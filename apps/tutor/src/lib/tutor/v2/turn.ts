@@ -34,6 +34,7 @@ import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './
 import { leftOpen, mayOpenPart, namesPart, partOffer } from './part-close';
 import { heardAsWords } from './heard';
 import { v2LanguagesSection } from './languages';
+import { V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2MarkLevelKnownParts, v2WorkingLevelSection } from './working-level';
 import { v2StopAsked } from './stop-signal';
 import { TUTOR_V2_STOP_SIGNAL } from '../orchestrator/flags';
 import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, V2_DISCUSSION_CONSTITUTION, directionAsked, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap } from './discussion';
@@ -128,6 +129,8 @@ export function v2SessionPart(session: V2Session): string {
     v2LevelLine(session.level),
     v2ModeLines(session.mode),
     v2LanguagesSection(session.languages, session.mode) ?? '',
+    // Only for a partner that checks the level: every other session part is unchanged.
+    v2LevelCheckOn(session) ? v2WorkingLevelSection() : '',
     // A free trial is the student's to steer (Praveen 2026-10-28: a trial student asked five times for another
     // topic and was kept on the plan). A partner whose showcase is a written lesson keeps its plan (trialKeepsPlan).
     session.trial && !session.trialKeepsPlan ? 'This is a free trial lesson, and the student may take it anywhere. The plan below is the topic they picked when they started. If they ask for a different topic, or a different subject altogether, teach that from then on, starting in the same reply, and leave the plan behind.' : '',
@@ -191,6 +194,7 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
   // to ask what they would like next, a new question to a student who is leaving (stop-signal.ts).
   const asked = args.because === 'student_asked' || (TUTOR_V2_STOP_SIGNAL && v2StopAsked(studentSaid));
   const discussion = discussionOf(session.plan);
+  if (name === 'set_working_level') return v2LevelCheckOn(session) ? v2ApplySetWorkingLevel(state, args) : 'unknown tool set_working_level';
   if (name === 'record_thinking') return discussion ? recordThinking(state, args) : 'unknown tool record_thinking';
   if (name === 'end_lesson' && discussion) {
     // A discussion is done when the person has chosen where to go next, which may well be before the clock: the
@@ -291,6 +295,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const applyBoard = input.applyBoard ?? applyToModelBoard;
   // The turn works on a copy: a failed model call leaves the caller's state as it was.
   const state: V2State = structuredClone(input.state);
+  // A level remembered from an earlier lesson skips the level-check parts before the tutor speaks.
+  v2MarkLevelKnownParts(session, state, nowMs);
 
   /** The first reply of the session: nothing has been said by either side. */
   const opening = !state.history.length && input.studentSaid === null;
@@ -310,7 +316,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     { type: 'text', text: v2SessionPart(session), cache_control: CACHE },
   ];
   const base = v2Tools(session.subject, session.topic ?? '', discussion);
-  const tools = discussion ? base : session.homeworkSheet ? [...base, V2_SET_CURRENT_PROBLEM_TOOL, V2_NOTE_OWN_ANSWER_TOOL] : session.homework ? [...base, V2_NOTE_OWN_ANSWER_TOOL] : base;
+  const tools = discussion ? base : session.homeworkSheet ? [...base, V2_SET_CURRENT_PROBLEM_TOOL, V2_NOTE_OWN_ANSWER_TOOL] : session.homework ? [...base, V2_NOTE_OWN_ANSWER_TOOL] : v2LevelCheckOn(session) ? [...base, V2_SET_WORKING_LEVEL_TOOL] : base;
   let messages: Anthropic.MessageParam[] = [...withCacheMark(state.history), userNow];
 
   const stored: Anthropic.MessageParam[] = [{ role: 'user', content: [{ type: 'text', text: studentText }] }];

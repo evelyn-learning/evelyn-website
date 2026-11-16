@@ -69,6 +69,9 @@ const SUPPORT: Record<WorkingLevel, string> = {
   advanced: 'Give little help: let them work it out, and correct only what matters for what the lesson is teaching.',
 };
 
+/** The per-level questions and support, for tutor v2's level section (v2/working-level.ts). */
+export { QUESTIONS as WORKING_LEVEL_QUESTIONS, SUPPORT as WORKING_LEVEL_SUPPORT };
+
 /** The session-block clause for a level. `known` = the level came from the
  *  learner's previous lesson (one continuation line, no check today);
  *  otherwise it was just chosen this lesson (one soft line, once).

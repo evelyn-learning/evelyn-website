@@ -1749,6 +1749,7 @@ export default function TutorSession(props: TutorSessionProps) {
           onMilestone={onMilestone}
           topic={topic || undefined}
           trial={isTrial || openScope || undefined}
+          levelCheck={levelCheck}
           sessionMaxMinutes={sessionMaxMinutes}
           composerSlot={videoBtn}
           handleRef={realtimeHandleRef}
@@ -1791,6 +1792,7 @@ export default function TutorSession(props: TutorSessionProps) {
           onMilestone={onMilestone}
           topic={topic || undefined}
           trial={isTrial || openScope || undefined}
+          levelCheck={levelCheck}
           prewarm={prewarm}
           tutorLanguages={tutorLanguages}
           sessionMaxMinutes={sessionMaxMinutes}

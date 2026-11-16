@@ -19,6 +19,8 @@ export interface V2ClientSession {
   teacher?: { name: string; nameIsRole?: boolean; style?: string };
   trial?: boolean;
   background?: string[];
+  /** The partner checks the learner's working level once and remembers it (working-level.ts). */
+  levelCheck?: boolean;
 }
 
 export interface V2TurnDone {

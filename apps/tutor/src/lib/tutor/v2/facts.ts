@@ -9,6 +9,7 @@ import { v2HomeworkFacts, v2HomeworkGuardFacts, v2SheetFacts } from './homework-
 import { renderGoalStatus } from './plan-map';
 import type { V2Session, V2State } from './types';
 import { discussionOf, effectiveMinutes, lastReplyNotes, renderThinking } from './discussion';
+import { v2WorkingLevelFacts } from './working-level';
 
 /** After the tutor chose to keep listening: how long the student stays silent before it is told so (TutorVoiceV2).
  *  At that point silence is no longer open to it: it kept listening twice and the student sat with a blank
@@ -60,6 +61,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   else if (session.homeworkSheet) lines.push(...v2SheetFacts(session.homeworkSheet, state.homework?.sheet));
   if (session.homework || session.homeworkSheet) lines.push(...v2HomeworkGuardFacts(state.homework));
   else if (session.plan) lines.push(`plan: ${renderGoalStatus(session.plan, state.goals)}`);
+  // The working level, every turn, so the language, questions and corrections stay at it (working-level.ts).
+  lines.push(...v2WorkingLevelFacts(session, state, f.heard));
   lines.push(`your note: ${state.note.trim() || '(empty — nothing written yet)'}`);
   const thinking = discussion ? renderThinking(state.thinking) : '';
   if (thinking) lines.push(thinking);

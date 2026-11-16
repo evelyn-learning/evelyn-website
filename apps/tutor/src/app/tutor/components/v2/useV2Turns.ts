@@ -26,6 +26,9 @@ import { SentenceStream } from '@/lib/tutor/v2/sentences';
 import { V2_CONTROL_TOOL_NAMES } from '@/lib/tutor/v2/tool-names';
 import { mentionsTool } from '@/lib/tutor/v2/tool-talk';
 import { newV2State, type V2State, type V2ToolCall } from '@/lib/tutor/v2/types';
+import { TUTOR_WORKING_LEVEL, TUTOR_WORKING_LEVEL_ESTIMATE } from '@/lib/tutor/orchestrator/flags';
+import { parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
+import { v2LevelEstimateDue, v2SeedWorkingLevel, v2WorkingLevelCommit } from '@/lib/tutor/v2/working-level';
 
 export interface V2TurnsConfig {
   mode: 'text' | 'voice';
@@ -38,6 +41,9 @@ export interface V2TurnsConfig {
   /** The teacher persona's name and manner, and whether this is a free trial (types.ts V2Session). */
   teacher?: { name: string; nameIsRole?: boolean; style?: string };
   trial?: boolean;
+  /** The partner checks the learner's working level once and remembers it (partner-session-options.ts `levelCheck`,
+   *  v2/working-level.ts). Under the TUTOR_WORKING_LEVEL kill switch. */
+  levelCheck?: boolean;
   /** The topic asked for when there is no lesson plan. */
   topic?: string;
   /** The session's teaching languages, English first (a partner's `tutor_languages`); a second one makes the lesson bilingual (v2/languages.ts). */
@@ -175,6 +181,34 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
 
   const publish = () => p.current.onTranscriptUpdate([...transcriptRef.current]);
 
+  // The working level (v2/working-level.ts): remembered on the profile, or estimated this lesson when the tutor left
+  // the level check without setting one. Each is put into the state before a turn that holds none.
+  const levelCheckOn = () => TUTOR_WORKING_LEVEL && !!p.current.levelCheck;
+  const knownLevelRef = useRef<WorkingLevel | null>(null);
+  const estimatedLevelRef = useRef<WorkingLevel | null>(null);
+  const loggedLevelRef = useRef<WorkingLevel | null>(null);
+  const estimateAskedRef = useRef(false);
+  // v1 Task 14 §G (the tool was never called and the whole lesson ran unlevelled): once the lesson is past the
+  // level-check part with no level, the student's answers so far go to the estimate route, once.
+  const requestLevelEstimate = () => {
+    const c = p.current; const plan = planRef.current;
+    if (!TUTOR_WORKING_LEVEL_ESTIMATE || !levelCheckOn() || !c.sessionId || !plan || estimateAskedRef.current) return;
+    if (!v2LevelEstimateDue(plan, stateRef.current.goals, stateRef.current.workingLevel)) return;
+    estimateAskedRef.current = true;
+    const answers = transcriptRef.current.filter((e) => e.role === 'student' && e.text?.trim()).map((e) => e.text);
+    if (!answers.length) { c.onDebugEvent?.('working_level_estimate_skipped', 'no student turns (v2)'); return; }
+    c.onDebugEvent?.('working_level_estimate_requested', `answers=${answers.length} (v2)`);
+    void fetch('/api/tutor/level/estimate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: c.sessionId, answers }) })
+      .then((r) => (r.ok ? r.json() : { status: 'unavailable', reason: `http ${r.status}` }))
+      .then((d: { status?: string; level?: unknown; reason?: unknown }) => {
+        const level = d?.status === 'ok' ? parseWorkingLevel(d.level) : null;
+        if (!level) { c.onDebugEvent?.('working_level_estimate_failed', `${String(d?.reason ?? 'unavailable')} (v2)`); return; }
+        // Taken into the state before the next turn, unless the tutor has set a level by then.
+        if (!stateRef.current.workingLevel) estimatedLevelRef.current = level;
+      })
+      .catch((e) => c.onDebugEvent?.('working_level_estimate_failed', String((e as Error)?.message ?? e).slice(0, 80)));
+  };
+
   const runTurn = useCallback(async (studentSaid: string | null, silenceSeconds?: number) => {
     if (stateRef.current.closed || endingRef.current) return;
     if (busyRef.current) {
@@ -201,6 +235,8 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     // The greeting waits a moment for the student's profile if it is still on its way: it is what lets the
     // tutor say where the last session left off.
     if (!stateRef.current.history.length) await Promise.race([memoryReadyRef.current, new Promise((r) => setTimeout(r, 1500))]);
+    // The working level goes into the state the turn carries: an estimate made this lesson, else the one on the profile.
+    if (levelCheckOn()) stateRef.current = v2SeedWorkingLevel(stateRef.current, { known: knownLevelRef.current, estimated: estimatedLevelRef.current });
     const session: V2ClientSession = {
       studentName: p.current.studentName, subject: p.current.subject, level: p.current.level, mode: p.current.mode,
       ...((p.current.tutorLanguages?.length ?? 0) > 1 ? { languages: p.current.tutorLanguages } : {}),
@@ -210,6 +246,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       ...(p.current.background?.length || memoryRef.current.length ? { background: [...(p.current.background ?? []), ...memoryRef.current].slice(0, V2_BACKGROUND_MAX_LINES) } : {}),
       ...(p.current.teacher ? { teacher: p.current.teacher } : {}),
       ...(p.current.trial ? { trial: true } : {}),
+      ...(levelCheckOn() ? { levelCheck: true } : {}),
     };
     const abort = new AbortController(); abortRef.current = abort;
     const sentences = new SentenceStream();
@@ -288,7 +325,12 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         },
       });
       letGo(); speak(sentences.flush());
+      if (levelCheckOn() && done.state.workingLevel?.from === 'this_lesson' && done.state.workingLevel.level !== loggedLevelRef.current) {
+        loggedLevelRef.current = done.state.workingLevel.level;
+        p.current.onDebugEvent?.('working_level_set', `${done.state.workingLevel.level}${done.state.workingLevel.level === estimatedLevelRef.current ? ' source=estimate' : ''} (v2)`);
+      }
       stateRef.current = done.state;
+      requestLevelEstimate();
       reportSheet();
       if (done.state.closed) clearV2State(p.current.sessionId); else saveV2State(p.current.sessionId, done.state);
       reportProgress();
@@ -341,17 +383,37 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   // before this in the normal case; this is the backstop.
   // What the engine remembers of this student (memory.ts): read as the page loads, committed when the session
   // ends, however it ends. A session of a few exchanges or fewer leaves nothing worth remembering.
-  const memoryRef = useRef<string[]>([]); const committedAtRef = useRef(0); const needsPracticeRef = useRef<string[]>([]); const sentMasteryRef = useRef<Set<string>>(new Set()); const memoryReadyRef = useRef<Promise<unknown>>(Promise.resolve());
+  const memoryRef = useRef<string[]>([]); const committedAtRef = useRef(0); const committedLevelRef = useRef(''); const needsPracticeRef = useRef<string[]>([]); const sentMasteryRef = useRef<Set<string>>(new Set()); const memoryReadyRef = useRef<Promise<unknown>>(Promise.resolve());
+  // A trial keeps no memory, except the working level when the partner checks it (v2/working-level.ts): a partner's
+  // trial link is the learner's link, and v1 remembered the level on it.
+  const levelCheck = !!config.levelCheck;
   useEffect(() => {
-    const id = config.studentId; if (!id || config.trial) return;
+    const id = config.studentId; if (!id || (config.trial && !(TUTOR_WORKING_LEVEL && levelCheck))) return;
     let gone = false;
     memoryReadyRef.current = fetch(`/api/tutor/student-profile/${encodeURIComponent(id)}`, p.current.embedToken ? { headers: { 'x-embed-token': p.current.embedToken } } : undefined)
-      .then((r) => (r.ok ? r.json() : null)).then((data: { profile?: unknown } | null) => { if (!gone && data?.profile) memoryRef.current = v2MemoryLines(data.profile as never, p.current.sessionId); })
+      .then((r) => (r.ok ? r.json() : null)).then((data: { profile?: { workingLevel?: { level?: unknown } } } | null) => {
+        if (gone || !data?.profile) return;
+        if (!config.trial) memoryRef.current = v2MemoryLines(data.profile as never, p.current.sessionId);
+        const known = levelCheckOn() ? parseWorkingLevel(data.profile.workingLevel?.level) : null;
+        if (known) { knownLevelRef.current = known; p.current.onDebugEvent?.('working_level_known', `${known} (v2)`); }
+      })
       .catch(() => { /* no profile: the lesson starts without it */ });
     return () => { gone = true; };
-  }, [config.studentId, config.trial]);
+  }, [config.studentId, config.trial, levelCheck]);
   const commitProfile = useCallback((keepalive = false) => {
     const c = p.current; const said = transcriptRef.current.length;
+    // A trial commits the working level alone, once per level (v2/working-level.ts).
+    if (c.trial && c.studentId && c.sessionId && levelCheckOn()) {
+      const body = v2WorkingLevelCommit({ sessionId: c.sessionId, subject: c.subject, lessonPlanId: c.lessonPlanId, state: stateRef.current });
+      const level = (body?.workingLevel as { level?: string } | undefined)?.level ?? '';
+      if (body && level !== committedLevelRef.current) {
+        committedLevelRef.current = level;
+        void fetch(`/api/tutor/student-profile/${encodeURIComponent(c.studentId)}`, { method: 'POST', keepalive, headers: { 'Content-Type': 'application/json', ...(c.embedToken ? { 'x-embed-token': c.embedToken } : {}) }, body: JSON.stringify(body) })
+          .then((r) => c.onDebugEvent?.('working_level_saved', `status=${r.status} ${level} (v2 trial)`))
+          .catch((e) => c.onDebugEvent?.('working_level_saved', `failed ${String((e as Error).message).slice(0, 80)}`));
+      }
+      return;
+    }
     if (!c.studentId || !c.sessionId || c.trial || said < 4 || said === committedAtRef.current) return;
     committedAtRef.current = said;
     const body = v2ProfileCommit({ sessionId: c.sessionId, subject: c.subject, level: c.level, topic: c.topic, lessonPlanId: c.lessonPlanId, plan: planRef.current, state: stateRef.current, transcript: transcriptRef.current, needsPracticeLoIds: needsPracticeRef.current });

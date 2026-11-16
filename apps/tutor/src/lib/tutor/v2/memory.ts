@@ -12,6 +12,7 @@ import { loGroupOf } from '../lesson-plan/context';
 import type { LessonPlan } from '../lesson-plan/types';
 import type { StudentProfile } from '../student-profile/types';
 import type { V2State } from './types';
+import { v2WorkingLevelField } from './working-level';
 
 const day = (iso: string | undefined) => (iso ?? '').slice(0, 10);
 
@@ -94,5 +95,7 @@ export function v2ProfileCommit(input: { needsPracticeLoIds?: string[]; sessionI
     gaps: (state.gaps ?? []).filter((g) => g.status !== 'done_alone').map((g) => ({ kind: 'prerequisite' as const, conceptLabel: g.what.slice(0, 120), observation: GAP_NOTE[g.status] ?? g.status })),
     transcript: input.transcript.filter((t) => (t.text ?? '').trim()).map((t) => ({ role: t.role === 'user' || t.role === 'student' ? 'student' as const : 'tutor' as const, text: String(t.text).slice(0, 4000) })),
     ...(state.closeSummary?.trim() ? { nextSessionIntent: state.closeSummary.trim().slice(0, 200) } : {}),
+    // A level set this lesson is remembered for the next one (working-level.ts).
+    ...v2WorkingLevelField(state, input.lessonPlanId),
   };
 }
