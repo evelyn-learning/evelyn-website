@@ -1770,6 +1770,7 @@ export default function TutorSession(props: TutorSessionProps) {
           onSessionStarted={() => setVoiceStartedAtMs((prev) => prev ?? Date.now())}
           onTutorBusy={handleTutorBusy}
           onVoiceStateChange={setLiveVoiceState}
+          onStageNotice={setStageNotice}
           onBrainUsage={onBrainUsage}
           onDebugEvent={onDebugEvent}
           onError={(err) => setError(err.message)}

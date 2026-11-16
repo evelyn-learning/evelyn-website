@@ -1616,3 +1616,10 @@ export const TUTOR_V2_SENTENCE_CARDS = process.env.NEXT_PUBLIC_TUTOR_V2_SENTENCE
  *  it: a v2 voice session ignores words heard once it is ending (they cut the goodbye, and nothing answers them), and the
  *  close follows the partner's lessonCloseAutoEnd (TUTOR_LESSON_CLOSE_AUTO_END is that switch). */
 export const TUTOR_V2_TIME_BOX = process.env.NEXT_PUBLIC_TUTOR_V2_TIME_BOX !== 'off';
+
+/** Tutor brain v2 (v2/sound-gate.ts): while the tutor speaks, a sound with no words yet pauses it only once the
+ *  microphone has carried energy above the level it had just before (v1's adaptive bar and 350 ms sustain). Paused at
+ *  the onset itself, the tutor's own voice from the speakers cut 2.5 s holes into its sentences, and after two the
+ *  client stopped pausing on sounds for the session. Words that are not the tutor's still pause it at once. Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_BARGEIN_ENERGY_GATE=off ⇒ a sound pauses the tutor at the onset, as before. */
+export const TUTOR_V2_BARGEIN_ENERGY_GATE = process.env.NEXT_PUBLIC_TUTOR_V2_BARGEIN_ENERGY_GATE !== 'off';

@@ -20,17 +20,24 @@
  * reset mid-sentence and chunks play on top of each other (Praveen's first
  * microphone session, embed-1794326349532: garbled voice, tutor deaf).
  *
- * NOT carried over from VoiceTutorRealtime yet (see the inventory,
- * docs/superpowers/specs/2026-11-09-vtr-non-teaching-inventory.md): the
- * sustained-energy barge-in gate, fillers, session recording, mic re-acquire
- * and the mute button, caption sync, resume, standby and host video.
+ * Carried over from VoiceTutorRealtime: a sound pauses the tutor only past the
+ * energy gate (v2/sound-gate.ts), the microphone is opened again when the
+ * device changes (v2/mic-watch.ts), and the caption follows the voice
+ * (v2/captions.ts). NOT carried over yet (see the inventory,
+ * docs/superpowers/specs/2026-11-09-vtr-non-teaching-inventory.md): fillers,
+ * the mute button, standby and host video.
  */
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject, type ReactNode } from 'react';
 import { useOpenAIRealtime, type OpenAIVoice } from '@/app/tutor/hooks/useOpenAIRealtime';
 import { usePerceptionWS, type PerceptionTranscript } from '@/app/tutor/hooks/usePerceptionWS';
 import { useCartesiaInkWS } from '@/app/tutor/hooks/useCartesiaInkWS';
 import { useAudioRecorder } from '@/app/tutor/hooks/useAudioRecorder';
-import { TUTOR_PRONUNCIATION_ASSESS, TUTOR_STT_ENGINE_INK2 } from '@/lib/tutor/orchestrator/flags';
+import { BARGEIN_GATE_POLL_MS, TUTOR_MIC_REACQUIRE, TUTOR_PRONUNCIATION_ASSESS, TUTOR_STT_ENGINE_INK2, TUTOR_V2_BARGEIN_ENERGY_GATE } from '@/lib/tutor/orchestrator/flags';
+import type { BargeInFrame } from '@/lib/tutor/voice/bargein-gate';
+import { armV2SoundGate, stepV2SoundGate } from '@/lib/tutor/v2/sound-gate';
+import { V2MicWatch } from '@/lib/tutor/v2/mic-watch';
+import { V2Captions } from '@/lib/tutor/v2/captions';
+import { getSharedMicLabel, reacquireSharedMicStream, sharedMicCaptureOpen, sharedMicReacquireInFlight, sharedMicTrackMuted } from '@/lib/tutor/voice/shared-mic';
 import { V2PronunciationRecorder } from '@/lib/tutor/v2/pronunciation-recorder';
 import { PRONUNCIATION_NOTE_WAIT_MS } from '@/lib/tutor/pronunciation/clip-capture';
 import { inkTurnEndTimeoutMs } from '@/lib/tutor/voice/ink-turn-end';
@@ -47,7 +54,7 @@ import { anchorSentenceIndex, asksAnywhere, inlineSentenceIndex } from '@/lib/tu
 import { summariseBoardCall } from '@/lib/tutor/v2/board';
 import { V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S } from '@/lib/tutor/v2/facts';
 import { outsideMathSpans, speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakLessonNotation, speakLetterUnits, speakGroups, speakNumberPlurals, speakSlashes } from '@/lib/tutor/voice/tts-pronunciation';
-import { cueStop, cueTick, cueTurnAccepted, initialThinkingCue } from '@/lib/tutor/voice/thinking-cue';
+import { cueStop, cueTick, cueTurnAccepted, initialThinkingCue, micChangedLabel, thinkingCueLanguage } from '@/lib/tutor/voice/thinking-cue';
 import { playThinkingPulse, playTurnChime, primeThinkingCueAudio } from '@/lib/tutor/voice/thinking-cue-audio';
 
 export interface TutorVoiceV2Props extends Omit<V2TurnsConfig, 'mode' | 'onSentence' | 'onCut' | 'closeDelayMs' | 'untilQuiet'> {
@@ -66,6 +73,8 @@ export interface TutorVoiceV2Props extends Omit<V2TurnsConfig, 'mode' | 'onSente
   thinkingCue?: boolean;
   composerSlot?: ReactNode;
   handleRef?: MutableRefObject<RealtimeHandle | null>;
+  /** A line for the stage while the microphone is being switched to a new device (null: take it down). */
+  onStageNotice?: (text: string | null) => void;
   onVoiceStateChange?: (state: 'idle' | 'listening' | 'hearing' | 'processing' | 'thinking' | 'speaking' | 'muted' | 'manual-held' | 'error') => void;
 }
 
@@ -192,6 +201,9 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     for (const x of lost) { const m = /^new_page:\s*(.*)$/.exec(x.what ?? ''); const last = state.board.pages[state.board.pages.length - 1]; if (m && last && state.board.pages.length > 1 && !last.items.length && last.title.slice(0, 80) === m[1]) { state.board.pages.pop(); state.board.current = state.board.pages.length - 1; } }
     state.boardProblems = [...(state.boardProblems ?? []), ...lost.map((x) => `${x.what ?? 'an item'}: the student spoke before you reached it, so it was NEVER shown and they have not seen it. It is not on the board and is not an open task`)];
   }, []);
+  // The caption follows the voice (v2/captions.ts); the host polls it through the handle's getSpokenCaption.
+  const captionsRef = useRef<V2Captions>(null as unknown as V2Captions);
+  if (!captionsRef.current) captionsRef.current = new V2Captions();
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const silenceStepRef = useRef(0);
   const realtimeRef = useRef<ReturnType<typeof useOpenAIRealtime> | null>(null);
@@ -244,8 +256,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     // A sentence that quotes a long span of the other teaching language goes to the voice in parts, each in its own
     // voice language (v2/languages.ts). Each part is a sentence here too: the voice reports each part as it starts,
     // and the board is timed by that count.
-    onSentence: (sentence, startsParagraph) => { if (startsParagraph || !turnSentencesRef.current.length) paraStartRef.current = turnSentencesRef.current.length; const parts = v2SpeechParts(sentence, p.current.tutorLanguages); if (parts.length > 1) p.current.onDebugEvent?.('tts_sentence_split', `${parts.length} parts: ${parts.map((x) => `"${x.slice(0, 30)}"`).join(' | ')}`); turnSentencesRef.current.push(...parts); placeBoard(); waitingRef.current = false; cueRef.current = cueStop(); spokenRef.current = [...spokenRef.current.slice(-7), sentence]; for (const part of parts) { if (openingSpeechRef.current) openingSpeechRef.current.push(part); else realtimeRef.current?.speakText(part); } },
-    onCut: () => { void realtimeRef.current?.clearSpeechQueue(); dropBoard(); },
+    onSentence: (sentence, startsParagraph) => { if (startsParagraph || !turnSentencesRef.current.length) paraStartRef.current = turnSentencesRef.current.length; const parts = v2SpeechParts(sentence, p.current.tutorLanguages); captionsRef.current.sentence(sentence, parts); if (parts.length > 1) p.current.onDebugEvent?.('tts_sentence_split', `${parts.length} parts: ${parts.map((x) => `"${x.slice(0, 30)}"`).join(' | ')}`); turnSentencesRef.current.push(...parts); placeBoard(); waitingRef.current = false; cueRef.current = cueStop(); spokenRef.current = [...spokenRef.current.slice(-7), sentence]; for (const part of parts) { if (openingSpeechRef.current) openingSpeechRef.current.push(part); else realtimeRef.current?.speakText(part); } },
+    onCut: () => { void realtimeRef.current?.clearSpeechQueue(); captionsRef.current.cut(); dropBoard(); },
     heardSoFar: () => cutHeardRef.current,
     onBoardWithdraw: (id) => {
       const held = heldBoardRef.current.find((h) => h.id === id);
@@ -326,8 +338,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     onTutorBusy: (busy) => {
       props.onTutorBusy?.(busy);
       turnBusyRef.current = busy;
-      if (busy) { cutHeardRef.current = null; releaseBoard(); paintedThisTurnRef.current = []; paintFnsRef.current.clear(); turnSentencesRef.current = []; startedCountRef.current = 0; segStartRef.current = 0; paraStartRef.current = 0; pageTurnAtRef.current = 0; lastBlockAtRef.current = -1; clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); showState('thinking'); }
-      else { waitingRef.current = false; cueRef.current = cueStop(); realtimeRef.current?.signalBrainThinking(false); placeBoard(true); if (!realtimeRef.current?.isSpeechPending()) releaseBoard(); else releaseBoard(startedCountRef.current);
+      if (busy) { captionsRef.current.begin(); cutHeardRef.current = null; releaseBoard(); paintedThisTurnRef.current = []; paintFnsRef.current.clear(); turnSentencesRef.current = []; startedCountRef.current = 0; segStartRef.current = 0; paraStartRef.current = 0; pageTurnAtRef.current = 0; lastBlockAtRef.current = -1; clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); showState('thinking'); }
+      else { captionsRef.current.streamEnd(); waitingRef.current = false; cueRef.current = cueStop(); realtimeRef.current?.signalBrainThinking(false); placeBoard(true); if (!realtimeRef.current?.isSpeechPending()) releaseBoard(); else releaseBoard(startedCountRef.current);
         // The tutor chose to say nothing and wait (keep_listening). If the student was in fact finished, it finds out soon.
         const silentReply = turnSentencesRef.current.length === 0 && !turnsRef.current?.isEnding();
         // Nothing will be spoken, so no playback event will move the indicator off "Thinking…".
@@ -363,7 +375,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     // (paused) is theirs now: its rest is dropped, not played before the goodbye.
     untilQuiet: async (maxMs) => {
       clearSilence();
-      if (pauseTimerRef.current) { clearTimeout(pauseTimerRef.current); pauseTimerRef.current = null; soundPauseRef.current = false; void realtimeRef.current?.clearSpeechQueue(); dropBoard(); }
+      stopSoundGate();
+      if (pauseTimerRef.current) { clearTimeout(pauseTimerRef.current); pauseTimerRef.current = null; soundPauseRef.current = false; void realtimeRef.current?.clearSpeechQueue(); captionsRef.current.cut(); dropBoard(); }
       const end = Date.now() + maxMs;
       while (Date.now() < end && realtimeRef.current?.isSpeechPending()) await new Promise((r) => setTimeout(r, 300));
       return !realtimeRef.current?.isSpeechPending();
@@ -374,6 +387,12 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   // Pause-first: when words that are not the tutor's own start arriving, the tutor stops mid-sentence
   // without losing its place; the finished transcript then either cuts it (a real turn) or lets it go on.
   const soundPauseRef = useRef(false); const soundMissesRef = useRef(0);
+  // The energy gate on a pause for a sound (v2/sound-gate.ts): the levels come from the recogniser that owns the
+  // microphone (its energy window), so its frames are tapped once, for the recogniser, the recording and the
+  // pronunciation clip as before.
+  const energyWindowRef = useRef<() => BargeInFrame[]>(() => []);
+  const soundGateRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  function stopSoundGate() { if (soundGateRef.current) { clearInterval(soundGateRef.current); soundGateRef.current = null; } }
   const liftPause = useCallback(() => {
     if (pauseTimerRef.current) { clearTimeout(pauseTimerRef.current); pauseTimerRef.current = null; }
     if (soundPauseRef.current) { soundPauseRef.current = false; soundMissesRef.current += 1; }
@@ -391,6 +410,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     // first, a student who spoke for longer than the wait heard the tutor start up again under them every few
     // seconds (AP Precalculus, embed-1794456849622: four restarts inside one 35-second question).
     if (pauseTimerRef.current) { clearTimeout(pauseTimerRef.current); pauseTimerRef.current = giveUp(); return; }
+    stopSoundGate();
     if (!rt.pauseSpeech()) { p.current.onDebugEvent?.('v2_heard_over_tutor', `words, not paused (nothing playing yet): ${text.slice(0, 60)}`); return; }
     {
       p.current.onDebugEvent?.('v2_bargein_pause', text.slice(0, 80));
@@ -411,6 +431,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       liftPause();
       return;
     }
+    stopSoundGate();
     if (pauseTimerRef.current) { clearTimeout(pauseTimerRef.current); pauseTimerRef.current = null; }
     soundPauseRef.current = false; soundMissesRef.current = 0;
     // The student has taken the floor: whatever the tutor still had queued or paused is dropped, whether or
@@ -419,6 +440,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     if (realtimeRef.current?.isSpeechPending()) {
       p.current.onDebugEvent?.('v2_bargein', opts?.typed ? 'typed over the tutor' : 'spoke over the tutor');
       void realtimeRef.current.clearSpeechQueue();
+      captionsRef.current.cut();
       // A finished reply cut short: the record keeps only what was heard (a reply still streaming is folded
       // by useV2Turns instead).
       // The sentence playing when they came in is counted as unheard: cut at "What's your first…", the
@@ -459,7 +481,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     // The wait chosen when the reply ended (a short one after a reply with no question) still stands once its
     // speech has finished: arming the plain 75 s here threw the short wait away, and a tutor who had stopped
     // without a question sat silent (embed-1794374818774, embed-1794376295543).
-    if (event === 'drain') { if (!turnsRef.current?.busy) { releaseBoard(); armSilence(soonAfterSpeechRef.current); } }
+    if (event === 'drain') { captionsRef.current.drain(); if (!turnsRef.current?.busy) { releaseBoard(); armSilence(soonAfterSpeechRef.current); } }
   }, [armSilence, releaseBoard]);
   const onRelayTranscript = useCallback((transcript: string, opts?: { typed?: boolean }) => heard(transcript, opts), [heard]);
   const languagesKey = (props.tutorLanguages ?? []).join(',');
@@ -506,16 +528,32 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     // the tutor run on for six or seven more of its own (AP Physics, embed-1794493438983), so it pauses on the
     // sound and goes on if no words of the student's follow. A room where sounds keep turning out to be
     // nothing (a cough, the tutor's own voice from the speakers) goes back to waiting for words.
-    if (pauseTimerRef.current || soundMissesRef.current >= SOUND_PAUSE_MISSES || !rt.pauseSpeech()) { p.current.onDebugEvent?.('v2_heard_over_tutor', `a sound, not paused: ${pauseTimerRef.current ? 'already paused' : soundMissesRef.current >= SOUND_PAUSE_MISSES ? 'sounds have been false alarms' : 'nothing playing yet'}`); return; }
-    soundPauseRef.current = true;
-    p.current.onDebugEvent?.('v2_bargein_pause', '(a sound, no words yet)');
-    pauseTimerRef.current = setTimeout(() => {
-      pauseTimerRef.current = null;
-      if (soundPauseRef.current) { soundPauseRef.current = false; soundMissesRef.current += 1; }
-      if (!flagRef.current.active) realtimeRef.current?.resumeSpeech();
-    }, SOUND_PAUSE_MS);
+    if (pauseTimerRef.current || soundGateRef.current || soundMissesRef.current >= SOUND_PAUSE_MISSES) { p.current.onDebugEvent?.('v2_heard_over_tutor', `a sound, not paused: ${pauseTimerRef.current ? 'already paused' : soundGateRef.current ? 'already gated' : 'sounds have been false alarms'}`); return; }
+    const pauseOnSound = (what: string) => {
+      if (!realtimeRef.current?.pauseSpeech()) { p.current.onDebugEvent?.('v2_heard_over_tutor', 'a sound, not paused: nothing playing yet'); return; }
+      soundPauseRef.current = true;
+      p.current.onDebugEvent?.('v2_bargein_pause', what);
+      pauseTimerRef.current = setTimeout(() => {
+        pauseTimerRef.current = null;
+        if (soundPauseRef.current) { soundPauseRef.current = false; soundMissesRef.current += 1; }
+        if (!flagRef.current.active) realtimeRef.current?.resumeSpeech();
+      }, SOUND_PAUSE_MS);
+    };
+    // The tutor's own voice from the speakers is heard as speech beginning too: the sound pauses the tutor only once
+    // the microphone has carried energy well above its level just before (v2/sound-gate.ts). No levels: at once.
+    const gate = TUTOR_V2_BARGEIN_ENERGY_GATE ? armV2SoundGate(energyWindowRef.current(), Date.now()) : null;
+    if (!gate) { pauseOnSound('(a sound, no words yet)'); return; }
+    p.current.onDebugEvent?.('v2_bargein_gate_armed', `threshold=${gate.threshold.toFixed(3)}`);
+    soundGateRef.current = setInterval(() => {
+      const step = stepV2SoundGate(gate, energyWindowRef.current(), Date.now(), !!realtimeRef.current?.isSpeechPending() && !flagRef.current.active);
+      if (step === 'wait') return;
+      stopSoundGate();
+      if (step === 'drop') { p.current.onDebugEvent?.('v2_bargein_gate_dropped', `after ${Date.now() - gate.onsetMs} ms`); return; }
+      if (!pauseTimerRef.current) pauseOnSound(`(a sound held ${Date.now() - gate.onsetMs} ms, no words yet)`);
+    }, BARGEIN_GATE_POLL_MS);
   }, []);
-  const onSpeechStop = useCallback(() => { if (flagRef.current.active) return; pronRef.current?.speechStop(); if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) showState('processing'); }, []);
+  // Speech stopped before the gate passed: a blip or the tutor's own voice, not an interruption.
+  const onSpeechStop = useCallback(() => { if (soundGateRef.current) { stopSoundGate(); p.current.onDebugEvent?.('v2_bargein_gate_dropped', 'speech stopped first'); } if (flagRef.current.active) return; pronRef.current?.speechStop(); if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) showState('processing'); }, []);
   const onNoTranscript = useCallback((kind: string | undefined) => {
     p.current.onDebugEvent?.('v2_transcription_failed', String(kind ?? 'unknown'));
     if (flagRef.current.active) return;
@@ -537,19 +575,41 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const pushStudentChunkRef = useRef(recorder.pushStudentChunk); pushStudentChunkRef.current = recorder.pushStudentChunk;
   const onStudentFrame = useCallback((f: Float32Array) => { pushStudentChunkRef.current(f); pronRef.current?.frame(f); }, []);
   const onPronunciationFrame = useCallback((f: Float32Array) => pronRef.current?.frame(f), []);
-  usePerceptionWS({
+  const perception = usePerceptionWS({
     enabled: listening && !TUTOR_STT_ENGINE_INK2,
     // This recogniser's frames never went to the session recording; they feed the clip alone.
     ...(pronunciationOn ? { onStudentAudioFrame: onPronunciationFrame } : {}),
     onTranscript, onSpeechStart, onSpeechStop, onMicLevel, onTranscriptionFailed: onNoTranscript, onError: onRecogniserError,
   });
-  useCartesiaInkWS({
+  const ink = useCartesiaInkWS({
     enabled: listening && TUTOR_STT_ENGINE_INK2,
     onStudentAudioFrame: pronunciationOn ? onStudentFrame : recorder.pushStudentChunk,
     turnEndTimeoutMs: inkTurnEndTimeoutMs(props.tutorLanguages),
     onTranscript, onPartialTranscript: onPartial, onSpeechStart, onSpeechStop, onMicLevel, onTranscriptionFailed: onNoTranscript, onError: onRecogniserError,
     onDiagnostic: onInkDiagnostic,
   });
+  energyWindowRef.current = TUTOR_STT_ENGINE_INK2 ? ink.getEnergyWindow : perception.getEnergyWindow;
+
+  // The microphone opened again when the device changes (v2/mic-watch.ts, v1 Task 27 §G).
+  useEffect(() => {
+    if (!TUTOR_MIC_REACQUIRE || typeof window === 'undefined') return;
+    const md = typeof navigator !== 'undefined' ? navigator.mediaDevices : undefined;
+    const watch = new V2MicWatch({
+      captureOpen: sharedMicCaptureOpen, inFlight: sharedMicReacquireInFlight, trackMuted: sharedMicTrackMuted, label: getSharedMicLabel,
+      ...(typeof md?.enumerateDevices === 'function' ? { listDevices: () => md.enumerateDevices() } : {}),
+      reacquire: (reason) => reacquireSharedMicStream(reason).then((stream) => ({ label: stream.getAudioTracks()[0]?.label ?? '' })),
+      log: (type, message) => p.current.onDebugEvent?.(type, message),
+      notice: (on) => p.current.onStageNotice?.(on ? micChangedLabel(thinkingCueLanguage(p.current.tutorLanguages, spokenRef.current[spokenRef.current.length - 1])) : null),
+      now: () => Date.now(), setTimer: (fn, ms) => setTimeout(fn, ms), clearTimer: (h) => clearTimeout(h as ReturnType<typeof setTimeout>),
+    });
+    const onDeviceChange = () => watch.deviceChange();
+    const onTrack = (e: Event) => watch.trackEvent((e as CustomEvent<{ kind?: string }>).detail?.kind);
+    const onFrame = () => watch.frame();
+    md?.addEventListener?.('devicechange', onDeviceChange);
+    window.addEventListener('evelyn:shared-mic-track', onTrack);
+    window.addEventListener('evelyn:shared-mic-frame', onFrame);
+    return () => { md?.removeEventListener?.('devicechange', onDeviceChange); window.removeEventListener('evelyn:shared-mic-track', onTrack); window.removeEventListener('evelyn:shared-mic-frame', onFrame); watch.dispose(); };
+  }, []);
 
   // Start needs a tap: browsers only release audio to a page after a gesture.
   const start = useCallback(() => {
@@ -565,7 +625,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     turnsRef.current?.open();
   }, []);
 
-  useEffect(() => () => { pronRef.current?.disarm(); releaseBoard(); clearSilence(); if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current); turnsRef.current?.abort(); realtimeRef.current?.disconnect(); }, []);
+  useEffect(() => () => { stopSoundGate(); pronRef.current?.disarm(); releaseBoard(); clearSilence(); if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current); turnsRef.current?.abort(); realtimeRef.current?.disconnect(); }, []);
 
   // A resumed session waits for a tap, as any session does (audio needs one): the page shows "Continue lesson".
   useEffect(() => { if (turns.resumedRef.current && !startedRef.current) p.current.onResumeAwaitingTapChange?.(true); // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -584,6 +644,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       setTutorVoiceMuted: (muted) => realtimeRef.current?.setVoiceMuted(muted),
       endSession: (opts) => { clearSilence(); void realtimeRef.current?.clearSpeechQueue(); turnsRef.current?.end(opts); },
       isEnding: () => turnsRef.current?.isEnding() ?? false,
+      getSpokenCaption: () => captionsRef.current.poll(realtimeRef.current?.getSpokenProgress() ?? null),
     };
     return () => { ref.current = null; };
   }, [props.handleRef, start, heard]);
@@ -606,7 +667,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       board: state?.board,
     };
   }, []);
-  const flagStart = useCallback(() => { clearSilence(); if (pauseTimerRef.current) { clearTimeout(pauseTimerRef.current); pauseTimerRef.current = null; } soundPauseRef.current = false; realtimeRef.current?.pauseSpeech(); p.current.onDebugEvent?.('v2_flag', 'opened'); }, []);
+  const flagStart = useCallback(() => { clearSilence(); stopSoundGate(); if (pauseTimerRef.current) { clearTimeout(pauseTimerRef.current); pauseTimerRef.current = null; } soundPauseRef.current = false; realtimeRef.current?.pauseSpeech(); p.current.onDebugEvent?.('v2_flag', 'opened'); }, []);
   const flagStop = useCallback(() => {
     p.current.onDebugEvent?.('v2_flag', 'closed');
     realtimeRef.current?.resumeSpeech();

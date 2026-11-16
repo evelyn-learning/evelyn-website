@@ -232,6 +232,7 @@
     "test:brain-v2": "npx tsx scripts/test-brain-v2.ts",
     "test:brain-v2-homework": "npx tsx scripts/test-brain-v2-homework.ts",
     "test:brain-v2-languages": "npx tsx scripts/test-brain-v2-languages.ts",
+    "test:v2-voice-client": "npx tsx scripts/test-v2-voice-client.ts",
     "test:brain-v2-plan-map": "npx tsx scripts/test-brain-v2-plan-map.ts",
     "test:brain-v2-pronunciation": "npx tsx scripts/test-brain-v2-pronunciation.ts",
     "test:brain-v2-working-level": "npx tsx scripts/test-brain-v2-working-level.ts",
