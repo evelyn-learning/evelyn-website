@@ -5,7 +5,8 @@ import { heardAsWords } from '../src/lib/tutor/v2/heard';
 import { mayOpenPart, partOffer } from '../src/lib/tutor/v2/part-close';
 import { mentionsTool } from '../src/lib/tutor/v2/tool-talk';
 import { applyToModelBoard, renderBoard, boardMisfit, spacedRoman, taskOnly, wordsAsText } from '../src/lib/tutor/v2/board';
-import { anchorSentenceFinal, anchorSentenceIndex, asksAloud, inlineSentenceIndex, saidCovers, unsaidAsk, asksAnywhere } from '../src/lib/tutor/v2/board-timing';
+import { anchorSentenceFinal, anchorSentenceIndex, asksAloud, inlineSentenceIndex, saidCovers, unsaidAsk, unsaidBoardItem, asksAnywhere } from '../src/lib/tutor/v2/board-timing';
+import { TUTOR_V2_SPEAK_BOARD_ITEM } from '../src/lib/tutor/orchestrator/flags';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { speaksMaths, unwrittenEquations } from '../src/lib/tutor/v2/spoken-maths';
 import { renderFacts, V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S } from '../src/lib/tutor/v2/facts';
@@ -716,6 +717,40 @@ async function main() {
   check('a figure written inside a problem goes up after it, and no closing tag is said (demo check 11-13)', boardBlocksIn(nested).map((b) => b.kind).join() === 'problem,figure' && nParts.filter((p) => 'block' in p).length === 2 && !nParts.some((p) => 'text' in p && /board/.test(p.text)) && !/board/.test(stripBoardBlocks(nested)), JSON.stringify(nParts).slice(0, 300));
   const crateDirs = (inlineToolCall(boardBlocksIn('<board forces object="the crate">Cable, first | toward the door | 150 N\nCable, third | away from the door | 400 N\nAir | up from the air | 2 N</board>')[0]).args as { forces: Array<{ direction: string }> }).forces.map((f) => f.direction).join();
   check('a force direction said in words is drawn that way: "away from the door" is the other way (demo check 11-13)', crateDirs === 'right,left,up', crateDirs);
+
+  console.log('a board item the learner must act on is heard (D2)');
+  {
+    const menu = { name: 'annotate', args: { text: '1) individual words\n2) a complete sentence\n3) speaking more naturally\n4) skip and continue' }, outcome: 'painted on page 7' };
+    check('james t49: the menu is read as "1, …; 2, …"', unsaidBoardItem([menu], ['発音の練習です。', '次のどれにしますか？', 'Which one would you like?', 'Just say the number.']) === '1, individual words; 2, a complete sentence; 3, speaking more naturally; 4, skip and continue.');
+    const card = { name: 'show_sentence', args: { sentence: 'I want to expand our business internationally.' }, outcome: 'painted on page 6' };
+    check('upper-int t61: the sentence to say back is read', unsaidBoardItem([card], ['Here is one you can use for your plans:', 'Please say it back to me.']) === 'I want to expand our business internationally.');
+    check('a sentence already said is not said twice', unsaidBoardItem([card], ['Try this one: I want to expand our business internationally.', 'Say it back to me.']) === null);
+    check('options already read are not read twice', unsaidBoardItem([menu], ['You can practise individual words, a complete sentence, speaking more naturally, or skip and continue.', 'Which one?']) === null);
+    check('a card the reply does not ask about (a correction, the summary) is left to the board', unsaidBoardItem([card], ['Yes, that is a clear plan.']) === null);
+    check('mathematics stays on the board', unsaidBoardItem([{ name: 'annotate', args: { text: '1) $x = 2$\n2) $x = 3$' }, outcome: 'painted' }], ['Which one is right?']) === null);
+    check('a note that is not a numbered list is not a menu', unsaidBoardItem([{ name: 'annotate', args: { text: 'Present perfect: have + past participle.' }, outcome: 'painted' }], ['Can you make one?']) === null);
+    check('an item that was not painted is not read', unsaidBoardItem([{ ...card, outcome: 'not painted: bad' }], ['Please say it back to me.']) === null);
+    check('a card the board scrolled back to is read', unsaidBoardItem([{ ...card, outcome: 'not painted again: already on the board (page 4); the board has scrolled back to it' }], ['Please say it back to me.']) === 'I want to expand our business internationally.');
+    const longCard = { name: 'show_sentence', args: { sentence: Array.from({ length: 40 }, (_, i) => `word${i}`).join(' ') }, outcome: 'painted' };
+    check('a card too long to say is left to the board', unsaidBoardItem([longCard], ['Read it to me.']) === null);
+
+    // Whole turns, streamed as the model writes them.
+    const streaming = (text: string): V2ModelCall => async (_p, onText) => { for (const piece of text.match(/[\s\S]{1,23}/g) ?? []) onText?.(piece); return msg([{ type: 'text', text }], 'end_turn'); };
+    const lang: V2Session = { studentName: 'Kenji', subject: 'English', level: 'adult', mode: 'voice', timeBoxMinutes: 20, languages: ['en', 'ja'] };
+    const midLesson = () => ({ ...newV2State(0), board: { pages: [{ title: 'Warm-up', items: [] }, { title: 'Pronunciation', items: [] }], current: 1 }, history: [{ role: 'user' as const, content: 'hi' }, { role: 'assistant' as const, content: 'Shall we go on, or do you have a question first?' }] });
+    const t61 = 'Here is one you can use for your plans:\n\n<board sentence stress="expand">I want to expand our business internationally.</board>\n\nPlease say it back to me.';
+    const v61 = await runV2Turn({ session: lang, state: midLesson(), studentSaid: 'A sentence, please.', callModel: streaming(t61), boardPass: false, mathsCheck: false, nowMs: 15 * 60000 });
+    check('voice, upper-int t61: the reply ends with the sentence, said', /Please say it back to me\.\n\nI want to expand our business internationally\.$/.test(v61.spoken), v61.spoken);
+    const t49 = '発音の練習です。次のどれにしますか？\n\n<board note>1) individual words\n2) a complete sentence\n3) speaking more naturally\n4) skip and continue</board>\n\nWhich one would you like? Just say the number.';
+    const v49 = await runV2Turn({ session: lang, state: midLesson(), studentSaid: 'Yes, thank you.', callModel: streaming(t49), boardPass: false, mathsCheck: false, nowMs: 10 * 60000 });
+    check('voice, james t49: the reply ends with the options, read', /Just say the number\.\n\n1, individual words; 2, a complete sentence; 3, speaking more naturally; 4, skip and continue\.$/.test(v49.spoken), v49.spoken);
+    const t5 = 'Great. Here is the first question.\n\n<board problem difficulty="easy">Can you tell me a little about your job? What do you do?</board>\n\nPlease answer in English, and don\'t worry about mistakes.';
+    const v5 = await runV2Turn({ session: lang, state: midLesson(), studentSaid: 'Yes, I am ready.', callModel: streaming(t5), boardPass: false, mathsCheck: false, nowMs: 2 * 60000 });
+    check('voice, josh t5: the question on the card is asked aloud (the problem card\'s own path)', /What do you do\?$/.test(v5.spoken), v5.spoken);
+    const x61 = await runV2Turn({ session: { ...lang, mode: 'text' }, state: midLesson(), studentSaid: 'A sentence, please.', callModel: streaming(t61), boardPass: false, mathsCheck: false, nowMs: 15 * 60000 });
+    check('text: nothing is added (the board is in front of them)', /Please say it back to me\.$/.test(x61.spoken), x61.spoken);
+    check('the kill switch defaults on', TUTOR_V2_SPEAK_BOARD_ITEM === true);
+  }
 
   console.log('discussion sessions');
   {

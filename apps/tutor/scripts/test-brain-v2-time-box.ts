@@ -19,7 +19,7 @@ import { V2_CONSTITUTION } from '../src/lib/tutor/v2/constitution';
 import { DISCUSSION_PLAN_KIND } from '../src/lib/tutor/v2/discussion';
 import { poolTimeBox } from '../src/lib/tutor/portal/partner-pool';
 import { goodbyeLine } from '../src/lib/tutor/voice/timebox-lines';
-import { TUTOR_V2_TIME_BOX } from '../src/lib/tutor/orchestrator/flags';
+import { TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_TIME_BOX } from '../src/lib/tutor/orchestrator/flags';
 
 let passed = 0; let failed = 0;
 const check = (label: string, ok: boolean, detail?: unknown) => {
@@ -122,6 +122,38 @@ async function main() {
     check('5 min left: a new part\'s page is still held, with the offer in its place', r5.state.board.pages.length === 2 && !r5.toolCalls.some((c) => c.name === 'new_page') && /Next is past simple\. Shall we go on/.test(r5.spoken), [r5.toolCalls.map((c) => c.outcome), r5.spoken]);
     const rNo = await turn({ ...lesson, wrapMinutes: undefined }, 1.8);
     check('no wrap minute from the host: 1.8 min left is not a closing turn, the page is held as before', !opened(rNo), rNo.spoken);
+  }
+
+  console.log('a reply that ends the lesson opens its summary page (D1)');
+  {
+    const usage = { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } as Anthropic.Usage;
+    // The model streams its words and then calls end_lesson, as in showcase embed-1794821260705 t77 (968 s of a 20-minute box).
+    const closing = (text: string): V2ModelCall => { let n = 0; return async (_params, onText) => {
+      n += 1;
+      if (n > 1) return { id: 'm', type: 'message', role: 'assistant', model: 'x', content: [{ type: 'text', text: '' }], stop_reason: 'end_turn', stop_sequence: null, usage } as unknown as Anthropic.Message;
+      for (const piece of text.match(/[\s\S]{1,17}/g) ?? []) onText?.(piece);
+      return { id: 'm', type: 'message', role: 'assistant', model: 'x', content: [{ type: 'text', text }, { type: 'tool_use', id: 'e1', name: 'end_lesson', input: { because: 'time_nearly_used', summary: 'Four past forms.' } }], stop_reason: 'tool_use', stop_sequence: null, usage } as unknown as Anthropic.Message;
+    }; };
+    const notClosing = (text: string): V2ModelCall => { let n = 0; return async (_params, onText) => { n += 1; const t = n === 1 ? text : ''; if (t) onText?.(t); return { id: 'm', type: 'message', role: 'assistant', model: 'x', content: [{ type: 'text', text: t }], stop_reason: 'end_turn', stop_sequence: null, usage } as unknown as Anthropic.Message; }; };
+    // Six pages open; the last reply answered a question of theirs and ended "Does that answer your question?" (no offer to go on).
+    const showcase = (): V2State => ({ ...newV2State(0), board: { pages: ['Warm-up', 'Four ways', 'The misconception', 'Verb chart', 'Choose the form', 'Role-play'].map((title) => ({ title, items: [] })), current: 5 },
+      history: [{ role: 'user', content: 'When do I use \'been\' and when do I use \'gone\'?' }, { role: 'assistant', content: 'Good question. "Gone" means someone went to a place and is not there now. "Been" means someone went and came back. Does that answer your question?' }] });
+    const T77 = '<board page>Summary: talking about the past</board>Today you used four ways to talk about the past, and you fixed "have went" at once. Next time, look again at been and gone. Goodbye, Aya!';
+    const run = (session: V2Session, nowMin: number, call: V2ModelCall) => {
+      const streamed: string[] = [];
+      return runV2Turn({ session, state: showcase(), studentSaid: 'Yes, thank you. That is very clear now.', callModel: call, onText: (t) => streamed.push(t), boardPass: false, mathsCheck: false, nowMs: nowMin * MIN }).then((r) => ({ r, streamed: streamed.join('') }));
+    };
+    const showcaseSession: V2Session = { ...lesson, mode: 'text', trial: true };
+    const { r, streamed } = await run(showcaseSession, 16.13, closing(T77));
+    check('t77 (3.9 min left, the box\'s last fifth): the summary page opens, the summary is said, no offer, and the session ends', r.state.closed && r.state.board.pages.at(-1)?.title === 'Summary: talking about the past' && /Today you used four ways/.test(r.spoken) && !/Shall we go on/.test(r.spoken) && !r.toolCalls.some((c) => /not opened yet/.test(c.outcome)) && r.toolCalls.some((c) => c.name === 'end_lesson' && c.outcome === 'the session is ending'), [r.toolCalls.map((c) => `${c.name} ${c.outcome}`), r.spoken]);
+    check('…and what was streamed is the summary, with no offer in it', /Goodbye, Aya!/.test(streamed) && !/Shall we go on/.test(streamed), streamed);
+    const { r: r2, streamed: s2 } = await run(showcaseSession, 16.13, notClosing(T77));
+    check('the same reply without end_lesson in the last fifth: the page is held, as before, with the offer', !r2.state.closed && r2.state.board.pages.length === 6 && /Next is summary: talking about the past\. Shall we go on/.test(r2.spoken) && /Shall we go on/.test(s2) && !/Today you used/.test(s2), [r2.spoken, s2]);
+    const { r: r3 } = await run(showcaseSession, 10, closing(T77));
+    check('10 min left: end_lesson is refused for time, and the page is held as before', !r3.state.closed && r3.state.board.pages.length === 6 && /Shall we go on/.test(r3.spoken), [r3.toolCalls.map((c) => `${c.name} ${c.outcome}`), r3.spoken]);
+    const { r: r4 } = await run({ ...showcaseSession, timeBoxMinutes: undefined, wrapMinutes: undefined }, 16.13, closing(T77));
+    check('no box (a close is never refused for time): a held page and end_lesson in one reply: the end_lesson is refused, the session goes on, on the offer', !r4.state.closed && /Shall we go on/.test(r4.spoken) && r4.toolCalls.some((c) => c.name === 'end_lesson' && /^not ended/.test(c.outcome)), [r4.toolCalls.map((c) => `${c.name} ${c.outcome}`), r4.spoken]);
+    check('the kill switch defaults on', TUTOR_V2_CLOSE_OPENS_SUMMARY === true);
   }
 
   console.log('the stop at the box');

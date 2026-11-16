@@ -165,3 +165,43 @@ export function saidCovers(statement: string, said: string): boolean {
   const hits = words.filter((w) => heard.has(w)).length + nums.filter((n) => heardNums.has(n)).length;
   return hits >= 2 && hits >= (words.length + nums.length) * 0.5;
 }
+
+/** The longest sentence card, and the most options of a menu, that are read out: longer is for reading. */
+const SAY_SENTENCE_WORDS = 30;
+const SAY_OPTIONS = 6;
+const SAY_OPTION_WORDS = 12;
+const OPTION_LINE = /^\s*\(?(\d{1,2})[.)]\s+(\S.*)$/;
+/** Mathematics or markup is the board's to show; a voice reading LaTeX helps nobody (keep today's behaviour there). */
+const HAS_MARKUP = /\$|\\[a-zA-Z]/;
+
+/** In a spoken lesson, a sentence card or a numbered list of options the reply asks the learner to act on must also be
+ *  heard (D2, gdi-on-v2 Task 6): "Which one would you like? Just say the number." went with a menu only on the board
+ *  (james t49), and "Please say it back to me." with the sentence only on the board drew "What sentence do you want me
+ *  to say?" (upper-int t61). Given this reply's board calls and its spoken sentences, this returns the words still to
+ *  be said: the sentence as it stands, or the options as "1, …; 2, …". Null when the reply asks nothing, when the spoken
+ *  words already carry the item (most of its words were said), when the item holds mathematics, or when it is too long
+ *  to say. Problem cards are not handled here (unsaidAsk). */
+export function unsaidBoardItem(calls: ReadonlyArray<{ name: string; args: Record<string, unknown>; outcome: string }>, sentences: string[]): string | null {
+  if (!sentences.length || !asksAnywhere(sentences)) return null;
+  const shown = calls.filter((c) => !/^not /.test(c.outcome) || /^not painted again: .*scrolled back/.test(c.outcome));
+  const items = shown.map((c) => {
+    if (c.name === 'show_sentence' && typeof c.args.sentence === 'string') return { kind: 'sentence' as const, text: c.args.sentence.replace(/\s+/g, ' ').trim() };
+    if (c.name === 'annotate' && typeof c.args.text === 'string') {
+      const lines = c.args.text.split('\n').map((l) => l.trim()).filter(Boolean);
+      const opts = lines.map((l) => l.match(OPTION_LINE)).filter((m): m is RegExpMatchArray => !!m);
+      if (opts.length >= 2) return { kind: 'options' as const, text: c.args.text, options: opts.map((m) => ({ n: m[1], what: m[2].replace(/[.;,:]+$/, '').trim() })) };
+    }
+    return null;
+  }).filter((x): x is NonNullable<typeof x> => !!x);
+  const item = items[items.length - 1];
+  if (!item || HAS_MARKUP.test(item.text)) return null;
+  // Carried already: most of what the item is about was said, or (an item of small words only) all its words were.
+  const said = sentences.join(' ');
+  const want = [...about(item.text)];
+  if (want.length) { const heard = about(said); if (want.filter((w) => heard.has(w)).length / want.length >= 0.6) return null; }
+  else if (norm(said).join(' ').includes(norm(item.text).join(' '))) return null;
+  if (item.kind === 'sentence') return norm(item.text).length <= SAY_SENTENCE_WORDS ? item.text : null;
+  const opts = item.options;
+  if (opts.length > SAY_OPTIONS || opts.some((o) => norm(o.what).length > SAY_OPTION_WORDS)) return null;
+  return `${opts.map((o) => `${o.n}, ${o.what}`).join('; ')}.`;
+}

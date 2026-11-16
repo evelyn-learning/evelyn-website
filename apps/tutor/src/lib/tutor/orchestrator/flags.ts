@@ -1623,3 +1623,48 @@ export const TUTOR_V2_TIME_BOX = process.env.NEXT_PUBLIC_TUTOR_V2_TIME_BOX !== '
  *  client stopped pausing on sounds for the session. Words that are not the tutor's still pause it at once. Default ON;
  *  NEXT_PUBLIC_TUTOR_V2_BARGEIN_ENERGY_GATE=off ⇒ a sound pauses the tutor at the onset, as before. */
 export const TUTOR_V2_BARGEIN_ENERGY_GATE = process.env.NEXT_PUBLIC_TUTOR_V2_BARGEIN_ENERGY_GATE !== 'off';
+
+/** Tutor brain v2 (v2/turn.ts): a reply that itself ends the lesson (its end_lesson is accepted, in the box's last fifth)
+ *  is a closing turn, and the summary page it opens is not held for "shall we go on?". The page is held back while the
+ *  rest of the reply is written, and opened with it when the reply closes. Held, the reply was cut to "Next is summary.
+ *  Shall we go on, or do you have a question first?" while its end_lesson still ended the session: no summary, and the
+ *  last words a question (gdi-on-v2 Task 6, D1: showcase embed-1794821260705, trial embed-1794821778369). Wherever a
+ *  held page and an end_lesson still meet, the end_lesson is refused: the session never ends on an unanswered offer.
+ *  Default ON; NEXT_PUBLIC_TUTOR_V2_CLOSE_OPENS_SUMMARY=off ⇒ the page is held at once, as before. */
+export const TUTOR_V2_CLOSE_OPENS_SUMMARY = process.env.NEXT_PUBLIC_TUTOR_V2_CLOSE_OPENS_SUMMARY !== 'off';
+
+/** Tutor brain v2 (v2/board-timing.ts unsaidBoardItem): in a spoken lesson, a sentence card or a numbered list of options
+ *  that the reply asks the learner to act on, and that the spoken words do not carry, is read out after the reply (the
+ *  options as "1, …; 2, …"). In text runs the learner saw them; in voice they would have heard "Which one would you like?
+ *  Just say the number." over a menu never read (james t49) and "Please say it back to me." with the sentence unsaid
+ *  (upper-int t61, which drew "What sentence do you want me to say?"). Items with mathematics are left to the board, as
+ *  before; problem cards keep their own path (unsaidAsk). Default ON; NEXT_PUBLIC_TUTOR_V2_SPEAK_BOARD_ITEM=off ⇒ only a
+ *  problem card is asked aloud, as before. */
+export const TUTOR_V2_SPEAK_BOARD_ITEM = process.env.NEXT_PUBLIC_TUTOR_V2_SPEAK_BOARD_ITEM !== 'off';
+
+/** Tutor brain v2 (v2/working-level.ts): a level remembered from an earlier lesson on the link is confirmed with one light
+ *  question at the start ("last time we worked at <level> level: does that still feel right?"), and a "no" re-opens the
+ *  level check: the remembered level is dropped and the skipped level-check parts come back. A second person on a shared
+ *  link inherited the first one's level and went straight into the lesson (findings case 11; Task 6 shared-link run).
+ *  Default ON; NEXT_PUBLIC_TUTOR_V2_LEVEL_RECONFIRM=off ⇒ an unnamed natural question, and no re-open, as before. */
+export const TUTOR_V2_LEVEL_RECONFIRM = process.env.NEXT_PUBLIC_TUTOR_V2_LEVEL_RECONFIRM !== 'off';
+
+/** Tutor brain v2 (v2/working-level.ts): set_working_level is refused, with the reason, until the learner has answered
+ *  at least three level-check questions (an answer with content: not "yes", "no", "I'm ready" or "could you rephrase
+ *  that?"), unless they asked to skip it, the time is up, or the check's budget (V2_LEVEL_CHECK_MAX_REPLIES) has run
+ *  out. Levels were set after two questions, one of them answered "No." twice (Task 6, D7: real-t2, both trial runs).
+ *  Default ON; NEXT_PUBLIC_TUTOR_V2_LEVEL_CHECK_MIN_ANSWERS=off ⇒ the level is taken whenever it is set, as before. */
+export const TUTOR_V2_LEVEL_CHECK_MIN_ANSWERS = process.env.NEXT_PUBLIC_TUTOR_V2_LEVEL_CHECK_MIN_ANSWERS !== 'off';
+
+/** Tutor brain v2 (v2/pronunciation.ts v2TextSoundFacts): a typed language lesson's facts say nothing they say is heard
+ *  or measured, so nothing is said about how they sounded, and a pronunciation part offers the sentence or words to say
+ *  aloud on their own. Typed, the tutor said "you said it clearly … sounds natural" right after saying it cannot hear
+ *  (beginner-ja t69–t75), and a sentence pick turned into a grammar drill (upper-int t61–t69) (Task 6, D4/D8). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_TEXT_NO_SOUND=off ⇒ no such line, as before. */
+export const TUTOR_V2_TEXT_NO_SOUND = process.env.NEXT_PUBLIC_TUTOR_V2_TEXT_NO_SOUND !== 'off';
+
+/** Tutor brain v2 (v2/languages.ts v2RetryFacts): in a lesson with a second teaching language, a learner's reply that is
+ *  another try at the sentence they said just before is counted in the facts; at the second try the facts say the
+ *  correct sentence comes next and the lesson goes on. One sentence was tried four times across four different errors
+ *  (Task 6, D5: upper-int t13–t21). Default ON; NEXT_PUBLIC_TUTOR_V2_RETRY_COUNT=off ⇒ no such line. */
+export const TUTOR_V2_RETRY_COUNT = process.env.NEXT_PUBLIC_TUTOR_V2_RETRY_COUNT !== 'off';

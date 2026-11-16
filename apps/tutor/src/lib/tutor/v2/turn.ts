@@ -24,7 +24,7 @@ import { catalogueSubjects, figureCatalogueFor, tutorFigureLines } from './figur
 import { applyToModelBoard, boardMisfit, renderBoard, summariseBoardCall, taskOnly, spacedRoman, wordsAsText } from './board';
 import { BoardInlineStream, boardBlocksIn, inlineToolCall, insertBlock, stripBoardBlocks, type InlineBlock, type InlinePart } from './board-inline';
 import { speaksMaths, unwrittenEquations } from './spoken-maths';
-import { saidCovers, unsaidAsk, asksAnywhere } from './board-timing';
+import { saidCovers, unsaidAsk, unsaidBoardItem, asksAnywhere } from './board-timing';
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, V2_NO_ASK_RECHECK_S, V2_TIME_UP_MIN, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
 import { v2WrapDue } from './time-box';
@@ -39,7 +39,7 @@ import { V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2Ma
 import { V2_PRACTISE_PRONUNCIATION_TOOL, v2ApplyPractisePronunciation, v2ConsumePronunciation, v2PronunciationOn, v2PronunciationSection } from './pronunciation';
 import { v2NoteCorrectedSentence, v2SentenceCardsOn, v2SentenceCardsSection } from './sentence-cards';
 import { v2StopAsked } from './stop-signal';
-import { TUTOR_V2_STOP_SIGNAL } from '../orchestrator/flags';
+import { TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL } from '../orchestrator/flags';
 import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, V2_DISCUSSION_CONSTITUTION, directionAsked, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap } from './discussion';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, V2_NOTE_OWN_ANSWER_TOOL, V2_SET_CURRENT_PROBLEM_TOOL, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
@@ -437,6 +437,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         // Once this reply has words, the call is only the tutor handing the floor over: refusing it then made the
         // opening say itself twice (AP Physics 1, embed-1794441323503).
         : block.name === 'keep_listening' && mustSpeak && !spoken.length ? 'not done: the student is waiting for you to speak. Say the next thing now.'
+        // The reply ended on the offer of the next part: a session that ended here would end on a question nobody
+        // answers, with no summary (D1). The close comes after their answer.
+        : block.name === 'end_lesson' && heldAt && TUTOR_V2_CLOSE_OPENS_SUMMARY ? 'not ended: this reply ends by asking the student whether to go on, and they have not answered yet. Say nothing of this message. Close after their answer.'
         : applyControlTool(state, session, block.name, args, nowMs, input.studentSaid);
     } else {
       // An object written as its JSON text is the object: a tree's root arrived as a string and the board drew
@@ -510,6 +513,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const inlinePainted: Array<{ id: string; raw: string; label: string }> = [];
 
   let heldAt: { raw: string; offer: string } | null = null; let saidNow = '';
+  // A page that would be held, and what followed it, while it is not yet known whether the reply ends the lesson (D1).
+  let pendingHold: InlinePart[] | null = null; let releasing = false;
+  // The tutor may end the lesson by itself: the box's last fifth (the end_lesson rule in applyControlTool).
+  const selfCloseOpen = !discussion && !session.homework && !session.homeworkSheet && !!session.timeBoxMinutes && leftMin <= session.timeBoxMinutes * 0.2;
   const lastTutorText = (() => { const m = [...state.history].reverse().find((h) => h.role === 'assistant' && (typeof h.content === 'string' || h.content.some((c) => c.type === 'text'))); return !m ? '' : typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '); })();
   const boardHasPage = (title: string) => state.board.pages.some((pg) => pg.title.replace(/\s+/g, '').toLowerCase() === title.replace(/\s+/g, '').toLowerCase());
   let owedAsked = false;
@@ -524,18 +531,25 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       messages,
     } as unknown as Anthropic.MessageCreateParamsNonStreaming;
     const inline = new BoardInlineStream();
+    const hold = (block: InlineBlock) => {
+      const offer = /\?\s*$/.test(saidNow) ? '' : partOffer(block.body.trim(), namesPart(block.body, saidNow));
+      heldAt = { raw: block.raw, offer };
+      if (offer) { input.onText?.(`\n\n${offer}`); saidChars += offer.length + 2; }
+      input.onToolCall?.({ id: `held_${nowMs.toString(36)}`, name: 'new_page', args: { title: block.body.trim() }, outcome: 'not opened yet: the student is asked first' });
+    };
     const take = (parts: InlinePart[]) => {
       for (const part of parts) {
         if (heldAt) continue;
+        if (pendingHold) { pendingHold.push(part); continue; }
         if ('opening' in part) { input.onBoardOpen?.(); continue; }
         if ('block' in part) {
           // A new part the student has not been asked about is not opened in this reply (part-close.ts): the
           // reply ends here, with the offer in place of the page and all that followed it.
-          if (part.block.kind === 'page' && !discussion && !boardHasPage(part.block.body) && !state.closed && !closingTurn && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length })) {
-            const offer = /\?\s*$/.test(saidNow) ? '' : partOffer(part.block.body.trim(), namesPart(part.block.body, saidNow));
-            heldAt = { raw: part.block.raw, offer };
-            if (offer) { input.onText?.(`\n\n${offer}`); saidChars += offer.length + 2; }
-            input.onToolCall?.({ id: `held_${nowMs.toString(36)}`, name: 'new_page', args: { title: part.block.body.trim() }, outcome: 'not opened yet: the student is asked first' });
+          if (part.block.kind === 'page' && !discussion && !boardHasPage(part.block.body) && !state.closed && !closingTurn && !releasing && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length })) {
+            // In the box's last fifth the tutor may close by itself, and a reply that does is a closing turn: whether it
+            // does is known only when the reply is complete, so the page and what follows it wait until then (D1).
+            if (TUTOR_V2_CLOSE_OPENS_SUMMARY && selfCloseOpen) { pendingHold = [part]; continue; }
+            hold(part.block);
             continue;
           }
           if (part.block.kind === 'page' && pageTurnAt < 0) { pageTurnAt = saidChars; pageBefore = state.board.current; }
@@ -559,6 +573,14 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     };
     const response = await callModel(params, (delta) => take(inline.push(delta)), input.signal);
     take(inline.flush());
+    if (pendingHold) {
+      // The reply is complete. One that calls end_lesson (accepted: this is the last fifth) is the close, and its page opens
+      // with all that followed it; any other is held at the page, as at once before (D1).
+      const waiting: InlinePart[] = pendingHold; pendingHold = null;
+      const block = (waiting[0] as { block: InlineBlock }).block;
+      if (response.content.some((b) => b.type === 'tool_use' && b.name === 'end_lesson')) { releasing = true; try { take(waiting); } finally { releasing = false; } }
+      else hold(block);
+    }
     const held = heldAt as { raw: string; offer: string } | null;
     if (held) {
       // The history keeps what was said: the reply up to the held page, then the offer.
@@ -621,10 +643,13 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     messages = [...messages, { role: 'assistant', content: response.content as unknown as Anthropic.ContentBlockParam[] }, { role: 'user', content: results }];
   }
 
-  // A problem card put up in a spoken reply is also asked aloud (board-timing.ts unsaidAsk).
+  // A problem card put up in a spoken reply is also asked aloud (board-timing.ts unsaidAsk); so is a sentence card or a
+  // numbered menu the reply asks them to act on, when its words were not said (unsaidBoardItem, D2).
   if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && spoken.length) {
     const card = [...toolCalls].reverse().find((c) => c.name === 'show_problem' && !/^not /.test(c.outcome));
-    const more = card ? unsaidAsk(String(card.args.statement ?? ''), spoken.join(' ').split(/(?<=[.!?？])\s+/).filter(Boolean)) : null;
+    const sentencesSaid = spoken.join(' ').split(/(?<=[.!?])\s+|(?<=[？。])/).filter((x) => x.trim());
+    const more = card ? unsaidAsk(String(card.args.statement ?? ''), spoken.join(' ').split(/(?<=[.!?？])\s+/).filter(Boolean))
+      : TUTOR_V2_SPEAK_BOARD_ITEM ? unsaidBoardItem(toolCalls, sentencesSaid) : null;
     if (more) {
       input.onText?.(`\n\n${more}`);
       spoken.push(more);
