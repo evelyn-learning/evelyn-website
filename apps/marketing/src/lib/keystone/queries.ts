@@ -3,10 +3,10 @@ import { ks, type ActivityDoc, type ItemDoc, type SolutionDoc } from "./db";
 
 export type ItemRow = Pick<
   ItemDoc,
-  "itemId" | "subject" | "course" | "itemType" | "topic" | "stage" | "version" | "keySource" | "evelynAnswer" | "key" | "showcase" | "reviewNote" | "priorStatus" | "lastActivityAt" | "order"
+  "itemId" | "subject" | "course" | "itemType" | "topic" | "stage" | "version" | "keySource" | "evelynAnswer" | "key" | "showcase" | "reviewNote" | "priorStatus" | "lastActivityAt" | "order" | "player"
 >;
 
-const ROW_FIELDS = "itemId subject course itemType topic stage version keySource evelynAnswer key showcase reviewNote priorStatus lastActivityAt order";
+const ROW_FIELDS = "itemId subject course itemType topic stage version keySource evelynAnswer key showcase reviewNote priorStatus lastActivityAt order player.entry";
 
 export async function stageCounts(): Promise<Record<Stage, number>> {
   const { Item } = await ks();

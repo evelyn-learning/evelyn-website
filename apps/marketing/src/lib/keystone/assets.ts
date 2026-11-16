@@ -46,4 +46,23 @@ export const MIME: Record<string, string> = {
   gif: "image/gif",
   svg: "image/svg+xml",
   webp: "image/webp",
+  html: "text/html; charset=utf-8",
+  mp3: "audio/mpeg",
+  m4a: "audio/mp4",
+  json: "application/json",
+  js: "text/javascript",
+  css: "text/css",
 };
+
+export const PLAYER_ROUTE = "/api/keystone/player";
+
+/** Absolute path of a player file, or null if the relative path tries to leave the folder. */
+export function playerFile(itemId: string, rel: string): string | null {
+  const root = path.join(DATA_DIR, "assets", safe(itemId), "player");
+  const full = path.resolve(root, rel);
+  return full.startsWith(root + path.sep) ? full : null;
+}
+
+export function playerUrl(itemId: string, entry: string) {
+  return `${PLAYER_ROUTE}/${safe(itemId)}/${entry.split("/").map(encodeURIComponent).join("/")}`;
+}

@@ -1,7 +1,9 @@
 import JSZip from "jszip";
 import { ITEM_TYPE_LABEL, SECTION_TITLE } from "./config";
 import { ks, type ItemDoc, type SolutionDoc } from "./db";
-import { readAsset } from "./assets";
+import { readFile, readdir } from "node:fs/promises";
+import path from "node:path";
+import { DATA_DIR, readAsset } from "./assets";
 import { renderForSolaro, toXhtml, type Png } from "./solaro";
 
 // Package of approved solutions for SOLARO (Vance's import format, 2026-10-22/23):
@@ -89,7 +91,7 @@ export async function buildExport(itemIds: string[]): Promise<Uint8Array> {
   const { Item, Solution, Activity } = await ks();
   const items = await Item.find({ itemId: { $in: itemIds } }).sort({ order: 1 }).lean<ItemDoc[]>();
   const zip = new JSZip();
-  const manifest = [["item_id", "subject", "course", "item_type", "key", "evelyn_answer", "version", "approved_at", "sections", "qti_package"]];
+  const manifest = [["item_id", "subject", "course", "item_type", "key", "evelyn_answer", "version", "approved_at", "sections", "qti_package", "animated"]];
 
   for (const item of items) {
     const sol = await Solution.findOne({ itemId: item.itemId, version: item.version }).lean<SolutionDoc>();
@@ -104,6 +106,25 @@ export async function buildExport(itemIds: string[]): Promise<Uint8Array> {
     for (const f of images) {
       const data = await readAsset(item.itemId, f);
       if (data) dir.file(`resources/${f}`, data);
+    }
+    // Animated (voiced) version, self-contained: entry html + audio, relative paths.
+    let animated = "";
+    if (item.player?.entry) {
+      const root = path.join(DATA_DIR, "assets", item.itemId, "player");
+      const walk = async (rel: string): Promise<void> => {
+        for (const e of await readdir(path.join(root, rel), { withFileTypes: true })) {
+          const r = rel ? `${rel}/${e.name}` : e.name;
+          if (e.name.startsWith(".")) continue;
+          if (e.isDirectory()) await walk(r);
+          else dir.file(`animated/${r}`, await readFile(path.join(root, r)));
+        }
+      };
+      try {
+        await walk("");
+        animated = `animated/${item.player.entry}`;
+      } catch {
+        animated = "";
+      }
     }
     dir.file("solution.md", sol.sections.map((s) => `## ${SECTION_TITLE[s.kind]}\n\n${s.md}\n`).join("\n"));
 
@@ -150,6 +171,7 @@ export async function buildExport(itemIds: string[]): Promise<Uint8Array> {
           approvedAt,
           sections: sol.sections.map((s) => s.kind),
           qtiPackage: qtiName || null,
+          animated: animated || null,
         },
         null,
         2,
@@ -166,6 +188,7 @@ export async function buildExport(itemIds: string[]): Promise<Uint8Array> {
       approvedAt,
       sol.sections.map((s) => s.kind).join("/"),
       qtiName,
+      animated,
     ]);
   }
 
@@ -184,6 +207,8 @@ export async function buildExport(itemIds: string[]): Promise<Uint8Array> {
       "                  (240 px wide or less) and any images. Transparent backgrounds.",
       "  item_<id>.zip   for items that came from a SOLARO QTI export: the same QTI 2.1 package with",
       "                  our solution as modalFeedback \"solution\" (div.step > div.text), one file per question.",
+      "  animated/       (some items) the animated, voiced version: a self-contained page + audio,",
+      "                  no outside calls; it can be shown in an iframe (height in item.json).",
       "  solution.md     the source text; item.json the key, our answer, version and approval time.",
       "",
       "manifest.csv lists every item in this download.",

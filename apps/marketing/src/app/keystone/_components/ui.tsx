@@ -63,6 +63,11 @@ export function ItemsTable({
                     <b>{r.itemId}</b>
                   </Link>
                   {r.showcase && <span className="ks-chip" style={{ marginLeft: 6 }}>Showcase</span>}
+                  {r.player?.entry && (
+                    <div>
+                      <span className="ks-chip" title="Has an animated, voiced version">▶ Animated</span>
+                    </div>
+                  )}
                 </td>
                 <td>
                   {r.subject}

@@ -43,6 +43,7 @@ export function ReviewBar(props: {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (document.querySelector("dialog[open]")) return; // the player is open: keys belong to it
       if (t.tagName === "TEXTAREA" || t.tagName === "INPUT" || t.tagName === "SELECT") {
         if (e.key === "Escape") t.blur();
         return;

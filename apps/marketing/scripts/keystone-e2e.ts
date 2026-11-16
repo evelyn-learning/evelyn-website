@@ -93,6 +93,26 @@ async function main() {
   await Promise.all([page.waitForURL((u) => !u.pathname.endsWith(`/item/${ITEM}`) || u.search.length > 0), page.click(".ks-bar button:has-text('Needs changes')")]);
   console.log(`  after Needs changes → ${page.url()}`);
 
+  // 3b. Reviewer: back links, and the animated player on an item that has one.
+  const PLAYER_ITEM = process.env.KS_PLAYER_ITEM || "234035";
+  await page.goto(`${BASE}/item/${PLAYER_ITEM}`);
+  ok(await page.isVisible(".ks-crumbs a:has-text('Overview')") && (await page.isVisible(".ks-crumbs a:has-text('All items')")), "item page links back to Overview and All items");
+  if (await page.isVisible("button:has-text('Play animated solution')")) {
+    const audio: number[] = [];
+    page.on("response", (r) => r.url().includes(`/api/keystone/player/${PLAYER_ITEM}/audio/`) && audio.push(r.status()));
+    await page.click("button:has-text('Play animated solution')");
+    const frame = page.frameLocator("dialog.ks-player iframe");
+    await frame.locator("body").waitFor();
+    ok(await page.isVisible("dialog.ks-player[open]"), "player opens in a window over the review page");
+    await frame.locator("button:has-text('Play')").first().click();
+    await page.waitForTimeout(2500);
+    await shot(page, "reviewer-player");
+    ok(audio.some((st) => st === 200 || st === 206), `player audio streams (${audio.join(",")})`);
+    await page.keyboard.press("Escape");
+    ok(!(await page.isVisible("dialog.ks-player[open]")), "Esc closes the player");
+    ok((await page.locator("dialog.ks-player iframe").count()) === 0, "closing unloads the player (audio stops)");
+  } else console.log(`  (no player on ${PLAYER_ITEM}; skipped)`);
+
   // 4. Evelyn sees the request and revises.
   await signIn(page, "praveen");
   ok(await page.isVisible(`.ks-list a:has-text('${ITEM}')`), "Evelyn's 'Needs Evelyn' lists the item");

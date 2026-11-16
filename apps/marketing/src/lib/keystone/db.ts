@@ -38,6 +38,8 @@ export type ItemDoc = {
   castleRockSolutionHtml?: string;
   /** Original QTI XML (items that arrived as QTI); resource paths as used in the XML. */
   qti?: { apip: string; metadata: string; resources: string[] };
+  /** Animated (voiced) player attached to the item: files under assets/<itemId>/player/. */
+  player?: { entry: string; voice?: string; height: number; note?: string; attachedAt: Date };
   stage: Stage;
   version: number;
   showcase: boolean;
@@ -137,6 +139,10 @@ function defineModels(conn: Connection): Models {
     options: [Option],
     castleRockSolutionHtml: String,
     qti: { type: new Schema({ apip: String, metadata: String, resources: [String] }, { _id: false }), required: false },
+    player: {
+      type: new Schema({ entry: String, voice: String, height: Number, note: String, attachedAt: Date }, { _id: false }),
+      required: false,
+    },
     stage: { type: String, index: true },
     version: { type: Number, default: 0 },
     showcase: { type: Boolean, default: false },
