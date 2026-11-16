@@ -119,7 +119,13 @@ export function Feed({ rows, base, empty = "No activity yet." }: { rows: Activit
               : "asked for changes on"
             : a.type === "revision" && a.version === 1
               ? "wrote the solution for"
-              : VERB[a.type]}{" "}
+              : a.type === "stage" && a.body?.startsWith("Downloaded")
+                ? "downloaded"
+                : a.type === "stage" && a.body?.startsWith("Delivered")
+                  ? "marked as delivered to SOLARO"
+                  : a.type === "stage" && a.body
+                    ? `${a.body.replace(/\.$/, "").replace(/^Stage set to/, "set the status to").toLowerCase()} on`
+                    : VERB[a.type]}{" "}
           <Link href={`${base}/item/${a.itemId}`}>item {a.itemId}</Link>
           {a.version ? <span style={{ color: "var(--muted)" }}> (v{a.version})</span> : null}{" "}
           <span className="when">· {ago(a.createdAt)}</span>
