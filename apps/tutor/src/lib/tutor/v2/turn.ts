@@ -548,10 +548,12 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   let owedAsked = false;
   // Fix round 1 (F1): the part-change frame is the runtime's, at most twice a lesson and never at two part changes running.
   // When it is not due, a page is not held for it and a frame the model writes is dropped (reply-gate.ts).
-  const frameDue = !TUTOR_V2_PART_OFFER_ONCE || discussion || v2FrameDue(state.history);
+  // Fix round 2 (N4, minor b): spoken teaching lessons only. Typed lessons and homework stream as before 55b7b557.
   const teaching = !discussion && !session.homework && !session.homeworkSheet;
+  const gated = teaching && session.mode === 'voice';
+  const frameDue = !TUTOR_V2_PART_OFFER_ONCE || !gated || v2FrameDue(state.history);
   // F3, F4: a goodbye waits for the reply to be complete (reply-gate.ts).
-  const holdGoodbye = teaching && (TUTOR_V2_CLOSE_ONE_QUESTION || TUTOR_V2_PASSED_PART_CLOSE);
+  const holdGoodbye = gated && (TUTOR_V2_CLOSE_ONE_QUESTION || TUTOR_V2_PASSED_PART_CLOSE);
   let framesDropped = 0;
   // F5: cards said one after another under one lead-in ("Here are two sentences…" and two cards).
   let cardRun = false;
@@ -570,7 +572,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       if (firstTextMs === null && t.trim()) firstTextMs = Date.now() - t0;
       saidChars += t.length; saidNow += t;
       input.onText?.(t);
-    }, { dropFrame: TUTOR_V2_PART_OFFER_ONCE && !frameDue && !!session.plan, holdGoodbye });
+    }, { dropFrame: gated && TUTOR_V2_PART_OFFER_ONCE && !frameDue && !!session.plan, holdGoodbye });
     const hold = (block: InlineBlock) => {
       gate.flush();
       // A held summary page with plan parts not reached: the offer names them and lets the student choose (Task 6e).
@@ -592,7 +594,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           gate.flush();
           // A new part the student has not been asked about is not opened in this reply (part-close.ts): the
           // reply ends here, with the offer in place of the page and all that followed it.
-          if (part.block.kind === 'page' && !discussion && frameDue && !boardHasPage(part.block.body) && !state.closed && !closingTurn && !releasing && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length })) {
+          // Fix round 2 (N2): a page that closes the lesson is held whatever the frame budget: its offer names a part
+          // not reached ("Before the summary, there is still…").
+          if (part.block.kind === 'page' && !discussion && (frameDue || closesLesson(part.block.body)) && !boardHasPage(part.block.body) && !state.closed && !closingTurn && !releasing && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length })) {
             // In the box's last fifth the tutor may close by itself, and a reply that does is a closing turn: whether it
             // does is known only when the reply is complete, so the page and what follows it wait until then (D1).
             // Only a page that closes the lesson waits: any other is held at once and the offer streams as before
@@ -672,7 +676,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       const ended = toolCalls.slice(callsBefore).find((c) => c.name === 'end_lesson');
       if (ended && /^not /.test(ended.outcome) && TUTOR_V2_CLOSE_ONE_QUESTION) gate.dropHeld();
       else {
-        const line = TUTOR_V2_PASSED_PART_CLOSE ? v2NextTimeLine(session.plan, state, `${saidNow} ${gate.held}`) : null;
+        // Fix round 2 (N1): only a goodbye that closes the lesson (a close accepted now, or a closing turn) gets the line.
+        const closing = closingTurn || (!!ended && !/^not /.test(ended.outcome));
+        const line = TUTOR_V2_PASSED_PART_CLOSE && closing ? v2NextTimeLine(session.plan, state, `${saidNow} ${gate.held}`) : null;
         const firstHeld = gate.held.split(/(?<=[.!?。！？])\s+/)[0] ?? '';
         if (line && firstHeld) for (const b of response.content) if (b.type === 'text' && b.text.includes(firstHeld)) { b.text = b.text.replace(firstHeld, `${line} ${firstHeld}`); break; }
         gate.releaseHeld(line ?? undefined);
@@ -686,6 +692,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       for (const block of response.content) if (block.type === 'text') { const words = wordsOf(block.text); if (words) { spoken.push(words); rawSpoken.push(block.text.trim()); } }
     }
 
+    // Fix round 2 (N3): a text block emptied by a removal is dropped: sent back to the model with the next call
+    // ([text "", tool_use end_lesson] after a refused close), the API refuses it.
+    if (gate.removed.length) response.content = response.content.filter((b) => b.type !== 'text' || !!b.text.trim());
     const keep = storable(response.content);
     if (keep.length) stored.push({ role: 'assistant', content: keep });
     // Every stored tool call is followed by its result, whatever the stop reason was

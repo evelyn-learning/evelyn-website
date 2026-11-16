@@ -83,16 +83,25 @@ export function partOffer(title: string, named: boolean, askQuestion: boolean = 
 
 /** The most part-change frames a lesson hears (Task 6e fix round 1, F1). */
 export const V2_MAX_PART_FRAMES = 2;
-const hasFrame = (text: string) => stripBoardBlocks(text).split(/(?<=[.!?。！？])\s+/).some((x) => V2_PART_FRAME.test(x.trim()) || QUESTION_CHECK.test(x));
+/** A frame sentence: asking whether to go on, alone or with "or do you have a question first?" ("any questions so far?"
+ *  in the middle of a part is a check-in, not a frame: fix round 2, minor a). */
+const hasFrame = (text: string) => stripBoardBlocks(text).split(/(?<=[.!?。！？])\s+/).some((x) => V2_PART_FRAME.test(x.trim()));
+const PAGE_BLOCK = /<board\s+page\b/;
 /** Whether this lesson may ask at a part change whether to go on (and whether they have a question first): fewer than
- *  V2_MAX_PART_FRAMES asked so far, and none at the last part change (one of the tutor's replies from the one before the
- *  current part's page block on). The frame came at every part change, by the model as often as by the runtime: tester
- *  B heard it five times, Josh at two changes running (v2audio-6e finding C). */
+ *  V2_MAX_PART_FRAMES asked so far, and none at the last part change. The frame came at every part change, by the model
+ *  as often as by the runtime: tester B heard it five times, Josh at two changes running (v2audio-6e finding C).
+ *  Only frames said at a part change count (fix round 2, minor a): a reply with a frame whose next reply opens a page
+ *  that is not the lesson's first ("Shall we start?" before the first page is the opening), or the latest reply, whose
+ *  change is happening now. */
 export function v2FrameDue(history: V2State['history']): boolean {
   const replies = history.filter((h) => h.role === 'assistant').map(replyText).filter((x) => x.trim());
-  if (replies.filter(hasFrame).length >= V2_MAX_PART_FRAMES) return false;
+  const n = replies.length;
+  const firstPage = replies.findIndex((r) => PAGE_BLOCK.test(r));
+  const atChange = (i: number) => i >= 0 && i < n && hasFrame(replies[i]!) && (i === n - 1 || (PAGE_BLOCK.test(replies[i + 1]!) && i + 1 !== firstPage));
+  let count = 0;
+  for (let i = 0; i < n; i++) if (atChange(i)) count += 1;
+  if (count >= V2_MAX_PART_FRAMES) return false;
   let page = -1;
-  for (let i = replies.length - 1; i >= 0; i--) if (/<board\s+page\b/.test(replies[i]!)) { page = i; break; }
-  if (page < 0) return true;
-  return !replies.slice(Math.max(0, page - 1)).some(hasFrame);
+  for (let i = n - 1; i >= 0; i--) if (PAGE_BLOCK.test(replies[i]!)) { page = i; break; }
+  return !atChange(n - 1) && !(page > 0 && page !== firstPage && atChange(page - 1));
 }

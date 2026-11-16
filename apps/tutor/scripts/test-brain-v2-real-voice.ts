@@ -121,6 +121,7 @@ async function main() {
 
     // Fix round 1 (F1): the frame is the runtime's, at most twice a lesson, never at two part changes running.
     const frameAt = (offer: string): V2State['history'] => [
+      { role: 'user', content: '[The session has just started.]' }, { role: 'assistant', content: '<board page>Lesson overview</board> Hello, today we talk about work.' },
       { role: 'user', content: 'I am ready.' }, { role: 'assistant', content: offer },
       { role: 'user', content: 'Yes.' }, { role: 'assistant', content: '<board page>Present perfect</board> We use it for experience. How long have you worked there?' },
       { role: 'user', content: 'I have worked here ten years.' }, { role: 'assistant', content: 'Nearly: we say "for ten years". Say it once more?' },
@@ -129,7 +130,7 @@ async function main() {
     const withShort = frameAt('Good. Next is present perfect. Shall we go on?');
     const withNone = frameAt('Good. That part is done. Next is present perfect, for experience up to now.');
     check('the last part change asked it (full or short frame): not due; none asked: due', !v2FrameDue(withQ) && !v2FrameDue(withShort) && v2FrameDue(withNone) && v2FrameDue([]) && v2QuestionCheckRecent(withQ));
-    const twice: V2State['history'] = [{ role: 'assistant', content: 'Shall we go on, or do you have a question first?' }, { role: 'user', content: 'Yes.' }, { role: 'assistant', content: '<board page>A</board> Next is B. Are you ready for that, or do you have a question first?' }, { role: 'user', content: 'Yes.' }, { role: 'assistant', content: '<board page>B</board> Good.' }, { role: 'user', content: 'ok' }, { role: 'assistant', content: '<board page>C</board> Good.' }];
+    const twice: V2State['history'] = [{ role: 'assistant', content: '<board page>Start</board> Hello.' }, { role: 'user', content: 'hi' }, { role: 'assistant', content: 'Next is A. Shall we go on, or do you have a question first?' }, { role: 'user', content: 'Yes.' }, { role: 'assistant', content: '<board page>A</board> Next is B. Are you ready for that, or do you have a question first?' }, { role: 'user', content: 'Yes.' }, { role: 'assistant', content: '<board page>B</board> Good.' }, { role: 'user', content: 'ok' }, { role: 'assistant', content: '<board page>C</board> Good.' }];
     check(`at most ${V2_MAX_PART_FRAMES} a lesson: after two, not due even with changes between`, !v2FrameDue(twice));
     check('the offer, when due, is the whole frame', partOffer('Past simple', false) === 'Next is past simple. Shall we go on, or do you have a question first?');
     const reply = 'Yes, that is right: for ten years. This part is done. Next is the past simple. Shall we go on, or do you have a question first? <board page>Past simple</board> We use it for finished events.';
@@ -314,6 +315,54 @@ async function main() {
     const o4: string[] = []; const g4 = new ReplyGate((t) => o4.push(t), { dropFrame: false, holdGoodbye: false });
     g4.push('Next part. 次は過去形です。いいですか？ '); g4.flush();
     check('Japanese sentences pass through whole; a part-change frame is kept when not told to drop', o4.join('') === 'Next part. 次は過去形です。いいですか？ ' && new ReplyGate(() => {}, { dropFrame: false, holdGoodbye: false }).removed.length === 0, o4.join(''));
+  }
+
+
+  console.log('fix round 2');
+  {
+    // Minor a: only frames said at a part change count toward the budget.
+    const opener: V2State['history'] = [{ role: 'assistant', content: 'Hello! Today: forces. Shall we start?' }, { role: 'user', content: 'Yes.' }, { role: 'assistant', content: '<board page>Forces</board> A push or a pull. Any questions so far?' }, { role: 'user', content: 'No.' }, { role: 'assistant', content: 'Good. Is a magnet a push or a pull? Any questions so far?' }, { role: 'user', content: 'A pull.' }, { role: 'assistant', content: 'Right.' }];
+    check('minor a: "Shall we start?" before the first page and mid-part "any questions so far?" spend none of the budget', v2FrameDue(opener));
+    // N1: farewells only, and not quoted ones; the line only on a goodbye that closes the lesson.
+    const g = new ReplyGate(() => {}, { dropFrame: false, holdGoodbye: true });
+    g.push('Take care with the sign here. Have a nice weekend is a friendly phrase. We say "Goodbye!" at the end of a call. See you then. '); g.flush();
+    check('N1: "take care", "have a nice weekend", "see you then" and a quoted "Goodbye!" are not held', !g.holdsGoodbye);
+    const mid = 'Goodbye for now is a fine way to end an email. Can you write one for your manager?';
+    const heardMid: string[] = [];
+    const rm = await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(['Lesson overview', 'Level check', 'Your job'], { workingLevel: { level: 'beginner', from: 'this_lesson' } } as Partial<V2State>), studentSaid: 'How do I end an email?', callModel: streaming(mid).call, onText: (d) => heardMid.push(d), boardPass: false, mathsCheck: false, nowMs: 6 * 60000 });
+    check('N1: a goodbye-like sentence mid-lesson, with no close: said whole, no next-time line', heardMid.join('').trim() === mid && !/next time/.test(rm.spoken), heardMid.join(''));
+    // N2: the closing page is held and names the part not reached even with the frame budget spent.
+    const B = ['Lesson overview', 'Level check', 'Your job', 'Present perfect', 'Past simple', 'Conversation'];
+    const spent: V2State['history'] = [
+      { role: 'user', content: '[The session has just started.]' }, { role: 'assistant', content: '<board page>Lesson overview</board> Hello, today we talk about work.' },
+      { role: 'user', content: 'I am ready.' }, { role: 'assistant', content: 'Good. Next is present perfect. Shall we go on, or do you have a question first?' },
+      { role: 'user', content: 'Yes.' }, { role: 'assistant', content: '<board page>Present perfect</board> We use it for experience. How long have you worked there?' },
+      { role: 'user', content: 'I have worked here ten years.' }, { role: 'assistant', content: 'Nearly: we say "for ten years". Say it once more?' },
+    ];
+    check('(setup: the frame is not due)', !v2FrameDue(spent));
+    const rs = await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(B, { history: spent, goals: { 'open-conversation': { status: 'shown', at: 0 } } }), studentSaid: 'My responsibility is contact for our clients.', callModel: streaming('Thank you. Let\'s finish with a quick summary. <board page>Summary</board> Great work today!').call, boardPass: false, mathsCheck: false, nowMs: 14 * 60000 });
+    check('N2: the summary page is held and its offer names pronunciation, frame budget or not', /Before the summary, there is still the pronunciation part\. Would you like to do it now, or go straight to the summary\?$/.test(rs.spoken) && !rs.state.board.pages.some((pg) => pg.title === 'Summary'), rs.spoken);
+    // N3: [text "See you next time!", tool_use end_lesson] refused: the next call gets no blank text block.
+    const seen: Anthropic.MessageCreateParamsNonStreaming[] = [];
+    const n3: V2ModelCall = async (params, onText) => {
+      seen.push(structuredClone(params));
+      if (seen.length === 1) { onText?.('See you next time!'); return msg([{ type: 'text', text: 'See you next time!' }, { type: 'tool_use', id: 'e1', name: 'end_lesson', input: { because: 'time_nearly_used', summary: 'x' } }], 'tool_use'); }
+      onText?.('What would you like now: more practice, or a question of your own?'); return msg([{ type: 'text', text: 'What would you like now: more practice, or a question of your own?' }], 'end_turn');
+    };
+    const r3 = await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(['Lesson overview', 'Summary']), studentSaid: 'Thank you.', callModel: n3, boardPass: false, mathsCheck: false, nowMs: 8 * 60000 });
+    const blank = (ms: Anthropic.MessageParam[]) => ms.some((m) => Array.isArray(m.content) && (m.content as Array<{ type: string; text?: string }>).some((c) => c.type === 'text' && !(c.text ?? '').trim()));
+    check('N3: the refused close\'s whole text block was the goodbye: the second call carries no blank text block, nor does the stored reply', seen.length === 2 && !blank(seen[1]!.messages) && !blank(r3.state.history) && !/See you next time/.test(JSON.stringify(seen[1]!.messages)), JSON.stringify(seen[1]?.messages.slice(-2)).slice(0, 600));
+    // N4: with nothing to drop or hold, the stream is the stream.
+    const pieces = ['Good, th', 'at is right. Now', ' the past simple: wh', 'at did you do yesterday?'];
+    const o: string[] = []; const pass = new ReplyGate((t) => o.push(t), { dropFrame: false, holdGoodbye: false });
+    for (const x of pieces) pass.push(x); pass.flush();
+    check('N4: the gate with its work off passes each chunk through as it came', JSON.stringify(o) === JSON.stringify(pieces), o);
+    const typed = 'Good, that is right. Next is the past simple. Shall we go on, or do you have a question first? See you next time maybe.';
+    const chunks: string[] = []; const sent = typed.match(/[\s\S]{1,17}/g) ?? [];
+    await runV2Turn({ session: { ...lang, mode: 'text', plan: GDI }, state: pagesAt(['Lesson overview', 'Present perfect'], { history: spent }), studentSaid: 'I have worked here.', callModel: streaming(typed).call, onText: (d) => chunks.push(d), boardPass: false, mathsCheck: false, nowMs: 8 * 60000 });
+    check('N4: a typed lesson streams exactly the model\'s chunks, nothing dropped or held', JSON.stringify(chunks) === JSON.stringify(sent), chunks);
+    const turnSrc = src('src/lib/tutor/v2/turn.ts');
+    check('N4 / minor b: the gate works only in spoken teaching lessons (no homework, no discussion, no typed lesson)', /const teaching = !discussion && !session\.homework && !session\.homeworkSheet;\n\s+const gated = teaching && session\.mode === 'voice';/.test(turnSrc) && /dropFrame: gated && /.test(turnSrc) && /const holdGoodbye = gated && /.test(turnSrc));
   }
 
   console.log(`\n${passed} passed, ${failed} failed`);

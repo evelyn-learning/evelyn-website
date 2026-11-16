@@ -18,7 +18,11 @@
 /** The part-change frame: asking whether to go on, alone or with the question check. Matched on a whole sentence. */
 export const V2_PART_FRAME = /^(?:(?:so|okay|ok|now|then|great|good|alright|all right)[,!.]?\s+)*(?:shall we (?:go on|move on|continue|start)|are you ready (?:for (?:that|it|the next part|this)|to (?:go on|move on|start))|ready to (?:go on|move on))\b[^.?!]*\?["'”’]*$|^[^.?!]*\bor do you have (?:a|any) questions? (?:first|before we (?:go on|move on|start))\?["'”’]*$/i;
 /** A goodbye: the words that end the lesson for the student. */
-export const V2_GOODBYE = /\b(?:see you (?:next time|soon|again|then)|goodbye|good-bye|bye for now|bye[,!.]|have a (?:good|great|nice|lovely) (?:day|evening|night|weekend|week)|take care)\b|お疲れ(?:様|さま)でした|またお会いしましょう|また次回/i;
+/** Fix round 2 (N1): farewells only. "take care", "have a nice weekend", "see you then" and "bye," are also lesson
+ *  phrases and lesson talk ("Take care with the sign…"), and holding on them held the rest of a mid-lesson reply. */
+export const V2_GOODBYE = /\b(?:see you (?:next time|soon|again)|goodbye|good-bye|bye for now)\b|お疲れ(?:様|さま)でした|またお会いしましょう|また次回お会い/i;
+/** Quoted words are a phrase being taught ("We say 'Goodbye!'"), not the tutor's own goodbye. */
+const QUOTED_SPANS = /"[^"]*"|“[^”]*”|「[^」]*」|『[^』]*』|‘[^’]*’/g;
 
 const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean).join(' ');
 
@@ -62,7 +66,15 @@ export class ReplyGate {
 
   constructor(private readonly out: (text: string) => void, private readonly opts: ReplyGateOptions) {}
 
-  push(text: string): void { this.buf += text; this.drain(false); }
+  /** Nothing to drop or hold: words go out as they come, cut nowhere (fix round 2, N4: with the gate's work off, the
+   *  stream is the stream as before it existed). A card waiting for the next sentence still holds them until then. */
+  private get passThrough(): boolean { return !this.opts.dropFrame && !this.opts.holdGoodbye && this.card === null; }
+
+  push(text: string): void {
+    if (this.passThrough && !this.buf) { this.emit(text); return; }
+    this.buf += text; this.drain(false);
+    if (this.passThrough && this.buf) { const rest = this.buf; this.buf = ''; this.emit(rest); }
+  }
 
   /** A board block or the end of a model call: the words so far go out (a goodbye stays held). */
   flush(): void { this.drain(true); this.releaseCard(); }
@@ -109,7 +121,7 @@ export class ReplyGate {
       if (c && n.includes(c)) this.card = null; else this.releaseCard();
     }
     if (this.opts.dropFrame && !this.holding && V2_PART_FRAME.test(core)) { this.removed.push(core); return; }
-    if (this.holding || (this.opts.holdGoodbye && V2_GOODBYE.test(core))) { this.holding = true; this.heldParts.push(s); return; }
+    if (this.holding || (this.opts.holdGoodbye && V2_GOODBYE.test(core.replace(QUOTED_SPANS, ' ')))) { this.holding = true; this.heldParts.push(s); return; }
     this.emit(s);
   }
 
