@@ -10,9 +10,11 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
+import type Anthropic from '@anthropic-ai/sdk';
 import { renderFacts } from '../src/lib/tutor/v2/facts';
+import { runV2Turn, type V2ModelCall } from '../src/lib/tutor/v2/turn';
 import { V2_HARD_STOP_TAIL_MAX_MS, v2HardStop, v2PartDueFact, v2PartDueNow, v2WrapDue, type V2HardStopSteps } from '../src/lib/tutor/v2/time-box';
-import { newV2State, type V2Session } from '../src/lib/tutor/v2/types';
+import { newV2State, type V2Session, type V2State } from '../src/lib/tutor/v2/types';
 import { V2_CONSTITUTION } from '../src/lib/tutor/v2/constitution';
 import { DISCUSSION_PLAN_KIND } from '../src/lib/tutor/v2/discussion';
 import { poolTimeBox } from '../src/lib/tutor/portal/partner-pool';
@@ -89,6 +91,23 @@ async function main() {
     check('a discussion: no part line', v2PartDueFact(disc, at(10).state, at(10).nowMs) === null);
     check('a topic lesson with no plan: no part line', v2PartDueFact({ ...lesson, plan: undefined }, at(10).state, at(10).nowMs) === null);
     check('the wrap needs a box', !v2WrapDue({ wrapMinutes: 18 }, 19));
+  }
+
+  console.log('the wrap minute is a closing turn: the summary page is not held');
+  {
+    const usage = { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } as Anthropic.Usage;
+    const reply = (text: string): V2ModelCall => { let n = 0; return async (_params, onText) => { n += 1; const t = n === 1 ? text : ''; if (t) onText?.(t); return { id: 'm', type: 'message', role: 'assistant', model: 'x', content: [{ type: 'text', text: t }], stop_reason: 'end_turn', stop_sequence: null, usage } as unknown as Anthropic.Message; }; };
+    // Two pages open, mid-lesson: the part-close hold applies to any new page (pagesOpen >= 2).
+    const twoPages = (): V2State => ({ ...newV2State(0), board: { pages: [{ title: 'Warm-up', items: [] }, { title: 'Present perfect', items: [] }], current: 1 }, history: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'Good. Have you ever worked abroad?' }] });
+    const SUMMARY = 'Thank you, that was clear. <board page>Summary</board> Today you used the past simple and the present perfect.';
+    const turn = (session: V2Session, leftMin: number, text = SUMMARY) => runV2Turn({ session, state: twoPages(), studentSaid: 'Yes, please.', callModel: reply(text), boardPass: false, mathsCheck: false, nowMs: (20 - leftMin) * MIN });
+    const opened = (r: Awaited<ReturnType<typeof turn>>) => r.state.board.pages[2]?.title === 'Summary' && !r.toolCalls.some((c) => /not opened yet/.test(c.outcome)) && !/Shall we go on/.test(r.spoken);
+    const r18 = await turn(lesson, 1.8);
+    check('1.8 min left on a timed link (past the wrap minute): "Yes, please." opens the summary page, without the offer', opened(r18), [r18.toolCalls.map((c) => `${c.name} ${c.outcome}`), r18.spoken]);
+    const r5 = await turn(lesson, 5, 'Good, that is right. <board page>Past simple</board> Now, what did you do last week?');
+    check('5 min left: a new part\'s page is still held, with the offer in its place', r5.state.board.pages.length === 2 && !r5.toolCalls.some((c) => c.name === 'new_page') && /Next is past simple\. Shall we go on/.test(r5.spoken), [r5.toolCalls.map((c) => c.outcome), r5.spoken]);
+    const rNo = await turn({ ...lesson, wrapMinutes: undefined }, 1.8);
+    check('no wrap minute from the host: 1.8 min left is not a closing turn, the page is held as before', !opened(rNo), rNo.spoken);
   }
 
   console.log('the stop at the box');

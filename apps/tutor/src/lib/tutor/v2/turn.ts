@@ -27,6 +27,7 @@ import { speaksMaths, unwrittenEquations } from './spoken-maths';
 import { saidCovers, unsaidAsk, asksAnywhere } from './board-timing';
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, V2_NO_ASK_RECHECK_S, V2_TIME_UP_MIN, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
+import { v2WrapDue } from './time-box';
 import { planGoalIds, renderPlanMap } from './plan-map';
 import { stripToolTalk } from './tool-talk';
 import { gradeOfLevel } from './session-kind';
@@ -314,9 +315,11 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // say it). A page it opens is the summary's, and is never held for "shall we go on?" (part-close.ts): held, "Sorry, I
   // have to finish now." in a two-page lesson got "Next is summary. Shall we go on?" and the summary, its sentence cards,
   // the goodbye and end_lesson were all dropped (review 4c N1). Not the last fifth of the box: that would bring back the
-  // abrupt page flip for every timed lesson's closing minutes (review 4c N2).
+  // abrupt page flip for every timed lesson's closing minutes (review 4c N2). Past the host's wrap minute too: the facts
+  // then say "finish this exchange, then summary" (time-box.ts), and a summary page held for "shall we go on?" would
+  // spend one of the last two minutes on the offer.
   const leftMin = session.timeBoxMinutes ? session.timeBoxMinutes - (nowMs - state.startedAtMs) / 60000 : Infinity;
-  const closingTurn = (TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid)) || leftMin <= V2_TIME_UP_MIN;
+  const closingTurn = (TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid)) || leftMin <= V2_TIME_UP_MIN || v2WrapDue(session, (nowMs - state.startedAtMs) / 60000);
   // A score is said once, in this turn's facts; the reply that answered it uses the arm up (pronunciation.ts).
   v2ConsumePronunciation(session, state, input.studentSaid);
   // "Your last reply brought in a complication" is said once, in this turn's facts; a new one sets it again.
