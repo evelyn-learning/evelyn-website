@@ -17,7 +17,8 @@ import { v2ProfileCommit } from '../src/lib/tutor/v2/memory';
 import { V2_CONTROL_TOOL_NAMES } from '../src/lib/tutor/v2/tool-names';
 import { runV2Turn, v2SessionPart, type V2ModelCall } from '../src/lib/tutor/v2/turn';
 import { newV2State, type V2Session, type V2State } from '../src/lib/tutor/v2/types';
-import { V2_LEVEL_CHECK_MAX_REPLIES, v2LevelEstimateDue, v2ReadWorkingLevel, v2SeedWorkingLevel, v2WorkingLevelCommit, v2WorkingLevelSection } from '../src/lib/tutor/v2/working-level';
+import { V2_LEVEL_CHECK_MAX_REPLIES, v2AnswerHasContent, v2DeclinesLevel, v2LevelEstimateDue, v2LevelSetTooEarly, v2ReadWorkingLevel, v2SeedWorkingLevel, v2WorkingLevelCommit, v2WorkingLevelFacts, v2WorkingLevelSection } from '../src/lib/tutor/v2/working-level';
+import { TUTOR_V2_LEVEL_CHECK_MIN_ANSWERS, TUTOR_V2_LEVEL_RECONFIRM } from '../src/lib/tutor/orchestrator/flags';
 import { streamV2Turn } from '../src/lib/tutor/v2/client';
 
 let passed = 0; let failed = 0;
@@ -85,8 +86,9 @@ async function main() {
 
   console.log('the tool');
   {
+    // Two answers given before, the third now: the check's three questions are answered (D7).
     const s = stub([setLevel('beginner'), words('Tell me more.')]);
-    const r = await runV2Turn({ session: checked, state: newV2State(), studentSaid: 'I am... work... bank.', callModel: s.call, boardPass: false, mathsCheck: false });
+    const r = await runV2Turn({ session: checked, state: replied(newV2State(), 2), studentSaid: 'I am... work... bank.', callModel: s.call, boardPass: false, mathsCheck: false });
     check('a first set holds the level, from this lesson', r.state.workingLevel?.level === 'beginner' && r.state.workingLevel?.from === 'this_lesson', r.state.workingLevel);
     check('the result tells the tutor not to announce it', /Do not tell the learner which level/.test(r.toolCalls[0]?.outcome ?? ''), r.toolCalls[0]?.outcome);
     const s2 = stub([setLevel('advanced', 't2'), words('Go on.')]);
@@ -115,12 +117,60 @@ async function main() {
   check('set this lesson: the level is in the facts, and is not checked again', /working level: intermediate/.test(set) && /not check it again/.test(set) && !/not known/.test(set), set);
   check('every turn: the level is in the facts later in the lesson too', /working level: intermediate/.test(factsOf(checked, replied(withLevel({ level: 'intermediate', from: 'this_lesson' }), 6), 'I went to Osaka.')));
   const rememberedOpen = factsOf(checked, withLevel({ level: 'advanced', from: 'earlier_lesson' }));
-  check('remembered, at the opening: one natural question re-confirms it, no test and no level named (case 11)', /working level: advanced, remembered from an earlier lesson/.test(rememberedOpen) && /one natural question/.test(rememberedOpen) && /not a test/.test(rememberedOpen) && /name no level/.test(rememberedOpen), rememberedOpen);
+  check('remembered, at the opening: one light question confirms it, naming the level once (case 11, D6)', /working level: advanced, remembered from an earlier lesson/.test(rememberedOpen) && /one light question to confirm it/.test(rememberedOpen) && rememberedOpen.includes('"Last time we worked at advanced level. Does that still feel right?"') && /Not a test/.test(rememberedOpen), rememberedOpen);
+  const offOpen = v2WorkingLevelFacts(checked, withLevel({ level: 'advanced', from: 'earlier_lesson' }), null, { reconfirm: false }).join('\n');
+  check('kill switch off: one natural question, no level named, as before', /one natural question/.test(offOpen) && /name no level/.test(offOpen) && !/Last time we worked/.test(offOpen), offOpen);
   check('remembered: the parts marked to skip are skipped', /skipped/.test(rememberedOpen));
   const rememberedFirst = factsOf(checked, replied(withLevel({ level: 'advanced', from: 'earlier_lesson' }), 0), 'Hello. I... am fine. Sorry, English is difficult.');
   check('remembered, on their first reply: that reply is the check, and another level is set with the tool', /their reply just now/i.test(rememberedFirst) && /set_working_level/.test(rememberedFirst), rememberedFirst);
   const rememberedLater = factsOf(checked, replied(withLevel({ level: 'advanced', from: 'earlier_lesson' }), 3), 'Yes.');
   check('remembered, later: the level alone, no more re-checking', /working level: advanced/.test(rememberedLater) && !/one natural question|their reply just now/i.test(rememberedLater), rememberedLater);
+
+  console.log('a "no" to the light confirm re-opens the level check (D6)');
+  {
+    check('the kill switches default on', TUTOR_V2_LEVEL_RECONFIRM === true && TUTOR_V2_LEVEL_CHECK_MIN_ANSWERS === true);
+    for (const no of ['No.', 'No, not really.', 'Hmm, not really.', 'Not sure.', 'I\'m not sure.', 'It\'s a bit too difficult.', 'Too hard for me.', 'いいえ', 'ちょっと難しいです', 'わかりません']) check(`a no: "${no}"`, v2DeclinesLevel(no));
+    for (const yes of ['Yes.', 'Yes, it feels right.', 'No problem, that is fine.', 'I think so.', 'Sure, let\'s go.', 'はい、大丈夫です', 'I have no idea about grammar but yes.', '[The student has not replied.]']) check(`not a no: "${yes}"`, !v2DeclinesLevel(yes));
+    // The shared-link run: b1's id, a new learner. The opening asked the light question; they answer "No".
+    const opened = { ...withLevel({ level: 'intermediate', from: 'earlier_lesson' }), history: [{ role: 'user' as const, content: [{ type: 'text' as const, text: '[The session has just started.]' }] }, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'Hello, I\'m Ryota. Last time we worked at intermediate level. Does that still feel right?' }] }], goals: { 'level-check': { status: 'skipped' as const, why: 'working level known from an earlier lesson', at: 1000 } } };
+    const s = stub([words('Thank you. Then let me ask you three short questions. What is your job?')]);
+    const r = await runV2Turn({ session: checked, state: opened, studentSaid: 'No, not really. It was too difficult.', callModel: s.call, boardPass: false, mathsCheck: false, nowMs: 61000 });
+    const facts = JSON.stringify(s.seen[0].messages.at(-1));
+    check('the remembered level is set aside and the level-check part comes back', !r.state.workingLevel && !r.state.goals['level-check'], [r.state.workingLevel, r.state.goals]);
+    check('the facts of that turn say so and ask for the three questions', /did not fit them/.test(facts) && /level check is open again/.test(facts) && /not known yet. Find it with three/.test(facts) && !/level-check=skipped/.test(facts), facts.slice(0, 900));
+    const s2 = stub([words('Great, let\'s begin.')]);
+    const r2 = await runV2Turn({ session: checked, state: opened, studentSaid: 'Yes, that feels right.', callModel: s2.call, boardPass: false, mathsCheck: false, nowMs: 61000 });
+    check('a yes keeps the remembered level and the skip', r2.state.workingLevel?.level === 'intermediate' && r2.state.goals['level-check']?.status === 'skipped' && /answers whether that level still feels right/.test(JSON.stringify(s2.seen[0].messages.at(-1))));
+    const later = { ...replied(withLevel({ level: 'intermediate', from: 'earlier_lesson' }), 2), goals: opened.goals };
+    const s3 = stub([words('Good.')]);
+    const r3 = await runV2Turn({ session: checked, state: later, studentSaid: 'No.', callModel: s3.call, boardPass: false, mathsCheck: false, nowMs: 61000 });
+    check('a "no" later in the lesson (to some other question) re-opens nothing', r3.state.workingLevel?.level === 'intermediate');
+    const r4 = await runV2Turn({ session: checked, state: opened, studentSaid: 'No.', callModel: stub([words('Hi.')]).call, boardPass: false, mathsCheck: false, nowMs: 61000 });
+    check('…and a "no" re-opens only in a session with the level check, from a remembered level', !r4.state.workingLevel);
+    const r5 = await runV2Turn({ session: base, state: opened, studentSaid: 'No.', callModel: stub([words('Hi.')]).call, boardPass: false, mathsCheck: false, nowMs: 61000 });
+    check('without the option nothing changes', r5.state.workingLevel?.level === 'intermediate');
+  }
+
+  console.log('the level waits for three answers (D7)');
+  {
+    for (const none of ['Yes.', 'No.', 'Yes, I\'m ready.', 'Yes, thank you. That sounds good.', 'Yes, that sounds good. Thank you for the lesson today.', 'Please, could you please rephrase that, please?', 'Uh, sorry. I don\'t understand.', 'No, I haven\'t.', 'Oh, yes.', 'はい', '[The student has not replied.]']) check(`no answer in it: "${none}"`, !v2AnswerHasContent(none));
+    for (const some of ['I work as admin at the company. Could you explain that in Japanese?', 'I\'m checking emails and sorting out some paperwork.', 'Make car.', 'I\'m engineer.', 'Yes, I went swimming.', '仕事で、メールとミーティングで英語を使います']) check(`an answer: "${some}"`, v2AnswerHasContent(some));
+    // real-t2: the job, the tasks, then "No." twice to two questions: the level was set there (Task 6, D7).
+    const t2 = (said: string[]): V2State => ({ ...newV2State(0), history: said.flatMap((x) => [{ role: 'user' as const, content: [{ type: 'text' as const, text: x }] }, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'Thank you. Next question?' }] }]) });
+    const before = t2(['[The session has just started.]', 'Yes, thank you. That sounds good.', 'Yes, I\'m ready.', 'Please, could you please rephrase that, please?', 'I work as admin at the company. Could you explain that in Japanese?', 'I\'m checking emails and sorting out some paperwork.', 'No.']);
+    const early = v2LevelSetTooEarly(before, 'No.');
+    check('real-t2 after two "No."s: refused, with the count and what to do', !!early && /answered 2 of the level check's 3 questions/.test(early) && /Ask your next level-check question/.test(early), early);
+    const s = stub([setLevel('beginner'), words('Have you ever written an email in English?')]);
+    const r = await runV2Turn({ session: checked, state: before, studentSaid: 'No.', callModel: s.call, boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
+    check('…in the turn: no level held, the result says why, and the tutor asks on', !r.state.workingLevel && /^not set: they have answered 2/.test(r.toolCalls.find((c) => c.name === 'set_working_level')?.outcome ?? ''), r.toolCalls.map((c) => c.outcome));
+    check('a third answer lets it through', v2LevelSetTooEarly(before, 'I write emails to customers in Japan.') === null);
+    check('they asked to skip the check: it goes through', v2LevelSetTooEarly(t2(['Yes.', 'Can we skip the questions and start?']), null) === null);
+    check('the time is up: it goes through', v2LevelSetTooEarly(t2(['Yes.']), 'No.', { timeUp: true }) === null);
+    check('past the check\'s reply budget with no answer of content: still held (real-t2 was past it at this very call)', v2LevelSetTooEarly(t2(Array.from({ length: V2_LEVEL_CHECK_MAX_REPLIES }, () => 'No.')), 'No.') !== null);
+    check('…and once answers with content come later in the lesson, it goes through', v2LevelSetTooEarly(t2([...Array.from({ length: V2_LEVEL_CHECK_MAX_REPLIES }, () => 'No.'), 'I sell car parts.', 'I visit customers.']), 'I write reports.') === null);
+    check('a remembered level\'s revision is not held', v2LevelSetTooEarly(withLevel({ level: 'advanced', from: 'earlier_lesson' }), 'Hello... I... sorry.') === null);
+    check('the kill switch off: never held', v2LevelSetTooEarly(t2(['Yes.']), 'No.', { enabled: false }) === null);
+  }
 
   console.log('the check is one phase: over without a level, the facts stop inviting it (review I1)');
   const OVER = /level check is over: do not check it again/;

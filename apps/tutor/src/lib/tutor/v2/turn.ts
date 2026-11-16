@@ -35,7 +35,7 @@ import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './
 import { leftOpen, mayOpenPart, namesPart, partOffer } from './part-close';
 import { heardAsWords } from './heard';
 import { v2LanguagesSection } from './languages';
-import { V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2MarkLevelKnownParts, v2WorkingLevelSection } from './working-level';
+import { V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2MarkLevelKnownParts, v2ReopenLevelCheck, v2WorkingLevelSection } from './working-level';
 import { V2_PRACTISE_PRONUNCIATION_TOOL, v2ApplyPractisePronunciation, v2ConsumePronunciation, v2PronunciationOn, v2PronunciationSection } from './pronunciation';
 import { v2NoteCorrectedSentence, v2SentenceCardsOn, v2SentenceCardsSection } from './sentence-cards';
 import { v2StopAsked } from './stop-signal';
@@ -201,7 +201,7 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
   // to ask what they would like next, a new question to a student who is leaving (stop-signal.ts).
   const asked = args.because === 'student_asked' || (TUTOR_V2_STOP_SIGNAL && v2StopAsked(studentSaid));
   const discussion = discussionOf(session.plan);
-  if (name === 'set_working_level') return v2LevelCheckOn(session) ? v2ApplySetWorkingLevel(state, args) : 'unknown tool set_working_level';
+  if (name === 'set_working_level') return v2LevelCheckOn(session) ? v2ApplySetWorkingLevel(state, args, { heard: studentSaid, timeUp: !!session.timeBoxMinutes && session.timeBoxMinutes - (nowMs - state.startedAtMs) / 60000 <= V2_TIME_UP_MIN }) : 'unknown tool set_working_level';
   if (name === 'practise_pronunciation') return v2PronunciationOn(session) ? v2ApplyPractisePronunciation(state, args) : 'unknown tool practise_pronunciation';
   if (name === 'record_thinking') return discussion ? recordThinking(state, args) : 'unknown tool record_thinking';
   if (name === 'end_lesson' && discussion) {
@@ -303,6 +303,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const applyBoard = input.applyBoard ?? applyToModelBoard;
   // The turn works on a copy: a failed model call leaves the caller's state as it was.
   const state: V2State = structuredClone(input.state);
+  // A "no" to "does that level still feel right?" sets the remembered level aside and re-opens the check (D6).
+  const levelReopened = v2ReopenLevelCheck(session, state, input.studentSaid);
   // A level remembered from an earlier lesson skips the level-check parts before the tutor speaks.
   v2MarkLevelKnownParts(session, state, nowMs);
 
@@ -310,7 +312,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const opening = !state.history.length && input.studentSaid === null;
   const discussion = !!discussionOf(session.plan);
   const studentText = v2StudentBlock(input.studentSaid, state, input.facts?.silenceSeconds, input.facts?.resumed, session);
-  const facts = renderFacts(session, state, { ...input.facts, nowMs, heard: input.studentSaid, ...(TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid) ? { stopAsked: true } : {}) });
+  const facts = renderFacts(session, state, { ...input.facts, nowMs, heard: input.studentSaid, ...(TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid) ? { stopAsked: true } : {}), ...(levelReopened ? { levelReopened: true } : {}) });
   // A reply that closes the session: the student's words ask to stop, or the time is up (V2_TIME_UP_MIN, as the facts
   // say it). A page it opens is the summary's, and is never held for "shall we go on?" (part-close.ts): held, "Sorry, I
   // have to finish now." in a two-page lesson got "Next is summary. Shall we go on?" and the summary, its sentence cards,

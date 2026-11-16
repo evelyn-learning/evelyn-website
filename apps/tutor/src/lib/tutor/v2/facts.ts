@@ -40,6 +40,8 @@ export interface V2TurnFacts {
   heard?: string | null;
   /** Their words just now end the session (stop-signal.ts). */
   stopAsked?: boolean;
+  /** Their words just now said the level remembered from an earlier lesson does not fit (working-level.ts v2ReopenLevelCheck). */
+  levelReopened?: boolean;
 }
 
 export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts): string {
@@ -73,7 +75,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   const partDue = v2PartDueFact(session, state, f.nowMs, !!session.timeBoxMinutes && left <= V2_TIME_UP_MIN);
   if (partDue) lines.push(partDue);
   // The working level, every turn, so the language, questions and corrections stay at it (working-level.ts).
-  lines.push(...v2WorkingLevelFacts(session, state, f.heard));
+  lines.push(...v2WorkingLevelFacts(session, state, f.heard, { reopened: f.levelReopened }));
   // A measured score, or that there is none: the only ground for a word on how they sounded (pronunciation.ts).
   lines.push(...v2PronunciationFacts(session, state, f.heard));
   // The learner's corrected sentences, for the summary's sentence cards (sentence-cards.ts).
