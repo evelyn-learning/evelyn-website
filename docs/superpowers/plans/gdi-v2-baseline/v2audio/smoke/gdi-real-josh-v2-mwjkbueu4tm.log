@@ -1,0 +1,14 @@
+17:54:07 open fixture=gdi-real-josh arm=v2 student=gdi-v2-audio-josh-smoke (audio student josh (16 clips), silent tutor voice)
+17:54:10 clicked start (1)
+17:54:17 HEARD  null
+17:54:17 TUTOR  Hello, I'm Ryota, and welcome to your English lesson! Today we'll practice talking about your work and the projects you're involved in, and we'll look at two grammar points: the present perfect and the past simple. Does that sound good to you?   [tools: annotate]
+17:54:37 STUDENT(clip #1 ok, 2.8 s) Yes.  — Learner agrees to the lesson plan
+17:54:46 HEARD  Yes.
+17:54:46 TUTOR  Great. Here is how the lesson works. You'll talk about your job, then we'll practice two grammar points: the present perfect for experience, and the past simple for finished events. I'll ask follow-up questions, correct your mistakes, and give you a chance to try again. Near the end, you can practis
+17:56:32 HEARD  null
+17:56:32 TUTOR  Take your time. Are you ready to start the short level check? Just say yes, and I'll ask the first question.
+17:56:44 STUDENT(clip #5 ok, 3.5 s) Do you want me to start now?  — Learner asks if they should start now, which is a natural response to tutor's readiness check
+17:56:48 HEARD  Do you want me to start now?
+17:56:48 TUTOR  Yes, let's start now. Before we begin, I'd like to know a little about your English, so the lesson suits you. Please answer in English, and don't worry about mistakes. My first question: can you tell me a little about your job? What do you do?
+17:56:48 audio: {"sttSockets":1,"sttSocketSeconds":157,"clipSeconds":6,"silentTtsReplies":14,"mic":{"plays":2,"gum":1,"buffers":20},"otherSockets":["ws://localhost:3021/_next/hmr","wss://api.openai.com/v1/realtime"]}
+17:56:48 waiting 35 s for the autosave

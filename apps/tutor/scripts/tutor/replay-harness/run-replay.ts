@@ -17,6 +17,12 @@
  * Needs: a dev server for this worktree on --port; PORTAL_PARTNER_SECRETS and
  * MONGODB_URI in the repo-root .env.local. Output: <out>/<fixture>-<arm>-<run>.json
  * (a RunBundle) and its scorecard printed and saved beside it.
+ *
+ * --audio-student <dir> (Task 6d): the student is a REAL learner's recorded turns (<dir>/clips.json and clips/NN.wav,
+ * made by ./cut-clips.ts) played into the page through a fake microphone (./audio-student.ts), so the real v2 voice
+ * client hears them: energy gate, speech recognition, turn end. Run it with --claims '{"input_mode":"voice"}'. The
+ * tutor's speech is never synthesised: every TTS request is answered with silence of about the reply's length (the
+ * client's playback clock still runs). The recogniser (Cartesia Ink) is live and billed.
  */
 import { chromium } from 'playwright';
 import crypto from 'node:crypto';
@@ -25,6 +31,7 @@ import path from 'node:path';
 import mongoose from 'mongoose';
 import { needsOpeningLine, scriptedStudentTurn, type Fixture, type ReplayTurn } from './scripted-student';
 import { scoreRun, type RunBundle } from './scorecard';
+import { FAKE_MIC_INIT, clipPath, clipPcmBase64, loadClips, pickClip, silentTtsBody, type AudioClip } from './audio-student';
 
 const arg = (k: string, d: string) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; };
 const fixtureName = arg('--fixture', 'calc-lhopital');
@@ -38,6 +45,8 @@ const maxMin = Number(arg('--max-min', String(fixture.maxMinutes)));
 const runId = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 // --student <id> overrides the generated student id (e.g. gdi-v2-replay-b1-v1).
 const studentId = arg('--student', `replay-${fixture.name}-${runId}`);
+const audioDir = arg('--audio-student', '').replace(/^~/, process.env.HOME ?? '~');
+const audioClips: AudioClip[] = audioDir ? loadClips(audioDir) : [];
 
 // ── env (repo-root .env.local; values are never printed) ──
 const envText = fs.readFileSync(path.resolve(process.cwd(), '../../.env.local'), 'utf8');
@@ -70,12 +79,13 @@ const page_note: string[] = [];
 const say = (s: string) => { const line = `${new Date().toISOString().slice(11, 19)} ${s}`; console.log(line); log.push(line); };
 const CLOSE_RE = /\bsee you next time\b|\bthat'?s (?:all|it) for today\b|\bwe can wrap up here\b|\bthanks for working through it today\b|\bgoodbye\b|\bbye for now\b/i;
 
-type BrainTurn = { t: number; sentences: string[]; tools: string[]; board: string[] };
-declare global { interface Window { __brain?: { inFlight: number; turns: BrainTurn[] } } }
+type BrainTurn = { t: number; sentences: string[]; tools: string[]; board: string[]; said?: string; silence?: number };
+declare global { interface Window { __brain?: { inFlight: number; turns: BrainTurn[] }; __play?: { end: number; buffers: number }; __mic?: { play: (b64: string) => number; plays: number; gum: number }; __ws?: Array<{ u: string; t0: number; t1: number }> } }
 
 async function main() {
-  const browser = await chromium.launch({ args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', `--use-file-for-fake-audio-capture=${silentWav}`, '--autoplay-policy=no-user-gesture-required'] });
+  const browser = await chromium.launch({ args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', ...(audioDir ? [] : [`--use-file-for-fake-audio-capture=${silentWav}`]), '--autoplay-policy=no-user-gesture-required'] });
   const ctx = await browser.newContext({ permissions: ['microphone'], viewport: { width: 1000, height: 820 } });
+  if (audioDir) await ctx.addInitScript(FAKE_MIC_INIT);
   // Tee the brain stream inside the page: window.__brain = { inFlight, turns: [{t, sentences, tools}] }.
   await ctx.addInitScript(() => {
     window.__brain = { inFlight: 0, turns: [] };
@@ -85,6 +95,9 @@ async function main() {
       const url = typeof input === 'string' ? input : (input as Request)?.url ?? '';
       if (!url.includes('/api/tutor/brain/stream') && !url.includes('/api/tutor/brain-v2/turn')) return orig.apply(this as typeof globalThis, args);
       window.__brain!.inFlight += 1;
+      // What the turn was asked with: the words the client heard (studentSaid) or a silence.
+      let said: string | undefined; let silence: number | undefined;
+      try { const b = JSON.parse(String((args[1] as RequestInit | undefined)?.body ?? '{}')) as { studentSaid?: string; silenceSeconds?: number }; said = b.studentSaid; silence = b.silenceSeconds; } catch { /* not JSON */ }
       let res: Response;
       try { res = await orig.apply(this as typeof globalThis, args); } catch (e) { window.__brain!.inFlight -= 1; throw e; }
       try {
@@ -120,7 +133,7 @@ async function main() {
             }
           } catch { /* stream aborted */ }
           window.__brain!.inFlight = Math.max(0, window.__brain!.inFlight - 1);
-          window.__brain!.turns.push({ t: Date.now(), sentences, tools, board });
+          window.__brain!.turns.push({ t: Date.now(), sentences, tools, board, said, silence });
         })();
       } catch { window.__brain!.inFlight = Math.max(0, window.__brain!.inFlight - 1); }
       return res;
@@ -130,7 +143,17 @@ async function main() {
   await ctx.route('**/api/tutor/session-audio*', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true,"stub":true}' }));
   // --no-speech: no paid speech for a run nobody hears. Cartesia (speech out and the mic's transcription) needs a
   // token minted here, and every other voice goes through a tts-* route; refuse them all.
-  if (process.argv.includes('--no-speech')) {
+  let silentTts = 0;
+  if (audioDir) {
+    // The recogniser stays live (cartesia-token + the stt socket); the tutor's voice is silence of the reply's length.
+    await ctx.route(/\/api\/tutor\/tts[a-z-]*(\?|$)/, (route) => {
+      let text = ''; try { text = String((JSON.parse(route.request().postData() ?? '{}') as { text?: string }).text ?? ''); } catch { /* none */ }
+      silentTts += 1;
+      return route.fulfill({ status: 200, contentType: 'application/octet-stream', body: silentTtsBody(text) });
+    });
+    await ctx.routeWebSocket(/cartesia\.ai\/tts/, (ws) => { say('speech socket refused: cartesia tts'); ws.close(); });
+    page_note.push(`audio student ${path.basename(audioDir)} (${audioClips.length} clips), silent tutor voice`);
+  } else if (process.argv.includes('--no-speech')) {
     await ctx.route(/\/api\/tutor\/(cartesia-token|tts[a-z-]*)(\?|$)/, (route) => { say(`speech refused: ${route.request().url().replace(/\?.*/, '')}`); return route.fulfill({ status: 403, contentType: 'application/json', body: '{"error":"speech off for this run"}' }); });
     await ctx.route(/cartesia\.ai/, (route) => { say('speech refused: cartesia.ai'); return route.abort(); });
     page_note.push('speech off');
@@ -141,12 +164,14 @@ async function main() {
   const page = await ctx.newPage();
   page.on('pageerror', (e) => say(`PAGEERROR ${String(e).slice(0, 200)}`));
   const wait = (ms: number) => page.waitForTimeout(ms);
+  const heardLog: string[] = [];
   const brainTurns: BrainTurn[] = []; let inFlight = 0; let lastEnd = 0; let lastWords = 0;
   const poll = async () => {
     const b = await page.evaluate(() => { const t = window.__brain?.turns.splice(0) ?? []; return { inFlight: window.__brain?.inFlight ?? 0, turns: t }; }).catch(() => ({ inFlight: 0, turns: [] as BrainTurn[] }));
     inFlight = b.inFlight;
     for (const x of b.turns) {
       brainTurns.push(x); lastEnd = Date.now(); lastWords = x.sentences.join(' ').split(/\s+/).filter(Boolean).length;
+      if (audioDir) { if (typeof x.said === 'string' && x.said) { heardLog.push(x.said); say(`HEARD  ${x.said}`); } else if (x.silence) say(`HEARD  (silence ${x.silence} s)`); }
       say(`TUTOR  ${x.sentences.join(' ').slice(0, 300)}${x.tools.length ? `   [tools: ${x.tools.join(', ')}]` : ''}`);
     }
   };
@@ -156,7 +181,10 @@ async function main() {
     for (;;) {
       await poll();
       const quietFor = Date.now() - lastEnd;
-      if (inFlight === 0 && lastEnd > 0 && quietFor >= lastWords * 380 + 1500 && quietFor >= 2500) return true;
+      if (audioDir) {
+        const playEnd = await page.evaluate(() => window.__play?.end ?? 0).catch(() => 0);
+        if (inFlight === 0 && lastEnd > 0 && Date.now() > playEnd + 1200 && quietFor >= 2500) return true;
+      } else if (inFlight === 0 && lastEnd > 0 && quietFor >= lastWords * 380 + 1500 && quietFor >= 2500) return true;
       if (Date.now() > end) return false;
       await wait(400);
     }
@@ -197,6 +225,8 @@ async function main() {
   let sinceStudent = openingLine ? Date.now() : 0; let studentTurns = 0;
   if (openingLine) turns.push({ role: 'student', text: openingLine, tag: 'ack' });
   let endedBy: RunBundle['endedBy'] = 'cap';
+  const usedClips: number[] = [];
+  const audioPicks: Array<{ n: number; fit: string; why: string; live: string; heard: string; sec: number; heardFrom?: number; turn?: { heard: string } }> = [];
   while (Date.now() - t0 < maxMin * 60000 && studentTurns < fixture.maxStudentTurns) {
     const quiet = await waitQuiet(150000);
     if (!quiet) { say('no tutor activity for 150 s'); endedBy = 'stall'; break; }
@@ -214,6 +244,29 @@ async function main() {
       await wait(2500);
       await page.screenshot({ path: path.join(outDir, `${fixture.name}-${arm}-${runId}-t${String(studentTurns).padStart(2, '0')}.png`), fullPage: false }).catch(() => {});
     }
+    if (audioDir) {
+      const pick = await pickClip(fixture.student.who, audioClips, usedClips, history, text);
+      if ('end' in pick) { say(`STUDENT(end) ${pick.why}`); endedBy = CLOSE_RE.test(text) ? 'tutor_close' : 'student_end'; break; }
+      const clip = audioClips.find((c) => c.n === pick.n)!;
+      const { b64, sec } = clipPcmBase64(clipPath(audioDir, clip.n));
+      await wait(900 + Math.random() * 900);
+      const heardBefore = heardLog.length;
+      // The tutor's reply to this clip ends after the clip starts: the next turn's text is read from here.
+      const playStart = Date.now();
+      await page.evaluate((x) => window.__mic!.play(x), b64);
+      usedClips.push(clip.n);
+      say(`STUDENT(clip #${clip.n} ${pick.fit}${clip.check !== 'ok' ? ` cut=${clip.check}` : ''}, ${sec.toFixed(1)} s) ${clip.text}  — ${pick.why}`);
+      // Wait for the clip to play and the client to hear it (a turn asked with its words), up to 20 s after it ends.
+      // Everything heard until the next clip plays belongs to this one (the recogniser may split it in two).
+      const playEnd = Date.now() + sec * 1000; const until = playEnd + 20000;
+      while (Date.now() < until) { await poll(); if (heardLog.length > heardBefore && Date.now() > playEnd) break; await wait(300); }
+      if (heardLog.length === heardBefore) say(`  (not heard within 20 s of the clip's end)`);
+      const turn = { role: 'student' as const, text: clip.text, tag: 'answer' as const, clip: clip.n, fit: pick.fit, heard: '', why: pick.why };
+      turns.push(turn);
+      audioPicks.push({ n: clip.n, fit: pick.fit, why: pick.why, live: clip.text, heard: '', sec, heardFrom: heardBefore, turn });
+      studentTurns += 1; sinceStudent = playStart;
+      continue;
+    }
     const reply = await scriptedStudentTurn(fixture.student, boardNow.length ? `${text}\n[board now shows] ${boardNow.join(' | ')}` : text, history);
     if (reply.tag === 'end' || !reply.say) {
       say(`STUDENT(end)`); endedBy = CLOSE_RE.test(text) ? 'tutor_close' : 'student_end'; break;
@@ -227,7 +280,19 @@ async function main() {
     await wait(1500);
   }
   const minutes = (Date.now() - t0) / 60000;
+  let audioMeta: Record<string, unknown> | undefined;
   await page.screenshot({ path: path.join(outDir, `${fixture.name}-${arm}-${runId}.png`), fullPage: false }).catch(() => {});
+  // Late hearings (a clip heard after the loop moved on) and the socket times, before the page goes.
+  if (audioDir) {
+    await poll();
+    audioPicks.forEach((pk, i) => { pk.heard = heardLog.slice(pk.heardFrom, audioPicks[i + 1]?.heardFrom ?? heardLog.length).join(' / '); if (pk.turn) pk.turn.heard = pk.heard; delete pk.heardFrom; delete pk.turn; });
+    const ws = await page.evaluate(() => window.__ws ?? []).catch(() => [] as Array<{ u: string; t0: number; t1: number }>);
+    const stt = ws.filter((w) => /cartesia\.ai\/stt/.test(w.u));
+    const sttSec = stt.reduce((a, w) => a + ((w.t1 || Date.now()) - w.t0) / 1000, 0);
+    const mic = await page.evaluate(() => ({ plays: window.__mic?.plays ?? 0, gum: window.__mic?.gum ?? 0, buffers: window.__play?.buffers ?? 0 })).catch(() => null);
+    audioMeta = { sttSockets: stt.length, sttSocketSeconds: Math.round(sttSec), clipSeconds: Math.round(audioPicks.reduce((a, p) => a + p.sec, 0)), silentTtsReplies: silentTts, mic, otherSockets: [...new Set(ws.filter((w) => !/cartesia\.ai\/stt/.test(w.u)).map((w) => w.u))] };
+    say(`audio: ${JSON.stringify(audioMeta)}`);
+  }
   say('waiting 35 s for the autosave'); await wait(35000);
   await browser.close();
 
@@ -251,7 +316,13 @@ async function main() {
     ? await (await import('./homework-outcome')).homeworkRunOutcome(String(payload.curriculum_module), turns, events).catch((e) => { say(`homework outcome failed: ${(e as Error).message.slice(0, 120)}`); return null; })
     : null;
   if (homework) say(`homework outcome=${homework.outcome} reveals=${homework.reveals.length}`);
-  fs.writeFileSync(`${base}.json`, JSON.stringify({ ...bundle, ...(homework ? { homework } : {}) }, null, 2));
+  // The stored transcript: what the session itself kept as the student's words (the recogniser's text).
+  let stored: Array<{ role: string; text: string }> = [];
+  if (audioDir) {
+    try { await mongoose.connect(mongoUri); const row = await mongoose.connection.db!.collection('tutorsessions').find({ studentId }).sort({ createdAt: -1 }).limit(1).next(); stored = ((row?.transcript ?? []) as Array<{ role: string; text: string }>).map((t) => ({ role: t.role, text: t.text })); }
+    catch { /* read only, best effort */ } finally { await mongoose.disconnect().catch(() => {}); }
+  }
+  fs.writeFileSync(`${base}.json`, JSON.stringify({ ...bundle, ...(homework ? { homework } : {}), ...(audioDir ? { audio: { ...audioMeta, picks: audioPicks, storedTranscript: stored } } : {}) }, null, 2));
   fs.writeFileSync(`${base}.log`, log.join('\n'));
   const card = scoreRun(bundle);
   fs.writeFileSync(`${base}.score.json`, JSON.stringify(card, null, 2));

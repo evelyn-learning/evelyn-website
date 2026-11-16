@@ -1,0 +1,222 @@
+{
+  "fixture": "gdi-real-josh",
+  "arm": "v2",
+  "sessionId": "embed-1794851647936",
+  "startedAt": "2026-11-16T17:54:10.913Z",
+  "minutes": 2.6326,
+  "turns": [
+    {
+      "role": "tutor",
+      "text": "Hello, I'm Ryota, and welcome to your English lesson! Today we'll practice talking about your work and the projects you're involved in, and we'll look at two grammar points: the present perfect and the past simple. Does that sound good to you?"
+    },
+    {
+      "role": "student",
+      "text": "Yes.",
+      "tag": "answer",
+      "clip": 1,
+      "fit": "ok",
+      "heard": "Yes. / ",
+      "why": "Learner agrees to the lesson plan"
+    },
+    {
+      "role": "tutor",
+      "text": "Take your time. Are you ready to start the short level check? Just say yes, and I'll ask the first question."
+    },
+    {
+      "role": "student",
+      "text": "Do you want me to start now?",
+      "tag": "answer",
+      "clip": 5,
+      "fit": "ok",
+      "heard": "Do you want me to start now?",
+      "why": "Learner asks if they should start now, which is a natural response to tutor's readiness check"
+    }
+  ],
+  "events": [
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no"
+    },
+    {
+      "type": "persona_resolved",
+      "message": "teacher=ryota"
+    },
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no"
+    },
+    {
+      "type": "persona_resolved",
+      "message": "teacher=ryota"
+    },
+    {
+      "type": "partner_pool_snapshot",
+      "message": "remaining=65742 cap=130920 session_max=1200 exhausted=false"
+    },
+    {
+      "type": "partner_pool_snapshot",
+      "message": "remaining=65742 cap=130920 session_max=1200 exhausted=false"
+    },
+    {
+      "type": "start_v2",
+      "message": "tutor opens (voice)"
+    },
+    {
+      "type": "v2_mic_quiet",
+      "message": "Mic appears silent (peak=-66.0dBFS rms=-70.9dBFS). Check OS-level mic permissions or device."
+    },
+    {
+      "type": "v2_opening_speech",
+      "message": "released 2495 ms after the tap; microphone live at 1594 ms; 0 sentence(s) were waiting"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 1 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "annotate: inline, with sentence 1 of 3 (stretch from 1), 1 started — now"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5971ms · first_sentence=2482ms · in=12263 out=510 cr=18765 cc=18765 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Does that sound good to you?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Does that sound good to you?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (silent) — \"Does that sound good to you?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6952ms · first_sentence=3809ms · in=13728 out=1158 cr=56707 cc=206 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794851679824 — \"Does that sound good to you?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Are you ready?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Are you ready?\""
+    },
+    {
+      "type": "idle_nudge_v2",
+      "message": "75s of silence"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2058ms · first_sentence=1930ms · in=540 out=270 cr=18971 cc=425 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794851789931 — \"Are you ready?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Are you ready to start the short level check?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Are you ready to start the short level check?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (question) — \"Are you ready to start the short level check?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2086ms · first_sentence=488ms · in=12767 out=206 cr=38367 cc=517 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794851806636 — \"Are you ready to start the short level check?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"What do you do?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What do you do?\""
+    }
+  ],
+  "estimatedCost": 0.0103,
+  "endedBy": "cap",
+  "audio": {
+    "sttSockets": 1,
+    "sttSocketSeconds": 157,
+    "clipSeconds": 6,
+    "silentTtsReplies": 14,
+    "mic": {
+      "plays": 2,
+      "gum": 1,
+      "buffers": 20
+    },
+    "otherSockets": [
+      "ws://localhost:3021/_next/hmr",
+      "wss://api.openai.com/v1/realtime"
+    ],
+    "picks": [
+      {
+        "n": 1,
+        "fit": "ok",
+        "why": "Learner agrees to the lesson plan",
+        "live": "Yes.",
+        "heard": "Yes. / ",
+        "sec": 2.8
+      },
+      {
+        "n": 5,
+        "fit": "ok",
+        "why": "Learner asks if they should start now, which is a natural response to tutor's readiness check",
+        "live": "Do you want me to start now?",
+        "heard": "Do you want me to start now?",
+        "sec": 3.5
+      }
+    ],
+    "storedTranscript": [
+      {
+        "role": "tutor",
+        "text": "Hello, I'm Ryota, and welcome to your English lesson! Today we'll practice talking about your work and the projects you're involved in, and we'll look at two grammar points: the present perfect and the past simple. Does that sound good to you?"
+      },
+      {
+        "role": "student",
+        "text": "Yes."
+      },
+      {
+        "role": "tutor",
+        "text": "Great. Here is how the lesson works. You'll talk about your job, then we'll practice two grammar points: the present perfect for experience, and the past simple for finished events. I'll ask follow-up questions, correct your mistakes, and give you a chance to try again. Near the end, you can practise your pronunciation if you like. First, there's a short, friendly level check, so I can adjust the lesson for you. Are you ready?"
+      },
+      {
+        "role": "tutor",
+        "text": "Take your time. Are you ready to start the short level check? Just say yes, and I'll ask the first question."
+      },
+      {
+        "role": "student",
+        "text": "Do you want me to start now?"
+      },
+      {
+        "role": "tutor",
+        "text": "Yes, let's start now. Before we begin, I'd like to know a little about your English, so the lesson suits you. Please answer in English, and don't worry about mistakes. My first question: can you tell me a little about your job? What do you do?"
+      }
+    ]
+  }
+}

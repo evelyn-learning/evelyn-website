@@ -7,6 +7,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { buildStudentSystemPrompt, needsOpeningLine, observerLine, parseStudentReply, scriptedStudentTurn, type Fixture, type ReplayTurn } from './scripted-student';
 import { averageScorecards, scoreRun, type RunBundle } from './scorecard';
+import { buildPickPrompt, isShortAck, parsePick, pickClip, silentTtsBody, type AudioClip } from './audio-student';
+import { parseLiveDump, wav } from './cut-clips';
 
 let passed = 0; let failed = 0;
 const check = (label: string, ok: boolean, detail?: unknown) => {
@@ -88,6 +90,30 @@ async function main() {
   check('cost per minute', card.costPerMinute === 0.05);
   const avg = averageScorecards([card, { ...card, complaintsTotal: 5 }]);
   check('averages across runs', avg.runs === 2 && avg.complaintsTotal === 4, avg.complaintsTotal);
+
+  console.log('audio student');
+  const clips: AudioClip[] = [
+    { n: 1, text: 'Yes.', sec: 1, words: 1, wps: 1, check: 'ok' },
+    { n: 2, text: 'I am a manager at a communications company.', sec: 5, words: 8, wps: 2, check: 'ok' },
+    { n: 3, text: 'I work here for eleven year.', sec: 4, words: 6, wps: 2, check: 'ok' },
+    { n: 4, text: 'Okay, please stop. I would like to end the session for now.', sec: 4, words: 12, wps: 3, check: 'ok' },
+  ];
+  check('short acks are told apart', isShortAck('Yes.') && isShortAck("I'm ready.") && isShortAck('Oh, yes.') && !isShortAck('Yes, I have. I work with companies here.'));
+  const pp = buildPickPrompt('Josh', clips, [1, 2], [{ role: 'tutor', text: 'Are you ready?' }, { role: 'student', text: 'Yes.' }], 'How long have you worked here?');
+  check('the prompt marks used lines and names the earliest unused', pp.includes('#2 (USED') && pp.includes('#1 (used; a short ack') && pp.includes('the earliest unused is #3'));
+  check('a fitting pick is kept', JSON.stringify(parsePick('{"n":3,"fit":"ok","why":"same question"}', clips, [1, 2])) === JSON.stringify({ n: 3, fit: 'ok', why: 'same question' }));
+  check('a used long line falls back to the earliest unused, misfit', (() => { const p = parsePick('{"n":2,"fit":"ok"}', clips, [1, 2]); return 'n' in p && p.n === 3 && p.fit === 'misfit'; })());
+  check('a used short ack may repeat', (() => { const p = parsePick('{"n":1,"fit":"ok"}', clips, [1, 2]); return 'n' in p && p.n === 1 && p.fit === 'ok'; })());
+  check('end is read', 'end' in parsePick('{"end":true,"why":"closed"}', clips, []));
+  check('garbage falls back to the earliest unused', (() => { const p = parsePick('hmm', clips, [1]); return 'n' in p && p.n === 2 && p.fit === 'misfit'; })());
+  const pk = await pickClip('Josh', clips, [], [], 'Hello, are you ready?', { complete: async () => '{"n":1,"fit":"ok","why":"ready"}' });
+  check('pickClip uses the injected model', 'n' in pk && pk.n === 1);
+  const none = await pickClip('Josh', clips.slice(1), [2, 3, 4], [], 'Anything else?', { complete: async () => { throw new Error('must not be called'); } });
+  check('no lines left ends without a model call', 'end' in none);
+  check('silent TTS is zero Float32 sized by words', (() => { const b = silentTtsBody('one two three four five'); return b.length === Math.round(5 * 0.42 * 24000) * 4 && b.every((x) => x === 0); })());
+  const dump = parseLiveDump('{"createdAt":"2026-11-09T06:12:49.017Z"}\n=== TRANSCRIPT\n    2s   0 tutor: Hello\n   36s   1 student: Yes.\ncontinued\n=== EVENTS\n  -57s x: y');
+  check('reads a live transcript dump', dump.turns.length === 2 && dump.turns[1].t === 36 && dump.turns[1].role === 'student' && dump.turns[1].text === 'Yes. continued');
+  check('wav header is 44 bytes and says 24 kHz mono', (() => { const w = wav(Buffer.alloc(480)); return w.length === 524 && w.readUInt32LE(24) === 24000 && w.readUInt16LE(22) === 1; })());
 
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);
