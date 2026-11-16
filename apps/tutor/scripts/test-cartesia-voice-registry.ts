@@ -7,7 +7,10 @@
 import assert from 'node:assert';
 import {
   CARTESIA_DEFAULT_VOICE_ID,
+  RETIRED_CARTESIA_VOICES,
+  applyCartesiaVoiceSubstitutions,
   cartesiaSpeedForVoiceId,
+  upgradeRetiredCartesiaVoice,
   resolveCartesiaVoice,
   teachersForAccent,
 } from '@core/voice/cartesia-voice-registry';
@@ -28,7 +31,8 @@ function check(name: string, fn: () => void) {
 const KATIE = 'f786b574-daa5-4673-aa0c-cbe3e8534c02';
 // R39 (2026-08-04): Elena/en-us-female/default swapped Katie -> Sophie (Coach
 // Riley's voice) — Katie read too fast even with the R38 -0.25 offset.
-const SOPHIE = 'bf0a246a-8642-498a-9950-80c35e9276b5';
+// 2026-11-23: Cartesia retired Sophie; Clara replaces her everywhere (const kept as the default-voice id).
+const SOPHIE = '01eaafa9-308a-4276-a017-6ab0cf061b1f';
 const SAMEER = '638efaaa-4d0c-442e-b701-3fae16aad012';
 const SKYLAR = 'db6b0ed5-d5d3-463d-ae85-518a07d3c2b4';
 const GEMMA = '62ae83ad-4f6a-430b-af41-a9bede9286ca';
@@ -250,6 +254,24 @@ check('cartesiaSpeedForVoiceId(made-up id) -> undefined', () => {
 
 check('cartesiaSpeedForVoiceId(undefined) -> undefined', () => {
   assert.strictEqual(cartesiaSpeedForVoiceId(undefined), undefined);
+});
+
+
+// 2026-11-16: retired Cartesia voices are upgraded on every TTS path.
+check('retired Sophie id → Clara', () => {
+  assert.strictEqual(upgradeRetiredCartesiaVoice('bf0a246a-8642-498a-9950-80c35e9276b5'), '01eaafa9-308a-4276-a017-6ab0cf061b1f');
+});
+check('retired Zeke id → Carson', () => {
+  assert.strictEqual(upgradeRetiredCartesiaVoice('e00d0e4c-a5c8-443f-a8a3-473eb9a62355'), '86e30c1d-714b-4074-a1f2-1cb6b552fb49');
+});
+check('substitution path upgrades a retired id with no env mapping (stored academy persona)', () => {
+  assert.strictEqual(applyCartesiaVoiceSubstitutions('bf0a246a-8642-498a-9950-80c35e9276b5', undefined), '01eaafa9-308a-4276-a017-6ab0cf061b1f');
+});
+check('env substitution to a retired id is upgraded too', () => {
+  assert.strictEqual(applyCartesiaVoiceSubstitutions('x', 'x:bf0a246a-8642-498a-9950-80c35e9276b5'), '01eaafa9-308a-4276-a017-6ab0cf061b1f');
+});
+check('no current table entry uses a retired id', () => {
+  assert.strictEqual(Object.keys(RETIRED_CARTESIA_VOICES).includes(CARTESIA_DEFAULT_VOICE_ID), false);
 });
 
 console.log(`\n${passed} passed`);

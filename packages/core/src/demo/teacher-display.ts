@@ -16,7 +16,7 @@ export const ORIGINAL_TEACHER_IDS = new Set([
 ]);
 
 export const ACCENT_CARD_HINTS: Record<string, string> = {
-  // Original four — accents follow their registry voices (Sophie en-us,
+  // Original four — accents follow their registry voices (Clara en-us,
   // Sameer en-in, Skylar en-us, Gemma en-gb).
   'ms-elena-vasquez': 'American accent',
   'mr-dev-khanna': 'Indian accent',

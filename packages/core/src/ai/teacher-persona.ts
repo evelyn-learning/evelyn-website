@@ -117,7 +117,7 @@ export const DEMO_TEACHERS: TeacherPersonaWire[] = [
     // selectedOpenAIVoice instead of 4 distinct OpenAI voices. Accepted,
     // not reverted: that branch is inert under prod's engine flags
     // (claude-brain + Cartesia TTS make effectiveOpenAIVoice unused there).
-    voice: { provider: 'cartesia', voiceId: 'bf0a246a-8642-498a-9950-80c35e9276b5' }, // Sophie (R39 — Katie read too fast; user call)
+    voice: { provider: 'cartesia', voiceId: '01eaafa9-308a-4276-a017-6ab0cf061b1f' }, // Clara (Cartesia retired Sophie 2026-11-23; Sophie since R39 — Katie read too fast)
   },
   {
     // id kept stable — referenced by the voice registry and stored sessions.
