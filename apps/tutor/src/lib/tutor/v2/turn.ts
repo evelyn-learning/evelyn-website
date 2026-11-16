@@ -511,7 +511,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     if (heldAt) break;
     // No words and no call where words are owed: ask once more.
     if (mustSpeak && !spoken.length && results.length === 0 && modelCalls < 3 && !input.signal?.aborted) continue;
-    if (response.stop_reason !== 'tool_use' || results.length === 0) break;
+    if (results.length === 0) break;
+    // Calls with no words where words are owed go round again, whatever the stop reason: a reply that was only
+    // note_own_answer, stopped as end_turn, left the student with nothing (GAC validation fixed3, 2026-11-15).
+    if (response.stop_reason !== 'tool_use' && !(mustSpeak && !spoken.length && modelCalls < 3 && !input.signal?.aborted)) break;
     // The model is called again only when it has something to react to: a tool call that
     // did not do what was asked, or a reply with no words yet. When it has spoken and every
     // call worked, the turn is over — a second call tends to say the same thing again, and

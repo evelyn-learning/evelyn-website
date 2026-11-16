@@ -460,6 +460,16 @@ async function main() {
     check('…and a second such draft has those sentences cut', d2.r.spoken === 'Any question?', d2.r.spoken);
     const u1 = await run(asked("Tell me what speed you'd expect after 1 second of fall?"), '3', [[t('Yes, 3 m/s after 1 second.')], [t('Not quite: it gains 10 m/s each second. What is it after 2 seconds?')]]);
     check('credit to a bare number no check covered is written again', u1.m.seen.length === 2 && /nothing checked that number/.test(u1.sent(1)), u1.r.spoken);
+    // Fix (fixed3 timeouts): a reply that was only note_own_answer, stopped as end_turn, left the student with nothing.
+    {
+      const m = stub([msg([{ type: 'tool_use', id: 'e1', name: 'note_own_answer', input: { question: 'limit', answer: '3' } }], 'end_turn'), msg([t('What happens if you put x = 1 in straight away?')], 'end_turn')]);
+      const r = await runV2HomeworkTurn({ session: base, resolved, state: asked('Anything else?', { confirmed: ['part:a'] }), studentSaid: 'can you help me with lim as x -> 1 of (x^3 - 1)/(x - 1)', callModel: m.call, nowMs: 1_060_000, boardPass: false });
+      check('a reply that only recorded an own result goes on to speak', r.spoken === 'What happens if you put x = 1 in straight away?', r.spoken);
+    }
+    // Fix (fixed3): the student's own hedged answer, once confirmed, is not a reveal: "Yes, that's right" stays.
+    // The reader can miss the student's own writing of it (an inequality, hedged), so a confirmed part is not withheld at all.
+    const h1 = await run(asked('Any question?', { confirmed: ['part:a', 'part:b'], done: true, doneAt: 0 }), 'no thanks', [[t("Yes, that's right: (b) is 100°. Bye for now.")]]);
+    check('a confirmed part is said back without a redraft', h1.m.seen.length === 1 && /^Yes, that's right/.test(h1.r.spoken), h1.r.spoken);
     const k1 = await run(asked('Try (b)?'), 'x = 30', [[t('Yes, x = 30. Then (b) is 100, the exterior angle.')], [t('Yes, x = 30. What is (b)?')]]);
     check('a key reveal still rewrites (regression)', k1.r.spoken === 'Yes, x = 30. What is (b)?', k1.r.spoken);
     check('the state keeps guessed and own parts through a reload', JSON.stringify(readHomeworkState({ confirmed: ['part:a'], guessed: [{ label: 'a', value: 'x = 30' }], own: [{ q: 'q', a: 'CH4' }] })) === '{"confirmed":["part:a"],"guessed":[{"label":"a","value":"x = 30"}],"own":[{"q":"q","a":"CH4"}]}');

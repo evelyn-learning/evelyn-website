@@ -15,7 +15,7 @@
 import type { ProseAnswerMatchFn } from '../voice/prose-answer-match';
 import { boardRevealsHomeworkKey, homeworkKeyWithheld, HOMEWORK_BOARD_KEY_WITHHELD_REASON, HOMEWORK_OPENER_BOARD_WITHHELD_REASON } from '../voice/homework-problem-block';
 import { boardStrings, revealsWithheldAnswer, type WithheldAnswer } from '../voice/whole-answer-reveal';
-import { newSheetRecord, sheetProblemNamed, studentMessagesOf, v2HomeworkCheck, type V2HomeworkResolved, type V2SheetResolved } from './homework';
+import { newSheetRecord, partLabel, sheetProblemNamed, studentMessagesOf, v2HomeworkCheck, type V2HomeworkResolved, type V2SheetResolved } from './homework';
 import { castsDoubt, creditsNonAnswer, givesCredit, isBareNumber, statesExpression, statesOwnResult, isGuess, nonAnswer, sentencesOf, unearnedCredit, verdictMissing, V2_HOMEWORK_GUARD_REASONS, V2_VERDICT_OPENERS, type GuessedPart, type NonAnswer } from './homework-guards';
 import { V2_CONTROL_TOOL_NAMES } from './tool-names';
 import { runV2Turn, type V2TurnInput } from './turn';
@@ -27,6 +27,15 @@ export type V2HomeworkFrameOut = { type: 'homework-keyed-verdict'; part: string;
 /** Said in place of a draft whose every sentence stated the answer, so the reply still hands the turn over. */
 export const V2_HOMEWORK_FALLBACK_QUESTION = 'What do you think the next step is?';
 export const V2_HOMEWORK_NOT_SENT = 'it stated the final answer of a part the student has not reached. They must reach it themselves: write the reply again without it, and give them the next smallest step.';
+
+/**
+ * The key with its confirmed parts left out: a part the answer check confirmed was written by the student, so
+ * saying it back is not a reveal. The number reader missed a hedged one ("maybe -10 < x < 2?") and cut the
+ * "Yes, that's right" it was owed (GAC validation fixed3, 2026-11-15).
+ */
+function openKey<K extends { parts: Array<{ label?: string | null }> }>(key: K, confirmed: ReadonlyArray<string>): K {
+  return { ...key, parts: key.parts.filter((p) => !confirmed.includes(`part:${partLabel(p.label)}`)) };
+}
 
 /** The words of the tutor's last reply in a v2 history. */
 function lastTutorText(history: V2State['history']): string {
@@ -106,7 +115,7 @@ export async function runV2HomeworkTurn(input: V2TurnInput & { resolved: V2Homew
   const facts = { ...(turn.facts ?? {}), ...(checks.length ? { answerCheck: checks.join('; ') } : {}) };
 
   const studentText = [...studentMessagesOf(turn.state.history).map((m) => m.content), turn.studentSaid ?? ''].join('\n');
-  const withheld = hw.verified && resolved.key ? homeworkKeyWithheld({ text: hw.text, verified: true, hasFigure: hw.hasFigure, key: resolved.key }, studentText) : [];
+  const withheld = hw.verified && resolved.key ? homeworkKeyWithheld({ text: hw.text, verified: true, hasFigure: hw.hasFigure, key: openKey(resolved.key, hc.confirmed) }, studentText) : [];
   const confirmedParts = hc.confirmed.filter((m) => m.startsWith('part:')).length;
   const r = await guardedTurn({ ...turn, session, state, facts }, withheld, { noReveal: !!hw.noReveal, figureOnScreen: hw.hasFigure }, {
     verdicts: repeatOnly ? [] : hc.verdicts.map((v) => v.verdict), nonAnswer: na, own: ownWithheld(turn.state, studentText), guessed, allGuessed: guessed.length > 0 && guessed.length >= confirmedParts,
@@ -271,7 +280,7 @@ export async function runV2SheetTurn(input: V2TurnInput & { resolvedSheet: V2She
   const studentText = [...studentMessagesOf(turn.state.history).map((m) => m.content), turn.studentSaid ?? ''].join('\n');
   // The whole sheet is given data: a number one problem states is never withheld as another's answer.
   const sheetText = sheet.problems.map((p) => p.text).join('\n');
-  const withheld = sheet.problems.flatMap((p) => (resolvedSheet.keys[p.n] ? homeworkKeyWithheld({ text: sheetText, verified: true, hasFigure: false, key: resolvedSheet.keys[p.n] }, studentText) : []));
+  const withheld = sheet.problems.flatMap((p) => (resolvedSheet.keys[p.n] ? homeworkKeyWithheld({ text: sheetText, verified: true, hasFigure: false, key: openKey(resolvedSheet.keys[p.n], rec.confirmed[String(p.n)] ?? []) }, studentText) : []));
   const confirmedParts = Object.values(rec.confirmed).flat().filter((m) => m.startsWith('part:')).length;
   const r = await guardedTurn({ ...turn, session, state }, withheld, { noReveal: !!sheet.noReveal, figureOnScreen: false }, {
     verdicts, nonAnswer: na, own: ownWithheld(turn.state, studentText), guessed, allGuessed: guessed.length > 0 && guessed.length >= confirmedParts,
