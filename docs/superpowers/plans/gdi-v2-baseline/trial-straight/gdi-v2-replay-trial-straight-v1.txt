@@ -1,0 +1,1368 @@
+{"sessionId":"embed-1794807219045","studentId":"gdi-v2-replay-trial-straight-v1","createdAt":"2026-11-16T05:34:01.208Z","endedAt":"2026-11-16T05:47:50.663Z","turns":82,"events":1243,"wb":34,"lp":{"lessonPlanId":"gdi.trial.english.work-projects.v1","currentSegmentId":"summary","completedSegmentIds":["overview","level-check","topic-intro","present-perfect","past-simple","open-conversation","pronunciation"],"updatedAt":"2026-11-16T05:46:48.382Z"}}
+=== TRANSCRIPT
+   -2s   0 student: Yes, I'm ready.
+    6s   1 tutor: You can say, "I work in…" or "I am a…". What is one skill you'd like to improve in your English, and why is it important to you?
+   25s   2 student: I work in the sales department of an electronics company in Osaka.
+   28s   3 tutor: Thanks, that's clear. Can you tell me a little about your job? What do you do?
+   40s   4 student: I work in the sales department of an electronics company in Osaka, as I said.
+   42s   5 tutor: Thanks for sharing that, that sounds like a busy department. Have you ever worked with an international customer? If so, can you tell me about the experience?
+   61s   6 student: It took about three months.
+   62s   7 tutor: Three months sounds like a real project. What is one skill you'd like to improve in your English, and why is it important to you?
+   79s   8 student: I want to improve my speaking because I have to explain our products to foreign customers.
+   81s   9 tutor: That's a very practical goal, Haruto. Speaking clearly about your products to foreign customers is a great reason to practise. お客様に製品を英語で説明する練習は、とても役に立ちますよ。 Let's start with your job. What are your main responsibilities at work?
+  102s  10 student: It was last year, in the spring.
+  104s  11 tutor: Thanks, that gives me a clearer picture. That's a time, but I asked about your main responsibilities at work. Could you tell me what you do in your job? 「お仕事の主な内容」を教えてください。 Could you describe your current responsibilities and explain how your role has developed over time?
+  128s  12 student: I was responsible for testing the website.
+  129s  13 tutor: Thanks for sharing that. That's a clear sentence about your past responsibility. 「was responsible for」は「〜を担当していた」という意味です。 What are you responsible for now, in your current role?
+  147s  14 student: I was responsible for testing the website, as I said.
+  148s  15 tutor: Right, thanks for repeating that. 「as I said」は「さっき言ったように」という意味です。 Let's move on to the next part. Have you worked for your current company for a long time?
+  166s  16 student: Yes, I have worked at my company for five years.
+  167s  17 tutor: Good, that's a clear answer. Yes, you have worked there for five years. That is the present perfect, because it started in the past and continues now. 「have worked」は、過去に始まって今も続いていることを表します。 What is one important skill you have learned at your company?
+  192s  18 student: I have learned how to negotiate with suppliers.
+  193s  19 tutor: Negotiating with suppliers is a valuable skill. That is a clear, complete sentence. Good use of the present perfect. 「have learned」は、過去に始めて今も役立っていることを表します。 How has that skill helped you in your work with customers?
+  213s  20 student: It has helped me get a better price.
+  214s  21 tutor: That's a useful result. Good answer. You used the present perfect correctly, and the reason is clear. 「get a better price」は「より良い価格を得る」という意味です。 Can you tell me about a time you used this skill with a customer? What happened?
+  237s  22 student: It took about three months.
+  239s  23 tutor: Three months, got it. 「about three months」は「約3か月」という意味です。 Can you tell me about a time you used this skill with a customer? What happened?
+  256s  24 student: It was last year, in the spring.
+  257s  25 tutor: Right, that was last spring. Yes, that is a clear time expression. You used the past for something finished. 「last year」は「去年」、「in the spring」は「春に」という意味です。 Good. Now tell me: what did you do during that time at work?
+  277s  26 student: I did it with two colleagues from my team.
+  279s  27 tutor: Good, that gives a clear picture of your team. That is a clear answer. You used the past simple for something finished. 「with two colleagues」は「2人の同僚と」という意味です。 What was the most challenging part of that work?
+  299s  28 student: It took about three months.
+  300s  29 tutor: Right, about three months. 「about three months」は「約3か月」という意味です。 Would you like one more question on this, or shall we move on to the past simple?
+  317s  30 student: One more, please.
+  319s  31 tutor: Sure, one more. もう1問ですね。 Have you ever visited a foreign company's office? Please tell me one sentence using have visited.
+  332s  32 student: Yes, I worked with a customer from Germany two years ago.
+  334s  33 tutor: Germany, two years ago. You used the past simple for a finished time, which is right. But the question asked for have visited, the present perfect, to describe an experience, not a finished event. Use have worked for an experience without a finished time. Two years ago needs the past simple, so the sentence is about one finished event. 「two years ago」のように時点がはっきりしている場合は過去形を使います。 Let's move on to the past simple. Did you attend any business events or exhibitions last year?
+  375s  34 student: Yes, I went to a trade show in Tokyo last year.
+  376s  35 tutor: Tokyoの展示会ですね。 That is a clear answer. You used the past simple for a finished event with a time word. last year は過去形と一緒に使う時間の表現です。 What did you learn at the trade show? Please answer with a short sentence.
+  399s  36 student: Yes, I went to a trade show in Tokyo last year, as I said.
+  400s  37 tutor: Right, you already said that. The sentence is correct, but the question was what you learned at the trade show, so please answer that. 「as I said」は「さっき言ったように」という意味です。 What did you learn at the trade show? Please answer with a short sentence.
+  425s  38 student: Yes, I went to a trade show in Tokyo last year.
+  427s  39 tutor: Tokyoの展示会ですね。 That is a clear answer, and you used the past simple correctly. last year は過去形と一緒に使う時間の表現です。 What did you learn at the trade show? Please answer with a short sentence.
+  446s  40 student: Yes, I went to a trade show in Tokyo last year, as I said.
+  448s  41 tutor: Right, you said that already. 「as I said」は「さっき言ったように」という意味です。 Let's move on. What did you learn at the trade show? Please answer in one short sentence.
+  466s  42 student: Yes, I went to a trade show in Tokyo last year.
+  468s  43 tutor: You already told me about the Tokyo trade show, so let's go a step further. What did you learn there? Please answer in one short sentence.
+  484s  44 student: I learned that communication is the most important thing.
+  485s  45 tutor: That's a clear answer about what you learned. 「that」の後に続く文で、学んだ内容を説明できています。 Why is communication so important in your work with customers?
+  500s  46 student: Because my customers are from overseas.
+  502s  47 tutor: Because your customers are from overseas, you need clear communication. That's a clear reason. 「because」は「〜なので」と理由を表します。 Would you like one more question on this, or shall we move on to the conversation part?
+  523s  48 student: Let's move on.
+  524s  49 tutor: Let's move on. Let's move on to the conversation part. What is one project you've worked on that you're particularly proud of?
+  539s  50 student: Last month I made a presentation for a new product launch.
+  541s  51 tutor: A product launch presentation, that's a big job. You used the past simple for a finished event, and the sentence is clear. 「made a presentation」は「プレゼンテーションを作った」という意味です。 What was the most challenging part of preparing that presentation?
+  560s  52 student: Last month I made a presentation for a new product launch, as I said.
+  562s  53 tutor: 「as I said」は「さっき言ったように」という意味です。 今回は、プレゼンの準備で一番大変だった部分を教えてください。 You already said the presentation sentence, so let's go a step further. What was the most challenging part of preparing that presentation?
+  579s  54 student: Last month I made a presentation for a new product launch.
+  580s  55 tutor: Last month, a product launch, that sounds like a big job. That is a clear sentence about a finished event. Good use of the past simple. 「made a presentation」は「プレゼンテーションを作った」という意味です。 What was the most challenging part of preparing that presentation?
+  603s  56 student: Last month I made a presentation for a new product launch, as I said.
+  605s  57 tutor: 「as I said」は「さっき言ったように」という意味です。 この質問の答えを教えてください。 Let's keep going. What was the most challenging part of preparing that presentation?
+  619s  58 student: Last month I made a presentation for a new product launch.
+  620s  59 tutor: 「as I said」は「さっき言ったように」という意味です。 You already gave that sentence, so let's go a step further. What was the most challenging part of preparing that presentation?
+  637s  60 student: Last month I made a presentation for a new product launch, as I said.
+  639s  61 tutor: 「as I said」は「さっき言ったように」という意味です。 You already gave that sentence. What was the most challenging part of preparing that presentation?
+  651s  62 student: Last month I made a presentation for a new product launch.
+  653s  63 tutor: You've told me about that presentation already. Let's go a step further. What was the hardest part of preparing it?
+  667s  64 student: Last month I made a presentation for a new product launch, as I said.
+  669s  65 tutor: 「as I said」は「さっき言ったように」という意味です。 You already gave that sentence. What was the hardest part of preparing that presentation? Please answer in one short sentence.
+  683s  66 student: Last month I made a presentation for a new product launch.
+  685s  67 tutor: 「as I said」は「さっき言ったように」という意味です。 That sentence is already on the board, so let's go one step further. What was the hardest part of preparing that presentation? Please answer in one short sentence.
+  703s  68 student: Last month I made a presentation for a new product launch, as I said.
+  705s  69 tutor: 「as I said」は「さっき言ったように」という意味です。 You've already given that sentence, so let's go one step further. What was the hardest part of preparing that presentation? Please answer in one short sentence.
+  722s  70 student: Last month I made a presentation for a new product launch.
+  725s  71 tutor: 「as I said」は「さっき言ったように」という意味です。 You've already given that sentence. Let's go one step further: what was the hardest part of preparing that presentation? Please answer in one short sentence.
+  740s  72 student: Last month I made a presentation for a new product launch, as I said.
+  741s  73 tutor: 「as I said」は「さっき言ったように」という意味です。 Let's move on to pronunciation. Would you like to practice your pronunciation? You can choose: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue.
+  763s  74 student: four
+  765s  75 tutor: Four, skip and continue. わかりました。 発音の練習はスキップして、まとめに進みましょう。 Okay, we'll skip pronunciation for today. Let's move on to the summary. Looking back at this lesson, which present perfect sentence felt most natural for you to say?
+  784s  76 student: I felt relieved.
+  785s  77 tutor: I'm glad it felt that way. 「relieved」は「ほっとした」という意味です。 That's a good feeling to end on. Which present perfect sentence felt most natural for you to say today?
+  804s  78 student: I felt relieved, as I said.
+  805s  79 tutor: Relieved is a good feeling to end on. Which of the sentences we practised today felt most natural for you to say? Please answer in one short sentence.
+  822s  80 student: I felt relieved.
+  824s  81 tutor: That's a good feeling to end on. 「relieved」は「ほっとした」という意味です。 Before we finish, one thing you did well today was describing your work clearly. Can you explain the difference between these two sentences? I have worked here for five years. I worked here five years ago. Take your time, and I'll help if you need it.
+=== WHITEBOARD
+    1s   0 {"action":"showSentence","data":{"sentence":"What do you do at work?","gloss":"お仕事は何をしていますか？","label":"Level check","id":"showSentence-1"},"timestamp":"2026-11-16T05:34:01.759Z","sourceMessageIndex":1}
+    1s   1 {"action":"reviseItems","data":{"ids":["showSentence-1"],"revising":true},"timestamp":"2026-11-16T05:34:02.560Z"}
+    8s   2 {"action":"newPage","data":{"title":"Part 2 · Level check · レベルチェック"},"timestamp":"2026-11-16T05:34:08.783Z","sourceMessageIndex":1}
+    8s   3 {"action":"showProblem","data":{"problem":{"statement":"1. Can you tell me a little about your job? What do you do?\n2. Have you ever worked with an international customer? If so, can you tell me about the experience?\n3. What is one skill you'd like to improve in your English, and why is it important to you?","format":"free-response","title":"Check"},"id":"showProblem-2"},"timestamp":"2026-11-16T05:34:08.783Z","sourceMessageIndex":1}
+    8s   4 {"action":"showTable","data":{"title":"Talking About Your Work and Recent Projects","headers":["#","Part","Part (ja)","Minutes"],"rows":[["1","Overview","概要","2"],["2","Level check","レベルチェック","3"],["3","Your job","仕事について","3"],["4","Present perfect","現在完了","3.5"],["5","Past simple","過去形","3.5"],["6","Conversation","会話","5"],["7","Pronunciation (optional)","発音","3"],["8","Summary","まとめ","2"]],"id":"showTable-1"},"timestamp":"2026-11-16T05:34:08.783Z","sourceMessageIndex":1}
+    8s   5 {"action":"reviseItems","data":{"ids":["showSentence-1"],"revising":false},"timestamp":"2026-11-16T05:34:08.800Z"}
+   89s   6 {"action":"showSentence","data":{"sentence":"I want to improve my speaking because I have to explain our products to foreign customers.","id":"showSentence-2"},"timestamp":"2026-11-16T05:35:30.461Z","sourceMessageIndex":9}
+  100s   7 {"action":"newPage","data":{"title":"Part 3 · Your job · 仕事について"},"timestamp":"2026-11-16T05:35:40.729Z","sourceMessageIndex":9}
+  100s   8 {"action":"showProblem","data":{"problem":{"statement":"1. Choose the tense that shows the timing and relevance of an event: 'I have worked with international customers for several years.' emphasises experience accumulated over time; 'I worked with a major international customer last year.' describes a completed experience in a specific past period.\n2. Practice question: Could you describe your current responsibilities and explain how your role has developed over time?","format":"free-response","title":"Key ideas"},"id":"showProblem-3"},"timestamp":"2026-11-16T05:35:40.738Z","sourceMessageIndex":9}
+  135s   9 {"action":"showSentence","data":{"sentence":"I was responsible for testing the website.","id":"showSentence-3"},"timestamp":"2026-11-16T05:36:15.741Z","sourceMessageIndex":13}
+  154s  10 {"action":"newPage","data":{"title":"Part 4 · Present perfect · 現在完了"},"timestamp":"2026-11-16T05:36:35.700Z","sourceMessageIndex":15}
+  154s  11 {"action":"showProblem","data":{"problem":{"statement":"Have you worked for your current company for a long time?","format":"free-response","title":"Try Yourself"},"id":"showProblem-4"},"timestamp":"2026-11-16T05:36:35.700Z","sourceMessageIndex":15}
+  178s  12 {"action":"showSentence","data":{"sentence":"I have worked at my company for five years.","id":"showSentence-4"},"timestamp":"2026-11-16T05:36:59.100Z","sourceMessageIndex":17}
+  202s  13 {"action":"showSentence","data":{"sentence":"I have learned how to negotiate with suppliers.","id":"showSentence-5"},"timestamp":"2026-11-16T05:37:23.339Z","sourceMessageIndex":19}
+  221s  14 {"action":"showSentence","data":{"sentence":"It has helped me get a better price.","id":"showSentence-6"},"timestamp":"2026-11-16T05:37:42.289Z","sourceMessageIndex":21}
+  265s  15 {"action":"showSentence","data":{"sentence":"It was last year, in the spring.","id":"showSentence-7"},"timestamp":"2026-11-16T05:38:26.258Z","sourceMessageIndex":25}
+  287s  16 {"action":"showSentence","data":{"sentence":"I did it with two colleagues from my team.","id":"showSentence-8"},"timestamp":"2026-11-16T05:38:48.358Z","sourceMessageIndex":27}
+  348s  17 {"action":"showSentence","data":{"sentence":"Yes, I have worked with a customer from Germany.","emphasis":["have","worked"],"emphasisAt":[2,3],"id":"showSentence-9"},"timestamp":"2026-11-16T05:39:48.778Z","sourceMessageIndex":33}
+  363s  18 {"action":"newPage","data":{"title":"Part 5 · Past simple · 過去形"},"timestamp":"2026-11-16T05:40:03.909Z","sourceMessageIndex":33}
+  363s  19 {"action":"showProblem","data":{"problem":{"statement":"Did you attend any business events or exhibitions last year?","format":"free-response","title":"Try Yourself"},"id":"showProblem-5"},"timestamp":"2026-11-16T05:40:03.909Z","sourceMessageIndex":33}
+  384s  20 {"action":"showSentence","data":{"sentence":"Yes, I went to a trade show in Tokyo last year.","id":"showSentence-10"},"timestamp":"2026-11-16T05:40:25.477Z","sourceMessageIndex":35}
+  488s  21 {"action":"showSentence","data":{"sentence":"I learned that communication is the most important thing.","id":"showSentence-11"},"timestamp":"2026-11-16T05:42:08.834Z","sourceMessageIndex":45}
+  508s  22 {"action":"showSentence","data":{"sentence":"Because my customers are from overseas.","id":"showSentence-12"},"timestamp":"2026-11-16T05:42:29.285Z","sourceMessageIndex":47}
+  525s  23 {"action":"newPage","data":{"title":"Part 6 · Conversation · 会話"},"timestamp":"2026-11-16T05:42:46.504Z","sourceMessageIndex":49}
+  525s  24 {"action":"showProblem","data":{"problem":{"statement":"What is one project you've worked on that you're particularly proud of?","format":"free-response","title":"Extension"},"id":"showProblem-6"},"timestamp":"2026-11-16T05:42:46.504Z","sourceMessageIndex":49}
+  549s  25 {"action":"showSentence","data":{"sentence":"Last month I made a presentation for a new product launch.","id":"showSentence-13"},"timestamp":"2026-11-16T05:43:09.996Z","sourceMessageIndex":51}
+  746s  26 {"action":"newPage","data":{"title":"Part 7 · Pronunciation · 発音"},"timestamp":"2026-11-16T05:46:26.814Z","sourceMessageIndex":73}
+  746s  27 {"action":"showProblem","data":{"problem":{"statement":"Would you like to practice your pronunciation? You can choose: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue.","format":"free-response","title":"Try Yourself"},"id":"showProblem-7"},"timestamp":"2026-11-16T05:46:26.814Z","sourceMessageIndex":73}
+  765s  28 {"action":"scrollTo","data":{"target":"item","targetId":"showSentence-10"},"timestamp":"2026-11-16T05:46:46.281Z","sourceMessageIndex":73}
+  765s  29 {"action":"scrollTo","data":{"target":"item","targetId":"showSentence-11"},"timestamp":"2026-11-16T05:46:46.282Z","sourceMessageIndex":73}
+  765s  30 {"action":"scrollTo","data":{"target":"item","targetId":"showSentence-12"},"timestamp":"2026-11-16T05:46:46.282Z","sourceMessageIndex":73}
+  765s  31 {"action":"scrollTo","data":{"target":"item","targetId":"showSentence-13"},"timestamp":"2026-11-16T05:46:46.283Z","sourceMessageIndex":73}
+  767s  32 {"action":"newPage","data":{"title":"Part 8 · Summary · まとめ"},"timestamp":"2026-11-16T05:46:48.331Z","sourceMessageIndex":75}
+  767s  33 {"action":"showProblem","data":{"problem":{"statement":"• Present perfect (have/has + past participle): experience that started in the past and continues now — I have worked with international customers for three years.\n• Past simple: a completed event at a specific time (yesterday, last year, ago) — I attended an exhibition last year.","format":"free-response","title":"Recap"},"id":"showProblem-8"},"timestamp":"2026-11-16T05:46:48.339Z","sourceMessageIndex":75}
+=== EVENTS
+  -22s embed_config: practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no
+  -22s persona_resolved: teacher=ryota
+  -22s embed_config: practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no
+  -22s persona_resolved: teacher=ryota
+  -22s partner_pool_snapshot: remaining=24056 cap=70920 session_max=1200 exhausted=false
+  -22s partner_pool_snapshot: remaining=24056 cap=70920 session_max=1200 exhausted=false
+  -21s perception_state: connecting
+  -21s perception_state: connecting
+  -21s perception_state: connected
+  -21s perception_state: connected
+  -21s shared_mic: opened: echoCancellation=true noiseSuppression=true autoGainControl=true sampleRate=48000 device="Fake Default Audio Input"
+  -21s perception_state: listening
+  -21s perception_state: listening
+  -20s opener_prefetch_skipped: fixed script: the client speaks the opening script
+   -2s start_typed_first: latched=true muted=false state=connected
+   -2s output_budget_headroom: required-phrases
+   -2s first_session_tip_attached: opening turn
+   -2s validator_tts_hold_started: attempt 0
+   -2s work_then_match: on for this turn
+   -2s pronunciation_tap: perception
+   -1s ack_suppressed: opening-turn
+    0s tool_call: Whiteboard tool: advanceLesson
+    0s fixed_script_advance_refused_script_missing: "overview" missing=[present perfect, past simple]
+    0s render_sync_empty_batch: no command survived processing
+    0s render_dropped: advance_lesson — This part's script has not been said yet — it must include: "present perfect", "past simple". Say it in this turn; the l
+    1s tool_call: Whiteboard tool: showSentence
+    1s render_sync_opening_bypass: 1 command(s) painted without waiting for an anchor
+    1s cache_start: read=112095 created=112095 in=9818
+    1s brain_validator_retry: Retrying: advance_lesson: This part's script has not been said yet — it must include: 
+    1s brain_validator_retry_context: student words attached (15 chars): "Yes, I'm ready."
+    3s tool_call: Whiteboard tool: advanceLesson
+    3s auto_newpage_on_advance_deferred: level-check: Part 2 · Level check · レベルチェック
+    3s rail_segment_held: "overview" stays active until the "level-check" page paints
+    3s render_sync_empty_batch: no command survived processing
+    4s auto_card_on_advance: level-check (misconception_check) — advanced without rendering the authored card
+    4s show_segment_card_resolved: level-check: "1. Can you tell me a little about your job? What d…"
+    4s tool_call: Whiteboard tool: showProblem
+    4s auto_new_page_first: no active page — opening the first page
+    4s auto_newpage_continuation_dropped: "Check" (deferred-page-is-authored) — deferred segment page "Part 2 · Level check · レベルチェック" kept
+    4s auto_newpage_on_advance_flushed: level-check: Part 2 · Level check · レベルチェック
+    4s render_sync_buffer: anchor=10 depth=1
+    4s advance_page_rearmed_after_kill: level-check (card queued)
+    4s fixed_script_entry_note_planted: "level-check" (brain advance)
+    4s render_sync_drop: 1 buffered render(s) dropped + retracted (1 id)
+    4s render_dropped: render_buffer — kill retraction of 1 buffered (1 id)
+    4s judge_kill_snapshot: 10 unplayed · heard=10
+    4s transition_ask_off_part: "Please answer this in English: what do you do at work?" vs "1. Can you tell me a little about your job? What do you do?
+…"
+    4s brain_validator_retry: Retrying: transition_ask_off_part: If the student just corrected you or asked something, answer
+    4s brain_validator_retry_context: student words attached (15 chars): "Yes, I'm ready."
+    5s meta_narration_dropped_note_citation_clause: "The student hasn't answered the level-check question yet, so" → "The student hasn't answered the level-check question yet."
+    5s meta_narration_dropped: The student hasn't answered the level-check question yet.
+    5s transition_ask_off_card_dropped: "Please answer in English: what do you do at work?"
+    6s judge_kill_resume_diverged: held=1
+    6s judge_authored_solution: Problem: 1. Can you tell me a little about your job? What do you do?
+2. Have you
+    8s judge_pass: grounded · You can say, "I work in…" or "I am a…".…
+    8s transition_ask_engine_fallback: "level-check" "What is one skill you'd like to improve in your English, and why is it important"
+    8s brain_turn: Brain 9542ms · 4 tool call(s) · 15 sentence(s) · first_sentence=2008ms · in=4273 out=61 cr=112173 cc=636
+    8s turn_length: 15 sentence(s) · 154 word(s) · 4 tool call(s)
+    8s fixed_script_entry_note_planted: "level-check" (brain advance)
+    8s tool_call: Whiteboard tool: showTable
+    8s auto_newpage_on_advance_card_added: level-check
+    8s auto_newpage_on_advance_flushed: level-check: Part 2 · Level check · レベルチェック
+    8s render_sync_buffer: anchor=0 depth=1 repair-anchor
+    8s rail_segment_released: "level-check" (its page painted)
+    8s render_sync_flush: 2 render(s) painted batches=1 (showProblem-2,showTable-1)
+    8s fixed_script_outline_card: rows=8 id=showProblem-2
+    8s opener_record_captured: [proactive] You can say, "I work in…" or "I am a…". What is one skill yo
+    8s killed_render_kept_validated: deferred 1: showSentence-1
+    8s qpin_set_verbatim: "What is one skill you'd like to improve in your English, and"
+    8s qpin_answer_clear_refused: no-student-turn — "What is one skill you'd like to improve in your English, and"
+   10s perception_opening_audio_done: processing
+   10s turn_latency: eager→end=nullms end→fetch=nullms brain_first=2021ms tts→audio=113ms TOTAL=nullms complete=false
+   25s thinking_cue_chime: thinking_cue_chime
+   25s fixed_script_entry_note_planted: "level-check" delivered with this turn
+   25s numbered_question_note_planted: 1 "level-check"
+   25s qpin_answer_clear_refused: awaiting-tutor-turn — "What is one skill you'd like to improve in your English, and"
+   25s verdict_precheck_pending: no hold on this turn
+   25s topic_shift: dist=0.883 — next whiteboard batch will get newPage
+   26s thinking_cue_ack_skipped: generic
+   28s verdict_precheck_none: ms=1840
+   28s typed_turn_field: ack
+   28s typed_turn_field: verdict
+   28s qpin_answer_clear_refused: no-affirm — "What is one skill you'd like to improve in your English, and"
+   28s typed_turn_field: verdict_say
+   28s typed_turn_field: board
+   28s typed_turn_field: correction
+   28s typed_turn_field: support_ja
+   29s typed_turn_field: next
+   29s typed_turn: verdict=none next=question ack=1 say=2 correction=no retries=0
+   29s judge_authored_solution: Problem: 1. Can you tell me a little about your job? What do you do?
+2. Have you
+   29s judge_pass: grounded · Thanks, that's clear. Can you tell me a little abo…
+   29s brain_turn: Brain 4366ms · 0 tool call(s) · 3 sentence(s) · first_sentence=3453ms · in=4713 out=90 cr=65770 cc=16450
+   29s turn_length: 3 sentence(s) · 16 word(s) · 0 tool call(s)
+   29s qpin_replaced: new ask in turn tutor-streaming-1794807266153-0 — "What is one skill you'd like to improve in your English, and"
+   30s qpin_set_verbatim: "What do you do?"
+   30s qpin_answer_clear_refused: no-student-turn — "What do you do?"
+   30s turn_latency: eager→end=nullms end→fetch=nullms brain_first=3460ms tts→audio=82ms TOTAL=nullms complete=false
+   40s thinking_cue_chime: thinking_cue_chime
+   40s numbered_question_note_planted: 2 "level-check"
+   40s qpin_answer_clear_refused: awaiting-tutor-turn — "What do you do?"
+   40s verdict_precheck_pending: no hold on this turn
+   41s thinking_cue_ack_skipped: generic
+   42s typed_turn_field: ack
+   42s typed_turn_field: verdict
+   42s qpin_answer_clear_refused: no-affirm — "What do you do?"
+   42s typed_turn_field: verdict_say
+   42s typed_turn_field: board
+   42s typed_turn_field: correction
+   42s typed_turn_field: support_ja
+   42s typed_turn_field: next
+   42s typed_turn: verdict=none next=question ack=1 say=2 correction=no retries=0
+   43s verdict_precheck: answers=open_question verdict=partly_correct confidence=medium ms=2324 proposed="I work in the sales department of an ele"
+   43s judge_authored_solution: Problem: 1. Can you tell me a little about your job? What do you do?
+2. Have you
+   43s judge_pass: grounded · Thanks for sharing that, that sounds like a busy d…
+   43s brain_turn: Brain 2986ms · 0 tool call(s) · 3 sentence(s) · first_sentence=1742ms · in=4680 out=109 cr=82220 cc=52
+   43s turn_length: 3 sentence(s) · 27 word(s) · 0 tool call(s)
+   43s pronunciation_claim_note_planted: Thanks for sharing that, that sounds like a busy department. Have you ever worke
+   43s pacing_ack_not_affirm: "Thanks for sharing that, that sounds like a busy d"
+   43s qpin_replaced: new ask in turn tutor-streaming-1794807281463-0 — "What do you do?"
+   44s qpin_set_verbatim: "If so, can you tell me about the experience?"
+   44s qpin_answer_clear_refused: no-student-turn — "If so, can you tell me about the experience?"
+   46s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1746ms tts→audio=83ms TOTAL=nullms complete=false
+   61s thinking_cue_chime: thinking_cue_chime
+   61s pronunciation_claim_note_consumed: delivered with this turn
+   61s numbered_question_note_planted: 3 "level-check"
+   61s qpin_answer_clear_refused: awaiting-tutor-turn — "If so, can you tell me about the experience?"
+   61s verdict_precheck_pending: no hold on this turn
+   62s thinking_cue_ack_skipped: generic
+   62s typed_turn_field: ack
+   62s typed_turn_field: verdict
+   62s typed_turn_field: verdict_say
+   62s typed_turn_field: board
+   62s typed_turn_field: correction
+   62s typed_turn_field: support_ja
+   62s qpin_answer_clear_refused: no-affirm — "If so, can you tell me about the experience?"
+   62s typed_turn_field: next
+   62s typed_turn: verdict=none next=question ack=1 say=1 correction=no retries=0
+   63s verdict_precheck_none: ms=2260
+   63s judge_authored_solution: Problem: 1. Can you tell me a little about your job? What do you do?
+2. Have you
+   64s judge_pass: grounded · Three months sounds like a real project. What is o…
+   64s brain_turn: Brain 2948ms · 0 tool call(s) · 2 sentence(s) · first_sentence=1399ms · in=4986 out=98 cr=82272 cc=75
+   64s turn_length: 2 sentence(s) · 25 word(s) · 0 tool call(s)
+   64s pronunciation_claim_note_planted: Three months sounds like a real project. What is one skill you'd like to improve
+   64s correct_retry_note_planted: earlier answered question re-asked: "what is one skill you'd like to improve in your english and "
+   64s qpin_replaced: new ask in turn tutor-streaming-1794807301991-0 — "If so, can you tell me about the experience?"
+   64s qpin_set: "What is one English skill you'd like to improve, and why is "
+   64s qpin_answer_clear_refused: no-student-turn — "What is one English skill you'd like to improve, and why is "
+   65s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1401ms tts→audio=77ms TOTAL=nullms complete=false
+   80s thinking_cue_chime: thinking_cue_chime
+   80s correct_retry_note_consumed: delivered with this turn
+   80s pronunciation_claim_note_consumed: delivered with this turn
+   80s numbered_question_note_planted: all answered "level-check"
+   80s qpin_answer_clear_refused: awaiting-tutor-turn — "What is one English skill you'd like to improve, and why is "
+   80s verdict_precheck_pending: no hold on this turn
+   80s topic_shift: dist=0.702 — next whiteboard batch will get newPage
+   81s ack_suppressed: damping
+   81s typed_turn_field: ack
+   81s typed_turn_field: verdict
+   81s qpin_answer_clear_refused: no-affirm — "What is one English skill you'd like to improve, and why is "
+   81s typed_turn_field: verdict_say
+   81s typed_turn_field: board
+   81s tool_call: Whiteboard tool: showSentence
+   81s topic_shift_held_for_sentence: sentence-only batch stays on the current page; the newPage mark waits for the next batch
+   81s render_sync_buffer: anchor=2 depth=1 repair-anchor
+   81s typed_turn_effect: model_card
+   81s typed_turn_field: correction
+   81s typed_turn_field: support_ja
+   81s typed_turn_field: next
+   81s working_level_estimate_requested: "level-check" answers=4
+   81s auto_newpage_on_advance_deferred: topic-intro: Part 3 · Your job · 仕事について
+   81s rail_segment_held: "level-check" stays active until the "topic-intro" page paints
+   81s typed_turn_effect: advance level-check→topic-intro
+   81s typed_turn_page_turn_held_for_card: level-check→topic-intro: page + card after say sentence 4
+   81s typed_turn_bridge_missing: level-check→topic-intro
+   81s typed_turn: verdict=correct next=move ack=1 say=2 correction=no retries=0
+   82s verdict_precheck: answers=open_question verdict=correct confidence=high ms=2253 proposed="I want to improve my speaking because I "
+   82s working_level_set: advanced source=estimate evidence=Answers are fluent, grammatically accurate, and use varied vocabulary; the learner forms complex sen
+   83s judge_pass: grounded · That's a very practical goal, Haruto. Speaking cle…
+   83s brain_turn: Brain 3054ms · 0 tool call(s) · 5 sentence(s) · first_sentence=1225ms · in=5155 out=175 cr=82347 cc=47
+   83s turn_length: 5 sentence(s) · 33 word(s) · 0 tool call(s)
+   83s typed_turn_page_turn_waits: brain idle: say sentence 4 not finished (started 1)
+   83s qpin_set: "What are your main responsibilities at work?"
+   83s qpin_answer_clear_refused: no-student-turn — "What are your main responsibilities at work?"
+   83s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1227ms tts→audio=83ms TOTAL=nullms complete=false
+   89s render_sync_flush: 1 render(s) painted (showSentence-2)
+  100s rail_segment_released: "topic-intro" (its page painted)
+  100s auto_newpage_on_advance_flushed: topic-intro: Part 3 · Your job · 仕事について at turn end
+  100s tool_call: Whiteboard tool: showProblem
+  100s auto_newpage_on_advance_card_added: topic-intro (turn end)
+  100s topic_shift_cleared_by_segment_page: topic-intro: Part 3 · Your job · 仕事について
+  102s thinking_cue_chime: thinking_cue_chime
+  102s numbered_question_note_planted: 1 "topic-intro"
+  102s qpin_answer_clear_refused: awaiting-tutor-turn — "What are your main responsibilities at work?"
+  102s verdict_precheck_pending: no hold on this turn
+  103s thinking_cue_ack_skipped: generic
+  104s verdict_precheck_none: ms=1773
+  104s typed_turn_field: ack
+  104s qpin_answer_clear_refused: no-affirm — "What are your main responsibilities at work?"
+  105s typed_turn_field: verdict
+  105s typed_turn_field: verdict_say
+  105s typed_turn_field: board
+  105s typed_turn_field: correction
+  105s typed_turn_field: support_ja
+  105s typed_turn_field: next
+  105s typed_turn: verdict=incorrect next=question ack=1 say=1 correction=no retries=0
+  106s judge_pass: grounded · Thanks, that gives me a clearer picture. That's a …
+  106s brain_turn: Brain 4124ms · 0 tool call(s) · 5 sentence(s) · first_sentence=2790ms · in=4161 out=156 cr=65770 cc=17043
+  106s turn_length: 5 sentence(s) · 45 word(s) · 0 tool call(s)
+  106s qpin_replaced: new ask in turn tutor-streaming-1794807342767-0 — "What are your main responsibilities at work?"
+  106s qpin_set_ask: gist empty: "Could you describe your current responsibilities and explain"
+  106s qpin_answer_clear_refused: no-student-turn — "Could you describe your current responsibilities and explain"
+  107s turn_latency: eager→end=nullms end→fetch=nullms brain_first=2792ms tts→audio=85ms TOTAL=nullms complete=false
+  128s thinking_cue_chime: thinking_cue_chime
+  128s qpin_answer_clear_refused: awaiting-tutor-turn — "Could you describe your current responsibilities and explain"
+  128s verdict_precheck_pending: no hold on this turn
+  128s topic_shift: dist=0.748 — next whiteboard batch will get newPage
+  129s thinking_cue_ack_skipped: generic
+  129s typed_turn_field: ack
+  129s typed_turn_field: verdict
+  129s qpin_answer_clear_refused: no-affirm — "Could you describe your current responsibilities and explain"
+  129s typed_turn_field: verdict_say
+  129s typed_turn_field: board
+  129s tool_call: Whiteboard tool: showSentence
+  129s topic_shift_held_for_sentence: sentence-only batch stays on the current page; the newPage mark waits for the next batch
+  129s render_sync_buffer: anchor=2 depth=1 repair-anchor
+  129s typed_turn_effect: model_card
+  129s typed_turn_field: correction
+  130s typed_turn_field: support_ja
+  130s tts_sentence_split: 2 parts: en"was responsible for." | ja"は「〜を担当していた」という意味です。"
+  130s typed_turn_field: next
+  130s typed_turn: verdict=correct next=question ack=1 say=1 correction=no retries=0
+  131s verdict_precheck: answers=other_part verdict=incorrect confidence=medium ms=2756 proposed="I was responsible for testing the websit"
+  132s judge_pass: grounded · Thanks for sharing that. That's a clear sentence a…
+  132s brain_turn: Brain 3538ms · 0 tool call(s) · 4 sentence(s) · first_sentence=1318ms · in=4074 out=137 cr=82813 cc=108
+  132s turn_length: 4 sentence(s) · 25 word(s) · 0 tool call(s)
+  132s pacing_ack_not_affirm: "Thanks for sharing that. That's a clear sentence a"
+  132s qpin_replaced: new ask in turn tutor-streaming-1794807369286-0 — "Could you describe your current responsibilities and explain"
+  132s qpin_set: "What are you responsible for now in your current role?"
+  132s qpin_answer_clear_refused: no-student-turn — "What are you responsible for now in your current role?"
+  135s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1319ms tts→audio=89ms TOTAL=nullms complete=false
+  135s render_sync_flush: 1 render(s) painted (showSentence-3)
+  147s thinking_cue_chime: thinking_cue_chime
+  147s probe_checkin_note_planted: "「was responsible for」は「〜を担当していた」という意味です。 What are you responsible for now, in yo"
+  147s qpin_answer_clear_refused: awaiting-tutor-turn — "What are you responsible for now in your current role?"
+  147s verdict_precheck_pending: no hold on this turn
+  148s typed_turn_field: ack
+  148s typed_turn_field: verdict
+  148s typed_turn_field: verdict_say
+  148s typed_turn_field: board
+  148s typed_turn_field: correction
+  148s qpin_cleared_answered: answered and affirmed — "What are you responsible for now in your current role?"
+  148s typed_turn_field: support_ja
+  148s tts_sentence_split: 2 parts: en"as I said." | ja"は「さっき言ったように」という意味です。"
+  148s typed_turn_field: next
+  148s auto_newpage_on_advance_deferred: present-perfect: Part 4 · Present perfect · 現在完了
+  148s rail_segment_held: "topic-intro" stays active until the "present-perfect" page paints
+  148s typed_turn_effect: advance topic-intro→present-perfect
+  148s tool_call: Whiteboard tool: showProblem
+  148s auto_new_page: topic shift (dist=0.748) (H4)
+  148s auto_newpage_continuation_dropped: "Try Yourself" (deferred-page-is-authored) — deferred segment page "Part 4 · Present perfect · 現在完了" kept
+  148s auto_newpage_on_advance_flushed: present-perfect: Part 4 · Present perfect · 現在完了 (on the transition sentence 3)
+  148s render_sync_buffer: anchor=3 depth=1 repair-anchor
+  148s segment_card_auto: present-perfect id=showProblem-4 "Have you worked for your current company for a lon" (typed)
+  148s typed_turn_bridge_missing: topic-intro→present-perfect
+  148s typed_turn: verdict=none next=move ack=1 say=2 correction=no retries=0
+  149s verdict_precheck: answers=other_part verdict=incorrect confidence=high ms=2211 proposed="I was responsible for testing the websit"
+  149s judge_authored_solution: Problem: Have you worked for your current company for a long time?
+  150s judge_pass: grounded · Right, thanks for repeating that. 「as I said」は「さっき…
+  150s brain_turn: Brain 2984ms · 0 tool call(s) · 4 sentence(s) · first_sentence=1199ms · in=4320 out=119 cr=82921 cc=81
+  150s turn_length: 4 sentence(s) · 26 word(s) · 0 tool call(s)
+  150s pacing_precheck_override: checked_incorrect — tutor affirmed, not counted · student="I was responsible for testing the websit"
+  150s qpin_set: "Have you worked for your current company for a long time?"
+  150s qpin_answer_clear_refused: no-student-turn — "Have you worked for your current company for a long time?"
+  150s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1201ms tts→audio=83ms TOTAL=nullms complete=false
+  154s rail_segment_released: "present-perfect" (its page painted)
+  154s render_sync_flush: 1 render(s) painted (showProblem-4)
+  166s thinking_cue_chime: thinking_cue_chime
+  166s qpin_answer_clear_refused: awaiting-tutor-turn — "Have you worked for your current company for a long time?"
+  166s verdict_precheck_pending: no hold on this turn
+  166s topic_shift: dist=0.791 — next whiteboard batch will get newPage
+  167s thinking_cue_ack_skipped: generic
+  167s typed_turn_field: ack
+  167s typed_turn_field: verdict
+  167s qpin_cleared_answered: answered and affirmed — "Have you worked for your current company for a long time?"
+  168s typed_turn_field: verdict_say
+  168s typed_turn_field: board
+  168s tool_call: Whiteboard tool: showSentence
+  168s topic_shift_held_for_sentence: sentence-only batch stays on the current page; the newPage mark waits for the next batch
+  168s render_sync_buffer: anchor=3 depth=1 repair-anchor
+  168s typed_turn_effect: model_card
+  168s typed_turn_field: correction
+  168s typed_turn_field: support_ja
+  168s typed_turn_field: next
+  168s typed_turn: verdict=correct next=question ack=1 say=1 correction=no retries=0
+  169s verdict_precheck: answers=open_question verdict=correct confidence=high ms=2380 proposed="Yes, I have worked at my company for fiv"
+  169s judge_authored_solution: Problem: Have you worked for your current company for a long time?
+  169s judge_pass: grounded · Good, that's a clear answer. Yes, you have worked …
+  169s brain_turn: Brain 3102ms · 0 tool call(s) · 5 sentence(s) · first_sentence=1285ms · in=4503 out=155 cr=83002 cc=79
+  169s turn_length: 5 sentence(s) · 40 word(s) · 0 tool call(s)
+  169s pacing_streak: correct=1
+  170s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1286ms tts→audio=94ms TOTAL=nullms complete=false
+  170s qpin_set: "What is one important skill you have learned at your company"
+  170s qpin_answer_clear_refused: no-student-turn — "What is one important skill you have learned at your company"
+  178s render_sync_flush: 1 render(s) painted (showSentence-4)
+  192s thinking_cue_chime: thinking_cue_chime
+  192s probe_checkin_note_planted: "「have worked」は、過去に始まって今も続いていることを表します。 What is one important skill you have learn"
+  192s qpin_answer_clear_refused: awaiting-tutor-turn — "What is one important skill you have learned at your company"
+  192s verdict_precheck_pending: no hold on this turn
+  192s topic_shift: dist=0.739 — next whiteboard batch will get newPage
+  193s typed_turn_field: ack
+  193s typed_turn_field: verdict
+  193s qpin_answer_clear_refused: no-affirm — "What is one important skill you have learned at your company"
+  193s typed_turn_field: verdict_say
+  193s typed_turn_field: board
+  193s tool_call: Whiteboard tool: showSentence
+  193s topic_shift_held_for_sentence: sentence-only batch stays on the current page; the newPage mark waits for the next batch
+  193s render_sync_buffer: anchor=3 depth=1 repair-anchor
+  193s typed_turn_effect: model_card
+  193s typed_turn_field: correction
+  193s typed_turn_field: support_ja
+  195s typed_turn_field: next retried
+  195s typed_turn: verdict=correct next=question ack=1 say=1 correction=no retries=1 reason=illegal_kind
+  195s verdict_precheck: answers=open_question verdict=correct confidence=high ms=2110 proposed="I have learned how to negotiate with sup"
+  195s judge_authored_solution: Problem: Have you worked for your current company for a long time?
+  196s judge_pass: grounded · Negotiating with suppliers is a valuable skill. Th…
+  196s brain_turn: Brain 3899ms · 0 tool call(s) · 5 sentence(s) · first_sentence=1188ms · in=9872 out=332 cr=166265 cc=103
+  196s turn_length: 5 sentence(s) · 32 word(s) · 0 tool call(s)
+  196s qpin_replaced: new ask in turn tutor-streaming-1794807433063-0 — "What is one important skill you have learned at your company"
+  196s qpin_set: "How has negotiating with suppliers helped you with customers"
+  196s qpin_answer_clear_refused: no-student-turn — "How has negotiating with suppliers helped you with customers"
+  197s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1190ms tts→audio=82ms TOTAL=nullms complete=false
+  202s render_sync_flush: 1 render(s) painted (showSentence-5)
+  213s thinking_cue_chime: thinking_cue_chime
+  213s probe_checkin_note_planted: "「have learned」は、過去に始めて今も役立っていることを表します。 How has that skill helped you in your wor"
+  213s qpin_answer_clear_refused: awaiting-tutor-turn — "How has negotiating with suppliers helped you with customers"
+  213s verdict_precheck_pending: no hold on this turn
+  214s thinking_cue_ack_skipped: generic
+  214s typed_turn_field: ack
+  214s typed_turn_field: verdict
+  214s typed_turn_field: verdict_say
+  214s qpin_cleared_answered: answered and affirmed — "How has negotiating with suppliers helped you with customers"
+  214s typed_turn_field: board
+  214s tool_call: Whiteboard tool: showSentence
+  214s topic_shift_held_for_sentence: sentence-only batch stays on the current page; the newPage mark waits for the next batch
+  214s render_sync_buffer: anchor=2 depth=1 repair-anchor
+  214s typed_turn_effect: model_card
+  214s typed_turn_field: correction
+  214s typed_turn_field: support_ja
+  214s tts_sentence_split: 2 parts: en"get a better price." | ja"は「より良い価格を得る」という意味です。"
+  216s typed_turn_field: next retried
+  216s typed_turn: verdict=correct next=question ack=1 say=2 correction=no retries=1 reason=illegal_kind
+  216s verdict_precheck: answers=open_question verdict=correct confidence=medium ms=2393 proposed="It has helped me get a better price."
+  216s judge_authored_solution: Problem: Have you worked for your current company for a long time?
+  217s judge_pass: grounded · That's a useful result. Good answer. You used the …
+  217s brain_turn: Brain 4145ms · 0 tool call(s) · 5 sentence(s) · first_sentence=1372ms · in=9926 out=310 cr=166471 cc=103
+  217s turn_length: 5 sentence(s) · 37 word(s) · 0 tool call(s)
+  217s praise_variety_note_planted: 3+ superlatives in the last 4 turns — sticky from now on
+  217s pacing_streak: correct=2
+  217s qpin_set: "Can you tell me about a time you used this skill with a cust"
+  217s qpin_answer_clear_refused: no-student-turn — "Can you tell me about a time you used this skill with a cust"
+  221s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1374ms tts→audio=82ms TOTAL=nullms complete=false
+  221s render_sync_flush: 1 render(s) painted (showSentence-6)
+  237s thinking_cue_chime: thinking_cue_chime
+  237s praise_variety_note_consumed: delivered with this turn
+  237s qpin_answer_clear_refused: awaiting-tutor-turn — "Can you tell me about a time you used this skill with a cust"
+  237s verdict_precheck_pending: no hold on this turn
+  239s thinking_cue_ack_skipped: generic
+  239s typed_turn_field: ack
+  239s typed_turn_field: verdict
+  239s typed_turn_field: verdict_say
+  239s typed_turn_field: board
+  239s typed_turn_field: correction
+  239s typed_turn_field: support_ja
+  239s tts_sentence_split: 2 parts: en"about three months." | ja"は「約3か月」という意味です。"
+  239s qpin_answer_clear_refused: no-affirm — "Can you tell me about a time you used this skill with a cust"
+  239s typed_turn_field: next
+  239s typed_turn: verdict=none next=question ack=1 say=2 correction=no retries=0
+  240s verdict_precheck: answers=open_question verdict=partly_correct confidence=medium ms=2346 proposed="It took about three months."
+  240s judge_authored_solution: Problem: Have you worked for your current company for a long time?
+  240s judge_pass: grounded · Three months, got it. 「about three months」は「約3か月」と…
+  240s brain_turn: Brain 3016ms · 0 tool call(s) · 4 sentence(s) · first_sentence=1794ms · in=4787 out=110 cr=83287 cc=94
+  240s turn_length: 4 sentence(s) · 23 word(s) · 0 tool call(s)
+  240s correct_retry_note_planted: answered question re-asked: "can you tell me about a time you used this skill with a cust"
+  240s qpin_replaced: new ask in turn tutor-streaming-1794807478593-0 — "Can you tell me about a time you used this skill with a cust"
+  241s qpin_set_verbatim: "What happened?"
+  241s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1796ms tts→audio=82ms TOTAL=nullms complete=false
+  241s qpin_answer_clear_refused: no-student-turn — "What happened?"
+  256s thinking_cue_chime: thinking_cue_chime
+  256s praise_variety_note_consumed: delivered with this turn
+  256s correct_retry_note_consumed: delivered with this turn
+  256s qpin_answer_clear_refused: awaiting-tutor-turn — "What happened?"
+  256s verdict_precheck_pending: no hold on this turn
+  257s thinking_cue_ack_skipped: generic
+  257s typed_turn_field: ack
+  257s typed_turn_field: verdict
+  257s qpin_cleared_answered: answered and affirmed — "What happened?"
+  257s typed_turn_field: verdict_say
+  257s typed_turn_field: board
+  257s tool_call: Whiteboard tool: showSentence
+  257s topic_shift_held_for_sentence: sentence-only batch stays on the current page; the newPage mark waits for the next batch
+  257s render_sync_buffer: anchor=3 depth=1 repair-anchor
+  257s typed_turn_effect: model_card
+  257s typed_turn_field: correction
+  258s typed_turn_field: support_ja
+  258s tts_sentence_split: 3 parts: ja"「last year」は「去年」、" | en"in the spring." | ja"は「春に」という意味です。"
+  258s typed_turn_field: next
+  258s typed_turn: verdict=correct next=question ack=1 say=2 correction=no retries=0
+  258s verdict_precheck: answers=other_part verdict=incorrect confidence=medium ms=2317 proposed="It was last year, in the spring."
+  258s judge_authored_solution: Problem: Have you worked for your current company for a long time?
+  259s judge_pass: grounded · Right, that was last spring. Yes, that is a clear …
+  259s brain_turn: Brain 2967ms · 0 tool call(s) · 5 sentence(s) · first_sentence=1297ms · in=4950 out=150 cr=83381 cc=61
+  259s turn_length: 5 sentence(s) · 36 word(s) · 0 tool call(s)
+  259s pacing_streak: correct=3
+  259s qpin_set: "What did you do at work during that time?"
+  259s qpin_answer_clear_refused: no-student-turn — "What did you do at work during that time?"
+  260s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1298ms tts→audio=86ms TOTAL=nullms complete=false
+  265s render_sync_flush: 1 render(s) painted (showSentence-7)
+  277s thinking_cue_chime: thinking_cue_chime
+  277s praise_variety_note_consumed: delivered with this turn
+  278s qpin_answer_clear_refused: awaiting-tutor-turn — "What did you do at work during that time?"
+  278s verdict_precheck_pending: no hold on this turn
+  279s thinking_cue_ack_skipped: generic
+  279s typed_turn_field: ack
+  279s typed_turn_field: verdict
+  279s segment_overlong: segment "present-perfect" has run 6 substantive tutor turns without advancing
+  279s qpin_cleared_answered: answered and affirmed — "What did you do at work during that time?"
+  279s typed_turn_field: verdict_say
+  279s typed_turn_field: board
+  279s tool_call: Whiteboard tool: showSentence
+  279s topic_shift_held_for_sentence: sentence-only batch stays on the current page; the newPage mark waits for the next batch
+  279s render_sync_buffer: anchor=2 depth=1 repair-anchor
+  279s typed_turn_effect: model_card
+  279s typed_turn_field: correction
+  279s typed_turn_field: support_ja
+  279s tts_sentence_split: 2 parts: en"with two colleagues." | ja"は「2人の同僚と」という意味です。"
+  279s perception_state: reconnecting
+  279s perception_state: reconnecting
+  279s perception_state: connecting
+  279s perception_state: connecting
+  279s typed_turn_field: next
+  279s typed_turn: verdict=correct next=question ack=1 say=1 correction=no retries=0
+  279s perception_state: connected
+  279s perception_state: connected
+  279s perception_state: listening
+  279s perception_state: listening
+  280s verdict_precheck: answers=neither verdict=cannot_determine confidence=medium ms=2030 proposed="I did it with two colleagues from my tea"
+  280s judge_authored_solution: Problem: Have you worked for your current company for a long time?
+  280s judge_pass: grounded · Good, that gives a clear picture of your team. Tha…
+  280s brain_turn: Brain 2649ms · 0 tool call(s) · 4 sentence(s) · first_sentence=1369ms · in=4835 out=146 cr=83442 cc=94
+  280s turn_length: 4 sentence(s) · 34 word(s) · 0 tool call(s)
+  280s segment_overlong_note_skipped_offer: present-perfect after 7 turns — the part's offer replaces it
+  280s board_anchor_flagged: question with no board write — note planted for next turn
+  280s pacing_streak: correct=4
+  281s qpin_set: "What was the most challenging part of that work?"
+  281s qpin_answer_clear_refused: no-student-turn — "What was the most challenging part of that work?"
+  282s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1370ms tts→audio=85ms TOTAL=nullms complete=false
+  287s render_sync_flush: 1 render(s) painted (showSentence-8)
+  299s thinking_cue_chime: thinking_cue_chime
+  299s praise_variety_note_consumed: delivered with this turn
+  299s qpin_answer_clear_refused: awaiting-tutor-turn — "What was the most challenging part of that work?"
+  299s verdict_precheck_pending: no hold on this turn
+  300s ack_suppressed: damping
+  300s typed_turn_field: ack
+  300s typed_turn_field: verdict
+  300s typed_turn_field: verdict_say
+  300s typed_turn_field: board
+  300s typed_turn_field: correction
+  300s qpin_cleared_answered: answered and affirmed — "What was the most challenging part of that work?"
+  300s typed_turn_field: support_ja
+  300s tts_sentence_split: 2 parts: en"about three months." | ja"は「約3か月」という意味です。"
+  301s typed_turn_field: next retried
+  301s typed_turn: verdict=none next=offer ack=1 say=1 correction=no retries=1 reason=illegal_kind
+  301s verdict_precheck: answers=other_part verdict=incorrect confidence=medium ms=1756 proposed="It took about three months."
+  301s judge_authored_solution: Problem: Have you worked for your current company for a long time?
+  304s judge_advisory_flag: 1 issue(s): Right, about three months.… · why: The tutor asked 'What was the most challenging part of that work?' — a question about the nature or difficulty of the wo
+  304s judge_issue_decision: advisory · kind=false_praise verdict=incorrect → note:false_praise no-withhold (false-praise) · Right, about three months.
+  304s judge_correction_note_planted: advisory: Right, about three months.
+  304s brain_turn: Brain 4959ms · 0 tool call(s) · 3 sentence(s) · first_sentence=1209ms · in=10428 out=225 cr=167162 cc=90
+  304s turn_length: 3 sentence(s) · 24 word(s) · 0 tool call(s)
+  304s praise_variety_note_planted: 3+ stock praise openers in the last 4 turns (sticky)
+  304s board_anchor_flagged: question with no board write — note planted for next turn
+  304s qpin_set_verbatim: "「about three months」は「約3か月」という意味です。 Would you like one more "
+  304s qpin_answer_clear_refused: no-student-turn — "「about three months」は「約3か月」という意味です。 Would you like one more "
+  307s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1211ms tts→audio=82ms TOTAL=nullms complete=false
+  317s thinking_cue_chime: thinking_cue_chime
+  317s praise_variety_note_consumed: delivered with this turn
+  317s fixed_script_offer_accepted: "present-perfect" "One more, please."
+  317s judge_correction_note_consumed: delivered with this turn
+  318s qpin_answer_clear_refused: awaiting-tutor-turn — "「about three months」は「約3か月」という意味です。 Would you like one more "
+  318s verdict_precheck_pending: no hold on this turn
+  319s thinking_cue_ack_skipped: generic
+  319s typed_turn_field: ack
+  319s typed_turn_field: verdict
+  319s typed_turn_field: verdict_say
+  319s typed_turn_field: board
+  319s typed_turn_field: correction
+  319s qpin_answer_clear_refused: no-affirm — "「about three months」は「約3か月」という意味です。 Would you like one more "
+  319s typed_turn_field: support_ja
+  319s typed_turn_field: next
+  319s verdict_precheck: answers=open_question verdict=correct confidence=high ms=1886 proposed="One more, please."
+  319s typed_turn: verdict=none next=question ack=1 say=2 correction=no retries=0
+  319s judge_authored_solution: Problem: Have you worked for your current company for a long time?
+  320s judge_pass: grounded · Sure, one more. もう1問ですね。 Have you ever visited a f…
+  320s brain_turn: Brain 2620ms · 0 tool call(s) · 4 sentence(s) · first_sentence=1574ms · in=5540 out=107 cr=83626 cc=60
+  320s turn_length: 4 sentence(s) · 20 word(s) · 0 tool call(s)
+  320s board_anchor_flagged: question with no board write — note planted for next turn
+  320s qpin_replaced: new ask in turn tutor-streaming-1794807558691-0 — "「about three months」は「約3か月」という意味です。 Would you like one more "
+  321s qpin_set: "Have you ever visited a foreign company's office?"
+  321s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1576ms tts→audio=86ms TOTAL=nullms complete=false
+  321s qpin_answer_clear_refused: no-student-turn — "Have you ever visited a foreign company's office?"
+  332s thinking_cue_chime: thinking_cue_chime
+  332s praise_variety_note_consumed: delivered with this turn
+  332s qpin_answer_clear_refused: awaiting-tutor-turn — "Have you ever visited a foreign company's office?"
+  332s verdict_precheck_pending: no hold on this turn
+  333s topic_shift: dist=0.584 — next whiteboard batch will get newPage
+  334s thinking_cue_ack_skipped: generic
+  334s typed_turn_field: ack
+  334s qpin_answer_clear_refused: no-affirm — "Have you ever visited a foreign company's office?"
+  334s verdict_precheck: answers=neither verdict=incorrect confidence=medium ms=1948 proposed="Yes, I worked with a customer from Germa"
+  334s typed_turn_field: verdict
+  334s typed_turn_field: verdict_say
+  334s typed_turn_field: board
+  334s typed_turn_field: correction
+  334s tool_call: Whiteboard tool: showSentence
+  334s topic_shift_held_for_sentence: sentence-only batch stays on the current page; the newPage mark waits for the next batch
+  334s render_sync_buffer: anchor=3 depth=1 repair-anchor
+  334s typed_turn_effect: correction_card
+  335s typed_turn_field: support_ja
+  335s tts_sentence_split: 2 parts: en"two years ago." | ja"のように時点がはっきりしている場合は過去形を使います。"
+  335s typed_turn_field: next
+  335s auto_newpage_on_advance_deferred: past-simple: Part 5 · Past simple · 過去形
+  335s rail_segment_held: "present-perfect" stays active until the "past-simple" page paints
+  335s typed_turn_effect: advance present-perfect→past-simple
+  335s tool_call: Whiteboard tool: showProblem
+  335s auto_newpage_on_advance_flushed: past-simple: Part 5 · Past simple · 過去形 (on the transition sentence 7)
+  335s render_sync_buffer: anchor=7 depth=2 repair-anchor
+  335s segment_card_auto: past-simple id=showProblem-5 "Did you attend any business events or exhibitions " (typed)
+  335s typed_turn: verdict=partly_correct next=move ack=1 say=2 correction=yes retries=0
+  335s judge_authored_solution: Problem: Did you attend any business events or exhibitions last year?
+  337s judge_advisory_flag: 1 issue(s): You used the past simple for a finished time, which is right… · why: The tutor affirms the student's use of past simple ('I worked') as 'right,' but then immediately contradicts this by exp
+  337s judge_issue_decision: advisory · kind=false_praise verdict=incorrect → note:false_praise no-withhold (false-praise) · You used the past simple for a finished time, whic
+  337s judge_correction_note_dropped: turn carried the correction
+  337s brain_turn: Brain 5170ms · 0 tool call(s) · 8 sentence(s) · first_sentence=1584ms · in=5135 out=284 cr=83686 cc=56
+  337s turn_length: 8 sentence(s) · 79 word(s) · 0 tool call(s)
+  337s turn_cap_flagged: 8 sentences · 79 words · 0 tool calls — cadence note planted for next turn
+  338s qpin_set: "Did you attend any business events or exhibitions last year?"
+  338s qpin_answer_clear_refused: no-student-turn — "Did you attend any business events or exhibitions last year?"
+  340s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1585ms tts→audio=84ms TOTAL=nullms complete=false
+  348s render_sync_flush: 1 render(s) painted (showSentence-9)
+  363s rail_segment_released: "past-simple" (its page painted)
+  363s render_sync_flush: 1 render(s) painted (showProblem-5)
+  366s idle_nudge_postponed: reason=busy recheckMs=15000 overdueMs=1 stretch=0
+  375s thinking_cue_chime: thinking_cue_chime
+  375s praise_variety_note_consumed: delivered with this turn
+  375s qpin_answer_clear_refused: awaiting-tutor-turn — "Did you attend any business events or exhibitions last year?"
+  375s verdict_precheck_pending: no hold on this turn
+  375s topic_shift: dist=0.594 — next whiteboard batch will get newPage
+  376s thinking_cue_ack_skipped: generic
+  376s typed_turn_field: ack
+  376s typed_turn_field: verdict
+  376s typed_turn_field: verdict_say
+  376s qpin_answer_clear_refused: no-affirm — "Did you attend any business events or exhibitions last year?"
+  376s typed_turn_field: board
+  376s tool_call: Whiteboard tool: showSentence
+  376s topic_shift_held_for_sentence: sentence-only batch stays on the current page; the newPage mark waits for the next batch
+  376s render_sync_buffer: anchor=2 depth=1 repair-anchor
+  376s typed_turn_effect: model_card
+  376s typed_turn_field: correction
+  376s typed_turn_field: support_ja
+  376s typed_turn_field: next
+  376s typed_turn: verdict=correct next=question ack=1 say=2 correction=no retries=0
+  377s verdict_precheck: answers=open_question verdict=correct confidence=high ms=2291 proposed="Yes, I went to a trade show in Tokyo las"
+  377s judge_authored_solution: Problem: Did you attend any business events or exhibitions last year?
+  378s judge_pass: grounded · Tokyoの展示会ですね。 That is a clear answer. You used the…
+  378s brain_turn: Brain 3038ms · 0 tool call(s) · 5 sentence(s) · first_sentence=1335ms · in=4492 out=163 cr=83742 cc=176
+  378s turn_length: 5 sentence(s) · 36 word(s) · 0 tool call(s)
+  378s qpin_replaced: new ask in turn tutor-streaming-1794807616005-0 — "Did you attend any business events or exhibitions last year?"
+  378s qpin_set: "What did you learn at the trade show?"
+  378s qpin_answer_clear_refused: no-student-turn — "What did you learn at the trade show?"
+  378s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1337ms tts→audio=87ms TOTAL=nullms complete=false
+  384s render_sync_flush: 1 render(s) painted (showSentence-10)
+  399s thinking_cue_chime: thinking_cue_chime
+  399s praise_variety_note_consumed: delivered with this turn
+  399s probe_checkin_note_planted: "last year は過去形と一緒に使う時間の表現です。 What did you learn at the trade show?"
+  399s qpin_answer_clear_refused: awaiting-tutor-turn — "What did you learn at the trade show?"
+  399s verdict_precheck_pending: no hold on this turn
+  400s thinking_cue_ack_skipped: generic
+  400s typed_turn_field: ack
+  400s typed_turn_field: verdict
+  400s typed_turn_field: verdict_say
+  400s typed_turn_field: board
+  400s typed_turn_field: correction
+  400s qpin_cleared_answered: answered and affirmed — "What did you learn at the trade show?"
+  400s typed_turn_field: support_ja
+  400s tts_sentence_split: 2 parts: en"as I said." | ja"は「さっき言ったように」という意味です。"
+  400s typed_turn_field: next
+  400s typed_turn: verdict=partly_correct next=question ack=1 say=2 correction=no retries=0
+  402s verdict_precheck: answers=other_part verdict=incorrect confidence=high ms=3235 proposed="Yes, I went to a trade show in Tokyo las"
+  402s judge_authored_solution: Problem: Did you attend any business events or exhibitions last year?
+  403s judge_pass: grounded · Right, you already said that. The sentence is corr…
+  403s brain_turn: Brain 4037ms · 0 tool call(s) · 5 sentence(s) · first_sentence=1370ms · in=4536 out=145 cr=83918 cc=107
+  403s turn_length: 5 sentence(s) · 41 word(s) · 0 tool call(s)
+  403s correct_retry_note_planted: answered question re-asked: "what did you learn at the trade show"
+  403s pacing_precheck_override: checked_incorrect — tutor affirmed, not counted · student="Yes, I went to a trade show in Tokyo las"
+  403s qpin_set: "What did you learn at the trade show?"
+  403s qpin_answer_clear_refused: no-student-turn — "What did you learn at the trade show?"
+  408s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1372ms tts→audio=82ms TOTAL=nullms complete=false
+  425s thinking_cue_chime: thinking_cue_chime
+  425s praise_variety_note_consumed: delivered with this turn
+  425s correct_retry_note_consumed: delivered with this turn
+  425s probe_checkin_note_planted: "「as I said」は「さっき言ったように」という意味です。 What did you learn at the trade show?"
+  425s qpin_answer_clear_refused: awaiting-tutor-turn — "What did you learn at the trade show?"
+  425s verdict_precheck_pending: no hold on this turn
+  426s ack_suppressed: damping
+  427s typed_turn_field: ack
+  427s typed_turn_field: verdict
+  427s typed_turn_field: verdict_say
+  427s qpin_answer_clear_refused: no-affirm — "What did you learn at the trade show?"
+  427s typed_turn_field: board
+  427s show_sentence_duplicate_skipped: page 5: "Yes, I went to a trade show in Tokyo last year."
+  427s typed_turn_effect: model_card not placed
+  427s typed_turn_field: correction
+  427s typed_turn_field: support_ja
+  427s typed_turn_field: next
+  427s typed_turn: verdict=correct next=question ack=1 say=2 correction=no retries=0
+  428s verdict_precheck: answers=other_part verdict=incorrect confidence=high ms=2342 proposed="Yes, I went to a trade show in Tokyo las"
+  428s judge_authored_solution: Problem: Did you attend any business events or exhibitions last year?
+  428s judge_pass: grounded · Tokyoの展示会ですね。 That is a clear answer, and you used…
+  428s brain_turn: Brain 2994ms · 0 tool call(s) · 5 sentence(s) · first_sentence=1834ms · in=4634 out=158 cr=84025 cc=110
+  428s turn_length: 5 sentence(s) · 30 word(s) · 0 tool call(s)
+  428s correct_retry_note_planted: answered question re-asked: "what did you learn at the trade show"
+  428s qpin_replaced: new ask in turn tutor-streaming-1794807666352-0 — "What did you learn at the trade show?"
+  429s qpin_set: "What did you learn at the trade show?"
+  429s qpin_answer_clear_refused: no-student-turn — "What did you learn at the trade show?"
+  429s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1836ms tts→audio=84ms TOTAL=nullms complete=false
+  446s thinking_cue_chime: thinking_cue_chime
+  446s praise_variety_note_consumed: delivered with this turn
+  446s correct_retry_note_consumed: delivered with this turn
+  446s probe_checkin_note_planted: "last year は過去形と一緒に使う時間の表現です。 What did you learn at the trade show?"
+  446s qpin_answer_clear_refused: awaiting-tutor-turn — "What did you learn at the trade show?"
+  446s verdict_precheck_pending: no hold on this turn
+  448s thinking_cue_ack_skipped: generic
+  448s typed_turn_field: ack
+  448s typed_turn_field: verdict
+  448s typed_turn_field: verdict_say
+  448s typed_turn_field: board
+  448s typed_turn_field: correction
+  448s typed_turn_field: support_ja
+  448s tts_sentence_split: 2 parts: en"as I said." | ja"は「さっき言ったように」という意味です。"
+  448s qpin_cleared_answered: answered and affirmed — "What did you learn at the trade show?"
+  448s typed_turn_field: next
+  448s typed_turn: verdict=none next=question ack=1 say=3 correction=no retries=0
+  449s verdict_precheck: answers=other_part verdict=incorrect confidence=high ms=2291 proposed="Yes, I went to a trade show in Tokyo las"
+  449s judge_authored_solution: Problem: Did you attend any business events or exhibitions last year?
+  450s judge_pass: grounded · Right, you said that already. 「as I said」は「さっき言ったよ…
+  450s brain_turn: Brain 3235ms · 0 tool call(s) · 4 sentence(s) · first_sentence=1460ms · in=4695 out=119 cr=84135 cc=102
+  450s turn_length: 4 sentence(s) · 25 word(s) · 0 tool call(s)
+  450s correct_retry_note_planted: answered question re-asked: "what did you learn at the trade show"
+  450s pacing_precheck_override: checked_incorrect — tutor affirmed, not counted · student="Yes, I went to a trade show in Tokyo las"
+  450s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1461ms tts→audio=78ms TOTAL=nullms complete=false
+  450s qpin_set: "What did you learn at the trade show?"
+  450s qpin_answer_clear_refused: no-student-turn — "What did you learn at the trade show?"
+  466s thinking_cue_chime: thinking_cue_chime
+  466s praise_variety_note_consumed: delivered with this turn
+  466s correct_retry_note_consumed: delivered with this turn
+  466s probe_checkin_note_planted: "What did you learn at the trade show?"
+  466s qpin_answer_clear_refused: awaiting-tutor-turn — "What did you learn at the trade show?"
+  466s verdict_precheck_pending: no hold on this turn
+  467s thinking_cue_ack_skipped: generic
+  467s typed_turn_field: ack
+  467s typed_turn_field: verdict
+  467s typed_turn_field: verdict_say
+  467s typed_turn_field: board
+  467s typed_turn_field: correction
+  467s typed_turn_field: support_ja
+  468s verdict_precheck: answers=other_part verdict=incorrect confidence=high ms=1794 proposed="Yes, I went to a trade show in Tokyo las"
+  468s typed_turn_field: next
+  468s typed_turn: verdict=none next=question ack=0 say=3 correction=no retries=0
+  468s judge_authored_solution: Problem: Did you attend any business events or exhibitions last year?
+  468s qpin_answer_clear_refused: no-affirm — "What did you learn at the trade show?"
+  468s judge_pass: grounded · You already told me about the Tokyo trade show, so…
+  468s brain_turn: Brain 2618ms · 0 tool call(s) · 2 sentence(s) · first_sentence=1964ms · in=4618 out=104 cr=84237 cc=88
+  468s turn_length: 2 sentence(s) · 26 word(s) · 0 tool call(s)
+  468s qpin_replaced: new ask in turn tutor-streaming-1794807706984-0 — "What did you learn at the trade show?"
+  469s qpin_set_verbatim: "What did you learn there?"
+  469s qpin_answer_clear_refused: no-student-turn — "What did you learn there?"
+  473s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1966ms tts→audio=85ms TOTAL=nullms complete=false
+  484s thinking_cue_chime: thinking_cue_chime
+  484s praise_variety_note_consumed: delivered with this turn
+  484s qpin_answer_clear_refused: awaiting-tutor-turn — "What did you learn there?"
+  484s verdict_precheck_pending: no hold on this turn
+  485s typed_turn_field: ack
+  485s thinking_cue_ack_skipped: generic
+  485s typed_turn_field: verdict
+  485s typed_turn_field: verdict_say
+  485s typed_turn_field: board
+  485s tool_call: Whiteboard tool: showSentence
+  485s topic_shift_held_for_sentence: sentence-only batch stays on the current page; the newPage mark waits for the next batch
+  485s render_sync_buffer: anchor=1 depth=1 repair-anchor
+  485s typed_turn_effect: model_card
+  485s typed_turn_field: correction
+  485s segment_overlong: segment "past-simple" has run 6 substantive tutor turns without advancing
+  485s qpin_answer_clear_refused: no-affirm — "What did you learn there?"
+  485s typed_turn_field: support_ja
+  485s typed_turn_field: next
+  485s typed_turn: verdict=correct next=question ack=0 say=1 correction=no retries=0
+  486s verdict_precheck: answers=open_question verdict=correct confidence=medium ms=1988 proposed="I learned that communication is the most"
+  486s judge_authored_solution: Problem: Did you attend any business events or exhibitions last year?
+  486s judge_pass: grounded · That's a clear answer about what you learned. 「tha…
+  486s brain_turn: Brain 2690ms · 0 tool call(s) · 3 sentence(s) · first_sentence=1318ms · in=4432 out=127 cr=84325 cc=67
+  486s turn_length: 3 sentence(s) · 19 word(s) · 0 tool call(s)
+  486s segment_overlong_note_skipped_offer: past-simple after 7 turns — the part's offer replaces it
+  486s qpin_replaced: new ask in turn tutor-streaming-1794807724801-0 — "What did you learn there?"
+  487s qpin_set: "Why is communication so important in your work with customer"
+  487s qpin_answer_clear_refused: no-student-turn — "Why is communication so important in your work with customer"
+  488s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1319ms tts→audio=83ms TOTAL=nullms complete=false
+  488s render_sync_flush: 1 render(s) painted (showSentence-11)
+  500s thinking_cue_chime: thinking_cue_chime
+  500s praise_variety_note_consumed: delivered with this turn
+  500s qpin_answer_clear_refused: awaiting-tutor-turn — "Why is communication so important in your work with customer"
+  500s verdict_precheck_pending: no hold on this turn
+  501s topic_shift: dist=0.764 — next whiteboard batch will get newPage
+  502s thinking_cue_ack_skipped: generic
+  502s typed_turn_field: ack
+  502s typed_turn_field: verdict
+  502s typed_turn_field: verdict_say
+  502s qpin_answer_clear_refused: no-affirm — "Why is communication so important in your work with customer"
+  502s typed_turn_field: board
+  502s tool_call: Whiteboard tool: showSentence
+  502s topic_shift_held_for_sentence: sentence-only batch stays on the current page; the newPage mark waits for the next batch
+  502s render_sync_buffer: anchor=2 depth=1 repair-anchor
+  502s typed_turn_effect: model_card
+  502s typed_turn_field: correction
+  502s typed_turn_field: support_ja
+  502s typed_turn_field: next
+  502s typed_turn: verdict=correct next=offer ack=0 say=1 correction=no retries=0
+  503s verdict_precheck: answers=open_question verdict=correct confidence=medium ms=2232 proposed="Because my customers are from overseas."
+  503s judge_authored_solution: Problem: Did you attend any business events or exhibitions last year?
+  503s judge_pass: grounded · Because your customers are from overseas, you need…
+  503s brain_turn: Brain 2967ms · 0 tool call(s) · 4 sentence(s) · first_sentence=1446ms · in=4505 out=142 cr=84392 cc=71
+  503s turn_length: 4 sentence(s) · 32 word(s) · 0 tool call(s)
+  503s qpin_replaced: new ask in turn tutor-streaming-1794807741518-0 — "Why is communication so important in your work with customer"
+  504s qpin_set: "One more question on this, or move on to the conversation pa"
+  504s qpin_answer_clear_refused: no-student-turn — "One more question on this, or move on to the conversation pa"
+  506s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1450ms tts→audio=102ms TOTAL=nullms complete=false
+  508s render_sync_flush: 1 render(s) painted (showSentence-12)
+  523s thinking_cue_chime: thinking_cue_chime
+  523s pacing_cue: cue="Let's move on"
+  523s praise_variety_note_consumed: delivered with this turn
+  523s qpin_answer_clear_refused: not-answer-shaped (request) — "One more question on this, or move on to the conversation pa"
+  523s verdict_precheck_pending: no hold on this turn
+  524s ack_suppressed: damping
+  524s typed_turn_field: ack
+  524s typed_turn_field: verdict
+  524s typed_turn_field: verdict_say
+  524s typed_turn_field: board
+  524s typed_turn_field: correction
+  524s typed_turn_field: support_ja
+  524s typed_turn_field: next
+  524s auto_newpage_on_advance_deferred: open-conversation: Part 6 · Conversation · 会話
+  524s rail_segment_held: "past-simple" stays active until the "open-conversation" page paints
+  524s typed_turn_effect: advance past-simple→open-conversation
+  524s tool_call: Whiteboard tool: showProblem
+  524s auto_new_page: topic shift (dist=0.764) (H4)
+  524s auto_newpage_continuation_dropped: "Extension" (deferred-page-is-authored) — deferred segment page "Part 6 · Conversation · 会話" kept
+  524s auto_newpage_on_advance_flushed: open-conversation: Part 6 · Conversation · 会話 (on the transition sentence 1)
+  524s render_sync_buffer: anchor=1 depth=1 repair-anchor
+  524s segment_card_auto: open-conversation id=showProblem-6 "What is one project you've worked on that you're p" (typed)
+  524s typed_turn: verdict=none next=move ack=1 say=2 correction=no retries=0
+  525s verdict_precheck: answers=open_question verdict=correct confidence=high ms=1793 proposed="Let's move on."
+  525s judge_authored_solution: Problem: What is one project you've worked on that you're particularly proud of?
+  525s rail_segment_released: "open-conversation" (its page painted)
+  525s render_sync_flush: 1 render(s) painted (showProblem-6)
+  527s judge_advisory_flag: 1 issue(s): What is one project you've worked on that you're particularl… · why: This question contradicts the whiteboard state and the tutor's preceding context. The whiteboard shows the lesson is on 
+  527s judge_issue_decision: advisory · kind=grounding verdict=not_an_answer → no-note no-withhold (not-an-answer-nothing-to-correct) · What is one project you've worked on that you're p
+  527s brain_turn: Brain 4567ms · 0 tool call(s) · 3 sentence(s) · first_sentence=1410ms · in=4695 out=100 cr=84463 cc=85
+  527s turn_length: 3 sentence(s) · 22 word(s) · 0 tool call(s)
+  528s qpin_set_verbatim: "What is one project you've worked on that you're particularl"
+  528s qpin_answer_clear_refused: no-student-turn — "What is one project you've worked on that you're particularl"
+  528s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1411ms tts→audio=82ms TOTAL=nullms complete=false
+  539s thinking_cue_chime: thinking_cue_chime
+  539s praise_variety_note_consumed: delivered with this turn
+  539s qpin_answer_clear_refused: awaiting-tutor-turn — "What is one project you've worked on that you're particularl"
+  539s verdict_precheck_pending: no hold on this turn
+  540s topic_shift: dist=0.744 — next whiteboard batch will get newPage
+  540s thinking_cue_ack_skipped: generic
+  541s typed_turn_field: ack
+  541s typed_turn_field: verdict
+  541s typed_turn_field: verdict_say
+  541s typed_turn_field: board
+  541s tool_call: Whiteboard tool: showSentence
+  541s topic_shift_held_for_sentence: sentence-only batch stays on the current page; the newPage mark waits for the next batch
+  541s render_sync_buffer: anchor=2 depth=1 repair-anchor
+  541s typed_turn_effect: model_card
+  541s typed_turn_field: correction
+  541s qpin_answer_clear_refused: no-affirm — "What is one project you've worked on that you're particularl"
+  541s typed_turn_field: support_ja
+  541s tts_sentence_split: 2 parts: en"made a presentation." | ja"は「プレゼンテーションを作った」という意味です。"
+  541s typed_turn_field: next
+  541s typed_turn: verdict=correct next=question ack=1 say=1 correction=no retries=0
+  541s verdict_precheck: answers=open_question verdict=correct confidence=medium ms=1943 proposed="Last month I made a presentation for a n"
+  541s judge_authored_solution: Problem: What is one project you've worked on that you're particularly proud of?
+  542s judge_pass: grounded · A product launch presentation, that's a big job. Y…
+  542s brain_turn: Brain 2637ms · 0 tool call(s) · 4 sentence(s) · first_sentence=1373ms · in=4436 out=158 cr=84548 cc=49
+  542s turn_length: 4 sentence(s) · 35 word(s) · 0 tool call(s)
+  542s qpin_replaced: new ask in turn tutor-streaming-1794807780360-0 — "What is one project you've worked on that you're particularl"
+  542s qpin_set: "What was the most challenging part of preparing that present"
+  542s qpin_answer_clear_refused: no-student-turn — "What was the most challenging part of preparing that present"
+  544s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1374ms tts→audio=84ms TOTAL=nullms complete=false
+  549s render_sync_flush: 1 render(s) painted (showSentence-13)
+  560s thinking_cue_chime: thinking_cue_chime
+  560s praise_variety_note_consumed: delivered with this turn
+  560s qpin_answer_clear_refused: awaiting-tutor-turn — "What was the most challenging part of preparing that present"
+  560s verdict_precheck_pending: no hold on this turn
+  561s typed_turn_field: ack
+  561s thinking_cue_ack_skipped: generic
+  562s typed_turn_field: verdict
+  562s typed_turn_field: verdict_say
+  562s typed_turn_field: board
+  562s typed_turn_field: correction
+  562s typed_turn_field: support_ja
+  562s tts_sentence_split: 2 parts: en"as I said." | ja"は「さっき言ったように」という意味です。"
+  562s qpin_answer_clear_refused: no-affirm — "What was the most challenging part of preparing that present"
+  562s typed_turn_field: next
+  562s typed_turn: verdict=none next=question ack=0 say=2 correction=no retries=0
+  563s verdict_precheck_none: ms=2237
+  563s judge_authored_solution: Problem: What is one project you've worked on that you're particularly proud of?
+  563s judge_pass: grounded · 「as I said」は「さっき言ったように」という意味です。 今回は、プレゼンの準備で一番大変だっ…
+  563s brain_turn: Brain 2921ms · 0 tool call(s) · 4 sentence(s) · first_sentence=1425ms · in=4525 out=146 cr=84597 cc=102
+  563s turn_length: 4 sentence(s) · 26 word(s) · 0 tool call(s)
+  563s correct_retry_note_planted: answered question re-asked: "what was the most challenging part of preparing that present"
+  563s qpin_replaced: new ask in turn tutor-streaming-1794807801501-0 — "What was the most challenging part of preparing that present"
+  564s qpin_set: "What was the most challenging part of preparing that present"
+  564s qpin_answer_clear_refused: no-student-turn — "What was the most challenging part of preparing that present"
+  566s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1427ms tts→audio=80ms TOTAL=nullms complete=false
+  579s thinking_cue_chime: thinking_cue_chime
+  579s praise_variety_note_consumed: delivered with this turn
+  579s correct_retry_note_consumed: delivered with this turn
+  579s probe_checkin_note_planted: "What was the most challenging part of preparing that presentation?"
+  579s qpin_answer_clear_refused: awaiting-tutor-turn — "What was the most challenging part of preparing that present"
+  579s verdict_precheck_pending: no hold on this turn
+  579s perception_state: reconnecting
+  579s perception_state: reconnecting
+  580s typed_turn_field: ack
+  580s typed_turn_field: verdict
+  580s qpin_answer_clear_refused: no-affirm — "What was the most challenging part of preparing that present"
+  580s typed_turn_field: verdict_say
+  580s typed_turn_field: board
+  580s show_sentence_duplicate_skipped: page 6: "Last month I made a presentation for a new product launch."
+  580s typed_turn_effect: model_card not placed
+  580s typed_turn_field: correction
+  580s typed_turn_field: support_ja
+  580s tts_sentence_split: 2 parts: en"made a presentation." | ja"は「プレゼンテーションを作った」という意味です。"
+  580s typed_turn_field: next
+  580s typed_turn: verdict=correct next=question ack=1 say=1 correction=no retries=0
+  580s perception_state: connecting
+  580s perception_state: connecting
+  581s verdict_precheck: answers=other_part verdict=incorrect confidence=medium ms=1964 proposed="Last month I made a presentation for a n"
+  581s judge_authored_solution: Problem: What is one project you've worked on that you're particularly proud of?
+  581s perception_state: connected
+  581s perception_state: connected
+  581s perception_state: listening
+  581s perception_state: listening
+  581s judge_pass: grounded · Last month, a product launch, that sounds like a b…
+  581s brain_turn: Brain 2661ms · 0 tool call(s) · 5 sentence(s) · first_sentence=1184ms · in=4700 out=164 cr=84699 cc=111
+  581s turn_length: 5 sentence(s) · 39 word(s) · 0 tool call(s)
+  581s pronunciation_claim_note_planted: Last month, a product launch, that sounds like a big job. That is a clear senten
+  581s correct_retry_note_planted: answered question re-asked: "what was the most challenging part of preparing that present"
+  581s qpin_replaced: new ask in turn tutor-streaming-1794807819780-0 — "What was the most challenging part of preparing that present"
+  582s qpin_set: "What was the most challenging part of preparing that present"
+  582s qpin_answer_clear_refused: no-student-turn — "What was the most challenging part of preparing that present"
+  584s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1184ms tts→audio=86ms TOTAL=nullms complete=false
+  603s thinking_cue_chime: thinking_cue_chime
+  603s praise_variety_note_consumed: delivered with this turn
+  603s correct_retry_note_consumed: delivered with this turn
+  603s pronunciation_claim_note_consumed: delivered with this turn
+  603s probe_checkin_note_planted: "「made a presentation」は「プレゼンテーションを作った」という意味です。 What was the most challenging part"
+  603s qpin_answer_clear_refused: awaiting-tutor-turn — "What was the most challenging part of preparing that present"
+  603s verdict_precheck_pending: no hold on this turn
+  604s thinking_cue_ack_skipped: generic
+  604s typed_turn_field: ack
+  605s typed_turn_field: verdict
+  605s typed_turn_field: verdict_say
+  605s typed_turn_field: board
+  605s typed_turn_field: correction
+  605s verdict_precheck: answers=other_part verdict=incorrect confidence=medium ms=1957 proposed="Last month I made a presentation for a n"
+  605s typed_turn_field: support_ja
+  605s tts_sentence_split: 2 parts: en"as I said." | ja"は「さっき言ったように」という意味です。"
+  605s qpin_answer_clear_refused: no-affirm — "What was the most challenging part of preparing that present"
+  605s typed_turn_field: next
+  605s typed_turn: verdict=none next=question ack=0 say=2 correction=no retries=0
+  605s judge_authored_solution: Problem: What is one project you've worked on that you're particularly proud of?
+  605s judge_pass: grounded · 「as I said」は「さっき言ったように」という意味です。 この質問の答えを教えてください。 L…
+  605s brain_turn: Brain 2898ms · 0 tool call(s) · 3 sentence(s) · first_sentence=2076ms · in=4895 out=119 cr=84810 cc=108
+  605s turn_length: 3 sentence(s) · 17 word(s) · 0 tool call(s)
+  605s correct_retry_note_planted: answered question re-asked: "what was the most challenging part of preparing that present"
+  606s qpin_replaced: new ask in turn tutor-streaming-1794807843777-0 — "What was the most challenging part of preparing that present"
+  606s turn_latency: eager→end=nullms end→fetch=nullms brain_first=2078ms tts→audio=81ms TOTAL=nullms complete=false
+  606s qpin_set: "What was the most challenging part of preparing that present"
+  606s qpin_answer_clear_refused: no-student-turn — "What was the most challenging part of preparing that present"
+  619s thinking_cue_chime: thinking_cue_chime
+  619s praise_variety_note_consumed: delivered with this turn
+  619s correct_retry_note_consumed: delivered with this turn
+  619s probe_checkin_note_planted: "What was the most challenging part of preparing that presentation?"
+  619s qpin_answer_clear_refused: awaiting-tutor-turn — "What was the most challenging part of preparing that present"
+  619s verdict_precheck_pending: no hold on this turn
+  620s typed_turn_field: ack
+  620s typed_turn_field: verdict
+  620s typed_turn_field: verdict_say
+  620s typed_turn_field: board
+  620s typed_turn_field: correction
+  620s ack_suppressed: damping
+  620s typed_turn_field: support_ja
+  620s tts_sentence_split: 2 parts: en"as I said." | ja"は「さっき言ったように」という意味です。"
+  620s qpin_answer_clear_refused: no-affirm — "What was the most challenging part of preparing that present"
+  620s typed_turn_field: next
+  620s typed_turn: verdict=none next=question ack=0 say=2 correction=no retries=0
+  621s verdict_precheck: answers=other_part verdict=incorrect confidence=medium ms=2005 proposed="Last month I made a presentation for a n"
+  621s judge_authored_solution: Problem: What is one project you've worked on that you're particularly proud of?
+  622s judge_pass: grounded · 「as I said」は「さっき言ったように」という意味です。 You already gave t…
+  622s brain_turn: Brain 2816ms · 0 tool call(s) · 3 sentence(s) · first_sentence=1233ms · in=4688 out=117 cr=84918 cc=84
+  622s turn_length: 3 sentence(s) · 24 word(s) · 0 tool call(s)
+  622s correct_retry_note_planted: answered question re-asked: "what was the most challenging part of preparing that present"
+  622s qpin_replaced: new ask in turn tutor-streaming-1794807859911-0 — "What was the most challenging part of preparing that present"
+  622s qpin_set: "What was the most challenging part of preparing that present"
+  622s qpin_answer_clear_refused: no-student-turn — "What was the most challenging part of preparing that present"
+  624s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1234ms tts→audio=84ms TOTAL=nullms complete=false
+  637s thinking_cue_chime: thinking_cue_chime
+  637s praise_variety_note_consumed: delivered with this turn
+  637s correct_retry_note_consumed: delivered with this turn
+  637s probe_checkin_note_planted: "What was the most challenging part of preparing that presentation?"
+  637s qpin_answer_clear_refused: awaiting-tutor-turn — "What was the most challenging part of preparing that present"
+  637s verdict_precheck_pending: no hold on this turn
+  638s thinking_cue_ack_skipped: generic
+  639s typed_turn_field: ack
+  639s typed_turn_field: verdict
+  639s typed_turn_field: verdict_say
+  639s typed_turn_field: board
+  639s typed_turn_field: correction
+  639s typed_turn_field: support_ja
+  639s tts_sentence_split: 2 parts: en"as I said." | ja"は「さっき言ったように」という意味です。"
+  639s segment_overlong: segment "open-conversation" has run 6 substantive tutor turns without advancing
+  639s qpin_answer_clear_refused: no-affirm — "What was the most challenging part of preparing that present"
+  639s typed_turn_field: next
+  639s typed_turn: verdict=none next=question ack=0 say=2 correction=no retries=0
+  639s verdict_precheck: answers=other_part verdict=incorrect confidence=high ms=1854 proposed="Last month I made a presentation for a n"
+  639s judge_authored_solution: Problem: What is one project you've worked on that you're particularly proud of?
+  640s judge_pass: grounded · 「as I said」は「さっき言ったように」という意味です。 You already gave t…
+  640s brain_turn: Brain 2677ms · 0 tool call(s) · 3 sentence(s) · first_sentence=1670ms · in=4702 out=109 cr=85002 cc=77
+  640s turn_length: 3 sentence(s) · 18 word(s) · 0 tool call(s)
+  640s correct_retry_note_planted: answered question re-asked: "what was the most challenging part of preparing that present"
+  640s qpin_replaced: new ask in turn tutor-streaming-1794807878184-0 — "What was the most challenging part of preparing that present"
+  640s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1672ms tts→audio=94ms TOTAL=nullms complete=false
+  640s qpin_set: "What was the most challenging part of preparing that present"
+  640s qpin_answer_clear_refused: no-student-turn — "What was the most challenging part of preparing that present"
+  651s thinking_cue_chime: thinking_cue_chime
+  651s praise_variety_note_consumed: delivered with this turn
+  651s correct_retry_note_consumed: delivered with this turn
+  651s probe_checkin_note_planted: "What was the most challenging part of preparing that presentation?"
+  651s qpin_answer_clear_refused: awaiting-tutor-turn — "What was the most challenging part of preparing that present"
+  651s verdict_precheck_pending: no hold on this turn
+  652s thinking_cue_ack_skipped: generic
+  652s typed_turn_field: ack
+  653s typed_turn_field: verdict
+  653s typed_turn_field: verdict_say
+  653s typed_turn_field: board
+  653s typed_turn_field: correction
+  653s typed_turn_field: support_ja
+  653s typed_turn_field: next
+  653s typed_turn: verdict=none next=question ack=0 say=3 correction=no retries=0
+  653s qpin_answer_clear_refused: no-affirm — "What was the most challenging part of preparing that present"
+  653s verdict_precheck: answers=other_part verdict=incorrect confidence=high ms=2057 proposed="Last month I made a presentation for a n"
+  653s judge_authored_solution: Problem: What is one project you've worked on that you're particularly proud of?
+  655s judge_pass: grounded · You've told me about that presentation already. Le…
+  655s brain_turn: Brain 3720ms · 0 tool call(s) · 2 sentence(s) · first_sentence=1734ms · in=4690 out=95 cr=85079 cc=73
+  655s turn_length: 2 sentence(s) · 20 word(s) · 0 tool call(s)
+  655s qpin_replaced: new ask in turn tutor-streaming-1794807892311-0 — "What was the most challenging part of preparing that present"
+  655s qpin_set_verbatim: "What was the hardest part of preparing it?"
+  655s qpin_answer_clear_refused: no-student-turn — "What was the hardest part of preparing it?"
+  656s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1735ms tts→audio=83ms TOTAL=nullms complete=false
+  667s thinking_cue_chime: thinking_cue_chime
+  667s praise_variety_note_consumed: delivered with this turn
+  667s probe_checkin_note_planted: "What was the hardest part of preparing it?"
+  667s qpin_answer_clear_refused: awaiting-tutor-turn — "What was the hardest part of preparing it?"
+  667s verdict_precheck_pending: no hold on this turn
+  668s thinking_cue_ack_skipped: generic
+  669s typed_turn_field: ack
+  669s typed_turn_field: verdict
+  669s typed_turn_field: verdict_say
+  669s typed_turn_field: board
+  669s typed_turn_field: correction
+  669s typed_turn_field: support_ja
+  669s tts_sentence_split: 2 parts: en"as I said." | ja"は「さっき言ったように」という意味です。"
+  669s qpin_answer_clear_refused: no-affirm — "What was the hardest part of preparing it?"
+  669s verdict_precheck: answers=other_part verdict=incorrect confidence=medium ms=2073 proposed="Last month I made a presentation for a n"
+  669s typed_turn_field: next
+  669s typed_turn: verdict=none next=question ack=0 say=3 correction=no retries=0
+  669s judge_authored_solution: Problem: What is one project you've worked on that you're particularly proud of?
+  670s judge_pass: grounded · 「as I said」は「さっき言ったように」という意味です。 You already gave t…
+  670s brain_turn: Brain 2841ms · 0 tool call(s) · 4 sentence(s) · first_sentence=1989ms · in=4653 out=119 cr=85152 cc=54
+  670s turn_length: 4 sentence(s) · 23 word(s) · 0 tool call(s)
+  670s qpin_replaced: new ask in turn tutor-streaming-1794807907971-0 — "What was the hardest part of preparing it?"
+  670s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1989ms tts→audio=98ms TOTAL=nullms complete=false
+  670s qpin_set_verbatim: "What was the hardest part of preparing that presentation?"
+  670s qpin_answer_clear_refused: no-student-turn — "What was the hardest part of preparing that presentation?"
+  683s thinking_cue_chime: thinking_cue_chime
+  683s praise_variety_note_consumed: delivered with this turn
+  683s probe_checkin_note_planted: "What was the hardest part of preparing that presentation?"
+  684s qpin_answer_clear_refused: awaiting-tutor-turn — "What was the hardest part of preparing that presentation?"
+  684s verdict_precheck_pending: no hold on this turn
+  685s thinking_cue_ack_skipped: generic
+  685s typed_turn_field: ack
+  685s typed_turn_field: verdict
+  685s typed_turn_field: verdict_say
+  685s typed_turn_field: board
+  685s typed_turn_field: correction
+  685s typed_turn_field: support_ja
+  685s tts_sentence_split: 2 parts: en"as I said." | ja"は「さっき言ったように」という意味です。"
+  685s qpin_answer_clear_refused: no-affirm — "What was the hardest part of preparing that presentation?"
+  685s typed_turn_field: next
+  685s typed_turn: verdict=none next=question ack=0 say=3 correction=no retries=0
+  685s verdict_precheck: answers=other_part verdict=incorrect confidence=medium ms=1886 proposed="Last month I made a presentation for a n"
+  685s judge_authored_solution: Problem: What is one project you've worked on that you're particularly proud of?
+  686s judge_pass: grounded · 「as I said」は「さっき言ったように」という意味です。 That sentence is a…
+  686s brain_turn: Brain 2668ms · 0 tool call(s) · 4 sentence(s) · first_sentence=1459ms · in=4597 out=128 cr=85206 cc=83
+  686s turn_length: 4 sentence(s) · 31 word(s) · 0 tool call(s)
+  686s correct_retry_note_planted: answered question re-asked: "what was the hardest part of preparing that presentation"
+  686s qpin_replaced: new ask in turn tutor-streaming-1794807924675-0 — "What was the hardest part of preparing that presentation?"
+  687s qpin_set: "What was the hardest part of preparing that presentation?"
+  687s qpin_answer_clear_refused: no-student-turn — "What was the hardest part of preparing that presentation?"
+  689s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1460ms tts→audio=90ms TOTAL=nullms complete=false
+  703s thinking_cue_chime: thinking_cue_chime
+  703s praise_variety_note_consumed: delivered with this turn
+  703s correct_retry_note_consumed: delivered with this turn
+  703s probe_checkin_note_planted: "What was the hardest part of preparing that presentation?"
+  703s qpin_answer_clear_refused: awaiting-tutor-turn — "What was the hardest part of preparing that presentation?"
+  703s verdict_precheck_pending: no hold on this turn
+  704s ack_suppressed: damping
+  704s typed_turn_field: ack
+  705s typed_turn_field: verdict
+  705s typed_turn_field: verdict_say
+  705s typed_turn_field: board
+  705s typed_turn_field: correction
+  705s typed_turn_field: support_ja
+  705s tts_sentence_split: 2 parts: en"as I said." | ja"は「さっき言ったように」という意味です。"
+  705s qpin_answer_clear_refused: no-affirm — "What was the hardest part of preparing that presentation?"
+  705s typed_turn_field: next
+  705s typed_turn: verdict=none next=question ack=0 say=3 correction=no retries=0
+  705s verdict_precheck: answers=other_part verdict=incorrect confidence=medium ms=1796 proposed="Last month I made a presentation for a n"
+  705s judge_authored_solution: Problem: What is one project you've worked on that you're particularly proud of?
+  706s judge_pass: grounded · 「as I said」は「さっき言ったように」という意味です。 You've already giv…
+  706s brain_turn: Brain 2503ms · 0 tool call(s) · 4 sentence(s) · first_sentence=1519ms · in=4711 out=127 cr=85289 cc=88
+  706s turn_length: 4 sentence(s) · 29 word(s) · 0 tool call(s)
+  706s correct_retry_note_planted: answered question re-asked: "what was the hardest part of preparing that presentation"
+  706s qpin_replaced: new ask in turn tutor-streaming-1794807944295-0 — "What was the hardest part of preparing that presentation?"
+  706s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1520ms tts→audio=80ms TOTAL=nullms complete=false
+  706s qpin_set: "What was the hardest part of preparing that presentation?"
+  706s qpin_answer_clear_refused: no-student-turn — "What was the hardest part of preparing that presentation?"
+  722s thinking_cue_chime: thinking_cue_chime
+  722s praise_variety_note_consumed: delivered with this turn
+  722s correct_retry_note_consumed: delivered with this turn
+  722s probe_checkin_note_planted: "What was the hardest part of preparing that presentation?"
+  723s qpin_answer_clear_refused: awaiting-tutor-turn — "What was the hardest part of preparing that presentation?"
+  723s verdict_precheck_pending: no hold on this turn
+  724s thinking_cue_ack_skipped: generic
+  724s typed_turn_field: ack
+  725s typed_turn_field: verdict
+  725s typed_turn_field: verdict_say
+  725s typed_turn_field: board
+  725s typed_turn_field: correction
+  725s typed_turn_field: support_ja
+  725s tts_sentence_split: 2 parts: en"as I said." | ja"は「さっき言ったように」という意味です。"
+  725s verdict_precheck: answers=other_part verdict=incorrect confidence=medium ms=1952 proposed="Last month I made a presentation for a n"
+  725s qpin_answer_clear_refused: no-affirm — "What was the hardest part of preparing that presentation?"
+  725s typed_turn_field: next
+  725s typed_turn: verdict=none next=question ack=0 say=3 correction=no retries=0
+  725s judge_authored_solution: Problem: What is one project you've worked on that you're particularly proud of?
+  725s judge_pass: grounded · 「as I said」は「さっき言ったように」という意味です。 You've already giv…
+  725s brain_turn: Brain 2942ms · 0 tool call(s) · 4 sentence(s) · first_sentence=2023ms · in=4816 out=127 cr=85377 cc=91
+  725s turn_length: 4 sentence(s) · 28 word(s) · 0 tool call(s)
+  725s qpin_replaced: new ask in turn tutor-streaming-1794807963688-0 — "What was the hardest part of preparing that presentation?"
+  726s turn_latency: eager→end=nullms end→fetch=nullms brain_first=2023ms tts→audio=79ms TOTAL=nullms complete=false
+  726s qpin_set: "What was the hardest part of preparing that presentation?"
+  726s qpin_answer_clear_refused: no-student-turn — "What was the hardest part of preparing that presentation?"
+  740s thinking_cue_chime: thinking_cue_chime
+  740s praise_variety_note_consumed: delivered with this turn
+  740s probe_checkin_note_planted: "what was the hardest part of preparing that presentation?"
+  740s qpin_answer_clear_refused: awaiting-tutor-turn — "What was the hardest part of preparing that presentation?"
+  740s verdict_precheck_pending: no hold on this turn
+  741s typed_turn_field: ack
+  741s typed_turn_field: verdict
+  741s typed_turn_field: verdict_say
+  741s typed_turn_field: board
+  741s typed_turn_field: correction
+  741s typed_turn_field: support_ja
+  741s tts_sentence_split: 2 parts: en"as I said." | ja"は「さっき言ったように」という意味です。"
+  741s qpin_answer_clear_refused: no-affirm — "What was the hardest part of preparing that presentation?"
+  742s typed_turn_field: next
+  742s auto_newpage_on_advance_deferred: pronunciation: Part 7 · Pronunciation · 発音
+  742s rail_segment_held: "open-conversation" stays active until the "pronunciation" page paints
+  742s typed_turn_effect: advance open-conversation→pronunciation
+  742s tool_call: Whiteboard tool: showProblem
+  742s auto_newpage_on_advance_flushed: pronunciation: Part 7 · Pronunciation · 発音 (on the transition sentence 2)
+  742s render_sync_buffer: anchor=2 depth=1 repair-anchor
+  742s segment_card_auto: pronunciation id=showProblem-7 "Would you like to practice your pronunciation? You" (typed)
+  742s typed_turn: verdict=none next=move ack=0 say=3 correction=no retries=0
+  742s verdict_precheck: answers=other_part verdict=incorrect confidence=high ms=1869 proposed="Last month I made a presentation for a n"
+  742s judge_authored_solution: Problem: Would you like to practice your pronunciation? You can choose: 1) indiv
+  743s judge_pass: grounded · 「as I said」は「さっき言ったように」という意味です。 Let's move on to p…
+  743s brain_turn: Brain 2686ms · 0 tool call(s) · 4 sentence(s) · first_sentence=1195ms · in=4776 out=152 cr=85468 cc=87
+  743s turn_length: 4 sentence(s) · 34 word(s) · 0 tool call(s)
+  744s qpin_set: "Which would you prefer: individual words, a complete sentenc"
+  744s qpin_answer_clear_refused: no-student-turn — "Which would you prefer: individual words, a complete sentenc"
+  746s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1196ms tts→audio=101ms TOTAL=nullms complete=false
+  746s rail_segment_released: "pronunciation" (its page painted)
+  746s render_sync_flush: 1 render(s) painted (showProblem-7)
+  763s language_digit_words: "4" → "four"
+  763s thinking_cue_chime: thinking_cue_chime
+  763s pacing_short_answer: open question — counted as an answer: "four"
+  763s praise_variety_note_consumed: delivered with this turn
+  763s menu_pick_resolved: 4 "skip and continue" ← "four"
+  763s qpin_answer_clear_refused: awaiting-tutor-turn — "Which would you prefer: individual words, a complete sentenc"
+  763s verdict_precheck_pending: no hold on this turn
+  764s thinking_cue_ack_skipped: generic
+  765s typed_turn_field: ack
+  765s typed_turn_field: verdict
+  765s typed_turn_field: verdict_say
+  765s typed_turn_field: board
+  765s typed_turn_field: correction
+  765s verdict_precheck: answers=open_question verdict=correct confidence=high ms=1853 proposed="four"
+  765s qpin_answer_clear_refused: no-affirm — "Which would you prefer: individual words, a complete sentenc"
+  765s typed_turn_field: support_ja
+  765s typed_turn_field: next
+  765s auto_newpage_on_advance_deferred: summary: Part 8 · Summary · まとめ
+  765s rail_segment_held: "pronunciation" stays active until the "summary" page paints
+  765s typed_turn_effect: advance pronunciation→summary
+  765s show_sentence_duplicate_reshown: page 5 → 8: "Yes, I went to a trade show in Tokyo last year."
+  765s show_sentence_duplicate_reshown: page 5 → 8: "I learned that communication is the most important thing."
+  765s show_sentence_duplicate_reshown: page 5 → 8: "Because my customers are from overseas."
+  765s show_sentence_duplicate_reshown: page 6 → 8: "Last month I made a presentation for a new product launch."
+  765s tool_call: Whiteboard tool: showSentence, showSentence, showSentence, showSentence
+  765s auto_newpage_on_advance_held_for_auto_card: summary: the auto card stays on the page being left
+  765s render_dropped: showSentence — duplicate of showSentence-10
+  765s dedup_scroll_to_existing: showSentence-10 on "Part 5 · Past simple · 過去形"
+  765s render_dropped: showSentence — duplicate of showSentence-11
+  765s dedup_scroll_to_existing: showSentence-11 on "Part 5 · Past simple · 過去形"
+  765s render_dropped: showSentence — duplicate of showSentence-12
+  765s dedup_scroll_to_existing: showSentence-12 on "Part 5 · Past simple · 過去形"
+  765s render_dropped: showSentence — duplicate of showSentence-13
+  765s dedup_scroll_to_existing: showSentence-13 on "Part 6 · Conversation · 会話"
+  765s render_sync_empty_batch: no command survived processing
+  765s recap_sentences_boarded: 0/4: Yes, I went to a trade show in | I learned that communication i | Because my customers are from  | Last month I made a presentati
+  765s typed_turn: verdict=none next=move ack=1 say=3 correction=no retries=0
+  766s judge_pass: grounded · Four, skip and continue. わかりました。 発音の練習はスキップして、まとめに…
+  766s brain_turn: Brain 3098ms · 0 tool call(s) · 6 sentence(s) · first_sentence=1922ms · in=4848 out=153 cr=85555 cc=116
+  766s turn_length: 6 sentence(s) · 34 word(s) · 0 tool call(s)
+  766s turn_cap_flagged: 6 sentences · 34 words · 0 tool calls — cadence note planted for next turn (sticky)
+  766s typed_turn_close_backstop_armed: "summary"
+  766s auto_newpage_on_advance_flush_waits: transition sentence 2 not yet spoken (brain idle)
+  766s qpin_set: "Which present perfect sentence felt most natural for you to "
+  766s qpin_answer_clear_refused: no-student-turn — "Which present perfect sentence felt most natural for you to "
+  767s rail_segment_released: "summary" (its page painted)
+  767s auto_newpage_on_advance_flushed: summary: Part 8 · Summary · まとめ at turn end
+  767s tool_call: Whiteboard tool: showProblem
+  767s auto_newpage_on_advance_card_added: summary (turn end)
+  767s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1924ms tts→audio=89ms TOTAL=nullms complete=false
+  784s thinking_cue_chime: thinking_cue_chime
+  784s praise_variety_note_consumed: delivered with this turn
+  784s output_budget_headroom: recap
+  784s qpin_answer_clear_refused: awaiting-tutor-turn — "Which present perfect sentence felt most natural for you to "
+  784s verdict_precheck_pending: no hold on this turn
+  785s typed_turn_field: ack
+  785s typed_turn_field: verdict
+  785s typed_turn_field: verdict_say
+  785s typed_turn_field: board
+  785s typed_turn_field: correction
+  786s qpin_answer_clear_refused: no-affirm — "Which present perfect sentence felt most natural for you to "
+  786s typed_turn_field: support_ja
+  786s typed_turn_field: next
+  786s typed_turn: verdict=none next=question ack=1 say=2 correction=no retries=0
+  786s verdict_precheck: answers=neither verdict=cannot_determine confidence=medium ms=1958 proposed="I felt relieved."
+  787s judge_pass: grounded · I'm glad it felt that way. 「relieved」は「ほっとした」という意味…
+  787s brain_turn: Brain 2631ms · 0 tool call(s) · 4 sentence(s) · first_sentence=1148ms · in=4447 out=123 cr=85671 cc=99
+  787s turn_length: 4 sentence(s) · 26 word(s) · 0 tool call(s)
+  787s qpin_replaced: new ask in turn tutor-streaming-1794808025521-0 — "Which present perfect sentence felt most natural for you to "
+  787s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1150ms tts→audio=77ms TOTAL=nullms complete=false
+  787s qpin_set: "Which present perfect sentence felt most natural for you to "
+  787s qpin_answer_clear_refused: no-student-turn — "Which present perfect sentence felt most natural for you to "
+  804s thinking_cue_chime: thinking_cue_chime
+  804s praise_variety_note_consumed: delivered with this turn
+  804s probe_checkin_note_planted: "Which present perfect sentence felt most natural for you to say today?"
+  804s answered_in_part_note_planted: "summary" n=1
+  804s output_budget_headroom: recap
+  804s qpin_answer_clear_refused: awaiting-tutor-turn — "Which present perfect sentence felt most natural for you to "
+  804s verdict_precheck_pending: no hold on this turn
+  804s topic_shift: dist=0.298 — next whiteboard batch will get newPage
+  805s ack_suppressed: damping
+  805s typed_turn_field: ack
+  805s typed_turn_field: verdict
+  805s typed_turn_field: verdict_say
+  805s typed_turn_field: board
+  805s typed_turn_field: correction
+  805s typed_turn_field: support_ja
+  805s qpin_answer_clear_refused: no-affirm — "Which present perfect sentence felt most natural for you to "
+  805s typed_turn_field: next
+  805s typed_turn: verdict=none next=question ack=1 say=2 correction=no retries=0
+  806s verdict_precheck: answers=neither verdict=cannot_determine confidence=medium ms=1821 proposed="I felt relieved, as I said."
+  806s judge_pass: grounded · Relieved is a good feeling to end on. Which of the…
+  806s brain_turn: Brain 2527ms · 0 tool call(s) · 3 sentence(s) · first_sentence=1433ms · in=4163 out=109 cr=85770 cc=75
+  806s turn_length: 3 sentence(s) · 28 word(s) · 0 tool call(s)
+  806s typed_turn_close_wrap_skipped: "summary" turnsSince=2
+  806s qpin_replaced: new ask in turn tutor-streaming-1794808044953-0 — "Which present perfect sentence felt most natural for you to "
+  807s qpin_set: "Which sentence from today felt most natural for you to say?"
+  807s qpin_answer_clear_refused: no-student-turn — "Which sentence from today felt most natural for you to say?"
+  808s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1434ms tts→audio=88ms TOTAL=nullms complete=false
+  822s thinking_cue_chime: thinking_cue_chime
+  822s praise_variety_note_consumed: delivered with this turn
+  822s probe_checkin_note_planted: "Which of the sentences we practised today felt most natural for you to say?"
+  822s neither_streak_move_on_note_planted: pending: "Which of the sentences we practised today felt most natural for you to say?" ← "I felt relieved."
+  822s answered_in_part_note_planted: "summary" n=2
+  822s output_budget_headroom: recap
+  822s qpin_answer_clear_refused: awaiting-tutor-turn — "Which sentence from today felt most natural for you to say?"
+  822s verdict_precheck_pending: no hold on this turn
+  823s thinking_cue_ack_skipped: generic
+  824s typed_turn_field: ack
+  824s typed_turn_field: verdict
+  824s typed_turn_field: verdict_say
+  824s typed_turn_field: board
+  824s typed_turn_field: correction
+  824s qpin_answer_clear_refused: no-affirm — "Which sentence from today felt most natural for you to say?"
+  824s typed_turn_field: support_ja
+  824s verdict_precheck: answers=neither verdict=cannot_determine confidence=medium ms=1737 proposed="I felt relieved."
+  825s typed_turn_field: next retried
+  825s neither_streak_confirmed: "Which of the sentences we practised today felt most natural for you to say?"
+  825s typed_turn: verdict=none next=question ack=1 say=5 correction=no retries=1 reason=check_question_unasked
+  826s judge_pass: grounded · That's a good feeling to end on. 「relieved」は「ほっとした…
+  826s brain_turn: Brain 4320ms · 0 tool call(s) · 7 sentence(s) · first_sentence=1546ms · in=8940 out=292 cr=171753 cc=63
+  826s turn_length: 7 sentence(s) · 54 word(s) · 0 tool call(s)
+  826s turn_cap_flagged: 7 sentences · 54 words · 0 tool calls — cadence note planted for next turn (sticky)
+  826s fixed_script_close_forced: "summary" — 3 tutor turns after the close note, no close_session_notes
+  826s lesson_closed: fixed-script close forced
+  826s qpin_cleared_closed: fixed-script close forced — "Which sentence from today felt most natural for you to say?"
+  826s turn_latency: eager→end=nullms end→fetch=nullms brain_first=1547ms tts→audio=105ms TOTAL=nullms complete=false

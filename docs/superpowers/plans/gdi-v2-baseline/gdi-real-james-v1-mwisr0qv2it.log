@@ -1,0 +1,82 @@
+05:02:06 open fixture=gdi-real-james arm=v1 student=gdi-v2-replay-james-v1 (speech off)
+05:02:51 no start orb (auto-start?)
+05:02:59 STUDENT(open) Hello, I am ready.
+05:03:08 TUTOR  Great, let's get started. First, a short level check so I can adjust the lesson for you. What do you do for work, James?   [tools: mark_segment_complete, advance_lesson, show_segment_card]
+05:03:15 TUTOR  Let's begin. Today we'll practice talking about your work and your projects. We'll study two grammar points: the present perfect for experience, and the past simple for finished events at a specific time. You'll also practice follow-up questions, I'll correct your mistakes and give you a chance to t   [tools: advance_lesson]
+05:03:18 TUTOR  Let's start with a short, friendly chat. Please answer in English, and don't worry about mistakes. 大丈夫ですよ。 Can you tell me a little about your job? What do you do?
+05:03:37 STUDENT(answer) Oh, yes. I'm engineer.
+05:03:44 TUTOR  Thanks, that helps me understand your work. You said I'm engineer. Try adding the article: I'm an engineer. Use a or an before a job title, like I'm a teacher or I'm an engineer. 「an engineer」の「an」を入れるのがポイントです。 Have you ever worked with an international customer? If so, can you tell me about the exp
+05:04:09 STUDENT(answer) Uh, sorry. I don't understand.
+05:04:10 TUTOR  No problem at all. 大丈夫ですよ。 ゆっくり言いますね。 Let me ask it more simply. What is one skill you'd like to improve in your English?
+05:04:24 STUDENT(answer) Uh, please repeat.
+05:04:27 TUTOR  Of course. もう一度言いますね。 Thanks, that gives me a good picture of your English. Now let's talk about your job. What do you do at work?
+05:04:41 STUDENT(answer) Make car.
+05:04:46 TUTOR  Okay, let's look at that. Nearly there. Make car is not a sentence yet, so let's build one about your job. Use a subject and a verb: I make cars. Add the subject I and the plural cars. 「Make car.」だけでは文になりません。 主語と動詞が必要です。 Can you say the whole sentence once more: I make cars.
+05:05:12 STUDENT(answer) I make cars.
+05:05:16 TUTOR  Yes, that's the sentence. Good. I make cars is a complete sentence. 「I make cars.」で、仕事の内容を伝えられます。 Now, what do you make at work, or what do you do in your company?
+05:05:31 STUDENT(answer) I make cars. I am CEO of company.
+05:05:36 TUTOR  I make cars, that's clear. The first sentence is correct. But I am CEO of company is not right, because CEO needs a and the word the: I am the CEO of a company. Use the before CEO and a before company, because it is one company among many. CEOの前には the、company の前には a を入れます。 Can you say the whole seco
+05:06:04 STUDENT(answer) I am the CEO of a company.
+05:06:08 TUTOR  That's the sentence, clean and correct. Yes, I am the CEO of a company. That is a complete, natural sentence. 「the CEO」と「a company」の使い分けができていますね。 Next, we'll look at talking about experience that continues now. Have you worked for your current company for a long time?
+05:06:29 STUDENT(answer) Uh, yes, for seven year.
+05:06:33 TUTOR  Yes, you have worked there a long time. Nice answer. Seven years needs the plural, so it is seven years. Use have worked for something that started in the past and continues now. Use the plural years after a number above one. 「have worked」は、過去に始まって今も続いていることに使います。 Can you say the full sentence once m
+05:06:57 STUDENT(answer) I have worked here for seven years.
+05:07:01 TUTOR  Yes, that's a clear answer. I have worked here for seven years. That is correct. 「here」は「この会社で」という意味ですね。 Good. What is one important skill you have learned at your company?
+05:07:17 STUDENT(answer) Uh, time management.
+05:07:22 TUTOR  Time management, good. Time management is a useful skill. That is a clear answer. time management は「時間管理」という意味ですね。 How has time management helped you at work?
+05:07:37 STUDENT(answer) Uh, helps me build more cars.
+05:07:41 TUTOR  Ah, you mean time management helps you build more cars. Nice idea. Let's make it a full sentence with the present perfect: time management has helped me. Use has helped with a subject and the past participle for an effect that continues now. 「has helped」は、今も続く効果を言うときに使います。 Can you say the whole sent
+05:08:06 STUDENT(answer) It has helped me build more cars.
+05:08:10 TUTOR  Good, you're close. That is a clear answer. It has helped me build more cars. 「has helped」の形が正しく使えていますね。 What has become easier for you since you started using time management?
+05:08:26 STUDENT(answer) Uh, I can plan my work better. I finish projects on time now.
+05:08:30 TUTOR  Good, that's a clear answer. Yes, planning your work better and finishing projects on time is exactly what became easier. 「finish projects on time」は「期限内にプロジェクトを終える」という意味ですね。 Which one has helped you most at work, planning or finishing on time? Please answer in one sentence.
+05:08:51 STUDENT(answer) Finishing on time has helped me most. It makes my team more productive.
+05:08:55 TUTOR  Thanks for sharing that. That is a clear answer. Finishing on time has helped you most. 「It makes my team more productive.」は「チームの生産性が上がります」という意味ですね。 Would you like one more practice question on this, or shall we move on to Past simple?
+05:09:14 STUDENT(answer) Uh, move on.
+05:09:17 TUTOR  Okay, let's move on. では、過去形に進みましょう。 Let's move on to the past simple. Did you attend any business events or exhibitions last year?
+05:09:31 STUDENT(answer) Yes, I attended about six exhibitions last year. They were very useful for my business.
+05:09:34 TUTOR  Sounds like a busy and useful year. That is a clear answer. You used the past simple with last year, so attended is right. 「last year」は過去の特定の時期なので、過去形を使います。 Which exhibition was the most useful for you, and what did you learn there?
+05:09:56 STUDENT(answer) Comdex in Las Vegas was the most useful. It was very informative and modern. I learned about the future of technology and AI, and the speed of change in the industry.
+05:10:00 TUTOR  Comdex sounds like a great event. That is a clear answer. You named the exhibition and what you learned there. 「I learned about」は「〜について学んだ」という意味ですね。 What is one idea about AI you think will change your company?
+05:10:19 STUDENT(answer) AI will help us design cars faster and more efficiently. We can use AI to test new designs before we build them. This saves time and money for the company.
+05:10:23 TUTOR  Good answer, James. That is a clear and useful answer. AI helps you test designs before you build them, so it saves time and money. 「test designs before we build them」は「作る前に設計を試せる」という意味ですね。 Which part of your work would AI change first?
+05:10:44 STUDENT(answer) AI would change the design process first. We could use machine learning to analyze customer feedback and improve our car designs automatically. This would make our development cycle much faster.
+05:10:49 TUTOR  Good point, James. That is a clear answer. AI changing the design process first makes sense. 「would change」は「変えるだろう」という意味ですね。 Which step in the design process would you automate first?
+05:11:04 STUDENT(answer) The initial concept phase. We could use AI to generate multiple design options based on specifications and market trends. Then our engineers would review and select the best ones. This would save weeks of manual sketching and brainstorming.
+05:11:08 TUTOR  Good idea, James. That is a clear answer. Using AI to generate design options is a strong first step. 「generate」は「生成する」という意味ですね。 Which tool or method do your engineers use today for that first sketching step?
+05:11:26 STUDENT(answer) We use CAD software, mainly AutoCAD and CATIA. Our senior engineers sketch the initial concepts by hand first, then we digitize them. It takes about two to three weeks for the concept phase. We have about ten engineers working on this step.
+05:11:31 TUTOR  Thanks, that gives me a clear picture of your design process. Your sentence describes the process clearly. 「digitize」は「デジタル化する」という意味ですね。 So AI could replace the hand sketching step. What would you like AI to do for your team first?
+05:11:51 STUDENT(answer) I would like AI to analyze customer feedback and market data first. This would help us understand what features customers want in new cars. Then our designers could focus on creating better solutions instead of spending time on research. This would make our whole process more efficient.
+05:11:55 TUTOR  Good, that's a clear and useful plan. Yes, you explained what AI would analyze and why it helps your designers. 「instead of spending time on research」は「調査に時間をかける代わりに」という意味ですね。 Would you like one more practice question on the past simple, or shall we move on to Conversation?
+05:12:17 STUDENT(answer) Uh, move on. How much longer is this lesson?
+05:12:19 TUTOR  Okay, let's move on. 次は会話です。 あなたの仕事のプロジェクトについて話しましょう。 Let's move on to Conversation. What is one project you've worked on that you're particularly proud of?
+05:12:33 STUDENT(answer) Yes, we are working on a new flying car project. It is very exciting. We have about ten engineers on this team. The biggest challenge was finding the technology to lift the car off the ground safely and efficiently. We learned a lot about aerodynamics and electric propulsion systems.
+05:12:37 TUTOR  Flying cars, that sounds exciting. That is a clear answer. You described a project and its biggest challenge. 「The biggest challenge was」は「一番の課題は〜でした」という意味ですね。 How did your team handle that challenge, and what did you learn from it?
+05:12:57 STUDENT(answer) We worked with aeronautics experts from universities and research institutes. We tested many prototypes with different wing designs and motor configurations. We learned that electric motors are not powerful enough yet, so we combined them with lightweight materials and advanced battery technology. T
+05:13:02 TUTOR  Okay, that's a detailed story. That is a clear answer. You explained how your team worked with experts and what you learned from the limits of the technology. 「learned that」の後ろに文を続けると、学んだ内容がはっきり伝わりますね。 What is one thing you would do differently next time on a project like this?
+05:13:25 STUDENT(answer) Next time, I would start the collaboration with universities earlier in the project. We waited too long before involving the aeronautics experts. If we had worked with them from the beginning, we could have saved six months of development time. I would also allocate more budget for prototype testing
+05:13:30 TUTOR  Starting the collaboration earlier is a strong lesson. That is a clear answer. You used would with a clear change and a reason. 「I would」は「〜するつもりです」という意味で、次にやることを話すときに使えます。 What is one way your team could test prototypes faster on your next project?
+05:13:49 STUDENT(answer) We could use simulation software and virtual testing before building physical prototypes. This would reduce the number of actual prototypes we need to build. We could also set up multiple testing stations so several teams work in parallel instead of sequentially. This parallel approach would cut our
+05:13:53 TUTOR  That's a useful plan. Simulation and parallel testing both make sense for speeding up prototype testing. シミュレーションで試してから実物を作るのは、時間を節約する良い方法ですね。 Which of these two ideas would have the biggest effect on your flying car project?
+05:14:11 STUDENT(answer) Simulation software would have the biggest effect. It would save us the most time and money because we could test hundreds of design variations without building physical prototypes. Physical prototypes are very expensive and take weeks to build. With simulation, we could test in days. This is why we
+05:14:16 TUTOR  Simulation is a strong choice, James. Good reasoning. You explained the time and money saving clearly. 「would have the biggest effect」は「一番大きな効果があるだろう」という意味ですね。 What is one design variation you would test first in the simulation?
+05:14:34 STUDENT(answer) I would test different wing configurations first. We need to find the optimal wing size and angle for lift and stability. A larger wing generates more lift but increases weight and drag. A smaller wing is lighter but may not provide enough lift. Testing these variations in simulation would help us f
+05:14:38 TUTOR  Wing configuration is a good first test. That is a clear answer. You named the variable and the trade-off between lift and weight. 「trade-off」は「どちらかを立てるともう一方が下がる関係」という意味ですね。 Which one would you test first, wing size or wing angle?
+05:14:56 STUDENT(answer) I would test wing size first. Wing size has a bigger impact on the overall lift and weight balance. Once we find the optimal size, then we can fine-tune the angle. Testing size first gives us a better foundation for the rest of the design.
+05:15:01 TUTOR  Wing size first makes sense, since it sets the lift and weight balance. That is a clear answer. You gave a reason and a clear order. 「fine-tune」は「細かく調整する」という意味ですね。 Good reasoning. Now, what would you check in the simulation after you find the best size?
+05:15:23 STUDENT(complaint_reask) I already said this. After we find the best size, we fine-tune the angle. Then we check stability and drag.
+05:15:27 TUTOR  Yes, you already covered that. Fine-tune the angle, then check stability and drag. That is a clear plan. 「fine-tune」は「細かく調整する」という意味ですね。 Which one would you check first, stability or drag?
+05:15:43 STUDENT(answer) Stability first. If the car is not stable in the air, it is dangerous. We need to make sure it can fly safely before we worry about drag and efficiency. Once stability is confirmed, then we can optimize for speed and fuel consumption.
+05:15:47 TUTOR  Stability first, with a clear safety reason. That is a clear answer. You put safety first, then efficiency. 「stability first」は「まず安定性を確認する」という意味ですね。 Good reasoning. In one sentence, what would you check for stability in the simulation?
+05:16:05 STUDENT(answer) I would check how the car responds to wind gusts and sudden changes in weight distribution during flight.
+05:16:10 TUTOR  Good, you named two clear test conditions. That is a clear answer. Wind gusts and weight shifts are exactly the disturbances a stability check needs. 「wind gusts」は「突風」、「weight distribution」は「重量の配分」という意味ですね。 Which one would you test first in the simulation, wind gusts or the weight shift?
+05:16:31 STUDENT(complaint_reask) I already answered this. Wind gusts first, then weight shift. Wind gusts are more common in real flying conditions.
+05:16:37 TUTOR  Right, you've already told me that. Wind gusts first, because they are common in real flight. That is a sound reason. 「common」は「よくある」という意味ですね。 Let's move on to pronunciation. Would you like to practice individual words, a complete sentence, more natural speaking, or skip? Choose 1, 2, 3, or 4.
+05:17:00 STUDENT(answer) Uh, just a little bit of individual words.
+05:17:05 TUTOR  Individual words, good choice. では、単語の発音から始めましょう。 Here are the four options again: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue. You chose individual words, so let's start with the word responsibilities. Say it after me once you're ready.
+05:17:27 STUDENT(answer) Responsibilities.
+05:17:33 TUTOR  Okay, responsibilities. Responsibilities is the word we'll practise. Let's go step by step. responsibilities は「責任」という意味です。 Here are your options: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue. Which one would you like?
+05:17:53 STUDENT(complaint_ignored) I said individual words.
+05:17:59 TUTOR  Individual words, got it. では、単語の発音から始めましょう。 Let's start with the word responsibilities. Listen, then repeat after me: responsibilities.
+05:18:10 STUDENT(answer) Responsibilities.
+05:18:12 waiting 35 s for the autosave

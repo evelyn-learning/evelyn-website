@@ -1,0 +1,50 @@
+04:51:29 open fixture=gdi-real-josh arm=v1 student=gdi-v2-replay-josh-v1 (speech off)
+04:52:14 no start orb (auto-start?)
+04:52:22 STUDENT(open) Hello, I am ready.
+04:52:26 TUTOR  Great, let's begin. First, a quick level check so I can pitch the lesson to you. Please answer in English if you can. What is your job, and how long have you been doing it?   [tools: advance_lesson]
+04:52:32 TUTOR  Great, let's begin. Today we'll talk about your work and the projects you're involved in. We'll practice two grammar points: the present perfect for experience that continues now, and the past simple for finished events at a specific time. You'll also practice follow-up questions, and I'll correct y   [tools: advance_lesson]
+04:52:36 TUTOR  Let's begin the level check. Please answer in English, and don't worry about mistakes. I just want to see what you can already do. 英語で答えられなくても大丈夫ですよ。 Question 1: Can you tell me a little about your job? What do you do?
+04:53:00 STUDENT(answer) I am a manager at a communications company in Japan. I work with the training division, and I help with sales for the division. We work with companies in Japan and also worldwide.
+04:53:04 TUTOR  Thank you, that is a clear picture of your work. いいですね。 次の質問です。 Have you ever worked with an international customer? If so, can you tell me about the experience?
+04:53:21 STUDENT(answer) Yes, I have worked with international customers. We have many customers from America and Europe. I work with them to help with their training programs and sales.
+04:53:24 TUTOR  Thank you, that is a helpful answer. That is a clear description of your international work. いいですね。 海外のお客様とのお仕事ですね。 What is one skill you'd like to improve in your English, and why is it important to you?
+04:53:43 STUDENT(answer) I want to improve my conversation with customers before meetings. Often I do not know what to say, and I want to speak more naturally with them.
+04:53:47 TUTOR  That's a clear and useful goal. That is a clear answer, and it gives a good reason. お客様との会話を自然にしたいというのは、とても実用的な目標ですね。 Thank you. Now let's move on to your job, and talk about your responsibilities. What are your main responsibilities at work?
+04:54:07 STUDENT(answer) I am the training division manager and I help with sales for the division. I also schedule class for many teachers and teach myself.
+04:54:11 TUTOR  Thank you, that is a clear picture of your role. That is a clear answer. You describe your job duties well. 業務内容をとても分かりやすく説明できていますね。 Could you describe your current responsibilities and explain how your role has developed over time?
+04:54:31 STUDENT(answer) I am the training division manager. I help with sales for the division. I schedule class for many teachers and I teach. My role has developed because the company grew, and we needed more training programs.
+04:54:36 TUTOR  Good, that is a clear picture of your role. You described your current responsibilities and explained how your role developed. That answers the question well. 「役割が発展した」は has developed で言えます。 Before we go on, which tense did you use for your role has developed, and why?
+04:54:58 STUDENT(answer) I used past simple because my role developed in the past, and it is finished now. The company grew, and we needed more training programs at that time.
+04:55:04 TUTOR  Thanks for explaining your reasoning. Your reason makes sense, but 'has developed' is the present perfect here. It links the past change to your role now. Use has developed when a past change still matters now. Past simple is for a finished event at a specific past time, like last year. 「has develop
+04:55:39 STUDENT(answer) I used the present perfect, because my role has developed and it still affects my work now.
+04:55:43 TUTOR  Yes, that's the sentence. That is exactly right. Present perfect links the past change to now. 過去の変化が今も続いている時は現在完了ですね。 Good. Now, let's move on to the present perfect. Have you worked for your current company for a long time?
+04:56:01 STUDENT(answer) I work here for eleven year.
+04:56:06 TUTOR  Okay, let's look at that sentence. You're close. For a period that started in the past and continues now, we use the present perfect, and 'year' becomes 'years' after eleven. Use have worked for a period that started in the past and continues now. Plural years is needed after eleven. 「have worked」は、
+04:56:36 STUDENT(answer) I have worked here for eleven year.
+04:56:41 TUTOR  Okay, let's look at that again. Not quite. Your sentence is not what the problem gives for a long time at your company. 「eleven」のあとは years の複数形が必要ですね。 Look at the number in your sentence. Which word after eleven needs a change?
+04:57:00 STUDENT(answer) The word 'year' needs to change to 'years'. I have worked here for eleven years.
+04:57:04 TUTOR  Right, you found it. Yes, year changes to years after eleven. I have worked here for eleven years. 「eleven」のあとは years と複数形にします。 Good. Now, what is one skill you have learned at your current company?
+04:57:23 STUDENT(answer) わかりません。
+04:57:27 TUTOR  大丈夫ですよ。 「skill」は、仕事で身につけた技術や能力のことです。 Let me ask it a different way. What is one thing you have learned at your company, like a new tool or a way of working?
+04:57:42 STUDENT(answer) I have learned how to manage training programs and how to work with international customers. This is important for my job.
+04:57:47 TUTOR  Good, that answer is clear. That is a clear answer, and you used the present perfect well for skills you have learned over time. 「have learned」は、会社で続けて身につけてきたことを話す時に使えます。 Which of those skills do you use most in your sales work?
+04:58:07 STUDENT(answer) I use the skill of working with international customers most in my sales work. I need to understand their needs and communicate clearly with them.
+04:58:11 TUTOR  Good answer. そうですね、国際的なお客様との仕事が営業でとても役立っているんですね。 「I need to」は「〜する必要があります」という意味です。 Which word in your sentence tells us you use this skill often?
+04:58:24 STUDENT(answer) The word 'most' tells us I use this skill often. 'Most' means I use it more than the other skills.
+04:58:27 TUTOR  Yes, exactly. 'Most' is the word that shows how often you use that skill. 「most」は「一番よく」という意味ですね。 Would you like one more question on this, or shall we move on to Past simple?
+04:58:44 STUDENT(answer) I would like to move on to past simple, please.
+04:58:48 TUTOR  Understood, let's move on. では、過去形に進みましょう。 Let's move on to the past simple. Did you attend any business events or exhibitions last year?
+04:59:01 STUDENT(answer) Yes, I attended a business exhibition last year. We showed our training programs to many customers from different countries.
+04:59:06 TUTOR  Thanks for sharing that. That is a clear answer, and you used the past simple for a finished event last year. 「last year」は特定の過去の時なので、過去形を使います。 Which customers came to your booth, and what did they ask you?
+04:59:24 STUDENT(answer) Customers from America and Europe came to our booth. They asked about our training programs and how we can help their companies with employee development.
+04:59:29 TUTOR  Thank you for sharing that. That is a clear answer, and the past simple fits the finished event at the booth. 「came」と「asked」が過去形ですね。 Which of those customers did you talk with most, and what did you discuss?
+04:59:47 STUDENT(answer) I talked most with customers from America. We discussed their training needs and how our programs could help their employees learn new skills.
+04:59:55 TUTOR  Good detail about the American customers. That is a clear answer, and the past simple fits both finished actions. 「talked」と「discussed」が過去形ですね。 Can you tell me about one customer you met at the exhibition, and what they wanted from your company?
+05:00:17 STUDENT(answer) I met a customer from Germany. They wanted to develop a training program for their sales team. We discussed how we could customize our program for their company needs.
+05:00:22 TUTOR  Okay, let's look at that answer. That is a clear answer. You used the past simple for a finished meeting, and it fits. 「met」と「wanted」が過去形ですね。 What did you discuss with them about the program?
+05:00:40 STUDENT(answer) We discussed the length of the program and the topics they needed. They wanted the program to focus on sales skills and customer communication. We also talked about the schedule and the cost.
+05:00:45 TUTOR  Good detail about that discussion. That is a clear answer, and the past simple fits the finished meeting. 「discussed」は過去形で、終わった話し合いを表します。 Which topic did they want most, and why?
+05:01:01 STUDENT(answer) They wanted the sales skills topic most. They said their sales team needed to improve how they talk with customers and understand their needs better.
+05:01:07 TUTOR  Good detail about their needs. That is a clear answer. You named the topic and gave a reason. 「because」で理由を言えていますね。 Which customer need do you think is hardest to meet at an exhibition, and why?
+05:01:25 STUDENT(answer) Okay, please stop. I would like to end the session for now.
+05:01:27 waiting 35 s for the autosave

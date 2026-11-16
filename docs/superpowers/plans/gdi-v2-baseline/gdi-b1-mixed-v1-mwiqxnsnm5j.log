@@ -1,0 +1,85 @@
+04:11:17 open fixture=gdi-b1-mixed arm=v1 student=gdi-v2-replay-b1-v1b (speech off)
+04:12:02 no start orb (auto-start?)
+04:12:10 STUDENT(open) Hello, I am ready.
+04:12:17 TUTOR  Thanks, Haruto. Today we'll talk about your work and projects, practice the present perfect and past simple, and work on follow-up questions. 今日は、仕事について英語で話す練習をしましょう。 Next is a short level check so I can tailor the lesson. To start, could you tell me briefly about your job?   [tools: advance_lesson]
+04:12:21 TUTOR  英語で答えてくださいね。 間違えても大丈夫ですよ。 今のあなたの英語を知りたいだけです。 Let's start with question one. Can you tell me a little about your job? What do you do?
+04:12:36 STUDENT(answer) I work in sales at a manufacturer. We make... uh, industrial parts. I am in Nagoya.
+04:12:42 TUTOR  Nagoya sounds like a great base for manufacturing. Have you ever worked with an international customer? If so, can you tell me about the experience?
+04:12:56 STUDENT(answer) Yes, we have customer in America. I email with them about delivery and price. It is difficult sometimes.
+04:13:01 TUTOR  Thank you for sharing that. Good, you described a real experience with an American customer. Small fix: say we have a customer, with a. Use a before customer, and say email them without with. Put sometimes before difficult, which sounds more natural. 「customer」の前には a が必要です。 「email them」は with を使いません
+04:13:32 STUDENT(answer) 仕事で、customer と communication が大切です。 I want to speak more fluent with customer on phone call.
+04:13:38 TUTOR  ありがとうございます。 Good goal, and phone calls with customers are important. Fluent is an adjective, so say more fluently. Use the adverb fluently after speak. Use customers in the plural, and say on the phone. 「speak more fluently」と言うと自然です。 Thank you, that completes the level check. Next, we'll talk about 
+04:14:07 STUDENT(answer) My main responsibility is... manage the sales team. I check order from customer and make sure delivery is on time.
+04:14:15 TUTOR  Thank you for sharing that. Good answer. Two small fixes: say manage the sales team, and check orders from customers. Use to before a verb after responsibility, and use plurals orders, customers and deliveries when you mean more than one. 「responsibility is to ～」で「～することが仕事です」という意味になります。 Can you say 
+04:14:40 STUDENT(answer) My main responsibility is to manage the sales team. I check orders from customers and make sure deliveries are on time.
+04:14:44 TUTOR  Good. That is a clear answer. You used responsibility is to correctly. 「responsibility is to ～」で「～することが仕事です」という意味です。 What are your main responsibilities at work?
+04:14:57 STUDENT(complaint_reask) I already answer this. I manage sales team and check orders from customers.
+04:15:04 TUTOR  Okay, let's look at your answer. Good, you name two clear duties. Say manage the sales team with the article: I manage the sales team. Use the before sales team, and add I before check so the two duties are clear sentences. 「sales team」の前には the が必要です。 Can you say the whole sentence once more?
+04:15:30 STUDENT(answer) I manage the sales team. I check orders from customers and make sure deliveries are on time.
+04:15:37 TUTOR  Okay, that's the sentence we wanted. That is a clear answer. You said both duties in full sentences. 「make sure」は「必ず～になるようにする」という意味です。 次は現在完了の練習です。 Have you worked for your current company for a long time?
+04:15:53 STUDENT(answer) I work here for eleven year.
+04:15:58 TUTOR  Good effort, Haruto. Nearly there. Since you started working here in the past and still work here now, we use the present perfect: I have worked here for eleven years. Use have worked for an experience that started in the past and continues now. Use years for more than one year. 「have worked」は、過去に始ま
+04:16:26 STUDENT(answer) I have worked here for eleven year.
+04:16:29 TUTOR  Okay, let's try it again. Nearly there. Years is plural, so say eleven years. Use the plural years after a number greater than one. 「eleven year」は単数になっているので、複数形の years にします。 Can you say the whole sentence once more?
+04:16:48 STUDENT(answer) I have worked here for eleven years.
+04:16:52 TUTOR  Yes, that's the sentence. Good. I have worked here for eleven years is a clear answer. 「have worked」は、過去に始まって今も続いていることを表します。 What is one skill you have learned at your company?
+04:17:08 STUDENT(answer) I have learned to manage team and communicate with customer. It is very important for my job.
+04:17:13 TUTOR  いいですね。 Good answer. Two small fixes: say manage the team, and communicate with customers. Use the before team, and customers in the plural because you mean more than one. 「communicate with」は「～と意思疎通をする」という意味です。 「have learned」は、過去に学んで今も役立っていることを表します。 Can you say the whole sentence once more?
+04:17:34 STUDENT(answer) I have learned to manage the team and communicate with customers. It is very important for my job.
+04:17:38 TUTOR  Okay, that's the sentence we wanted. That is a clear answer. You said what you learned and why it matters. 「have learned」は、過去に学んで今も役立っていることを表します。 What is one challenge you have faced when working with customers, and how did you handle it?
+04:17:59 STUDENT(answer) One challenge is... uh... language barrier. Customer speak different English, and I not understand sometimes. I ask them to repeat or send email.
+04:18:05 TUTOR  Okay, let's look at that. Good, you named a challenge and how you handled it. Now fix the grammar: say customers speak, and I do not understand. Use the plural customers and the auxiliary don't with I. Add them after understand, and add an before email. 「customers」は複数形、「I don't understand」は「わからない」とい
+04:18:32 STUDENT(answer) One challenge is language barrier. Customers speak different English, and I do not understand them sometimes. I ask them to repeat or send an email.
+04:18:37 TUTOR  Good, that's much clearer. That is a clear answer about a real challenge. You said what the problem was and how you handled it. いいですね。 次は過去形の練習に進みます。 Would you like one more practice sentence, or shall we move on to Past simple?
+04:18:57 STUDENT(answer) I want to move on to Past simple, please.
+04:19:01 TUTOR  Of course, let's move on. 過去形に進みましょう。 Let's go to the past simple. Did you attend any business events or exhibitions last year?
+04:19:14 STUDENT(answer) Yes, I attend a trade show in Osaka. I meet customer from America and we discuss new product.
+04:19:20 TUTOR  Good, you gave a real example. Your first sentence is correct, and it is a good answer. But 'attend' needs the past form, so say I attended a trade show in Osaka. Last year is a specific time in the past, so we use the past simple: attended. 「last year」のような過去の特定の時期には、過去形を使います。 Can you say the whole 
+04:19:49 STUDENT(answer) I attended a trade show in Osaka. I met a customer from America and we discussed a new product.
+04:19:54 TUTOR  Okay, that's the sentence we wanted. That is a clear past simple answer. You used attended and met for completed events. 過去の特定の時期には、過去形を使います。 What was one thing you learned from that trade show?
+04:20:11 STUDENT(answer) I learned about new technology and market trend. I also make good connection with customer.
+04:20:16 TUTOR  Good, you shared two things you learned. Both ideas are clear. But the question asks for one thing, and 'learned' needs the past form: I learned about new technology. Use the past simple learned for a completed event. For the plural trend, say market trends, and connection needs a and plural. 「learn
+04:20:47 STUDENT(answer) I learned about new technology and market trends. I also made good connections with customers.
+04:20:55 TUTOR  Okay, let's look at that. Good, you named two things clearly. But the question asks for one thing, so please choose one and say it once. Use the past simple learned for a completed event. One clear sentence is enough for this question. 質問は「一つ」なので、一文だけにしましょう。 Can you say the one-sentence answer once 
+04:21:22 STUDENT(answer) I learned about new technology and market trends.
+04:21:28 TUTOR  Okay, I see what you mean. You named one thing clearly. But the question asks for one thing only, and you gave two. The question asks for one thing, so one clause is enough. Your sentence is clear, so keep it short. 質問は「一つ」なので、一文で答えると良いです。 Good. Now try it once more in your own words: what did you l
+04:21:56 STUDENT(complaint_reask) I already answer this. I learned about new technology and market trends.
+04:22:01 TUTOR  Okay, I hear you. Market trends is right, and so is learned. But the question asks for one thing, so choose one. The question asks for one thing, so one clause is enough. Learned is the past form for a completed event. 質問は「一つ」なので、一つ選んで答えましょう。 Please say the one-thing answer once more, starting with 
+04:22:26 STUDENT(complaint_ignored) I already answer. Please move on to next question.
+04:22:29 TUTOR  Okay, let's move on. では次に進みましょう。 Let's move on. Your next part is Conversation: what is one project you've worked on that you're particularly proud of?
+04:22:44 STUDENT(answer) I work on project to improve delivery system. We reduce delivery time by 20 percent. I am proud of this.
+04:22:48 TUTOR  Good, that's a clear project. That is a clear answer. You named the project and why you are proud of it. 「be proud of」は「～を誇りに思う」という意味です。 Next, we'll move on to the conversation part. Can you tell me more about how you reduced the delivery time?
+04:23:11 STUDENT(answer) We change the process. Before, we check order manually. Now we use computer system. It is faster and more accurate.
+04:23:17 TUTOR  Okay, that's a clear process change. Good explanation of the change. Before, we checked orders manually. Use the past simple checked for the old process, and orders in the plural. Add a before computer system. 「checked」は過去の方法を表す過去形です。 Can you say the two sentences about the old and new process once 
+04:23:41 STUDENT(answer) Before, we checked orders manually. Now we use a computer system. It is faster and more accurate.
+04:23:45 TUTOR  Okay, I hear you. That is a clear answer. You described the old and new process well. 「checked」は過去の方法を表す過去形です。 What was the biggest challenge when you changed the process?
+04:24:02 STUDENT(answer) The biggest challenge was... uh... staff training. Many people not familiar with computer system. We need time to teach them.
+04:24:07 TUTOR  Okay, that's a useful challenge. Staff training is a clear challenge. But say: many people are not familiar with the computer system. A full sentence needs a verb, so add are. Use the before computer system because we mean the one new system. 「are」と「the」を足すと、完全な文になります。 Can you say the whole sentence
+04:24:33 STUDENT(answer) Many people are not familiar with the computer system. We need time to teach them.
+04:24:38 TUTOR  Yes, that's the sentence we wanted. That is a clear answer. You explained the staff training challenge well. 「not familiar with」は「～に慣れていない」という意味です。 How did you help your staff get used to the new system?
+04:24:55 STUDENT(answer) We make training session for all staff. I explain how to use system step by step. We also give them manual and support.
+04:25:01 TUTOR  いいですね。 That is a clear answer. You described training, step-by-step explanations, and manuals. 「give them a manual」は「マニュアルを渡す」という意味です。 Which part of the training did your staff find most helpful?
+04:25:17 STUDENT(answer) I think the step by step explanation is most helpful. When I show them on computer, they understand better.
+04:25:22 TUTOR  That's a useful detail. Yes, the step-by-step explanation was the most helpful part. 「step by step」は「一步ずつ」という意味です。 Good. What was the biggest result of the training?
+04:25:36 STUDENT(answer) The biggest result is staff can use system now. Delivery time is faster, and we have fewer mistake.
+04:25:41 TUTOR  いいですね、結果がよく伝わります。 Good result. Two small fixes: say the staff can use the system, and fewer mistakes. Use the before system because we mean the one new system. Use mistakes in the plural because you mean more than one. 「the system」は「そのシステム」という意味です。 Can you say the whole sentence once more?
+04:26:04 STUDENT(answer) The staff can use the system now. Delivery time is faster, and we have fewer mistakes.
+04:26:09 TUTOR  Okay, that's clear. That is a clear answer. You described the result well. 「fewer mistakes」は「ミスが減った」という意味です。 Good. Now, can you tell me one project you would like to work on in the future?
+04:26:26 STUDENT(answer) I want to work on project to improve customer communication. Maybe we can use new software for email and message.
+04:26:30 TUTOR  Good idea. That is a clear project idea. Say: I want to work on a project to improve customer communication. Use a before project because it is one project, and work on needs a noun after it. 「work on a project」は「プロジェクトに取り組む」という意味です。 Can you say the whole sentence once more? Then tell me how the new
+04:26:57 STUDENT(answer) I want to work on a project to improve customer communication. The new software help us send message faster and keep all conversation in one place.
+04:27:01 TUTOR  Good, that's a clear project idea. Your first sentence is right. But the new software helps us, and we need the -s on help, so say: The new software helps us send messages faster. With the third person singular software, the verb takes -s. Messages and conversations are plural because we mean more t
+04:27:32 STUDENT(answer) The new software helps us send messages faster and keep all conversations in one place.
+04:27:38 TUTOR  Right, that's the sentence we wanted. The new software helps us send messages faster and keep all conversations in one place. That is a clear answer. helps は三人称単数なので -s が付きます。 次は発音の練習です。 Would you like to practice your pronunciation? You can choose: 1) individual words, 2) a complete sentence, 3) sp
+04:28:04 STUDENT(answer) I want to practice individual words, please.
+04:28:13 TUTOR  Individual words, great choice. では、単語の発音から始めましょう。 Here are the options again: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue. You picked one, so let's go with words. Please tell me which option you want.
+04:28:34 STUDENT(ack) Yes, individual words is good.
+04:28:41 TUTOR  Individual words, good choice. では、単語の発音から始めましょう。 Here are the options: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue. You picked words, so please tell me which option you want.
+04:28:59 STUDENT(complaint_ignored) I already choose individual words. Please start the pronunciation practice.
+04:29:05 TUTOR  Okay, let's start with words. では、単語の発音から始めましょう。 Let's move on to the summary. Could you tell me one thing you practised today that helped you most?
+04:29:20 STUDENT(answer) ちょっと待ってください
+04:29:26 TUTOR  わかりました、ゆっくりどうぞ。 はい、準備ができたら教えてください。 今日いちばん役に立った練習は何でしたか？
+04:29:32 STUDENT(answer) I think present perfect practice is most helpful. I learn how to use have worked for long time job.
+04:29:38 TUTOR  Present perfect practice, good choice. That is a clear answer. You named the grammar point and why it helped. 「have worked for a long time」は、今も続いている仕事の期間を表す形です。 Before we finish, one thing you did well today was naming your own sentence about your job. Now, can you explain the difference between the
+04:30:12 STUDENT(answer) First sentence... I work now, still here. Second sentence... I work in past, maybe not here now. Have worked is present perfect, worked is past simple.
+04:30:14 waiting 35 s for the autosave

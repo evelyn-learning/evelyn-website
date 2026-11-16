@@ -1,0 +1,77 @@
+05:18:49 open fixture=gdi-real-t2 arm=v1 student=gdi-v2-replay-t2-v1 (speech off)
+05:19:34 no start orb (auto-start?)
+05:19:43 STUDENT(open) Hello, I am ready.
+05:19:50 TUTOR  Great, let's get started. Today you'll talk about your work and recent projects. We'll practice the present perfect for experience and the past simple for finished events. You'll also practice follow-up questions, and I'll correct your mistakes and give you a chance to try again. 今日は、仕事について英語で話す練習をし   [tools: advance_lesson, mark_segment_complete]
+05:20:23 STUDENT(answer) Please, could you please rephrase that, please?
+05:20:24 TUTOR  Of course, let me ask it again more simply. もう一度ゆっくり聞きますね。 Can you tell me a little about your job? What do you do?
+05:20:39 STUDENT(answer) I work as admin at the company. Could you explain that in Japanese?
+05:20:41 TUTOR  なるほど、事務のお仕事なんですね。 「admin」は事務、総務のような仕事を指す言葉です。 Let's keep going. Have you ever worked with an international customer? If so, can you tell me about the experience?
+05:20:55 STUDENT(answer) No.
+05:20:56 TUTOR  わかりました、では次の質問です。 英語で答えるのが難しければ、日本語で大丈夫ですよ。 What is one skill you'd like to improve in your English, and why is it important to you?
+05:21:09 STUDENT(answer) I want to improve my speaking skill because I often attend a meeting that use English.
+05:21:13 TUTOR  Speaking is a great skill to focus on. Good reason. Let's fix one small thing: 'a meeting that uses English'. After a singular noun like meeting, the verb takes an s. 「会議で英語を使う」という意味です。 「meeting that uses English」は、英語を使う会議という意味です。 Now let's talk about your job. Can you tell me one main responsibilit
+05:21:39 STUDENT(answer) I'm checking emails and sorting out some paperwork.
+05:21:43 TUTOR  なるほど、メールチェックと書類整理ですね。 That is a clear description of a responsibility. I check emails and sort out paperwork is a good model. 「sorting out」は「整理する」という意味です。 What are your main responsibilities at work?
+05:22:00 STUDENT(answer) I already answered that. I check emails and sort out some documents.
+05:22:05 TUTOR  了解です、もう答えてくれていましたね。 「I check emails」は正しい文です。 「sort out some documents」は「sorting out some paperwork」と同じ意味で、どちらでも大丈夫です。 responsibilities は「担当業務」という意味です。 二文以上で答えてみましょう。 Can you say your answer as two complete sentences, one about emails and one about another task?
+05:22:22 STUDENT(answer) I check emails every day. I sort out some documents and organize them.
+05:22:26 TUTOR  Good, that's two complete sentences. That's a clear answer. Both sentences are complete. 「organize」は「整理する」という意味です。 次は現在完了です。 Have you worked for your current company for a long time?
+05:22:42 STUDENT(answer) I have worked for the current company for ten years.
+05:22:47 TUTOR  Good, that's a complete answer. That's a clear answer, and the present perfect fits well here. 「ten years」のように期間を言うと、現在完了がはっきり伝わります。 What is one thing you have learned at your company?
+05:23:03 STUDENT(answer) Uh, I have learned accounting system and how to manage the budget.
+05:23:08 TUTOR  なるほど、経理の仕事もされているんですね。 Good. I have learned the accounting system and how to manage the budget is a clear answer. 「have learned」は、過去に始めて今も続いている経験や学んだことを表す現在完了です。 How has that helped you in your daily work?
+05:23:22 STUDENT(answer) It helps me to understand the company's financial situation and make correct decisions.
+05:23:28 TUTOR  ありがとうございます、いい説明ですね。 会社の財務状況を理解できる、という説明ですね。 英語でもはっきり伝わります。 「help me understand」は「理解する手助けになる」という意味です。 Can you tell me about a decision you made with that knowledge?
+05:23:40 STUDENT(request) Please move on to the past simple.
+05:23:43 TUTOR  わかりました、次に進みましょう。 過去形は、終わった出来事について話すときに使います。 Let's move on to the past simple. Did you attend any business events or exhibitions last year?
+05:23:55 STUDENT(answer) No.
+05:23:58 TUTOR  わかりました。 「No.」だけで大丈夫ですよ。 次の質問に英語で答えるなら、Yes, I did. や No, I didn't. と言えます。 Let's try a different one. What did you do last weekend?   [tools: tutor_handwrite]
+05:24:12 STUDENT(answer) Last weekend I stayed at home and relaxed. I watched TV and read a book.
+05:24:17 TUTOR  Relaxing at home sounds nice. That is a clear answer. You used the past simple well for last weekend. 「last weekend」は特定の過去の時間なので、過去形を使います。 Did you go out at all last weekend, or did you stay in the whole time?
+05:24:36 STUDENT(answer) No, I didn't. I stayed in the whole time at home.
+05:24:40 TUTOR  わかりました、家にずっといたんですね。 That is a clear answer. You used the past simple, didn't, for last weekend. 「stayed」は stay の過去形で、過去の出来事を表します。 What did you do at home last weekend besides relaxing?
+05:24:57 STUDENT(answer) I watched TV and read a book. I also cleaned my room and cooked dinner.
+05:25:02 TUTOR  Sounds like a busy and relaxing weekend. That is a clear answer. You used the past simple well for each activity. 「cleaned」と「cooked」はどちらも過去形です。 Which of those activities did you enjoy the most, and why?
+05:25:19 STUDENT(answer) I enjoyed cooking the most because I like to make delicious food for myself.
+05:25:23 TUTOR  Lovely, cooking sounds like a great part of your weekend. That is a clear answer, and you gave a reason too. 「enjoyed」は過去形で、終わった週末の出来事を話せていますね。 What did you cook for dinner?
+05:25:39 STUDENT(answer) I cooked chicken with vegetables and rice. It was very delicious.
+05:25:44 TUTOR  Sounds delicious. That is a clear answer. You used the past simple, cooked, for a finished event. 「cooked」は cook の過去形で、終わった夕食の出来事を表します。 Who did you cook for?
+05:25:58 STUDENT(answer) I cooked for myself only.
+05:26:01 TUTOR  Yes, that's clear. That's a clear answer. You used the past simple, cooked, for a finished dinner. 「for myself」は「自分のために」という意味です。 Would you like one more past simple question, or shall we move on to the conversation part? 次は会話練習です。
+05:26:21 STUDENT(ack) Yes, let's move on to the conversation part.
+05:26:25 TUTOR  はい、会話練習に進みましょう。 会話練習では、ご自身の仕事や経験について話してもらいます。 What is one project you've worked on that you're particularly proud of?
+05:26:36 STUDENT(answer) No.
+05:26:38 TUTOR  わかりました、無理に答えなくて大丈夫ですよ。 「project」は「プロジェクト」、「proud」は「誇りに思う」という意味です。 Let's make it smaller. Is there any work task you finished well recently? Just tell me in one short sentence.
+05:26:51 STUDENT(answer) No, I didn't.
+05:26:56 TUTOR  わかりました、無理に答えなくて大丈夫ですよ。 「No, I didn't.」は、前の質問への答えとして少し違いますね。 Let's try a different question. Is there any work task you finished well recently? Just say one short sentence.   [tools: tutor_handwrite]
+05:27:13 STUDENT(answer) No, I have not.
+05:27:17 TUTOR  Okay, let's keep going. No, that's a clear answer. 「No, I have not.」は、今回の質問に対する自然な答えです。 That's fine. Let's talk about something else. What do you usually do at the start of your workday?
+05:27:34 STUDENT(answer) At the start of my workday, I check my emails and read messages from my colleagues.
+05:27:39 TUTOR  Good, that's a clear routine. That is a clear answer. You used the present simple well for a daily routine. 「at the start of my work day」は「仕事の始まりに」という意味です。 What do you usually do after that, before lunch?
+05:27:57 STUDENT(answer) After that, I organize documents and prepare reports for my manager.
+05:28:02 TUTOR  Good, that's a clear routine. That is a clear answer. You used the present simple, organize and prepare, for your regular tasks. 「prepare reports」は「報告書を準備する」という意味です。 What kind of report do you prepare for your manager most often?
+05:28:21 STUDENT(answer) I prepare financial reports and budget reports. These reports show the company's money situation.
+05:28:26 TUTOR  Financial and budget reports, that makes sense with your accounting work. That is a clear answer. You used the present simple, prepare, for a regular task. 「budget report」は「予算報告書」という意味です。 Who reads these reports most often, and what do they do with them?
+05:28:46 STUDENT(answer) My manager reads these reports. He uses them to understand the company's financial situation and make decisions about budget.
+05:28:51 TUTOR  Good answer. Yes, that's a clear answer. Your manager reads the reports to understand the company's finances. 上司が報告書を読んで、会社の財務状況を理解し、予算について判断する、という説明ですね。 Do you usually meet your manager to talk about these reports, or do you send them by email?
+05:29:09 STUDENT(answer) Usually I send them by email. Sometimes we meet to discuss the reports if there are important issues.
+05:29:14 TUTOR  Right, that's a clear answer. Usually by email, and meetings for important issues. That's a clear answer. 「if there are important issues」は「重要な問題があれば」という意味です。 What is the most important issue you have discussed with your manager recently?
+05:29:33 STUDENT(answer) No, I have not.
+05:29:37 TUTOR  Okay, let's keep going. 「No, I have not.」は、今回の質問への答えとしては少しずれていますね。 Let's try again. What is the most important issue you have discussed with your manager recently? You can answer in English, even a short phrase is fine.
+05:29:56 STUDENT(answer) No, I didn't discuss any important issue recently.
+05:30:00 TUTOR  Okay, that's fine. No problem, that is a clear answer. 「No, I didn't discuss any important issue recently.」は、今回の質問に対する答えとして自然です。 Then let's talk about something else. What is one task you finished well at work recently?
+05:30:19 STUDENT(answer) No, I have not.
+05:30:23 TUTOR  Okay, no problem. 「No, I have not.」は、今の質問「最近、仕事でうまくできたタスクは何ですか？」 への答えではありませんね。 Let's try a different angle. Did you finish any work task well in the last month? Just tell me one task in a short sentence.
+05:30:40 STUDENT(answer) No, I didn't finish any special task in the last month.
+05:30:44 TUTOR  Okay, that's fine. That is a clear answer. No task to share is fine. 大丈夫ですよ。 次に進みましょう。 Let's move on to pronunciation. Would you like to practice your pronunciation? You can choose: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue.
+05:31:07 STUDENT(answer) Skip and continue.
+05:31:12 TUTOR  わかりました、発音練習はスキップしましょう。 発音練習はスキップして、まとめに進みます。 Pronunciation practice is skipped. Here are your choices: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue.
+05:31:22 TUTOR  Okay, let's move on. 発音練習はスキップして、まとめに進みましょう。 Here are your choices: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue.
+05:31:37 STUDENT(complaint_ignored) Skip and continue.
+05:31:41 TUTOR  Understood, we'll skip the pronunciation practice. 発音練習はスキップして、まとめに進みましょう。 Let's move on to the summary. What is one thing from today's lesson you want to remember?
+05:31:54 STUDENT(answer) I want to remember the difference between present perfect and past simple. Present perfect is for experience until now, and past simple is for finished event in the past.
+05:32:00 TUTOR  That's a clear takeaway. そのとおりです。 Present perfect は今も続く経験、past simple は終わった過去の出来事ですね。 Before we finish, can you explain the difference between these two sentences? I have worked here for five years. I worked here five years ago. 違いを説明してみてください。
+05:32:18 STUDENT(answer) The first means I have been working here for five years until now. The second means I worked there five years ago and no longer work.
+05:32:24 TUTOR  Yes, you explained both clearly. その説明で合っています。 The first sentence is ongoing until now, and the second is a finished time in the past. 「have worked」は今も続く経験、「worked」は終わった過去の出来事です。 One thing you did well was linking each sentence to its meaning clearly. Well done! Thank you for today's lesson. Keep pra
+05:32:49 STUDENT(end)
+05:32:49 waiting 35 s for the autosave

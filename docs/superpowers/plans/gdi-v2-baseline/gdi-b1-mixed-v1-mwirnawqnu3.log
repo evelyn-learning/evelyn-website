@@ -1,0 +1,88 @@
+04:31:13 open fixture=gdi-b1-mixed arm=v1 student=gdi-v2-replay-b1-v1-r2 (speech off)
+04:31:58 no start orb (auto-start?)
+04:32:06 STUDENT(open) Hello, I am ready.
+04:32:13 TUTOR  Great, let's begin. First, a short level check so I can adjust the lesson for you. Could you tell me a little about your job, in one or two sentences?   [tools: mark_segment_complete, advance_lesson, show_segment_card]
+04:32:18 TUTOR  Today we'll practice talking about your work. We'll cover two grammar points: the present perfect for experience, and the past simple for finished events at a specific time. I'll correct your mistakes and give you a chance to try again. Now, could you tell me a little about your job, in one or two s
+04:32:45 STUDENT(answer) I work in sales at a manufacturer. We make industrial parts in Nagoya.
+04:32:49 TUTOR  Thanks for sharing that. That is a clear description of your job. いいですね。 営業の仕事ですね。 Let's move on to the level check. Can you tell me a little about your job? What do you do?
+04:33:07 STUDENT(complaint_reask) I already answer this. I work in sales, make industrial parts.
+04:33:11 TUTOR  Thanks, that's clear. 了解です。 次の質問に進みましょう。 Have you ever worked with an international customer? If so, can you tell me about the experience?
+04:33:25 STUDENT(answer) Yes, I work with customer from America. We sell parts to them two year ago.
+04:33:30 TUTOR  Thanks for sharing that. Good, you named the customer and the past time. Now check the verb and the number. Ago means a finished time, so use the past form sold. Use the plural years after two. 「ago」は終わった時間なので、過去形の sold を使います。 What is one skill you'd like to improve in your English, and why is it im
+04:33:57 STUDENT(answer) 仕事で英語を使うので、スピーキングが大切です。I want to speak more fluently with customers.
+04:34:03 TUTOR  Good, that's a clear reason. Speaking with customers is a clear goal, and you gave a reason tied to your work. 仕事で英語を使う理由がはっきり伝わりました。 Thanks, that gives me a good picture of your work. Now let's look at your job in more detail. What are your main responsibilities at work?
+04:34:26 STUDENT(answer) I manage sales team. I plan strategy and communicate with customer about order and delivery.
+04:34:30 TUTOR  Good, that's a clear picture of your role. Nice content. Two small fixes: say I manage the sales team, and customers takes a plural. Use the before sales team, and make strategy, customer, order and delivery plural when you talk about them in general. 「the sales team」のように、チームの前には the を付けます。 Can you 
+04:34:57 STUDENT(answer) I manage the sales team. I plan strategies and communicate with customers about orders and deliveries.
+04:35:01 TUTOR  Yes, that's right now. Perfect. The sales team has the, and the plurals are right. 「the sales team」のように、チームの前には the を付けます。 Good. Now, what do you do at work each day?
+04:35:18 STUDENT(answer) Every day I check email from customers. I make report about sales and attend meeting with team.
+04:35:22 TUTOR  Good, that's a busy and clear day. Nearly there. Every day takes the present simple, so the verbs need the s-less form for each action and the plural makes sense. Use plural nouns for things you do regularly, and add my before team. 毎日の仕事は現在形で話します。 Can you say the corrected sentences once more?
+04:35:47 STUDENT(answer) Every day I check emails from customers. I make reports about sales and attend meetings with my team.
+04:35:51 TUTOR  Okay, let's look at your answer. Both sentences are clear now. Every day, check emails, make reports, and attend meetings with my team. 毎日の仕事を現在形で話せています。 Next, we'll look at experience that continues to now. Have you worked for your current company for a long time?
+04:36:13 STUDENT(answer) I work here for eleven year.
+04:36:17 TUTOR  Thanks for trying that. Good start with the present perfect. Years needs a plural after eleven, and the verb should be have worked. Use have worked for something that started in the past and continues now. Use the plural years after a number above one. 「for eleven years」は、過去に始まって今も続いていることを表します。 Can 
+04:36:44 STUDENT(answer) I have worked here for eleven year.
+04:36:47 TUTOR  Thanks for trying that. Good start with the present perfect. Years needs an s after eleven. After a number above one, the noun takes an s. Have worked is right, because you started in the past and still work here. 「eleven years」のように、1より大きい数の後は複数形にします。 Can you say the full sentence once more, with ye
+04:37:12 STUDENT(answer) I have worked here for eleven years.
+04:37:16 TUTOR  Yes, that's the sentence. I have worked here for eleven years. You used have worked and years correctly. 「have worked」は、過去に始まって今も続いていることを表します。 What is one thing you have learned at your company?
+04:37:31 STUDENT(answer) ちょっと待ってください
+04:37:35 TUTOR  わかりました。 はい、お待ちしています。 準備ができたら教えてください。
+04:37:42 STUDENT(answer) I learn how to manage project and communicate with international team.
+04:37:46 TUTOR  Okay, let's look at that. Managing projects and communicating with international teams are good things to learn. But you learned them, so use the present perfect. Use have learned for something you learned over time and still use now. Also use the plural projects and teams. 「have learned」は、今までに身につけて
+04:38:13 STUDENT(answer) I have learned how to manage projects and communicate with international teams.
+04:38:17 TUTOR  Got it, that's the sentence. You used have learned correctly, and the plurals are right. 「have learned」は、今までに身につけて今も使っていることを表します。 What is one challenge you have faced at work recently?
+04:38:32 STUDENT(answer) Recently, I face challenge with schedule. Many project at same time, very difficult.
+04:38:40 TUTOR  Thanks for sharing that. You named the challenge, schedule and many projects at once. Say it with the present perfect: I have faced a challenge with my schedule. Use have faced for something that happened recently and affects now. Use the plural projects after many. 「recently」と一緒に現在完了を使うと、最近の経験を表せます   [tools: tutor_handwrite]
+04:39:10 STUDENT(answer) I have faced a challenge with my schedule. Many projects at same time.
+04:39:17 TUTOR  Okay, let's look at that. The first sentence is right. The second part needs a verb and the word the. A full sentence needs a verb, and we say at the same time. 二文目は動詞と the が必要です。 Good, you have the first part down. Now, let's move on to the past simple. Did you attend any business events or exhibit
+04:39:45 STUDENT(answer) Yes, I attend trade show in Osaka last year. I meet many customer there.
+04:39:51 TUTOR  Trade show in Osaka, nice. You named the event and the time, last year. Two things to fix: trade show needs a plural or an article, and meet needs the past form. Last year is a finished time, so use the past simple: attended and met. Also use a trade show and customers, plural after many. 「last year
+04:40:22 STUDENT(answer) I attended a trade show in Osaka last year.
+04:40:26 TUTOR  Yes, that's the sentence. I attended a trade show in Osaka last year. Past simple, with a finished time. 「last year」のような終わった時間には過去形を使います。 Good. Now, what did you discuss with those customers?
+04:40:41 STUDENT(answer) I discuss about product specification and price. We talk about future order.
+04:40:46 TUTOR  Thanks for trying that. Good topics. But discuss takes no about, and the talk was in the past, so use the past simple. Discuss is a verb with no about, and talk takes the past form talked. Use the past simple because the meeting happened last year. discuss は「about」なしで使います。 過去の出来事なので過去形にします。 Can you 
+04:41:14 STUDENT(answer) I discussed product specification and price. We talked about future order.
+04:41:17 TUTOR  Okay, let's look at that. The first sentence is right. In the second, talked is past, but order needs a plural after future. Use plurals for general nouns like specifications, prices and orders, and add with them for the customers. 「future order」は「future orders」と複数形にします。 Can you say the corrected se
+04:41:42 STUDENT(answer) I discussed product specifications and price. We talked about future orders with them.
+04:41:48 TUTOR  Thanks, that's clear. Your first sentence is right. In the second, the plural is needed: future orders, and with them is fine. You had the plural right: orders. The sentence is already correct, so keep it as you said it. 「future orders」は複数形です。 文は正しいです。 Good. Now, what did you discuss with those cust
+04:42:14 STUDENT(complaint_reask) I already answer this. I discussed specifications and price, talked about future orders.
+04:42:19 TUTOR  Got it. That is a clear answer. You named the topics and the future orders. Which customer did you talk with most often last year?
+04:42:33 STUDENT(answer) I talk most with American customer. They are big customer for us.
+04:42:40 TUTOR  Thanks for sharing that. You named the customers and why they matter, which is useful. But customer needs a plural, and the question asks for one customer you talked with most often last year. Last year is a finished time, so use the past simple talked. After my or a number, the noun takes an s. 「la
+04:43:14 STUDENT(answer) I talked most with one American customer. They are big customer for us.
+04:43:20 TUTOR  Okay, let's look at that. The first part is right: one American customer. But customer needs a plural after big, so it is big customers. After are, a plural noun is needed for more than one customer group. Here customers is the general plural. 「big customers」と複数形にします。 Good, that's the practice on th
+04:43:53 STUDENT(answer) I work on project to improve delivery time. We reduce delivery from six month to three month. Very good result.
+04:43:57 TUTOR  Thanks for sharing that result. The result is clear. Now check the grammar: the project needs the article a, and reduce needs the past form. Use the past simple worked and reduced for a finished project. Use a project, and plural months after six and three. プロジェクトは過去に終わったので、過去形を使います。 Can you say the
+04:44:23 STUDENT(answer) I worked on a project to improve delivery time. We reduced delivery from six months to three months. Very good result.
+04:44:27 TUTOR  Thanks for sharing that result. That is a clear answer, and the past tense is right. 「reduced delivery time」のように、time を付けると分かりやすくなります。 What was your role in that project?
+04:44:44 STUDENT(answer) I was project leader. I manage team and coordinate with other department for delivery improvement.
+04:44:48 TUTOR  Project leader, that's a clear role. You named your role well. Now check the verbs: after I was, use the noun leader, and after I coordinate, add with. Use the before a role and team. Departments takes a plural, and coordinate with becomes coordinate with other departments on delivery improvement. 「
+04:45:15 STUDENT(answer) I was the project leader. I managed the team and coordinated with other departments on delivery improvement.
+04:45:19 TUTOR  Yes, that's the sentence. You used the past forms managed and coordinated correctly. 過去の役割や仕事は過去形で話せています。 What was the biggest challenge in that project?
+04:45:32 STUDENT(answer) The biggest challenge was coordination with other department. Many people, different opinion, difficult to decide.
+04:45:37 TUTOR  Okay, let's look at that. Your first sentence is clear. The second needs a fix: department needs an s, and opinion needs an s too. Other departments is plural because we work with more than one. Opinions is plural after different, the same as departments after other. 「other departments」「different op
+04:46:06 STUDENT(answer) The biggest challenge was coordination with other departments. Many people, different opinions, difficult to decide.
+04:46:10 TUTOR  Thanks, that's clear. The biggest challenge was coordination with other departments. That is a clear sentence, and departments and opinions are plural. 「other departments」と「different opinions」は複数形で正しいです。 How did you handle those different opinions?
+04:46:28 STUDENT(answer) I listen to all opinion and find common goal. We discuss together and make decision by consensus.
+04:46:32 TUTOR  That's a thoughtful approach. Your idea is clear. Opinion needs an s, and find should be found. Use the past simple for something that happened in the project. Opinions and decisions are plural after all and by consensus. 過去の出来事なので、過去形にします。 Can you say the corrected sentence once more?
+04:46:54 STUDENT(answer) I listened to all opinions and found common goal. We discussed together and made decision by consensus.
+04:46:58 TUTOR  Okay, let's look at that. The first part is right. In the second part, goal and decision need a word before them. Use a before a singular countable noun like goal. Decisions is plural here, because the team made several decisions. 「a common goal」と「decisions」の形に注意しましょう。 Can you say the corrected sent
+04:47:24 STUDENT(answer) I listened to all opinions and found a common goal. We discussed together and made decisions by consensus.
+04:47:28 TUTOR  Okay, let's look at that. That is a clear answer. You have the common goal and the decisions right. 「a common goal」と「decisions」の形がそろいました。 What was the result of that project for your customers?
+04:47:45 STUDENT(answer) The result was very good. Customers very happy because delivery time become faster. We get more order from them.
+04:47:50 TUTOR  Good, that's a clear result. Your first sentence is clear: the result was very good. In the second, the verb needs the past form became, and orders needs an s. The result happened in the past, so use the past forms were, became and got. Orders is plural after more. 結果は過去の出来事なので、過去形を使います。 Can you say
+04:48:17 STUDENT(answer) Customers were very happy because delivery time became faster. We got more orders from them.
+04:48:21 TUTOR  Thanks, that's clear. Both sentences are correct now, with the past forms became and got. 結果は過去の出来事なので、過去形で正しく話せています。 Let's move on to pronunciation. Would you like to practice individual words, a complete sentence, speaking more naturally, or skip and continue? Choose 1, 2, 3, or 4.
+04:48:44 STUDENT(answer) I choose 1, practice individual words.
+04:48:48 TUTOR  Individual words, good choice. では、単語を一つずつ練習しましょう。 Which word would you like to practise? 1) responsibilities, 2) international, 3) communicate, 4) customers, 5) developed.
+04:49:01 STUDENT(answer) I choose number 1, responsibilities.
+04:49:06 TUTOR  Good choice, responsibilities. responsibilities は、まず発音の練習です。 強いところは BIL の部分です。 1) responsibilities, 2) international, 3) communicate, 4) customers, 5) developed.
+04:49:14 TUTOR  Pronunciation is done for today. Next, let's review what you practiced. Can you tell me one sentence from today that you're happy with?
+04:49:28 STUDENT(answer) responsibilitizu
+04:49:32 TUTOR  Okay, let's look at that. 「responsibilitizu」は聞き取れませんでした。 もう一度お願いします。 I didn't catch that as a sentence. Can you tell me one sentence from today that you're happy with?
+04:49:47 STUDENT(answer) I am happy with sentence about project. I listened to all opinions and found a common goal.
+04:49:54 TUTOR  Thanks for sharing that. You named the project, and the past forms listened and found are right. 「listened」と「found」は過去形で、過去の出来事を正しく表せています。 One thing you did well today was using the past forms correctly. Before we finish, can you explain the difference between these two sentences? I have worked here
+04:50:24 STUDENT(answer) First sentence, I work now. Second sentence, I work before, not now. Present perfect and past simple different.
+04:50:30 TUTOR  Good, you've got the main idea. That's the key difference. The present perfect connects the past to now, and the past simple is finished. 現在完了は過去に始まって今も続いている経験、過去形は終わった出来事です。 Well done today! Thank you for the lesson. Keep using these two grammar points when you talk about your work. See you next ti
+04:50:51 STUDENT(end)
+04:50:51 waiting 35 s for the autosave

@@ -1,0 +1,31 @@
+{
+  "fixture": "gdi-real-james",
+  "arm": "v1",
+  "minutes": 15.2,
+  "tutorTurns": 38,
+  "studentTurns": 39,
+  "complaints": {
+    "complaint_reask": 2,
+    "complaint_ignored": 1,
+    "complaint_lost": 0,
+    "move_on": 0,
+    "verdict_only": 0
+  },
+  "complaintsTotal": 3,
+  "questionEndingShare": 0.87,
+  "questionAfterAnswerShare": 0.91,
+  "wordsAfterVerdictOnly": null,
+  "tutorTurnsAfterRecapRequest": null,
+  "tutorWordsMedian": 39,
+  "tutorWordsP90": 53,
+  "verdictCuts": 0,
+  "validatorRetries": 2,
+  "narrationDrops": 0,
+  "rendersDropped": 3,
+  "firstSentenceMsP50": 3621,
+  "firstSentenceMsP95": 5548,
+  "inputTokens": 4173373,
+  "outputTokens": 7779,
+  "costPerMinute": 0.016,
+  "endedBy": "cap"
+}

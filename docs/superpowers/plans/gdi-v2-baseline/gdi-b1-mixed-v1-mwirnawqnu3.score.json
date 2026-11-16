@@ -1,0 +1,31 @@
+{
+  "fixture": "gdi-b1-mixed",
+  "arm": "v1",
+  "minutes": 18.8,
+  "tutorTurns": 41,
+  "studentTurns": 41,
+  "complaints": {
+    "complaint_reask": 2,
+    "complaint_ignored": 0,
+    "complaint_lost": 0,
+    "move_on": 0,
+    "verdict_only": 0
+  },
+  "complaintsTotal": 2,
+  "questionEndingShare": 0.88,
+  "questionAfterAnswerShare": 0.87,
+  "wordsAfterVerdictOnly": null,
+  "tutorTurnsAfterRecapRequest": null,
+  "tutorWordsMedian": 51,
+  "tutorWordsP90": 65,
+  "verdictCuts": 0,
+  "validatorRetries": 1,
+  "narrationDrops": 0,
+  "rendersDropped": 3,
+  "firstSentenceMsP50": 3577,
+  "firstSentenceMsP95": 4967,
+  "inputTokens": 4642944,
+  "outputTokens": 10580,
+  "costPerMinute": 0.011,
+  "endedBy": "tutor_close"
+}

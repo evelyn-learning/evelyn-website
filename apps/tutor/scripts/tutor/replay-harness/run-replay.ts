@@ -36,7 +36,8 @@ fs.mkdirSync(outDir, { recursive: true });
 const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', `${fixtureName}.json`), 'utf8')) as Fixture;
 const maxMin = Number(arg('--max-min', String(fixture.maxMinutes)));
 const runId = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
-const studentId = `replay-${fixture.name}-${runId}`;
+// --student <id> overrides the generated student id (e.g. gdi-v2-replay-b1-v1).
+const studentId = arg('--student', `replay-${fixture.name}-${runId}`);
 
 // ── env (repo-root .env.local; values are never printed) ──
 const envText = fs.readFileSync(path.resolve(process.cwd(), '../../.env.local'), 'utf8');
@@ -181,9 +182,20 @@ async function main() {
     }
   }
   if (!started) say('start did not take after 8 taps');
+  // input_mode "text" shows no start orb and the tutor waits for the learner to type first ("Type your question
+  // below to start"). Open with one line (--open "...") so the run does not stall; the line is kept as a student turn.
+  let openingLine = '';
+  if (!(await orb.isVisible().catch(() => false)) && (await page.evaluate(() => (window.__brain?.turns.length ?? 0) + (window.__brain?.inFlight ?? 0)).catch(() => 0)) === 0) {
+    await wait(8000);
+    if ((await page.evaluate(() => (window.__brain?.turns.length ?? 0) + (window.__brain?.inFlight ?? 0)).catch(() => 0)) === 0) {
+      openingLine = arg('--open', 'Hello, I am ready.');
+      try { await input.click({ timeout: 15000 }); await input.fill(openingLine); await input.press('Enter'); say(`STUDENT(open) ${openingLine}`); } catch (e) { say(`could not type the opening line (${String((e as Error).message).split('\n')[0].slice(0, 60)})`); openingLine = ''; }
+    }
+  }
   const t0 = Date.now();
   const turns: ReplayTurn[] = [];
-  let sinceStudent = 0; let studentTurns = 0;
+  let sinceStudent = openingLine ? Date.now() : 0; let studentTurns = 0;
+  if (openingLine) turns.push({ role: 'student', text: openingLine, tag: 'ack' });
   let endedBy: RunBundle['endedBy'] = 'cap';
   while (Date.now() - t0 < maxMin * 60000 && studentTurns < fixture.maxStudentTurns) {
     const quiet = await waitQuiet(150000);
