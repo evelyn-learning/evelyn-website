@@ -1,0 +1,218 @@
+22:13:29 open fixture=gdi-real-t2 arm=v2 student=gdi-v2-audio6e2-tester-2 (audio student tester-2 (41 clips), silent tutor voice)
+22:13:32 clicked start (1)
+22:13:40 TUTOR  Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and a project you've been involved in, and practise two grammar points: the present perfect and the past simple. Does that sound good to you?   [tools: new_page, annotate]
+22:13:59 STUDENT(clip #1 ok, 1.0 s) Yes.  — Readiness question, learner gives short affirmative ack
+22:14:06 HEARD  Yes.
+22:14:06 TUTOR  Great, let's begin. You'll talk about your job and a project you're proud of, practise the present perfect and the past simple, and try follow-up questions. I'll correct your mistakes, explain them, and give you a chance to try again. If you'd like, we can also practise pronunciation at the end. Fir
+22:14:35 STUDENT(clip #1 ok, 1.0 s) Yes.  — Readiness question, short ack appropriate
+22:14:41 HEARD  Yes.
+22:14:41 TUTOR  Wonderful. Let's start with a short conversation so I can see what you can already do. Please answer in English, and don't worry about mistakes.
+
+
+
+Can you tell me a little about your job? What do you do?   [tools: new_page]
+22:15:01 STUDENT(clip #3 ok, 7.8 s) I, I work as admin at the company.  — Tutor asks about the learner's job. Line #3 is the first unused line that directly answers this question.
+22:15:11 HEARD  I, I work as admin at the company.
+22:15:11 TUTOR  Thanks, that's clear. What kind of admin work do you do?
+22:15:19 STUDENT(clip #7 ok, 4.0 s) I do accounting and some admin work.  — Directly answers what kind of admin work the learner does
+22:15:25 HEARD  I do accounting and some admin work.
+22:15:25 TUTOR  Accounting is a useful area to know well. Have you ever worked with an international customer? If so, can you tell me about the experience?
+22:15:39 STUDENT(clip #19 ok, 3.6 s) No.  — Answering 'Have you ever worked with an international customer?' with 'No.'
+22:15:44 HEARD  No.
+22:15:44 TUTOR  No problem. 
+22:15:46 HEARD  No, I didn't.
+22:15:46 TUTOR  That's fine. Can you tell me about a difficult task or project you worked on at your company?
+22:15:57 STUDENT(clip #23 misfit, 3.5 s) What do you mean by important project?  — Learner asks for clarification rather than answering the question about a difficult project
+22:16:04 HEARD  What do you mean by important project?
+22:16:04 TUTOR  Good question. I mean any work task or project that took time or effort, for example a big report, a new system, or an event your team organized. It can be small or big. Can you tell me about one task you did at work?
+22:16:25 STUDENT(clip #29 ok, 6.0 s) The year in tax system corporation.  — Learner attempts to answer the tutor's question about a work task, starting to describe a project related to tax system
+22:16:36 HEARD  The year end tax. system comparison.
+22:16:36 TUTOR  Thanks. A year-end tax system comparison is a good example of real work. Now let's look at two tenses you can use when you talk about your job.
+
+
+
+Shall we go on, or do you have a question first?
+22:16:54 STUDENT(clip #1 ok, 1.0 s) Yes.  — Readiness question - learner gives short ack
+22:17:02 HEARD  Yes.
+22:17:02 TUTOR  Let's move on to talking about your work. 仕事について話すときは、短い文を使うと分かりやすいです。
+
+
+
+
+ここにある文を、ひとつずつ読んでみてください。Now, what do you do at work? Please answer with one or two short sentences.   [tools: new_page, annotate]
+22:17:16 STUDENT(clip #9 ok, 7.7 s) I'm checking emails and sorting out some paperwork.  — Answers 'what do you do at work' with a description of current work activities
+22:17:27 HEARD  I'm checking emails and sorting out some paperwork.
+22:17:27 TUTOR  その文は正しいです。メールの確認と書類の整理ですね。
+
+では、今の仕事の文をもうひとつ言ってみましょう。Try starting with: "I work in..."
+
+
+
+Does that make sense?
+22:17:34 STUDENT(clip #16 ok, 1.4 s) Yes.  — Yes/no readiness question, short ack appropriate
+22:17:39 HEARD  Yes.
+22:17:39 TUTOR  わかりました。では、今の仕事について、あなたの言葉で一文言ってみてください。Try starting with: "I work in..."
+22:17:46 STUDENT(clip #10 ok, 5.5 s) I do emails and sorting out some documents.  — Learner answers tutor's request to describe current work with a short sentence starting appropriately.
+22:17:56 HEARD  I do emails and sorting out some documents.
+22:17:56 TUTOR  いいですね、仕事の内容がよく分かります。「I do emails」は少し不自然なので、「I handle emails」と言うのが自然です。
+
+
+
+Now you say it, please: "I handle emails and documents."   [tools: show_sentence]
+22:18:08 STUDENT(clip #2 misfit, 5.0 s) Please, could you please rephrase that, please?  — Tutor asked learner to repeat a specific sentence. Learner should repeat it, but #2 is a request to rephrase instead. No
+22:18:18 HEARD  Please, could you please rephrase that, please?
+22:18:18 TUTOR  わかりました。別の言い方にします。「I take care of emails and documents.」は「メールと書類を担当しています」という意味です。
+
+
+
+Now you say it, please: "I take care of emails and documents."   [tools: show_sentence]
+22:18:29 STUDENT(clip #1 ok, 1.0 s) Yes.  — Short ack to tutor's readiness check before the repetition task
+22:18:39 HEARD  Yes.
+22:18:39 TUTOR  仕事の練習はここまでです。次は現在完了を練習しましょう。まず、お手本を言います。 "I take care of emails and documents."
+
+
+
+現在完了は have か has と過去分詞を使い、今も続いている期間や経験を話すときに使います。
+
+
+
+では、質問です。どのくらい今の会社で働いていますか。Try starting with: "I have worked..."
+
+
+
+How long have you worked at your current company? Answer with a full sentence, starting with "I h   [tools: new_page, annotate, show_problem]
+22:18:59 STUDENT(clip #11 ok, 5.7 s) I have worked for the current company for ten years.  — Tutor asks 'How long have you worked at your current company?' with 'I have worked' prompt. Line 11 is the first unused 
+22:19:11 HEARD  I have worked for the current company for ten years.
+22:19:11 TUTOR  すばらしいです。「I have worked ... for ten years」は現在完了で正しく言えています。ひとつだけ直すと、「for the current company」は「at my current company」と言うほうが自然です。
+
+
+
+次は過去形です。特定の時期に終わった出来事には、過去形を使います。
+
+
+
+Next is past simple. Shall we go on, or do you have a question first?   [tools: show_sentence]
+22:19:30 STUDENT(clip #1 ok, 1.0 s) Yes.  — Readiness question - learner gives short ack
+22:19:35 HEARD  Yes.
+22:19:35 TUTOR  では、過去形を練習しましょう。過去形は、特定の時に終わった出来事に使います。
+
+
+
+
+では質問です。あなたはいつ今の会社に入りましたか。Try starting with: "I joined my company in..."
+
+
+
+When did you join your company? Answer with a full sentence, starting with "I joined my company in".   [tools: new_page, annotate, show_problem]
+22:19:52 STUDENT(clip #28 misfit, 4.8 s) I don't really know.  — Learner doesn't know the answer; closest available response to a direct question
+22:19:59 HEARD  I don't really know.
+22:19:59 TUTOR  That's okay. Let's make it easier: you don't need the exact date. You can just say the year, like "2015", or "about ten years ago". Try starting with: "I joined my company in..."
+22:20:14 STUDENT(clip #40 misfit, 1.1 s) two.  — Learner says 'two' (line 40) which doesn't fit the tutor's request for when they joined. But no better line available; l
+22:20:22 HEARD  Two.
+22:20:22 TUTOR  「Two」だけでは、いつ入社したのか分かりません。年を言ってもらえますか。たとえば「I joined my company in 2015.」のように、Try starting with: "I joined my company in..."
+
+
+
+Does that make sense?   [tools: annotate]
+22:20:33 STUDENT(clip #4 ok, 3.1 s) Could you explain that in Japanese?  — Learner doesn't understand the tutor's explanation and asks for clarification in Japanese
+22:20:38 HEARD  Could you explain that in Japanese?
+22:20:38 TUTOR  はい、日本語で説明します。
+
+英語で「I joined my company in 2015.」と言うと、「私は2015年に会社に入りました」という意味です。「join」は「入る」という意味で、過去の終わったできごとなので、過去形の「joined」を使います。年を言うだけで大丈夫ですよ。
+
+では、もう一度言ってみてください。Try starting with: "I joined my company in..."
+22:20:49 STUDENT(clip #12 ok, 6.0 s) I have worked for my current company for ten years.  — Learner provides a full sentence about joining company, closest match to the tutor's request for a complete answer with 
+22:21:01 HEARD  I have worked for my current company for 10 years.
+22:21:01 TUTOR  現在完了の形は正しいです。ただ、前に直した「at」がまだ残っています。「for my current company」ではなく「at my current company」と言います。
+
+
+
+では、過去形の質問にもう一度答えてください。あなたはいつ今の会社に入りましたか。Try starting with: "I joined my company in..."
+
+Are you with me so far?   [tools: show_sentence]
+22:21:17 STUDENT(clip #5 misfit, 11.3 s) I won't uh improve my speaking skill because I often attend a meeting.  — Learner should attempt 'I joined my company in...' but #5 is unrelated. No fitting line available; picking earliest unus
+22:21:38 HEARD  that use English.
+22:21:38 TUTOR  Of course, I'll use English. Here is the sentence: "I joined my company in 2015."
+
+
+
+Now let's try the past simple with your work. Did you do the year-end tax system comparison alone, or with a team?
+22:21:52 STUDENT(clip #8 misfit, 1.9 s) Uh, what do you mean?  — Learner confused; tutor asking new question about tax work. #8 'Uh, what do you mean?' is closest available reaction to 
+22:21:56 HEARD  Uh, what do you mean?
+22:21:56 TUTOR  Sorry, that was unclear. When you did the year-end tax system comparison, did you work alone, or with other people?
+22:22:08 STUDENT(clip #37 ok, 6.8 s) No, I don't really did work closely with her on the project.  — Answers the tutor's question about working alone or with others on the tax project
+22:22:24 HEARD  No, I don't really did work closely with her on the project.
+22:22:24 TUTOR  Not quite. After "didn't," we use the basic verb, so it's "didn't work," not "didn't did work." Try the whole sentence again, starting with: "I didn't..."
+
+   [tools: annotate]
+22:22:35 STUDENT(clip #38 ok, 5.0 s) No, I didn't really work closely with her on the project.  — Learner repeats the corrected sentence after tutor's grammar correction
+22:22:45 HEARD  No, I didn't really work closely with her on the project.
+22:22:45 TUTOR  Yes, that's right: "I didn't really work closely with her on the project." Now let's use the past simple for the tax comparison. When did you finish it? Try starting with: "I finished it in..."
+22:23:01 STUDENT(clip #27 ok, 3.4 s) I finished accounting yesterday.  — Learner answers when tutor asks 'When did you finish it?' with past simple sentence about finishing work
+22:23:10 HEARD  I finished accounting yesterday.
+22:23:10 TUTOR  Yes, that's right: "I finished accounting yesterday." You used the past simple for a finished task at a specific time. Now, what did you do at work last month? Try starting with: "I finished..." or "I worked on..."
+22:23:28 STUDENT(clip #30 ok, 10.8 s) because we implemented a new system for tax system this year and I was a successfully finished all the new taxes on time.  — Learner answers what they did at work (past simple), explaining a completed task with reason
+22:23:46 HEARD  because we implemented a new system for tax system this year and I was successfully finished all the new taxes on time.
+22:23:46 TUTOR  Good, you explained the reason clearly. One thing to fix: "I was successfully finished" is not quite right here. Use the past simple verb directly: "I successfully finished..." Try the whole sentence again, starting with: "I successfully finished..."
+
+   [tools: show_sentence, annotate]
+22:24:03 STUDENT(clip #32 ok, 20.1 s) I successfully finished the new tasks because we implemented the new tax system this year.  — Tutor asks learner to repeat the sentence with correct past simple form 'I successfully finished...' Line 32 is exactly 
+22:24:32 HEARD  I successfully finished the new tasks because we implemented a new task system this year.
+22:24:32 TUTOR  Yes, that's right: "I successfully finished the new tasks because we implemented a new task system this year." Your past simple is clear and accurate.
+
+That's the past simple done. Next is a longer conversation about your work. What is one project you are proud of?
+
+
+   [tools: new_page, show_problem, show_sentence]
+22:24:52 STUDENT(clip #31 ok, 30.4 s) that I think successfully finished the new tasks because we implement the new system for tax. year in tax system.  — Learner responds to question about a project they're proud of; #31 is next unused line that addresses this topic
+22:25:25 HEARD  year in tax system.
+22:25:25 TUTOR  The year-end tax system project, I see. Can you make it a full sentence? Try starting with: "I worked on..."
+22:25:36 STUDENT(clip #33 ok, 12.5 s) that that everything was new, that we didn't know them we we didn't have a manual to follow on.  — Learner responds to tutor's request for a full sentence about the project, continuing with details about the challenges 
+22:25:56 HEARD  that that everything was new, that we didn't know them we we didn't have a manual to follow on.
+22:25:56 TUTOR  Everything being new is a clear reason, and "we didn't have" is correct past simple. One small thing: we say "a manual to follow," without "on." Can you say the whole sentence again, starting with "We didn't have a manual..."?   [tools: annotate]
+22:26:15 STUDENT(clip #13 misfit, 2.0 s) Could you repeat that, please?  — Learner should repeat the corrected sentence, but #13 is a request to repeat. No line matches well; #13 is closest as le
+22:26:18 HEARD  Could you repeat that, please?
+22:26:18 TUTOR  Of course. The small point was this: we say "a manual to follow," without "on." Can you say the whole sentence again, starting with "We didn't have a manual..."?
+22:26:35 STUDENT(clip #34 misfit, 8.9 s) I don't really remember, but maybe helps from our accounting office staff.  — Learner should repeat the sentence as requested, but #34 is about help from staff. No exact repeat line available; picki
+22:26:49 HEARD  I don't really remember, but maybe helps from our accounting office staff.
+22:26:49 TUTOR  That's fine, asking your colleagues is a good idea. Here is the sentence: "We didn't have a manual to follow."
+
+
+
+Now, how did your team finish everything on time without a manual? Try starting with: "We..."   [tools: show_sentence]
+22:27:06 STUDENT(clip #36 ok, 8.4 s) Uh, she's from the or accounting office admin.  — Answering how the team finished on time - mentions help from accounting office staff
+22:27:21 HEARD  Uh, she's from the or accounting office admin.
+22:27:21 TUTOR  So she's from the accounting office admin team, and she helped you with the project. Thanks for explaining. What did she help you with? Try starting with: "She helped me..."
+22:27:34 STUDENT(clip #35 misfit, 2.4 s) I cannot share the name.  — Learner deflects with 'I cannot share the name' rather than answering what she helped with, but it's the next available 
+22:27:38 HEARD  I cannot share the name.
+22:27:38 TUTOR  No problem, you don't need to say her name. Just tell me what she helped you with. Try starting with: "She helped me..."
+22:27:52 STUDENT(clip #39 misfit cut=fast, 0.8 s) Skip and continue.  — Learner avoids answering; 'Skip and continue' is closest available response to repeated prompt
+22:27:54 HEARD  new.
+22:27:54 TUTOR  Did you mean she helped you with the new system? Please say the full sentence, starting with "She helped me with..."
+22:28:06 STUDENT(clip #15 misfit, 2.4 s) Could you repeat that, please?  — Learner asks to repeat rather than answer the direct question about what she helped with
+22:28:11 HEARD  Could you repeat that, please?
+22:28:11 TUTOR  Of course. She helped you with the new system, so you can say: "She helped me with the new system." Please say that sentence.
+
+Are you with me so far?
+22:28:26 STUDENT(clip #1 ok, 1.0 s) Yes.  — Yes/no readiness question, short ack appropriate
+22:28:35 HEARD  Yes.
+22:28:35 TUTOR  Here it is, from me: "She helped me with the new system."
+
+That finishes our talk about your project. Next is an optional pronunciation practice on a few words from today. Would you like to do it, or shall we go straight to the summary?   [tools: show_sentence]
+22:28:56 STUDENT(clip #14 misfit, 16.6 s) How to communicate with the non in not the Japanese people with not the with people with the in and not from Japan.  — No clear fit; learner likely needs to answer the yes/no question about pronunciation practice. Line 14 is next unused bu
+22:29:21 HEARD  How to communicate with the non in not the Japanese people with not the with people with the in and not from Japan.
+22:29:21 TUTOR  Did you ask how to communicate with people who are not from Japan? (日本語で確認です。日本以外の人と、どうやって話すかという質問ですか。)
+
+If so, one useful sentence is: "I communicate with customers by email."
+
+
+
+Is that the question you meant?   [tools: show_sentence]
+22:29:37 STUDENT(clip #1 ok, 1.0 s) Yes.  — Yes/no question about whether that was the learner's question
+22:29:45 HEARD  Yes.
+22:29:45 TUTOR  Yes, email is a good way to reach people outside Japan.
+
+Today you talked about your work and a project you were proud of. Your present perfect was accurate: "I have worked at my current company for ten years." Your past simple was clear in your project story. To improve, say "finished" rather than    [tools: new_page, show_sentence, show_sentence]
+22:30:25 STUDENT(end) the tutor said goodbye
+22:30:25 audio: {"sttSockets":1,"sttSocketSeconds":972,"clipSeconds":216,"silentTtsReplies":183,"mic":{"plays":37,"gum":1,"buffers":257},"otherSockets":["ws://localhost:3021/_next/hmr","wss://api.openai.com/v1/realtime"]}
+22:30:25 waiting 35 s for the autosave

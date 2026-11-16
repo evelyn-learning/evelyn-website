@@ -98,6 +98,9 @@ export function checks6e(b: Bundle) {
   const sumAt = tutorIdx.find((x, k) => k > 2 && /\b(summary|let'?s (?:quickly )?review|great work today|to sum up)\b|まとめ/i.test(x.t.text));
   const before = sumAt ? tutorIdx.filter((x) => x.i < sumAt.i).slice(-1)[0] : undefined;
   return {
+    shallWeAnyTurns: tutorIdx.filter((x) => /\bshall we (?:go on|continue|move on)\b|進んでもいいですか|続けましょうか/i.test(x.t.text)).map((x) => x.i),
+    wordsLost: ev('v2_words_lost').map((e) => e.message.slice(0, 80)),
+    transcriptionFailed: ev('v2_transcription_failed').length,
     garbageStored: stored.filter((t) => JUNK.test(t.text) || t.text.length > 3000).length,
     garbageToBrain: said.filter((h) => JUNK.test(h)).length,
     heardNoise: ev('v2_heard_noise').map((e) => e.message.slice(0, 60)),

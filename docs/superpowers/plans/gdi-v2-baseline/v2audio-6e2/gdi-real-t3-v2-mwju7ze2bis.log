@@ -1,0 +1,141 @@
+22:31:03 open fixture=gdi-real-t3 arm=v2 student=gdi-v2-audio6e2-tester-b (audio student tester-b (33 clips), silent tutor voice)
+22:31:06 clicked start (1)
+22:31:12 TUTOR  Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and the projects you're involved in, and practise two grammar points: the present perfect and the past simple. Does that sound good to you?   [tools: annotate]
+22:31:32 STUDENT(clip #1 ok, 2.0 s) I'm ready.  — Readiness question; learner gives short ack
+22:31:41 HEARD  I'm ready.
+22:31:41 TUTOR  Great, let's begin. Today we'll talk about your job and your projects, and I'll correct your English as we go. We'll practise the present perfect for experience that continues now, and the past simple for finished events at a specific time. You can also ask questions yourself, and near the end you c
+22:32:20 STUDENT(clip #3 ok, 22.6 s) Yes, I'm a sales manager in the G, I'm uh the GM uh general manager of that and I just supporting for the old division in the the company and of course most of the part of the management and the sales area for this.  — Tutor asks about learner's job; line 3 is first unused line that directly answers this question with details about being
+22:32:47 HEARD  Yes, I'm sales manager in the G IMR uh the GM uh general manager, well that's and I just supporting for the old division in the the company. And of course, most of the part of the management and the sales area of this.
+22:32:47 TUTOR  Thank you, that's helpful. You're a sales manager who supports the division and manages the sales area. What kind of products does your team sell?
+22:33:00 STUDENT(clip #4 misfit, 24.2 s) My main responsibility in sales area to the contact for the clients and supporting for the each division member about this and of course I have a suggesting for the uh the new uh products about to the clients.  — Learner describes responsibilities rather than products, but it's the next content line that addresses sales work
+22:33:29 HEARD  My main responsibility in sales area to the uh contact for the clients and supporting for the each division member about this and of course I have uh suggesting for the uh the new uh products about to the clients.
+22:33:29 TUTOR  So you're the main contact for clients, and you also suggest new products to them. Have you ever worked with an international customer? If so, can you tell me about that experience?
+22:33:44 STUDENT(clip #11 ok, 7.0 s) Yes, I have working with the international customer for sometimes.  — Answers the yes/no question about working with international customers
+22:33:55 HEARD  Yes, I have working with the international customer for sometimes.
+22:33:55 TUTOR  Good, so you have experience with international customers. Which country are your customers from?
+22:34:04 STUDENT(clip #12 misfit, 5.1 s) I have worked with international customer  — Learner hasn't answered which country; line 12 repeats earlier statement. No direct answer to 'which country' exists in 
+22:34:16 HEARD  I have worked with international customer
+22:34:16 TUTOR  Which countries are your international customers from?
+22:34:23 STUDENT(clip #13 misfit, 8.1 s) I have worked with international customer sometimes.  — Learner repeats previous line; no country info given, but best available continuation
+22:34:33 HEARD  I have worked with international customer sometimes.
+22:34:33 TUTOR  Thank you. Let me ask it more simply: which country are your customers from? For example, America or China?
+22:34:45 STUDENT(clip #15 ok, 8.9 s) Yes, I have been working a project with uh uh us from another content, another uh countries.  — Answers which countries: mentions 'us from another content, another countries'
+22:35:03 HEARD  Yes, I have been working a project with uh uh us from another country, another uh countries.
+22:35:03 TUTOR  You've been working on a project with customers from other countries, that's great. One small thing: we say "working on a project." Today we'll focus on making your grammar more accurate and your answers more natural. What is the project about?   [tools: set_working_level, show_sentence]
+22:35:24 STUDENT(clip #24 ok, 15.1 s) Uh, let me see is uh one project I worked in the supporting for the the the uh the uh SNS networking contents.  — Learner describes a project they worked on, answering the tutor's question about what the project is about.
+22:35:47 HEARD  Uh, let me see is uh one project I worked in the supporting for the the the uh the uh SNS networking contents.
+22:35:47 TUTOR  That sounds interesting: you supported the SNS content for a project. Now let's look at the two tenses you just used.  Can you say one sentence about your work with a finished event, using last year or two years ago?   [tools: show_table, show_table]
+22:36:06 STUDENT(clip #25 ok, 5.8 s) I worked on a project to support SNS networking content.  — Answers about a past project work; uses simple past tense as requested
+22:36:18 HEARD  I worked on a project to support SNS networking content.
+22:36:18 TUTOR  That's right. "I worked on a project" is past simple because the project is finished. Now let's practise the present perfect for experience that continues now.
+
+
+
+
+
+Answer this question in English: Have you worked for your current company for a long time?   [tools: new_page, show_problem]
+22:36:39 STUDENT(clip #8 ok, 6.0 s) I have worked here over the ten years.  — Directly answers the question about working at current company for a long time, using past perfect tense as requested
+22:36:55 HEARD  I have here over the 10 years.
+22:36:55 TUTOR  You're right about the time, over 10 years. The verb is missing, though. We say:  I have worked here for over 10 years.  Can you say the full sentence?   [tools: show_sentence, show_sentence]
+22:37:08 STUDENT(clip #9 ok, 8.8 s) I have working for our company for a long time. It takes about uh around the ten years.  — Learner attempts to say how long they've worked at the company, using present perfect with 'have working' (grammatically
+22:37:24 HEARD  I have working for our company for a long time. It takes about uh around 10 years.
+22:37:24 TUTOR  Good, the time is clear. Here the verb needs the past participle: you said "have working", and we say "have worked."  I have worked for our company for about 10 years.  Can you say that sentence once more?   [tools: show_sentence, annotate]
+22:37:42 STUDENT(clip #7 ok, 5.8 s) Yes, working for our company above over the ten years.  — Tutor asks learner to repeat the corrected sentence about working for the company for over 10 years. Line 7 is the first
+22:37:53 HEARD  Yes. for my our company above over the 10 years.
+22:37:53 TUTOR  The verb form is the key point here, so here is the full sentence:  I have worked for our company for about 10 years.  That finishes the present perfect part. Next is the past simple for finished events. Shall we go on to that?
+22:38:14 STUDENT(clip #2 ok, 2.0 s) I'm ready.  — Readiness question 'Shall we go on?' gets short ack; #2 is unused repeat of 'I'm ready.'
+22:38:19 HEARD  and lady.
+22:38:19 TUTOR  Sorry, I didn't catch that. Would you like to say the sentence about your 10 years once more, or shall we move on to the past simple?
+22:38:33 STUDENT(clip #23 ok, 7.5 s) Uh, I will shall move on to the next conversation.  — Learner chooses to move on rather than repeat the sentence again
+22:38:46 HEARD  Uh, I will shall move on to the next conversation.
+22:38:46 TUTOR  Let's move on to the past simple, for finished events at a specific time.
+
+
+
+
+
+Here is a question for you. Answer in English.
+
+
+
+Did you attend any business events or exhibitions last year?   [tools: new_page, annotate, show_problem]
+22:39:03 STUDENT(clip #16 ok, 8.5 s) Yes, I attended the uh some business event in the uh Japan last year.  — Directly answers the tutor's question about attending business events last year
+22:39:15 HEARD  Yes, I attended the uh some business event in the uh Japan last year.
+22:39:15 TUTOR  Yes, that's right. "I attended" is past simple, and "last year" tells us it's a finished event. One small thing: we say "a business event in Japan." Which event was it, and what did you do there?
+22:39:34 STUDENT(clip #18 ok, 13.7 s) Uh, it's kind of the networking events, uh, that's looking for the new uh business partner or the connecting for the the related our service.  — Tutor asks what kind of event it was and what the learner did there. Line 18 describes the type of event (networking eve
+22:39:53 HEARD  Uh, it's kind of the networking events. Uh, the looking for the new uh business partner or the connecting for the the related our service.
+22:39:53 TUTOR  Networking events are a good place to find new partners. One small thing: we say "to connect with a partner" or "to promote our service." Did you meet any new business partners at the event?   [tools: show_sentence]
+22:40:11 STUDENT(clip #19 ok, 10.8 s) Yes, I met someone. We came at the the new partner or the the related for the new business with customers.  — Answers the tutor's question about meeting new business partners at the event
+22:40:29 HEARD  Yes, I met someone. We came where the the new partner or the the related for the new business with customers.
+22:40:29 TUTOR  "I met someone" is correct, because "last year" is a finished time. Your sentence got a little tangled after that, so tell me in a simple way: what kind of business is your new partner in?   [tools: show_sentence]
+22:40:48 STUDENT(clip #20 ok, 3.9 s) We met a new business partner there.  — Learner describes the new partner met at the event; simple, direct answer to tutor's question about the partner.
+22:40:57 HEARD  We met a new business partner there.
+22:40:57 TUTOR  "We met a new business partner there" is clear and correct, and "met" is the right past form for a finished event. What did you talk about with that partner?   [tools: show_sentence]
+22:41:13 STUDENT(clip #22 ok, 18.8 s) I talk about for the our business to supporting for the training for the the global person, uh, mainly for the Japanese or introducing for the IT engineer to the clients.  — Learner describes what they talked about with the business partner
+22:41:18 HEARD  Oh.
+22:41:18 TUTOR  Take your time. What did you talk about with that new partner?
+22:41:36 STUDENT(clip #5 misfit, 17.7 s) My main responsibility in sales area is uh contact for our clients and supporting for the each division member and suggesting for the new product clients.  — picked #22 (used or unknown) → earliest unused
+22:41:38 HEARD  I talk about for the our business to uh supporting for the training for the the global person uh mainly for the Japanese or introducing for the IT engineer uh to the clients.
+22:41:38 TUTOR  You mentioned training for global staff and introducing IT engineers to clients, which are useful topics. Now say it as one finished event in the past, starting with "We talked about".  Can you say your own sentence about the meeting?   [tools: show_sentence]
+22:41:59 STUDENT(clip #10 ok, 18.7 s) Uh, what I have the long at the my company, it uh connecting to the foreigner person because of a company, a lot of the foreigner and uh I have to using for my English to communicate for the each other.  — Learner explains what they discussed, mentioning working with foreigners and using English to communicate - relevant to 
+22:42:02 HEARD  My main responsibility in sales area is uh contact for our clients and supporting for the individual member and suggesting for the new product clients.
+22:42:02 TUTOR  That's a clear summary of your job, and I can hear how your responsibilities fit together. Did you want to add something to it, or shall we move on to a longer conversation about your work?   [tools: annotate]
+22:42:07 HEARD  Uh, what I have the learn at the
+22:42:07 TUTOR     [tools: keep_listening]
+22:42:23 STUDENT(clip #6 misfit, 26.3 s) My main responsibility in the sales area is to be a contact for our clients, supporting for the each division member of of course the management for the each division member and of course uh suggesting for the new service and the project products to the clients.  — picked #23 (used or unknown) → earliest unused
+22:42:25 HEARD  connecting to the foreign person because of a company, a lot of the foreigner and I have to using for my English to communicate for the each other.
+22:42:25 TUTOR  That's clear: you learned to use your English with foreign colleagues and customers. "I have learned" is the right present perfect, because you learned it over time and still use it. Now a past simple question: when did you start working with foreign customers?   [tools: show_sentence]
+22:42:56 HEARD  My main responsibility in the sales area is to be a contact for our clients, supporting for the each division member of of course the management for the each division member and of course uh suggesting for the new service and the project. products to the clients.
+22:42:56 TUTOR  Your answer about your responsibilities is clear. One small thing: after "support" we don't use "for", so we say  I support each division member.  Now, back to the event: what did you do after you met the new partner?   [tools: show_sentence]
+22:43:14 STUDENT(clip #14 ok, 1.2 s) Yes.  — Simple affirmative response to tutor's question about what happened after meeting the partner; learner needs time to for
+22:43:18 HEARD  Yes.
+22:43:18 TUTOR  Could you tell me what you did with that new partner after you met them? Just a short answer is fine.
+22:43:31 STUDENT(clip #17 misfit, 5.4 s) Yes, I attended the business event in Japan last year.  — picked #22 (used or unknown) → earliest unused
+22:43:42 HEARD  Yes, I attended the business event in Japan last year.
+22:43:42 TUTOR  You already told me about the event, so I'd like to hear what happened next. After you met the new partner, what did you do? You can start with "After that, we..."   [tools: annotate]
+22:43:58 STUDENT(clip #21 misfit, 3.3 s) We met a new business partner there.  — Learner repeats 'We met a new business partner there' instead of describing what happened next, but it's the only unused
+22:44:08 HEARD  We met a new business partner there.
+22:44:08 TUTOR  You've said that sentence correctly, so let's move on. Next we'll talk about a project you're proud of. Start with "I worked on a project to..."
+
+
+
+
+
+What is one project you've worked on that you're particularly proud of?   [tools: new_page, show_problem]
+22:44:28 STUDENT(clip #26 ok, 17.0 s) Uh, my role is to manage for the member who is making for the content. uh, the talking about for the content and making for the content.  — Tutor asks about a project; learner describes their role in the SNS project they mentioned earlier
+22:44:37 HEARD  Ah, my role is to manage for the member.
+22:44:37 TUTOR  Your role is to manage your team, so we say "manage the members" without "for".  My role is to manage the members.  Now, which project are you most proud of? Start with "I worked on a project to..."   [tools: show_sentence]
+22:44:39 HEARD  who is making for the content.
+22:44:39 TUTOR  Do you mean who makes the SNS content in your project? If so, we say "who makes the content" with no "for". Who makes the content in your team?
+22:44:49 HEARD  uh, the talking about for the content. and the making for the content.
+22:44:49 TUTOR  Your meaning is clear: you talk about the content and make the content. We say "make the content", with no "for".  My role is to talk about the content and make the content.  Now back to the question: what is one project you're particularly proud of?   [tools: show_sentence]
+22:44:51 HEARD  I need to manage
+22:44:51 TUTOR     [tools: keep_listening]
+22:44:58 STUDENT(clip #27 ok, 7.8 s) My rule is to manage for the SNS networking content member.  — Learner restates their role managing SNS content members, closest unused line to the context
+22:45:02 HEARD  (silence 5 s)
+22:45:02 TUTOR  "I need to manage" is clear. In English we say "manage the team" or "manage the members", with no "for" after "manage". Now back to the project: what is one project you're proud of? Start with "I worked on a project to..."   [tools: show_sentence]
+22:45:10 HEARD  My rule is to manage for the assessment and networking content member.
+22:45:10 TUTOR  Your sentence is close, but after "manage" we don't use "for." Try the whole sentence once more: "My role is to manage the content members."
+22:45:26 STUDENT(clip #28 misfit cut=fast, 0.7 s) I need to manage for the uh  — Incomplete sentence, but learner is attempting to respond to tutor's correction about 'manage' without 'for'
+22:45:47   (not heard within 20 s of the clip's end)
+22:46:38 HEARD  (silence 75 s)
+22:46:38 TUTOR  Take your time. If it helps, start with "I manage..." and tell me which team you look after.
+22:46:49 STUDENT(clip #29 misfit, 2.0 s) I'm not sure about it.  — Learner uncertain, tutor asking for clarification on team; #29 expresses uncertainty which fits the hesitation, though n
+22:46:56 HEARD  I'm not sure about it.
+22:46:56 TUTOR  That's fine. Let's make it easier: you said you manage the team, so try this one. "I manage the sales team" or "I manage the content team." Which one is true for you?
+22:47:10 STUDENT(clip #30 misfit, 14.3 s) Uh, I think in the future, I will supporting for the the global networking to the between the foreigner company and Japanese company with my uh our directors.  — Learner pivots to future plans rather than answering which team they manage now
+22:47:30 HEARD  Uh, I think in the future, I will supporting for the the global networking to the between the foreigner company and the Japanese company with my uh our directors.
+22:47:30 TUTOR  Your plan for the future is clear. One small thing: we say "with our directors," since they are your team's directors. Before we finish, here is a quick summary.
+
+
+
+Before the summary, there is still the pronunciation part. Would you like to do it now, or go straight to the summary?
+22:47:54 STUDENT(clip #32 misfit, 3.6 s) one more again.  — Learner says 'one more again' when tutor asks about pronunciation or summary preference; doesn't directly answer but sig
+22:48:02 HEARD  one more again.
+22:48:02 TUTOR  Do you mean one more try at the sentence about your role, or shall we go to the final question about "I have worked here for five years" and "I worked here five years ago"?
+22:48:21 STUDENT(clip #33 misfit, 13.3 s) Uh, not project, but I have to find for the the new uh person to exchanging for the the uh the project members.  — Learner hasn't answered the tutor's clarification question about which retry they want; #33 is next in order but doesn't
+22:48:38 HEARD  Uh, not project, but I have to find for the the new uh person to exchanging for the the uh the project members.
+22:48:38 TUTOR  Good work today. You talked about your job, your responsibilities and a networking event you attended last year. The "I have worked for our company for about 10 years" sentence showed the present perfect, and "We met a new business partner there" showed the past simple. Next time, practise the verb 
+22:49:12 STUDENT(end) the tutor said goodbye
+22:49:12 audio: {"sttSockets":1,"sttSocketSeconds":1050,"clipSeconds":316,"silentTtsReplies":106,"mic":{"plays":32,"gum":1,"buffers":162},"otherSockets":["ws://localhost:3021/_next/hmr","wss://api.openai.com/v1/realtime"]}
+22:49:12 waiting 35 s for the autosave
