@@ -7,6 +7,7 @@ Read-only dumps of prod (:3009 build) sessions; laptop copies in the 11-15 sessi
 | Josh | embed-1794204711914 (11-09) | 7 min | stopped in present perfect |
 | James (CEO) | embed-1794314921551 (11-10) | 13 min | stopped at the pronunciation menu |
 | tester-2 (Japanese staff) | embed-1794791354557 (11-16 JST) | 20 min | full lesson |
+| a SECOND person on the tester-2 link (sales GM) | embed-1794804263661 (11-16 JST) | 20 min | ran out of time at the pronunciation menu — no summary |
 
 ## Acceptance cases for v2 (each seen live)
 1. **Confusion skips the question.** "Could you rephrase that?" / "Sorry, I don't understand" in the level check → v1 asks the NEXT question (James t6–8, tester-2 t3–4). v2 must rephrase or simplify the same question.
@@ -19,5 +20,8 @@ Read-only dumps of prod (:3009 build) sessions; laptop copies in the 11-15 sessi
 8. **Invented facts.** James t44 credits "time management" for something he did not say.
 9. **Timer line interrupts a menu.** tester-2 t76–79: two-minute warning mid-menu, then a confusing "practise more words or stop?" after "skip".
 10. **Resume.** Josh asked "Can we continue from this point next time?" and was told yes; v1 has no resume. v2 must not promise what it can't do (or resume from lessonProgress).
+
+11. **Shared link = inherited level.** A second person used the tester-2 link: the remembered level skipped the level check for someone new ("I'm ready" said twice before a question). v2: the level check is skipped only when the level is known AND the learner is plausibly the same person; at minimum a remembered level is re-confirmed lightly in the first exchange, and history is per link (a shared link is an ops issue — one link per person).
+12. **Over-correction eats the lesson.** Second tester-2 session: nearly every answer got a correction + retry (one sentence 4 tries), so at 20:00 it was still offering the pronunciation menu — no summary. Corrections were also wrong ("Meet is the past form of meet"; "you're close" after a correct sentence; "My rule is…" for *role* never caught) and a retry chain was dropped mid-way for an unrelated question. After the two-minute line it kept asking new questions; "one more again" (= say it again) read as "one more question". v2: correct the ONE error that matters most for the part's goal, at most two tries, then give the sentence and move on; pace to the box so the summary always happens.
 
 What went well: Japanese support when asked (tester-2 t7–8, t15–16), the retry-to-correct sentence loop, the summary check question (tester-2 t83–86 answered perfectly).
