@@ -25,7 +25,7 @@ import { newV2State, type V2Session, type V2State } from '../src/lib/tutor/v2/ty
 import { streamV2Turn } from '../src/lib/tutor/v2/client';
 import {
   PRONUNCIATION_LOW_SCORE, V2_PRACTISE_PRONUNCIATION_TOOL, v2ApplyPractisePronunciation, v2PronunciationHeardOf, v2PronunciationSection,
-  v2ReadPronunciation, v2TextSoundFacts, v2WithPronunciationHeard, type V2PronunciationHeard,
+  v2ReadPronunciation, v2TextSoundFacts, v2WithPronunciationHeard, v2PronunciationFacts, type V2PronunciationHeard,
 } from '../src/lib/tutor/v2/pronunciation';
 import { V2PronunciationRecorder } from '../src/lib/tutor/v2/pronunciation-recorder';
 import { parseAssessBody } from '../src/lib/tutor/pronunciation/assess-request';
@@ -140,7 +140,10 @@ async function main() {
   const a1 = armed(['schedule']);
   check('armed, while they have not spoken yet: what is being recorded', /their next spoken reply is recorded and scored against "schedule\."/.test(factsOf(on, a1, null)));
   const unmeasured = factsOf(on, a1, 'schedule');
-  check('they spoke but nothing came back (typed, talked over the tutor, too slow): not measured, say nothing about it', /this reply was not measured/.test(unmeasured) && NO_SOUND_TALK.test(unmeasured), unmeasured);
+  // Task 6f (PRONUNCIATION_FALLBACK, default on): asked once more, as an unmeasured reply is; off: the old line.
+  check('they spoke but nothing came back (typed, talked over the tutor, too slow): no comment on it, asked once more', /no score came back for this reply/.test(unmeasured) && /say it once more/.test(unmeasured) && NO_SOUND_TALK.test(unmeasured), unmeasured);
+  const unmeasuredOld = v2PronunciationFacts(on, a1, 'schedule', false).join('\n');
+  check('… with the fallback off: not measured, say nothing about it (as before)', /this reply was not measured/.test(unmeasuredOld) && NO_SOUND_TALK.test(unmeasuredOld), unmeasuredOld);
   check('nothing armed: no pronunciation line at all', !/pronunciation/.test(factsOf(on, newV2State(1000), 'I work in a bank.')));
 
   console.log('the facts: a measured score');
@@ -195,7 +198,10 @@ async function main() {
   console.log('a session the route will not measure');
   {
     const off = factsOf(on, v2WithPronunciationHeard(a1, { seq: 1, status: 'off', reason: 'http_404' }), 'schedule');
-    check('off: not measured, and no more practice offered', /cannot be measured in this session/.test(off) && /do not offer pronunciation practice again/.test(off) && NO_SOUND_TALK.test(off), off);
+    // Task 6f (PRONUNCIATION_FALLBACK, default on): told once, and practice without a score offered; off: the old line.
+    check('off: not measured, told once, practice without a score offered', /cannot give a score today/.test(off) && /without a score/.test(off) && /say it after you/.test(off) && /do not call practise_pronunciation/.test(off) && NO_SOUND_TALK.test(off), off);
+    const offOld = v2PronunciationFacts(on, v2WithPronunciationHeard(a1, { seq: 1, status: 'off', reason: 'http_404' }), 'schedule', false).join('\n');
+    check('… with the fallback off: not measured, and no more practice offered (as before)', /cannot be measured in this session/.test(offOld) && /do not offer pronunciation practice again/.test(offOld) && NO_SOUND_TALK.test(offOld), offOld);
     const s = stub([words('Thanks. Next, tell me about your week.')]);
     const r = await runV2Turn({ session: on, state: v2WithPronunciationHeard(a1, { seq: 1, status: 'off' }), studentSaid: 'schedule', callModel: s.call, boardPass: false, mathsCheck: false });
     check('it is remembered for the rest of the session', r.state.pronunciation?.off === true && /cannot be measured in this session/.test(factsOf(on, r.state, 'ok')));

@@ -1762,3 +1762,35 @@ export const TUTOR_V2_PRACTICE_ASK_CAP = process.env.NEXT_PUBLIC_TUTOR_V2_PRACTI
  *  One moment…" with the silence timer cleared at the speech's start, and no nudge came for four minutes (Task 6e fix
  *  round 1, F6: tester B's stalled first try). Default ON; NEXT_PUBLIC_TUTOR_V2_NO_WORDS_RECOVER=off ⇒ no watch. */
 export const TUTOR_V2_NO_WORDS_RECOVER = process.env.NEXT_PUBLIC_TUTOR_V2_NO_WORDS_RECOVER !== 'off';
+
+/** Tutor brain v2 (v2/pronunciation.ts): when measuring is not available (no vendor or key, the route closed) or a
+ *  recording could not be measured, the learner who asked for pronunciation practice is told once, in one short
+ *  sentence, that there is no score today, and is offered to go on practising without one (say it after the tutor),
+ *  instead of being moved on to the summary after one word (Task 6f: the real-voice replays ran with no vendor, and
+ *  "I can't check the sound of your voice today, so I'll move on to the summary." followed James's first word). A reply
+ *  that was not a try at the item ("I said individual words.") is answered first. Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_PRONUNCIATION_FALLBACK=off ⇒ the facts lines as before. */
+export const TUTOR_V2_PRONUNCIATION_FALLBACK = process.env.NEXT_PUBLIC_TUTOR_V2_PRONUNCIATION_FALLBACK !== 'off';
+
+/** Tutor brain v2 (v2/board-timing.ts noteSentencesToSay, v2/turn.ts, spoken teaching lessons): a note or table of
+ *  example sentences that a lead-in points at ("Here is the form", "Now let's look at the two tenses you just used.",
+ *  or "ここにある文を…読んでみてください" just after it) has its example sentences spoken where it stands, as a sentence
+ *  card is (SAY_SENTENCE_CARD). Only sentence cards were spoken, and three lead-ins pointed at a note or a table whose
+ *  sentences were never said (Task 6f, v2audio-6e2 James T22, tester A T16, tester B T16). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_SAY_NOTE_SENTENCES=off ⇒ notes and tables are shown and not spoken, as before. */
+export const TUTOR_V2_SAY_NOTE_SENTENCES = process.env.NEXT_PUBLIC_TUTOR_V2_SAY_NOTE_SENTENCES !== 'off';
+
+/** Tutor brain v2 (v2/turn.ts, v2/plan-map.ts v2FramePartLabel, spoken lessons with a plan): the part-change frame names
+ *  the part that will open. A held page whose part the same reply marks done (set_goal_status) is not named: the frame
+ *  waits for the reply to be complete and names the plan's next part instead. James heard "Next is your job." while the
+ *  reply marked the job part done, and the next reply opened the present perfect (Task 6f, v2audio-6e2 T20). The frame
+ *  is said at once when nothing was said before the page. Default ON; NEXT_PUBLIC_TUTOR_V2_FRAME_NAMES_OPENED=off ⇒ the
+ *  frame names the held page as it streams, as before. */
+export const TUTOR_V2_FRAME_NAMES_OPENED = process.env.NEXT_PUBLIC_TUTOR_V2_FRAME_NAMES_OPENED !== 'off';
+
+/** Tutor brain v2 (v2/turn.ts, plan-map.ts): a reply that has already begun the summary ("here is a quick summary") is not
+ *  held at the summary page for the offer of a part not reached ("Before the summary, there is still the pronunciation
+ *  part…"): the page opens and the part is named as next time, in one line, where it stands. Tester B heard both lead-ins
+ *  in one reply (Task 6f, v2audio-6e2 T60). Default ON; NEXT_PUBLIC_TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME=off ⇒ held with the
+ *  offer, as before. */
+export const TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME = process.env.NEXT_PUBLIC_TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME !== 'off';

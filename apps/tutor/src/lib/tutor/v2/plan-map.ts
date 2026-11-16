@@ -258,3 +258,30 @@ export function v2NextTimeLine(plan: LessonPlan | undefined, state: Pick<V2State
   const names = partNames(missing).replace(/\bthe (\S)/g, (_m, c: string) => `the ${c.toLowerCase()}`);
   return `We didn't get to ${names} today, so that's for next time.`;
 }
+
+/** Task 6f: the part a part-change frame names for a held page headed `title`. James heard "Next is your job." from a
+ *  reply that wrote a "Your job" page and, in the same reply, marked the job part done (set_goal_status); the next reply
+ *  opened the present perfect. When the held page is the page of a plan part already marked (before this reply, or by it:
+ *  `markedNow`), the frame names the plan's next part not reached instead (its authored name), or nothing (null: "Shall
+ *  we go on?" alone) when there is none. Undefined: name the held page, as before (no plan, a page of no part, or a part
+ *  not marked). */
+export function v2FramePartLabel(plan: LessonPlan | undefined, state: Pick<V2State, 'goals' | 'board' | 'workingLevel'>, title: string, markedNow: readonly string[]): string | null | undefined {
+  if (!plan) return undefined;
+  const segs = plan.segments;
+  const at = segs.findIndex((seg) => !!v2PartOf(seg).label && pageOfPart(seg, title));
+  if (at < 0) return undefined;
+  const marked = (id: string) => !!state.goals[id] || markedNow.includes(id);
+  if (!marked(segs[at]!.id)) return undefined;
+  const reached = (seg: Segment) => marked(seg.id) || state.board.pages.some((pg) => pageOfPart(seg, pg.title)) || (v2PartOf(seg).skipWhenLevelKnown && !!state.workingLevel);
+  const next = segs.slice(at + 1).find((seg) => !reached(seg));
+  return next ? (v2PartOf(next).label ?? null) : null;
+}
+
+/** Task 6f: the line naming every plan part not reached as next time (v2UnreachedAtClose), said where a summary the reply
+ *  has already begun opens, in place of the offer to do them first. Null when none was missed. */
+export function v2NextTimeAllLine(plan: LessonPlan | undefined, state: Pick<V2State, 'goals' | 'board' | 'workingLevel'>): string | null {
+  if (!plan) return null;
+  const left = v2UnreachedAtClose(plan, state);
+  if (!left.length) return null;
+  return `We didn't get to ${partNames(left).replace(/\bthe (\S)/g, (_m, c: string) => `the ${c.toLowerCase()}`)} today, so that's for next time.`;
+}

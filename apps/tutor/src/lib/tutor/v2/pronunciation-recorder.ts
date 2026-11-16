@@ -78,7 +78,7 @@ export class V2PronunciationRecorder {
     const peakLabel = Number.isFinite(peak) ? peak.toFixed(1) : '-inf';
     this.log('pronunciation_clip_sent', `#${seq} ${clip.durationMs}ms peak=${peakLabel}dBFS "${clip.referenceText.slice(0, 80)}" (v2)`);
     // v1 Task 24 §A2: an all-zero clip reads to the vendor as "not attempted": it is not posted.
-    if (!(peak >= CLIP_SILENT_DBFS)) { this.ready = { seq, status: 'unavailable', reason: 'clip_silent' }; return; }
+    if (!(peak >= CLIP_SILENT_DBFS)) { this.ready = { seq, status: 'unavailable', reason: 'clip_silent' }; this.log('pronunciation_failed', `#${seq} unavailable clip_silent (v2)`); return; }
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), ASSESS_TIMEOUT_MS);
     const run = this.fetchImpl('/api/tutor/pronunciation/assess', {
@@ -86,7 +86,9 @@ export class V2PronunciationRecorder {
     })
       .then(async (res) => v2PronunciationHeardOf(seq, res.status, res.ok ? await res.json().catch(() => null) : null))
       .catch((e: unknown): V2PronunciationHeard => ({ seq, status: 'unavailable', reason: `fetch_failed: ${String((e as Error)?.message ?? e).slice(0, 60)}` }))
-      .then((heard) => { this.ready = heard; this.log('pronunciation_scored', `#${seq} ${heard.status}${heard.overall !== undefined ? ` ${heard.overall}/100` : ''}${heard.reason ? ` ${heard.reason}` : ''} (v2)`); })
+      // Task 6f: a measurement is pronunciation_scored, anything else pronunciation_failed with its reason, so a replay or a
+      // session dump shows why no score reached the facts (the local replays ran with no vendor: no_vendor, never logged).
+      .then((heard) => { this.ready = heard; this.log(heard.status === 'measured' ? 'pronunciation_scored' : 'pronunciation_failed', `#${seq} ${heard.status}${heard.overall !== undefined ? ` ${heard.overall}/100` : ''}${heard.reason ? ` ${heard.reason}` : ''} (v2)`); })
       .finally(() => { clearTimeout(timer); if (this.pending === run) this.pending = null; });
     this.pending = run;
   }
@@ -95,6 +97,9 @@ export class V2PronunciationRecorder {
   async take(waitMs: number): Promise<V2PronunciationHeard | null> {
     if (this.pending) await Promise.race([this.pending, new Promise((r) => setTimeout(r, waitMs))]);
     const heard = this.ready; this.ready = null;
+    // Still in flight when the turn has to run: this reply goes unmeasured (its result, when it comes, answers an arm
+    // the turn has used up and is dropped).
+    if (!heard && this.pending) this.log('pronunciation_failed', `#${this.seq} late: no result within ${waitMs}ms (v2)`);
     return heard;
   }
 }

@@ -56,6 +56,8 @@ export interface ReplyGateOptions {
 export class ReplyGate {
   private buf = '';
   private card: string | null = null;
+  /** Task 6f: the waiting card goes out only if the next sentence passes this (it points back at the board); else it is dropped. */
+  private cardIf: ((sentence: string) => boolean) | null = null;
   private holding = false;
   /** Held goodbye text, in order, as it came (white space kept). */
   private heldParts: string[] = [];
@@ -82,6 +84,11 @@ export class ReplyGate {
   /** A sentence card to say where it stands. It goes out before the next sentence, unless that sentence says it. */
   speakCard(sentence: string): void { this.drain(true); this.releaseCard(); this.card = sentence; }
 
+  /** Words to say where a block stands only if the sentence after it points back at them (Task 6f: "ここにある文を、
+   *  ひとつずつ読んでみてください。" after a note of example sentences). Said just before that sentence; dropped when the
+   *  next sentence does not point back, or a block or the end comes first. */
+  speakCardIf(sentence: string, when: (next: string) => boolean): void { this.drain(true); this.releaseCard(); this.card = sentence; this.cardIf = when; }
+
   /** Whether a goodbye is being held. */
   get holdsGoodbye(): boolean { return this.holding; }
   /** The held goodbye text (trimmed), for checks before it is let go. */
@@ -100,7 +107,12 @@ export class ReplyGate {
     this.heldParts = []; this.holding = false;
   }
 
-  private releaseCard(): void { if (this.card !== null) { const c = this.card; this.card = null; this.saidCards.push(c); this.emit(` ${c} `); } }
+  private releaseCard(): void {
+    if (this.card === null) return;
+    const c = this.card; this.card = null;
+    if (this.cardIf) { this.cardIf = null; return; }
+    this.saidCards.push(c); this.emit(` ${c} `);
+  }
 
   private drain(final: boolean): void {
     for (;;) {
@@ -115,7 +127,10 @@ export class ReplyGate {
   private sentence(s: string): void {
     const core = s.trim();
     if (!core) { if (this.holding) this.heldParts.push(s); else this.emit(s); return; }
-    if (this.card !== null) {
+    if (this.card !== null && this.cardIf) {
+      const when = this.cardIf; this.cardIf = null;
+      if (when(core)) this.releaseCard(); else this.card = null;
+    } else if (this.card !== null) {
       // The model said the card's sentence itself, straight after it: said once, in its words.
       const c = norm(this.card); const n = norm(core);
       if (c && n.includes(c)) this.card = null; else this.releaseCard();

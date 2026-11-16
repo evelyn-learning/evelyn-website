@@ -19,7 +19,7 @@ import { PRONUNCIATION_LOW_SCORE, pronunciationLowScore } from '../pronunciation
 import { MAX_REFERENCE_CHARS } from '../pronunciation/assess-request';
 import { WORD_FLAG_SCORE } from '../pronunciation/normalize';
 import { discussionOf } from './discussion';
-import { TUTOR_V2_TEXT_NO_SOUND } from '../orchestrator/flags';
+import { TUTOR_V2_PRONUNCIATION_FALLBACK, TUTOR_V2_TEXT_NO_SOUND } from '../orchestrator/flags';
 import type { V2Session, V2State } from './types';
 
 export { PRONUNCIATION_LOW_SCORE };
@@ -80,9 +80,11 @@ export function v2PronunciationReference(items: string[]): string {
 }
 
 /** The tool's effect on the state: arm the next spoken reply. */
-export function v2ApplyPractisePronunciation(state: V2State, args: Record<string, unknown>): string {
+export function v2ApplyPractisePronunciation(state: V2State, args: Record<string, unknown>, fallback: boolean = TUTOR_V2_PRONUNCIATION_FALLBACK): string {
   const p = state.pronunciation ?? { seq: 0 };
-  if (p.off) return 'not armed: pronunciation cannot be measured in this session. Say nothing about how they sound, and do not offer pronunciation practice again.';
+  if (p.off) return fallback
+    ? `not armed: pronunciation cannot be measured in this session. ${NO_SCORE_PRACTICE}`
+    : 'not armed: pronunciation cannot be measured in this session. Say nothing about how they sound, and do not offer pronunciation practice again.';
   const items = (Array.isArray(args.items) ? args.items : typeof args.items === 'string' ? [args.items] : [])
     .filter((x): x is string => typeof x === 'string').map((x) => x.replace(/\s+/g, ' ').trim()).filter(Boolean);
   if (!items.length) return 'not armed: give the words or sentence they are to say, in items.';
@@ -172,26 +174,44 @@ function isLow(h: V2PronunciationHeard): boolean {
 }
 const quote = (xs: string[]) => xs.map((x) => `"${x}"`).join(', ');
 
-/** The facts lines for pronunciation practice (only in a session that has it). `studentSaid` is this turn's words. */
-export function v2PronunciationFacts(session: V2Session, state: V2State, studentSaid: string | null | undefined): string[] {
+/** Task 6f: practice without a measurement, when there is none to be had: the tutor's model to say after, no comment on
+ *  how it sounded, and the learner's choice whether to go on. */
+const NO_SCORE_PRACTICE = 'If they want to go on practising, do it without a score: say the word or sentence yourself and have them say it after you, then the next one; say nothing about how they sounded, and do not call practise_pronunciation. Go on to the summary only when they want to or the time is up.';
+/** Task 6f: a reply to the ask that was not a try at the item ("I said individual words.") is answered first. */
+const ANSWER_FIRST = 'If what they said was not a try at it (a question, a complaint, something else), answer that first.';
+
+/** The facts lines for pronunciation practice (only in a session that has it). `studentSaid` is this turn's words.
+ *  `fallback` (TUTOR_V2_PRONUNCIATION_FALLBACK): with no measurement to be had, the learner is told once and offered
+ *  practice without a score, instead of the lines that moved James to the summary after one word (Task 6f). */
+export function v2PronunciationFacts(session: V2Session, state: V2State, studentSaid: string | null | undefined, fallback: boolean = TUTOR_V2_PRONUNCIATION_FALLBACK): string[] {
   if (!v2PronunciationOn(session)) return [];
   const p = state.pronunciation;
   // A session the route will not measure: offered practice would only ever come back unmeasured.
-  if (p?.off && !p.heard) return ['pronunciation: it cannot be measured in this session. Say nothing about how they sound, and do not offer pronunciation practice'];
+  if (p?.off && !p.heard) return [fallback
+    ? `pronunciation: it cannot be measured in this session, and they have been told there is no score today: do not say it again. ${NO_SCORE_PRACTICE}`
+    : 'pronunciation: it cannot be measured in this session. Say nothing about how they sound, and do not offer pronunciation practice'];
   if (!p?.armed) return [];
   const { armed, heard } = p;
+  // v1 W9-B3 (run 5): told the recording failed, the tutor told the learner "I cannot hear the sounds".
+  const never = 'never say you cannot hear them, and say nothing about how it sounded';
   if (!heard) {
     if (studentSaid === null || studentSaid === undefined) return [`pronunciation: their next spoken reply is recorded and scored against "${armed.reference}"`];
     // Typed, spoken over the tutor, or the score did not come back in time: there is no measurement.
-    return ['pronunciation: this reply was not measured, so say nothing about how it sounded'];
-  }
-  if (heard.status === 'off') return ['pronunciation: it cannot be measured in this session, so this reply was not measured: say nothing about how it sounded, and do not offer pronunciation practice again'];
-  if (heard.status !== 'measured') {
-    // v1 W9-B3 (run 5): told the recording failed, the tutor told the learner "I cannot hear the sounds".
-    const never = 'never say you cannot hear them, and say nothing about how it sounded';
+    if (!fallback) return ['pronunciation: this reply was not measured, so say nothing about how it sounded'];
     return armed.attempt === 1
+      ? [`pronunciation: no score came back for this reply, so say nothing about how it sounded. ${ANSWER_FIRST} If it was a try at "${armed.reference}", ask them in one short sentence to say it once more, and call practise_pronunciation with it again (${never})`]
+      : [`pronunciation: no score came back for this reply either. Say once, in one short sentence, that there is no score for it this time (${never}). ${NO_SCORE_PRACTICE}`];
+  }
+  if (heard.status === 'off') return [fallback
+    ? `pronunciation: scoring is not available today, so this reply was not measured. ${ANSWER_FIRST} Tell them once, in one short sentence, that you cannot give a score today (${never}). ${NO_SCORE_PRACTICE}`
+    : 'pronunciation: it cannot be measured in this session, so this reply was not measured: say nothing about how it sounded, and do not offer pronunciation practice again'];
+  if (heard.status !== 'measured') {
+    if (!fallback) return armed.attempt === 1
       ? [`pronunciation: the recording of "${armed.reference}" was cut short and could not be measured. In one short sentence ask them to say it once more, and call practise_pronunciation with it again (${never})`]
       : [`pronunciation: the second recording of "${armed.reference}" could not be measured either. Leave it there and go on (${never})`];
+    return armed.attempt === 1
+      ? [`pronunciation: the recording of "${armed.reference}" was cut short and could not be measured. ${ANSWER_FIRST} Otherwise, in one short sentence ask them to say it once more, and call practise_pronunciation with it again (${never})`]
+      : [`pronunciation: the second recording of "${armed.reference}" could not be measured either. Say once, in one short sentence, that there is no score for it this time (${never}). ${NO_SCORE_PRACTICE}`];
   }
   const cut = cutWordOf(heard);
   const words = (heard.words ?? []).filter((w) => w !== cut).slice(0, 8).map((w) => w.omitted
@@ -223,12 +243,14 @@ export function v2TextSoundFacts(session: V2Session, enabled: boolean = TUTOR_V2
 }
 
 /** After the facts are rendered: a scored reply, or a spoken one, uses the arm up; what it asked for is remembered. */
-export function v2ConsumePronunciation(session: V2Session, state: V2State, studentSaid: string | null | undefined): void {
+export function v2ConsumePronunciation(session: V2Session, state: V2State, studentSaid: string | null | undefined, fallback: boolean = TUTOR_V2_PRONUNCIATION_FALLBACK): void {
   const p = state.pronunciation;
   if (!v2PronunciationOn(session) || !p) return;
   if (!p.heard && (studentSaid === null || studentSaid === undefined)) return;
   const h = p.heard; const armed = p.armed;
-  const asksAgain = !!h && !!armed && armed.attempt === 1 && (h.status === 'cut' || h.status === 'unavailable' || (h.status === 'measured' && isLow(h)));
+  // Task 6f: a reply with no score back asks once more, as an unmeasured one does, and that try is the second (so a
+  // result that never comes cannot ask again and again).
+  const asksAgain = !!armed && armed.attempt === 1 && (h ? (h.status === 'cut' || h.status === 'unavailable' || (h.status === 'measured' && isLow(h))) : fallback);
   state.pronunciation = {
     seq: p.seq,
     ...(asksAgain ? { retryOf: wordsOf(armed!.reference) } : {}),

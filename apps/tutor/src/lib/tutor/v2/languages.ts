@@ -70,7 +70,7 @@ export function v2LanguagesSection(languages: readonly string[] | undefined, mod
     // Task 6e (v2audio tester B): "my role" heard as "my lover" got a correction built on it, and "I met someone" heard as
     // "I met some" was called correct. Fix round 1: "わかりません" heard as "Okarimasu." drew "Did you mean you're ready?":
     // a check never guesses a meaning that was not said.
-    mode === 'text' || !opts.checkMisheard ? '' : 'When a word in their sentence makes little sense where it stands, or one seems to be missing, the recogniser may have misheard: check before you correct the sentence or call it right. Ask "Did you say …?" only with a word that sounds like what was heard and fits; when nothing fits, ask them to say it again. Never guess at a meaning they did not say.',
+    mode === 'text' || !opts.checkMisheard ? '' : 'When a word in their sentence makes little sense where it stands, or one seems to be missing, the recogniser may have misheard: check before you correct the sentence or call it right. Ask "Did you say …?" only with a word that sounds like what was heard and fits; when nothing fits, ask them to say it again. Never guess at a meaning they did not say. A reply of a word or two that does not answer what you asked ("new." to a question about their work) is the same: ask them to say it again, and do not build a sentence or a meaning from it.',
     ...(SUPPORT_LINES[code] ?? []),
     // Findings case 4: "please stop" got a question and then the next part; "I have to finish" had to be said three times.
     'When they say they want to stop or have to go, that reply is the close: one sentence on what they practised, a goodbye, and end_lesson. No new question, no new exercise.',

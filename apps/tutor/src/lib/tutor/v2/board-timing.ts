@@ -252,3 +252,54 @@ export function sentenceCardToSay(sentence: string, saidSoFar: string, opts: { l
   if (!want || norm(saidSoFar).join(' ').includes(want)) return null;
   return /[.!?。！？]["'”’)]*$/.test(s) ? s : `${s}.`;
 }
+
+/** Task 6f: the most example sentences of a note or table said where it stands, and their most words together. */
+const NOTE_SAY_MAX = 4;
+const NOTE_SAY_WORDS = 45;
+/** A line or cell that is an English sentence to say: a capital, a full stop or "!", no gap to fill ("I have ? here"), no
+ *  arrow ("work → have worked"), no letters outside English. A form line ("have / has + past participle") is not one. */
+const SAYABLE = (x: string) => /^[A-Z]/.test(x) && /[.!]["'”’)]*$/.test(x) && !/[?？→_]|\.\.\.|…/.test(x) && !HAS_MARKUP.test(x) && /^[\x20-\x7E’‘“”—–]+$/.test(x) && norm(x).length >= 3;
+
+/** The example sentences of a note or a table block, in order: each line of a note (a list marker taken off, a label
+ *  before a colon taken off when what follows is a sentence, a gloss in brackets at its end left out), each cell of a
+ *  table. Not a numbered menu (two option lines or more): unsaidBoardItem reads those. */
+export function exampleSentencesOf(kind: string, body: string): string[] {
+  const lines = body.split('\n').map((l) => l.trim()).filter(Boolean);
+  if (kind === 'note' && lines.filter((l) => OPTION_LINE.test(l)).length >= 2) return [];
+  const pieces = kind === 'note' ? lines : kind === 'table' ? lines.flatMap((l) => l.split('|')) : [];
+  const out: string[] = [];
+  for (const raw of pieces) {
+    let x = raw.replace(/^\s*(?:[-*•・]|\d{1,2}[.)])\s+/, '').trim().replace(/\s*[(（][^()（）]*[)）]\s*$/, '').trim();
+    const labelled = x.match(/^[^:：]{1,40}[:：]\s*(.+)$/);
+    if (labelled && SAYABLE(labelled[1]!.trim())) x = labelled[1]!.trim();
+    if (SAYABLE(x) && !out.some((y) => norm(y).join(' ') === norm(x).join(' '))) out.push(x);
+  }
+  return out;
+}
+
+/** Words that point at what is on the board: before the block ("Now let's look at the two tenses you just used.") or as
+ *  the lead-ins of sentenceCardToSay. */
+const BOARD_POINTER = /\b(?:let'?s (?:look|have a look|take a look) at|(?:look|looking) at (?:the|these|this|those)|on the board|the (?:form|rule|pattern)s?\b)|ここにある|ここの文|これらの文|次の(?:文|例)|例文/i;
+/** A sentence just after the block that points back at its sentences ("ここにある文を、ひとつずつ読んでみてください。",
+ *  "Read these sentences aloud."): the sentences are said before it. */
+const POINTS_BACK = /\b(?:these (?:sentences|examples|lines)|the sentences (?:here|on the board|above)|(?:read|say) (?:them|these|each(?: one)?)\b|one by one|on the board)\b|ここにある|ここの文|この文|これらの文|ひとつずつ|一つずつ/i;
+export function pointsBackAtBoard(sentence: string): boolean { return POINTS_BACK.test(sentence); }
+
+/** In a spoken language lesson, the example sentences of a note or a table to speak where the block stands (Task 6f): the
+ *  block is lifted out of the speech, and three lead-ins pointed at sentences never said ("Here is the form, and then
+ *  I'll ask you a question." over a note; "Now let's look at the two tenses you just used." over a table; a note followed
+ *  by "ここにある文を、ひとつずつ読んでみてください。"). `announced`: the words before it lead into it (a colon, a lead-in
+ *  as for a sentence card, or words pointing at the board), not a question; otherwise the words are to be said only if
+ *  the next sentence points back at them. Null when it has no example sentence not already said, or too many to say. */
+export function noteSentencesToSay(kind: string, body: string, saidSoFar: string): { say: string; announced: boolean } | null {
+  const said = norm(saidSoFar).join(' ');
+  const fresh = exampleSentencesOf(kind, body).filter((x) => !said.includes(norm(x).join(' ')));
+  if (!fresh.length) return null;
+  const picked: string[] = []; let words = 0;
+  for (const x of fresh) { const n = norm(x).length; if (picked.length >= NOTE_SAY_MAX || words + n > NOTE_SAY_WORDS) break; picked.push(x); words += n; }
+  if (!picked.length) return null;
+  const last = lastSentenceOf(saidSoFar);
+  const asking = /[?？]/.test(last) || asksAloud([last]);
+  const announced = !asking && (LEAD_IN_COLON.test(saidSoFar) || CARD_LEAD_IN.test(last) || BOARD_POINTER.test(last));
+  return { say: picked.join(' '), announced };
+}
