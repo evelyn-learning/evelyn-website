@@ -34,6 +34,7 @@ import { goodbyeLine } from '@/lib/tutor/voice/timebox-lines';
 import { parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
 import { v2LevelEstimateDue, v2SeedWorkingLevel, v2WorkingLevelCommit } from '@/lib/tutor/v2/working-level';
 import { v2WithPronunciationHeard, type V2PronunciationHeard } from '@/lib/tutor/v2/pronunciation';
+import { V2ClosingWords, v2CloseHears } from '@/lib/tutor/v2/close-mic';
 
 export interface V2TurnsConfig {
   mode: 'text' | 'voice';
@@ -131,6 +132,9 @@ export interface V2Turns {
   end: (opts?: { farewell?: string }) => void;
   abort: () => void;
   isEnding: () => boolean;
+  /** Task 7h (CLOSE_HEARS): the tutor has closed the lesson and its closing words are still being said; the microphone
+   *  is open, and words over them other than thanks or a goodbye call the close off (v2/close-mic.ts). */
+  isClosing: () => boolean;
   busy: boolean;
   closed: boolean;
   openedRef: MutableRefObject<boolean>;
@@ -203,6 +207,8 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   // the session a second time (review 5a I1).
   const endedRef = useRef(false);
   const endOnce = (reason?: 'time_limit') => { if (endedRef.current) return; endedRef.current = true; p.current.onEndSession?.(reason); };
+  /** Task 7h: the closing words of a spoken close, still being said (v2/close-mic.ts). */
+  const closingRef = useRef(new V2ClosingWords());
   const homeworkDoneRecordedRef = useRef(false);
   const [busy, setBusy] = useState(false);
   const [closed, setClosed] = useState(false);
@@ -238,6 +244,16 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   };
 
   const runTurn = useCallback(async (studentSaid: string | null, silenceSeconds?: number, unheard?: boolean) => {
+    // Task 7h (CLOSE_HEARS): the closing words are still being said. Words of the student's over them call the close off
+    // and the lesson goes on from them; thanks, a goodbye or a silence check let it end (v2/close-mic.ts).
+    const overClose = endingRef.current ? 'not-closing' : closingRef.current.heard(unheard ? null : studentSaid);
+    if (overClose === 'let-end') return;
+    if (overClose === 'reopen') {
+      stateRef.current = { ...stateRef.current, closed: false };
+      saveV2State(p.current.sessionId, stateRef.current);
+      p.current.onCut?.();
+      p.current.onDebugEvent?.('v2_close_called_off', `the student spoke over the closing words: "${(studentSaid ?? '').slice(0, 80)}"`);
+    }
     if (stateRef.current.closed || endingRef.current) return;
     // Noise over a running reply is nothing to answer (heard.ts v2HeardIsNoise).
     if (busyRef.current && unheard) return;
@@ -378,7 +394,11 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         needsPracticeRef.current = (Array.isArray(closing?.args.needs_practice) ? (closing?.args.needs_practice as unknown[]) : []).map((n) => planRef.current?.los[Number(n) - 1]?.id).filter((x): x is string => !!x);
         commitProfile();
         assignPractice(settled.find((c) => c.name === 'end_lesson' && !/^not /.test(c.outcome)));
-        setClosed(true);
+        // Task 7h (CLOSE_HEARS): a spoken close is closed once its words have been said (below); until then the
+        // microphone stays open.
+        const wait = p.current.closeDelayMs;
+        const hears = v2CloseHears(p.current.mode, typeof wait === 'function');
+        if (!hears) setClosed(true);
         p.current.onDebugEvent?.('lesson_closed', 'end_lesson');
         // A one-problem homework session closed by the tutor reads, for the academy's outcome, as the finish
         // button does (homework-build/outcome.ts): done when every part is, needs review otherwise.
@@ -386,9 +406,20 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         p.current.onLessonClosed?.('end_lesson');
         // A partner that keeps the session open after the close (lessonCloseAutoEnd off, as v1 reads it) leaves the end
         // to the student or the host; the box still ends it (armHardStop). No turn runs either way: the state is closed.
-        if (TUTOR_LESSON_CLOSE_AUTO_END && p.current.lessonCloseAutoEnd !== false) {
+        const autoEnd = TUTOR_LESSON_CLOSE_AUTO_END && p.current.lessonCloseAutoEnd !== false;
+        if (hears && typeof wait === 'function') {
+          // The microphone stays open until the closing words have been said; the session closes (and ends) then, unless
+          // the student called the close off (runTurn, above) or the box or the host ended it first.
+          const round = closingRef.current.begin();
+          p.current.onDebugEvent?.('v2_close_listening', 'the microphone stays open while the closing words are said');
+          void wait().then(() => {
+            if (!closingRef.current.said(round)) return;
+            setClosed(true);
+            if (autoEnd) { endingRef.current = true; endOnce(); }
+          });
+          if (!autoEnd) p.current.onDebugEvent?.('lesson_closed_stays_open', 'the partner ends the session itself (lessonCloseAutoEnd off)');
+        } else if (autoEnd) {
           endingRef.current = true;
-          const wait = p.current.closeDelayMs;
           if (typeof wait === 'function') void wait().then(() => endOnce());
           else setTimeout(() => endOnce(), wait ?? CLOSE_READ_MS);
         } else p.current.onDebugEvent?.('lesson_closed_stays_open', 'the partner ends the session itself (lessonCloseAutoEnd off)');
@@ -499,7 +530,10 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     const stopMin = v2HardStopMinutes(minutes, p.current.sessionStopCeilingMinutes);
     hardStopRef.current = setTimeout(() => {
       if (endingRef.current) return;
-      endingRef.current = true;
+      // Task 7h: a close still being said when the box comes is not interruptible either: the microphone closes.
+      const wasClosing = closingRef.current.active;
+      endingRef.current = true; closingRef.current.stop();
+      if (wasClosing) setClosed(true);
       p.current.onDebugEvent?.('v2_time_limit', `${stopMin} min (box ${minutes})`);
       // A lesson that has already said its goodbye (kept open by its partner) is not said goodbye to twice.
       const bye = TUTOR_V2_TIME_BOX && !stateRef.current.closed ? goodbyeLine(p.current.studentName) : null;
@@ -574,7 +608,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   // The host's end carries a line for the student ("Saved — pick this up from your list…", host-end.ts): it is
   // the tutor's last words before the session closes.
   const end = useCallback((opts?: { farewell?: string }) => {
-    endingRef.current = true; abortRef.current?.abort();
+    endingRef.current = true; closingRef.current.stop(); abortRef.current?.abort();
     // Already ended (the box's stop, the close): no second farewell, commit or end.
     if (endedRef.current) return;
     const farewell = opts?.farewell?.trim();
@@ -582,6 +616,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     commitProfile(true); endOnce();
   }, [commitProfile]);
   const isEnding = useCallback(() => endingRef.current, []);
+  const isClosing = useCallback(() => closingRef.current.active, []);
 
-  return { send, open, nudge, end, abort, isEnding, busy, closed, openedRef, stateRef, resumedRef };
+  return { send, open, nudge, end, abort, isEnding, isClosing, busy, closed, openedRef, stateRef, resumedRef };
 }

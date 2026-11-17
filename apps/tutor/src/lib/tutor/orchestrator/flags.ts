@@ -1963,3 +1963,27 @@ export const TUTOR_V2_QUESTION_CARD = process.env.NEXT_PUBLIC_TUTOR_V2_QUESTION_
  *  the engine ran about a minute ahead, "we're nearly out of time" with 5 minutes on screen). A resumed session keeps its
  *  start. Default ON; NEXT_PUBLIC_TUTOR_V2_CLOCK_FROM_START=off ⇒ the clock from the hook's mount, as before. */
 export const TUTOR_V2_CLOCK_FROM_START = process.env.NEXT_PUBLIC_TUTOR_V2_CLOCK_FROM_START !== 'off';
+
+/** Tutor brain v2 (v2/echo-window.ts, TutorVoiceV2): the microphone's words are the tutor's own voice only where they could
+ *  have come from the speakers: a sentence counts once its audio has begun, while it plays or for a short tail after, and
+ *  only the stretch of it played around where the heard words began. A learner who says the model sentence back is heard
+ *  (Task 7h, mic test 2 flag 6, embed-1794941004529: "I attended a robotics exhibition in Tokyo 2 year ago." was dropped as
+ *  echo and the tutor talked over him twice). Default ON; NEXT_PUBLIC_TUTOR_V2_ECHO_BY_PLAYBACK=off ⇒ the words are matched
+ *  against the last sentences written, while speech is pending, as before. */
+export const TUTOR_V2_ECHO_BY_PLAYBACK = process.env.NEXT_PUBLIC_TUTOR_V2_ECHO_BY_PLAYBACK !== 'off';
+
+/** Tutor brain v2 (useV2Turns, v2/close-mic.ts): in a spoken lesson the microphone stays open while the closing reply is
+ *  said, and the session is closed only once it has been said. Words over it (other than thanks or a goodbye) stop the
+ *  tutor as any interruption does and go to it as a turn: the lesson is open again. The time box's hard stop stays
+ *  uninterruptible. Task 7h, mic test 2 flags 9–10 (embed-1794941004529): a 55 s closing reply with the microphone off.
+ *  Same switch name as the close work on another branch (9efef789). Default ON; NEXT_PUBLIC_TUTOR_V2_CLOSE_HEARS=off ⇒ the
+ *  microphone closes as end_lesson is accepted, as before. */
+export const TUTOR_V2_CLOSE_HEARS = process.env.NEXT_PUBLIC_TUTOR_V2_CLOSE_HEARS !== 'off';
+
+/** Tutor brain v2 (v2/target-pauses.ts, TutorVoiceV2 plainSpeech): in a spoken lesson that teaches a language, a short quoted
+ *  target in the tutor's speech (a word, an ending such as "-ed", a phrase of at most three words; Latin script) is set apart by
+ *  a short pause either side (the voice's break tag), at most two targets a sentence; a quoted sentence gets none and nothing on
+ *  the board changes. Task 7h, mic test 2 flag 8 (embed-1794941004529): in Please add "an" before "important customer" the
+ *  quoted words had no stress (the quotes are stripped before the voice). Default ON; NEXT_PUBLIC_TUTOR_V2_TARGET_PAUSE=off ⇒
+ *  the quotes are stripped with no pause, as before. */
+export const TUTOR_V2_TARGET_PAUSE = process.env.NEXT_PUBLIC_TUTOR_V2_TARGET_PAUSE !== 'off';

@@ -25,23 +25,31 @@ const weight = (ws: string[]) => ws.reduce((n, w) => n + (CJK_CHAR.test(w) ? 0.5
 const SLIP = /^(?:\p{N}+|[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\u30FC])$/u;
 
 export function isOwnVoice(transcript: string, recentlySpoken: string[], minWords = 4, share = 0.7, skipSlips: boolean = TUTOR_V2_OWN_VOICE_SKIP): boolean {
-  const heard = words(transcript);
-  if (!heard.length || weight(heard) < minWords) return false;
-  const said = words(recentlySpoken.join(' '));
-  if (!said.length) return false;
+  return ownVoiceMatch(words(transcript), words(recentlySpoken.join(' ')), minWords, share, skipSlips).own;
+}
+
+/** The words the matcher compares, in its own split (CJK characters one word each). */
+export const ownVoiceWords = (s: string): string[] => words(s);
+
+/** The match behind isOwnVoice, with its score (share of the heard words found in order) and where in `said` the best run
+ *  began, for the log (Task 7h: a dropped final names the tutor's sentence it matched). */
+export interface OwnVoiceMatch { own: boolean; score: number; at: number }
+export function ownVoiceMatch(heard: string[], said: string[], minWords = 4, share = 0.7, skipSlips: boolean = TUTOR_V2_OWN_VOICE_SKIP): OwnVoiceMatch {
+  if (!heard.length || !said.length) return { own: false, score: 0, at: -1 };
   // Longest run of the transcript's words found in order within what was said.
-  let best = 0;
+  let best = 0; let at = -1;
   for (let start = 0; start < said.length; start++) {
-    let i = 0; let j = start; let hit = 0;
+    let i = 0; let j = start; let hit = 0; let first = -1;
     while (i < heard.length && j < said.length && j - start < heard.length * 2) {
-      if (heard[i] === said[j]) { hit += 1; i += 1; j += 1; continue; }
+      if (heard[i] === said[j]) { if (first < 0) first = j; hit += 1; i += 1; j += 1; continue; }
       if (!skipSlips || !SLIP.test(heard[i])) { j += 1; continue; }
       // A CJK character or number the tutor did not say within reach is the recogniser's slip (三 heard as 3): it is
       // passed over, where before it ran past everything the tutor said after it.
       const k = said.indexOf(heard[i], j);
       if (k < 0 || k - start >= heard.length * 2) i += 1; else j = k;
     }
-    if (hit > best) best = hit;
+    if (hit > best) { best = hit; at = first; }
   }
-  return best / heard.length >= share;
+  const score = best / heard.length;
+  return { own: weight(heard) >= minWords && score >= share, score, at };
 }
