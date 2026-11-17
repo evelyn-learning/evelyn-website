@@ -48,14 +48,38 @@ export function unfoldCode(line: string): string {
   return out.trim();
 }
 
+/** A line cut into its words and its mathematics (the pieces between dollar signs, returned with them).
+ *  A dollar sign is also money. Mathematics starts and ends hard against its dollar signs and is not followed by
+ *  a digit; "$581B ÷ total $692B" has a space before the second sign, so both are money and the line is all words.
+ *  Read as any two dollar signs, that line went up as "$581B ÷ total $$692B ≈ 84\%$" (AP US Government, portal-1115afec). */
+export function mathsPieces(text: string): Array<{ maths: boolean; text: string }> {
+  const out: Array<{ maths: boolean; text: string }> = [];
+  let from = 0; let i = 0;
+  while (i < text.length) {
+    const open = text.indexOf('$', i);
+    if (open < 0) break;
+    const close = text.indexOf('$', open + 1);
+    if (close < 0) break;
+    const inner = text.slice(open + 1, close);
+    if (text[open - 1] === '\\' || /^\s|\s$/.test(inner) || (inner && /\d/.test(text[close + 1] ?? ''))) { i = open + 1; continue; }
+    if (open > from) out.push({ maths: false, text: text.slice(from, open) });
+    out.push({ maths: true, text: text.slice(open, close + 1) });
+    from = i = close + 1;
+  }
+  if (from < text.length) out.push({ maths: false, text: text.slice(from) });
+  return out;
+}
+/** Apply a change to the words of a line and leave its mathematics as written. */
+const inWords = (text: string, change: (words: string) => string): string => mathsPieces(text).map((p) => (p.maths ? p.text : change(p.text))).join('');
+
 /** "2^n" and "O(2^n)" between dollar signs, so the board typesets them. Lines that already carry maths are left alone. */
 export function typesetPowers(whole: string): string {
-  return whole.split(/(\$[^$]*\$)/).map((line) => line.startsWith('$') ? line : line.replace(/(?<![\w\\^])((?:[A-Za-z]\()?[A-Za-z0-9]+\^(?:\{[^}]*\}|\([^)]*\)|[A-Za-z0-9]+)\)?)(?![\w^])/g, (m) => {
+  return inWords(whole, (line) => line.replace(/(?<![\w\\^])((?:[A-Za-z]\()?[A-Za-z0-9]+\^(?:\{[^}]*\}|\([^)]*\)|[A-Za-z0-9]+)\)?)(?![\w^])/g, (m) => {
     // "O(2^n)" closes its own bracket; in "(x^2)" the bracket belongs to the sentence.
     const open = (m.match(/\(/g) ?? []).length; const close = (m.match(/\)/g) ?? []).length;
     const body = close > open ? m.slice(0, -1) : m;
     return `$${body.replace(/\^([A-Za-z0-9]{2,})/, '^{$1}')}$${close > open ? ')' : ''}`;
-  })).join('');
+  }));
 }
 
 // ── Mathematics written in the middle of a sentence ───────────────────────
@@ -124,8 +148,7 @@ function toLatex(run: string): string {
  *  "⟨3, 6⟩" stood on the board as brackets and commas beside typeset matrices (AP Precalculus, embed-1794456849622). */
 function typesetBrackets(line: string): string {
   const cell = (c: string) => toLatex(c.trim());
-  return line.split(/(\$[^$]*\$)/).map((seg) => {
-    if (seg.startsWith('$')) return seg;
+  return inWords(line, (seg) => {
     return seg
       .replace(/\[\s*(\[[^[\]]*\](?:\s*,\s*\[[^[\]]*\])+)\s*\]/g, (_m, rows: string) => `$\\begin{bmatrix} ${rows.split(/\]\s*,\s*\[/).map((r) => r.replace(/^\s*\[|\]\s*$/g, '').split(',').map(cell).join(' & ')).join(' \\\\ ')} \\end{bmatrix}$`)
       .replace(/\[\s*([^[\];,]+(?:\s*;\s*[^[\];,]+)+)\s*\]/g, (_m, col: string) => `$\\begin{bmatrix} ${col.split(';').map(cell).join(' \\\\ ')} \\end{bmatrix}$`)
@@ -133,19 +156,17 @@ function typesetBrackets(line: string): string {
       // The name it is given, and a product or an equals sign between two of them, join the same piece of mathematics.
       .replace(/\$\s*(·|=)\s*\$/g, (_m, op: string) => (op === '·' ? ' \\cdot ' : ' = '))
       .replace(/(?<![A-Za-z$\\])((?:\d+)?[A-Za-z]{1,2}(?:\s*[·+−-]\s*[A-Za-z])?)\s*=\s*\$(?=\\(?:begin|langle))/g, (_m, name: string) => `$${toLatex(name)} = `);
-  }).join('');
+  });
 }
 const RAISED: Record<string, string> = { 'ˣ': 'x', 'ʸ': 'y', 'ⁿ': 'n', 'ᵃ': 'a', 'ᵇ': 'b', 'ᶜ': 'c', 'ᵈ': 'd', 'ᵉ': 'e', 'ᵏ': 'k', 'ᵐ': 'm', 'ᵗ': 't', 'ᵘ': 'u', 'ᵛ': 'v', 'ʳ': 'r', 'ˢ': 's', 'ᶻ': 'z', 'ⁱ': 'i', 'ʲ': 'j' };
 /** "eˣ" and "u′v" as the characters a formula is typed with: "e^{x}", "u'v". Outside dollar signs only. */
 function plainMarks(text: string): string {
-  return text.split(/(\$[^$]*\$)/).map((seg) => seg.startsWith('$') ? seg : seg
-    .replace(/[ˣʸⁿᵃᵇᶜᵈᵉᵏᵐᵗᵘᵛʳˢᶻⁱʲ⁰¹²³⁴-⁹⁻⁺]*[ˣʸⁿᵃᵇᶜᵈᵉᵏᵐᵗᵘᵛʳˢᶻⁱʲ][ˣʸⁿᵃᵇᶜᵈᵉᵏᵐᵗᵘᵛʳˢᶻⁱʲ⁰¹²³⁴-⁹⁻⁺]*/g, (m) => `^{${[...m].map((c) => RAISED[c] ?? SUPERS[c] ?? c).join('')}}`)
-    ).join('');
+  return inWords(text, (seg) => seg
+    .replace(/[ˣʸⁿᵃᵇᶜᵈᵉᵏᵐᵗᵘᵛʳˢᶻⁱʲ⁰¹²³⁴-⁹⁻⁺]*[ˣʸⁿᵃᵇᶜᵈᵉᵏᵐᵗᵘᵛʳˢᶻⁱʲ][ˣʸⁿᵃᵇᶜᵈᵉᵏᵐᵗᵘᵛʳˢᶻⁱʲ⁰¹²³⁴-⁹⁻⁺]*/g, (m) => `^{${[...m].map((c) => RAISED[c] ?? SUPERS[c] ?? c).join('')}}`));
 }
 export function typesetMaths(text: string): string {
   const line = typesetBrackets(plainMarks(text).replace(/ŷ/g, 'y\u0302').replace(/ȳ/g, 'y\u0304'));
-  return line.split(/(\$[^$]*\$)/).map((seg) => {
-    if (seg.startsWith('$')) return seg;
+  return inWords(line, (seg) => {
     // "∫ from a to b of" is the integral's limits, said in words.
     // "the x-axis", "the y-values": the letter is the variable.
     const pre = seg.replace(/∫\s*from\s+(\S+)\s+to\s+(\S+)\s+of\s+/g, '∫_{$1}^{$2} ').replace(/(?<![A-Za-z$])([xy])-(axis|axes|values?|coordinates?|intercepts?)\b/g, '$$$1$$-$2');
@@ -205,7 +226,7 @@ export function typesetMaths(text: string): string {
       i = after;
     }
     return out.join('');
-  }).join('');
+  });
 }
 
 const END_PUNCT = /[.:;?!,]\s*$/;

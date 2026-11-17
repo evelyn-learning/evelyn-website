@@ -25,6 +25,10 @@ interface NumberLineInterval {
   to: number;
   fromInclusive?: boolean;
   toInclusive?: boolean;
+  /** A ray: this end has no endpoint. The shading runs on to the arrowhead in its own colour and no dot is
+   *  drawn there (a filled dot at the edge of the line read as an included endpoint, portal-02fd8638). */
+  fromOpenEnded?: boolean;
+  toOpenEnded?: boolean;
   color?: string;
   label?: string;
 }
@@ -591,8 +595,8 @@ export function NumberLineRenderer({
 
         {/* ======================== Intervals ======================== */}
         {intervals.map((iv, i) => {
-          const x1 = toX(iv.from);
-          const x2 = toX(iv.to);
+          const x1 = iv.fromOpenEnded ? PADDING_X - ARROW_OVERHANG : toX(iv.from);
+          const x2 = iv.toOpenEnded ? SVG_WIDTH - PADDING_X + ARROW_OVERHANG : toX(iv.to);
           const color = iv.color ?? COLOR_INTERVAL;
           const ivName = iv.label ? `interval-${featSlug(iv.label)}` : `interval-${i + 1}`;
           const lp = labelXY(`iv-${i}`, (x1 + x2) / 2);
@@ -609,25 +613,29 @@ export function NumberLineRenderer({
                 strokeLinecap="round"
               />
 
-              {/* Left endpoint: filled or open circle */}
-              <circle
+              {/* Left endpoint: filled or open circle; a ray has an arrowhead instead */}
+              {iv.fromOpenEnded
+                ? <polyline points={`${x1 + 8},${LINE_Y - 5} ${x1},${LINE_Y} ${x1 + 8},${LINE_Y + 5}`} fill="none" stroke={color} strokeWidth={4} strokeLinejoin="round" strokeLinecap="round" />
+                : <circle
                 cx={x1}
                 cy={LINE_Y}
                 r={POINT_RADIUS}
                 fill={iv.fromInclusive ? color : 'white'}
                 stroke={color}
                 strokeWidth={2}
-              />
+              />}
 
-              {/* Right endpoint: filled or open circle */}
-              <circle
+              {/* Right endpoint: filled or open circle; a ray has an arrowhead instead */}
+              {iv.toOpenEnded
+                ? <polyline points={`${x2 - 8},${LINE_Y - 5} ${x2},${LINE_Y} ${x2 - 8},${LINE_Y + 5}`} fill="none" stroke={color} strokeWidth={4} strokeLinejoin="round" strokeLinecap="round" />
+                : <circle
                 cx={x2}
                 cy={LINE_Y}
                 r={POINT_RADIUS}
                 fill={iv.toInclusive ? color : 'white'}
                 stroke={color}
                 strokeWidth={2}
-              />
+              />}
 
               {/* Optional interval label (packed into the rows above the line) */}
               {iv.label && (

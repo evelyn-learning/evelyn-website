@@ -4,6 +4,7 @@
  * The one thing the runtime adds to a turn. Facts only: nothing in here tells
  * the model what to do.
  */
+import { closeDueMinutes } from './close-heard';
 import { renderBoard } from './board';
 import { v2HomeworkFacts, v2HomeworkGuardFacts, v2SheetFacts } from './homework-facts';
 import { renderGoalStatus } from './plan-map';
@@ -49,7 +50,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     // Homework: a solved problem does not go on spending the student's minutes.
     session.homework || session.homeworkSheet
       ? `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > 1.5 ? `about ${Math.round(left)} left` : 'the time is up'}` : ''}; the session ends when ${session.homeworkSheet ? 'the sheet' : 'this problem'} is done`
-      : `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > session.timeBoxMinutes * 0.2 ? `about ${Math.round(left)} left, which is time for more: the lesson is not at its close unless the student asks to stop` : left > 1.5 ? `about ${Math.round(left)} left: the close is near` : 'the time is up'}` : ''}`,
+      : `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > closeDueMinutes(session.timeBoxMinutes) ? `about ${Math.round(left)} left, which is time for more: the lesson is not at its close unless the student asks to stop` : left > 1.5 ? `about ${Math.round(left)} left: the close is near` : 'the time is up'}` : ''}`,
     `board:\n  ${renderBoard(state.board)}`,
   ];
   if ((state.repliesSinceBoard ?? 0) >= 1) lines.push(`board last written on: ${state.repliesSinceBoard} ${state.repliesSinceBoard === 1 ? 'reply' : 'replies'} ago`);
@@ -75,7 +76,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   if (f.silenceSeconds) lines.push(Math.round(f.silenceSeconds) === V2_NO_ASK_RECHECK_S
     ? `your last reply has finished and it ended on a statement: no question, and nothing for them to do. They are waiting for you to go on`
     : Math.round(f.silenceSeconds) === V2_WAITED_RECHECK_S
-    ? `you kept listening after the student's last words, and they have said nothing more for ${V2_WAITED_RECHECK_S} seconds: they had finished. Take what they said as their answer and reply to it now`
+    ? `you kept listening after the student's last words, and they have said nothing more for ${V2_WAITED_RECHECK_S} seconds: they had finished. Take what they said as their answer and reply to it now, as you would have straight away: no remark about the wait, and no telling them you are here`
     : `the student has said nothing for ${Math.round(f.silenceSeconds)} seconds`);
   return `<facts>\n${lines.join('\n')}\n</facts>`;
 }

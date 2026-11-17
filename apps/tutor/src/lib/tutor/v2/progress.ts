@@ -30,7 +30,12 @@ export function v2Progress(plan: LessonPlan, goals: V2State['goals']): V2Progres
   const open = plan.segments.findIndex((seg, i) => !done[i] && goals[seg.id]?.status === 'shown');
   const next = Math.min(done.lastIndexOf(true) + 1, plan.segments.length - 1);
   const after = stamped ? done.findIndex((d, i) => i > stamped.i && !d) : -1;
-  const at = stamped ? (!done[stamped.i] ? stamped.i : after >= 0 ? after : stamped.i) : open >= 0 ? open : Math.max(0, next);
+  // A part taken out of order leaves one before it that was never started, and that one is still ahead of the
+  // student, unlike a part opened and left. The plan ran practice problem, then common-mistake check; the tutor
+  // took the check first, and Recap was shown as the part in hand all through the practice problem
+  // (AP US Government, portal-1115afec).
+  const passedOver = stamped && done[stamped.i] ? plan.segments.findIndex((seg, i) => i < stamped.i && !goals[seg.id]?.status && plan.segments.slice(0, i).some((s) => goals[s.id]?.status)) : -1;
+  const at = stamped ? (!done[stamped.i] ? stamped.i : passedOver >= 0 ? passedOver : after >= 0 ? after : stamped.i) : open >= 0 ? open : Math.max(0, next);
   const currentSegmentId = plan.segments[at]?.id ?? '';
   const reached = (kind: string, need: (status: string | undefined) => boolean) => plan.segments.some((seg) => seg.kind === kind && need(goals[seg.id]?.status));
   const milestone: TutorMilestone | null = reached('recap', (s) => s === 'shown' || s === 'demonstrated') ? 'recap_reached'

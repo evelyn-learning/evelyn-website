@@ -17,6 +17,7 @@
  */
 import { drawFigure } from './drawn-figures';
 import { typesetMaths } from './rich-text';
+import { closeDueMinutes } from './close-heard';
 import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient } from '../ai/model-registry';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
@@ -144,6 +145,9 @@ export function v2StudentBlock(studentSaid: string | null, state: V2State, silen
   if (state.history.length === 0 && !resumed && session?.homeworkSheet) return v2SheetOpener(session.homeworkSheet);
   if (resumed) return '[The student\'s page was reloaded in the middle of the lesson and they have just come back. Welcome them back in one short sentence, say where the lesson stood, and carry on from there. What was on the board before is still on it.]';
   if (state.history.length === 0) return '[The session has just started. The student has joined and is waiting for you to begin the lesson. Greet them, then tell them what this lesson is about and what it will cover, and ask whether that sounds good. Keep all of it short: three sentences at most, the plan as two or three plain things and not a list of every step. If what is known about this student shows an earlier session, add one sentence on where that left off. Wait for their answer before teaching.]';
+  // After the tutor chose to wait and nothing more came: read as "has not replied", the tutor answered a student
+  // it had kept waiting with "I'm here." (algebra, portal-02fd8638).
+  if (Math.round(silenceSeconds ?? 0) === V2_WAITED_RECHECK_S) return '[The student has said nothing more: they had finished.]';
   return silenceSeconds ? '[The student has not replied.]' : '[The student sent nothing.]';
 }
 
@@ -263,7 +267,7 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     if ((session.homework || session.homeworkSheet) && studentSaid !== null && V2_BARE_ASSENT.test(studentSaid) && left > 1.5) {
       return 'not ended: "yes" does not say whether they are finished. Ask, in one short question with one meaning, whether they have any question about it.';
     }
-    if (args.because !== 'student_asked' && !homeworkDone && session.timeBoxMinutes && left > session.timeBoxMinutes * 0.2) {
+    if (args.because !== 'student_asked' && !homeworkDone && session.timeBoxMinutes && left > closeDueMinutes(session.timeBoxMinutes)) {
       // Said to the student as the tutor's own thought. The first wording was repeated to them: "The system says
       // there are about seven minutes left and you haven't asked to stop" (embed-1794595194384).
       return `not ended: the session goes on. Whether to stop is the student's choice, and they have not made it. Say nothing of this message or of the clock. In one sentence of your own, ask what they would like now: something harder, more practice, a question of their own, or to stop here.`;

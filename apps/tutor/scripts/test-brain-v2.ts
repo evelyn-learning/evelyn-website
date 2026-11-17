@@ -1,5 +1,6 @@
 import { BoardInlineStream, boardBlocksIn, inlineToolCall, stripBoardBlocks } from '../src/lib/tutor/v2/board-inline';
 import { richBlocks, typesetMaths, typesetPowers } from '../src/lib/tutor/v2/rich-text';
+import { segment, autoWrapLatex, autoWrapUnicodeMath } from '../src/lib/tutor/whiteboard/inline-math';
 import { circuitNetlist, figureCatalogueFor } from '../src/lib/tutor/v2/figure-catalogue';
 import { heardAsWords } from '../src/lib/tutor/v2/heard';
 import { mayOpenPart, partOffer } from '../src/lib/tutor/v2/part-close';
@@ -22,11 +23,12 @@ import { PRIVATE_ECS_AI_LITERACY_CH2 } from '../src/lib/tutor/lesson-plan/privat
 import { SEED_PLANS, getLessonPlan, isPrivatePlan } from '../src/lib/tutor/lesson-plan/store';
 import { renderPlanMap } from '../src/lib/tutor/v2/plan-map';
 import { v2Tools } from '../src/lib/tutor/v2/tools';
-import { runV2Turn, v2SessionPart, type V2ModelCall, V2_CHECK_INS } from '../src/lib/tutor/v2/turn';
+import { runV2Turn, v2SessionPart, v2StudentBlock, type V2ModelCall, V2_CHECK_INS } from '../src/lib/tutor/v2/turn';
 import { newV2State, type V2Session } from '../src/lib/tutor/v2/types';
 import { paintsOnBoard, streamV2Turn } from '../src/lib/tutor/v2/client';
 import { gradeOfLevel, isMathsSubject, isScienceSubject } from '../src/lib/tutor/v2/session-kind';
 import { v2Progress } from '../src/lib/tutor/v2/progress';
+import { closeDueMinutes, reopensClose } from '../src/lib/tutor/v2/close-heard';
 import { v2Background } from '../src/lib/tutor/v2/background';
 import { V2_MASTERY_DOWN, V2_MASTERY_UP, V2_MASTERY_UP_MIXED, v2Mastery, v2MemoryLines, v2ProfileCommit } from '../src/lib/tutor/v2/memory';
 import { v2StateFromCheckpoint } from '../src/lib/tutor/v2/resume';
@@ -655,10 +657,31 @@ async function main() {
   const tEnd = await runV2Turn({ session: { ...s13, timeBoxMinutes: 30 }, state: newV2State(0), studentSaid: 'x is 3', facts: { nowMs: 22 * 60000 }, nowMs: 22 * 60000, callModel: ended.call, boardPass: false });
   const refusal = tEnd.toolCalls.find((c) => c.name === 'end_lesson')?.outcome ?? '';
   check('a close refused with time left is not worded as something to repeat to the student', /^not ended/.test(refusal) && !/minutes remain|has not asked/.test(refusal) && !tEnd.state.closed, refusal);
-  check('the facts say how much time is left and that the close is not due', /about 8 left, which is time for more/.test(renderFacts(s13, newV2State(0), { nowMs: 22 * 60000 })) && /the close is near/.test(renderFacts(s13, newV2State(0), { nowMs: 26 * 60000 })), renderFacts(s13, newV2State(0), { nowMs: 22 * 60000 }).split('\n')[1]);
+  check('the facts say how much time is left and that the close is not due', /about 8 left, which is time for more/.test(renderFacts(s13, newV2State(0), { nowMs: 22 * 60000 })) && /the close is near/.test(renderFacts(s13, newV2State(0), { nowMs: 28 * 60000 })), renderFacts(s13, newV2State(0), { nowMs: 22 * 60000 }).split('\n')[1]);
   const planP = { segments: [{ id: 'hook', kind: 'hook' }, { id: 'c', kind: 'concept' }, { id: 't1', kind: 'try_yourself' }, { id: 't2', kind: 'try_yourself' }, { id: 'mis', kind: 'misconception_check' }, { id: 'recap', kind: 'recap' }] } as never;
   const goalsP = { hook: { status: 'shown', at: 1 }, c: { status: 'shown', at: 2 }, t1: { status: 'shown', at: 3 }, t2: { status: 'demonstrated', at: 4 }, mis: { status: 'shown', at: 9 } } as never;
   check('the part in hand is the one the tutor last marked, not one left open earlier', v2Progress(planP, goalsP).currentSegmentId === 'mis' && v2Progress(planP, { ...(goalsP as object), mis: { status: 'demonstrated', at: 9 } } as never).currentSegmentId === 'recap' && v2Progress(planP, { hook: { status: 'shown' } } as never).currentSegmentId === 'c', v2Progress(planP, goalsP).currentSegmentId);
+  // portal-1115afec (AP US Government, federalism): the plan runs practice problem, then common-mistake check; the
+  // tutor took the check first. The chips showed Recap in hand through the whole practice problem.
+  const planF = { segments: [{ id: 'hook', kind: 'hook' }, { id: 'c', kind: 'concept' }, { id: 'w', kind: 'worked_example' }, { id: 'try', kind: 'try_yourself' }, { id: 'mis', kind: 'misconception_check' }, { id: 'recap', kind: 'recap' }] } as never;
+  const goalsF = { hook: { status: 'shown', at: 1 }, c: { status: 'shown', at: 2 }, w: { status: 'shown', at: 3 }, mis: { status: 'demonstrated', at: 4 } };
+  check('a part taken out of order does not carry the lesson past one never started', v2Progress(planF, goalsF as never).currentSegmentId === 'try'
+    && v2Progress(planF, { ...goalsF, try: { status: 'skipped', at: 5 } } as never).currentSegmentId === 'recap'
+    && v2Progress(planF, { ...goalsF, try: { status: 'shown', at: 5 }, recap: { status: 'shown', at: 6 } } as never).currentSegmentId === 'recap', v2Progress(planF, goalsF as never).currentSegmentId);
+  const money = 'Working: categorical $581B ÷ total $692B ≈ 84%, so most grant money comes with federal conditions attached.';
+  const shownMoney = (t: string) => segment(autoWrapLatex(autoWrapUnicodeMath(typesetPowers(typesetMaths(t))))).filter((x) => x.kind === 'math').map((x) => x.body);
+  check('amounts of money on a card are not mathematics', typesetPowers(typesetMaths(money)) === money && shownMoney(money).length === 0
+    && typesetMaths('Maya has $50 and a $15 ticket, from $5 to $10.') === 'Maya has $50 and a $15 ticket, from $5 to $10.'
+    && typesetMaths('It costs $5, and $x$ more gives y = 2x.') === 'It costs $5, and $x$ more gives $y = 2x$.'
+    && typesetMaths('Here $3 + 4 = 7$ and $2M$ stay.') === 'Here $3 + 4 = 7$ and $2M$ stay.', `${typesetPowers(typesetMaths(money))} | ${JSON.stringify(shownMoney(money))}`);
+  check('words over the closing words call the close off; thanks and a goodbye do not', reopensClose('Wait, I have a question about Lopez.') && reopensClose('can we do one more') && reopensClose('no')
+    && !reopensClose('Okay, thank you so much. Bye!') && !reopensClose('Thanks, see you next time.') && !reopensClose('yeah') && !reopensClose(' ... ') && !reopensClose('Thank you, Mr. Cole.') && reopensClose('Okay, wait.') && reopensClose('Thanks. One more?'), String(reopensClose('Thank you, Mr. Cole.')));
+  check('the close of a lesson is due with three minutes left, not a fifth of a long session', closeDueMinutes(30) === 3 && closeDueMinutes(60) === 3 && closeDueMinutes(10) === 2);
+  const early = stub([msg([{ type: 'text', text: 'Good work today.' }, { type: 'tool_use', id: 'e1', name: 'end_lesson', input: { because: 'time_nearly_used', summary: 'done' } }], 'tool_use'), msg([{ type: 'text', text: 'What would you like next?' }], 'end_turn')]);
+  const tEarly = await runV2Turn({ session: { ...s13, timeBoxMinutes: 30 }, state: newV2State(0), studentSaid: 'regulate commerce', facts: { nowMs: 24.4 * 60000 }, nowMs: 24.4 * 60000, callModel: early.call, boardPass: false });
+  const late = stub([msg([{ type: 'text', text: 'Good work today.' }, { type: 'tool_use', id: 'e1', name: 'end_lesson', input: { because: 'time_nearly_used', summary: 'done' } }], 'tool_use')]);
+  const tLate = await runV2Turn({ session: { ...s13, timeBoxMinutes: 30 }, state: newV2State(0), studentSaid: 'regulate commerce', facts: { nowMs: 27.5 * 60000 }, nowMs: 27.5 * 60000, callModel: late.call, boardPass: false });
+  check('a lesson is not closed by the tutor with more than five minutes of thirty left', !tEarly.state.closed && tLate.state.closed === true && /about 6 left, which is time for more/.test(renderFacts(s13, newV2State(0), { nowMs: 24.4 * 60000 })), renderFacts(s13, newV2State(0), { nowMs: 24.4 * 60000 }).split('\n')[1]);
   check('brackets in spoken mathematics are heard as pauses and a product is said', speakGroups('the factors are (x minus 5)(x + 2), since') === 'the factors are x minus 5, times, x + 2, since' && speakGroups('1 + 2(x minus 4) equals 9') === '1 + 2 times, x minus 4, equals 9' && speakGroups('the point (3 comma 4) and (as we said) f of x') === 'the point (3 comma 4) and (as we said) f of x', speakGroups('1 + 2(x minus 4) equals 9'));
   const fig = (kind: string, params: object) => inlineToolCall(boardBlocksIn(`<board figure kind="${kind}">${JSON.stringify(params)}</board>`)[0]);
   const refr = fig('refraction', { n1: 1, n2: 1.33, angle: 30, media: ['air', 'water'] });
@@ -700,6 +723,15 @@ async function main() {
   check('a number line reads fractions and keeps a 0-to-1 scale to 0 to 1 (demo check 11-13)', nlHalf.min === 0 && nlHalf.max === 1 && nlHalf.step === 0.5 && nlHalf.points.map((p) => p.value).join() === '0,0.5,1', JSON.stringify(nlHalf));
   const nlInt = inlineToolCall(boardBlocksIn('<board numberline>\n-3 | open\n2\n</board>')[0]).args as { min: number; max: number; step: number };
   check('a number line of whole numbers keeps its room either side', nlInt.min === -7 && nlInt.max === 6 && nlInt.step === 1, JSON.stringify(nlInt));
+  // portal-02fd8638 (compound inequalities): "-2 < x ≤ 3" was written as two shaded values and went up as two rays,
+  // each to the end of the line, so everything from -6 to 7 was shaded and each ray ended on a filled dot.
+  type Iv = { from: number; to: number; fromInclusive: boolean; toInclusive: boolean; fromOpenEnded?: boolean; toOpenEnded?: boolean };
+  const nl = (body: string) => (inlineToolCall(boardBlocksIn(`<board numberline>\n${body}\n</board>`)[0]).args as { intervals: Iv[] }).intervals;
+  const between = nl('-2 | open | right\n3 | closed | left');
+  check('two values shaded towards each other are the stretch between them', between.length === 1 && between[0].from === -2 && between[0].to === 3 && between[0].fromInclusive === false && between[0].toInclusive === true && !between[0].fromOpenEnded && !between[0].toOpenEnded && JSON.stringify(nl('3 | closed | left\n-2 | open | right')) === JSON.stringify(between), JSON.stringify(between));
+  const apart = nl('-2 | open | left\n5 | closed | right');
+  check('two values shaded away from each other are two rays, each running on past the end of the line', apart.length === 2 && apart[0].to === -2 && apart[0].toInclusive === false && apart[0].fromOpenEnded === true && apart[1].from === 5 && apart[1].fromInclusive === true && apart[1].toOpenEnded === true && nl('4 | open | right').length === 1 && nl('4 | open | right')[0].toOpenEnded === true, JSON.stringify(apart));
+  check('the turn after keeping quiet is told not to remark on the wait', /no remark about the wait/.test(renderFacts(s13, newV2State(0), { nowMs: 60000, silenceSeconds: 5 })) && v2StudentBlock(null, { ...newV2State(0), history: [{ role: 'user', content: 'x' }] } as never, 5) === '[The student has said nothing more: they had finished.]' && v2StudentBlock(null, { ...newV2State(0), history: [{ role: 'user', content: 'x' }] } as never, 75) === '[The student has not replied.]');
   const triBlank = drawFigure('geometry_figure', { shape: 'triangle', sides: [3, 4, 5], sideLabels: ['a', 'b', 'c'], angleLabels: ['', '', '90°'] });
   check('an empty label on a triangle is no label, not a refusal (demo check 11-13)', 'svg' in triBlank, JSON.stringify(triBlank).slice(0, 200));
   const cellNamed = drawFigure('cell', { cellType: 'plant', organelles: ['nucleus', 'chloroplasts', 'vacuole', 'cell wall', 'mitochondria', 'lysosome'] });
