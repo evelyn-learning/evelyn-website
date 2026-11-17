@@ -195,9 +195,11 @@ export class LearnerCardWatch {
   private done = false;
   private afterRight = false;
   /** The decided card, waiting for the next thing in the reply. `check`: an as-said card, which also waits for the end of
-   *  the next sentence and is dropped when that sentence holds the praise back or corrects (fix round 2, N1). `trail`: the
-   *  reply's words from the quote's sentence on, as they stand in the stored text. */
-  private pending: { block: InlineBlock; trail: string; check: boolean } | null = null;
+   *  the next sentence and is dropped when that sentence holds the praise back or corrects (fix round 2, N1); after that it
+   *  waits as a correction card does, so a card of the model's for the same sentence there still wins. `quote`: the quote's
+   *  own sentence, which the stored reply puts the card after (fix round 3, N5: stored after the next sentence, the card
+   *  stood after the ask in the history the model reads, the shape Task 6e forbids). */
+  private pending: { block: InlineBlock; quote: string; check: boolean } | null = null;
   /** The cards written, with the reply sentence each follows (for the stored reply). */
   readonly written: Array<{ after: string; raw: string }> = [];
   constructor(private readonly learnerSaid: string, private readonly onBoard: (sentence: string) => boolean) {}
@@ -207,14 +209,15 @@ export class LearnerCardWatch {
 
   private release(out: InlinePart[]): void {
     if (!this.pending) return;
-    this.written.push({ after: this.pending.trail.trim(), raw: this.pending.block.raw });
+    this.written.push({ after: this.pending.quote, raw: this.pending.block.raw });
     out.push({ block: this.pending.block });
     this.pending = null;
   }
 
-  /** An as-said card's next sentence (or what there is of it): dropped when it goes on to correct, else written. */
-  private settleChecked(next: string, out: InlinePart[]): void {
-    if (GOES_ON_TO_CORRECT.test(next)) this.pending = null; else this.release(out);
+  /** An as-said card's next sentence (or what there is of it): dropped when it goes on to correct; else it waits for the
+   *  next thing, as a correction card does. */
+  private settleChecked(next: string): void {
+    if (GOES_ON_TO_CORRECT.test(next)) this.pending = null; else this.pending!.check = false;
   }
 
   /** Text after a waiting card. The words always go out at once; only the card waits. A correction card goes before the
@@ -223,8 +226,8 @@ export class LearnerCardWatch {
     const p = this.pending!;
     if (!p.check) {
       const ws = text.match(/^\s*/)![0];
-      if (ws.length === text.length) { p.trail += text; out.push({ text }); return; }
-      if (ws) { p.trail += ws; out.push({ text: ws }); }
+      if (ws.length === text.length) { out.push({ text }); return; }
+      if (ws) out.push({ text: ws });
       this.release(out);
       out.push({ text: text.slice(ws.length) });
       return;
@@ -238,13 +241,12 @@ export class LearnerCardWatch {
       if (!this.cur.slice(0, end).trim()) continue;
       const at = Math.max(0, end - before);
       if (at > 0) out.push({ text: text.slice(0, at) });
-      p.trail += text.slice(0, at);
-      this.settleChecked(this.cur.slice(0, end), out);
+      this.settleChecked(this.cur.slice(0, end));
       this.cur = '';
-      if (text.slice(at)) out.push({ text: text.slice(at) });
+      const rest = text.slice(at);
+      if (rest) { if (this.pending) this.textAfterPending(rest, out); else out.push({ text: rest }); }
       return;
     }
-    p.trail += text;
     out.push({ text });
   }
 
@@ -255,8 +257,7 @@ export class LearnerCardWatch {
       if ('block' in part) {
         // The model's own card of the same sentence right after the quote: the model's card wins (it has the gloss).
         if (this.pending && part.block.kind === 'sentence' && key(part.block.body) === key(this.pending.block.body)) this.pending = null;
-        else if (this.pending?.check) this.settleChecked(this.cur, out);
-        else this.release(out);
+        else { if (this.pending?.check) this.settleChecked(this.cur); this.release(out); }
         if (part.block.kind === 'sentence') this.done = true;
         // Fix round 1 (M1): a sentence is read only within one run of words, so the one a card follows is in the stored text.
         this.cur = '';
@@ -290,7 +291,7 @@ export class LearnerCardWatch {
    *  it, is read too. */
   end(): InlinePart[] {
     const out: InlinePart[] = [];
-    if (this.pending) { if (this.pending.check) this.settleChecked(this.cur, out); else this.release(out); this.cur = ''; return out; }
+    if (this.pending) { if (this.pending.check) this.settleChecked(this.cur); this.release(out); this.cur = ''; return out; }
     const last = this.cur; this.cur = '';
     if (!this.done && last.trim() && this.decide(last)) this.release(out);
     return out;
@@ -305,7 +306,7 @@ export class LearnerCardWatch {
     this.done = true;
     const body = card.sentence.replace(/[<>]/g, '');
     const raw = `<board sentence${card.stress.length ? ` stress="${card.stress.join(' | ')}"` : ''}>${body}</board>`;
-    this.pending = { block: { kind: 'sentence', attrs: card.stress.length ? { stress: card.stress.join(' | ') } : {}, body, raw }, trail: sentence, check: card.kind === 'as-said' };
+    this.pending = { block: { kind: 'sentence', attrs: card.stress.length ? { stress: card.stress.join(' | ') } : {}, body, raw }, quote: sentence.trim(), check: card.kind === 'as-said' };
     return true;
   }
 }

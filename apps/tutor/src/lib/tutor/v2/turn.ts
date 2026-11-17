@@ -802,7 +802,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // Task 7b: the runtime's card is stored where it was written, after the sentence that quotes it.
     for (const w of learnerWatch?.written.slice(learnerStored) ?? []) {
       learnerStored += 1;
-      for (const b of response.content) { if (b.type !== 'text') continue; const at = b.text.indexOf(w.after); if (at >= 0) { const end = at + w.after.length; b.text = `${b.text.slice(0, end)} ${w.raw}${b.text.slice(end)}`; break; } }
+      for (const b of response.content) { if (b.type !== 'text') continue; const at = b.text.indexOf(w.after); if (at >= 0) { const end = at + w.after.length; const rest = b.text.slice(end); b.text = `${b.text.slice(0, end)} ${w.raw}${!rest || /^\s/.test(rest) ? '' : ' '}${rest}`; break; } }
     }
     const nextTime = nextTimeAt as { raw: string; line: string } | null;
     if (nextTime) {

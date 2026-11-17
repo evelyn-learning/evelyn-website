@@ -146,7 +146,23 @@ async function main() {
     check('"That\'s right: "…"" then a sentence that holds back: dropped', cards(held).length === 0, held.calls);
     const ok = 'That\'s right: "I have worked at Acme Corp for five years." Now tell me about a project.';
     const b = await run(spoken, SAID_RIGHT, ok);
-    check('"That\'s right: "…"" then the lesson goes on: carded, after the next sentence', cards(b).length === 1 && /a project\. ?<board sentence>I have worked at Acme Corp for five years\.<\/board>$/.test(storedText(b)) && stripBoardBlocks(storedText(b)) === ok, storedText(b));
+    check('"That\'s right: "…"" then the lesson goes on: carded; stored right after the quote\'s own sentence (N5)', cards(b).length === 1 && storedText(b) === 'That\'s right: "I have worked at Acme Corp for five years." <board sentence>I have worked at Acme Corp for five years.</board> Now tell me about a project.', storedText(b));
+    // Fix round 3 (N5): painted after the next sentence (the N1 check), but stored after the quote: never after the ask in
+    // the history the model reads (the shape Task 6e forbids).
+    const ask = 'That\'s right: "I have worked at Acme Corp for five years." What else did you do last year?';
+    const c = await run(spoken, SAID_RIGHT, ask);
+    const stored = storedText(c);
+    check('N5: stored before the ask "What else…?", never after it', cards(c).length === 1 && stored.indexOf('<board sentence>') >= 0 && stored.indexOf('<board sentence>') < stored.indexOf('What else') && !/\?\s*<board sentence/.test(stored), stored);
+    check('N5: the stored words read as the reply', stripBoardBlocks(stored).startsWith(ask), stored);
+    // Fix round 3: the model's own card of the same sentence after the next sentence still wins.
+    const late = 'That\'s right: "I have worked at Acme Corp for five years." Well done. <board sentence gloss="現在完了">I have worked at Acme Corp for five years.</board> Now tell me about a project.';
+    const d = await run(spoken, SAID_RIGHT, late);
+    const ds = d.calls.filter((x) => x.name === 'show_sentence');
+    check('the model\'s card after the next sentence: one card, the model\'s with its gloss; the stored reply is the model\'s', ds.length === 1 && ds[0]!.args.gloss === '現在完了' && boardBlocksIn(storedText(d)).filter((x) => x.kind === 'sentence').length === 1 && storedText(d).startsWith(late), { ds, stored: storedText(d) });
+    // N6: a Japanese sentence end has no space after it; the stored card is set off by one.
+    const ja = '「I have worked at Acme Corp for five years.」と言います。もう一度言ってください。';
+    const e = await run(spoken, 'I work at Acme Corp for five year.', ja);
+    check('N6: after 。 the stored card has a space on both sides', cards(e).length === 1 && storedText(e).startsWith('「I have worked at Acme Corp for five years.」と言います。 <board sentence stress="have | worked | years">I have worked at Acme Corp for five years.</board> もう一度言ってください。'), storedText(e));
     check('…and the words heard are the model\'s', b.said.replace(/\s+/g, ' ').trim() === ok, b.said);
     const w = new LearnerCardWatch(SAID_RIGHT, () => false);
     const p1 = w.feed([{ text: 'Correct: "I have worked at Acme Corp for five years." Now tell me ' }]);
