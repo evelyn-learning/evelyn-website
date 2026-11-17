@@ -8,6 +8,7 @@ import { ArrowLeft, Clock, MessageSquare, Layers, DollarSign, User, BookOpen, Ta
 import { formatRelativeTime } from "@/lib/tutor/recordings/relative-time";
 import { sessionActiveSeconds } from "@/lib/tutor/recordings/active-seconds";
 import { resolveSessionSpan } from "@/lib/tutor/recordings/session-span";
+import { isTestSession } from "@/lib/tutor/recordings/filters";
 import ReplayPlayer from "../components/ReplayPlayer";
 import ExportSessionPDFButton from "@/components/session/ExportSessionPDFButton";
 import SpokenTranscript from "../components/SpokenTranscript";
@@ -93,6 +94,9 @@ export default async function SessionDetailPage({ params }: SessionPageProps) {
                 }`}>
                   {session.source === 'embed' ? 'Portal' : session.source === 'test' ? 'Test' : session.source === 'showcase' ? 'Showcase' : 'Website'}
                 </span>
+                {session.source !== 'test' && isTestSession(session as Parameters<typeof isTestSession>[0]) && (
+                  <span className="inline-flex rounded px-2 py-0.5 text-xs font-medium bg-purple-50 text-purple-600" title="Local machine, our IP, or a test name">Test</span>
+                )}
                 {session.sourcePartnerId && (
                   <span className="inline-flex rounded px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-600">{session.sourcePartnerId}</span>
                 )}

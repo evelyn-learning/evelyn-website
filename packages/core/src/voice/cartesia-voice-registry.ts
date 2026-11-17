@@ -61,8 +61,11 @@ const TEACHER_VOICES: Record<string, TeacherVoice> = {
     // No speed offset: Sophie's natural cadence is the accepted baseline. NOTE:
     // CARTESIA_DEFAULT_VOICE_ID derives from this entry, so Sophie is also the
     // global no-match fallback voice.
-    voiceId: 'bf0a246a-8642-498a-9950-80c35e9276b5', // Sophie
-    label: 'Sophie',
+    // 2026-11-16: Cartesia retires Sophie on 2026-11-23; their recommended
+    // replacement Clara takes her place (user OK'd). The old id stays in
+    // RETIRED_CARTESIA_VOICES so stored configs keep working.
+    voiceId: '01eaafa9-308a-4276-a017-6ab0cf061b1f', // Clara (was Sophie)
+    label: 'Clara',
     gender: 'female',
     nativeAccent: 'en-us',
   },
@@ -178,7 +181,7 @@ const TEACHER_VOICES: Record<string, TeacherVoice> = {
 const ACCENT_POOLS: Record<string, AccentPool> = {
   'en-us': {
     // R39: pool female follows the Elena swap — Sophie, natural pace (see TEACHER_VOICES).
-    female: { voiceId: 'bf0a246a-8642-498a-9950-80c35e9276b5', label: 'Sophie' },
+    female: { voiceId: '01eaafa9-308a-4276-a017-6ab0cf061b1f', label: 'Clara' }, // was Sophie (retired 2026-11-23)
     male: { voiceId: 'a5136bf9-224c-4d76-b823-52bd5efcffcc', label: 'Jameson' },
   },
   'en-gb': {
@@ -243,7 +246,7 @@ export function teachersForAccent(accent: string): { female?: string; male?: str
   return out;
 }
 
-/** Default Cartesia voice when no teacher/accent match is found — Sophie (R39). */
+/** Default Cartesia voice when no teacher/accent match is found — Clara (Sophie until Cartesia retired her, 2026-11-23). */
 export const CARTESIA_DEFAULT_VOICE_ID = TEACHER_VOICES['ms-elena-vasquez'].voiceId;
 
 /**
@@ -267,14 +270,33 @@ export function substituteCartesiaVoiceId(voiceId: string): string {
  * not secrets) and useCartesiaSonicWS applies it here.
  */
 export function applyCartesiaVoiceSubstitutions(voiceId: string, raw: string | undefined): string {
-  if (!raw) return voiceId;
-  for (const pair of raw.split(',')) {
-    const [from, to] = pair.split(':').map((s) => s.trim());
-    if (from && to && from === voiceId) return to;
+  if (raw) {
+    for (const pair of raw.split(',')) {
+      const [from, to] = pair.split(':').map((s) => s.trim());
+      if (from && to && from === voiceId) return upgradeRetiredCartesiaVoice(to);
+    }
   }
-  return voiceId;
+  return upgradeRetiredCartesiaVoice(voiceId);
 }
-const DEFAULT_LABEL = 'Sophie (default)';
+
+/**
+ * Voices Cartesia has retired → the replacement we use (2026-11-16: Cartesia
+ * retires Sophie and Zeke on 2026-11-23; replacements are their
+ * recommendations, approved by the user). Applied on every TTS path — the
+ * server route and the browser socket both go through
+ * applyCartesiaVoiceSubstitutions — so an old id still stored anywhere
+ * (academy teacher personas, partner embed configs carrying raw ids, partner
+ * copies of our docs) keeps working and matches our own default.
+ */
+export const RETIRED_CARTESIA_VOICES: Readonly<Record<string, string>> = {
+  'bf0a246a-8642-498a-9950-80c35e9276b5': '01eaafa9-308a-4276-a017-6ab0cf061b1f', // Sophie → Clara
+  'e00d0e4c-a5c8-443f-a8a3-473eb9a62355': '86e30c1d-714b-4074-a1f2-1cb6b552fb49', // Zeke → Carson
+};
+
+export function upgradeRetiredCartesiaVoice(voiceId: string): string {
+  return RETIRED_CARTESIA_VOICES[voiceId] ?? voiceId;
+}
+const DEFAULT_LABEL = 'Clara (default)';
 
 export interface ResolveCartesiaVoiceOpts {
   /** DEMO_TEACHERS id, e.g. 'ms-elena-vasquez'. */
@@ -336,6 +358,7 @@ export function resolveCartesiaVoice(opts: ResolveCartesiaVoiceOpts = {}): {
  */
 export function cartesiaSpeedForVoiceId(voiceId: string | undefined): number | undefined {
   if (!voiceId) return undefined;
+  voiceId = upgradeRetiredCartesiaVoice(voiceId);
   for (const teacher of Object.values(TEACHER_VOICES)) {
     if (teacher.voiceId === voiceId) return teacher.speed;
   }

@@ -1,3 +1,4 @@
+import { upgradeRetiredCartesiaVoice } from './cartesia-voice-registry';
 /**
  * Partner-facing voice codes: the names partners put in an embed token
  * (`voice: "maple"`, or a persona's `voice: "maple"`) to choose how the tutor
@@ -31,7 +32,7 @@ export interface VoiceCode {
 
 export const VOICE_CODES: readonly VoiceCode[] = [
   // ── Teacher voices (house personas) ──
-  { code: 'maple', group: 'teacher', tags: ['female', 'American', 'warm'], description: 'Calm, mature and warm — our default teacher voice.', voiceId: 'bf0a246a-8642-498a-9950-80c35e9276b5' },
+  { code: 'maple', group: 'teacher', tags: ['female', 'American', 'warm'], description: 'Calm, mature and warm — our default teacher voice.', voiceId: '01eaafa9-308a-4276-a017-6ab0cf061b1f' },
   { code: 'willow', group: 'teacher', tags: ['female', 'American', 'friendly'], description: 'Approachable and clear, a friendly guide.', voiceId: 'db6b0ed5-d5d3-463d-ae85-518a07d3c2b4' },
   { code: 'canyon', group: 'teacher', tags: ['male', 'American', 'easygoing'], description: 'Relaxed and friendly, never in a hurry.', voiceId: 'a5136bf9-224c-4d76-b823-52bd5efcffcc' },
   { code: 'thistle', group: 'teacher', tags: ['female', 'British', 'confident'], description: 'Confident and expressive.', voiceId: '62ae83ad-4f6a-430b-af41-a9bede9286ca' },
@@ -51,7 +52,7 @@ export const VOICE_CODES: readonly VoiceCode[] = [
   { code: 'tulip', group: 'teacher', tags: ['female', 'Dutch accent', 'methodical'], description: 'Clear and methodical.', voiceId: '225ba8cf-9fc2-4371-a78c-fe38ba38898a' },
   // ── Character voices (themed companions) ──
   { code: 'pixel', group: 'character', tags: ['female', 'young adult', 'high energy'], description: 'Bright, high-energy, made for animated characters.', voiceId: 'cccc21e8-5bcf-4ff0-bc7f-be4e40afc544' },
-  { code: 'turbo', group: 'character', tags: ['male', 'young adult', 'sidekick'], description: 'Friendly, upbeat sidekick.', voiceId: 'e00d0e4c-a5c8-443f-a8a3-473eb9a62355' },
+  { code: 'turbo', group: 'character', tags: ['male', 'young adult', 'sidekick'], description: 'Friendly, upbeat sidekick.', voiceId: '86e30c1d-714b-4074-a1f2-1cb6b552fb49' },
   { code: 'confetti', group: 'character', tags: ['female', 'young adult', 'cheery'], description: 'Cheery and fun.', voiceId: '56b87df1-594d-4135-992c-1112bb504c59' },
   { code: 'jelly', group: 'character', tags: ['male', 'comic', 'silly'], description: 'Goofy and playful — for a comic companion.', voiceId: 'bfd3644b-d561-4b1c-a01f-d9af98cb67c0' },
   { code: 'rocket', group: 'character', tags: ['male', 'excited', 'cheerful'], description: 'Excited and cheerful.', voiceId: '2d5b8c3a-116c-4741-acaf-ba4fa289eba2' },
@@ -83,5 +84,6 @@ export function voiceIdForCode(code: string): string | null {
 
 /** The code for a provider voice id (to show a catalogue persona's voice as a code). */
 export function codeForVoiceId(voiceId: string): string | null {
-  return VOICE_CODES.find((v) => v.voiceId === voiceId)?.code ?? null;
+  const id = upgradeRetiredCartesiaVoice(voiceId);
+  return VOICE_CODES.find((v) => v.voiceId === id)?.code ?? null;
 }

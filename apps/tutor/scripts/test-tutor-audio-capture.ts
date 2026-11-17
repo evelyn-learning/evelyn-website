@@ -54,6 +54,7 @@ const vtr = readFileSync(join(root, 'app/tutor/components/VoiceTutorRealtime.tsx
 const hook = readFileSync(join(root, 'app/tutor/hooks/useOpenAIRealtime.ts'), 'utf8');
 const recorder = readFileSync(join(root, 'app/tutor/hooks/useAudioRecorder.ts'), 'utf8');
 const route = readFileSync(join(root, 'app/api/tutor/session-audio/route.ts'), 'utf8');
+const v2 = readFileSync(join(root, 'app/tutor/components/v2/TutorVoiceV2.tsx'), 'utf8');
 
 test('wiring: the tap is attached only when the decision says so; the student tap is untouched', () => {
   assert.ok(vtr.includes('const tutorAudioCapture = decideTutorAudioCapture({ recordEnabled: !!audioRecordEnabled, sessionMode, ttsProvider });'));
@@ -76,6 +77,16 @@ test('wiring: a track with nothing pushed uploads nothing, and the route flags a
   // …and finalize decides from what is on disk.
   assert.ok(route.includes('const decision = resolveAudioFinalize({ pcmBytes });'));
   assert.equal(route.split('{ $set: { hasAudio: true } }').length - 1, 2, 'chunk branch + finalize branch — both behind stored bytes');
+});
+// 2026-11-16: v2 recorded only the student's microphone — every v2 voice session (marketing, Crimsora,
+// evelyntutor since 11-12) had student.pcm16 and no tutor.pcm16, so replays were the student alone
+// (embed-1794832831433, embed-1794829907553).
+test('wiring (v2): the tutor tap goes to the same recorder, behind the same decision', () => {
+  assert.match(v2, /const tutorAudioCapture = decideTutorAudioCapture\(\{ recordEnabled: recordOn, sessionMode: 'voice', ttsProvider: props\.ttsProvider \}\);/);
+  assert.ok(v2.includes('onTutorAudioChunk: tutorAudioCapture.capture ? recorder.pushTutorChunk : undefined,'));
+  // The recorder exists before the realtime hook that feeds it.
+  assert.ok(v2.indexOf('const recorder = useAudioRecorder(') < v2.indexOf('const realtime = useOpenAIRealtime('));
+  assert.equal(v2.split('recorder.pushTutorChunk').length - 1, 1, 'one tap site');
 });
 test('kill switch defaults ON', () => {
   const flags = readFileSync(join(root, 'lib/tutor/orchestrator/turn-round-flags.ts'), 'utf8');

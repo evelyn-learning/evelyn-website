@@ -1,7 +1,7 @@
 {
   "version": "v3 (2026-10-05)",
   "voice": {
-    "note": "Mr. Joseph narrates (same Cartesia voiceId as academy seed-teachers.ts); Coach Riley is the tutor heard in the live-lesson slice. v1/v2 narrator was Coach Riley (bf0a246a-8642-498a-9950-80c35e9276b5) with Mr. Cole as tutor.",
+    "note": "Mr. Joseph narrates (same Cartesia voiceId as academy seed-teachers.ts); Coach Riley is the tutor heard in the live-lesson slice. v1/v2 narrator was Coach Riley (01eaafa9-308a-4276-a017-6ab0cf061b1f) with Mr. Cole as tutor.",
     "voiceId": "7d444628-dd13-442b-b687-71a6baf0c07e"
   },
   "notes": [

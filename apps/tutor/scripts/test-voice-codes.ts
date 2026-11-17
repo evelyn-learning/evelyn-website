@@ -85,7 +85,7 @@ test('persona: a custom persona with an unknown voice code keeps the persona, dr
 });
 
 test('persona: the old {provider, voiceId} shape is untouched', () => {
-  const t = { id: 'x', name: 'X', intro: 'i', voice: { provider: 'cartesia' as const, voiceId: 'bf0a246a-8642-498a-9950-80c35e9276b5' } };
+  const t = { id: 'x', name: 'X', intro: 'i', voice: { provider: 'cartesia' as const, voiceId: '01eaafa9-308a-4276-a017-6ab0cf061b1f' } };
   assert.deepEqual(resolveEmbedPersona({ teacher: t }).teacher, t);
 });
 

@@ -35,7 +35,7 @@ export const ELEVENLABS_VOICES = {
 
 const { NAKUL, ANJURA, EARL, SONYA } = ELEVENLABS_VOICES;
 
-/** Mirrors the Cartesia default (Sophie since R39; was Katie — both en-us female → Sonya). */
+/** Mirrors the Cartesia default (Clara since 2026-11-23, Sophie before, Katie before that — all en-us female → Sonya). */
 export const ELEVENLABS_DEFAULT_VOICE_ID = SONYA;
 
 const CARTESIA_TO_ELEVENLABS: Record<string, string> = {
@@ -47,7 +47,9 @@ const CARTESIA_TO_ELEVENLABS: Record<string, string> = {
   '3e39e9a5-585c-4f5f-bac6-5e4905c51095': EARL,    // Mr. Cole — American male
   'e8e5fffb-252c-436d-b842-8879b84445b6': SONYA,   // Ms. Cathy — American female
   'd7bf7d75-64b7-4c1e-86c0-79d647366587': SONYA,   // Ms. Michelle — American female
-  'bf0a246a-8642-498a-9950-80c35e9276b5': SONYA,   // Coach Riley (Sophie, 2026-07-30 swap) — female
+  '01eaafa9-308a-4276-a017-6ab0cf061b1f': SONYA,   // Clara — default teacher + Coach Riley (Sophie's replacement, 2026-11-23)
+  'bf0a246a-8642-498a-9950-80c35e9276b5': SONYA,   // Sophie (retired by Cartesia 2026-11-23; kept for stored ids) — female
+  '86e30c1d-714b-4074-a1f2-1cb6b552fb49': EARL,    // Carson — 'turbo' character (Zeke's replacement)
   // ── Engine /tutor demo registry (cartesia-voice-registry.ts) ──
   'f786b574-daa5-4673-aa0c-cbe3e8534c02': SONYA,   // Katie — en-us female
   'db6b0ed5-d5d3-463d-ae85-518a07d3c2b4': SONYA,   // Skylar — en-us female

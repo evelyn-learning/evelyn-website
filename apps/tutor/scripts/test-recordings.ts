@@ -6,7 +6,7 @@
 import { formatRelativeTime } from '../src/lib/tutor/recordings/relative-time';
 import { categorizeEvent, curateEvents, EVENT_CATEGORIES } from '../src/lib/tutor/recordings/timeline-events';
 import { buildSpeakerSegments } from '../src/lib/tutor/recordings/segments';
-import { buildSessionFilter } from '../src/lib/tutor/recordings/filters';
+import { buildSessionFilter, isTestSession, testSessionClauses, TEST_CLIENT_IPS } from '../src/lib/tutor/recordings/filters';
 import { extractClientIp, isPrivateIp } from '../src/lib/tutor/recordings/client-ip';
 
 let passed = 0;
@@ -82,24 +82,48 @@ check('EVENT_CATEGORIES has 5 legend entries', EVENT_CATEGORIES.length === 5);
 
 // ── filters ───────────────────────────────────────────────────────
 {
-  // Default (no src) → Students view: excludes test/showcase sources and test-named students.
-  const f = buildSessionFilter({}) as { source?: { $nin?: string[] }; studentName?: { $not?: RegExp } };
-  check('no params → students source $nin', JSON.stringify(f.source?.$nin) === JSON.stringify(['test', 'showcase']));
-  check('no params → students name exclusion matches Praveen', f.studentName?.$not instanceof RegExp && f.studentName.$not.test('Praveen'));
-  check('no params → students name exclusion spares real names', f.studentName?.$not instanceof RegExp && !f.studentName.$not.test('mitakshra bhaskar'));
+  // Default (no src) → Students view: $nor of showcase + every test clause.
+  const f = buildSessionFilter({}) as { $nor?: Record<string, unknown>[]; source?: unknown };
+  const nor = f.$nor ?? [];
+  check('no params → students uses $nor, no source clause', nor.length > 0 && f.source === undefined);
+  check('no params → students excludes showcase', nor.some((c) => c.source === 'showcase'));
+  check('no params → students excludes source=test', nor.some((c) => c.source === 'test'));
+  check('no params → students excludes Local rows', nor.some((c) => c['location.city'] === 'Local'));
+  check('no params → students excludes our IPs', nor.some((c) => JSON.stringify(c.clientIp) === JSON.stringify({ $in: TEST_CLIENT_IPS })));
+  const nameRx = nor.map((c) => c.studentName).filter((v): v is RegExp => v instanceof RegExp);
+  check('students name exclusion matches Praveen', nameRx.some((r) => r.test('Praveen')));
+  check('students name exclusion spares real names', !nameRx.some((r) => r.test('mitakshra bhaskar')));
+  check('exact "test" name excluded, "Testa" spared', nameRx.some((r) => r.test(' Test ')) && !nameRx.some((r) => r.test('Testa')));
 }
 {
-  const f = buildSessionFilter({ src: 'bogus' }) as { source?: unknown };
-  check('invalid src falls back to students shape', typeof f.source === 'object' && f.source !== null);
+  const f = buildSessionFilter({ src: 'bogus' }) as { $nor?: unknown[] };
+  check('invalid src falls back to students shape', Array.isArray(f.$nor));
 }
+{
+  const f = buildSessionFilter({ src: 'test', q: 'Sam' }) as { $and?: { $or: unknown[] }[]; $or?: unknown[] };
+  check('src=test → $and[$or test clauses]', Array.isArray(f.$and?.[0]?.$or) && f.$and![0].$or.length === testSessionClauses().length);
+  check('src=test + search keeps both', Array.isArray(f.$or) && Array.isArray(f.$and));
+}
+{
+  const f = buildSessionFilter({ src: 'embed' }) as { source?: string; $nor?: unknown[] };
+  check('src=embed → embed minus tests', f.source === 'embed' && Array.isArray(f.$nor));
+  const sc = buildSessionFilter({ src: 'showcase' }) as { source?: string; $nor?: unknown[] };
+  check('src=showcase → no test exclusion', sc.source === 'showcase' && sc.$nor === undefined);
+}
+// isTestSession mirrors the clauses
+check('isTestSession: source test', isTestSession({ source: 'test' }));
+check('isTestSession: Local city', isTestSession({ source: 'embed', location: { city: 'Local' } }));
+check('isTestSession: ::1 without location', isTestSession({ source: 'embed', clientIp: '::1' }));
+check('isTestSession: our home IP', isTestSession({ source: 'embed', clientIp: '157.131.199.237' }));
+check('isTestSession: Praveen elsewhere', isTestSession({ source: 'embed', clientIp: '71.154.176.167', studentName: 'Praveen' }));
+check('isTestSession: real partner student', !isTestSession({ source: 'embed', clientIp: '107.3.160.147', studentName: 'GameClass', location: { city: 'Salinas' } }));
+check('isTestSession: partner dev on localhost host, public IP', !isTestSession({ source: 'embed', clientIp: '49.36.182.81', studentName: 'Naresh' }));
 check('src=all → no source clause', buildSessionFilter({ src: 'all' }).source === undefined);
 check('src=all + audio still applies audio', (buildSessionFilter({ src: 'all', audio: '1' }) as { hasAudio?: boolean }).hasAudio === true);
-check('src=test → source filter', (buildSessionFilter({ src: 'test' }) as { source?: string }).source === 'test');
-check('src=embed unchanged', (buildSessionFilter({ src: 'embed' }) as { source?: string }).source === 'embed');
 check('partner filter', (buildSessionFilter({ partner: 'acme' }) as { sourcePartnerId?: string }).sourcePartnerId === 'acme');
 check('host filter', (buildSessionFilter({ host: 'https://retail.example' }) as { sourceHost?: string }).sourceHost === 'https://retail.example');
 check('audio=1 → hasAudio true', (buildSessionFilter({ audio: '1' }) as { hasAudio?: boolean }).hasAudio === true);
-check('audio other value ignored (defaults to students)', Object.keys(buildSessionFilter({ audio: '0' })).length === 2);
+check('audio other value ignored (defaults to students)', Object.keys(buildSessionFilter({ audio: '0' })).length === 1);
 {
   const f = buildSessionFilter({ range: '7d' }, NOW) as { startedAt?: { $gte: Date } };
   check('range=7d → startedAt $gte 7 days back', f.startedAt?.$gte.getTime() === NOW.getTime() - 7 * 86_400_000);
@@ -108,10 +132,10 @@ check('audio other value ignored (defaults to students)', Object.keys(buildSessi
   const f = buildSessionFilter({ range: 'today' }, NOW) as { startedAt?: { $gte: Date } };
   check('range=today → startedAt $gte 24h back', f.startedAt?.$gte.getTime() === NOW.getTime() - 86_400_000);
 }
-check('invalid range ignored (defaults to students)', Object.keys(buildSessionFilter({ range: 'always' })).length === 2);
+check('invalid range ignored (defaults to students)', Object.keys(buildSessionFilter({ range: 'always' })).length === 1);
 {
   const f = buildSessionFilter({ src: 'embed', partner: 'acme', audio: '1' });
-  check('filters compose', Object.keys(f).length === 3);
+  check('filters compose', Object.keys(f).length === 4);
 }
 
 // ── client-ip ─────────────────────────────────────────────────────

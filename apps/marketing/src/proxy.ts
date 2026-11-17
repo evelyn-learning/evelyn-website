@@ -16,8 +16,37 @@ const APEX_HOST = 'evelynlearning.com';
 const WWW_HOST = `www.${APEX_HOST}`;
 const SINGLE_HOST_PREFIXES = ['/admin', '/api/auth'];
 
+/**
+ * Keystone (Castle Rock's review site) lives at /keystone/* in this app and is
+ * served on its own host: keystone.evelynlearning.com/x → /keystone/x. API
+ * routes and Next assets pass through untouched; /keystone/x on that host is
+ * redirected to the short URL.
+ */
+const KEYSTONE_HOSTS = ['keystone.evelynlearning.com', 'keystone.localhost'];
+
+function keystone(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  if (pathname.startsWith('/_next') || pathname.startsWith('/api/') || pathname === '/favicon.ico' || pathname === '/favicon.png') {
+    return NextResponse.next();
+  }
+  if (pathname === '/robots.txt') {
+    return new NextResponse('User-agent: *\nDisallow: /\n', { headers: { 'Content-Type': 'text/plain' } });
+  }
+  if (pathname === '/keystone' || pathname.startsWith('/keystone/')) {
+    // Build from the Host header: behind nginx nextUrl's host is the upstream (localhost:3001).
+    const host = request.headers.get('host') || 'keystone.evelynlearning.com';
+    const proto = request.headers.get('x-forwarded-proto') || (host.startsWith('keystone.localhost') ? 'http' : 'https');
+    const target = new URL(`${pathname.slice('/keystone'.length) || '/'}${request.nextUrl.search}`, `${proto}://${host}`);
+    return NextResponse.redirect(target, 308);
+  }
+  const url = request.nextUrl.clone();
+  url.pathname = `/keystone${pathname === '/' ? '' : pathname}`;
+  return NextResponse.rewrite(url);
+}
+
 export function proxy(request: NextRequest) {
   const hostname = (request.headers.get('host') || '').split(':')[0];
+  if (KEYSTONE_HOSTS.includes(hostname)) return keystone(request);
   if (hostname !== WWW_HOST) return NextResponse.next();
 
   const { pathname } = request.nextUrl;
@@ -32,6 +61,7 @@ export function proxy(request: NextRequest) {
   return NextResponse.redirect(url, 308);
 }
 
+// Every page path (Keystone's host needs them all); static files skip the proxy.
 export const config = {
-  matcher: ['/admin/:path*', '/admin', '/api/auth/:path*'],
+  matcher: ['/((?!_next/static|_next/image).*)'],
 };

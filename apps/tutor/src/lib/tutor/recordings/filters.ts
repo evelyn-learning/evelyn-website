@@ -10,6 +10,52 @@ const VALID_SOURCES = new Set(['tutor', 'embed', 'showcase', 'test']);
  *  Case-insensitive substring match against studentName. */
 export const TEST_STUDENT_NAMES = ['praveen'];
 
+/** Exact names (case-insensitive) that only ever mean a test run. */
+export const TEST_EXACT_NAMES = ['test'];
+
+/** Public IPs whose sessions are always ours (2026-11-16). Our own tests
+ *  on prod hosts carry a real IP, so `Local` alone misses them; partner
+ *  developers testing their integration are NOT listed — that is partner
+ *  traffic. Update when the home IP changes.
+ *  - 157.131.199.237: Praveen's home network (Richmond, US)
+ *  - 85.239.239.134:  US prod box (scripted runs on the server) */
+export const TEST_CLIENT_IPS = ['157.131.199.237', '85.239.239.134'];
+
+/** Private / loopback clientIp prefixes — mirrors isPrivateIp(). Geo stores
+ *  city 'Local' for these, but older rows may lack location. */
+const PRIVATE_IP_RX = /^(::1$|localhost$|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|f[cd]|fe80)/i;
+
+/** A session is a Test if ANY clause matches: the harness marked it, it ran
+ *  on a local machine, it came from one of our IPs, or it used a test name.
+ *  Students = none match (and not a showcase). */
+export function testSessionClauses(): Record<string, unknown>[] {
+  return [
+    { source: 'test' },
+    { 'location.city': 'Local' },
+    { clientIp: PRIVATE_IP_RX },
+    { clientIp: { $in: TEST_CLIENT_IPS } },
+    { studentName: new RegExp(TEST_STUDENT_NAMES.map(escapeRegex).join('|'), 'i') },
+    { studentName: new RegExp(`^\\s*(${TEST_EXACT_NAMES.map(escapeRegex).join('|')})\\s*$`, 'i') },
+  ];
+}
+
+/** Same rule as testSessionClauses(), for one already-loaded row (badges). */
+export function isTestSession(s: {
+  source?: unknown;
+  clientIp?: unknown;
+  studentName?: unknown;
+  location?: { city?: unknown } | null;
+}): boolean {
+  if (s.source === 'test') return true;
+  if (s.location?.city === 'Local') return true;
+  const ip = typeof s.clientIp === 'string' ? s.clientIp : '';
+  if (ip && (PRIVATE_IP_RX.test(ip) || TEST_CLIENT_IPS.includes(ip))) return true;
+  const name = typeof s.studentName === 'string' ? s.studentName.trim().toLowerCase() : '';
+  if (name && TEST_STUDENT_NAMES.some((n) => name.includes(n))) return true;
+  if (name && TEST_EXACT_NAMES.includes(name)) return true;
+  return false;
+}
+
 const RANGE_MS: Record<string, number> = {
   today: 86_400_000,
   '7d': 7 * 86_400_000,
@@ -103,14 +149,19 @@ export function buildSessionFilter(
   const filter: Record<string, unknown> = {};
   if (params.src === 'all') {
     // explicit everything view — no source clause
+  } else if (params.src === 'test') {
+    // Tests: anything testSessionClauses() flags. Wrapped in $and so the
+    // search box's own $or (applied below) cannot overwrite it.
+    filter.$and = [{ $or: testSessionClauses() }];
   } else if (params.src && VALID_SOURCES.has(params.src)) {
+    // Website / Portal / Showcase: that source, minus test sessions.
     filter.source = params.src;
+    if (params.src !== 'showcase') filter.$nor = testSessionClauses();
   } else {
-    // Default: Students. Missing source/studentName fields still match
-    // ($nin and $not both include docs lacking the field), so legacy
-    // website sessions and anonymous students stay visible.
-    filter.source = { $nin: ['test', 'showcase'] };
-    filter.studentName = { $not: new RegExp(TEST_STUDENT_NAMES.join('|'), 'i') };
+    // Default: Students = not a showcase and not a test. A doc missing a
+    // field never matches that field's clause, so legacy website sessions
+    // and anonymous students stay visible.
+    filter.$nor = [{ source: 'showcase' }, ...testSessionClauses()];
   }
   if (params.partner) filter.sourcePartnerId = params.partner;
   if (params.host) filter.sourceHost = params.host;

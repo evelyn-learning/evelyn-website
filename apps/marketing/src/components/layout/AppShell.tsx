@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useSelectedLayoutSegment } from 'next/navigation';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { ChatWidgetWrapper } from '@/components/chat';
@@ -20,6 +20,13 @@ interface AppShellProps {
  */
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
+  // Keystone (Castle Rock review site) brings its own chrome. Checked by route
+  // segment, not pathname: on keystone.evelynlearning.com the browser path has
+  // no /keystone prefix (src/proxy.ts rewrites it).
+  const segment = useSelectedLayoutSegment();
+  if (segment === 'keystone') {
+    return <>{children}</>;
+  }
 
   // Showcase pages bring their own header, footer and chat widget.
   if (pathname?.startsWith('/showcase/')) {

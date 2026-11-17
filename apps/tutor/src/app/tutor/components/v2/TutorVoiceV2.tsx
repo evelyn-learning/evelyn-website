@@ -40,6 +40,7 @@ import { V2Captions } from '@/lib/tutor/v2/captions';
 import { getSharedMicLabel, reacquireSharedMicStream, sharedMicCaptureOpen, sharedMicReacquireInFlight, sharedMicTrackMuted } from '@/lib/tutor/voice/shared-mic';
 import { V2PronunciationRecorder } from '@/lib/tutor/v2/pronunciation-recorder';
 import { PRONUNCIATION_NOTE_WAIT_MS } from '@/lib/tutor/pronunciation/clip-capture';
+import { decideTutorAudioCapture } from '@/lib/tutor/voice/tutor-audio-capture';
 import { inkTurnEndTimeoutMs } from '@/lib/tutor/voice/ink-turn-end';
 import type { RealtimeHandle } from '@/lib/tutor/orchestrator/types';
 import type { WhiteboardCommand } from '@core/knowledge/types';
@@ -525,6 +526,12 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     // fell through to plain speech and "3 A" was read as the letter (AP Physics, embed-1794500923861).
     ...(isMathsSubject(props.subject) ? { ttsTextTransform: mathsSpeech } : isScienceSubject(props.subject) ? { ttsTextTransform: scienceSpeech } : { ttsTextTransform: plainSpeech }),
   }), [onRelayTranscript, props.subject, props.ttsProvider, props.cartesiaVoiceId, props.cartesiaVoiceSpeed, languagesKey, props.speechRate, props.studentName]);
+  // Both tracks of the session recording. The tutor's is tapped where its audio is played (useOpenAIRealtime's
+  // dequeue), so only what the student heard is kept. v2 tapped the microphone alone, and every v2 replay was
+  // the student by themselves (embed-1794832831433, embed-1794829907553). A silent tutor has no track.
+  const recordOn = !!props.recordSessionId && process.env.NEXT_PUBLIC_TUTOR_RECORD_AUDIO !== 'false';
+  const recorder = useAudioRecorder({ sessionId: props.recordSessionId ?? '', enabled: recordOn });
+  const tutorAudioCapture = decideTutorAudioCapture({ recordEnabled: recordOn, sessionMode: 'voice', ttsProvider: props.ttsProvider });
   const realtime = useOpenAIRealtime({
     instructions: TRANSPORT_ONLY,
     voice: props.voice,
@@ -534,6 +541,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     onError: onRealtimeError,
     onStateChange: onRealtimeState,
     onTtsPlaybackProgress: onPlayback,
+    onTutorAudioChunk: tutorAudioCapture.capture ? recorder.pushTutorChunk : undefined,
   });
   realtimeRef.current = realtime;
 
@@ -595,7 +603,6 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const releaseOpeningSpeech = useCallback(() => { const held = openingSpeechRef.current; if (!held) return; openingSpeechRef.current = null; const since = (t: number) => (t && tapAtRef.current ? `${t - tapAtRef.current} ms` : 'never'); p.current.onDebugEvent?.('v2_opening_speech', `released ${since(Date.now())} after the tap; microphone live at ${since(micLiveAtRef.current)}${micLiveAtRef.current ? '' : ' (the wait ran out)'}; ${held.length} sentence(s) were waiting`); for (const s of held) realtimeRef.current?.speakText(s); }, []);
   const onMicLevel = useCallback((level: number) => { if (openingSpeechRef.current && !micLiveRef.current) { micLiveRef.current = true; micLiveAtRef.current = Date.now(); setTimeout(releaseOpeningSpeech, MIC_SETTLE_MS); } if (level > MIC_SOUND_LEVEL) lastSoundAtRef.current = Date.now(); const now = Date.now(); if (now - micUiAtRef.current > 110) { micUiAtRef.current = now; setComposerStatus((was) => (Math.abs((was.level ?? 0) - level) < 0.04 && !(was.quiet && level > MIC_SOUND_LEVEL) ? was : { ...was, level, ...(level > MIC_SOUND_LEVEL ? { quiet: false } : {}) })); } }, [releaseOpeningSpeech]);
   const onInkDiagnostic = useCallback((type: string, message: string) => p.current.onDebugEvent?.(type, message), []);
-  const recorder = useAudioRecorder({ sessionId: props.recordSessionId ?? '', enabled: !!props.recordSessionId && process.env.NEXT_PUBLIC_TUTOR_RECORD_AUDIO !== 'false' });
   // The recogniser's microphone frames (24 kHz) feed the session recording and, when it is on, the pronunciation clip
   // (v1 Task 24 §A1 taps the same frames the recogniser hears).
   const pushStudentChunkRef = useRef(recorder.pushStudentChunk); pushStudentChunkRef.current = recorder.pushStudentChunk;
