@@ -28,7 +28,7 @@ import { V2_CONTROL_TOOL_NAMES } from '@/lib/tutor/v2/tool-names';
 import { mentionsTool } from '@/lib/tutor/v2/tool-talk';
 import { newV2State, type V2State, type V2ToolCall } from '@/lib/tutor/v2/types';
 import { TUTOR_LESSON_CLOSE_AUTO_END, TUTOR_V2_TIME_BOX, TUTOR_WORKING_LEVEL, TUTOR_WORKING_LEVEL_ESTIMATE } from '@/lib/tutor/orchestrator/flags';
-import { v2HardStop } from '@/lib/tutor/v2/time-box';
+import { v2HardStop, v2HardStopMinutes } from '@/lib/tutor/v2/time-box';
 import { v2HardStopNextTime } from '@/lib/tutor/v2/close-invite';
 import { goodbyeLine } from '@/lib/tutor/voice/timebox-lines';
 import { parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
@@ -46,6 +46,9 @@ export interface V2TurnsConfig {
   /** The host's wrap minute, two before the box (partner-pool.ts `poolTimeBox`, the embed page's `wrap_at_minutes`):
    *  from it the facts tell the tutor to finish the exchange and summarise (v2/time-box.ts). */
   sessionWrapMinutes?: number;
+  /** Task 7f F: the most minutes the session may run, whatever the overrun margin: a partner pool's remaining balance (the embed
+   *  page). The hard stop is at the box plus the margin (TUTOR_V2_TIME_OVERRUN), never past this. */
+  sessionStopCeilingMinutes?: number;
   /** The partner's `lessonCloseAutoEnd` (partner-session-options.ts, on by default; TUTOR_LESSON_CLOSE_AUTO_END):
    *  off, the tutor's close leaves the session open for the student or the host to end. */
   lessonCloseAutoEnd?: boolean;
@@ -486,15 +489,18 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   // The time box is a hard stop, as it is in v1: partner minute pools and demo limits depend on a
   // session not running past it. The tutor is told the time every turn, the wrap among it, and closes by
   // itself before this in the normal case; this is the backstop. It ends with a goodbye, said after the
-  // tutor's speech under way (v2/time-box.ts): v2 ended mid-sentence with none.
+  // tutor's speech under way (v2/time-box.ts): v2 ended mid-sentence with none. Task 7f F: the box is the target; the stop
+  // is at the box plus the overrun margin, never past the ceiling the host gives (a partner pool's remaining balance).
   const hardStopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const armHardStop = useCallback(() => {
     const minutes = p.current.sessionMaxMinutes;
     if (!minutes || hardStopRef.current) return;
+    // Task 7f F (TIME_OVERRUN): the box is the target; the stop is at the box plus the margin, never past the pool's balance.
+    const stopMin = v2HardStopMinutes(minutes, p.current.sessionStopCeilingMinutes);
     hardStopRef.current = setTimeout(() => {
       if (endingRef.current) return;
       endingRef.current = true;
-      p.current.onDebugEvent?.('v2_time_limit', `${minutes} min`);
+      p.current.onDebugEvent?.('v2_time_limit', `${stopMin} min (box ${minutes})`);
       // A lesson that has already said its goodbye (kept open by its partner) is not said goodbye to twice.
       const bye = TUTOR_V2_TIME_BOX && !stateRef.current.closed ? goodbyeLine(p.current.studentName) : null;
       // Task 7d fix round 1 (M10): the next-time line waits for the reply that closes; when the box comes first, its goodbye says it.
@@ -518,7 +524,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         log: (type, message) => p.current.onDebugEvent?.(type, message),
       }, farewell);
     // A resumed session's box runs from when the lesson first began.
-    }, Math.max(5000, minutes * 60000 - (resumedRef.current ? Date.now() - stateRef.current.startedAtMs : 0)));
+    }, Math.max(5000, stopMin * 60000 - (resumedRef.current ? Date.now() - stateRef.current.startedAtMs : 0)));
   }, []);
   // Unmounted: a stop under way (waiting on the last words or the goodbye) does nothing more.
   // (Set false on mount: React's development double mount runs this clean-up once before the real mount.)

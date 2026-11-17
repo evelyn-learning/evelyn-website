@@ -16,9 +16,21 @@ const PROBLEM_CHARS = 300;
  *  the close; final review I6: read whatever STATE_CARRY says, as the held page is (its own switch, CLOSE_INVITES_QUESTIONS,
  *  and its scope are applied in v2ScopeCarried): with STATE_CARRY off it was dropped every turn, and every close after the
  *  invitation was refused and the invitation asked again. */
-export function v2ReadCarried(raw: unknown, enabled: boolean = TUTOR_V2_STATE_CARRY): Pick<V2State, 'heldPage' | 'summaryBegunAt' | 'repliesSinceBoard' | 'boardProblems' | 'closeInvitedAt'> {
+type Carried = Pick<V2State, 'heldPage' | 'summaryBegunAt' | 'repliesSinceBoard' | 'boardProblems' | 'closeInvitedAt' | 'timeFit' | 'practiceSaid' | 'moveOnAsked'>;
+const ID = /^[\w.:-]{1,80}$/;
+export function v2ReadCarried(raw: unknown, enabled: boolean = TUTOR_V2_STATE_CARRY): Carried {
   const s = (raw && typeof raw === 'object' ? raw : {}) as Partial<Record<keyof V2State, unknown>>;
-  const out: Pick<V2State, 'heldPage' | 'summaryBegunAt' | 'repliesSinceBoard' | 'boardProblems' | 'closeInvitedAt'> = {};
+  const out: Carried = {};
+  // Task 7f (B, C): read whatever STATE_CARRY says, as the held page is (their own switches and scope in v2ScopeCarried).
+  const tf = s.timeFit as Partial<NonNullable<V2State['timeFit']>> | undefined;
+  if (tf && typeof tf === 'object' && Array.isArray(tf.dropped)) {
+    out.timeFit = { dropped: tf.dropped.filter((x): x is string => typeof x === 'string' && ID.test(x)).slice(0, 20), ...(tf.told === true ? { told: true as const } : {}), ...(typeof tf.shown === 'number' && Number.isFinite(tf.shown) && tf.shown > 0 ? { shown: Math.min(20, Math.floor(tf.shown)) } : {}) };
+  }
+  if (s.practiceSaid && typeof s.practiceSaid === 'object' && !Array.isArray(s.practiceSaid)) {
+    const said = Object.fromEntries(Object.entries(s.practiceSaid as Record<string, unknown>).filter((e): e is [string, number] => ID.test(e[0]) && typeof e[1] === 'number' && Number.isFinite(e[1]) && e[1] > 0).slice(0, 40).map(([k, v]) => [k, Math.min(99, Math.floor(v))]));
+    if (Object.keys(said).length) out.practiceSaid = said;
+  }
+  if (Array.isArray(s.moveOnAsked)) { const ids = s.moveOnAsked.filter((x): x is string => typeof x === 'string' && ID.test(x)).slice(-20); if (ids.length) out.moveOnAsked = ids; }
   const h = s.heldPage as Partial<NonNullable<V2State['heldPage']>> | undefined;
   if (h && typeof h === 'object' && typeof h.title === 'string' && typeof h.part === 'string' && typeof h.at === 'number' && Number.isFinite(h.at)) out.heldPage = { title: h.title.slice(0, 80), part: h.part.slice(0, 80), at: h.at, ...(h.unasked === true ? { unasked: true as const } : {}) };
   if (typeof s.closeInvitedAt === 'number' && Number.isFinite(s.closeInvitedAt) && s.closeInvitedAt > 0) out.closeInvitedAt = s.closeInvitedAt;
@@ -45,5 +57,8 @@ export function v2CarryApplies(session: Pick<V2Session, 'mode' | 'plan' | 'homew
 export function v2ScopeCarried(state: V2State, session: Pick<V2Session, 'mode' | 'plan' | 'homework' | 'homeworkSheet'> & Partial<Pick<V2Session, 'languages' | 'pronunciation'>>, closeInviteOn: boolean = v2CloseInviteOn(session)): V2State {
   if (!v2CarryApplies(session)) { delete state.summaryBegunAt; delete state.repliesSinceBoard; delete state.boardProblems; delete state.closeInvitedAt; }
   if (!closeInviteOn) delete state.closeInvitedAt;
+  // Task 7f: the practice count is the part flow's (spoken plan-led lessons); the time fit any timed taught lesson's with a plan.
+  if (!v2CarryApplies(session)) { delete state.practiceSaid; delete state.moveOnAsked; }
+  if (!session.plan || session.homework || session.homeworkSheet || discussionOf(session.plan)) delete state.timeFit;
   return state;
 }

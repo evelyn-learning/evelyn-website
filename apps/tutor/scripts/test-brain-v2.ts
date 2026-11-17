@@ -1,3 +1,6 @@
+// Task 7f: run with NEXT_PUBLIC_TUTOR_V2_CLOSE_BY_CONTENT=off (package.json): it pins the behaviour
+// before Task 7f (the box's last fifth, the fitted part minutes, the stop at the box, part changes with no practice count);
+// scripts/test-brain-v2-time-7f.ts covers the switches on, and each one off alone.
 import { BoardInlineStream, boardBlocksIn, inlineToolCall, stripBoardBlocks } from '../src/lib/tutor/v2/board-inline';
 import { richBlocks, typesetMaths, typesetPowers } from '../src/lib/tutor/v2/rich-text';
 import { circuitNetlist, figureCatalogueFor } from '../src/lib/tutor/v2/figure-catalogue';

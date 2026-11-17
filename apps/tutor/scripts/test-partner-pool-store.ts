@@ -11,6 +11,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { PoolDoc } from '../src/lib/tutor/portal/partner-pool';
 import { chargeSitting, readPoolSnapshot, type PoolStoreDeps } from '../src/lib/tutor/portal/partner-pool-store';
+import { TUTOR_V2_OVERRUN_MIN, TUTOR_V2_TIME_OVERRUN } from '../src/lib/tutor/orchestrator/flags';
 
 let passed = 0;
 let failed = 0;
@@ -126,10 +127,11 @@ async function main() {
     assert.equal(f.pools.get('gameclass')!.usedSec, 180);
   });
 
-  await test('a sitting entry is clamped: the sitting cannot exceed sessionMax + 120 s', async () => {
+  // Task 7f F (TUTOR_V2_TIME_OVERRUN): a v2 sitting may run the overrun margin past the cap, and is charged wall-clock for it.
+  await test(`a sitting entry is clamped: the sitting cannot exceed sessionMax + ${TUTOR_V2_TIME_OVERRUN ? `${TUTOR_V2_OVERRUN_MIN} min overrun + ` : ''}120 s`, async () => {
     const f = fakeDeps({ pool: POOL, createdAtMs: 0, now: 5_000_000 });
     const r = await chargeSitting({ partnerId: 'gameclass', sessionId: 's1', reportedEngagedAtMs: 30_000, save: { status: 'active' } }, f.deps);
-    assert.equal(r.deltaSec, 1020);
+    assert.equal(r.deltaSec, 1020 + (TUTOR_V2_TIME_OVERRUN ? TUTOR_V2_OVERRUN_MIN * 60 : 0));
   });
 
   await test('no pool doc → not pooled, nothing charged, no incPool', async () => {

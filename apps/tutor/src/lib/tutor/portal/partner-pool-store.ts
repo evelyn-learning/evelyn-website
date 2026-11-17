@@ -19,6 +19,7 @@ import {
   type PoolSnapshot,
   type PoolThreshold,
 } from './partner-pool';
+import { TUTOR_V2_OVERRUN_MIN, TUTOR_V2_TIME_OVERRUN } from '../orchestrator/flags';
 
 /** Two reports of the same sitting may disagree on engagedAt by this much (clock skew, ISO rounding). */
 export const SITTING_MATCH_MS = 60_000;
@@ -129,7 +130,9 @@ export async function chargeSitting(
     }
 
     const endMs = sittingEndMs(input.save, nowMs);
-    const { wallSec, deltaSec } = sittingCharge({ engagedAtMs, endMs, chargedSec: entry?.chargedSec ?? 0, sessionMaxSec: snap.sessionMaxSec });
+    // Task 7f F: a v2 sitting may run the overrun margin past the per-session cap; the pool is charged wall-clock for it. The
+    // store cannot tell a v1 sitting from a v2 one, and a v1 sitting ends at the cap, so the clamp is raised for every sitting.
+    const { wallSec, deltaSec } = sittingCharge({ engagedAtMs, endMs, chargedSec: entry?.chargedSec ?? 0, sessionMaxSec: snap.sessionMaxSec, overrunSec: TUTOR_V2_TIME_OVERRUN ? TUTOR_V2_OVERRUN_MIN * 60 : 0 });
     if (deltaSec <= 0) return none(snap);
 
     const won = await deps.casSittingCharge({

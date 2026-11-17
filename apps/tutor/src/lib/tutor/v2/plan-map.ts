@@ -189,7 +189,8 @@ export function v2PassedPartFact(plan: LessonPlan | undefined, state: V2State, c
   if (!enabled || !plan || closing || state.closed) return [];
   // Task 6g: a part offered twice and not taken up is not offered again (v2PartOfferFacts names it as next time).
   const out = v2OfferedOut(plan, state);
-  const passed = v2PassedParts(plan, state).filter((seg) => !out.has(seg.id));
+  // Task 7f B: a part left out for time is not offered (it is named as next time).
+  const passed = v2PassedParts(plan, state).filter((seg) => !out.has(seg.id) && !state.timeFit?.dropped.includes(seg.id));
   if (!passed.length) return [];
   const names = passed.map((seg) => `the ${v2PartOf(seg).label} part`);
   const list = names.length === 1 ? names[0]! : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
@@ -229,7 +230,8 @@ const partNames = (segs: Segment[]) => {
 export function v2UnreachedAtCloseFact(plan: LessonPlan | undefined, state: V2State, phase: 'near' | 'closing' | null, enabled: boolean = TUTOR_V2_PASSED_PART_CLOSE): string[] {
   if (!enabled || !plan || !phase || state.closed) return [];
   const out = v2OfferedOut(plan, state);
-  const left = v2UnreachedAtClose(plan, state).filter((seg) => !out.has(seg.id));
+  // Task 7f B: near the close, a part left out for time is not offered (the time-fit line names it as next time).
+  const left = v2UnreachedAtClose(plan, state).filter((seg) => !out.has(seg.id) && (phase === 'closing' || !state.timeFit?.dropped.includes(seg.id)));
   if (!left.length) return [];
   const list = partNames(left); const one = left.length === 1; const it = one ? 'it' : 'them';
   const head = `${list[0]!.toUpperCase()}${list.slice(1)} ${one ? 'was' : 'were'} not reached`;
@@ -240,11 +242,11 @@ export function v2UnreachedAtCloseFact(plan: LessonPlan | undefined, state: V2St
 
 /** With time left, the offer in place of a held summary page, when parts were not reached (v2UnreachedAtClose): it names
  *  them and lets the student choose, in one line. Null when nothing was missed. */
-export function v2UnreachedOffer(plan: LessonPlan | undefined, state: Pick<V2State, 'goals' | 'board' | 'workingLevel'> & { history?: V2State['history'] }, enabled: boolean = TUTOR_V2_PASSED_PART_CLOSE): string | null {
+export function v2UnreachedOffer(plan: LessonPlan | undefined, state: Pick<V2State, 'goals' | 'board' | 'workingLevel'> & { history?: V2State['history']; timeFit?: V2State['timeFit'] }, enabled: boolean = TUTOR_V2_PASSED_PART_CLOSE): string | null {
   if (!enabled || !plan) return null;
-  // Task 6g: not a part already offered twice and not taken up.
+  // Task 6g: not a part already offered twice and not taken up. Task 7f B: nor one left out for time.
   const out = state.history ? v2OfferedOut(plan, { ...state, history: state.history }) : new Set<string>();
-  const left = v2UnreachedAtClose(plan, state).filter((seg) => !out.has(seg.id));
+  const left = v2UnreachedAtClose(plan, state).filter((seg) => !out.has(seg.id) && !state.timeFit?.dropped.includes(seg.id));
   if (!left.length) return null;
   const list = partNames(left).replace(/\bthe (\S)/g, (_m, c: string) => `the ${c.toLowerCase()}`);
   const one = left.length === 1;

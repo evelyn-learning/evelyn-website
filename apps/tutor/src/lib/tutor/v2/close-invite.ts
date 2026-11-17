@@ -7,7 +7,8 @@
  * asked for a question first.
  *
  * Now, in a spoken plan-led second-language lesson (the gate of the 6e close guards, narrowed to language lessons), while a
- * close is open by the clock (time-box.ts v2CloseOpenByClock: the box's last fifth, the rule applyControlTool already uses)
+ * close is open (time-box.ts v2CloseOpen: Task 7f D, the plan's content done or the wrap minute; with CLOSE_BY_CONTENT off the
+ * box's last fifth, the rule applyControlTool already uses)
  * and more than the time-up minute is left (at or under it the time is up, and the close is as before), and the learner
  * has not asked to stop:
  *  - the facts say the summary reply ends with one invitation to ask questions and does not end the lesson;
@@ -33,7 +34,7 @@ import { discussionOf } from './discussion';
 import { V2_CLOSING_PAGE, endsAsking } from './part-close';
 import { v2NextTimeLine } from './plan-map';
 import { isPartFrame } from './reply-gate';
-import { V2_TIME_UP_MIN, v2CloseOpenByClock } from './time-box';
+import { V2_TIME_UP_MIN, v2CloseOpen, v2LeftToStopMin } from './time-box';
 import type { V2Session, V2State } from './types';
 
 type Gate = Pick<V2Session, 'mode' | 'plan' | 'homework' | 'homeworkSheet' | 'languages' | 'pronunciation'>;
@@ -47,10 +48,10 @@ export function v2CloseInviteOn(session: Gate, enabled: boolean = TUTOR_V2_CLOSE
 
 /** The invitation is owed now: the lesson is one it applies to, not closed, not yet invited, the clock lets the tutor close
  *  (the box's last fifth), more than the time-up minute is left, and the learner has not asked to stop. */
-export function v2CloseInviteOwed(session: V2Session, state: V2State, ctx: { nowMs: number; stopAsked: boolean; enabled?: boolean }): boolean {
+export function v2CloseInviteOwed(session: V2Session, state: V2State, ctx: { nowMs: number; stopAsked: boolean; enabled?: boolean; closeByContent?: boolean; overrun?: boolean }): boolean {
   if (!v2CloseInviteOn(session, ctx.enabled) || state.closed || typeof state.closeInvitedAt === 'number' || ctx.stopAsked || !session.timeBoxMinutes) return false;
-  const left = session.timeBoxMinutes - (ctx.nowMs - state.startedAtMs) / 60000;
-  return left > V2_TIME_UP_MIN && v2CloseOpenByClock(session, state, ctx.nowMs);
+  // Task 7f: the time-up minute is at the box plus the margin (F), and the close opens by content or the wrap minute (D).
+  return v2LeftToStopMin(session, state, ctx.nowMs, ctx.overrun) > V2_TIME_UP_MIN && v2CloseOpen(session, state, ctx.nowMs, ctx.closeByContent);
 }
 
 /** The result of an end_lesson refused for the invitation. Said as the tutor's own next step, as the other refused closes are. */
@@ -63,12 +64,12 @@ export const V2_CLOSE_INVITE_WAIT = 'not ended: wait for their answer to your qu
 
 /** The facts line: the invitation owed, or given (only while the clock lets the tutor close: never "end the lesson in this
  *  reply" where the close would be refused). */
-export function v2CloseInviteFacts(session: V2Session, state: V2State, ctx: { nowMs: number; stopAsked: boolean; enabled?: boolean }): string[] {
+export function v2CloseInviteFacts(session: V2Session, state: V2State, ctx: { nowMs: number; stopAsked: boolean; enabled?: boolean; closeByContent?: boolean; overrun?: boolean }): string[] {
   if (!v2CloseInviteOn(session, ctx.enabled) || state.closed) return [];
   // Final review I3: the summary is part of the close; when no summary has begun (no summary page, no summary reply), it comes
   // first, in a few words.
   const summaryGiven = typeof state.summaryBegunAt === 'number' || state.board.pages.some((pg) => V2_CLOSING_PAGE.test(pg.title));
-  if (typeof state.closeInvitedAt === 'number') return v2CloseOpenByClock(session, state, ctx.nowMs) ? [`questions before the close: you have asked whether they have any questions before you finish. If they asked one, answer it briefly; ${summaryGiven ? '' : 'if you have not given the summary yet, give it in a few words first; '}then say goodbye and end the lesson in this reply`] : [];
+  if (typeof state.closeInvitedAt === 'number') return v2CloseOpen(session, state, ctx.nowMs, ctx.closeByContent) ? [`questions before the close: you have asked whether they have any questions before you finish. If they asked one, answer it briefly; ${summaryGiven ? '' : 'if you have not given the summary yet, give it in a few words first; '}then say goodbye and end the lesson in this reply`] : [];
   if (!v2CloseInviteOwed(session, state, ctx)) return [];
   return ['questions before the close: there is time for their questions, so the reply that gives the summary does not end the lesson: it ends with one question, in your own words, asking whether they have any questions before you finish (that is its one question; no goodbye in it). The lesson ends on their answer'];
 }

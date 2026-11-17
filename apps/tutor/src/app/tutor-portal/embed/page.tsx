@@ -36,7 +36,8 @@ import { parseEmbedConfig } from '@/lib/tutor/portal/parse-embed-config';
 import { parseLessonContext, parseEntry, clampTitle } from '@/lib/tutor/embed/lesson-context';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
 import { unloadSaveStatus } from '@/lib/tutor/voice/lesson-close';
-import { TUTOR_CLOSED_LESSON_COMPLETES, TUTOR_BRAIN_V2_CLAIM, TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT, TUTOR_HOST_START, TUTOR_HOST_LESSON, TUTOR_HOST_QUESTION_READ, TUTOR_EXTRA_LANGUAGES, TUTOR_THINKING_CUE } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_CLOSED_LESSON_COMPLETES, TUTOR_BRAIN_V2_CLAIM, TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT, TUTOR_HOST_START, TUTOR_HOST_LESSON, TUTOR_HOST_QUESTION_READ, TUTOR_EXTRA_LANGUAGES, TUTOR_THINKING_CUE, TUTOR_V2_TIME_OVERRUN } from '@/lib/tutor/orchestrator/flags';
+import { v2OverrunMin } from '@/lib/tutor/v2/time-box';
 import { parseTutorLanguages } from '@/lib/tutor/voice/tts-language';
 import { shouldFlushEarly } from '@/lib/tutor/orchestrator/flush-policy';
 import type { TeacherPersonaWire } from '@core/ai/teacher-persona';
@@ -55,7 +56,7 @@ import {
 } from '@/lib/tutor/portal/host-lesson';
 import { LESSON_CACHE_MAX_CHARS, lessonCacheKey, parseLessonTimeline, renderLessonNow, timelineStats, type TimelineEntry } from '@/lib/tutor/portal/host-lesson-timeline';
 import { HOST_START_VIDEO_WAIT_MS, PREWARM_IDLE_MS, decideHostStart, isAutoplayBlocked, shouldAwaitVideoState, isPrewarmParam, parseHostStart, prewarmIdleAction, tokenExpSec } from '@/lib/tutor/portal/host-start';
-import { POOL_BLOCKED_LINE, POOL_GOODBYE_LINE, clockPoolSeconds, effectiveCapSec, poolSnapshotFromWire, poolTimeBox, startDecision, type PoolSnapshot, type PoolTimeBox } from '@/lib/tutor/portal/partner-pool';
+import { POOL_BLOCKED_LINE, POOL_GOODBYE_LINE, clockPoolSeconds, effectiveCapSec, poolSnapshotFromWire, poolStopSec, poolTimeBox, startDecision, type PoolSnapshot, type PoolTimeBox } from '@/lib/tutor/portal/partner-pool';
 
 // Opener-recency / extraction-carrier gate (mirrors the same flag read in
 // VoiceTutorRealtime.tsx and page.tsx — one env var, read per module).
@@ -893,6 +894,10 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   const branding = config.branding;
   // Per-host chrome choices (Humor section, small-screen Finish control).
   const uiOptions = useMemo(() => resolveEmbedUiOptions(config), [config]);
+  // The session runs on the v2 brain (read here once: the pool's wall-clock cap gives a v2 session the overrun margin, Task 7f F).
+  const brainVersion: 'v1' | 'v2' = (sessionOptions.brainVersion === 'v2' || (TUTOR_BRAIN_V2_CLAIM && config.brain_version === 'v2')) && v2CanRunSession({ sessionGoal, targetKind: config.target_kind, tutorLanguages, standby: !!uiOptions.videoControl, homeworkOnV2: sessionOptions.homeworkOnV2 }) ? 'v2' : 'v1';
+  const brainVersionRef = useRef(brainVersion);
+  brainVersionRef.current = brainVersion;
   // Document title (white-label): the layout serves the neutral "Lesson";
   // once the token is read, add the partner's own product name. Never this
   // site's name.
@@ -1006,6 +1011,11 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // evelyn:session_ended the same way hostEndReasonRef does.
   const poolSnapshotRef = useRef<PoolSnapshot | null>(null);
   const poolCapSecRef = useRef<number | null>(null);
+  // Task 7f F: the pool's remaining balance when the cap latched: a v2 sitting may run its overrun margin past the cap, never
+  // past this.
+  const poolRemainingAtLatchSecRef = useRef<number | null>(null);
+  // …and the balance as last read, the ceiling on the v2 runtime's own hard stop (sessionStopCeilingMinutes).
+  const [poolCeilingMinutes, setPoolCeilingMinutes] = useState<number | undefined>(undefined);
   // W16-E: the pool cap as the sitting's time box (wrap line at cap − 2, hard stop at the cap) when the token has none.
   // W17-C: ...or when the token's box is looser than the pool cap (the GDI links say 30; the pool says 20) — the tighter wins.
   const [poolTimeBoxState, setPoolTimeBoxState] = useState<PoolTimeBox | null>(null);
@@ -1020,6 +1030,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       sessionMaxSec: snap.sessionMaxSec,
       remainingSec: snap.remainingSec,
     });
+    poolRemainingAtLatchSecRef.current = snap.remainingSec;
     poolIdleEndSecRef.current = snap.idleEndSec;
   };
   const latchPoolCapRef = useRef(latchPoolCap);
@@ -1682,6 +1693,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       if (snap.pooled) {
         poolIdleEndSecRef.current = snap.idleEndSec;
         setPoolTimeBoxState(poolTimeBox({ tokenMaxMinutes: maxDurationExplicit ? maxDuration : null, pooled: true, capSec: effectiveCapSec({ sessionMaxSec: snap.sessionMaxSec, remainingSec: snap.remainingSec }) }));
+        setPoolCeilingMinutes(snap.remainingSec / 60);
         addDebugEvent('partner_pool_snapshot', `remaining=${snap.remainingSec} cap=${snap.capSec} session_max=${snap.sessionMaxSec} exhausted=${snap.exhausted}`);
       } else if (j?.error === 'unavailable') {
         addDebugEvent('partner_pool_unavailable', 'read=unavailable');
@@ -2115,12 +2127,16 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       const cap = poolCapSecRef.current;
       const engagedAt = sessionEngagedAtRef.current;
       if (cap === null || engagedAt === null || poolEndReasonRef.current || sessionEndedPostedRef.current) return;
-      if (Date.now() - engagedAt < cap * 1000) return;
+      // Task 7f F (TUTOR_V2_TIME_OVERRUN): a v2 sitting runs to the cap plus the overrun margin (its own runtime says the goodbye
+      // there), never past the pool's remaining balance; v1 sittings end at the cap, as before. No database write: the margin is
+      // the engine's constant, and the pool is charged wall-clock (partner-pool-store.ts).
+      const stopSec = poolStopSec({ capSec: cap, remainingSec: poolRemainingAtLatchSecRef.current, overrunSec: brainVersionRef.current === 'v2' && TUTOR_V2_TIME_OVERRUN ? v2OverrunMin() * 60 : 0 });
+      if (Date.now() - engagedAt < stopSec * 1000) return;
       const h = sessionHandleRef.current;
       if (h?.isEnding?.() === true) return;
       clearInterval(t);
       poolEndReasonRef.current = 'time_limit';
-      addDebugEvent('partner_pool_cap_end', `capSec=${cap} wallMs=${Date.now() - engagedAt}`);
+      addDebugEvent('partner_pool_cap_end', `capSec=${cap} stopSec=${stopSec} wallMs=${Date.now() - engagedAt}`);
       if (h?.endSession) h.endSession({ farewell: goodbyeFor('finished') });
       else handleEndSessionRef.current('time_limit');
     }, 5_000);
@@ -2558,7 +2574,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         cartesiaVoiceSpeed={cartesiaVoiceSpeed}
         tutorLanguages={tutorLanguages}
         openerPrefetch={sessionOptions.openerPrefetch}
-        brainVersion={(sessionOptions.brainVersion === 'v2' || (TUTOR_BRAIN_V2_CLAIM && config.brain_version === 'v2')) && v2CanRunSession({ sessionGoal, targetKind: config.target_kind, tutorLanguages, standby: !!uiOptions.videoControl, homeworkOnV2: sessionOptions.homeworkOnV2 }) ? 'v2' : 'v1'}
+        brainVersion={brainVersion}
         lessonCloseAutoEnd={sessionOptions.lessonCloseAutoEnd}
         levelCheck={sessionOptions.levelCheck}
         pronunciation={sessionOptions.pronunciation}
@@ -2566,6 +2582,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         thinkingCue={thinkingCue}
         sessionMaxMinutes={poolTimeBoxState?.maxMinutes ?? maxDuration}
         sessionWrapMinutes={poolTimeBoxState?.wrapMinutes ?? wrapAtMinutes}
+        sessionStopCeilingMinutes={poolCeilingMinutes}
         maxDurationExplicit={maxDurationExplicit || poolTimeBoxState !== null}
         socialMemory={config.social_memory}
         progressDigest={config.progress_digest}

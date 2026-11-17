@@ -13,6 +13,20 @@ import type { LessonPlan } from '../lesson-plan/types';
 import type { StudentProfile } from '../student-profile/types';
 import type { V2State } from './types';
 import { v2WorkingLevelField } from './working-level';
+import { v2MissedAtClose, v2PartOf } from './plan-map';
+import { v2PlanLabelled } from './part-flow';
+
+/** Task 7f B (TIME_NO_SQUEEZE): the line that carries the plan parts left out for time, and (in a plan with part names) the
+ *  parts the lesson did not reach, to the next session: it heads the profile's plan for next time, which the next lesson's
+ *  facts read as "At the end of the last session the plan for next time was: …" (v2MemoryLines). Only for a lesson whose time
+ *  fit was decided (state.timeFit); null when nothing was left. */
+export function v2LeftForNextTime(plan: LessonPlan | null, state: Pick<V2State, 'timeFit' | 'goals' | 'board' | 'workingLevel'>): string | null {
+  if (!plan || !state.timeFit) return null;
+  const ids = new Set(state.timeFit.dropped);
+  if (v2PlanLabelled(plan)) for (const seg of v2MissedAtClose(plan, state)) ids.add(seg.id);
+  const left = plan.segments.filter((seg) => ids.has(seg.id)).map((seg) => v2PartOf(seg).label ?? seg.id);
+  return left.length ? `Not reached last time, to do next: ${left.join(', ')}.` : null;
+}
 
 const day = (iso: string | undefined) => (iso ?? '').slice(0, 10);
 
@@ -94,7 +108,8 @@ export function v2ProfileCommit(input: { needsPracticeLoIds?: string[]; sessionI
     // A gap the student closed alone in the session is not carried forward.
     gaps: (state.gaps ?? []).filter((g) => g.status !== 'done_alone').map((g) => ({ kind: 'prerequisite' as const, conceptLabel: g.what.slice(0, 120), observation: GAP_NOTE[g.status] ?? g.status })),
     transcript: input.transcript.filter((t) => (t.text ?? '').trim()).map((t) => ({ role: t.role === 'user' || t.role === 'student' ? 'student' as const : 'tutor' as const, text: String(t.text).slice(0, 4000) })),
-    ...(state.closeSummary?.trim() ? { nextSessionIntent: state.closeSummary.trim().slice(0, 200) } : {}),
+    // Task 7f B: the parts left for next time head the plan for next time (v2LeftForNextTime).
+    ...((): Record<string, string> => { const text = [v2LeftForNextTime(input.plan, state), state.closeSummary?.trim()].filter(Boolean).join(' ').slice(0, 200); return text ? { nextSessionIntent: text } : {}; })(),
     // A level set this lesson is remembered for the next one (working-level.ts).
     ...v2WorkingLevelField(state, input.lessonPlanId),
   };

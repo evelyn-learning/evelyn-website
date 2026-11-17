@@ -31,6 +31,7 @@ export function HeaderClock({
   maxMinutes,
   countDown,
   frozenAtMs,
+  overrunMinutes = 0,
   className = '',
 }: {
   /** Wallclock ms when the voice session actually started (mic tap). Null
@@ -45,6 +46,9 @@ export function HeaderClock({
    *  hidden): the clock shows the elapsed time at that instant and does not
    *  tick. Standing-by time is not session time. */
   frozenAtMs?: number | null;
+  /** Task 7f F (v2 sessions): minutes the session may run past `maxMinutes` (the target). Past the target the clock counts up
+   *  the time in the session, in the neutral tone; amber only in the last 2 minutes before the hard stop. 0: as before. */
+  overrunMinutes?: number;
   className?: string;
 }) {
   const [elapsedSec, setElapsedSec] = useState(0);
@@ -77,17 +81,20 @@ export function HeaderClock({
   const remainingSec = maxMinutes * 60 - elapsedSec;
   // Clamp at zero: a countdown that goes negative reads as a bug to a student,
   // and the host owns what actually happens at expiry.
-  const shown = countDown ? fmt(Math.max(0, remainingSec)) : fmt(elapsedSec);
-  const low = countDown && remainingSec <= 300 && remainingSec > 0;
-  const out = countDown && remainingSec <= 0;
+  const overrunSec = Math.max(0, overrunMinutes) * 60;
+  const pastTarget = overrunSec > 0 && countDown && remainingSec <= 0;
+  const shown = countDown && !pastTarget ? fmt(Math.max(0, remainingSec)) : fmt(elapsedSec);
+  const stopLeft = remainingSec + overrunSec;
+  const low = countDown && (overrunSec > 0 ? stopLeft <= 120 && stopLeft > 0 : remainingSec <= 300 && remainingSec > 0);
+  const out = countDown && stopLeft <= 0;
 
   const tone = out ? 'text-red-600' : low ? 'text-amber-600' : 'text-slate-500';
 
   return (
     <span
       className={`inline-flex items-center gap-1 font-mono text-xs tabular-nums ${tone} ${className}`}
-      title={countDown ? 'Time left in this lesson' : 'Time in this session'}
-      aria-label={countDown ? `${shown} left` : `${shown} elapsed`}
+      title={countDown && !pastTarget ? 'Time left in this lesson' : 'Time in this session'}
+      aria-label={countDown && !pastTarget ? `${shown} left` : `${shown} elapsed`}
     >
       <Clock className="w-4 h-4 shrink-0" />
       {shown}

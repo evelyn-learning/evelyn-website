@@ -1,4 +1,7 @@
 /// <reference types="node" />
+// Task 7f: run with NEXT_PUBLIC_TUTOR_V2_PART_MIN_PRACTICE=off (package.json): it pins the behaviour
+// before Task 7f (the box's last fifth, the fitted part minutes, the stop at the box, part changes with no practice count);
+// scripts/test-brain-v2-time-7f.ts covers the switches on, and each one off alone.
 /**
  * Tutor brain v2 — Task 7a: chip, page and part move together; every part change is asked (mic test 1,
  * embed-1794882458629, docs/superpowers/plans/2026-11-17-gdi-v2-mic-test-1-handoff.md A and B). No network, no model.

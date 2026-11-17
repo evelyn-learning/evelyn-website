@@ -1,4 +1,7 @@
 /// <reference types="node" />
+// Task 7f: run with NEXT_PUBLIC_TUTOR_V2_TIME_NO_SQUEEZE=off (package.json): it pins the behaviour
+// before Task 7f (the box's last fifth, the fitted part minutes, the stop at the box, part changes with no practice count);
+// scripts/test-brain-v2-time-7f.ts covers the switches on, and each one off alone.
 /**
  * Tutor brain v2 — Task 6f: measured pronunciation from clip to facts, and the small leftovers of the real-voice replays
  * (docs/superpowers/plans/gdi-v2-baseline/v2audio-6e2/RESULTS.md). No network, no model: the assess endpoint is mocked

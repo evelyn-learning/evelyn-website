@@ -42,6 +42,9 @@ interface SessionControlsProps {
   /** The host draws the clock itself (embed option `sessionTimer` off). */
   hideTimer?: boolean;
   maxDuration: number; // minutes
+  /** Task 7f F (v2 sessions): minutes the session may run past `maxDuration` (the target). Past the target the timer keeps
+   *  counting with no alarm; the "N min left" chip shows only in the last 2 minutes before the hard stop. 0: as before. */
+  overrunMinutes?: number;
   /** Demo-polish (2026-10-29): the stage's fullscreen machinery, rendered
    *  here as a labelled Full screen button. null/undefined ⇒ no button. */
   fullscreen?: FullscreenApi | null;
@@ -158,6 +161,7 @@ export function SessionControls({
   frozenAtMs,
   hideTimer,
   maxDuration,
+  overrunMinutes = 0,
   fullscreen,
   onEndSession,
   onUploadHomework,
@@ -203,8 +207,11 @@ export function SessionControls({
   };
 
   // Calculate remaining time
-  const remainingSeconds = maxDuration * 60 - elapsedSeconds;
-  const isLowTime = remainingSeconds <= 300; // 5 minutes
+  // Task 7f F: with an overrun margin, the time left is counted to the hard stop (target + margin), and only its last 2
+  // minutes are low; without one, as before (5 minutes to the target).
+  const overrunSec = Math.max(0, overrunMinutes) * 60;
+  const remainingSeconds = maxDuration * 60 + overrunSec - elapsedSeconds;
+  const isLowTime = overrunSec > 0 ? remainingSeconds <= 120 : remainingSeconds <= 300;
   const isOvertime = remainingSeconds < 0;
 
   // Process an image file into a preview

@@ -18,7 +18,8 @@ import { v2PronunciationFacts, v2TextSoundFacts } from './pronunciation';
 import { v2SentenceCardsFacts } from './sentence-cards';
 import { v2LearnerSentenceFacts } from './learner-card';
 import { v2PracticeAskFacts, v2RetryFacts } from './languages';
-import { V2_TIME_UP_MIN, v2PartDueFact, v2WrapDue } from './time-box';
+import { V2_TIME_UP_MIN, v2CloseOpen, v2PlanContentDone, v2LeftToStopMin, v2LessonTimeLine, v2PartDueFact, v2TimeFlags, v2WrapDue, type V2TimeFlags } from './time-box';
+import { v2MorePracticeFacts, v2PracticeFacts, v2TimeFitFacts } from './time-fit';
 import { v2CloseInviteFacts } from './close-invite';
 
 /** After the tutor chose to keep listening: how long the student stays silent before it is told so (TutorVoiceV2).
@@ -54,6 +55,12 @@ export interface V2TurnFacts {
   partAskEvery?: boolean;
   /** Task 7b, tests only: BOARD_LEARNER_SENTENCE for this turn (default: the flag). */
   learnerCards?: boolean;
+  /** Task 7f: the time switches for this turn (default: the flags; turn.ts passes the turn's own). */
+  time?: Partial<V2TimeFlags>;
+  /** Task 7f C: the practice part in hand is short of its sentences (turn.ts, v2PracticeShort under the part flow). */
+  practiceShort?: { index: number; n: number } | null;
+  /** Task 7f E: they asked for more practice at the close: given (true) or no time left (false). */
+  morePractice?: boolean;
 }
 
 /** A quoted span at the very start of a reply, in any of the quote pairs a tutor uses: 「…」, 『…』, “…”, "…", ‘…’, '…'. */
@@ -134,6 +141,10 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // minutes" ran to 10.4).
   const box = discussion ? effectiveMinutes(session.timeBoxMinutes, state.thinking) : session.timeBoxMinutes;
   const left = box ? box - (f.nowMs - state.startedAtMs) / 60000 : 0;
+  // Task 7f: the time switches; "the time is up" at the box plus the margin for a taught lesson (F); the close by content (D).
+  const tf = v2TimeFlags(f.time);
+  const leftStop = discussion ? left : v2LeftToStopMin(session, state, f.nowMs, tf.overrun);
+  const closeOpen = !discussion && !!session.timeBoxMinutes && v2CloseOpen(session, state, f.nowMs, tf.closeByContent);
   // Task 6g: the summary has begun (turn.ts): "time for more" no longer stands (gdi-real-james, v2audio-6f: the review began,
   // and the next two replies offered more practice).
   const summaryBegun = v2SummaryBegun(state);
@@ -148,7 +159,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
       ? `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > V2_TIME_UP_MIN ? `about ${Math.round(left)} left` : 'the time is up'}` : ''}; the session ends when ${session.homeworkSheet ? 'the sheet' : 'this problem'} is done`
       // Past the host's wrap minute the wrap is said here, a fact for the next reply: spoken into the lesson by the client
       // on v1, it cut into the menu the tutor was reading (tester-2, time-box.ts).
-      : `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > V2_TIME_UP_MIN && v2WrapDue(session, (f.nowMs - state.startedAtMs) / 60000) ? `about ${Math.round(left)} minutes left: finish this exchange, then summary` : left > session.timeBoxMinutes * 0.2 && summaryBegun ? `about ${Math.round(left)} left` : left > session.timeBoxMinutes * 0.2 ? `about ${Math.round(left)} left, which is time for more: the lesson is not at its close unless the student asks to stop` : left > V2_TIME_UP_MIN ? `about ${Math.round(left)} left: the close is near` : 'the time is up'}` : ''}`,
+      : `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${v2LessonTimeLine(session, state, f.nowMs, { summaryBegun, closeOpen, tf })}` : ''}`,
     `board:\n  ${renderBoard(state.board)}`,
   ];
   if ((state.repliesSinceBoard ?? 0) >= 1) lines.push(`board last written on: ${state.repliesSinceBoard} ${state.repliesSinceBoard === 1 ? 'reply' : 'replies'} ago`);
@@ -159,12 +170,14 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   else if (session.plan) {
     lines.push(`plan: ${renderGoalStatus(session.plan, state.goals)}`);
     // A part the lesson went past is offered before the summary; not when the close comes first (plan-map.ts, Task 6c).
-    const closing = !!f.stopAsked || (!!session.timeBoxMinutes && left <= V2_TIME_UP_MIN) || v2WrapDue(session, (f.nowMs - state.startedAtMs) / 60000);
+    const closing = !!f.stopAsked || (!!session.timeBoxMinutes && leftStop <= V2_TIME_UP_MIN) || v2WrapDue(session, (f.nowMs - state.startedAtMs) / 60000, undefined, tf.closeByContent);
     const passed = discussion ? [] : v2PassedPartFact(session.plan, state, closing);
     lines.push(...passed);
     // Near or at the close, a part not reached is offered in one line or named in the summary as next time (Task 6e);
     // not beside the passed-part line, which already says to offer it.
-    const near = !!session.timeBoxMinutes && left <= session.timeBoxMinutes * 0.2;
+    // Task 7f D: near the close = the close is open (content done or the wrap minute), not the box's last fifth.
+    // The required parts done is near too: an optional part not reached is then offered before the summary.
+    const near = tf.closeByContent ? closeOpen || (!!session.timeBoxMinutes && v2PlanContentDone(session.plan, state, true)) : !!session.timeBoxMinutes && left <= session.timeBoxMinutes * 0.2;
     if (!discussion && !passed.length) lines.push(...v2UnreachedAtCloseFact(session.plan, state, closing || summaryBegun ? 'closing' : near ? 'near' : null));
     // Task 6g: an optional part offered and not taken up is offered at most once more (tester A: four offers in nine turns).
     if (!discussion) lines.push(...v2PartOfferFacts(session.plan, state));
@@ -172,10 +185,14 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     // Task 6e fix round 1 (F4): tester B was asked about a question or the summary in two turns running.
     if (!discussion && TUTOR_V2_CLOSE_ONE_QUESTION && (closing || near) && !state.closed) lines.push('at the close: at most one question in a reply, never one you asked in your last reply, and nothing after a goodbye');
     // Task 7d (CLOSE_INVITES_QUESTIONS): the summary reply ends by inviting their questions, and the lesson ends on their answer.
-    if (!discussion) lines.push(...v2CloseInviteFacts(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked }));
+    if (!discussion) lines.push(...v2CloseInviteFacts(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun }));
+    // Task 7f B: the parts left out for time; C: the practice the part in hand still needs; E: more practice asked for at the close.
+    if (!discussion) lines.push(...v2TimeFitFacts(session, state, tf.noSqueeze));
+    if (!discussion && f.practiceShort && session.plan) lines.push(...v2PracticeFacts(session.plan, f.practiceShort));
+    if (!discussion && f.morePractice !== undefined) lines.push(...v2MorePracticeFacts(f.morePractice, leftStop));
   }
   // Where the parts' minutes put the lesson now, so it paces itself to the box (time-box.ts).
-  const partDue = v2PartDueFact(session, state, f.nowMs, !!session.timeBoxMinutes && left <= V2_TIME_UP_MIN);
+  const partDue = v2PartDueFact(session, state, f.nowMs, !!session.timeBoxMinutes && leftStop <= V2_TIME_UP_MIN, undefined, tf.noSqueeze);
   if (partDue) lines.push(partDue);
   // The working level, every turn, so the language, questions and corrections stay at it (working-level.ts).
   lines.push(...v2WorkingLevelFacts(session, state, f.heard, { reopened: f.levelReopened }));

@@ -1,4 +1,7 @@
 /// <reference types="node" />
+// Task 7f: run with NEXT_PUBLIC_TUTOR_V2_PART_MIN_PRACTICE=off (package.json): it pins the behaviour
+// before Task 7f (the box's last fifth, the fitted part minutes, the stop at the box, part changes with no practice count);
+// scripts/test-brain-v2-time-7f.ts covers the switches on, and each one off alone.
 /**
  * Tutor brain v2 — the final review of Tasks 7a–7d (.superpowers/sdd/2026-11-13-gdi-on-v2-plan/final7-review.md): its
  * findings I1–I6 and M1–M6, each as the scenario the review's probes found, and the test gaps it named for merge. No network,

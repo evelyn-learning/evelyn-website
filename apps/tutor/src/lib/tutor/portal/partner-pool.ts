@@ -84,14 +84,18 @@ export function sittingEndMs(
   return typeof save.endedAtMs === 'number' && Number.isFinite(save.endedAtMs) ? save.endedAtMs : nowMs;
 }
 
+/** `overrunSec` (Task 7f F, TUTOR_V2_TIME_OVERRUN): a v2 sitting may run this far past the per-session cap, and the pool is
+ *  charged wall-clock for it; the caller passes it (0: as before). */
 export function sittingCharge(input: {
   engagedAtMs: number;
   endMs: number;
   chargedSec: number;
   sessionMaxSec: number;
+  overrunSec?: number;
 }): { wallSec: number; deltaSec: number } {
   const raw = Math.floor((input.endMs - input.engagedAtMs) / 1000);
-  const wallSec = Math.max(0, Math.min(raw, input.sessionMaxSec + POOL_CHARGE_SLACK_SEC));
+  const overrun = typeof input.overrunSec === 'number' && Number.isFinite(input.overrunSec) && input.overrunSec > 0 ? input.overrunSec : 0;
+  const wallSec = Math.max(0, Math.min(raw, input.sessionMaxSec + overrun + POOL_CHARGE_SLACK_SEC));
   const deltaSec = Math.max(0, wallSec - Math.max(0, input.chargedSec));
   return { wallSec, deltaSec };
 }
@@ -112,6 +116,16 @@ export function poolTimeBox(input: { tokenMaxMinutes: number | null; pooled: boo
   const maxMinutes = Math.max(1, Math.floor(input.capSec / 60));
   if (input.tokenMaxMinutes !== null && Number.isFinite(input.tokenMaxMinutes) && input.tokenMaxMinutes <= maxMinutes) return null;
   return { maxMinutes, wrapMinutes: Math.max(1, maxMinutes - 2) };
+}
+
+/** Task 7f F (TUTOR_V2_TIME_OVERRUN): when a pooled sitting's wall-clock cap ends it. A v2 sitting runs to the cap plus the
+ *  overrun margin, never past the pool's remaining balance when the cap latched (a real ceiling); a v1 sitting (overrunSec 0)
+ *  at the cap, as before. Never before the cap. */
+export function poolStopSec(input: { capSec: number; remainingSec?: number | null; overrunSec: number }): number {
+  const cap = Math.max(0, input.capSec);
+  if (!(input.overrunSec > 0)) return cap;
+  const ceiling = typeof input.remainingSec === 'number' && Number.isFinite(input.remainingSec) ? input.remainingSec : cap;
+  return Math.max(cap, Math.min(cap + input.overrunSec, ceiling));
 }
 
 export function startDecision(

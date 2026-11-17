@@ -69,6 +69,7 @@ import { isQpinStaleByTurns, shouldClearQpinOnAnswer, QPIN_MAX_TUTOR_TURNS_BEHIN
 import { latestSubstantiveTutorEntry, shouldClearQpinOnSegmentChange } from '@/lib/tutor/qpin-behavior';
 import { preStartDockCaption } from './prestart-affordances';
 import { HeaderClock } from './HeaderClock';
+import { v2OverrunMin } from '@/lib/tutor/v2/time-box';
 import {
   buildStudentMediaBrainInput, buildUploadedProblemCard, classifyExtraction, studentMediaNotice,
   extractionUsage, runWithAbortTimeout, EXTRACTION_TIMEOUT_MS, extractionRequestBody, studentMediaDebugDetail,
@@ -160,6 +161,9 @@ export interface TutorSessionProps {
   /** Demo time-box (trial): wrap-phase threshold in minutes. Forwarded to the
    *  runtime, typed from VoiceTutorRealtime to avoid drift. */
   sessionWrapMinutes?: VTRProps['sessionWrapMinutes'];
+  /** Task 7f F (v2 only): the most minutes the session may run past its box, as a ceiling on the box plus the overrun margin
+   *  (a partner pool's remaining balance, from the embed page). */
+  sessionStopCeilingMinutes?: number;
   /** Whether the embed token carried an EXPLICIT max_duration_minutes (gates
    *  trial time-mode demo-stop + the hard wall-clock cap). Forwarded to the
    *  runtime, typed from VoiceTutorRealtime to avoid drift. */
@@ -327,7 +331,7 @@ export default function TutorSession(props: TutorSessionProps) {
     onUploadHomework, onLessonPlanIdChange, onLessonProgressChange,
     onCompletedSegmentsChange, availableLessonPlans, resumeState,
     socialMemory, progressDigest, lastOpener, readinessNote, practiceLocator, tutorOpens, goalNote, onOpenerRecord, isTrial, openScope, lessonContext, inFlow, prewarm, onRelayReady,
-    targetKind, checkpointStale, teacherPersona, sessionWrapMinutes, maxDurationExplicit,
+    targetKind, checkpointStale, teacherPersona, sessionWrapMinutes, sessionStopCeilingMinutes, maxDurationExplicit,
     onPracticeStatsChange,
     humorControl = true, voiceMuteControl = false, paceChip = true, mobileFinish,
     standby = false, videoHost, getLessonNow, onStudentWake, onResumeLesson, getOpeningNote, videoControl,
@@ -1754,6 +1758,7 @@ export default function TutorSession(props: TutorSessionProps) {
           pronunciation={pronunciation}
           sessionMaxMinutes={sessionMaxMinutes}
           sessionWrapMinutes={sessionWrapMinutes}
+          sessionStopCeilingMinutes={sessionStopCeilingMinutes}
           lessonCloseAutoEnd={lessonCloseAutoEnd}
           composerSlot={videoBtn}
           handleRef={realtimeHandleRef}
@@ -1802,6 +1807,7 @@ export default function TutorSession(props: TutorSessionProps) {
           tutorLanguages={tutorLanguages}
           sessionMaxMinutes={sessionMaxMinutes}
           sessionWrapMinutes={sessionWrapMinutes}
+          sessionStopCeilingMinutes={sessionStopCeilingMinutes}
           lessonCloseAutoEnd={lessonCloseAutoEnd}
           composerSlot={videoBtn}
           handleRef={realtimeHandleRef}
@@ -2009,6 +2015,7 @@ export default function TutorSession(props: TutorSessionProps) {
       frozenAtMs={standbySinceMs}
       hideTimer={!sessionTimer}
       maxDuration={sessionMaxMinutes}
+      overrunMinutes={brainVersion === 'v2' ? v2OverrunMin() : 0}
       onEndSession={handleEndSession}
       onUploadHomework={onUploadHomework ?? handleUploadHomeworkFallback}
       hideUpload={brainVersion === 'v2'}
@@ -2342,6 +2349,7 @@ export default function TutorSession(props: TutorSessionProps) {
             frozenAtMs={standbySinceMs}
             maxMinutes={sessionMaxMinutes}
             countDown={!!maxDurationExplicit}
+            overrunMinutes={brainVersion === 'v2' ? v2OverrunMin() : 0}
           />
         )}
         adaptiveMenu={adaptiveMenuEl}

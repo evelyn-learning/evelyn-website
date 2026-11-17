@@ -1891,3 +1891,46 @@ export const TUTOR_V2_LEVEL_CHECK_CAP = process.env.NEXT_PUBLIC_TUTOR_V2_LEVEL_C
  *  summary, the goodbye and end_lesson came in one reply with 2.4 min left (Task 7d, embed-1794882458629). Default ON;
  *  NEXT_PUBLIC_TUTOR_V2_CLOSE_INVITES_QUESTIONS=off ⇒ as before. */
 export const TUTOR_V2_CLOSE_INVITES_QUESTIONS = process.env.NEXT_PUBLIC_TUTOR_V2_CLOSE_INVITES_QUESTIONS !== 'off';
+
+/** Tutor brain v2 (v2/time-box.ts v2PartDueNow, v2/time-fit.ts, v2/facts.ts, v2/memory.ts): never squeeze a plan. The parts'
+ *  minutes are no longer scaled down to the box; when they add up to more than it, the plan's OPTIONAL parts are left out,
+ *  last first, until the rest fits, the learner is told once when the first teaching part opens, and the parts left out go
+ *  to the next session's "plan for next time". The "by the plan's minutes" line is a guide only. Mic test 2
+ *  (embed-1794941004529): a 25-minute plan in a 20-minute box thinned every part to one learner sentence (Task 7f B).
+ *  Default ON; NEXT_PUBLIC_TUTOR_V2_TIME_NO_SQUEEZE=off ⇒ the minutes are fitted to the box, as before. */
+export const TUTOR_V2_TIME_NO_SQUEEZE = process.env.NEXT_PUBLIC_TUTOR_V2_TIME_NO_SQUEEZE !== 'off';
+
+/** Tutor brain v2 (v2/time-fit.ts, v2/turn.ts; spoken lessons with labelled plans, where Task 7a's part flow runs): a
+ *  practice part is not closed (goal marked done, part-change ask, next page) until the learner has said at least 2 practice
+ *  sentences of their own in it, unless they ask to move on. Counted in the runtime, told in the facts, and the part change
+ *  held. Not the overview, the level check or the summary. Mic test 2 (embed-1794941004529, flags 4 and 7): one sentence
+ *  each for the present perfect and the past simple (Task 7f C). Default ON; NEXT_PUBLIC_TUTOR_V2_PART_MIN_PRACTICE=off ⇒ as
+ *  before. */
+export const TUTOR_V2_PART_MIN_PRACTICE = process.env.NEXT_PUBLIC_TUTOR_V2_PART_MIN_PRACTICE !== 'off';
+
+/** Tutor brain v2 (v2/time-box.ts v2CloseOpen and its readers: turn.ts end_lesson, the summary detection, close-invite.ts,
+ *  facts.ts): the tutor may begin the summary or end by itself when the plan's required parts are done (optional ones done,
+ *  left out or declined), or at the wrap minute (the host's, else two before the box); no longer at the box's last fifth.
+ *  Mic test 2 (embed-1794941004529, flag 9): the summary began at 15.9 of 20 minutes with two parts not taught (Task 7f D).
+ *  Default ON; NEXT_PUBLIC_TUTOR_V2_CLOSE_BY_CONTENT=off ⇒ the last fifth, as before. */
+export const TUTOR_V2_CLOSE_BY_CONTENT = process.env.NEXT_PUBLIC_TUTOR_V2_CLOSE_BY_CONTENT !== 'off';
+
+/** Tutor brain v2 (v2/time-fit.ts, v2/turn.ts, v2/facts.ts): a learner who asks for more practice after the summary has begun,
+ *  or at the close, gets it while more than 3 minutes remain to the hard stop (the box plus the overrun margin); otherwise the
+ *  tutor says plainly there is no time left today and names it for next time. The tutor still offers no NEW practice once the
+ *  summary has begun (Task 6g). Mic test 2 (embed-1794941004529): "Can we do some more practice?" was refused (Task 7f E).
+ *  Default ON; NEXT_PUBLIC_TUTOR_V2_MORE_PRACTICE=off ⇒ as before. */
+export const TUTOR_V2_MORE_PRACTICE = process.env.NEXT_PUBLIC_TUTOR_V2_MORE_PRACTICE !== 'off';
+
+/** Tutor brain v2 (v2/time-box.ts, useV2Turns, the embed page's pool cap, partner-pool-store charging, SessionControls): the
+ *  session length is a target, not a cutoff. A v2 lesson may run TUTOR_V2_OVERRUN_MIN minutes past it: "the time is up" and the
+ *  runtime's hard stop with its goodbye move to target + margin; a pooled sitting's wall-clock cap gets the same margin (never
+ *  past the pool's remaining balance), and the pool is charged wall-clock for it; the visible timer counts on past the target
+ *  with no alarm. v1 sessions are untouched. Praveen's decision after mic test 2 (embed-1794941004529, Task 7f F). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_TIME_OVERRUN=off ⇒ the hard stop at the box, as before. */
+export const TUTOR_V2_TIME_OVERRUN = process.env.NEXT_PUBLIC_TUTOR_V2_TIME_OVERRUN !== 'off';
+/** The overrun margin in minutes (TUTOR_V2_TIME_OVERRUN): 5, or NEXT_PUBLIC_TUTOR_V2_OVERRUN_MIN (0–30). */
+export const TUTOR_V2_OVERRUN_MIN = (() => {
+  const n = Number(process.env.NEXT_PUBLIC_TUTOR_V2_OVERRUN_MIN);
+  return process.env.NEXT_PUBLIC_TUTOR_V2_OVERRUN_MIN !== undefined && process.env.NEXT_PUBLIC_TUTOR_V2_OVERRUN_MIN !== '' && Number.isFinite(n) && n >= 0 && n <= 30 ? n : 5;
+})();

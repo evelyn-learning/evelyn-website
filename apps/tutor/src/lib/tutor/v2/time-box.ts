@@ -9,12 +9,54 @@
  * On v1 the wrap was a line the client spoke into the lesson ("We've got about two minutes left, so let's finish
  * this one."), and it cut into the menu the tutor was reading (tester-2 at 18:26). And v2 ended at the box in the
  * middle of a sentence with no goodbye.
+ *
+ * Task 7f (Praveen, after mic test 2, embed-1794941004529): the box is a target, not a cutoff. A taught lesson may run
+ * TUTOR_V2_OVERRUN_MIN (5) minutes past it: "the time is up" and the hard stop move to target + margin (F); the parts keep
+ * their own minutes (B); the tutor closes by itself when the plan's content is done or at the wrap minute, not at the box's
+ * last fifth (D).
  */
 import type { LessonPlan } from '../lesson-plan/types';
-import { TUTOR_V2_TIME_BOX } from '../orchestrator/flags';
+import { TUTOR_V2_CLOSE_BY_CONTENT, TUTOR_V2_MORE_PRACTICE, TUTOR_V2_OVERRUN_MIN, TUTOR_V2_PART_MIN_PRACTICE, TUTOR_V2_TIME_BOX, TUTOR_V2_TIME_NO_SQUEEZE, TUTOR_V2_TIME_OVERRUN } from '../orchestrator/flags';
 import { discussionOf } from './discussion';
-import { v2PartOf } from './plan-map';
+import { v2IsPageOfPart, v2OfferedOut, v2PartIsOptional, v2PartOf } from './plan-map';
 import type { V2Session, V2State } from './types';
+
+/** Task 7f's switches, B to F, as one value: each its own flag (default on); tests pass some off for one turn. */
+export interface V2TimeFlags { noSqueeze: boolean; minPractice: boolean; closeByContent: boolean; morePractice: boolean; overrun: boolean }
+export function v2TimeFlags(o: Partial<V2TimeFlags> = {}): V2TimeFlags {
+  return {
+    noSqueeze: o.noSqueeze ?? TUTOR_V2_TIME_NO_SQUEEZE, minPractice: o.minPractice ?? TUTOR_V2_PART_MIN_PRACTICE,
+    closeByContent: o.closeByContent ?? TUTOR_V2_CLOSE_BY_CONTENT, morePractice: o.morePractice ?? TUTOR_V2_MORE_PRACTICE, overrun: o.overrun ?? TUTOR_V2_TIME_OVERRUN,
+  };
+}
+
+/** Task 7f F (TIME_OVERRUN): the minutes a v2 lesson may run past its box (the target). 0 with the switch off. */
+export function v2OverrunMin(on: boolean = TUTOR_V2_TIME_OVERRUN): number { return on ? TUTOR_V2_OVERRUN_MIN : 0; }
+
+/** Task 7f F: the minute of the runtime's hard stop (useV2Turns): the box plus the margin, never past `ceilingMin` (a partner
+ *  pool's remaining balance) and never before the box. */
+export function v2HardStopMinutes(boxMin: number, ceilingMin?: number, on: boolean = TUTOR_V2_TIME_OVERRUN): number {
+  const stop = boxMin + v2OverrunMin(on);
+  return typeof ceilingMin === 'number' && Number.isFinite(ceilingMin) && ceilingMin > 0 ? Math.max(boxMin, Math.min(stop, ceilingMin)) : stop;
+}
+
+/** A taught lesson: not homework, not a discussion (they keep their own time lines; the margin reaches only their hard stop). */
+export const v2Taught = (session: Pick<V2Session, 'homework' | 'homeworkSheet' | 'plan'>) => !session.homework && !session.homeworkSheet && !discussionOf(session.plan);
+
+/** Minutes left to the time-up reference: a taught lesson's box plus the overrun margin (Task 7f F: "the time is up" moves to
+ *  target + margin), homework's and a discussion's box. Infinity with no box. */
+export function v2LeftToStopMin(session: Pick<V2Session, 'timeBoxMinutes' | 'homework' | 'homeworkSheet' | 'plan'>, state: Pick<V2State, 'startedAtMs'>, nowMs: number, overrun: boolean = TUTOR_V2_TIME_OVERRUN): number {
+  if (!session.timeBoxMinutes) return Infinity;
+  return session.timeBoxMinutes + (v2Taught(session) ? v2OverrunMin(overrun) : 0) - (nowMs - state.startedAtMs) / 60000;
+}
+
+/** The wrap minute: the host's, else (Task 7f D, CLOSE_BY_CONTENT) two before the box, so the close by the clock still has a
+ *  minute to come at. Undefined with no box, or no host wrap and the switch off (as before). */
+export function v2WrapMin(session: Pick<V2Session, 'wrapMinutes' | 'timeBoxMinutes'>, fallback: boolean = TUTOR_V2_CLOSE_BY_CONTENT): number | undefined {
+  if (!session.timeBoxMinutes) return undefined;
+  if (typeof session.wrapMinutes === 'number' && session.wrapMinutes > 0) return session.wrapMinutes;
+  return fallback ? Math.max(1, session.timeBoxMinutes - 2) : undefined;
+}
 
 /** Minutes left at or below which the time is up: the facts say so, a close is no longer argued with, and a page the
  *  closing reply opens is never held (turn.ts). Here, a leaf module, so close-invite.ts reads it too (facts.ts re-exports it). */
@@ -27,13 +69,43 @@ export function v2CloseOpenByClock(session: Pick<V2Session, 'timeBoxMinutes'>, s
   return session.timeBoxMinutes - (nowMs - state.startedAtMs) / 60000 <= session.timeBoxMinutes * 0.2;
 }
 
+/** Task 7f D (CLOSE_BY_CONTENT): the plan's content is done: every part before the last (the close's own) is done: a goal
+ *  marked (shown, demonstrated or skipped: a part declined or passed is marked skipped), left out for time (B), a level check
+ *  with the level known, a part the lesson has gone past (a later part's goal marked shown or demonstrated or, in a plan with part names, its page
+ *  open), or an optional part offered twice and not taken up (declined). No plan: never by content. `requiredOnly`: optional
+ *  parts aside (facts.ts: the close is near, so an optional part not reached is offered). */
+export function v2PlanContentDone(plan: LessonPlan | undefined, state: Pick<V2State, 'goals' | 'board' | 'workingLevel' | 'history' | 'timeFit'>, requiredOnly = false): boolean {
+  if (!plan || !plan.segments.length) return false;
+  const segs = plan.segments;
+  if (segs.length === 1) return !!state.goals[segs[0]!.id];
+  const dropped = new Set(state.timeFit?.dropped ?? []);
+  const out = v2OfferedOut(plan, state);
+  const labelled = segs.every((seg) => !!v2PartOf(seg).label);
+  const paged = (i: number) => labelled && state.board.pages.some((pg) => v2IsPageOfPart(segs[i]!, pg.title));
+  const reachedAfter = (i: number) => segs.slice(i + 1, -1).some((seg, k) => ['shown', 'demonstrated'].includes(state.goals[seg.id]?.status ?? '') || paged(i + 1 + k));
+  return segs.slice(0, -1).every((seg, i) => !!state.goals[seg.id] || dropped.has(seg.id) || (v2PartOf(seg).skipWhenLevelKnown && !!state.workingLevel)
+    || (v2PartIsOptional(seg) && (requiredOnly || out.has(seg.id))) || reachedAfter(i));
+}
+
+/** Task 7f D: the tutor may begin the summary or end the lesson by itself: no box; the wrap minute reached (v2WrapMin); or the
+ *  plan's content done (v2PlanContentDone). Homework keeps the last fifth (its own time line). `on` off: the last fifth, as
+ *  before (v2CloseOpenByClock). Read by turn.ts (applyControlTool's end_lesson rule, the summary detection, the held summary
+ *  page), close-invite.ts and facts.ts. */
+export function v2CloseOpen(session: V2Session, state: Pick<V2State, 'startedAtMs' | 'goals' | 'board' | 'workingLevel' | 'history' | 'timeFit'>, nowMs: number, on: boolean = TUTOR_V2_CLOSE_BY_CONTENT): boolean {
+  if (!on || session.homework || session.homeworkSheet) return v2CloseOpenByClock(session, state, nowMs);
+  if (!session.timeBoxMinutes) return true;
+  if (v2WrapDue(session, (nowMs - state.startedAtMs) / 60000, true, true)) return true;
+  return v2PlanContentDone(session.plan, state);
+}
+
 /** How long the speech the tutor has under way at the box may run on before the goodbye. Bounded: a partner's minute
  *  pool is charged to the wall clock, with POOL_CHARGE_SLACK_SEC (120 s) of slack past the box. */
 export const V2_HARD_STOP_TAIL_MAX_MS = 20000;
 
 /** The session is past its wrap minute (the host's `sessionWrapMinutes`, two before the box). */
-export function v2WrapDue(session: Pick<V2Session, 'wrapMinutes' | 'timeBoxMinutes'>, usedMin: number, on: boolean = TUTOR_V2_TIME_BOX): boolean {
-  return on && !!session.timeBoxMinutes && typeof session.wrapMinutes === 'number' && session.wrapMinutes > 0 && usedMin >= session.wrapMinutes;
+export function v2WrapDue(session: Pick<V2Session, 'wrapMinutes' | 'timeBoxMinutes'>, usedMin: number, on: boolean = TUTOR_V2_TIME_BOX, fallback: boolean = TUTOR_V2_CLOSE_BY_CONTENT): boolean {
+  const wrap = v2WrapMin(session, fallback);
+  return on && wrap !== undefined && usedMin >= wrap;
 }
 
 export interface V2PartDue {
@@ -41,7 +113,7 @@ export interface V2PartDue {
   /** 1-based, among the parts that count (a skipped part does not). */
   n: number; of: number;
   fromMin: number; toMin: number;
-  /** The plan's minutes add up to something other than the box, and were scaled to it. */
+  /** The plan's minutes add up to something other than the box, and were scaled to it (never with TIME_NO_SQUEEZE). */
   fitted: boolean;
   /** The plan's own total, in minutes. */
   planMin: number;
@@ -52,13 +124,16 @@ export interface V2PartDue {
  *  runs at half speed (unscaled, it read "every part's time has passed" at 15 minutes beside "about 15 left, which is
  *  time for more", review 5a I2). 'done': the box's time is past. null: no box (nothing to pace to), or a part that
  *  counts has no minutes. */
-export function v2PartDueNow(plan: LessonPlan, goals: V2State['goals'], usedMin: number, boxMin?: number): V2PartDue | 'done' | null {
+export function v2PartDueNow(plan: LessonPlan, goals: V2State['goals'], usedMin: number, boxMin?: number, opts: { fit?: boolean; dropped?: readonly string[] } = {}): V2PartDue | 'done' | null {
   if (!boxMin || !(boxMin > 0)) return null;
-  const parts = plan.segments.filter((s) => goals[s.id]?.status !== 'skipped').map((s) => ({ seg: s, part: v2PartOf(s) }));
+  // Task 7f B (TIME_NO_SQUEEZE): the parts keep their own minutes, and a part left out for time takes none.
+  const fit = opts.fit ?? !TUTOR_V2_TIME_NO_SQUEEZE;
+  const dropped = new Set(opts.dropped ?? []);
+  const parts = plan.segments.filter((s) => goals[s.id]?.status !== 'skipped' && !dropped.has(s.id)).map((s) => ({ seg: s, part: v2PartOf(s) }));
   if (!parts.length || parts.some(({ part }) => !part.minutes)) return null;
   const total = parts.reduce((t, { part }) => t + (part.minutes ?? 0), 0);
-  const fitted = total !== boxMin;
-  const scale = boxMin / total;
+  const fitted = fit && total !== boxMin;
+  const scale = fit ? boxMin / total : 1;
   let at = 0;
   for (let i = 0; i < parts.length; i += 1) {
     const { seg, part } = parts[i];
@@ -75,14 +150,37 @@ export function v2PartDueNow(plan: LessonPlan, goals: V2State['goals'], usedMin:
  *  here, not an order to move on. A discussion and homework are paced by their own lines; a lesson with no box has
  *  nothing to pace to. `timeUp`: the facts' time-up window (facts.ts V2_TIME_UP_MIN); "every part's time has passed" is
  *  said only then or past the wrap minute, never while the box has time left. */
-export function v2PartDueFact(session: V2Session, state: V2State, nowMs: number, timeUp: boolean, on: boolean = TUTOR_V2_TIME_BOX): string | null {
+export function v2PartDueFact(session: V2Session, state: V2State, nowMs: number, timeUp: boolean, on: boolean = TUTOR_V2_TIME_BOX, noSqueeze: boolean = TUTOR_V2_TIME_NO_SQUEEZE): string | null {
   if (!on || !session.plan || !session.timeBoxMinutes || session.homework || session.homeworkSheet || discussionOf(session.plan)) return null;
   const usedMin = Math.max(0, (nowMs - state.startedAtMs) / 60000);
-  const due = v2PartDueNow(session.plan, state.goals, usedMin, session.timeBoxMinutes);
+  const due = v2PartDueNow(session.plan, state.goals, usedMin, session.timeBoxMinutes, { fit: !noSqueeze, dropped: noSqueeze ? state.timeFit?.dropped : [] });
   if (!due) return null;
-  if (due === 'done') return timeUp || v2WrapDue(session, usedMin, on) ? 'by the plan\'s minutes: every part\'s time has passed' : null;
+  // Task 7f B: unscaled, the line is a guide: it never cuts a part short (the practice a part needs comes first).
+  const head = noSqueeze ? 'by the plan\'s minutes (a guide only: never a reason to cut a part short or skip its practice)' : 'by the plan\'s minutes';
+  if (due === 'done') return timeUp || v2WrapDue(session, usedMin, on) ? `${head}: every part's time has passed` : null;
   const within = due.fitted ? `, the plan's ${due.planMin} minutes fitted to the ${session.timeBoxMinutes}-minute box` : '';
-  return `by the plan's minutes: [${due.id}]${due.label ? ` ${due.label}` : ''} would be running now (part ${due.n} of ${due.of}, minutes ${due.fromMin}–${due.toMin}${within})`;
+  return `${head}: [${due.id}]${due.label ? ` ${due.label}` : ''} would be running now (part ${due.n} of ${due.of}, minutes ${due.fromMin}–${due.toMin}${within})`;
+}
+
+/** The lesson's time line in the facts, after "time: N min used of about B; " (facts.ts). Task 7f: "the time is up" at the box
+ *  plus the margin (F); the close by content or the wrap minute, never the box's last fifth (D). Both off: as before. */
+export function v2LessonTimeLine(session: V2Session, state: Pick<V2State, 'startedAtMs'>, nowMs: number, o: { summaryBegun: boolean; closeOpen: boolean; tf: V2TimeFlags }): string {
+  const box = session.timeBoxMinutes!;
+  const used = (nowMs - state.startedAtMs) / 60000;
+  const left = box - used;
+  const leftStop = left + (o.tf.overrun ? v2OverrunMin(true) : 0);
+  const n = Math.round(left);
+  if (leftStop <= V2_TIME_UP_MIN) return 'the time is up';
+  if (v2WrapDue(session, used, TUTOR_V2_TIME_BOX, o.tf.closeByContent)) {
+    return left > 0.5 ? `about ${Math.max(1, n)} minutes left: finish this exchange, then summary` : 'the planned time is reached: finish this exchange properly, then summary (there are a few minutes past it to finish well, not for new work)';
+  }
+  if (!o.tf.closeByContent) {
+    if (left > box * 0.2) return o.summaryBegun ? `about ${n} left` : `about ${n} left, which is time for more: the lesson is not at its close unless the student asks to stop`;
+    return left > 0.5 ? `about ${n} left: the close is near` : 'the planned time is reached: the close is near';
+  }
+  if (o.summaryBegun) return `about ${n} left`;
+  if (o.closeOpen) return `about ${n} left; the plan's parts are done, so the summary may begin`;
+  return `about ${n} left, which is time for more: the lesson is not at its close unless the student asks to stop`;
 }
 
 /** What the session does at the box. Each step is the caller's (useV2Turns); this is their order. */

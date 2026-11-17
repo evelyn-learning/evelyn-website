@@ -1,4 +1,7 @@
 /// <reference types="node" />
+// Task 7f: run with NEXT_PUBLIC_TUTOR_V2_TIME_NO_SQUEEZE=off, NEXT_PUBLIC_TUTOR_V2_PART_MIN_PRACTICE=off, NEXT_PUBLIC_TUTOR_V2_CLOSE_BY_CONTENT=off, NEXT_PUBLIC_TUTOR_V2_TIME_OVERRUN=off (package.json): it pins the behaviour
+// before Task 7f (the box's last fifth, the fitted part minutes, the stop at the box, part changes with no practice count);
+// scripts/test-brain-v2-time-7f.ts covers the switches on, and each one off alone.
 /**
  * Tutor brain v2 — fixes from the four GDI learners' real voices replayed on v2 (Task 6e;
  * docs/superpowers/plans/gdi-v2-baseline/v2audio/RESULTS.md). No network, no model.

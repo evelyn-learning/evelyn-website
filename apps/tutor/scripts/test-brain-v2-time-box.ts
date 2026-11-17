@@ -1,4 +1,7 @@
 /// <reference types="node" />
+// Task 7f: run with NEXT_PUBLIC_TUTOR_V2_TIME_NO_SQUEEZE=off, NEXT_PUBLIC_TUTOR_V2_PART_MIN_PRACTICE=off, NEXT_PUBLIC_TUTOR_V2_CLOSE_BY_CONTENT=off, NEXT_PUBLIC_TUTOR_V2_TIME_OVERRUN=off (package.json): it pins the behaviour
+// before Task 7f (the box's last fifth, the fitted part minutes, the stop at the box, part changes with no practice count);
+// scripts/test-brain-v2-time-7f.ts covers the switches on, and each one off alone.
 /**
  * Tutor brain v2 — the time box (v2/time-box.ts): which part should be running by the plan's minutes, the wrap minute as
  * a fact (not a line spoken into the lesson), the goodbye at the box after the tutor's speech, and the host's box, wrap
