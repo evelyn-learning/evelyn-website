@@ -30,21 +30,33 @@ export const V2_GOODBYE = /\b(?:see you (?:next time|soon|again)|goodbye|good-by
 /** Task 6g (PASSED_PART_CLOSE): a lesson's closing thanks is a goodbye too. Tester B's and gdi-real-james's closes had no
  *  farewell word ("Thank you for today's lesson, and well done!"), so the goodbye was never held and the line naming
  *  the part not reached was never said before it (v2audio-6f finding 1). Only thanks for the lesson as a whole, never
- *  "thank you for trying" or a thanks for an answer. */
-export const V2_GOODBYE_THANKS = /\bthanks?(?: you)?(?: (?:so|very) much)? for (?:today'?s (?:lesson|class|session)|the lesson today|(?:the |this |your )?(?:lesson|class|session)(?: today)?|today)\b|今日の(?:レッスン|授業)は(?:ここまで|これで終わり)|今日はここまで(?:です|にしましょう)/i;
+ *  "thank you for trying" or a thanks for an answer. Fix round 1 (minor 4): the phrase must end there ("Thank you for
+ *  your class project idea." is no goodbye). */
+export const V2_GOODBYE_THANKS = /\bthanks?(?: you)?(?: (?:so|very) much)? for (?:today'?s (?:lesson|class|session)|the lesson today|(?:the |this )(?:lesson|class|session)(?: today)?|your time today|today)(?=\s*(?:[.!,]|$|and\b))|今日の(?:レッスン|授業)は(?:ここまで|これで終わり)|今日はここまで(?:です|にしましょう)/i;
 /** Whether a sentence (its quoted spans already taken out) is a goodbye. `wide`: the closing thanks counts too. */
 export function isGoodbye(sentence: string, wide: boolean = TUTOR_V2_PASSED_PART_CLOSE): boolean {
   return V2_GOODBYE.test(sentence) || (wide && V2_GOODBYE_THANKS.test(sentence));
 }
 
 /** Task 6g (PART_OFFER_ONCE): the frame in Japanese. Asking whether to go on (次に進みますか, 先に進んでもいいですか,
- *  過去形に進みましょうか), or the question check that goes with it (それとも先に質問がありますか, 進む前に何か質問は
- *  ありますか), in a sentence that ends as a question. "質問はありますか？" alone is a check-in, as "any questions so far?"
+ *  次の部分に進みましょうか), or the question check that goes with it (過去形に進みますか、それとも先に質問がありますか,
+ *  進む前に何か質問はありますか), in a sentence that ends as a question. "質問はありますか？" alone is a check-in, as "any questions so far?"
  *  is in English; "仕事は順調に進みますか？" asks about their work. */
-const JA_GO_ON = /(?:(?:次|先|つぎ|さき)[^。！？?]{0,20}?|(?<!順調|うまく|スムーズ)(?:に|へ))(?:進(?:みますか|みましょうか|んで(?:も)?(?:いい|よい|よろしい|大丈夫)(?:です|でしょう)?か)|行きますか|行きましょうか|移りますか|移りましょうか)/;
-const JA_QUESTION_FIRST = /それとも[^。！？?]*質問|(?:進む|移る|行く)前に[^。！？?]*質問/;
+// Fix round 1 (I1): only the frame's own shape. Any "…に行きますか／進みますか／移りますか" caught ordinary questions
+// (「海外出張に行きますか？」, 「次の会議に行きますか？」, 「プロジェクトはスケジュール通りに進みますか？」), which were dropped,
+// stripped from the history and counted as frames.
+const JA_GO_ON_VERB = '(?:進(?:みますか|みましょうか|んで(?:も)?(?:いい|よい|よろしい|大丈夫)(?:です|でしょう)?か)|行きますか|行きましょうか|移りますか|移りましょうか)';
+/** A bare go-on: no object or destination ("次に進みますか", "先へ進みましょうか"). */
+const JA_BARE_GO_ON = new RegExp(`(?:次|先|つぎ|さき)(?:に|へ)${JA_GO_ON_VERB}`);
+/** Going on to the next part of the lesson ("次の部分に進んでもいいですか"). */
+const JA_NEXT_PART = new RegExp(`次の(?:パート|部分|ところ|項目|テーマ|トピック|セクション|ステップ|練習|課題|内容)(?:に|へ)${JA_GO_ON_VERB}`);
+/** Any go-on, only beside the question check ("過去形に進みますか、それとも先に質問がありますか"). */
+const JA_ANY_GO_ON = new RegExp(`(?:に|へ)${JA_GO_ON_VERB}`);
+const JA_OR_QUESTION = /それとも[^。！？?]*質問/;
+/** The question check before moving on ("過去形に進む前に、何か質問はありますか"). */
+const JA_QUESTION_BEFORE = /(?:進む|移る)前に[^。！？?]*質問/;
 const JA_ASKS = /(?:[?？]|か[。．]?)["'」』）)]*\s*$/;
-export const V2_PART_FRAME_JA = { test: (s: string) => JA_ASKS.test(s) && (JA_GO_ON.test(s) || JA_QUESTION_FIRST.test(s)) };
+export const V2_PART_FRAME_JA = { test: (s: string) => JA_ASKS.test(s) && (JA_BARE_GO_ON.test(s) || JA_NEXT_PART.test(s) || JA_QUESTION_BEFORE.test(s) || (JA_ANY_GO_ON.test(s) && JA_OR_QUESTION.test(s))) };
 /** Whether a whole sentence is a part-change frame. `ja`: the Japanese forms count too (the kill switch's old matcher
  *  is the English one only). */
 export function isPartFrame(sentence: string, ja: boolean = TUTOR_V2_PART_OFFER_ONCE): boolean {
@@ -88,6 +100,9 @@ export interface ReplyGateOptions {
    *  when what follows begins the summary or says goodbye. Once the summary has begun in the reply, a later practice
    *  ask is dropped. The predicate says which sentences are practice asks; absent: no such hold. */
   closeAsk?: ((sentence: string) => boolean) | null;
+  /** Fix round 1 (I3): whether a practice ask is held at all (the summary is due). False: only the drop after a summary begun
+   *  in the reply. Absent: held, as in the first version. */
+  holdAsk?: boolean;
   /** The words that say the summary has begun (turn.ts V2_SUMMARY_BEGUN), for closeAsk. */
   summaryBegun?: RegExp;
 }
@@ -162,6 +177,8 @@ export class ReplyGate {
 
   /** Task 6g: a practice ask is waiting for what comes after it. */
   get holdsAsk(): boolean { return this.ask !== null; }
+  /** The practice ask waiting, as words (fix round 1, minor 3: a card's lead-in is judged with it). */
+  get heldAsk(): string { return this.ask ?? ''; }
   /** Let a waiting practice ask go out: the reply goes on with the lesson, or is complete. */
   releaseAsk(): void { const a = this.ask; this.ask = null; if (a) this.emit(a); }
   /** Drop a waiting practice ask: what follows it closes the lesson. */
@@ -200,7 +217,8 @@ export class ReplyGate {
     // Task 6g: what follows a waiting practice ask decides it. The summary beginning or a goodbye closes the lesson, so the
     // ask is dropped (a goodbye keeps it until the close is known: see releaseHeld, dropHeld); anything else, it goes out.
     if (this.opts.closeAsk) {
-      const begins = !!this.opts.summaryBegun?.test(core);
+      // Fix round 1 (I2): summary words begin the summary only when it is due; a closing page always does (summaryBegins).
+      const begins = this.opts.holdAsk !== false && !!this.opts.summaryBegun?.test(core);
       if (begins) { this.dropAsk(); this.summaryStarted = true; }
       else if (this.summaryStarted && !this.holding && this.opts.closeAsk(core)) { this.removed.push(core); return; }
       else if (this.ask !== null && !this.holding && !(this.opts.holdGoodbye && isGoodbye(core.replace(QUOTED_SPANS, ' ')))) this.releaseAsk();
@@ -219,7 +237,7 @@ export class ReplyGate {
     if (this.echoes.size && this.echoes.has(norm(core))) { this.removed.push(core); return; }
     if (this.opts.dropFrame && !this.holding && isPartFrame(core)) { this.removed.push(core); return; }
     if (this.holding || (this.opts.holdGoodbye && isGoodbye(core.replace(QUOTED_SPANS, ' ')))) { this.holding = true; this.heldParts.push(s); return; }
-    if (this.opts.closeAsk && this.ask === null && this.opts.closeAsk(core)) { this.ask = s; return; }
+    if (this.opts.closeAsk && this.opts.holdAsk !== false && this.ask === null && this.opts.closeAsk(core)) { this.ask = s; return; }
     this.emit(s);
   }
 

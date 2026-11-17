@@ -28,7 +28,7 @@ import { saidCovers, sentenceCardToSay, unsaidAsk, unsaidBoardItem, asksAnywhere
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, v2SummaryBegun, V2_NO_ASK_RECHECK_S, V2_TIME_UP_MIN, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
 import { v2WrapDue } from './time-box';
-import { planGoalIds, renderPlanMap, v2NextTimeAllLine, v2PagePartLabel, v2NextTimeLine, v2PartOf, v2UnreachedOffer } from './plan-map';
+import { planGoalIds, renderPlanMap, v2NextTimeAllLine, v2PagePartLabel, v2NextTimeLine, v2PartIsOptional, v2PartOf, v2UnreachedOffer } from './plan-map';
 import { stripToolTalk } from './tool-talk';
 import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
@@ -84,7 +84,9 @@ const CACHE = { type: 'ephemeral' as const, ttl: '1h' as const };
  *  sound verdicts and informal wording; asked only for a slip of calculation it does not. */
 export const V2_MATHS_CHECK = `[check — from the system running the session, not from the student]\nYou have just said the reply above aloud. Look only for a slip of calculation in it: an operation you named ("dividing by", "multiplying by", "adding") or a value you gave that, carried out on what is on the board, does not give what you said. A point, value or label on a figure you drew with this reply counts too, when it is false for the thing it is drawn on (a point marked as on a curve that it is not on). A statement that is true on any ordinary reading stands: counting both ends of a range, rounding, or a different but equal form is not a slip. Be certain before you correct. Nothing else is in question: not your verdict on the student's answer, not which shape or case something is, not loose or informal wording, not anything you left unsaid. If there is such a slip, write "correction:" and one short sentence of at most twenty words, as you would say it aloud straight after, naming only the right operation or value. Otherwise write "maths: ok". Write only that one line.`;
 
-export type V2ModelCall = (params: Anthropic.MessageCreateParamsNonStreaming, onText?: (delta: string) => void, signal?: AbortSignal) => Promise<Anthropic.Message>;
+/** `onBlockEnd`: a content block of the reply is complete (its type): Task 6g fix round 1 lets a held practice ask go when
+ *  the words end, not when the trailing tool calls do. */
+export type V2ModelCall = (params: Anthropic.MessageCreateParamsNonStreaming, onText?: (delta: string) => void, signal?: AbortSignal, onBlockEnd?: (type: string) => void) => Promise<Anthropic.Message>;
 export type V2BoardPort = (board: V2Board, id: string, name: string, args: Record<string, unknown>) => V2BoardOutcome;
 
 export interface V2TurnInput {
@@ -193,10 +195,11 @@ export function v2StudentBlock(studentSaid: string | null, state: V2State, silen
   return silenceSeconds ? '[The student has not replied.]' : '[The student sent nothing.]';
 }
 
-const defaultModelCall: V2ModelCall = async (params, onText, signal) => {
+const defaultModelCall: V2ModelCall = async (params, onText, signal, onBlockEnd) => {
   const { client, model } = getModelClient('brain');
   const stream = client.messages.stream({ ...params, model: params.model || model }, signal ? { signal } : undefined);
   if (onText) stream.on('text', (delta) => onText(delta));
+  if (onBlockEnd) stream.on('contentBlock', (block) => onBlockEnd(block.type));
   return stream.finalMessage();
 };
 
@@ -580,7 +583,22 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const summaryBefore = gated && !!session.plan && v2SummaryBegun(state);
   // Task 6g: in a reply that may close the lesson, a practice ask waits for the next sentence and is dropped when the summary
   // or a goodbye follows it (reply-gate.ts closeAsk): tester B's last reply asked for a retry and then gave the summary.
-  const closeAsk = gated && TUTOR_V2_CLOSE_ONE_QUESTION && !!session.plan && (selfCloseOpen || closingTurn || summaryBefore) ? v2IsPracticeAsk : null;
+  // Fix round 1 (I3): held only when the summary is due (a closing turn; the summary begun earlier; or the box's last fifth
+  // with every required part before the summary reached), not for every ask of a timed lesson's last fifth: a maths "Can
+  // you try this one?" waited for the whole reply. A summary begun in this reply drops later asks whenever the gate is on.
+  const closeAsk = gated && TUTOR_V2_CLOSE_ONE_QUESTION && !!session.plan ? v2IsPracticeAsk : null;
+  const summaryDue = (() => {
+    if (!closeAsk || !session.plan) return false;
+    if (closingTurn || summaryBefore) return true;
+    if (!selfCloseOpen) return false;
+    const segs = session.plan.segments;
+    if (state.board.pages.some((pg) => closesLesson(pg.title))) return false;
+    return segs.slice(0, -1).every((seg) => {
+      const p = v2PartOf(seg);
+      if (v2PartIsOptional(seg) || state.goals[seg.id] || (p.skipWhenLevelKnown && state.workingLevel)) return true;
+      return !!p.label && state.board.pages.some((pg) => v2PagePartLabel(session.plan, pg.title) === p.label);
+    });
+  })();
   // A closing page opened in this turn (for summaryBegunAt), and whether a next-time line was said.
   let closingOpened = false; let nextTimeSaid = false;
   // The reply's whole text, while a page held until it was complete is let go (D1): the next-time line checks it.
@@ -605,7 +623,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       if (firstTextMs === null && t.trim()) firstTextMs = Date.now() - t0;
       saidChars += t.length; saidNow += t;
       input.onText?.(t);
-    }, { dropFrame: gated && TUTOR_V2_PART_OFFER_ONCE && !frameDue && !!session.plan, holdGoodbye, closeAsk, summaryBegun: V2_SUMMARY_BEGUN });
+    }, { dropFrame: gated && TUTOR_V2_PART_OFFER_ONCE && !frameDue && !!session.plan, holdGoodbye, closeAsk, holdAsk: summaryDue, summaryBegun: V2_SUMMARY_BEGUN });
     const hold = (block: InlineBlock) => {
       gate.flush(); gate.releaseAsk();
       // A held summary page with plan parts not reached: the offer names them and lets the student choose (Task 6e).
@@ -675,13 +693,14 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           // when the words before it ask them something. Said only if the model's next sentence does not say it (reply-gate.ts).
           // Fix round 3: spoken teaching lessons only (not voice homework or a discussion).
           if (part.block.kind === 'sentence' && gated && TUTOR_V2_SAY_SENTENCE_CARD) {
-            const say = sentenceCardToSay(part.block.body, saidNow, { leadIn: true, continuing: cardRun });
+            // Fix round 1 (minor 3): a practice ask the gate holds is part of what was said before the card.
+            const say = sentenceCardToSay(part.block.body, `${saidNow}${gate.heldAsk}`, { leadIn: true, continuing: cardRun });
             if (say) { saidCards.set(part.block.raw, say); sinceWords = []; gate.speakCard(say); cardRun = true; }
           }
           // Task 6f: a note or a table of example sentences a lead-in points at is spoken there too (board-timing.ts
           // noteSentencesToSay): announced before it, at once; otherwise only if the next sentence points back at it.
           if ((part.block.kind === 'note' || part.block.kind === 'table') && gated && languageLesson && TUTOR_V2_SAY_NOTE_SENTENCES) {
-            const note = noteSentencesToSay(part.block.kind, part.block.body, saidNow);
+            const note = noteSentencesToSay(part.block.kind, part.block.body, `${saidNow}${gate.heldAsk}`);
             if (note) {
               saidCards.set(part.block.raw, note.say); sinceWords = [];
               if (note.announced) gate.speakCard(note.say, { perSentence: true }); else gate.speakCardIf(note.say, pointsBackAtBoard, { perSentence: true });
@@ -693,7 +712,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         gate.push(part.text);
       }
     };
-    const response = await callModel(params, (delta) => take(inline.push(delta)), input.signal);
+    // Fix round 1 (I3): when the words end, the last sentence goes out (it waited for the white space after it, or for the
+    // call to return, behind any trailing tool calls), and a practice ask still waiting goes too, unless a closing page waits
+    // on the end of the reply (pendingHold) or a goodbye is held: their outcome decides it.
+    const response = await callModel(params, (delta) => take(inline.push(delta)), input.signal, (type) => { if (type !== 'text' || pendingHold) return; gate.flush(); if (!pendingHold && !gate.holdsGoodbye) gate.releaseAsk(); });
     take(inline.flush());
     gate.flush();
     if (pendingHold) {
@@ -769,7 +791,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       // Task 6g: a close with no goodbye the gate could hold still names an optional part it skipped, at its end, when the
       // reply has not: a close accepted now, or the student's stop. Every lesson that skips one names it at the close.
       const ended = toolCalls.slice(callsBefore).find((c) => c.name === 'end_lesson');
-      const accepted = (!!ended && !/^not /.test(ended.outcome)) || (TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid));
+      // Fix round 1 (minor 1): an accepted end_lesson, or a closing turn's last call (never in the middle of a turn that goes on).
+      const accepted = (!!ended && !/^not /.test(ended.outcome)) || (closingTurn && response.stop_reason !== 'tool_use');
       const line = accepted ? v2NextTimeLine(session.plan, state, saidNow) : null;
       if (line) {
         nextTimeSaid = true;
@@ -1098,7 +1121,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
 
   // Task 6g (CLOSE_ONE_QUESTION): the summary has begun: its closing page opened, or its words said so, once most of the
   // plan is behind the lesson (an early "Quick recap" page is not its summary). From the next turn, no new practice.
-  if (gated && TUTOR_V2_CLOSE_ONE_QUESTION && session.plan && typeof state.summaryBegunAt !== 'number' && !state.closed && (closingOpened || V2_SUMMARY_BEGUN.test(spoken.join(' ')))) {
+  // Fix round 1 (I2): summary words count only in the box's last fifth or a closing turn: "Let's recap what we've done so
+  // far" halfway through a maths lesson locked practice out for the rest of it. A closing page counts whenever it opens.
+  if (gated && TUTOR_V2_CLOSE_ONE_QUESTION && session.plan && typeof state.summaryBegunAt !== 'number' && !state.closed && (closingOpened || ((selfCloseOpen || closingTurn) && V2_SUMMARY_BEGUN.test(spoken.join(' '))))) {
     const before = session.plan.segments.slice(0, -1);
     const reached = before.filter((seg) => !!state.goals[seg.id] || state.board.pages.some((pg) => !!v2PartOf(seg).label && v2PagePartLabel(session.plan, pg.title) === v2PartOf(seg).label)).length;
     if (before.length && reached * 2 >= before.length) state.summaryBegunAt = nowMs;

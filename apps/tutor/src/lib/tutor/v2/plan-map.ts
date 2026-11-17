@@ -315,14 +315,21 @@ const historyText = (h: V2State['history'][number]) => (typeof h.content === 'st
  *  your pronunciation next…?", 「…発音の練習をするか、どちらにしますか？」), or the runtime's own offer ("Before the summary,
  *  there is still the pronunciation part. Would you like to do it now…?"). */
 export function v2PartOffers(seg: Segment, history: V2State['history']): number {
+  // Fix round 1 (minor 2): a part with no name words and no localized name has nothing to be offered by (v2PartNamedIn
+  // counts it as named everywhere, and every question would have been an offer).
+  const p = v2PartOf(seg);
+  if (!headingWords(p.label ?? '').length && !Object.keys(p.labelLocalized ?? {}).length) return 0;
   let n = 0;
   for (const h of history) {
     if (h.role !== 'assistant') continue;
     const xs = stripBoardBlocks(historyText(h)).split(SENTENCES).map((x) => x.trim()).filter(Boolean);
-    if (xs.some((x, i) => ASKS_END.test(x) && (v2PartNamedIn(seg, x) || (i > 0 && /^Before the summary, there is still\b/.test(xs[i - 1]!) && v2PartNamedIn(seg, xs[i - 1]!))))) n += 1;
+    if (xs.some((x, i) => ASKS_END.test(x) && ((OFFER_SHAPE.test(x) && v2PartNamedIn(seg, x)) || (i > 0 && /^Before the summary, there is still\b/.test(xs[i - 1]!) && v2PartNamedIn(seg, xs[i - 1]!))))) n += 1;
   }
   return n;
 }
+/** Fix round 1 (minor 2): an offer or a choice, not any question that names the part ("How was your pronunciation
+ *  class?"). */
+const OFFER_SHAPE = /\b(?:would you like|do you want|want to|shall we|how about|or)\b|どちら|しますか|しましょうか|やりますか|やってみますか|どうですか|それとも/i;
 
 /** The optional parts not taken up that have been offered V2_MAX_PART_OFFERS times or more: not offered again. */
 export function v2OfferedOut(plan: LessonPlan, state: Pick<V2State, 'goals' | 'board' | 'history'>, enabled: boolean = TUTOR_V2_PASSED_PART_CLOSE): Set<string> {

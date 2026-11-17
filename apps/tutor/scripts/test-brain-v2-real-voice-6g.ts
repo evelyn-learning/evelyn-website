@@ -55,9 +55,15 @@ async function main() {
   {
     const T40 = '次に進みますか、それとも先に質問がありますか？';
     check('root cause: the English matcher misses it', !V2_PART_FRAME.test(T40));
-    check('now a frame: go-on asks and the question check with it', isPartFrame(T40) && isPartFrame('現在完了に進んでもいいですか。') && isPartFrame('先に進みましょうか？') && isPartFrame('過去形に進む前に、何か質問はありますか？'));
+    check('now a frame: go-on asks and the question check with it', isPartFrame(T40) && isPartFrame('次の部分に進んでもいいですか。') && isPartFrame('先に進みましょうか？') && isPartFrame('過去形に進みますか、それとも先に質問がありますか？') && isPartFrame('過去形に進む前に、何か質問はありますか？'));
     check('not a frame: a check-in alone, a question about their work, a statement', !isPartFrame('質問はありますか？') && !isPartFrame('仕事は順調に進みますか？') && !isPartFrame('次は過去形です。') && !isPartFrame('では、次に進みましょう。'));
     check('the kill switch off: the English matcher only', !isPartFrame(T40, false) && isPartFrame('Shall we go on?', false));
+    const ordinary = ['海外出張に行きますか？', '次の会議に行きますか？', 'プロジェクトはスケジュール通りに進みますか？', '来週は大阪へ行きますか？', '次はどの部署に移りますか？'];
+    check('fix round 1 (I1): ordinary questions with a destination are not frames', ordinary.every((x) => !isPartFrame(x)), ordinary.filter((x) => isPartFrame(x)));
+    check('…nor do they open a page as a frame would', !mayOpenPart({ title: 'Past simple', studentSaid: 'はい', lastTutor: 'プロジェクトはスケジュール通りに進みますか？', pagesOpen: 4 }));
+    const og: string[] = []; const gg = new ReplyGate((t) => og.push(t), { dropFrame: true, holdGoodbye: false });
+    for (const x of ordinary) gg.push(x); gg.flush();
+    check('…and the gate lets them go', og.join('') === ordinary.join('') && !gg.removed.length, og.join(''));
     // The gate drops it where it stands, when the frame is not due.
     const out: string[] = [];
     const g = new ReplyGate((t) => out.push(t), { dropFrame: true, holdGoodbye: false });
@@ -85,6 +91,9 @@ async function main() {
       a('The correct sentence is: I successfully finished. Would you like to practise your pronunciation next, or keep talking about your work?'), u('Could you give me some more examples?'),
       a('先月の仕事を一文で言うか、発音の練習をするか、どちらにしますか？'), u('No, I have not.')];
     check('two offers counted, in English and Japanese; the overview\'s "Does that sound good?" is none', v2PartOffers(pron, offers) === 2, v2PartOffers(pron, offers));
+    check('fix round 1 (minor 2): a question that names the part but offers nothing is no offer', v2PartOffers(pron, [a('How was your pronunciation class at school?')]) === 0);
+    const nameless = { ...pron, metadata: { optional: true } } as typeof pron;
+    check('…and a part with no name words is never offered by every question', v2PartOffers(nameless, [a('Would you like to try another one?')]) === 0);
     check('the runtime\'s own offer counts (its ask names the part the sentence before)', v2PartOffers(pron, [a('Before the summary, there is still the pronunciation part. Would you like to do it now, or go straight to the summary?')]) === 1);
     const st = pagesAt(B, { goals: goalsB, ...level, history: offers });
     const facts = v2PartOfferFacts(GDI, st);
@@ -101,6 +110,7 @@ async function main() {
   {
     check('root cause: "Thank you for today\'s lesson, and well done!" was no goodbye to the gate; now it is', isGoodbye("Thank you for today's lesson, and well done!") && !isGoodbye("Thank you for today's lesson, and well done!", false));
     check('thanks for an answer or a try is not', !isGoodbye('Thanks for trying.') && !isGoodbye('Thank you for explaining your role.') && !isGoodbye('Thank you, that explains it clearly.'));
+    check('fix round 1 (minor 4): anchored: "Thank you for your class project idea." is not; "Thanks for today." is', !isGoodbye('Thank you for your class project idea.') && !isGoodbye('Thank you for the lesson plan you sent.') && isGoodbye('Thanks for today.') && isGoodbye('Thank you for the lesson today, and good luck!'));
     const skipped = pagesAt(B, { goals: { ...goalsB, pronunciation: { status: 'skipped', at: 0 } }, ...level });
     check('a part marked skipped is still missed at the close (it counted as reached before)', v2MissedAtClose(GDI, skipped).map((s) => s.id).join() === 'pronunciation' && v2MissedAtClose(GDI, skipped, false).length === 0);
     check('…and the goodbye line names it', v2NextTimeLine(GDI, skipped, 'Today you described your job.') === "We didn't get to the pronunciation part today, so that's for next time.");
@@ -148,6 +158,9 @@ async function main() {
     const o6: string[] = []; const g6 = new ReplyGate((t) => o6.push(t), { dropFrame: false, holdGoodbye: true });
     run(['Good. Please say this sentence once more. ', 'Here is a quick summary.'], g6);
     check('outside the close (no closeAsk): as before', o6.join('').includes('Please say this sentence once more.'));
+    const o7: string[] = []; const g7 = new ReplyGate((t) => o7.push(t), { dropFrame: false, holdGoodbye: true, closeAsk: v2IsPracticeAsk, holdAsk: false, summaryBegun: /here is a quick summary/i });
+    g7.push('Good. Can you try this one: 3x + 2 = 11? '); g7.push('Here is a quick summary'); const early7 = o7.join(''); g7.push('. Then more. '); g7.flush();
+    check('fix round 1 (I3): summary not due: an ask goes out at once, and summary words do not drop what follows', /Can you try this one: 3x \+ 2 = 11\?/.test(early7) && !g7.holdsAsk && /Then more\./.test(o7.join('')), [early7, o7.join('')]);
     check('summary advice is not an ask', !v2IsPracticeAsk('Try to say it this way next time.') && v2IsPracticeAsk('Please say this sentence once more.') && v2IsPracticeAsk('もう一度言ってみてください。') && v2IsPracticeAsk('We can do one quick practice on "there was", or we can finish now. Which would you like?'));
 
     // James T50: the review begins (its page opens) with eight minutes left; the next turns.
@@ -168,6 +181,36 @@ async function main() {
     check('an early recap page is not the summary', early.state.summaryBegunAt === undefined);
     check('typed lessons: never recorded', (await runV2Turn({ session: { ...lang, mode: 'text', plan: GDI }, state: pagesAt([...B, 'Pronunciation'], { goals, ...level, history: spent }), studentSaid: 'yes', callModel: streaming('Now let\'s finish with a short review. <board page>Summary</board> Well done.').call, boardPass: false, mathsCheck: false, nowMs: 11 * 60000 })).state.summaryBegunAt === undefined);
     check('the kill switch is on by default; off, nothing is begun', TUTOR_V2_CLOSE_ONE_QUESTION === true && !v2SummaryBegun(r.state, false));
+  }
+
+  console.log('6. fix round 1: holds and records only at the close (I2, I3, minor 1)');
+  {
+    // I2: "Let's recap what we've done so far" halfway: not the summary, practice goes on.
+    const hist: H = [u('hi'), a('<board page>Lesson overview</board> Hello.'), u('ok'), a('<board page>Your job</board> What do you do?')];
+    const st = pagesAt(['Lesson overview', 'Level check', 'Your job', 'Present perfect'], { goals: { overview: { status: 'shown', at: 0 }, 'topic-intro': { status: 'shown', at: 0 } }, ...level, history: hist });
+    const r = await runV2Turn({ session: { ...lang, plan: GDI }, state: st, studentSaid: 'I have worked here for ten years.', callModel: streaming('Good. Let\'s recap what we\'ve done so far: you used the present perfect. Can you try one more sentence with "have worked"?').call, boardPass: false, mathsCheck: false, nowMs: 10 * 60000 });
+    check('I2: recap words at the halfway point record no summary', r.state.summaryBegunAt === undefined && !v2SummaryBegun(r.state));
+    const f = renderFacts({ ...lang, plan: GDI }, r.state, { nowMs: 11 * 60000 });
+    check('…the next facts still say time for more, with no summary line', /time for more/.test(f) && !/the summary has begun/.test(f));
+    check('…and the practice ask was said', /Can you try one more sentence/.test(r.spoken), r.spoken);
+    // I3: a maths-style ask in the last fifth, the summary not due (parts left): out before the call ends.
+    const heardAtEnd: string[] = []; let atEnd = '';
+    const text = 'Good. Can you try this one: 3x + 2 = 11?';
+    const call: V2ModelCall = async (_p, onText, _s, onBlockEnd) => { for (const piece of text.match(/[\s\S]{1,9}/g) ?? []) onText?.(piece); onBlockEnd?.('text'); atEnd = heardAtEnd.join(''); return msg([{ type: 'text', text }, { type: 'tool_use', id: 'n1', name: 'update_session_note', input: { note: 'x' } }], 'tool_use'); };
+    await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(['Lesson overview', 'Level check', 'Your job'], { goals: { overview: { status: 'shown', at: 0 } }, ...level, history: hist }), studentSaid: 'ok', callModel: call, onText: (d) => heardAtEnd.push(d), boardPass: false, mathsCheck: false, nowMs: 17 * 60000 });
+    check('I3: last fifth, summary not due: the ask is heard when the words end, before the trailing tool calls', /Can you try this one: 3x \+ 2 = 11\?/.test(atEnd), atEnd);
+    // I3: with the summary due, a held ask goes when the words end (onBlockEnd), not when the trailing tool calls do.
+    const heard2: string[] = []; let atText = '';
+    const t2 = 'Good. Please say this sentence once more.';
+    const call2: V2ModelCall = async (_p, onText, _s, onBlockEnd) => { for (const piece of t2.match(/[\s\S]{1,9}/g) ?? []) onText?.(piece); onBlockEnd?.('text'); atText = heard2.join(''); onBlockEnd?.('tool_use'); return msg([{ type: 'text', text: t2 }, { type: 'tool_use', id: 'n1', name: 'update_session_note', input: { note: 'x' } }], 'tool_use'); };
+    await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(B, { goals: goalsB, ...level, history: hist }), studentSaid: 'ok', callModel: call2, onText: (d) => heard2.push(d), boardPass: false, mathsCheck: false, nowMs: 17 * 60000 });
+    check('I3: summary due, no summary in the reply: the ask goes out when the words end', /Please say this sentence once more\./.test(atText), atText);
+    // Minor 1: the student's stop alone, mid multi-call (the first call goes on with tool calls), adds no line there.
+    const heard3: string[] = []; let calls = 0;
+    const call3: V2ModelCall = async (_p, onText) => { calls += 1; if (calls === 1) { onText?.('Of course.'); return msg([{ type: 'text', text: 'Of course.' }, { type: 'tool_use', id: 'x1', name: 'show_sentence', input: {} }], 'tool_use'); } onText?.(' Thank you, Ken.'); return msg([{ type: 'text', text: ' Thank you, Ken.' }], 'end_turn'); };
+    await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(B, { goals: { ...goalsB, pronunciation: { status: 'skipped', at: 0 } }, ...level, history: hist }), studentSaid: 'Sorry, I have to finish now.', callModel: call3, onText: (d) => heard3.push(d), boardPass: false, mathsCheck: false, nowMs: 12 * 60000 });
+    const h3 = heard3.join('');
+    check('minor 1: no line in the middle of a turn that goes on; one at the closing turn\'s last call', !/Of course\.\s*We didn't get to/.test(h3) && (h3.match(/We didn't get to/g) ?? []).length <= 1 && /Thank you, Ken\.[\s\S]*We didn't get to the pronunciation part/.test(h3), h3);
   }
 
   console.log('5. the slow first frame: set_working_level is called after the words (two model calls in all four runs)');

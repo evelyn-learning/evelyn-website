@@ -32,7 +32,8 @@ const STEERS = /\b(?:move on|go on|go ahead|carry on|keep going|continue|skip (?
 /** The tutor's last reply left the way open: it offered what comes next, or checked in. */
 const OFFERS = /\b(?:next is|next up|ready|shall we|any questions?|a question first|make sense|with me|is that clear|all clear|so far|sound good)\b/i;
 /** Task 6g (PART_OFFER_ONCE): the same, in Japanese (「次に進みますか、それとも先に質問がありますか？」). */
-const OFFERS_JA = /(?:次|先)に進|進んでも|に進みますか|に進みましょうか|質問(?:が|は)(?:あります|ありません)か/;
+// Fix round 1 (I1): the frame's own shape only, not any "…に進みますか" (「プロジェクトはスケジュール通りに進みますか？」).
+const OFFERS_JA = /(?:次|先)(?:に|へ)進|次の(?:パート|部分|ところ|項目|テーマ|トピック|セクション|ステップ|練習|課題|内容)(?:に|へ)|(?:進む|移る)前に|質問(?:が|は)(?:あります|ありません)か/;
 const offers = (text: string, ja: boolean = TUTOR_V2_PART_OFFER_ONCE) => OFFERS.test(text) || (ja && OFFERS_JA.test(text));
 
 /** Whether a sentence ends as a question. With `secondLanguage`, a question in the support language counts too: a
