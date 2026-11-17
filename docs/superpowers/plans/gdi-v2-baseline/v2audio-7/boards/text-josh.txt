@@ -1,0 +1,151 @@
+# embed-1794903243930 student=gdi-v2-replay-r5-text-josh status=active duration=630 progress={"lessonPlanId":"gdi.trial.english.work-projects.v1","currentSegmentId":"past-simple","completedSegmentIds":["overview","level-check","topic-intro","present-perfect"],"updatedAt":"2026-11-17T08:19:32.577Z"}
+
+T0 [0.07] TUTOR: Hello, Josh! I'm Ryota, and welcome to your English lesson. Today we'll talk about your work and the projects you're involved in, and practise two grammar points: the present perfect for experience, and the past simple for finished events. Does that sound good?
+    [board 0.14] PAGE "Overview"
+    [board 0.14] annotate {"text":"Today's lesson\nTalking about your work and experience\nPresent perfect: I have worked here for five years\nPast simple: I attended an exhibition last 
+
+T1 [1.15] STUDENT: Yes, that sounds good. Thank you, Ryota.
+
+T2 [1.18] TUTOR: Great! Here's how it goes: first, a short, friendly chat so I can see what your English is like and adjust the lesson for you. Then we'll talk about your work and practise both grammar points. I'll correct your mistakes and give you a chance to try again. Are you ready?
+
+T3 [1.63] STUDENT: Yes, I am ready. Please go ahead.
+
+T4 [1.66] TUTOR: Let's start with a short, friendly chat so I can see how you speak English. Please answer in English, and don't worry about mistakes.
+    [board 1.67] PAGE "Level check"
+    [board 1.67] showProblem {"problem":{"statement":"Can you tell me a little about your job? What do you do?","format":"free-response","difficultyLabel":"easy","rich":true},"id":"inl_mwkf
+
+T5 [1.98] STUDENT: I am a manager at a communications company in Japan. I work with companies in Japan and also worldwide. My main responsibility is training division, and I help with sales for the division.
+
+T6 [2.02] TUTOR: Thank you, that's a clear picture of your role. Now, have you ever worked with an international customer? If so, please tell me about the experience.
+    [board 2.02] showProblem {"problem":{"statement":"Have you ever worked with an international customer? If so, can you tell me about the experience?","format":"free-response","difficulty
+
+T7 [2.34] STUDENT: Yes, I have worked with international customers. I work with companies in America and Europe and Asia. I help them with training programs and sales support.
+
+T8 [2.36] TUTOR: Good, that gives me a clear picture of your work. Last question: what is one skill you'd like to improve in your English, and why is it important to you?
+    [board 2.36] showProblem {"problem":{"statement":"What is one skill you'd like to improve in your English, and why is it important to you?","format":"free-response","difficultyLabel":"e
+
+T9 [2.69] STUDENT: I want to improve my conversation with customers. Before meetings, I often do not know what to say. This is important because I need to communicate better with them.
+
+T10 [2.75] TUTOR: Thank you, Josh. Today we'll focus on making your grammar more accurate and your answers more natural, especially before meetings with customers.
+
+Let's start with your own work. What are your main responsibilities at work? Please give at least two sentences.
+    [board 2.75] PAGE "Your job"
+    [board 2.76] annotate {"text":"Explaining your work:\nI work in training, and I help customers with sales support.\nI have worked with international customers for three years. (exper
+    [board 2.76] showProblem {"problem":{"statement":"What are your main responsibilities at work? Give a complete answer with at least two sentences.","format":"free-response","difficultyL
+
+T11 [3.24] STUDENT: Do you want me to start now?
+
+T12 [3.26] TUTOR: Yes, please go ahead. Answer the question on the board in at least two sentences, and take your time.
+
+T13 [3.45] STUDENT: I am both the training division manager and to help with sales for the division. I work with many teachers and customers every day.
+
+T14 [3.48] TUTOR: Your sentence about teachers and customers is clear. One thing to fix: "both ... and" needs two matching parts, and "to help" doesn't match "manager." We say:
+
+Can you say your first sentence again with this change?
+    [board 3.49] CARD "I am the training division manager, and I also help with sales for the division." / both ... and では同じ形の文をつなぎます
+    [board 3.58] annotate {"text":"\"both ... and\" joins two matching parts: a noun with a noun, or a verb with a verb.","style":"highlight","rich":true,"id":"inl_mwkf66iy_2"}
+
+T15 [3.93] STUDENT: I am both the training division manager and help with sales for the division.
+
+T16 [3.98] TUTOR: Not quite: "both ... and" needs matching parts, and "manager" is a noun while "help" is a verb. The correct sentence is the one on the board: "I am the training division manager, and I also help with sales for the division."
+
+We've finished talking about your job. Shall we move on to the present perfect, or do you have a question first?
+
+T17 [4.51] STUDENT: Thank you. I understand. We can move on to the present perfect.
+
+T18 [4.55] TUTOR: Your job is done. Now the present perfect: we use it for experience that started in the past and still continues now.
+
+Here is a question for you. Try starting with "I have worked…".
+    [board 4.56] PAGE "Present perfect"
+    [board 4.56] annotate {"text":"Present perfect = have / has + past participle\nI have worked here for five years. (started in the past, still true now)\nShe has completed several pro
+    [board 4.57] showProblem {"problem":{"statement":"Have you worked for your current company for a long time?","format":"free-response","difficultyLabel":"medium","rich":true},"id":"inl_m
+
+T19 [4.93] STUDENT: I work here for eleven year.
+
+T20 [4.96] TUTOR: Eleven years is a long time! Because you started in the past and you still work there now, we say "have worked": I have worked here for eleven years. Can you say that sentence once more?
+    [board 4.97] CARD "I have worked here for eleven years." / 過去に始まり今も続いている経験は have + 過去分詞で言います
+
+T21 [5.38] STUDENT: I have worked here for eleven year.
+
+T22 [5.41] TUTOR: The sentence still needs "years," so here it is: I have worked here for eleven years. "Eleven" is a number above one, so the noun stays plural.
+
+That's the present perfect for now. Next is the past simple, for finished events at a specific time. "Last year" is a specific time, so the past simple fits.
+
+Did you attend any business events or exhibitions last year? Try starting with "I attended…".
+    [board 5.42] PAGE "Past simple"
+    [board 5.42] annotate {"text":"Past simple = subject + past-tense verb\nI joined the company in 2022.\nWe attended an international exhibition last month.\nSpecific time (yesterday, 
+    [board 5.43] showProblem {"problem":{"statement":"Did you attend any business events or exhibitions last year?","format":"free-response","difficultyLabel":"medium","rich":true},"id":"in
+
+T23 [6.04] STUDENT: I attended a training exhibition last year. It was very useful for my work.
+
+T24 [6.07] TUTOR: Yes, "I attended" is the past simple for a finished event, and "last year" makes it right. "It was very useful" is also correct.
+
+What did you learn at the exhibition? Try starting with "I learned…".
+
+T25 [6.45] STUDENT: I learned about new training methods and technology for online classes. This was very helpful for my division.
+
+T26 [6.52] TUTOR: Good, "I learned about..." is right for a finished event, and "This was very helpful" is correct too. When did you start using these methods in your division?
+    [board 6.53] showProblem {"problem":{"statement":"When did you start using these new training methods in your division?","format":"free-response","difficultyLabel":"easy","rich":true},"
+
+T27 [6.85] STUDENT: I started using these methods about three months ago. We introduced them to our teachers first, and then to our customers.
+
+T28 [6.89] TUTOR: That's right: "about three months ago" and "we introduced them" are both past simple, for finished events at a specific time. Your sentences are clear and easy to follow.
+
+Now let's talk about a project. What is one project you've worked on that you're particularly proud of? Try starting with "I worked on a project to…".
+    [board 6.90] showProblem {"problem":{"statement":"What is one project you've worked on that you're particularly proud of?","format":"free-response","difficultyLabel":"medium","rich":tru
+
+T29 [7.40] STUDENT: I worked on a project to develop a new training program for sales staff. We spent six months planning and testing it, and now many companies use it. I am very proud of this project because it helps our customers improve their sales skills.
+
+T30 [7.44] TUTOR: Your past simple is accurate throughout: "we spent six months planning" and "I worked on a project" both describe finished events. What was the biggest challenge when you were developing that program?
+
+T31 [7.75] STUDENT: The biggest challenge was to understand what the customers really needed. We had many meetings with different companies, and sometimes their opinions were different. So we needed to find a solution that worked for everyone.
+
+T32 [7.78] TUTOR: That was a real challenge, and you handled it well by finding one solution for several companies. How did you find that solution in the end?
+
+T33 [8.04] STUDENT: We listened carefully to all the customers and found the common needs. Then we designed the program to meet those needs. We also asked for feedback and made changes based on their suggestions.
+
+T34 [8.06] TUTOR: Your past simple is correct again: "we listened," "we designed," and "we made changes" are all finished events. Now let's use the present perfect. Have you worked on a similar project since then?
+    [board 8.07] showProblem {"problem":{"statement":"Have you worked on a similar project since then?","format":"free-response","difficultyLabel":"medium","rich":true},"id":"inl_mwkfc2zu_1
+
+T35 [8.44] STUDENT: Yes, I have worked on another project to improve customer communication. We started this project six months ago, and we are still working on it now. I think this project is very important for my company.
+
+T36 [8.47] TUTOR: Yes, that's right. "I have worked on another project" shows a project that started in the past and is still going, and "six months ago" correctly uses the past simple.
+
+What have you learned from this project so far? Try starting with "I have learned…".
+
+T37 [8.87] STUDENT: I have learned that good communication is very important before meetings with customers. I have also learned that listening to customers helps us understand their real needs better.
+
+T38 [8.91] TUTOR: "I have learned" is the present perfect, and it fits here because you're describing lessons from a project that is still going. Listening to customers before meetings is a good way to prepare. How has that changed the way you prepare for your meetings now?
+
+T39 [9.34] STUDENT: Now I prepare more carefully before meetings. I read about the customer's company and their business. I also think about questions to ask them, so I can have better conversation with them.
+
+T40 [9.41] TUTOR: Good, that's a sensible way to prepare. One small thing: we say "a better conversation." Now, when you prepare for a meeting with a customer from another country, what kind of questions do you usually think of?
+    [board 9.45] CARD "I can have a better conversation with them." / conversation の前には a を付けます
+
+T41 [9.82] STUDENT: I think about their business and their goals. I ask questions about their company size, their industry, and what they want to achieve. I also ask about their challenges so I can understand how to help them better.
+
+T42 [9.85] TUTOR: Your questions cover the customer's business, goals and challenges, which is a thorough way to prepare. Have you ever had a meeting where the customer's needs were very different from what you expected?
+
+T43 [10.17] STUDENT: Yes, I have had that experience. One customer told me they needed training for a different group of people than I expected. So I had to change my approach and listen more carefully to understand their real needs.
+
+T44 [10.21] TUTOR: Yes, you used the present perfect for "I have had that experience," and the past simple for "told," "needed," and "had to change," all for finished events. That's accurate.
+
+Now it's your turn to ask me a question about work experience. What would you like to know?
+
+## events
+0.14 tool_call | new_page → new page 1 "Overview" · inline
+1.19 tool_call | set_goal_status → recorded
+1.67 tool_call | new_page → new page 2 "Level check" · inline
+2.74 tool_call | set_working_level → Level set to intermediate. Do not tell the learner which level you set; just continue the lesson.
+2.75 tool_call | new_page → new page 3 "Your job" · inline
+2.78 tool_call | set_goal_status → recorded
+2.84 working_level_set | intermediate (v2)
+3.49 tool_call | show_sentence → painted on page 3 · inline
+4.55 tool_call | set_goal_status → recorded
+4.56 tool_call | new_page → new page 4 "Present perfect" · inline
+4.97 tool_call | show_sentence → painted on page 4 · inline
+5.42 tool_call | new_page → new page 5 "Past simple" · inline
+5.44 tool_call | set_goal_status → recorded
+6.91 tool_call | set_goal_status → recorded
+8.06 segment_overlong | segment "past-simple" has run 6 substantive tutor turns without advancing
+9.45 tool_call | show_sentence → painted on page 5 · inline

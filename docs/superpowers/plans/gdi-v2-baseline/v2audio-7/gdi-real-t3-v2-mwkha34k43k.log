@@ -1,0 +1,229 @@
+09:16:33 open fixture=gdi-real-t3 arm=v2 student=gdi-v2-replay-audio7-tester-b (audio student tester-b (33 clips), silent tutor voice)
+09:16:36 clicked start (1)
+09:16:41 TUTOR  Hello, I'm Ryota, and welcome to your English lesson! Today we'll practise talking about your work and your projects, using the present perfect for experience and the past simple for finished events. Does that sound good to you?   [tools: annotate]
+09:17:01 STUDENT(clip #1 ok, 2.0 s) I'm ready.  — Readiness question; learner gives short ack
+09:17:08 HEARD  I'm ready.
+09:17:08 TUTOR  
+Great, let's begin. Today we'll talk about your work, practise the present perfect and the past simple, ask follow-up questions, and finish with pronunciation if you like. First, a short, friendly chat so I can see what you can already do. Please answer in English, and don't worry about mistakes. C   [tools: new_page]
+09:17:40 STUDENT(clip #3 ok, 22.6 s) Yes, I'm a sales manager in the G, I'm uh the GM uh general manager of that and I just supporting for the old division in the the company and of course most of the part of the management and the sales area for this.  — Learner answers the tutor's question about their job with a detailed description of their role as GM/sales manager
+09:18:06 HEARD  Yes, I'm sales manager in the G I'm our uh the GM uh general manager, well, that's and I just supporting for the old division in the the company. And of course, most of the part of the management and the sales area for this.
+09:18:06 TUTOR  Thank you, that helps me understand your role. Which products does your division sell?
+09:18:16 STUDENT(clip #4 misfit, 24.2 s) My main responsibility in sales area to the contact for the clients and supporting for the each division member about this and of course I have a suggesting for the uh the new uh products about to the clients.  — Learner describes responsibilities, not products sold; closest available line
+09:18:42 HEARD  My main responsibility in sales area to the uh contact for the clients and supporting for the each division member about this. And of course, I have a suggesting for the uh the new uh products about to the clients.
+09:18:42 TUTOR  Thanks, that's clear. Have you ever worked with an international customer? If so, can you tell me about the experience?
+09:18:53 STUDENT(clip #11 ok, 7.0 s) Yes, I have working with the international customer for sometimes.  — Directly answers the yes/no question about working with international customers
+09:19:04 HEARD  Yes, I have working with the international customer for sometimes.
+09:19:04 TUTOR  That's good to know, and you have experience with international customers. What is one skill you'd like to improve in your English, and why is it important to you?
+09:19:19 STUDENT(clip #10 ok, 18.7 s) Uh, what I have the long at the my company, it uh connecting to the foreigner person because of a company, a lot of the foreigner and uh I have to using for my English to communicate for the each other.  — Learner explains why English is important - connecting with foreigners at company
+09:19:47 HEARD  Uh, what I have the long at the my company, it uh connecting to the foreigner person because of a company has a lot of the foreigner and uh I have to using for my English to communicate for the each other.
+09:19:47 TUTOR  Thank you, I understand you well. Today we'll focus on making your grammar more accurate and your sentences more natural. Next is Your job. Do you have a question first, or shall we go on?   [tools: set_working_level]
+09:20:03 STUDENT(clip #2 ok, 2.0 s) I'm ready.  — Readiness question; learner gives short ack
+09:20:07 HEARD  and lady.
+09:20:07 TUTOR  すみません、よく聞き取れませんでした。次は「Your job」です。仕事について話す練習をします。質問はありますか？それとも、このまま進みますか？
+09:20:14 STUDENT(clip #1 ok, 2.0 s) I'm ready.  — Readiness question; short ack appropriate
+09:20:21 HEARD  I'm ready.
+09:20:21 TUTOR  
+では、「Your job」に進みましょう。仕事について話すときは、短い文を使います。
+
+
+
+
+
+それでは、あなたの仕事について一文で教えてください。What do you do at work?   [tools: new_page, show_sentence, show_sentence, show_sentence]
+09:20:29 STUDENT(clip #5 ok, 17.7 s) My main responsibility in sales area is uh contact for our clients and supporting for the each division member and suggesting for the new product clients.  — Tutor asks 'What do you do at work?' - line 5 directly answers with main responsibilities in sales area
+09:20:54 HEARD  My responsibility in sales area is a contact for our clients and supporting for the ADF member and suggesting for the new product clients.
+09:20:54 TUTOR  いいですね、仕事の内容がよく分かりました。ただ、一つ直しましょう。「a contact」ではなく「the contact」を使います。
+
+
+
+この文をもう一度言ってみてください。I am the contact for our clients.   [tools: show_sentence]
+09:21:03 STUDENT(clip #6 ok, 26.3 s) My main responsibility in the sales area is to be a contact for our clients, supporting for the each division member of of course the management for the each division member and of course uh suggesting for the new service and the project products to the clients.  — Learner repeats corrected version with 'the contact' as requested by tutor
+09:21:37 HEARD  My main responsibility in the sales area is to be a contact for our clients, supporting for the each division member of of course the management for the each division member and of course uh suggesting for the new service and the project products to the clients.
+09:21:37 TUTOR  仕事の内容がよく分かりました。一つだけ直しましょう。「support」の後ろに「for」は要りません。「support each division member」と言います。
+
+
+
+この文を一度言ってみてください。My main responsibility is to be the contact for our clients, and to support each division member.   [tools: show_sentence, annotate]
+09:21:51 STUDENT(clip #7 misfit, 5.8 s) Yes, working for our company above over the ten years.  — Tutor asks learner to repeat a corrected sentence about job responsibilities. Line 7 is about years of work experience, 
+09:22:01 HEARD  Yes, for my our company above over the 10 years.
+09:22:01 TUTOR  10年以上ですね。もう一度聞かせてください。「I have worked for our company for over 10 years.」と言いましたか？
+09:22:11 STUDENT(clip #8 ok, 6.0 s) I have worked here over the ten years.  — Tutor asks learner to repeat/confirm the 10 years statement. Line 8 directly answers this with the correct form about wo
+09:22:21 HEARD  I have here over the 10 years.
+09:22:21 TUTOR  「I have here」の後に、動詞の「worked」が抜けています。「have」の後ろは、過去分詞の形にします。「work」の過去分詞を使って、もう一度言ってみてください。
+09:22:27 STUDENT(clip #9 ok, 8.8 s) I have working for our company for a long time. It takes about uh around the ten years.  — Learner attempts to correct the sentence about working for the company for ten years, using 'have working' which is stil
+09:22:40 HEARD  I have working for our company for a long time. It takes about uh around the 10 years.
+09:22:40 TUTOR  「I have working」の「working」は「worked」にします。「I have worked for our company for a long time.」です。
+
+
+
+これで「Your job」は終わりです。次は「Present perfect」で、今も続いている経験を話す練習をします。質問はありますか？それとも、このまま進みますか？   [tools: show_sentence]
+09:22:53 STUDENT(clip #14 ok, 1.2 s) Yes.  — Yes/no readiness question; learner gives short ack
+09:23:01 HEARD  Yes.
+09:23:01 TUTOR  
+現在完了は、過去に始まって今も続いている経験や、これまでの経験に使います。形は have か has、その後ろに過去分詞を置きます。
+
+
+
+
+
+では、あなたの会社での経験について聞かせてください。
+
+
+
+Have you worked for your current company for a long time? Answer in one full sentence, starting with "I have worked".   [tools: new_page, annotate, show_problem]
+09:23:14 STUDENT(clip #12 ok, 5.1 s) I have worked with international customer  — Answers the tutor's question about working at the company; first unused line that fits the present perfect context
+09:23:28 HEARD  I have worked with international customer
+09:23:28 TUTOR  Yes, "I have worked" is the right form. One small thing: we say "customers" with an s, because there are many of them.
+
+
+
+ I have worked with international customers. Now, how long have you worked with international customers?   [tools: show_sentence]
+09:23:49 STUDENT(clip #13 ok, 8.1 s) I have worked with international customer sometimes.  — Answers 'how long' with 'sometimes', fitting the question about duration with international customers
+09:24:02 HEARD  I have worked with international customer sometimes.
+09:24:02 TUTOR  Good, the main point is there. We say the correct sentence this way: "I have worked with international customers sometimes."
+
+
+
+Now, what kind of work did you do with them? Tell me in one or two sentences.   [tools: show_sentence]
+09:24:22 STUDENT(clip #15 ok, 8.9 s) Yes, I have been working a project with uh uh us from another content, another uh countries.  — Answers what kind of work with international customers; next unused line in order
+09:24:35 HEARD  Yes, I have been working a project with uh uh us from another content, another uh countries.
+09:24:35 TUTOR  「work on a project」と言います。「I have worked on a project with people from other countries.」です。
+
+
+
+Can you say that sentence once more?   [tools: show_sentence]
+09:24:50 STUDENT(clip #25 ok, 5.8 s) I worked on a project to support SNS networking content.  — Tutor asks learner to repeat the corrected sentence about working on a project; #25 is the cleaned-up version of that pr
+09:25:02 HEARD  I worked on a project to support SNS networking content.
+09:25:02 TUTOR  Yes, that's right, and "worked on" is the correct past form. Your project is a good example for the past simple, which we'll practise next.
+
+
+
+Have you worked on any other projects like this one?   [tools: show_sentence]
+09:25:21 STUDENT(clip #33 ok, 13.3 s) Uh, not project, but I have to find for the the new uh person to exchanging for the the uh the project members.  — Learner answers the question about other projects with a new project example
+09:25:37 HEARD  Uh, not project, but I have to find for the the new uh person to exchanging for the the uh the project members.
+09:25:37 TUTOR  少し聞き取れませんでした。もう一度ゆっくり言ってもらえますか？   [tools: keep_listening]
+09:25:45 STUDENT(clip #32 ok, 3.6 s) one more again.  — Learner repeats the previous line more slowly as requested
+09:25:51 HEARD  one more again.
+09:25:51 TUTOR  もう一度聞きますね。Have you worked on any other projects like this one? 「I have worked on…」で始めてみてください。
+09:26:02 STUDENT(clip #34 ok, 12.0 s) Uh, because of the one member is will leaving to our company and the project going on, so that's why I have to find the new people.  — Learner attempts to answer the repeated question about other projects, providing a reason/explanation for their current 
+09:26:24 HEARD  Uh, because of is will leaving to our company and the project going on. So that's why I have to find a new people.
+09:26:24 TUTOR  分かりました。担当の方が会社を辞めるので、プロジェクトのために新しい人を探しているのですね。ひとりの人なので「a new person」と言います。
+
+
+
+現在完了の練習はここまでです。次は「Past simple」で、終わった出来事を話す練習をします。質問が先にありますか？それとも、このまま進みますか？   [tools: show_sentence]
+09:26:31 STUDENT(clip #23 ok, 7.5 s) Uh, I will shall move on to the next conversation.  — Learner agrees to move on to next topic as tutor suggests
+09:26:44 HEARD  Uh, I will shall move on to the next conversation.
+09:26:44 TUTOR  
+過去形は、終わった出来事を話すときに使います。「last year」や「yesterday」のように、いつのことかはっきり分かる時に使います。
+
+
+
+
+
+では、去年のことを聞きます。
+
+
+
+Did you attend any business events or exhibitions last year? Answer in one full sentence.   [tools: new_page, annotate, show_problem]
+09:26:56 STUDENT(clip #16 ok, 8.5 s) Yes, I attended the uh some business event in the uh Japan last year.  — Answers the tutor's question about attending business events last year
+09:27:11 HEARD  Yes, I attended the uh some business event in the uh Japan. last 2 year.
+09:27:11 TUTOR  「attended」は過去形として正しく使えています。直すところは「last 2 year」です。「last year」は数字を入れず、「last year」と言います。
+
+
+
+もう一度、この文を言ってみてください。   [tools: show_sentence]
+09:27:18 STUDENT(clip #17 ok, 5.4 s) Yes, I attended the business event in Japan last year.  — Tutor asks learner to repeat the sentence about attending a business event, correcting the grammar. Line 17 is the corre
+09:27:30 HEARD  Yes, I attended the business event in Japan last year.
+09:27:30 TUTOR  Yes, that's right: "I attended the business event in Japan last year." Now, what did you do at the event? Tell me one thing you did there.   [tools: show_sentence]
+09:27:45 STUDENT(clip #18 ok, 13.7 s) Uh, it's kind of the networking events, uh, that's looking for the new uh business partner or the connecting for the the related our service.  — Learner describes what happened at the networking event in response to tutor's question about what they did there.
+09:28:06 HEARD  Uh, it's kind of the networking events, uh, the looking for the new uh business partner or the connecting for the the related our service.
+09:28:06 TUTOR  ネットワーキングのイベントに参加して、新しいビジネスパートナーを探したのですね。過去の出来事なので、「looked」の過去形を使います。
+
+
+
+この文をもう一度言ってみてください。   [tools: show_sentence]
+09:28:14 STUDENT(clip #19 ok, 10.8 s) Yes, I met someone. We came at the the new partner or the the related for the new business with customers.  — Learner describes meeting a new business partner at the event, answering what they did there in past tense context
+09:28:31 HEARD  Yes, I met someone. We came at the the new partner or the the related for the new business with customers.
+09:28:31 TUTOR  「I met someone」は過去形として正しく言えています。ただ、その後の「We came at」は「met」を使います。
+
+
+
+この文をもう一度言ってみてください。   [tools: show_sentence]
+09:28:38 STUDENT(clip #20 ok, 3.9 s) We met a new business partner there.  — Learner corrects and simplifies: 'We met a new business partner there' uses past tense 'met' as tutor requested
+09:28:48 HEARD  We met a new business partner, Bill.
+09:28:48 TUTOR  はい、正しく言えています。「We met a new business partner, Bill.」
+
+
+
+過去の出来事を話す練習はここまでです。次は「Conversation」で、あなたが誇りに思うプロジェクトについて話します。質問がありますか？それとも、もう始めますか？   [tools: show_sentence]
+09:28:58 STUDENT(clip #21 ok, 3.3 s) We met a new business partner there.  — Short ack to readiness question; learner has nothing left to say about past events and tutor is moving to next topic
+09:29:07 HEARD  We met a new business partner there.
+09:29:07 TUTOR  That's right: "We met a new business partner there." That finishes the past simple practice. Next is Conversation, where we talk about a project you are proud of. 
+
+Shall we move on, or is there anything you would like to ask first?   [tools: show_sentence]
+09:29:28 STUDENT(clip #22 ok, 18.8 s) I talk about for the our business to supporting for the training for the the global person, uh, mainly for the Japanese or introducing for the IT engineer to the clients.  — Learner responds to 'shall we move on' with content about a project, moving forward naturally
+09:29:32 HEARD  Oh.
+09:29:32 TUTOR     [tools: keep_listening]
+09:29:55 HEARD  I talk about for the our business to uh supporting for the training for the the global person uh mainly for the Japanese or introducing for the IT engineer uh to the client.
+09:29:55 TUTOR  
+Thank you, that's a clear picture of your work. One small thing: we say "support the training for global staff", with no "-ing" after "support".
+
+
+
+ We support the training for global staff, mainly for Japanese employees. Now, what is one project you have worked on that you are proud of? Try starti   [tools: new_page, show_sentence]
+09:30:24 STUDENT(clip #24 ok, 15.1 s) Uh, let me see is uh one project I worked in the supporting for the the the uh the uh SNS networking contents.  — Learner answers the tutor's question about a project they are proud of, starting with 'I worked on a project...' as inst
+09:30:45 HEARD  Uh, let me see is uh one project I worked in the supporting for the the the uh the uh SNS networking contents.
+09:30:45 TUTOR  「worked on」を使うと、もっと自然になります。「I worked on a project to support SNS networking content.」と言います。
+
+
+
+この文をもう一度言ってみてください。その後、このプロジェクトであなたの役割は何でしたか？   [tools: show_sentence]
+09:30:54 STUDENT(clip #26 ok, 17.0 s) Uh, my role is to manage for the member who is making for the content. uh, the talking about for the content and making for the content.  — Tutor asks about learner's role in the project; #26 directly answers this with 'my role is to manage...'
+09:31:04 HEARD  Uh, my role is to manage for the member.
+09:31:04 TUTOR  「manage」の後ろに「for」は要りません。「manage the members」と言います。
+
+
+
+Now, how many members are in your team?   [tools: show_sentence]
+09:31:07 HEARD  who is making for the content.
+09:31:07 TUTOR  「Who makes the content?」という意味で合っていますか？プロジェクトでは、誰がコンテンツを作っているのか教えてください。
+09:31:16 HEARD  uh, the talking about for the content. and making for the content.
+09:31:16 TUTOR  「make the content」は「for」を使いません。「Who makes the content?」と言います。
+
+
+
+あなたのチームでは、誰がコンテンツを作りますか？英語で一文で答えてみてください。   [tools: show_sentence, show_sentence]
+09:31:17 HEARD  I need to manage
+09:31:17 TUTOR     [tools: keep_listening]
+09:31:25 STUDENT(clip #27 ok, 7.8 s) My rule is to manage for the SNS networking content member.  — Learner describes their role managing SNS content team members, answering the tutor's question about their role in the p
+09:31:39 HEARD  My rule is to manage for the assessment and networking content member.
+09:31:39 TUTOR  「role」は「役割」という意味です。「manage」の後ろに「for」は要りません。「manage the members」と言います。
+
+
+
+この文をもう一度言ってみてください。   [tools: show_sentence]
+09:31:47 STUDENT(clip #28 misfit cut=fast, 0.7 s) I need to manage for the uh  — Learner starts new thought; tutor asks for repetition of previous sentence
+09:32:18   (not heard within 20 s of the clip's end)
+09:32:57 HEARD  (silence 75 s)
+09:32:57 TUTOR  Take your time. If it helps, start with "Our team makes the content…" and finish the sentence.
+09:33:09 STUDENT(clip #29 misfit, 2.0 s) I'm not sure about it.  — Learner hesitates; #29 'I'm not sure about it' fits the pause/uncertainty, though not ideal for the prompt to complete a
+09:33:17 HEARD  I'm not sure about it.
+09:33:17 TUTOR  No problem. The question was about who makes the content in your project, so we can leave it there.
+
+
+
+Before the summary, there is still the pronunciation part. Would you like to do it now, or go straight to the summary?
+09:33:37 STUDENT(clip #30 ok, 14.3 s) Uh, I think in the future, I will supporting for the the global networking to the between the foreigner company and Japanese company with my uh our directors.  — Tutor moved on from content question; learner responds with forward-looking statement about future work
+09:33:58 HEARD  Uh, I think in the future, I will supporting for the the global networking to the between the foreigner company and Japanese company with my uh our directors.
+09:33:58 TUTOR  That's a good goal for the future! One small thing: after "will" we use the base verb, so we say "will support", with no "-ing" and no "for".
+
+
+
+ I think in the future, I will support global networking between foreign and Japanese companies with our directors. Do you have any questions before we fin   [tools: show_sentence]
+09:34:25 STUDENT(clip #14 ok, 1.2 s) Yes.  — Readiness question; short ack appropriate
+09:34:27 HEARD  Yes.
+09:34:27 TUTOR  Of course, go ahead and ask your question.
+09:34:33 STUDENT(end) no lines left
+09:34:33 audio: {"sttSockets":1,"sttSocketSeconds":1077,"clipSeconds":331,"silentTtsReplies":155,"mic":{"plays":35,"gum":1,"buffers":221},"otherSockets":["ws://localhost:3021/_next/hmr","wss://api.openai.com/v1/realtime"]}
+09:34:33 waiting 35 s for the autosave

@@ -1,0 +1,140 @@
+# embed-1794904318081 student=gdi-v2-replay-audio7-josh status=completed duration=534 progress={"lessonPlanId":"gdi.trial.english.work-projects.v1","currentSegmentId":"summary","completedSegmentIds":["overview","level-check","topic-intro","present-perfect","summary"],"updatedAt":"2026-11-17T08:40:27.176Z"}
+
+T0 [0.08] TUTOR: Hello, I'm Ryota, and welcome to your English lesson! Today we'll practice talking about your work and your projects, using two grammar points: the present perfect and the past simple. Does that sound good to you?
+    [board 0.14] annotate {"text":"Present perfect: have/has + past participle, for experience that started in the past and continues now (I have worked here for five years).\nPast simpl
+
+T1 [0.48] STUDENT: Yes.
+
+T2 [0.50] TUTOR: Great! Here is how the lesson works. You'll talk about your job and the projects you're involved in. We'll practice two grammar points: the present perfect for your experience, and the past simple for finished events at a specific time. You'll also practice follow-up questions to keep a conversation going, and I'll correct your mistakes and give you a chance to try again. Near the end, you can practice your pronunciation if you'd like. First, there's a short level check, so I can adjust the lesson for you. Are you ready?
+    [board 0.55] PAGE "Overview"
+    [board 1.28] PAGE "Level check"
+
+T3 [1.28] STUDENT: Yes.
+
+T4 [1.30] TUTOR: Please answer in English, and don't worry about mistakes. This helps me see what you can already do. First question: can you tell me a little about your job? What do you do?
+
+T5 [1.74] STUDENT: I am a manager at a communications company.
+
+T6 [1.76] TUTOR: Thank you, that's clear. Next question: have you ever worked with an international customer? If so, can you tell me about the experience?
+
+T7 [2.09] STUDENT: Yes, I have. I work with companies here in Japan and from all over the world.
+
+T8 [2.12] TUTOR: That's good to know, and it's a lot of international work. Now the last question: what is one skill you'd like to improve in your English, and why is it important to you?
+
+T9 [2.59] STUDENT: I'd like to improve my conversation with customers before meetings because I often don't know what to say.
+
+T10 [2.65] TUTOR: Thank you, Josh. Your answers were clear, so today we'll focus on making your grammar more accurate and your answers more natural. Next is "Talking about your job", where you'll describe your work and experience. Would you like to go on, or do you have a question first?
+
+T11 [3.12] STUDENT: Do you want me to start now?
+
+T12 [3.17] TUTOR: Yes, let's start. We'll begin with talking about your job.
+
+ I have worked with international customers for three years. I worked with an international customer yesterday.
+
+Here is a preview of the two sentences on the board. We'll practise them in the next activities. For now, what are your main responsibilities at work? Please give me at least two sentences.
+    [board 3.19] PAGE "Talking about your job"
+    [board 3.19] annotate {"text":"I have worked with international customers for three years. (experience that continues now)\nI worked with an international customer yesterday. (a fini
+
+T13 [3.88] STUDENT: My main responsibilities at work are both the training division manager and to help with sales for the division.
+
+T14 [3.93] TUTOR: Good, you named two clear responsibilities. One small thing: we say "My main responsibilities are managing the training division and helping with sales."
+
+That completes the part on your job. Next is present perfect, where we talk about experience that continues now. Do you have a question first, or shall we go on?
+    [board 3.94] CARD "My main responsibilities are managing the training division and helping with sales." / 責任の内容を、同じ形（-ing）でつなぎます。
+    [board 4.43] PAGE "Present perfect"
+
+T15 [4.43] STUDENT: Yes.
+
+T16 [4.47] TUTOR: We use the present perfect, have or has plus the past participle, for experience that started in the past and continues now. Your sentence "I have worked here for five years" shows this.
+
+ She has completed several projects.
+
+Please answer this question in one or two sentences: have you worked for your current company for a long time?
+    [board 4.47] annotate {"text":"Present perfect: have/has + past participle\nI have worked here for five years. (started in the past, still true now)\nShe has completed several projec
+    [board 4.70] showProblem {"problem":{"statement":"Have you worked for your current company for a long time? Answer with a sentence using the present perfect.","format":"free-response","
+
+T17 [5.05] STUDENT: I have worked here for 11 years.
+
+T18 [5.07] TUTOR: Yes, that's right: "I have worked here for 11 years." It shows you started in the past and you still work there now.
+
+What is one important skill you have learned at your company?
+    [board 5.08] CARD "I have worked here for 11 years." / 現在まで続いている経験は、have worked を使います。
+    [board 5.52] CARD "I really like going to meet customers." / お客様に会うのが好き、という気持ちを、そのまま言えています。
+
+T19 [5.48] STUDENT: I really like going to meet customers.
+
+T20 [5.53] TUTOR: That's a good, natural sentence, and it tells me something about you. Now try a question with present perfect: how has meeting customers helped you at work?
+
+T21 [5.98] STUDENT: I schedule class for many teachers. and teach.
+
+T22 [6.02] TUTOR: So you schedule classes for many teachers, and you also teach them. Now, the question was about how meeting customers has helped you at work. Try it with "has" or "have": Try starting with: "Meeting customers has helped me..."
+
+T23 [6.49] STUDENT: My main responsibilities at work are being the training division manager and helping with sales for the division.
+
+T24 [6.52] TUTOR: Your sentence about responsibilities is fine, so let's keep going with the present perfect question. How has meeting customers helped you at work? You can start with "Meeting customers has helped me…".
+    [board 6.60] annotate {"text":"How has meeting customers helped you at work?\nTry starting with: \"Meeting customers has helped me…\"","style":"highlight","rich":true,"id":"inl_mwkfx
+
+T25 [6.94] STUDENT: I work here for 11 year.
+
+T26 [6.96] TUTOR: You said "I work here for 11 year." For a time that started in the past and continues now, we say "I have worked here for 11 years." Can you say that sentence once more?
+    [board 6.97] scrollTo {"target":"item","targetId":"inl_mwkfv9cp_1","pulse":true}
+
+T27 [7.36] STUDENT: I have worked here for 11 year.
+
+T28 [7.40] TUTOR: You said "11 year," but we say "11 years," with an s. The full sentence is "I have worked here for 11 years." Let's try a new question: what is one skill you have learned in your job?
+
+T29 [7.75] STUDENT: わかりません。
+
+T30 [7.77] TUTOR: 少し難しかったですね。質問は「仕事で学んだスキルは何ですか」という意味です。
+
+Try starting with: "I have learned…"
+    [board 7.79] annotate {"text":"What is one skill you have learned in your job?\nTry starting with: \"I have learned…\"","style":"highlight","rich":true,"id":"inl_mwkfyqk6_1"}
+
+T31 [8.01] STUDENT: I have worked in my department for 10 years.
+
+T32 [8.04] TUTOR: Yes, that's right: "I have worked in my department for 10 years." You used "years" correctly, too.
+
+Now, what has been the biggest challenge in your department so far?
+    [board 8.05] CARD "I have worked in my department for 10 years." / 部署で10年働いている、と今も続いている経験を言えています。
+
+T33 [8.39] STUDENT: Okay.
+
+T34 [8.42] TUTOR: Take your time. What has been the biggest challenge in your department so far? You can start with "The biggest challenge has been…"
+
+T35 [8.44] STUDENT: Please, I would like to end the session for now.
+
+T36 [8.46] TUTOR: Thank you, Josh. Today you practised describing your job and using the present perfect for experience that continues now, and you got "I have worked here for 11 years" right on your own. Next time we can look at the past simple, the conversation practice and pronunciation. Goodbye, and see you next time!
+
+ I attended an exhibition last year.
+    [board 8.79] PAGE "Summary"
+    [board 8.79] annotate {"text":"Present perfect: I have worked here for 11 years. (started in the past, still true now)\nPlural after a number: 11 years, 10 years\nPast simple, for ne
+
+## events
+0.50 tool_call | new_page → new page 2 "Overview" · inline
+0.50 v2_board_timing | new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — held
+0.52 tool_call | set_goal_status → recorded
+1.28 tool_call | new_page → new page 3 "Level check" · inline
+1.28 v2_board_timing | new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — now
+2.66 tool_call | set_working_level → Level set to intermediate. Do not tell the learner which level you set; just continue the lesson.
+2.66 tool_call | set_goal_status → recorded
+2.75 working_level_set | intermediate (v2)
+3.17 tool_call | new_page → new page 4 "Talking about your job" · inline
+3.17 v2_board_timing | new_page: inline, with sentence 2 of 2 (stretch from 1), 1 started — held
+3.18 tool_call | set_goal_status → recorded
+3.94 tool_call | show_sentence → painted on page 4 · inline
+3.94 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — now
+4.43 tool_call | new_page → new page 5 "Present perfect" · inline
+4.43 v2_board_timing | new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — now
+5.08 tool_call | show_sentence → painted on page 5 · inline
+5.08 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — now
+5.52 tool_call | show_sentence → painted on page 5 · inline
+5.52 v2_board_timing | show_sentence: inline, with sentence 1 of 0 (stretch from 1), 0 started — now
+6.97 tool_call | show_sentence → not painted again: already on the board (page 5); the board has scrolled back to it · inline
+7.40 segment_overlong | segment "present-perfect" has run 6 substantive tutor turns without advancing
+8.05 tool_call | show_sentence → painted on page 5 · inline
+8.05 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — now
+8.42 v2_heard_over_tutor | words, not paused (nothing playing yet): Please, I
+8.47 tool_call | new_page → new page 6 "Summary" · inline
+8.47 v2_board_timing | new_page: inline, with sentence 4 of 3 (stretch from 1), 1 started — held
+8.48 tool_call | end_lesson → the session is ending
+8.48 lesson_closed | end_lesson

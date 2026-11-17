@@ -1,0 +1,328 @@
+# embed-1794903262612 student=gdi-v2-replay-r5-text-james status=active duration=930 progress={"lessonPlanId":"gdi.trial.english.work-projects.v1","currentSegmentId":"pronunciation","completedSegmentIds":["overview","level-check","topic-intro","present-perfect","past-simple"],"updatedAt":"2026-11-17T08:27:21.836Z"}
+
+T0 [0.05] TUTOR: Hello, I'm Ryota, and welcome to your English lesson! Today we'll practise talking about your work and the projects you've been involved in, using the present perfect and the past simple. Does that sound good to you?
+
+(こんにちは、Ryotaです。今日は、お仕事や最近のプロジェクトについて英語で話す練習をします。よろしいでしょうか？)
+    [board 0.12] PAGE "Lesson overview"
+    [board 0.12] annotate {"text":"Talking about your work and projects\nPresent perfect: experience that continues now (I have worked here for five years)\nPast simple: a finished event
+
+T1 [1.12] STUDENT: Oh, yes.
+
+T2 [1.18] TUTOR: Great! Here's how it works. You'll talk about your job and your projects, and we'll practise the present perfect for experience and the past simple for finished events at a specific time. I'll ask follow-up questions, correct your mistakes, explain them, and give you a chance to try again. Near the end, you can practise pronunciation if you like. First, a short level check so I can adjust the lesson for you.
+
+(まず、短いレベルチェックをします。英語で答えてください。間違えても大丈夫です。)
+
+Are you ready?
+
+T3 [1.80] STUDENT: Yes, ready.
+
+T4 [1.81] TUTOR: Good. Let's start the level check. Please answer in English, and don't worry about mistakes.
+
+Can you tell me a little about your job? What do you do?
+
+(お仕事について教えてください。どんな仕事をしていますか？)
+
+T5 [2.10] STUDENT: I'm engineer.
+
+T6 [2.11] TUTOR: Thank you. What kind of engineering do you work on?
+
+T7 [2.26] STUDENT: Make car.
+
+T8 [2.29] TUTOR: Car engineering, that's interesting.
+
+Have you ever worked with an international customer? If so, can you tell me about the experience? If not, you can tell me about a new customer or a difficult project.
+
+(海外のお客様と仕事をしたことはありますか？)
+
+T9 [2.63] STUDENT: Uh, sorry. I don't understand.
+
+T10 [2.64] TUTOR: No problem. Let me ask it more simply.
+
+Have you ever worked with a customer from another country?
+
+(外国のお客様と仕事をしたことがありますか？)
+
+T11 [2.85] STUDENT: Uh, please repeat.
+
+T12 [2.87] TUTOR: Have you worked with a customer from another country? Just a yes or no is fine, and you can tell me more if you like.
+
+(外国のお客様と仕事をしたことはありますか？ はい・いいえだけでも大丈夫です。)
+
+T13 [3.14] STUDENT: Yes. Many customer.
+
+T14 [3.22] TUTOR: Thank you, James. You work as an engineer on car production, and that helps me plan the lesson. Today we'll make your sentences clear and natural.
+
+(ありがとうございます。仕事の話は、短い文で十分です。)
+
+Here are some simple sentences for talking about your job. Try one about your work: "I work in..." or "I make..."
+    [board 3.23] PAGE "Talking about your job"
+    [board 3.23] annotate {"text":"Simple sentences about your job:\nI work in sales.\nI help customers.\nI joined my company three years ago.","style":"highlight","rich":true,"id":"inl_
+    [board 3.24] CARD "I work in car engineering." / 自分の仕事を一文で言うときの型です
+
+T15 [3.73] STUDENT: I make cars.
+
+T16 [3.77] TUTOR: Yes, "I make cars" is correct. Now try one more sentence about your work with "I help..." or "I work on...".
+
+Do you work on design, or on the production line?
+    [board 3.77] CARD "I work on car design." / 「私は〜の仕事をしています」の形です
+
+T17 [4.12] STUDENT: I work on production. I make cars in factory.
+
+T18 [4.18] TUTOR: "I work on production" is right. One small thing: we say "in a factory." Here is the corrected sentence:
+
+(「in a factory」です。)
+
+That's the job part done. Next is the present perfect, for experience that started in the past and continues now. Shall we go on?
+
+(次は現在完了です。続けてよろしいですか？)
+    [board 4.19] CARD "I make cars in a factory." / 工場は a factory と言います
+
+T19 [4.64] STUDENT: Yes.
+
+T20 [4.68] TUTOR: Good. Now the present perfect. We use it for experience that started in the past and continues now.
+
+(現在完了は、過去に始まって今も続いている経験や状態に使います。)
+
+Here is a model sentence. Listen to the form, have worked.
+
+Now your turn. How long have you worked at your company? Start with "I have worked..."
+    [board 4.68] PAGE "Present perfect"
+    [board 4.69] annotate {"text":"Present perfect: have / has + past participle\nwork → have worked\nlearn → have learned\ndo → have done\nUse it for experience that started in the past
+    [board 4.69] CARD "I have worked here for five years." / 5年前から今も続いている、という形です
+
+T21 [5.13] STUDENT: Uh, yes, for seven year.
+
+T22 [5.17] TUTOR: Seven years is the right length of time. For this grammar point, the full sentence needs "have worked" at the start: "I have worked here for seven years." Try saying that whole sentence.
+
+(期間は合っています。現在完了の形で、「I have worked」から始めてください。)
+    [board 5.18] CARD "I have worked here for seven years." / 「have worked」を入れ、years は複数形です
+
+T23 [5.58] STUDENT: I have worked here for seven years.
+
+T24 [5.62] TUTOR: Yes, that's right: "I have worked here for seven years." Now let's use the same form for something you do now. Have you worked on any projects at your company?
+
+(はい、正解です。今度は、会社で関わったプロジェクトについて教えてください。「I have worked on...」から始めてください。)
+
+T25 [5.92] STUDENT: I have worked on many projects. Car production, new design.
+
+T26 [5.96] TUTOR: "I have worked on many projects" uses the present perfect correctly, and it shows experience that continues. Which project are you working on now?
+
+(「I have worked on many projects」は現在完了が正しく使えています。今、どのプロジェクトに関わっていますか？)
+    [board 6.02] CARD "I have worked on many projects." / あなたの文です。正しく使えています
+
+T27 [6.34] STUDENT: Now I work on flying car project. Very interesting.
+
+T28 [6.38] TUTOR: That sounds exciting! For what you're doing right now, we say "I'm working on a flying car project." Try it.
+
+(「I'm working on」は「今まさに取り組んでいる」という意味で、自然な言い方です。)
+
+Now try a question with the present perfect. How long have you worked on this project? Start with "I have worked on it for..."
+    [board 6.39] CARD "I'm working on a flying car project." / 今取り組んでいる、と言うときの形です
+
+T29 [6.88] STUDENT: I have worked on it for two years.
+
+T30 [6.91] TUTOR: Yes, "I have worked on it for two years" is correct. That's the present perfect for something that started two years ago and continues now.
+
+The present perfect part is done. Next is the past simple, for things that happened and finished at a specific time.
+
+Shall we go on, or do you have a question first?
+
+T31 [7.37] STUDENT: Yes, go on.
+
+T32 [7.40] TUTOR: Present perfect is done. Next is the past simple, for things that happened and finished at a specific time.
+
+Here is a model sentence. Notice that "last year" is a specific time, so we use the past simple.
+
+Now your turn. Did you visit a factory or a business event last year? Start with "I visited..." or "I attended..."
+    [board 7.41] PAGE "Past simple"
+    [board 7.41] annotate {"text":"Past simple: verb + ed, or an irregular past form\nattend → attended\nmeet → met\njoin → joined\nUse it with a specific time: yesterday, last year, two
+    [board 7.42] CARD "I attended an exhibition last year." / 「last year」のような特定の時期には過去形を使います
+
+T33 [7.97] STUDENT: Yes, I attended six exhibitions last year.
+
+T34 [8.00] TUTOR: Yes, that's right: "I attended six exhibitions last year." You used the past simple with "last year," a finished time.
+
+(はい、正解です。「last year」という終わった時期なので、過去形を使えています。)
+
+Which exhibition was the most interesting?
+    [board 8.01] CARD "I attended six exhibitions last year." / あなたの文です。過去形と last year が正しく使えています
+
+T35 [8.36] STUDENT: Comdex in Las Vegas was the most interesting. It was very informative and modern. I learned about the future of technology and AI.
+
+T36 [8.39] TUTOR: Your sentences are correct. "I learned about the future of technology and AI" uses the past simple for a finished event, and "Comdex was the most interesting" is a clear opinion.
+
+(文はすべて正しいです。「I learned」は終わった出来事に過去形を使えています。)
+
+What is one thing you learned about AI? Start with "I learned that..."
+    [board 8.40] CARD "I learned about the future of technology and AI." / あなたの文です。過去形が正しく使えています
+
+T37 [8.86] STUDENT: I learned that the speed of change in technology is very fast. AI will change many industries.
+
+T38 [8.89] TUTOR: That's a clear point about how fast technology changes. Now let's talk about a project you're proud of.
+
+(技術の変化が速いという話、よく分かりました。次は、誇りに思っているプロジェクトについて話しましょう。)
+
+Shall we go on, or do you have a question first?
+
+T39 [9.16] STUDENT: How much longer is this lesson?
+
+T40 [9.17] TUTOR: About 11 minutes are left. We can go on with the project talk, then a short pronunciation practice, and finish with a summary.
+
+(あと約11分あります。プロジェクトの話をして、最後にまとめをします。)
+
+Now, a project you're proud of. Please tell me about it in English, one or two sentences.
+    [board 9.18] PAGE "Project I'm proud of"
+    [board 9.19] annotate {"text":"Useful starters:\nI worked on a project to...\nI was responsible for...\nIt was important because...","style":"highlight","rich":true,"id":"inl_mwkfdxi
+    [board 9.19] showProblem {"problem":{"statement":"Tell me about one project you are proud of. Say what it was and what your role was.","format":"free-response","difficultyLabel":"easy",
+
+T41 [9.61] STUDENT: I worked on a project for a new flying car. I was responsible for finding the technology to lift the car off the ground. It was important because it was the biggest challenge for our team. About ten other engineers worked with me on this project.
+
+T42 [9.67] TUTOR: Your sentences are clear. "I was responsible for finding the technology" uses the right pattern, and "It was important because..." gives a reason.
+
+(わかりやすい説明でした。「I was responsible for...」の形が正しく使えています。)
+
+One small thing: after "a project," we say "a project to develop..." rather than "a project for...".
+
+That completes the past simple part. Now let's do a short open conversation about your work. What was the hardest part of finding that technology?
+    [board 9.68] CARD "I worked on a project to develop a new flying car." / 「〜するためのプロジェクト」は a project to と言います
+
+T43 [10.29] STUDENT: The hardest part was understanding how to make the car light enough but strong enough at the same time. We needed materials that were very strong but very light. We tested many different materials and designs. It took about eighteen months to find the right solution. The team worked very hard on this challenge.
+
+T44 [10.32] TUTOR: Excellent, James! "We tested many different materials" and "It took about eighteen months" are both past simple and both correct.
+
+(すばらしいです。過去のできごとを、正しい過去形で話せています。)
+
+Have you finished the flying car project, or are you still working on it?
+    [board 10.33] CARD "It took about eighteen months to find the right solution." / あなたの文です。過去形が正しく使えています
+
+T45 [10.73] STUDENT: We are still working on it. We finished the first prototype last month. Now we are testing it and making improvements. I think we will finish the full project in about one year.
+
+T46 [10.76] TUTOR: That's clear. "We finished the first prototype last month" is correct: "last month" is a finished time, so we use the past simple.
+
+(「last month」は終わった時期なので、過去形の finished になります。よくできました。)
+
+What kind of improvements are you making now?
+    [board 10.77] CARD "We finished the first prototype last month." / あなたの文です。last month と過去形が正しく使えています
+
+T47 [11.17] STUDENT: We are improving the battery system to make it last longer. We are also working on the safety features, like the landing system and the emergency controls. And we are testing the aerodynamics to make the car more stable in the air. These improvements will take several more months.
+
+T48 [11.20] TUTOR: Your description of the project is clear, and "We are improving the battery system" is a natural way to describe work in progress.
+
+(プロジェクトの説明がとても分かりやすいです。「We are improving」は、今進行中の仕事を言う自然な形です。)
+
+Now it's your turn to ask me a question about work. For example, "What do you do at your company?"
+
+(今度は、あなたが私に仕事について質問してください。)
+
+T49 [11.64] STUDENT: What do you do at your company? Do you work with many students?
+
+T50 [11.69] TUTOR: I teach English in Nagoya, and my students are working adults at Japanese companies, in manufacturing, sales and office jobs. I help them with meetings, emails and business trips. Did that answer your question?
+
+(名古屋で、日本の会社で働く社会人に英語を教えています。)
+
+Now, back to the flying car project: what do you enjoy most about working on it?
+
+T51 [12.18] STUDENT: I enjoy most the innovation and creativity. We are solving a problem that no one has solved before. Every day is different and challenging. I also enjoy working with my team of engineers from different countries. They bring different ideas and perspectives. This project is the most exciting work I have done in my career.
+
+T52 [12.23] TUTOR: That's a great answer, James. "This project is the most exciting work I have done in my career" uses the present perfect correctly for experience that continues.
+
+(とても良い答えです。「I have done」の形も正しく使えています。)
+
+One small thing: we usually put "most" at the end, so we say "I enjoy the innovation and creativity most."
+
+(「most」を文の最後に置きます。)
+
+That's the conversation part done. Next is pronunciation, which is optional. Shall we go on, or do you have a question first?
+    [board 12.24] CARD "I enjoy the innovation and creativity most." / most は文の終わりに置くのが自然です
+
+T53 [12.86] STUDENT: Uh, next.
+
+T54 [12.90] TUTOR: Let's do pronunciation. I can't hear your voice in this typed lesson, so I'll give you the words and the stressed parts to say aloud.
+
+(発音の練習です。このレッスンでは声は聞こえないので、言葉と強く読むところをお伝えします。)
+
+Which would you like?
+1) Words: from the list on the board
+2) A sentence: "I have worked with international customers for several years."
+3) Speaking more naturally: one of your own sentences from today
+4) Skip and go on to the summary
+
+(1、2、3、4のどれにしますか？ 番号で答えてください。)
+    [board 12.91] PAGE "Pronunciation"
+    [board 12.91] annotate {"text":"Words to practise (stress in CAPITALS):\nre-spon-si-BIL-i-ties\nin-ter-NA-tion-al\ncom-MU-ni-cate\nCUS-tom-ers\nde-VEL-oped","style":"highlight","rich"
+    [board 12.98] annotate {"text":"1) Words: from the list on the board\n2) A sentence: \"I have worked with international customers for several years.\"\n3) Speaking more naturally: one
+
+T55 [13.57] STUDENT: Uh, just a little bit of individual words.
+
+T56 [13.60] TUTOR: Good, let's start with one word. Say "responsibilities" aloud, with the stress on the fourth syllable: re-spon-si-BIL-i-ties. Then type it here when you're ready.
+
+(まず一つ目は responsibilities です。BIL の部分を強く読みます。声は聞こえないので、言ってから入力してください。)
+    [board 13.61] CARD "responsibilities" / 強く読むのは BIL の部分です
+
+T57 [13.93] STUDENT: responsibilities
+
+T58 [13.97] TUTOR: You typed "responsibilities" correctly. Now try "international," with the stress on NA: in-ter-NA-tion-al. Type it when you're ready.
+
+(次は international です。NA の部分を強く読んでください。)
+    [board 13.97] scrollTo {"target":"item","targetId":"inl_mwkfiop1_3","pulse":true}
+
+T59 [14.19] STUDENT: international
+
+T60 [14.21] TUTOR: Good. Next is "communicate," with the stress on MU: com-MU-ni-cate. Say it aloud, then type it here.
+
+(次は communicate です。MU の部分を強く読んでください。)
+    [board 14.22] CARD "communicate" / 強く読むのは MU の部分です
+
+T61 [14.52] STUDENT: communicate
+
+T62 [14.54] TUTOR: Next is "customers," with the stress on CUS: CUS-tom-ers. Say it aloud, then type it here.
+    [board 14.54] CARD "customers" / 強く読むのは CUS の部分です
+
+T63 [14.79] STUDENT: customers
+
+T64 [14.82] TUTOR: Good, "customers" is typed correctly. Last word: "developed," with the stress on VEL: de-VEL-oped. Say it aloud, then type it.
+    [board 14.82] CARD "developed" / 強く読むのは VEL の部分です
+
+T65 [15.12] STUDENT: developed
+
+T66 [15.16] TUTOR: Your five words are done. Let's review today's lesson.
+
+Next is summary. Shall we go on, or do you have a question first?
+
+## events
+0.12 tool_call | new_page → new page 1 "Lesson overview" · inline
+2.64 segment_overlong | segment "overview" has run 6 substantive tutor turns without advancing
+3.23 tool_call | new_page → new page 2 "Talking about your job" · inline
+3.24 tool_call | show_sentence → painted on page 2 · inline
+3.25 tool_call | set_working_level → Level set to beginner. Do not tell the learner which level you set; just continue the lesson.
+3.29 working_level_set | beginner (v2)
+3.77 tool_call | show_sentence → painted on page 2 · inline
+4.19 tool_call | show_sentence → painted on page 2 · inline
+4.68 tool_call | new_page → new page 3 "Present perfect" · inline
+4.69 tool_call | show_sentence → painted on page 3 · inline
+4.70 tool_call | set_goal_status → recorded
+5.18 tool_call | show_sentence → painted on page 3 · inline
+6.02 tool_call | show_sentence → painted on page 3 · inline
+6.39 tool_call | show_sentence → painted on page 3 · inline
+6.92 tool_call | new_page → not opened yet: the student is asked first
+7.40 segment_overlong | segment "present-perfect" has run 6 substantive tutor turns without advancing
+7.41 tool_call | new_page → new page 4 "Past simple" · inline
+7.42 tool_call | show_sentence → painted on page 4 · inline
+7.44 tool_call | set_goal_status → recorded
+8.01 tool_call | show_sentence → painted on page 4 · inline
+8.40 tool_call | show_sentence → painted on page 4 · inline
+8.90 tool_call | new_page → not opened yet: the student is asked first
+9.18 tool_call | new_page → new page 5 "Project I'm proud of" · inline
+9.68 tool_call | show_sentence → painted on page 5 · inline
+10.32 segment_overlong | segment "past-simple" has run 6 substantive tutor turns without advancing
+10.33 tool_call | show_sentence → painted on page 5 · inline
+10.77 tool_call | show_sentence → painted on page 5 · inline
+12.24 tool_call | show_sentence → painted on page 5 · inline
+12.91 tool_call | new_page → new page 6 "Pronunciation" · inline
+13.61 tool_call | show_sentence → painted on page 6 · inline
+13.97 tool_call | show_sentence → not painted again: already on the board (page 6); the board has scrolled back to it · inline
+14.22 tool_call | show_sentence → painted on page 6 · inline
+14.54 tool_call | show_sentence → painted on page 6 · inline
+14.82 tool_call | show_sentence → painted on page 6 · inline
+15.16 segment_overlong | segment "pronunciation" has run 6 substantive tutor turns without advancing
+15.16 tool_call | new_page → not opened yet: the student is asked first

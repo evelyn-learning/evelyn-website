@@ -1,0 +1,179 @@
+08:41:41 open fixture=gdi-real-james arm=v2 student=gdi-v2-replay-audio7-james (audio student james (33 clips), silent tutor voice)
+08:41:44 clicked start (1)
+08:41:50 TUTOR  Hello, I'm Ryota, and welcome to your English lesson! Today we'll practise talking about your work and the projects you're involved in. We'll also look at two grammar points, the present perfect and the past simple, for your experience and for finished events. Does that sound good to you?   [tools: new_page, annotate]
+08:42:14 STUDENT(clip #1 ok, 2.4 s) Oh, yes.  — Yes/no readiness question, learner gives short ack
+08:42:24 HEARD  Oh, yes.
+08:42:24 TUTOR  Great. In this lesson you'll talk about your job and the projects you work on. We'll practise two grammar points: the present perfect for experience that continues now, and the past simple for finished events at a specific time. I'll also ask follow-up questions to keep the conversation going. When 
+08:43:01 STUDENT(clip #1 ok, 2.4 s) Oh, yes.  — Readiness question; short ack appropriate
+08:43:07 HEARD  Oh, yes.
+08:43:07 TUTOR  Please answer in English, and don't worry about mistakes. I just want to see what you can already do, so the lesson fits you. First question: can you tell me a little about your job? What do you do?   [tools: new_page]
+08:43:28 STUDENT(clip #2 ok, 3.5 s) I'm engineer.  — Direct answer to 'What do you do?' - learner's first attempt at self-description
+08:43:35 HEARD  I'm engineer.
+08:43:35 TUTOR  Thank you. What kind of engineering do you do?
+08:43:42 STUDENT(clip #7 ok, 2.1 s) I make cars.  — Answers what kind of engineering (makes cars)
+08:43:48 HEARD  I make cars.
+08:43:48 TUTOR  Cars, that's interesting. Next question: have you ever worked with an international customer? If so, can you tell me about the experience?
+08:43:59 STUDENT(clip #3 misfit, 1.4 s) Uh, sorry.  — No direct answer to the question; learner likely needs clarification or time to process
+08:44:02 HEARD  Uh, sorry.
+08:44:02 TUTOR  大丈夫です。Let me ask it more simply. Have you ever worked with a customer from another country?
+08:44:13 STUDENT(clip #4 ok, 3.5 s) Uh, sorry. I don't understand.  — Learner doesn't understand the simplified question; #4 is the appropriate response
+08:44:18 HEARD  Uh, sorry, I don't understand.
+08:44:18 TUTOR  No problem. Let me ask it more simply. 外国のお客さんと一緒に仕事をしたことはありますか？ Have you ever worked with a customer from another country?
+08:44:29 STUDENT(clip #5 ok, 2.0 s) Uh, please repeat.  — Tutor repeated question; learner asks for repetition again
+08:44:37 HEARD  Uh, please repeat.
+08:44:37 TUTOR  Let me say it slowly. 外国のお客さんと仕事をしたことはありますか？ In English: Have... you... worked... with a customer from another country? Just tell me yes or no.   [tools: set_working_level]
+08:44:53 STUDENT(clip #1 ok, 2.4 s) Oh, yes.  — Yes/no question, short ack appropriate
+08:44:58 HEARD  Oh, yes.
+08:44:58 TUTOR  ありがとうございます。これでレベルチェックは終わりです。次は「Your job」、仕事について話す練習です。何か質問はありますか？それとも、このまま始めますか？
+08:45:04 STUDENT(clip #1 ok, 2.4 s) Oh, yes.  — Short ack to readiness question 'Shall we start?'
+08:45:14 HEARD  Oh, yes.
+08:45:14 TUTOR  では、仕事について話しましょう。まず、簡単な文から始めます。
+
+
+
+
+このように、短い文で仕事を説明できます。例えば "I make cars." は「車を作っています」という意味です。では、あなたの仕事について、 "I am..." か "I work..." で一文言ってみてください。   [tools: new_page, annotate]
+08:45:23 STUDENT(clip #6 ok, 7.2 s) make car.  — Tutor asks learner to describe their job with 'I am...' or 'I work...' Line #6 'make car' is the next unused line and fi
+08:45:30 HEARD  Uh, I
+08:45:30 TUTOR     [tools: keep_listening]
+08:45:37 HEARD  make car.
+08:45:37 TUTOR  Good, you make cars. One small thing: we say "I make cars," with an s on cars. Now, can you say it as a full sentence? Start with "I am an engineer" and add where you work.
+08:45:55 STUDENT(clip #8 misfit, 5.5 s) Sorry. again?  — Learner impatient, asks to repeat/move on rather than attempt the full sentence requested
+08:46:02 HEARD  Uh, sorry? Again
+08:46:02 TUTOR  もう一度ゆっくり言います。 "I am an engineer. I make cars."
+
+
+
+では、同じように言ってみてください。 "I am an engineer."
+08:46:13 STUDENT(clip #9 misfit, 5.0 s) Uh, yes, for seven year.  — unreadable pick → earliest unused
+08:46:26 HEARD  Uh, yes. For 7 year.
+08:46:26 TUTOR  Seven years as an engineer, that's a good start. Here's the full sentence: "I have been an engineer for seven years." Next is the present perfect, for experience that started in the past and continues now. Do you have a question first, or shall we go on?
+
+   [tools: show_sentence]
+08:46:49 STUDENT(clip #10 ok, 3.5 s) I work here for seven years.  — Learner answers the tutor's question about continuing; #10 is the first unused attempt at expressing work duration
+08:47:00 HEARD  I work here for 7 years.
+08:47:00 TUTOR  「I work here」は今の状態ですが、「7年間ずっと」は過去から今まで続いているので、現在完了を使います。Say: "I have worked here for seven years." 「have worked」がポイントです。
+
+
+
+もう一度、言ってみてください。   [tools: show_sentence]
+08:47:08 STUDENT(clip #11 ok, 2.9 s) I have worked here for seven years.  — Tutor asks learner to repeat the corrected present perfect sentence; #11 is the exact sentence requested
+08:47:13 HEARD  I have worked here for 7 years.
+08:47:13 TUTOR  Yes, that's right: "I have worked here for seven years." 現在完了の文が言えました。
+
+Next is the past simple, for finished events at a specific time. 
+
+Do you have a question before we go on, or are you ready?
+08:47:31 STUDENT(clip #12 ok, 3.0 s) Uh, time management.  — Readiness question; learner impatient, deflects with topic change rather than 'ready'
+08:47:36 HEARD  Uh, time management.
+08:47:36 TUTOR  すみません、よく聞き取れませんでした。もう一度言ってもらえますか？ Next is past simple. Shall we go on? Or do you have a question first?
+08:47:46 STUDENT(clip #15 ok, 2.1 s) Uh. next.  — Learner impatient, wants to move on past the unclear exchange
+08:47:57 HEARD  Uh, next.
+08:47:57 TUTOR  
+Now the past simple. We use it for something that finished at a specific time in the past, like yesterday, last year, or three years ago.
+
+
+
+「三年前に入社しました」は、この形です。 Listen: "I joined my company three years ago."
+
+
+
+Now you say one. Use "I joined" and "three years ago," or change the time to "last year   [tools: new_page, new_page, annotate]
+08:48:20 STUDENT(clip #13 misfit, 3.5 s) Uh, helps me build more cars.  — No line matches past simple 'I joined' request. #13 is next unused but doesn't fit the task.
+08:48:29 HEARD  Uh, helps me build more cars.
+08:48:29 TUTOR  Your sentence is about helping to build cars, but I didn't catch the past form. I'll say the past simple sentence myself: "I joined my company three years ago." Now, when did you join your company? You can answer with a year or with "years ago."
+08:48:49 STUDENT(clip #14 misfit, 3.5 s) It has helped me build more cars.  — Learner impatient, deflecting; no past simple answer ready yet
+08:48:59 HEARD  It has helped me build more cars.
+08:48:59 TUTOR  "It has helped me build more cars." is correct. You used the present perfect again, for something that started in the past and still continues.
+
+
+
+Past simple is for a finished time, like "I joined my company three years ago." Next is open conversation. 
+
+Any questions first, or shall we go on?   [tools: show_sentence]
+08:49:24 STUDENT(clip #23 ok, 1.4 s) Uh, move on.  — Learner is impatient, wants to move on from grammar explanation
+08:49:28 HEARD  Uh, move on.
+08:49:28 TUTOR  Good. Let's talk about your work now. What is one project you worked on that you are proud of? Try starting with "I worked on a project to..."
+
+   [tools: new_page, show_problem]
+08:49:46 STUDENT(clip #24 ok, 5.6 s) I worked on a project with a new car that can actually fly.  — Directly answers the tutor's question about a project the learner is proud of, using 'I worked on a project' as suggeste
+08:49:56 HEARD  I worked on a project with a new car that can actually fly.
+08:49:56 TUTOR  Nice, a flying car! You used the past simple correctly for a finished project.
+
+
+
+What was your job in this project? For example, did you design the engine, or something else?   [tools: show_sentence]
+08:50:12 STUDENT(clip #26 ok, 5.5 s) Uh, yes, I did. There was about uh, ten other engineers involved in the project.  — Answers what his job was in the project by describing his role and team involvement
+08:50:23 HEARD  Uh, yes, I did. There was about uh, 10 other engineers involved in the project.
+08:50:23 TUTOR  That's a big team! One small thing: we say "There were" with a plural noun like engineers. 
+
+
+
+ There were about ten other engineers involved in the project. Now, what part of the car did you work on? You can say "I worked on the..." and the part's name.   [tools: show_sentence]
+08:50:47 STUDENT(clip #25 ok, 8.0 s) The largest or the biggest challenged was finding the technology allowing the car to lift off the ground.  — Answers what part of the car he worked on, fits the tutor's prompt about 'I worked on the...'
+08:51:01 HEARD  The largest or the biggest challenge was finding the technology allowing the car to lift off the ground.
+08:51:01 TUTOR  That's a clear description of a big challenge. One small thing: we say "the biggest challenge," not "the largest or the biggest." Now, how did your team solve that problem? You can start with "We..."   [tools: show_sentence]
+08:51:19 STUDENT(clip #16 misfit, 5.4 s) Yeah, quite a few actually attended, maybe about six exhibitions throughout the year.  — Learner has no recorded line about solving the flying car problem. Line 16 is about exhibitions, earliest unused line th
+08:51:29 HEARD  Yeah, quite a few. I actually attended maybe about 6 exhibitions throughout the year.
+08:51:29 TUTOR  Yes, that's right. "Attended" is past simple, and "throughout the year" is a finished time. Which exhibition was the most useful for your work?
+
+   [tools: show_sentence]
+08:51:42 STUDENT(clip #18 ok, 8.7 s) Comdex in Los on Las Vegas was great because it was very informative and very modern.  — Learner answers which exhibition was most useful by naming Las Vegas/Comdex and explaining why it was great/useful
+08:51:55 HEARD  Uh, Comdex in Los in Las Vegas was great because it was very informative and very modern.
+08:51:55 TUTOR  Comdex in Las Vegas sounds like a good event. Your sentence is clear and correct.
+
+
+
+What did you learn at Comdex that you used in your project?   [tools: show_sentence]
+08:52:10 STUDENT(clip #19 ok, 2.9 s) the future of technology and AI.  — Answers what he learned at Comdex; fits the question naturally
+08:52:18 HEARD  The future of technology and AI.
+08:52:18 TUTOR  Good, you learned about the future of technology and AI. In English, we say: "I learned about the future of technology and AI."
+
+
+
+「learned」は過去の形です。Now, how did this help your project? Try starting with "It helped me..."   [tools: show_sentence]
+08:52:37 STUDENT(clip #20 ok, 1.7 s) the speed of change.  — Answers 'how did this help' with a relevant topic about what helped the project
+08:52:41 HEARD  The speed of change.
+08:52:41 TUTOR  Yes, the speed of change is important in your work. Can you say it as a full sentence? Start with "It helped me understand..."
+08:52:55 STUDENT(clip #21 ok, 5.1 s) it definitely has. Um, I think less.  — Learner answers tutor's request for a full sentence starting with 'It helped me...' Line 21 provides that structure.
+08:53:06 HEARD  It definitely has. Um, I think less.
+08:53:06 TUTOR  「It definitely has」は、「確かにそうです」という意味で、いい答えです。
+
+
+
+ただ、「I think less」の部分がよく聞き取れませんでした。どういう意味で言いましたか？もう一度言ってもらえますか？   [tools: show_sentence]
+08:53:15 STUDENT(clip #22 ok, 2.8 s) It's helped me be more efficient with my time.  — Learner clarifies what they meant by providing a complete sentence about how it helped them, moving past the unclear 'I 
+08:53:22 HEARD  It's helped me be more efficient with my time.
+08:53:22 TUTOR  That's right. "It's helped" is the short form of "It has helped," and you used it for something that started and still continues. Now, are you working on a new project now?
+
+   [tools: show_sentence]
+08:53:40 STUDENT(clip #17 misfit, 3.0 s) Yes, I attended about six exhibitions last year.  — picked #24 (used or unknown) → earliest unused
+08:53:45 HEARD  Yes, I attended about 6 exhibitions last year.
+08:53:45 TUTOR  Good, "attended" with "last year" is the past simple for a finished time. 
+
+What is the new project about? Tell me in one or two sentences.
+08:53:59 STUDENT(clip #27 misfit, 3.8 s) How much longer is this is this lesson?  — picked #24 (used or unknown) → earliest unused
+08:54:05 HEARD  How much longer is this is this lesson?
+08:54:05 TUTOR  あと約8分です。まだ時間がありますので、ゆっくり続けましょう。
+
+Let's go back to your question. What is the new project about? You can say one or two sentences, and start with "I am working on..."
+08:54:20 STUDENT(clip #28 ok, 5.5 s) Please move on to pronunciation practice.  — Learner is impatient, wants to move on from this topic after asking how long the lesson is. Tutor is pushing to continue
+08:54:31 HEARD  Please move on to pronunciation practice.
+08:54:31 TUTOR  
+わかりました。発音の練習をしましょう。単語とひと文、どちらがいいですか？   [tools: new_page]
+08:54:39 STUDENT(clip #29 ok, 3.1 s) Uh, just a little bit of individual words.  — Learner chooses individual words over sentences for pronunciation practice
+08:54:44 HEARD  Uh, just a little bit of individual words.
+08:54:44 TUTOR  Let's start with "responsibilities." Listen, then repeat after me: responsibilities.   [tools: practise_pronunciation]
+08:54:55 STUDENT(clip #30 misfit, 2.4 s) I said individual words.  — Learner should repeat the word, but #30 is a clarification about previous request. No repeat line available; closest is 
+08:55:00 HEARD  I said individual words.
+08:55:00 TUTOR  わかりました、単語の練習ですね。もう一度、"responsibilities" と言ってみてください。   [tools: practise_pronunciation]
+08:55:08 STUDENT(clip #31 misfit, 2.1 s) Sorry, I have to finish now.  — Learner impatient, wants to end; tutor asking to repeat word
+08:55:14 HEARD  Sorry, I have to finish now.
+08:55:14 TUTOR  
+Thank you, James. Today you practised "I have worked here for seven years" for experience and "I attended about six exhibitions throughout the year" for a finished time. Next time, look at when to use the present perfect and when to use the past simple. お疲れさまでした、さようなら！
+
+
+   [tools: new_page, show_sentence, show_sentence]
+08:55:36 STUDENT(end) the tutor said goodbye
+08:55:36 audio: {"sttSockets":1,"sttSocketSeconds":809,"clipSeconds":125,"silentTtsReplies":153,"mic":{"plays":34,"gum":1,"buffers":217},"otherSockets":["ws://localhost:3021/_next/hmr","wss://api.openai.com/v1/realtime"]}
+08:55:36 waiting 35 s for the autosave

@@ -1,0 +1,210 @@
+08:16:17 open fixture=gdi-real-t2 arm=v2 student=gdi-v2-replay-r5-text-t2 (speech off)
+08:17:02 no start orb (auto-start?)
+08:17:02 TUTOR  Hello, I'm Ryota, and welcome to today's English lesson! We'll practise talking about your work and your recent projects, using the present perfect for experience and the past simple for finished events. Before we start, I'll ask you a few short questions so I can pitch the lesson at the right level   [tools: new_page, annotate]
+08:17:30 STUDENT(ack) Yes, that sounds good.
+08:17:38 TUTOR  Good. Today you'll talk about your job and a project you're proud of, and practise two grammar points: the present perfect for experience and the past simple for finished events. I'll also give you follow-up questions to keep a conversation going, and I'll correct your mistakes and let you try again   [tools: show_graphic_organizer]
+08:18:14 STUDENT(answer) Please, could you please rephrase that, please?
+08:18:16 TUTOR  Of course. Today we practise talking about your work. You'll answer a few short questions first, so I know your level. 今日は、仕事について英語で話す練習をします。まず簡単な質問を3つしますね。
+
+Are you ready?
+08:18:31 STUDENT(ack) Yes, I'm ready.
+08:18:37 TUTOR  Great. Here is the first question. Please answer in English, and don't worry about mistakes.
+
+Can you tell me a little about your job? What do you do?
+
+(簡単に答えてください。例えば「I work in...」で始めてもいいですよ。)   [tools: annotate]
+08:18:57 STUDENT(answer) I work as admin at the company. Could you explain that in Japanese?
+08:19:04 TUTOR  「I work as admin」は「事務として働いています」という意味です。「as」は「〜として」、「admin」は administration（事務）の短い言い方です。
+
+Thank you. Here is question 2. Please answer in English.
+
+Have you ever worked with an international customer? If so, can you tell me about the experience?
+
+   [tools: annotate]
+08:19:22 STUDENT(answer) No.
+08:19:25 TUTOR  Thank you. If you have not worked with an international customer, that is fine. Have you ever worked on a new project, or with a difficult customer?
+
+(国際的なお客様がいなくても大丈夫です。新しいプロジェクトや、大変だったお客様はありますか？)
+08:19:39 STUDENT(answer) No.
+08:19:44 TUTOR  Understood, no problem. Here is the last question. Please answer in English.
+
+What is one skill you'd like to improve in your English, and why is it important to you?
+
+(例：「I want to improve my speaking, because...」のように始めてもいいですよ。)
+
+   [tools: annotate]
+08:20:06 STUDENT(answer) I want to improve my speaking skill because I often attend a meeting that use English.
+08:20:18 TUTOR  Thank you, that's helpful. I'll focus on making your sentences more accurate and natural as we go.
+
+
+
+Let's talk about your work. We use the present perfect for experience that continues now, and the past simple for something that finished at a specific time. You'll practise both shortly.
+
+
+
+Now, yo   [tools: new_page, annotate, show_problem]
+08:20:48 STUDENT(answer) I'm checking emails and sorting out some paperwork. Uh, I also do accounting work for the company.
+08:20:56 TUTOR  「I check emails.」「I do accounting work.」はどちらも正しい英語です。仕事の内容がよく伝わります。
+
+会社で何年働いていますか？ Try starting with: "I have worked..."
+
+   [tools: show_sentence, annotate]
+08:21:08 STUDENT(answer) I have worked for the current company for ten years.
+08:21:13 TUTOR  Yes, that's right. You used "have worked" for ten years, which continues until now.
+
+
+
+Next is present perfect practice. Shall we go on, or do you have a question first?
+08:21:29 STUDENT(ack) Yes, let's go on.
+08:21:40 TUTOR  現在完了は「have / has + 過去分詞」で、過去に始まって今も続いている経験や期間を言うときに使います。ten years（10年間）のように「どれくらい続いているか」を言うときにぴったりです。
+
+
+
+
+Here is a model sentence. Say it after you have read it.
+
+
+
+Now your turn. Please answer this question in English. Try starting with "I have learned…".
+
+   [tools: new_page, annotate, show_sentence, show_problem]
+08:21:59 STUDENT(answer) I have learned how to use new accounting software at work.
+08:22:03 TUTOR  That's right. "I have learned how to use new accounting software" is a complete, natural sentence.
+
+Present perfect is done. Next is the past simple, for things that finished at a specific time. Here's the first pattern.
+
+
+
+Shall we go on, or do you have a question first?
+08:22:26 STUDENT(ack) Yes, let's go on.
+08:22:33 TUTOR  過去形は、「昨日」「去年」「2年前」のように、いつ終わったかがはっきりしている出来事に使います。
+
+
+
+
+Here is a model sentence. Read it, then say it.
+
+
+
+Now your turn. Answer this question in English, using the past simple.
+
+   [tools: new_page, annotate, show_sentence, show_problem]
+08:22:50 STUDENT(answer) No, I did not attend any business events last year.
+08:22:53 TUTOR  That's right. "I did not attend any business events last year" is a correct past simple negative for a finished time.
+
+Here's a follow-up. Tell me one thing you did at work last month. Try starting with "Last month, I…".
+
+   [tools: show_problem]
+08:23:17 STUDENT(answer) Last month, I finished the monthly accounting report.
+08:23:22 TUTOR  「Last month, I finished the monthly accounting report.」は、過去形の finished を正しく使えています。「last month」は特定の時期なので、過去形になります。
+
+
+
+Next is your project. Shall we go on, or do you have a question first?
+08:23:36 STUDENT(ack) Yes, let's go on.
+08:23:40 TUTOR  では、プロジェクトについて話しましょう。Try starting with "I worked on a project to…".
+
+
+   [tools: new_page, show_problem]
+08:23:50 STUDENT(answer) I worked on a project to implement the new tax system this year. We finished it successfully.
+08:23:53 TUTOR  Both sentences are correct. "We finished it successfully" is a finished event, so the past simple is right.
+
+プロジェクトでのあなたの役割は何でしたか？ Try starting with "My role was…".
+
+   [tools: show_problem]
+08:24:09 STUDENT(answer) My role was to check the new system and make sure it works correctly with our documents.
+08:24:12 TUTOR  「make sure it works correctly」は正しく言えています。役割をはっきり説明できました。
+
+Next, a short question about the project. What was the biggest problem during the project? Try starting with "The biggest problem was…".
+
+   [tools: show_problem]
+08:24:31 STUDENT(answer) The biggest problem was that the old system and new system did not work together at first. But we fixed it.
+08:24:38 TUTOR  That's a clear answer, and "did not work" and "fixed" are both past simple for a finished problem. 過去形で、終わった出来事を正しく説明できています。
+
+How did your team fix the problem? Try starting with "We fixed it by…".
+
+   [tools: show_problem, annotate]
+08:24:59 STUDENT(answer) We fixed it by testing both systems together and adjusting the settings. We also asked the software company for help.
+08:25:02 TUTOR  「We fixed it by testing both systems together」も「We also asked the software company for help」も正しい過去形です。解決方法まで順番に説明できました。
+
+Next question: how long did the project take? Try starting with "It took…".
+
+   [tools: show_problem]
+08:25:19 STUDENT(answer) It took about three months to finish the project from start to end.
+08:25:32 TUTOR  Three months is a clear answer. Earlier you said "a meeting that use English." Here, "that" points back to one meeting, so the verb takes -s. 「one meeting」なら「uses」、「meetings」と複数なら「use」です。
+
+
+
+Please say this sentence in English.   [tools: show_sentence, show_sentence, annotate]
+08:25:52 STUDENT(answer) I often attend a meeting that uses English.
+08:25:58 TUTOR  That's right. "a meeting that uses English" is correct, because the verb takes -s after a singular noun.
+
+What did you learn from this project? Try starting with "I learned…".
+
+   [tools: show_problem]
+08:26:17 STUDENT(answer) I learned that it is important to test the new system carefully before we use it with real data. I also learned how to work with the software company.
+08:26:22 TUTOR  Both sentences are correct. "I learned that it is important to test..." and "I learned how to work with..." are clear, and you used the past simple for a finished lesson.
+
+Now a question using the present perfect. Have you worked on any other projects since then? Try starting with "Yes, I have..." o   [tools: show_problem]
+08:26:51 STUDENT(answer) No, I have not.
+08:26:56 TUTOR  "No, I have not." is correct, and it answers the question clearly. Here is one more question about your work. What would you like to learn next at work? Try starting with "I would like to learn…".
+
+   [tools: show_problem]
+08:27:18 STUDENT(answer) I would like to learn how to use English in meetings more confidently. I want to understand what people say quickly.
+08:27:24 TUTOR  Both sentences are correct, and your goal is clear. This conversation part is done. Next is pronunciation, which is optional.
+
+
+
+Shall we go on, or do you have a question first?
+08:27:40 STUDENT(request) Skip and continue.
+08:27:52 TUTOR  That's fine, we'll skip pronunciation. Let's review what you practised today.
+
+
+
+
+You used both grammar points well. Here are some of your own sentences.
+
+
+
+
+
+One thing you did well is that you described your project clearly, from your role to the problem and how you fixed it. One thing to improve i   [tools: new_page, annotate, show_sentence, show_sentence, show_sentence, show_problem]
+08:28:42 STUDENT(answer) The first one means I have been working here for five years until now. The second one means I worked there five years ago and no longer work there.
+08:28:53 TUTOR  Yes, that's exactly right. The first sentence is an experience that started in the past and continues now, and the second is a finished event five years ago. Today you talked about your job and a project you're proud of, and you used both grammar points correctly. Keep using "have worked" for things   [tools: annotate]
+08:29:36 STUDENT(answer) Thank you very much. I think stop here is good for today.
+08:29:38 TUTOR  Thank you for today's lesson. You talked about your job and your tax system project, and you used the present perfect and the past simple correctly. Keep practising "a meeting that uses English" when you describe what you do. See you next time!
+08:29:57 STUDENT(end)
+08:29:57 waiting 35 s for the autosave
+
+=== gdi-real-t2 / v2 · 12.9 min · session embed-1794903377755 · bundle /Users/luke/Dev/evelynlearning/.claude/worktrees/gdi-v2/docs/superpowers/plans/gdi-v2-baseline/v2audio-7/text/gdi-real-t2-v2-mwkf4lo64w3.json
+{
+  "fixture": "gdi-real-t2",
+  "arm": "v2",
+  "minutes": 12.9,
+  "tutorTurns": 28,
+  "studentTurns": 27,
+  "complaints": {
+    "complaint_reask": 0,
+    "complaint_ignored": 0,
+    "complaint_lost": 0,
+    "move_on": 0,
+    "verdict_only": 0
+  },
+  "complaintsTotal": 0,
+  "questionEndingShare": 0.36,
+  "questionAfterAnswerShare": 0.38,
+  "wordsAfterVerdictOnly": null,
+  "tutorTurnsAfterRecapRequest": null,
+  "tutorWordsMedian": 33,
+  "tutorWordsP90": 74,
+  "verdictCuts": 0,
+  "validatorRetries": 0,
+  "narrationDrops": 0,
+  "rendersDropped": 0,
+  "firstSentenceMsP50": 2465,
+  "firstSentenceMsP95": 4710,
+  "inputTokens": 1307670,
+  "outputTokens": 29012,
+  "costPerMinute": 0.004,
+  "endedBy": "tutor_close"
+}

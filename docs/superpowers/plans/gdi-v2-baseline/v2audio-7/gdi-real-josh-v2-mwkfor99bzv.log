@@ -1,0 +1,83 @@
+08:31:57 open fixture=gdi-real-josh arm=v2 student=gdi-v2-replay-audio7-josh (audio student josh (16 clips), silent tutor voice)
+08:32:01 clicked start (1)
+08:32:06 TUTOR  Hello, I'm Ryota, and welcome to your English lesson! Today we'll practice talking about your work and your projects, using two grammar points: the present perfect and the past simple. Does that sound good to you?   [tools: annotate]
+08:32:24 STUDENT(clip #1 ok, 2.8 s) Yes.  — Yes/no readiness question gets short ack
+08:32:31 HEARD  Yes.
+08:32:31 TUTOR  
+Great! Here is how the lesson works. You'll talk about your job and the projects you're involved in. We'll practice two grammar points: the present perfect for your experience, and the past simple for finished events at a specific time. You'll also practice follow-up questions to keep a conversatio   [tools: new_page]
+08:33:12 STUDENT(clip #1 ok, 2.8 s) Yes.  — Readiness question; short ack appropriate
+08:33:18 HEARD  Yes.
+08:33:18 TUTOR  Please answer in English, and don't worry about mistakes. This helps me see what you can already do. First question: can you tell me a little about your job? What do you do?   [tools: new_page]
+08:33:36 STUDENT(clip #2 ok, 5.6 s) I am a manager at a communications company.  — Directly answers the tutor's question about what the learner does
+08:33:46 HEARD  I am a manager at a communications company.
+08:33:46 TUTOR  Thank you, that's clear. Next question: have you ever worked with an international customer? If so, can you tell me about the experience?
+08:33:56 STUDENT(clip #3 ok, 7.5 s) Yes, I have. I work with companies here in Japan and from all over the world.  — Directly answers the tutor's question about working with international customers
+08:34:07 HEARD  Yes, I have. I work with companies here in Japan and from all over the world.
+08:34:07 TUTOR  That's good to know, and it's a lot of international work. Now the last question: what is one skill you'd like to improve in your English, and why is it important to you?
+08:34:23 STUDENT(clip #4 ok, 10.9 s) I'd like to improve my conversation with customers before meetings because I often don't know what to say.  — Directly answers the tutor's question about a skill to improve and why it matters
+08:34:42 HEARD  I'd like to improve my conversation with customers before meetings because I often don't know what to say.
+08:34:42 TUTOR  Thank you, Josh. Your answers were clear, so today we'll focus on making your grammar more accurate and your answers more natural. Next is "Talking about your job", where you'll describe your work and experience. Would you like to go on, or do you have a question first?   [tools: set_working_level]
+08:35:03 STUDENT(clip #5 ok, 3.5 s) Do you want me to start now?  — Learner asks if ready to start, tutor asks if they want to go on
+08:35:11 HEARD  Do you want me to start now?
+08:35:11 TUTOR  Yes, let's start. We'll begin with talking about your job.
+
+
+
+
+ I have worked with international customers for three years. I worked with an international customer yesterday. Here is a preview of the two sentences on the board. We'll practise them in the next activities. For now, what are your main    [tools: new_page, annotate]
+08:35:39 STUDENT(clip #6 ok, 10.7 s) My main responsibilities at work are both the training division manager and to help with sales for the division.  — Tutor asks for main responsibilities at work in at least two sentences. Line #6 is the first unused attempt at this answ
+08:35:56 HEARD  My main responsibilities at work are both the training division manager and to help with sales for the division.
+08:35:56 TUTOR  Good, you named two clear responsibilities. One small thing: we say "My main responsibilities are managing the training division and helping with sales." 
+
+That completes the part on your job. Next is present perfect, where we talk about experience that continues now. Do you have a question first, o   [tools: show_sentence]
+08:36:22 STUDENT(clip #1 ok, 2.8 s) Yes.  — Yes/no readiness question; short ack appropriate
+08:36:28 HEARD  Yes.
+08:36:28 TUTOR  We use the present perfect, have or has plus the past participle, for experience that started in the past and continues now. Your sentence "I have worked here for five years" shows this.
+
+
+
+ She has completed several projects. Please answer this question in one or two sentences: have you worked for    [tools: new_page, annotate, show_problem]
+08:36:56 STUDENT(clip #10 ok, 5.0 s) I have worked here for eleven years.  — Answers the question about how long working at current company; uses present perfect correctly
+08:37:04 HEARD  I have worked here for 11 years.
+08:37:04 TUTOR  Yes, that's right: "I have worked here for 11 years." It shows you started in the past and you still work there now. 
+
+What is one important skill you have learned at your company?   [tools: show_sentence]
+08:37:22 STUDENT(clip #11 ok, 4.3 s) I really like going to meet customers.  — Answers the question about an important skill learned at the company
+08:37:31 HEARD  I really like going to meet customers.
+08:37:31 TUTOR  
+
+That's a good, natural sentence, and it tells me something about you. Now try a question with present perfect: how has meeting customers helped you at work?   [tools: show_sentence]
+08:37:47 STUDENT(clip #14 misfit, 8.6 s) I schedule class for many teachers and teach.  — Learner has no recorded present perfect answer about how meeting customers helped; #14 is about scheduling and teaching,
+08:38:00 HEARD  I schedule class for many teachers. and teach.
+08:38:00 TUTOR  So you schedule classes for many teachers, and you also teach them. Now, the question was about how meeting customers has helped you at work. Try it with "has" or "have": Try starting with: "Meeting customers has helped me..."
+08:38:20 STUDENT(clip #7 misfit, 7.3 s) My main responsibilities at work are being the training division manager and helping with sales for the division.  — Learner hasn't answered the 'how has meeting customers helped' question yet; #7 is next unused but doesn't fit the promp
+08:38:34 HEARD  My main responsibilities at work are being the training division manager and helping with sales for the division.
+08:38:34 TUTOR  Your sentence about responsibilities is fine, so let's keep going with the present perfect question. How has meeting customers helped you at work? You can start with "Meeting customers has helped me…".   [tools: annotate]
+08:38:49 STUDENT(clip #8 misfit, 5.5 s) I work here for eleven year.  — No line fits the present perfect question; #8 is earliest unused
+08:38:58 HEARD  I work here for 11 year.
+08:38:58 TUTOR  You said "I work here for 11 year." For a time that started in the past and continues now, we say "I have worked here for 11 years." Can you say that sentence once more?
+
+
+08:39:15 STUDENT(clip #9 misfit, 4.2 s) I have worked here for eleven year.  — unreadable pick → earliest unused
+08:39:24 HEARD  I have worked here for 11 year.
+08:39:24 TUTOR  You said "11 year," but we say "11 years," with an s. The full sentence is "I have worked here for 11 years." Let's try a new question: what is one skill you have learned in your job?
+08:39:41 STUDENT(clip #12 misfit, 1.6 s) わかりません。  — Learner doesn't understand the new question; 'わかりません' (I don't understand) is the only unused line available, though not
+08:39:46 HEARD  わかりません。
+08:39:46 TUTOR  少し難しかったですね。質問は「仕事で学んだスキルは何ですか」という意味です。
+
+Try starting with: "I have learned…"
+
+   [tools: annotate]
+08:39:54 STUDENT(clip #13 misfit, 5.1 s) I have worked in my department for ten years.  — Learner has no recorded line about skills learned. Line #13 about department tenure is closest available unused line, bu
+08:40:02 HEARD  I have worked in my department for 10 years.
+08:40:02 TUTOR  Yes, that's right: "I have worked in my department for 10 years." You used "years" correctly, too. 
+
+Now, what has been the biggest challenge in your department so far?   [tools: show_sentence]
+08:40:19 STUDENT(clip #15 misfit, 4.2 s) Okay, please stop. I would like to end the session for now.  — Learner should answer the challenge question, but no fitting line remains. Line 15 is closest as a content line, though 
+08:40:23 HEARD  Okay.
+08:40:23 TUTOR  Take your time. What has been the biggest challenge in your department so far? You can start with "The biggest challenge has been…"
+08:40:27 HEARD  Please, I would like to end the session for now.
+08:40:27 TUTOR  Thank you, Josh. Today you practised describing your job and using the present perfect for experience that continues now, and you got "I have worked here for 11 years" right on your own. Next time we can look at the past simple, the conversation practice and pronunciation.  I attended an exhibition    [tools: new_page, annotate]
+08:40:54 STUDENT(end) the tutor said goodbye
+08:40:54 audio: {"sttSockets":1,"sttSocketSeconds":505,"clipSeconds":92,"silentTtsReplies":69,"mic":{"plays":17,"gum":1,"buffers":104},"otherSockets":["ws://localhost:3021/_next/hmr","wss://api.openai.com/v1/realtime"]}
+08:40:54 waiting 35 s for the autosave

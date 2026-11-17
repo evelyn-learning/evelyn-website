@@ -1,0 +1,335 @@
+# embed-1794906993296 student=gdi-v2-replay-audio7-tester-b status=active duration=1110 progress={"lessonPlanId":"gdi.trial.english.work-projects.v1","currentSegmentId":"open-conversation","completedSegmentIds":["overview","level-check","topic-intro","present-perfect","past-simple"],"updatedAt":"2026-11-17T09:29:55.524Z"}
+
+T0 [0.08] TUTOR: Hello, I'm Ryota, and welcome to your English lesson! Today we'll practise talking about your work and your projects, using the present perfect for experience and the past simple for finished events. Does that sound good to you?
+    [board 0.14] annotate {"text":"Talking About Your Work and Recent Projects\nTalk about experience and achievements that started in the past and continue now: I have worked here for f
+
+T1 [0.50] STUDENT: I'm ready.
+
+T2 [0.57] TUTOR: Great, let's begin. Today we'll talk about your work, practise the present perfect and the past simple, ask follow-up questions, and finish with pronunciation if you like. First, a short, friendly chat so I can see what you can already do. Please answer in English, and don't worry about mistakes. Can you tell me a little about your job? What do you do?
+    [board 0.59] PAGE "Level check"
+
+T3 [1.52] STUDENT: Yes, I'm sales manager in the G I'm our uh the GM uh general manager, well, that's and I just supporting for the old division in the the company. And of course, most of the part of the management and the sales area for this.
+
+T4 [1.56] TUTOR: Thank you, that helps me understand your role. Which products does your division sell?
+
+T5 [2.13] STUDENT: My main responsibility in sales area to the uh contact for the clients and supporting for the each division member about this. And of course, I have a suggesting for the uh the new uh products about to the clients.
+
+T6 [2.15] TUTOR: Thanks, that's clear. Have you ever worked with an international customer? If so, can you tell me about the experience?
+
+T7 [2.48] STUDENT: Yes, I have working with the international customer for sometimes.
+
+T8 [2.51] TUTOR: That's good to know, and you have experience with international customers. What is one skill you'd like to improve in your English, and why is it important to you?
+
+T9 [3.09] STUDENT: Uh, what I have the long at the my company, it uh connecting to the foreigner person because of a company has a lot of the foreigner and uh I have to using for my English to communicate for the each other.
+
+T10 [3.15] TUTOR: Thank you, I understand you well. Today we'll focus on making your grammar more accurate and your sentences more natural. Next is Your job. Do you have a question first, or shall we go on?
+
+T11 [3.54] STUDENT: and lady.
+
+T12 [3.57] TUTOR: すみません、よく聞き取れませんでした。次は「Your job」です。仕事について話す練習をします。質問はありますか？それとも、このまま進みますか？
+
+T13 [3.73] STUDENT: I'm ready.
+
+T14 [3.75] TUTOR: では、「Your job」に進みましょう。仕事について話すときは、短い文を使います。
+
+それでは、あなたの仕事について一文で教えてください。What do you do at work?
+    [board 3.80] PAGE "Your job"
+    [board 3.80] CARD "I work in sales." / 私は営業で働いています。
+    [board 3.80] CARD "I help customers." / 私はお客様を助けます。
+    [board 3.80] CARD "I work with international clients." / 私は海外のお客様と仕事をします。
+
+T15 [4.25] STUDENT: My responsibility in sales area is a contact for our clients and supporting for the ADF member and suggesting for the new product clients.
+
+T16 [4.30] TUTOR: いいですね、仕事の内容がよく分かりました。ただ、一つ直しましょう。「a contact」ではなく「the contact」を使います。
+
+この文をもう一度言ってみてください。I am the contact for our clients.
+    [board 4.30] CARD "I am the contact for our clients." / 私は顧客の窓口です。
+
+T17 [4.94] STUDENT: My main responsibility in the sales area is to be a contact for our clients, supporting for the each division member of of course the management for the each division member and of course uh suggesting for the new service and the project products to the clients.
+
+T18 [4.99] TUTOR: 仕事の内容がよく分かりました。一つだけ直しましょう。「support」の後ろに「for」は要りません。「support each division member」と言います。
+
+この文を一度言ってみてください。My main responsibility is to be the contact for our clients, and to support each division member.
+    [board 5.00] CARD "My main responsibility is to be the contact for our clients, and to support each division member." / 私の主な仕事は、顧客の窓口と、各部門のメンバーのサポートです。
+    [board 5.08] annotate {"text":"support + person: no \"for\". Say \"support each division member\".","style":"warning","rich":true,"id":"inl_mwkhgglf_2"}
+
+T19 [5.41] STUDENT: Yes, for my our company above over the 10 years.
+
+T20 [5.47] TUTOR: 10年以上ですね。もう一度聞かせてください。「I have worked for our company for over 10 years.」と言いましたか？
+
+T21 [5.74] STUDENT: I have here over the 10 years.
+
+T22 [5.79] TUTOR: 「I have here」の後に、動詞の「worked」が抜けています。「have」の後ろは、過去分詞の形にします。「work」の過去分詞を使って、もう一度言ってみてください。
+
+T23 [6.05] STUDENT: I have working for our company for a long time. It takes about uh around the 10 years.
+
+T24 [6.09] TUTOR: 「I have working」の「working」は「worked」にします。「I have worked for our company for a long time.」です。
+
+これで「Your job」は終わりです。次は「Present perfect」で、今も続いている経験を話す練習をします。質問はありますか？それとも、このまま進みますか？
+    [board 6.09] CARD "I have worked for our company for a long time." / 私は会社で長く働いています。have の後は過去分詞の worked を使います。
+
+T25 [6.36] STUDENT: Yes.
+
+T26 [6.39] TUTOR: 現在完了は、過去に始まって今も続いている経験や、これまでの経験に使います。形は have か has、その後ろに過去分詞を置きます。
+
+では、あなたの会社での経験について聞かせてください。
+
+Have you worked for your current company for a long time? Answer in one full sentence, starting with "I have worked".
+    [board 6.40] scrollTo {"target":"item","targetId":"inl_mwkhiadf_2","pulse":true}
+    [board 6.46] PAGE "Present perfect"
+    [board 6.46] annotate {"text":"have / has + past participle\nwork → have worked\nExample: I have worked here for five years.","style":"highlight","rich":true,"id":"inl_mwkhiadf_2"}
+    [board 6.46] showProblem {"problem":{"statement":"Have you worked for your current company for a long time? Answer in one full sentence, starting with \"I have worked\".","format":"free
+
+T27 [6.84] STUDENT: I have worked with international customer
+
+T28 [6.89] TUTOR: Yes, "I have worked" is the right form. One small thing: we say "customers" with an s, because there are many of them.
+
+ I have worked with international customers.
+
+Now, how long have you worked with international customers?
+    [board 6.90] CARD "I have worked with international customers." / 「customer」は「customers」と複数形にします。
+
+T29 [7.41] STUDENT: I have worked with international customer sometimes.
+
+T30 [7.45] TUTOR: Good, the main point is there. We say the correct sentence this way: "I have worked with international customers sometimes."
+
+Now, what kind of work did you do with them? Tell me in one or two sentences.
+    [board 7.45] CARD "I have worked with international customers sometimes." / 海外のお客様と時々仕事をしたことがあります。
+
+T31 [7.98] STUDENT: Yes, I have been working a project with uh uh us from another content, another uh countries.
+
+T32 [8.01] TUTOR: 「work on a project」と言います。「I have worked on a project with people from other countries.」です。
+
+Can you say that sentence once more?
+    [board 8.02] CARD "I have worked on a project with people from other countries." / 海外の人たちと一緒にプロジェクトに取り組んだことがあります。「work on」は「〜に取り組む」という意味です。
+
+T33 [8.40] STUDENT: I worked on a project to support SNS networking content.
+
+T34 [8.44] TUTOR: Yes, that's right, and "worked on" is the correct past form. Your project is a good example for the past simple, which we'll practise next.
+
+Have you worked on any other projects like this one?
+    [board 8.44] CARD "I worked on a project to support SNS networking content." / SNSの交流コンテンツを支援するプロジェクトに取り組みました。
+
+T35 [9.03] STUDENT: Uh, not project, but I have to find for the the new uh person to exchanging for the the uh the project members.
+
+T36 [9.07] TUTOR: 少し聞き取れませんでした。もう一度ゆっくり言ってもらえますか？
+
+T37 [9.27] STUDENT: one more again.
+
+T38 [9.30] TUTOR: もう一度聞きますね。Have you worked on any other projects like this one? 「I have worked on…」で始めてみてください。
+
+T39 [9.70] STUDENT: Uh, because of is will leaving to our company and the project going on. So that's why I have to find a new people.
+
+T40 [9.78] TUTOR: 分かりました。担当の方が会社を辞めるので、プロジェクトのために新しい人を探しているのですね。ひとりの人なので「a new person」と言います。
+
+現在完了の練習はここまでです。次は「Past simple」で、終わった出来事を話す練習をします。質問が先にありますか？それとも、このまま進みますか？
+    [board 9.78] CARD "I have to find a new person for the project." / プロジェクトのために新しい人を探さなければなりません。
+
+T41 [10.11] STUDENT: Uh, I will shall move on to the next conversation.
+
+T42 [10.14] TUTOR: 過去形は、終わった出来事を話すときに使います。「last year」や「yesterday」のように、いつのことかはっきり分かる時に使います。
+
+では、去年のことを聞きます。
+
+Did you attend any business events or exhibitions last year? Answer in one full sentence.
+    [board 10.15] scrollTo {"target":"item","targetId":"inl_mwkhn3u4_2","pulse":true}
+    [board 10.18] PAGE "Past simple"
+    [board 10.18] annotate {"text":"Past simple: subject + past verb\nattend → attended, meet → met, join → joined\nExample: I attended an exhibition last year.","style":"highlight","rich
+    [board 10.18] showProblem {"problem":{"statement":"Did you attend any business events or exhibitions last year? Answer in one full sentence, using the past simple.","format":"free-respon
+
+T43 [10.53] STUDENT: Yes, I attended the uh some business event in the uh Japan. last 2 year.
+
+T44 [10.58] TUTOR: 「attended」は過去形として正しく使えています。直すところは「last 2 year」です。「last year」は数字を入れず、「last year」と言います。
+
+もう一度、この文を言ってみてください。
+    [board 10.59] CARD "I attended a business event in Japan last year." / 去年、日本でビジネスイベントに参加しました。「last year」は数字を入れません。
+
+T45 [10.86] STUDENT: Yes, I attended the business event in Japan last year.
+
+T46 [10.90] TUTOR: Yes, that's right: "I attended the business event in Japan last year." Now, what did you do at the event? Tell me one thing you did there.
+    [board 10.90] CARD "I attended the business event in Japan last year."
+
+T47 [11.43] STUDENT: Uh, it's kind of the networking events, uh, the looking for the new uh business partner or the connecting for the the related our service.
+
+T48 [11.47] TUTOR: ネットワーキングのイベントに参加して、新しいビジネスパートナーを探したのですね。過去の出来事なので、「looked」の過去形を使います。
+
+この文をもう一度言ってみてください。
+    [board 11.47] CARD "I attended networking events last year, and I looked for new business partners." / 去年のイベントで、新しいビジネスパートナーを探しました。
+
+T49 [11.87] STUDENT: Yes, I met someone. We came at the the new partner or the the related for the new business with customers.
+
+T50 [11.90] TUTOR: 「I met someone」は過去形として正しく言えています。ただ、その後の「We came at」は「met」を使います。
+
+この文をもう一度言ってみてください。
+    [board 11.91] CARD "I met a new business partner at the event last year." / 去年のイベントで、新しいビジネスパートナーに会いました。
+
+T51 [12.17] STUDENT: We met a new business partner, Bill.
+
+T52 [12.22] TUTOR: はい、正しく言えています。「We met a new business partner, Bill.」
+
+過去の出来事を話す練習はここまでです。次は「Conversation」で、あなたが誇りに思うプロジェクトについて話します。質問がありますか？それとも、もう始めますか？
+    [board 12.23] CARD "We met a new business partner, Bill." / 私たちは新しいビジネスパートナーのビルさんと会いました。
+
+T53 [12.48] STUDENT: We met a new business partner there.
+
+T54 [12.52] TUTOR: That's right: "We met a new business partner there." That finishes the past simple practice. Next is Conversation, where we talk about a project you are proud of.
+
+Shall we move on, or is there anything you would like to ask first?
+    [board 12.53] CARD "We met a new business partner there."
+    [board 12.53] scrollTo {"target":"item","targetId":"inl_mwkhq5et_1","pulse":true}
+    [board 13.30] PAGE "Conversation"
+
+T55 [12.96] STUDENT: Oh.
+
+T56 [13.24] STUDENT: I talk about for the our business to uh supporting for the training for the the global person uh mainly for the Japanese or introducing for the IT engineer uh to the client.
+
+T57 [13.30] TUTOR: Thank you, that's a clear picture of your work. One small thing: we say "support the training for global staff", with no "-ing" after "support".
+
+ We support the training for global staff, mainly for Japanese employees.
+
+Now, what is one project you have worked on that you are proud of? Try starting with: "I worked on a project to..."
+    [board 13.31] CARD "We support the training for global staff, mainly for Japanese employees." / 私たちは海外のスタッフ向けの研修をサポートしています。
+
+T58 [14.11] STUDENT: Uh, let me see is uh one project I worked in the supporting for the the the uh the uh SNS networking contents.
+
+T59 [14.14] TUTOR: 「worked on」を使うと、もっと自然になります。「I worked on a project to support SNS networking content.」と言います。
+
+この文をもう一度言ってみてください。その後、このプロジェクトであなたの役割は何でしたか？
+    [board 14.14] CARD "I worked on a project to support SNS networking content." / SNSの交流コンテンツをサポートするプロジェクトに取り組みました。
+
+T60 [14.45] STUDENT: Uh, my role is to manage for the member.
+
+T61 [14.48] TUTOR: 「manage」の後ろに「for」は要りません。「manage the members」と言います。
+
+
+
+Now, how many members are in your team?
+    [board 14.49] CARD "My role is to manage the members." / 私の役割は、メンバーを管理することです。
+
+T62 [14.51] STUDENT: who is making for the content.
+
+T63 [14.56] TUTOR: 「Who makes the content?」という意味で合っていますか？プロジェクトでは、誰がコンテンツを作っているのか教えてください。
+
+T64 [14.62] STUDENT: uh, the talking about for the content. and making for the content.
+
+T65 [14.65] TUTOR: 「make the content」は「for」を使いません。「Who makes the content?」と言います。
+
+
+
+あなたのチームでは、誰がコンテンツを作りますか？英語で一文で答えてみてください。
+    [board 14.66] CARD "Who makes the content?"
+    [board 14.66] CARD "Who makes the content in your project?" / 誰がコンテンツを作りますか？「make」の後ろに「for」は要りません。
+
+T66 [14.71] STUDENT: I need to manage
+
+T67 [15.02] STUDENT: My rule is to manage for the assessment and networking content member.
+
+T68 [15.05] TUTOR: 「role」は「役割」という意味です。「manage」の後ろに「for」は要りません。「manage the members」と言います。
+
+この文をもう一度言ってみてください。
+    [board 15.05] CARD "My role is to manage the assessment and networking content members." / 私の役割は、評価とネットワーキングのコンテンツのメンバーを管理することです。
+
+T69 [16.38] TUTOR: Take your time. If it helps, start with "Our team makes the content…" and finish the sentence.
+
+T70 [16.65] STUDENT: I'm not sure about it.
+
+T71 [16.71] TUTOR: No problem. The question was about who makes the content in your project, so we can leave it there.
+
+Before the summary, there is still the pronunciation part. Would you like to do it now, or go straight to the summary?
+
+T72 [17.32] STUDENT: Uh, I think in the future, I will supporting for the the global networking to the between the foreigner company and Japanese company with my uh our directors.
+
+T73 [17.38] TUTOR: That's a good goal for the future! One small thing: after "will" we use the base verb, so we say "will support", with no "-ing" and no "for".
+
+ I think in the future, I will support global networking between foreign and Japanese companies with our directors.
+
+Do you have any questions before we finish?
+    [board 17.39] CARD "I think in the future, I will support global networking between foreign and Japanese companies with our directors." / 将来、外国企業と日本企業の間のグローバルなネットワーキングを、取締役と一緒にサポートしたいです。
+
+T74 [17.90] STUDENT: Yes.
+
+T75 [17.91] TUTOR: Of course, go ahead and ask your question.
+
+## events
+0.57 tool_call | new_page → new page 2 "Level check" · inline
+0.57 v2_board_timing | new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — held
+0.58 tool_call | set_goal_status → recorded
+3.14 tool_call | set_working_level → Level set to beginner. Do not tell the learner which level you set; just continue the lesson.
+3.23 working_level_set | beginner (v2)
+3.75 tool_call | new_page → new page 3 "Your job" · inline
+3.75 v2_board_timing | new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — held
+3.75 segment_overlong | segment "level-check" has run 6 substantive tutor turns without advancing
+3.76 tool_call | show_sentence → painted on page 3 · inline
+3.76 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — held
+3.76 tool_call | show_sentence → painted on page 3 · inline
+3.76 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — held
+3.76 tool_call | show_sentence → painted on page 3 · inline
+3.76 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — held
+3.78 tool_call | set_goal_status → recorded
+4.30 tool_call | show_sentence → painted on page 3 · inline
+4.30 v2_board_timing | show_sentence: inline, with sentence 1 of 3 (stretch from 1), 1 started — now
+5.00 tool_call | show_sentence → painted on page 3 · inline
+5.00 v2_board_timing | show_sentence: inline, with sentence 1 of 5 (stretch from 1), 2 started — now
+6.09 tool_call | show_sentence → painted on page 3 · inline
+6.09 v2_board_timing | show_sentence: inline, with sentence 1 of 4 (stretch from 1), 1 started — now
+6.39 tool_call | new_page → new page 4 "Present perfect" · inline
+6.39 v2_board_timing | new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — held
+6.39 segment_overlong | segment "topic-intro" has run 6 substantive tutor turns without advancing
+6.40 tool_call | show_sentence → not painted again: already on the board (page 4); the board has scrolled back to it · inline
+6.41 tool_call | set_goal_status → recorded
+6.90 tool_call | show_sentence → painted on page 4 · inline
+6.90 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — now
+7.45 tool_call | show_sentence → painted on page 4 · inline
+7.45 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — now
+8.02 tool_call | show_sentence → painted on page 4 · inline
+8.02 v2_board_timing | show_sentence: inline, with sentence 1 of 4 (stretch from 1), 1 started — now
+8.44 tool_call | show_sentence → painted on page 4 · inline
+8.44 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — now
+9.30 segment_overlong | segment "present-perfect" has run 6 substantive tutor turns without advancing
+9.78 tool_call | show_sentence → painted on page 4 · inline
+9.78 v2_board_timing | show_sentence: inline, with sentence 1 of 5 (stretch from 1), 1 started — now
+10.14 tool_call | new_page → new page 5 "Past simple" · inline
+10.14 v2_board_timing | new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — held
+10.15 tool_call | show_sentence → not painted again: already on the board (page 5); the board has scrolled back to it · inline
+10.17 tool_call | set_goal_status → recorded
+10.59 tool_call | show_sentence → painted on page 5 · inline
+10.59 v2_board_timing | show_sentence: inline, with sentence 1 of 3 (stretch from 1), 1 started — now
+10.90 tool_call | show_sentence → painted on page 5 · inline
+10.90 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 0 started — held
+11.47 tool_call | show_sentence → painted on page 5 · inline
+11.47 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — now
+11.91 tool_call | show_sentence → painted on page 5 · inline
+11.91 v2_board_timing | show_sentence: inline, with sentence 1 of 5 (stretch from 1), 1 started — now
+12.23 tool_call | show_sentence → painted on page 5 · inline
+12.23 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — now
+12.25 tool_call | set_goal_status → recorded
+12.52 segment_overlong | segment "past-simple" has run 6 substantive tutor turns without advancing
+12.53 tool_call | show_sentence → painted on page 5 · inline
+12.53 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 0 started — held
+12.53 tool_call | show_sentence → not painted again: already on the board (page 5); the board has scrolled back to it · inline
+13.30 tool_call | new_page → new page 6 "Conversation" · inline
+13.30 v2_board_timing | new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — now
+13.31 tool_call | show_sentence → painted on page 6 · inline
+13.31 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — now
+13.33 tool_call | set_goal_status → recorded
+14.14 tool_call | show_sentence → painted on page 6 · inline
+14.14 v2_board_timing | show_sentence: inline, with sentence 1 of 3 (stretch from 1), 1 started — now
+14.49 tool_call | show_sentence → painted on page 6 · inline
+14.49 v2_board_timing | show_sentence: inline, with sentence 1 of 3 (stretch from 1), 1 started — now
+14.56 v2_heard_over_tutor | words, not paused (nothing playing yet): uh, the talking about
+14.58 v2_heard_over_tutor | a sound, not paused: already paused
+14.66 tool_call | show_sentence → painted on page 6 · inline
+14.66 v2_board_timing | show_sentence: inline, with sentence 1 of 4 (stretch from 1), 1 started — now
+14.66 tool_call | show_sentence → painted on page 6 · inline
+14.66 v2_board_timing | show_sentence: inline, with sentence 1 of 4 (stretch from 1), 1 started — now
+15.05 tool_call | show_sentence → painted on page 6 · inline
+15.05 v2_board_timing | show_sentence: inline, with sentence 1 of 4 (stretch from 1), 1 started — now
+16.39 segment_overlong | segment "open-conversation" has run 6 substantive tutor turns without advancing
+16.74 tool_call | new_page → not opened yet: the student is asked first
+16.76 qpin_set | "Would you like to do the pronunciation part now, or go strai"
+16.76 qpin_answer_clear_refused | no-student-turn — "Would you like to do the pronunciation part now, or go strai"
+17.32 qpin_answer_clear_refused | awaiting-tutor-turn — "Would you like to do the pronunciation part now, or go strai"
+17.38 qpin_answer_clear_refused | no-affirm — "Would you like to do the pronunciation part now, or go strai"
+17.39 tool_call | show_sentence → painted on page 6 · inline
+17.39 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — now
+17.42 qpin_replaced | new ask in turn tutor-1794908032345 — "Would you like to do the pronunciation part now, or go strai"

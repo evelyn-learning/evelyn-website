@@ -1,0 +1,238 @@
+{
+  "fixture": "gdi-real-stop",
+  "arm": "v2",
+  "sessionId": "embed-1794903282717",
+  "startedAt": "2026-11-17T08:15:27.520Z",
+  "minutes": 2.8232833333333334,
+  "turns": [
+    {
+      "role": "tutor",
+      "text": "Hello, I'm Ryota, and welcome to your English lesson! Today we'll practise talking about your work and the projects you're involved in, using the present perfect for your experience and the past simple for finished events. Does that sound good?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, that sounds good. I am ready to start.",
+      "tag": "ack"
+    },
+    {
+      "role": "tutor",
+      "text": "Great, let's begin. Today we'll talk about your job and your projects, practise the present perfect for experience and the past simple for finished events, and ask each other follow-up questions. I'll correct your mistakes and give you a chance to try again, and pronunciation is there at the end if you want it. First, a short level check, so I can adjust the lesson for you. Please answer in English, and don't worry about mistakes."
+    },
+    {
+      "role": "student",
+      "text": "I am a manager at a communications company in Japan.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Thank you. A communications company manager is a useful background for today's practice. Now the second question:"
+    },
+    {
+      "role": "student",
+      "text": "Yes, I have worked with many international customers. I work with companies in Japan and also worldwide.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "That's a good answer, and it tells me a lot about your experience. Here is the last question."
+    },
+    {
+      "role": "student",
+      "text": "I want to improve my conversation with customers before meetings. This is important because I need to build good relationship with them.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Thank you. Building relationships with customers before meetings is a clear goal, and we'll work on it today. One small thing: we say \"good relationships,\" with an s. Today I'll help you make your answers more accurate and more natural.\n\n\n\nNext is your job and experience. Shall we go on, or do you have a question first?"
+    },
+    {
+      "role": "student",
+      "text": "Okay, please stop. I would like to end the session for now.",
+      "tag": "answer"
+    },
+    {
+      "role": "tutor",
+      "text": "Today you introduced your job and your goal of building good relationships with customers before meetings. Next time we'll work on your job and responsibilities, the present perfect, the past simple, open conversation and pronunciation. Goodbye, Josh, and see you next time!"
+    }
+  ],
+  "events": [
+    {
+      "type": "start_v2",
+      "message": "tutor opens (text)"
+    },
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no"
+    },
+    {
+      "type": "persona_resolved",
+      "message": "teacher=ryota"
+    },
+    {
+      "type": "start_v2",
+      "message": "tutor opens (text)"
+    },
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no"
+    },
+    {
+      "type": "persona_resolved",
+      "message": "teacher=ryota"
+    },
+    {
+      "type": "partner_pool_snapshot",
+      "message": "remaining=50323 cap=130920 session_max=1200 exhausted=false"
+    },
+    {
+      "type": "partner_pool_snapshot",
+      "message": "remaining=50323 cap=130920 session_max=1200 exhausted=false"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 1 · inline"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 4746ms · first_sentence=1664ms · in=12608 out=735 cr=36704 cc=0 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Does that sound good?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Does that sound good?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Does that sound good?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Does that sound good?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 2 \"Level check\" · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 2 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5843ms · first_sentence=3497ms · in=13150 out=1042 cr=36704 cc=750 · v2"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 2 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2290ms · first_sentence=1501ms · in=762 out=466 cr=18727 cc=499 · v2"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 2 · inline"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2590ms · first_sentence=1556ms · in=721 out=457 cr=19226 cc=292 · v2"
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → not opened yet: the student is asked first"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_working_level → Level set to intermediate. Do not tell the learner which level you set; just continue the lesson."
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "working_level_set",
+      "message": "intermediate (v2)"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6238ms · first_sentence=3621ms · in=790 out=1277 cr=19518 cc=324 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 3 \"Summary\" · inline"
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 3 · inline"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered, and the reply asked nothing more — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "end_lesson → the session is ending"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3644ms · first_sentence=2676ms · in=951 out=693 cr=19842 cc=654 · v2"
+    },
+    {
+      "type": "lesson_closed",
+      "message": "end_lesson"
+    },
+    {
+      "type": "qpin_drop",
+      "message": "gist empty (model judged the \"?\" conversational)"
+    },
+    {
+      "type": "v2_profile_commit",
+      "message": "status=200 gaps=0 mastery=[] evidence=0 turns=11"
+    }
+  ],
+  "estimatedCost": 0.0072,
+  "endedBy": "tutor_close"
+}

@@ -1,0 +1,44 @@
+# embed-1794903282717 student=gdi-v2-replay-r5-text-stop status=completed duration=187 progress={"lessonPlanId":"gdi.trial.english.work-projects.v1","currentSegmentId":"summary","completedSegmentIds":["overview","level-check","summary"],"updatedAt":"2026-11-17T08:17:45.995Z"}
+
+T0 [0.04] TUTOR: Hello, I'm Ryota, and welcome to your English lesson! Today we'll practise talking about your work and the projects you're involved in, using the present perfect for your experience and the past simple for finished events. Does that sound good?
+    [board 0.09] annotate {"text":"Talking About Your Work and Recent Projects\nTalk about experience and achievements that started in the past and continue now: I have worked here for f
+
+T1 [1.13] STUDENT: Yes, that sounds good. I am ready to start.
+
+T2 [1.19] TUTOR: Great, let's begin. Today we'll talk about your job and your projects, practise the present perfect for experience and the past simple for finished events, and ask each other follow-up questions. I'll correct your mistakes and give you a chance to try again, and pronunciation is there at the end if you want it. First, a short level check, so I can adjust the lesson for you. Please answer in English, and don't worry about mistakes.
+    [board 1.20] PAGE "Level check"
+    [board 1.21] showProblem {"problem":{"statement":"Question 1: Can you tell me a little about your job? What do you do?","format":"free-response","difficultyLabel":"easy","rich":true},"i
+
+T3 [1.83] STUDENT: I am a manager at a communications company in Japan.
+
+T4 [1.86] TUTOR: Thank you. A communications company manager is a useful background for today's practice. Now the second question:
+    [board 1.86] showProblem {"problem":{"statement":"Question 2: Have you ever worked with an international customer? If so, can you tell me about the experience?","format":"free-response"
+
+T5 [2.11] STUDENT: Yes, I have worked with many international customers. I work with companies in Japan and also worldwide.
+
+T6 [2.14] TUTOR: That's a good answer, and it tells me a lot about your experience. Here is the last question.
+    [board 2.14] showProblem {"problem":{"statement":"Question 3: What is one skill you'd like to improve in your English, and why is it important to you?","format":"free-response","difficu
+
+T7 [2.40] STUDENT: I want to improve my conversation with customers before meetings. This is important because I need to build good relationship with them.
+
+T8 [2.47] TUTOR: Thank you. Building relationships with customers before meetings is a clear goal, and we'll work on it today. One small thing: we say "good relationships," with an s. Today I'll help you make your answers more accurate and more natural.
+
+Next is your job and experience. Shall we go on, or do you have a question first?
+    [board 3.03] PAGE "Summary"
+
+T9 [2.99] STUDENT: Okay, please stop. I would like to end the session for now.
+
+T10 [3.03] TUTOR: Today you introduced your job and your goal of building good relationships with customers before meetings. Next time we'll work on your job and responsibilities, the present perfect, the past simple, open conversation and pronunciation. Goodbye, Josh, and see you next time!
+    [board 3.04] CARD "I want to build good relationships with my customers before meetings." / ご自身の目標を言うときの正しい形です
+
+## events
+1.20 tool_call | new_page → new page 2 "Level check" · inline
+1.22 tool_call | set_goal_status → recorded
+2.47 tool_call | new_page → not opened yet: the student is asked first
+2.51 tool_call | set_working_level → Level set to intermediate. Do not tell the learner which level you set; just continue the lesson.
+2.51 tool_call | set_goal_status → recorded
+2.51 working_level_set | intermediate (v2)
+3.03 tool_call | new_page → new page 3 "Summary" · inline
+3.04 tool_call | show_sentence → painted on page 3 · inline
+3.05 tool_call | end_lesson → the session is ending
+3.05 lesson_closed | end_lesson

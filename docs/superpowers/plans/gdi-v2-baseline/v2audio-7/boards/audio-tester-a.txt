@@ -1,0 +1,358 @@
+# embed-1794905784740 student=gdi-v2-replay-audio7-tester-2 status=completed duration=1161 progress={"lessonPlanId":"gdi.trial.english.work-projects.v1","currentSegmentId":"summary","completedSegmentIds":["overview","level-check","topic-intro","present-perfect","past-simple","open-conversation","summary"],"updatedAt":"2026-11-17T09:15:25.350Z"}
+
+T0 [0.11] TUTOR: Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and a project you're involved in, and practise two grammar points: the present perfect for experience, and the past simple for finished events. Does that sound good to you? 今日のレッスンはこの内容で大丈夫でしょうか。
+    [board 0.17] annotate {"text":"Talking About Your Work and Recent Projects\nTalk about experience and achievements that started in the past and continue now: I have worked here for f
+
+T1 [0.55] STUDENT: Yes.
+
+T2 [0.59] TUTOR: Great! Today you'll talk about your job and a project you're involved in. We'll practise the present perfect for experience, and the past simple for finished events. I'll ask you follow-up questions to keep the conversation going. I'll correct your mistakes, explain them, and give you a chance to try again. Near the end, you can practise your pronunciation if you like. First, there's a short level check, so I can adjust the lesson for you. Are you ready?
+    [board 0.62] PAGE "Overview"
+    [board 1.27] PAGE "Level check"
+
+T3 [1.27] STUDENT: Yes.
+
+T4 [1.30] TUTOR: Let's begin with a few short questions, so I can see how you speak. Please answer in English, and don't worry about mistakes. Can you tell me a little about your job? What do you do?
+
+T5 [1.79] STUDENT: I, I work as admin at the company.
+
+T6 [1.82] TUTOR: Admin work keeps a company running, so that's useful to know. Have you ever worked with an international customer? If so, can you tell me about that experience? If not, you can tell me about a new customer or a difficult project.
+
+T7 [2.20] STUDENT: No.
+
+T8 [2.24] TUTOR: That's fine. Then tell me about a new customer you worked with, or a difficult project, even a small one.
+
+T9 [2.25] STUDENT: No, I didn't.
+
+T10 [2.29] TUTOR: Thank you, that's fine. Here's the last question: what is one skill you'd like to improve in your English, and why is it important to you?
+
+T11 [2.74] STUDENT: I won't uh improve my speaking skill because I often attend a meeting. that use English.
+
+T12 [2.82] TUTOR: Speaking in meetings is a good reason to practise. Today I'll focus on making your sentences more accurate and natural. 今日は文法を正確にすることに重点を置きます。Next is Your job, where you'll talk about your work. Do you have a question first, or shall we go on?
+    [board 3.21] PAGE "Your job"
+
+T13 [3.20] STUDENT: Yes.
+
+T14 [3.30] TUTOR: Your own sentence, "I work as admin at the company," is already a good start. Here are some short sentences for talking about your job.
+
+ I help customers. I work with international clients. I joined my company three years ago.
+
+「I work in sales.」は「営業で働いています」という意味です。文はできるだけ短くして、一つずつ言いましょう。Can you say one sentence about your own work? Try starting with: I work…
+    [board 3.30] annotate {"text":"I work in sales.\nI help customers.\nI work with international clients.\nI joined my company three years ago.","style":"highlight","rich":true,"id":"in
+    [board 4.00] CARD "I do accounting and some admin work." / 経理と事務の仕事をしています。はっきり言えています。
+
+T15 [3.91] STUDENT: I do accounting and some admin work.
+
+T16 [4.00] TUTOR: Yes, that's right, and it's clear. 経理と事務の仕事をしています、と言えていますね。
+
+Now, what is your main task in accounting? Try starting with: I…
+    [board 4.44] CARD "I'm checking emails and sorting out some paperwork." / メールを確認して、書類を整理しています。
+
+T17 [4.41] STUDENT: I'm checking emails and sorting out some paperwork.
+
+T18 [4.44] TUTOR: That sentence is clear and natural, and you said it well. メールの確認と書類の整理、ですね。
+
+Your job is done. Next is Present perfect, where we talk about experience that continues now. Do you have a question first, or would you like to go on?
+    [board 4.86] PAGE "Present perfect"
+
+T19 [4.86] STUDENT: Yes.
+
+T20 [4.90] TUTOR: Let's start with the present perfect. We use it for something that started in the past and is still true now: have/has + past participle.
+
+「I have worked here for five years.」は、五年前から今も働いている、という意味です。Now try it with your own number. Try starting with: I have worked here for…
+    [board 4.90] annotate {"text":"have / has + past participle\nI have worked here for five years.\nwork → have worked\nUse it for something that started in the past and continues now."
+    [board 5.49] CARD "I have worked for the current company for 10 years." / 現在の会社で10年働いています。現在完了が正しく使えています。
+
+T21 [5.44] STUDENT: I have worked for the current company for 10 years.
+
+T22 [5.49] TUTOR: That's right. You used have worked for a time that started in the past and continues now. 現在完了が正しく使えていますよ。
+
+Now, how long have you worked in accounting? Try starting with: I have worked in accounting for…
+
+T23 [5.95] STUDENT: I have worked for my current company for 10 years.
+
+T24 [6.00] TUTOR: Your sentence is correct: "I have worked for my current company for 10 years." 今の会社で10年、という意味ですね。
+
+Now, I asked how long you have worked in accounting. Can you try that sentence? Start with: I have worked in accounting for…
+    [board 6.00] CARD "I have worked for my current company for 10 years."
+
+T25 [6.43] STUDENT: Yes, I have.
+
+T26 [6.48] TUTOR: Yes, you have! 経理の仕事を何年しているかを、文で言ってみましょう。Start with: I have worked in accounting for…
+
+Does that make sense so far?
+
+T27 [6.74] STUDENT: Please, could you please rephrase that, please?
+
+T28 [6.77] TUTOR: わかりました。もう一度、簡単に言いますね。
+
+経理の仕事を何年しているか、聞いています。「How long」は「どのくらい」という意味です。Please say: I have worked in accounting for… and add your number of years.
+
+T29 [7.01] STUDENT: Could you explain that in Japanese?
+
+T30 [7.05] TUTOR: 経理の仕事を何年しているか、聞いています。「How long」は「どのくらいの期間」という意味です。答えの形は「I have worked in accounting for」の後に年数を入れます。例えば「for three years」です。Please try your own number: I have worked in accounting for…
+
+T31 [7.34] STUDENT: Uh, what do you mean?
+
+T32 [7.35] TUTOR: すみません、わかりにくかったですね。質問は「経理の仕事を何年していますか」です。答えは「I have worked in accounting for」の後に年数を入れるだけです。
+
+「for」の後ろに年数を入れてください。あなたの年数はいくつですか？ Say: I have worked in accounting for…
+    [board 7.36] CARD "I have worked in accounting for three years." / 経理の仕事を3年しています。
+    [board 7.43] annotate {"text":"How long have you worked in accounting? / I have worked in accounting for + the number of years.","style":"highlight","rich":true,"id":"inl_mwkgtmwi_2"
+
+T33 [7.68] STUDENT: I do emails and sorting out some documents.
+
+T34 [7.71] TUTOR: その仕事の内容は分かりました。今は年数を聞いています。経理の仕事を何年しているか、教えてください。Please answer with a number: I have worked in accounting for…
+
+Does that make sense so far?
+
+T35 [7.96] STUDENT: Could you repeat that, please?
+
+T36 [7.98] TUTOR: もう一度言いますね。「何年、経理の仕事をしていますか」という質問です。答えは、英語で次のように言います。
+
+I have worked in accounting for ___ years.
+
+空欄に、あなたの年数を入れてください。例えば「five」なら「for five years」です。
+
+Is that clear, or shall I go over it again?
+
+T37 [8.25] STUDENT: Yes.
+
+T38 [8.29] TUTOR: それでは、あなたの年数で言ってみましょう。Try: I have worked in accounting for, and then your number of years.
+
+T39 [8.72] STUDENT: How to communicate with non-in- not the Japanese people with not the with people with the in and not from Japan.
+
+T40 [8.76] TUTOR: すみません、今のお話が聞き取れませんでした。もう一度ゆっくり言ってもらえますか。
+
+Your question is: how long have you worked in accounting? Just say the number of years, like this: I have worked in accounting for…
+
+T41 [9.04] STUDENT: Could you repeat that, please?
+
+T42 [9.07] TUTOR: Let me say it slowly. The question is: How long have you worked in accounting? 経理の仕事を何年していますか。
+
+Answer with a number: I have worked in accounting for… and your years. For example, "for five years."
+    [board 9.18] showProblem {"problem":{"statement":"Question: How long have you worked in accounting? Answer with your own number of years, starting with: I have worked in accounting for…
+
+T43 [9.44] STUDENT: Yes.
+
+T44 [9.47] TUTOR: Let me give you the model myself: "I have worked in accounting for five years." 経理の仕事を五年しているという意味です。
+
+Present perfect is done. Next is Past simple, for things that finished at a specific time.
+
+Ready to go on, or would you like to ask something first?
+    [board 9.57] CARD "I have worked in accounting for five years." / 経理の仕事を五年しているという意味です。
+    [board 9.93] PAGE "Past simple"
+
+T45 [9.93] STUDENT: Please move on to the past simple.
+
+T46 [9.97] TUTOR: この部分は過去形です。終わった出来事を、「いつ」かがはっきりしているときに使います。
+
+「I attended a meeting yesterday.」は、昨日会議に出た、という意味です。現在完了との違いは、「yesterday」のような時間の言葉があるかどうかです。
+
+Now, say one thing you did at work yesterday. Try starting with: Yesterday I…
+    [board 9.98] annotate {"text":"Past simple: subject + past verb\nI attended a meeting yesterday.\nattend → attended, join → joined, meet → met\nUse it with a specific time: yesterday
+    [board 10.35] CARD "I finished accounting yesterday." / 昨日、経理を終えました。過去形が正しく使えています。
+
+T47 [10.30] STUDENT: I finished accounting yesterday.
+
+T48 [10.35] TUTOR: That's right. You used the past simple with "yesterday," a specific time in the past. 過去形が正しく使えていますよ。
+
+Now, what did you do with the emails yesterday? Try starting with: Yesterday I…
+
+T49 [10.73] STUDENT: No, I didn't.
+
+T50 [10.77] TUTOR: わかりました、昨日はメールを確認しなかったんですね。では、昨日あなたがした仕事を一つ言ってみましょう。Try starting with: Yesterday I…
+
+T51 [10.94] STUDENT: No, I have not.
+
+T52 [10.97] TUTOR: 「No, I have not.」は、「yesterday」があるので過去形を使います。「No, I did not.」か「No, I didn't.」と言いましょう。
+
+Please say it once more: No, I didn't.
+
+T53 [11.22] STUDENT: No, I have not.
+
+T54 [11.26] TUTOR: 正しい文は「No, I didn't.」です。「yesterday」があるので、現在完了ではなく過去形を使います。
+
+Past simple はこれで終わりです。次は Conversation で、あなたの仕事について少し話しましょう。質問がありますか、それとも次に進みますか。
+
+Is that clear, or shall I go over it again?
+    [board 11.27] CARD "No, I didn't." / 昨日のことなので過去形です。「No, I have not.」ではなく「No, I didn't.」です。
+    [board 11.38] annotate {"text":"Yesterday is a specific time, so use the past simple, not have + past participle.","style":"highlight","rich":true,"id":"inl_mwkgymt5_2"}
+
+T55 [11.59] STUDENT: Yes.
+
+T56 [11.63] TUTOR: Good, that's clear. Past simple is done. Next is Conversation, where we talk about your work more freely. 次は、仕事について少し話す練習です。
+
+Any questions first, or shall we go on?
+    [board 11.90] PAGE "Conversation"
+
+T57 [11.89] STUDENT: Yes.
+
+T58 [11.92] TUTOR: 誇りに思っているプロジェクトはありますか。日本語で「何か一つ、誇りに思っている仕事はありますか」という意味です。
+
+Try starting with: I worked on a project to…
+    [board 11.93] annotate {"text":"I worked on a project to + verb\nI worked on a project to reduce paperwork.\nI worked on a project to improve our filing system.","style":"highlight","
+
+T59 [12.17] STUDENT: What do you mean by important project?
+
+T60 [12.19] TUTOR: An important project is simply a piece of work that you feel good about, or that made a real difference. 例えば、事務の仕事を楽にした改善などです。
+
+Can you think of one? Try starting with: I worked on a project to…
+    [board 12.24] annotate {"text":"An important project: a piece of work you feel good about, or that made a real difference.\nExample: I worked on a project to reduce paperwork.","style
+
+T61 [12.62] STUDENT: The year end tax. system comparison.
+
+T62 [12.65] TUTOR: 年末税務の制度を比べるプロジェクトですね。大切な仕事だと分かります。
+
+では、そのプロジェクトで何をしましたか。Try starting with: I compared…
+    [board 13.15] CARD "I successfully finished the new tasks because we implemented the new task system this year." / 今年、新しい業務システムを導入したので、タスクを無事に終えられました。
+
+T63 [12.99] STUDENT: Hmm.
+
+T64 [13.10] STUDENT: I successfully finished the new tasks because we implemented the new task system this year.
+
+T65 [13.15] TUTOR: That's a clear, complete sentence, and you used the past simple correctly. 今年新しいシステムを導入したので、仕事をうまく終えられたんですね。
+
+What was the new task system? Try starting with: The new system is…
+
+T66 [13.64] STUDENT: That that everything was new. that we didn't know them we we didn't have a manual to follow on.
+
+T67 [13.70] TUTOR: 新しいシステムで、全部が初めてだったんですね。マニュアルがない中で進めたのは大変だったと思います。
+
+One small thing: "follow on" は "follow" と言います。
+
+So how did you learn the new system without a manual? Try starting with: We learned it by…
+    [board 13.71] CARD "Everything was new, and we didn't have a manual to follow." / すべてが新しく、従うマニュアルがありませんでした。
+
+T68 [14.14] STUDENT: I don't really remember, but maybe helps from our accounting office staff.
+
+T69 [14.17] TUTOR: 「maybe」のあとは、「with help from」と言います。
+
+Please say that sentence once more.
+    [board 14.18] CARD "I think we learned it with help from our accounting office staff." / 経理課のスタッフの助けを借りて、という意味です。
+
+T70 [14.43] STUDENT: No, I have not.
+
+T71 [14.47] TUTOR: すみません、今の答えは私の質問と合っていないようです。もう一度言ってもらえますか。
+
+The sentence on the board is: I think we learned it with help from our accounting office staff. 経理課のスタッフの助けを借りた、という意味です。
+
+Does that make sense so far?
+    [board 14.47] scrollTo {"target":"item","targetId":"inl_mwkh2ds4_1","pulse":true}
+
+T72 [14.74] STUDENT: Yes.
+
+T73 [14.78] TUTOR: はい、わかりました。「with help from」は、「〜の助けを借りて」という意味で、経理課のスタッフの助けを借りた、ということです。
+
+Now, a short question. Did you finish the year-end tax comparison? Please answer with "Yes, I did" or "No, I didn't."
+
+T74 [15.05] STUDENT: No.
+
+T75 [15.08] TUTOR: Thank you for telling me. 終わらなかったんですね。It's fine. Now, what was the hard part of the project? Try starting with: The hard part was…
+
+T76 [15.41] STUDENT: Could you give me some more example of past simple?
+
+T77 [15.44] TUTOR: 過去形の例をもう少し出しますね。「いつ」が分かるときに使います。
+
+「I joined the company in 2019.」は、2019年に入社した、という意味です。時間の言葉が入っているので、過去形を使います。
+
+これで分かりましたか。分かったら、次は「The hard part was…」で、プロジェクトの大変だった部分を一つ話してみてください。
+    [board 15.45] goToPage {"title":"Past simple","page":6,"id":"inl_mwkh40ix_1","writesThere":true}
+    [board 15.45] annotate {"text":"I joined the company in 2019.\nI attended a meeting last week.\nI checked the emails this morning.\nI finished the tax report yesterday.\nI visited the
+
+T78 [15.64] TUTOR: Thank you for your answers today. We'll stop the conversation here. 今日は、プロジェクトの話をたくさんしてくれました。
+
+Next is Pronunciation, a short optional practice.
+
+Next comes conversation. Shall we move on, or is there anything you would like to ask first?
+
+T79 [15.72] STUDENT: I don't really know.
+
+T80 [15.74] TUTOR: 大丈夫ですよ。では、選んでみてください。時間が足りなかったのか、新しいシステムそのものが難しかったのか、どちらですか。
+
+Try starting with: The hard part was…
+
+T81 [16.07] STUDENT: Because we implemented a new system for tax system this year and I was successfully finished all the new taxes on time.
+
+T82 [16.15] TUTOR: 「I was finished」ではなく、過去形で「I finished」と言います。もう一度、この文を言ってみてください。Try starting with: I successfully…
+    [board 16.95] CARD "I successfully finished the new tax tasks on time this year." / 今年、新しい税務の業務を期限内に無事に終えました。
+
+T83 [16.79] STUDENT: that I've been successfully finished the new tasks because we implement a new system for tax.
+
+T84 [16.81] STUDENT: year in tax system.
+
+T85 [16.95] TUTOR: Before the summary, there is still the pronunciation part. Would you like to do it now, or go straight to the summary?
+
+T86 [18.42] TUTOR: 今日はよく話してくれました。仕事、責任、プロジェクトについて話せましたね。
+
+Present perfect (have + past participle) is for something that started in the past and continues now. Past simple is for something finished at a specific time, such as yesterday or last year.
+
+Pronunciation was not reached today; we can practise it next time. 発音は次回にしましょう。
+
+Do you have any questions before we finish?
+    [board 18.47] PAGE "Summary"
+    [board 18.47] CARD "I have worked for my current company for 10 years." / 現在完了で、10年前から今も続いていることを言えています。
+    [board 18.47] CARD "I finished accounting yesterday." / 昨日という特定の時間なので過去形です。
+    [board 18.47] CARD "I successfully finished the new tax tasks on time this year." / I was finished ではなく、過去形の I finished を使います。
+
+T87 [18.97] STUDENT: I cannot share the name.
+
+T88 [18.99] TUTOR: That's perfectly fine, you don't need to give your name. Today you described your accounting work and your tax project, and used the present perfect and the past simple. Next time we'll practise pronunciation and the present perfect with "for" and "since". 次回は発音から始めましょう。Thank you, and goodbye!
+
+## events
+0.59 tool_call | new_page → new page 2 "Overview" · inline
+0.59 v2_board_timing | new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — held
+0.60 tool_call | set_goal_status → recorded
+1.27 tool_call | new_page → new page 3 "Level check" · inline
+1.27 v2_board_timing | new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — now
+2.84 tool_call | set_working_level → not set: wait for the answers: they have answered 2 of the level check's 3 questions (a yes, a no or a request to repeat is not an answer). Say nothing of this message. If your reply already asks them
+3.21 tool_call | new_page → new page 4 "Your job" · inline
+3.21 v2_board_timing | new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — now
+3.33 tool_call | set_working_level → not set: wait for the answers: they have answered 2 of the level check's 3 questions (a yes, a no or a request to repeat is not an answer). Say nothing of this message. If your reply already asks them
+3.99 tool_call | set_working_level → Level set to beginner. Do not tell the learner which level you set; just continue the lesson.
+4.00 tool_call | show_sentence → painted on page 4 · inline
+4.00 v2_board_timing | show_sentence: inline, with sentence 1 of 0 (stretch from 1), 0 started — now
+4.02 working_level_set | beginner (v2)
+4.44 tool_call | show_sentence → painted on page 4 · inline
+4.44 v2_board_timing | show_sentence: inline, with sentence 1 of 0 (stretch from 1), 0 started — now
+4.86 tool_call | new_page → new page 5 "Present perfect" · inline
+4.86 v2_board_timing | new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — now
+5.49 tool_call | show_sentence → painted on page 5 · inline
+5.49 v2_board_timing | show_sentence: inline, with sentence 1 of 0 (stretch from 1), 0 started — now
+6.00 tool_call | show_sentence → painted on page 5 · inline
+6.00 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 0 started — held
+7.35 segment_overlong | segment "present-perfect" has run 6 substantive tutor turns without advancing
+7.36 tool_call | show_sentence → painted on page 5 · inline
+7.36 v2_board_timing | show_sentence: inline, with sentence 1 of 5 (stretch from 1), 1 started — now
+9.57 tool_call | show_sentence → painted on page 5 · with "Let me give you the model myself"
+9.57 v2_board_timing | show_sentence: sentence 1 of 4, 1 started — now
+9.93 tool_call | new_page → new page 6 "Past simple" · inline
+9.93 v2_board_timing | new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — now
+10.35 tool_call | show_sentence → painted on page 6 · inline
+10.35 v2_board_timing | show_sentence: inline, with sentence 1 of 0 (stretch from 1), 0 started — now
+11.27 tool_call | show_sentence → painted on page 6 · inline
+11.27 v2_board_timing | show_sentence: inline, with sentence 1 of 4 (stretch from 1), 1 started — now
+11.90 tool_call | new_page → new page 7 "Conversation" · inline
+11.90 v2_board_timing | new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — now
+11.92 segment_overlong | segment "past-simple" has run 6 substantive tutor turns without advancing
+13.15 tool_call | show_sentence → painted on page 7 · inline
+13.15 v2_board_timing | show_sentence: inline, with sentence 1 of 0 (stretch from 1), 0 started — now
+13.70 tool_call | show_sentence → painted on page 7 · inline
+13.70 v2_board_timing | show_sentence: inline, with sentence 3 of 3 (stretch from 3), 1 started — held
+14.17 tool_call | show_sentence → painted on page 7 · inline
+14.18 v2_board_timing | show_sentence: inline, with sentence 1 of 3 (stretch from 1), 0 started — held
+14.47 segment_overlong | segment "open-conversation" has run 6 substantive tutor turns without advancing
+14.47 tool_call | show_sentence → not painted again: already on the board (page 7); the board has scrolled back to it · inline
+16.95 tool_call | show_sentence → painted on page 6 · inline
+16.95 v2_board_timing | show_sentence: inline, with sentence 1 of 0 (stretch from 1), 0 started — now
+16.97 tool_call | new_page → not opened yet: the student is asked first
+18.42 tool_call | new_page → new page 8 "Summary" · inline
+18.42 v2_board_timing | new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — held
+18.43 tool_call | show_sentence → painted on page 8 · inline
+18.43 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — held
+18.43 tool_call | show_sentence → painted on page 8 · inline
+18.43 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — held
+18.43 tool_call | show_sentence → painted on page 8 · inline
+18.43 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 2 started — held
+18.46 tool_call | end_lesson → not ended: wait for their answer to your question. Say nothing of this message.
+19.01 tool_call | end_lesson → the session is ending
+19.01 lesson_closed | end_lesson

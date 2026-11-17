@@ -1,0 +1,187 @@
+08:16:37 open fixture=gdi-real-t3 arm=v2 student=gdi-v2-replay-r5-text-t3 (speech off)
+08:17:22 no start orb (auto-start?)
+08:17:22 TUTOR  Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and the projects you're involved in, and practise two grammar points: the present perfect for experience, and the past simple for finished events. Does that sound good to you?   [tools: annotate]
+08:17:46 STUDENT(answer) I'm ready.
+08:17:50 TUTOR  Great. First, a short, friendly level check so I can adjust the lesson for you. Please answer in English, and don't worry about mistakes.
+
+
+
+Question 1: Can you tell me a little about your job? What do you do?   [tools: new_page]
+08:18:14 STUDENT(answer) Yes, I'm a sales manager, uh the GM, general manager, and I just supporting for the all division in the company and of course most of the part of the management.
+08:18:16 TUTOR  Thank you, that's a clear picture of your role. Question 2: Have you ever worked with an international customer? If so, can you tell me about the experience?
+08:18:30 STUDENT(answer) Yes, I have working with the international customer for sometimes. Uh, we are supporting for the the different country, like the Southeast Asia and the uh Europe area.
+08:18:32 TUTOR  Question 3: What is one skill you'd like to improve in your English, and why is it important to you?
+08:18:44 STUDENT(answer) Uh, I think the the most important skill is uh speaking fluently without the the long pause. Because in the sales area, I need to communicate with the client quickly and uh smoothly, so the fluent speaking is very important for me.
+08:18:49 TUTOR  Thank you, that gives me a good picture. Today we'll focus on making your grammar more accurate and your answers smoother, especially when you talk about your work.
+
+
+
+Next is your job and experience. Shall we go on, or do you have a question first?   [tools: set_working_level]
+08:19:13 STUDENT(ack) Yes, let's go on.
+08:19:20 TUTOR  
+
+
+ここでは、仕事の説明と経験を話す練習をします。まず、現在完了と過去形の違いを見ておきましょう。詳しくは次の練習で扱います。
+
+Now, a question about your work: What are your main responsibilities at work? Please give me at least two sentences.   [tools: new_page, annotate]
+08:19:37 STUDENT(answer) My main responsibility in sales area is uh contact for our clients and supporting for the each division member and suggesting for the new product clients. Uh, I am also managing the the team member and uh looking for the new business opportunity.
+08:19:43 TUTOR  Good, you explained your responsibilities clearly, and "managing the team" is a useful phrase. Now we'll move on to the present perfect. Earlier you said "I have working", and the correct form is "I have worked".
+
+
+
+Shall we go on, or do you have a question first?
+08:20:06 STUDENT(ack) Yes, I understand. Let's go on.
+08:20:12 TUTOR  
+
+
+現在完了は「過去に始まり、今も続いている経験や状態」を話すときに使います。たとえば "I have worked here for five years." は、今も働いているという意味です。
+
+Here is a question for you. Please answer with a full sentence.
+
+   [tools: new_page, annotate, show_problem]
+08:20:28 STUDENT(answer) I have worked for our company for a long time. It takes about uh around the ten years.
+08:20:33 TUTOR  That's right: "I have worked for our company" is the present perfect, and it shows you started in the past and still work there. For the second part, we say "for about ten years", not "it takes about ten years".
+
+
+
+
+
+Shall we go on, or do you have a question first?   [tools: show_sentence]
+08:21:00 STUDENT(ack) Yes, I understand. Let's go on.
+08:21:04 TUTOR  
+
+
+Past simple is for something that is finished and happened at a specific time. When you say the time, use the past simple, not the present perfect.
+
+Here is a question for you. Answer with a full sentence.
+
+   [tools: new_page, annotate, show_problem]
+08:21:27 STUDENT(answer) Yes, I attended the uh some business event in the uh Japan last year. It's kind of the networking events, looking for the new business partner.
+08:21:33 TUTOR  Yes, "I attended" is the right past simple form, because "last year" is a specific time in the past. One small thing: we say "in Japan" without "the".
+
+Which networking event did you go to, and who did you meet there?   [tools: show_sentence]
+08:21:57 STUDENT(answer) Yes, I met someone. We came at the the new partner or the related for the new business with customers. Uh, it was very good opportunity for me to expand the the network in the Japan market.
+08:22:04 TUTOR  Good, "I met someone" is the past simple, and it fits the finished event in Japan last year. For the business part, we say "we talked about a new partner" rather than "we came at the new partner."
+
+
+
+What did you talk about with that person?   [tools: show_sentence, annotate]
+08:22:29 STUDENT(answer) Uh, we talked about the the new product and uh the market situation in the Southeast Asia. And uh, we discussed about the the possibility to work together for the future business opportunity.
+08:22:35 TUTOR  One small thing: we say "discussed the possibility", without "about". Your past simple "we talked" and "we discussed" were both correct.
+
+That finishes the past simple part. Now let's have a conversation about your work.
+
+
+
+
+Here is a question for you. Take your time, and use the hint if it helps.
+
+   [tools: new_page, show_sentence, show_problem]
+08:23:02 STUDENT(answer) Uh, let me see is uh one project I worked in the supporting for the the SNS networking contents. My rule is to manage for the SNS networking content member. It was very interesting project because uh we could reach to the many customer through the the social media platform.
+08:23:11 TUTOR  That sounds like a useful project, and reaching many customers through social media is a strong achievement. You said "I worked in the supporting for the SNS networking contents." We say "I worked on a project to support…", so try saying your project in one full sentence starting with "I worked on a   [tools: show_sentence, annotate]
+08:23:41 STUDENT(answer) I worked on a project to support the the SNS networking content member. Uh, the aim is to reach the many customer through the social media platform and uh to build the the strong relationship with the client.
+08:23:47 TUTOR  Your sentence has the right structure: "I worked on a project to support..." Small fix: we say "reach many customers", with "customers" in the plural. What was the biggest challenge in that project, and how did you handle it?   [tools: annotate]
+08:24:10 STUDENT(answer) Uh, the biggest challenge was uh to coordinate between the the different division member and the the SNS content creator. We have many opinion and uh sometimes difficult to decide which content is the best. So I organized the the meeting and uh we discussed together to find the the common direction 
+08:24:12 TUTOR  Good, you explained the challenge and how you solved it, and "discussed together" is correct without "about". Have you worked on a similar project since then?
+08:24:28 STUDENT(answer) Uh, not exactly the same project, but I have working on the similar task to support for the the content creation in the different division. It is still continuing now, so uh the experience from the the first project is very helpful for me.
+08:24:34 TUTOR  Not quite. After "have" we need "been" before the -ing form, because the task is still going on now. Try the sentence again, starting with "I have been working…".
+
+   [tools: annotate]
+08:24:53 STUDENT(answer) I have been working on a similar task to support for the the content creation in the different division. It is still continuing now, so uh the experience from the the first project is very helpful for me.
+08:24:57 TUTOR  Your tense is right now: "have been working" shows the task is still going on. The remaining error is "support for", which should be "support". Here is the full sentence:
+
+
+
+Your turn now. Please ask me a question about my work or the experience of a project.   [tools: show_sentence]
+08:25:23 STUDENT(question) Uh, Ryota, can you tell me uh what kind of project you have been working on in your company? And uh how long have you been working on this project?
+08:25:32 TUTOR  Your question is well formed: "how long have you been working on this project" uses the same present perfect pattern we practised. I'm a language teacher, so my projects are about helping students. Recently I've worked on a project to improve our lesson materials for working adults. Does that answer
+08:26:07 STUDENT(complaint_reask) Uh, I already answered this. I have been working on the content creation task in the different division, and it is still continuing now from the the first project.
+08:26:12 TUTOR  You're right, sorry. Your answer is clear: you have been working on it, and it is still going on now. How long have you been working on it so far?
+08:26:29 STUDENT(answer) Uh, I have been working on this project for about uh one year and a half. It started from the the last year and uh we are still continuing to improve the the content quality and the the customer engagement.
+08:26:34 TUTOR  Yes, "I have been working on this project for about one and a half years" is correct. It shows the work started in the past and is still going on. What results have you seen from the project so far?
+
+   [tools: show_sentence]
+08:26:58 STUDENT(answer) I'm not sure about it. Uh, but I think the the engagement from the customer is increasing, and uh we received the positive feedback from the the division member. The the project is helping to build the the stronger relationship with the client through the social media.
+08:27:05 TUTOR  You can describe the results clearly, and "the engagement is increasing" is a good phrase. Since the feedback is still coming in, we can say "we have received" with the present perfect. We also don't need "the" before "positive feedback".
+
+
+
+This part of our conversation is done. Next is an optional   [tools: show_sentence]
+08:27:41 STUDENT(ack) Yes, let's go on with the pronunciation practice.
+08:27:45 TUTOR  
+
+Good. Here are your options:
+1) Individual words
+2) A complete sentence
+3) Speaking more naturally
+4) Skip and continue
+
+Which one would you like? Since this lesson is typed, I can't hear your voice, so I'll help with the stress and the linking of words.
+
+   [tools: new_page, show_problem]
+08:28:11 STUDENT(answer) Uh, I think option 3, speaking more naturally, is good for me. Because I want to improve the the fluency and uh reduce the the long pause when I am speaking.
+08:28:17 TUTOR  Option 3 it is. Try this sentence at a steady pace, without stopping between the words. The stressed words are marked.
+
+
+
+Say it aloud a few times, then type it back to me when you're ready.   [tools: show_sentence]
+08:28:37 STUDENT(answer) I have been working on a project to support the SNS networking content members for about one and a half years.
+08:28:47 TUTOR  Your typed sentence is fully right: "I have been working on a project to support the SNS networking content members for about one and a half years." I can only check your words here, not your sound, so that completes the pronunciation practice. Now the summary.
+
+
+
+Shall we go on, or do you have a qu
+08:29:14 STUDENT(ack) Yes, let's go on to the summary.
+08:29:26 TUTOR  
+
+
+Today you talked about your work, your responsibilities and your projects. Here are two of your own sentences to keep.
+
+For experience that continues now, you said:
+
+
+
+For a finished event at a specific time, you said:
+
+
+
+One thing you did well was use the present perfect for a project that is st   [tools: new_page, annotate, show_sentence, show_sentence, show_sentence]
+08:30:12 STUDENT(answer) Uh, yes. The first sentence 'I have worked here for five years' means uh I started working five years ago and I am still working now. But the second sentence 'I worked here five years ago' means uh I worked in the past, but maybe I am not working there now. So the the present perfect is for the the 
+08:30:22 TUTOR  Yes, that's exactly right. "I have worked here for five years" means you started five years ago and still work there. "I worked here five years ago" is a finished time in the past, and it doesn't say whether you still work there.
+
+Well done today. You explained your job and a project you're proud of   [tools: annotate, show_table]
+08:31:10 STUDENT(end)
+08:31:10 waiting 35 s for the autosave
+
+=== gdi-real-t3 / v2 · 13.8 min · session embed-1794903397327 · bundle /Users/luke/Dev/evelynlearning/.claude/worktrees/gdi-v2/docs/superpowers/plans/gdi-v2-baseline/v2audio-7/text/gdi-real-t3-v2-mwkf50ty6ww.json
+{
+  "fixture": "gdi-real-t3",
+  "arm": "v2",
+  "minutes": 13.8,
+  "tutorTurns": 27,
+  "studentTurns": 26,
+  "complaints": {
+    "complaint_reask": 1,
+    "complaint_ignored": 0,
+    "complaint_lost": 0,
+    "move_on": 0,
+    "verdict_only": 0
+  },
+  "complaintsTotal": 1,
+  "questionEndingShare": 0.63,
+  "questionAfterAnswerShare": 0.74,
+  "wordsAfterVerdictOnly": null,
+  "tutorTurnsAfterRecapRequest": null,
+  "tutorWordsMedian": 44,
+  "tutorWordsP90": 76,
+  "verdictCuts": 0,
+  "validatorRetries": 0,
+  "narrationDrops": 0,
+  "rendersDropped": 0,
+  "firstSentenceMsP50": 2618,
+  "firstSentenceMsP95": 5694,
+  "inputTokens": 1400040,
+  "outputTokens": 27161,
+  "costPerMinute": 0.004,
+  "endedBy": "tutor_close"
+}

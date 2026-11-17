@@ -1,0 +1,256 @@
+# embed-1794903377755 student=gdi-v2-replay-r5-text-t2 status=completed duration=804 progress={"lessonPlanId":"gdi.trial.english.work-projects.v1","currentSegmentId":"summary","completedSegmentIds":["overview","level-check","topic-intro","present-perfect","past-simple","open-conversation","summary"],"updatedAt":"2026-11-17T08:29:37.707Z"}
+
+T0 [0.05] TUTOR: Hello, I'm Ryota, and welcome to today's English lesson! We'll practise talking about your work and your recent projects, using the present perfect for experience and the past simple for finished events. Before we start, I'll ask you a few short questions so I can pitch the lesson at the right level. Does that sound good?
+    [board 0.10] PAGE "Today's lesson"
+    [board 0.10] annotate {"text":"Talking about your work and recent projects\nPresent perfect: have/has + past participle, for experience that continues now (I have worked here for fiv
+
+T1 [1.22] STUDENT: Yes, that sounds good.
+
+T2 [1.27] TUTOR: Good. Today you'll talk about your job and a project you're proud of, and practise two grammar points: the present perfect for experience and the past simple for finished events. I'll also give you follow-up questions to keep a conversation going, and I'll correct your mistakes and let you try again. Pronunciation is optional at the end. First comes a short level check, so I can adjust the lesson for you. Are you ready?
+    [board 1.28] showGraphicOrganizer {"spec":{"kind":"sequence","title":"Today's lesson","steps":["Level check: a few short questions","Your job: talking about your work","Present perfect: experien
+
+T3 [1.94] STUDENT: Please, could you please rephrase that, please?
+
+T4 [1.97] TUTOR: Of course. Today we practise talking about your work. You'll answer a few short questions first, so I know your level. 今日は、仕事について英語で話す練習をします。まず簡単な質問を3つしますね。
+
+Are you ready?
+
+T5 [2.24] STUDENT: Yes, I'm ready.
+
+T6 [2.26] TUTOR: Great. Here is the first question. Please answer in English, and don't worry about mistakes.
+
+Can you tell me a little about your job? What do you do?
+
+(簡単に答えてください。例えば「I work in...」で始めてもいいですよ。)
+    [board 2.33] annotate {"text":"Level check, question 1: Can you tell me a little about your job? What do you do?","style":"highlight","rich":true,"id":"inl_mwkf7hoe_1"}
+
+T7 [2.67] STUDENT: I work as admin at the company. Could you explain that in Japanese?
+
+T8 [2.71] TUTOR: 「I work as admin」は「事務として働いています」という意味です。「as」は「〜として」、「admin」は administration（事務）の短い言い方です。
+
+Thank you. Here is question 2. Please answer in English.
+
+Have you ever worked with an international customer? If so, can you tell me about the experience?
+    [board 2.72] annotate {"text":"I work as admin: 事務として働いています\nas = 〜として\nadmin = administration（事務）の短い言い方","style":"highlight","rich":true,"id":"inl_mwkf81j3_1"}
+
+T9 [3.08] STUDENT: No.
+
+T10 [3.10] TUTOR: Thank you. If you have not worked with an international customer, that is fine. Have you ever worked on a new project, or with a difficult customer?
+
+(国際的なお客様がいなくても大丈夫です。新しいプロジェクトや、大変だったお客様はありますか？)
+
+T11 [3.37] STUDENT: No.
+
+T12 [3.40] TUTOR: Understood, no problem. Here is the last question. Please answer in English.
+
+What is one skill you'd like to improve in your English, and why is it important to you?
+
+(例：「I want to improve my speaking, because...」のように始めてもいいですよ。)
+    [board 3.41] annotate {"text":"Level check, question 3: What is one skill you'd like to improve in your English, and why is it important to you?","style":"highlight","rich":true,"id"
+
+T13 [3.81] STUDENT: I want to improve my speaking skill because I often attend a meeting that use English.
+
+T14 [3.86] TUTOR: Thank you, that's helpful. I'll focus on making your sentences more accurate and natural as we go.
+
+Let's talk about your work. We use the present perfect for experience that continues now, and the past simple for something that finished at a specific time. You'll practise both shortly.
+
+Now, your question: what are your main responsibilities at work? Please give at least two sentences.
+    [board 3.86] PAGE "Your job"
+    [board 3.87] annotate {"text":"Present perfect: I have worked with international customers for three years. (experience that continues now)\nPast simple: I worked with an internation
+    [board 3.88] showProblem {"problem":{"statement":"What are your main responsibilities at work? Answer in at least two complete sentences.","format":"free-response","difficultyLabel":"me
+
+T15 [4.52] STUDENT: I'm checking emails and sorting out some paperwork. Uh, I also do accounting work for the company.
+
+T16 [4.58] TUTOR: 「I check emails.」「I do accounting work.」はどちらも正しい英語です。仕事の内容がよく伝わります。
+
+会社で何年働いていますか？ Try starting with: "I have worked..."
+    [board 4.59] CARD "I have worked here for ___ years." / ずっと続いている経験や期間を言うときは have worked を使います
+    [board 4.64] annotate {"text":"Your work: I check emails. / I do accounting work.","style":"highlight","rich":true,"id":"inl_mwkfaf9m_2"}
+
+T17 [4.84] STUDENT: I have worked for the current company for ten years.
+
+T18 [4.92] TUTOR: Yes, that's right. You used "have worked" for ten years, which continues until now.
+
+Next is present perfect practice. Shall we go on, or do you have a question first?
+
+T19 [5.19] STUDENT: Yes, let's go on.
+
+T20 [5.28] TUTOR: 現在完了は「have / has + 過去分詞」で、過去に始まって今も続いている経験や期間を言うときに使います。ten years（10年間）のように「どれくらい続いているか」を言うときにぴったりです。
+
+Here is a model sentence. Say it after you have read it.
+
+Now your turn. Please answer this question in English. Try starting with "I have learned…".
+    [board 5.28] PAGE "Present perfect (現在完了)"
+    [board 5.29] annotate {"text":"have / has + 過去分詞（past participle）\nI have worked here for ten years. （今も働いている）\nShe has completed several projects. （経験）\nwork → have worked, learn → 
+    [board 5.30] CARD "I have learned new skills at work." / 仕事で新しいスキルを身につけた、という経験の言い方です
+    [board 5.30] showProblem {"problem":{"statement":"Have you learned any new skills at work? Answer in English, starting with \"I have learned…\".","format":"free-response","difficultyLab
+
+T21 [5.70] STUDENT: I have learned how to use new accounting software at work.
+
+T22 [5.73] TUTOR: That's right. "I have learned how to use new accounting software" is a complete, natural sentence.
+
+Present perfect is done. Next is the past simple, for things that finished at a specific time. Here's the first pattern.
+
+Shall we go on, or do you have a question first?
+
+T23 [6.14] STUDENT: Yes, let's go on.
+
+T24 [6.18] TUTOR: 過去形は、「昨日」「去年」「2年前」のように、いつ終わったかがはっきりしている出来事に使います。
+
+Here is a model sentence. Read it, then say it.
+
+Now your turn. Answer this question in English, using the past simple.
+    [board 6.18] PAGE "Past simple (過去形)"
+    [board 6.19] annotate {"text":"Past simple: subject + 過去形 (attend → attended, meet → met, join → joined)\nSpecific time words: yesterday, last year, in 2022, two weeks ago\nI joined 
+    [board 6.19] CARD "I attended an exhibition last year." / 去年、展示会に参加しました。attend は「出席する」です
+    [board 6.20] showProblem {"problem":{"statement":"Did you attend any business events or exhibitions last year? Answer in English. If you did not, you can say something else you did last
+
+T25 [6.54] STUDENT: No, I did not attend any business events last year.
+
+T26 [6.57] TUTOR: That's right. "I did not attend any business events last year" is a correct past simple negative for a finished time.
+
+Here's a follow-up. Tell me one thing you did at work last month. Try starting with "Last month, I…".
+    [board 6.58] showProblem {"problem":{"statement":"What did you do at work last month? Answer in English, starting with \"Last month, I…\".","format":"free-response","difficultyLabel":"e
+
+T27 [6.99] STUDENT: Last month, I finished the monthly accounting report.
+
+T28 [7.04] TUTOR: 「Last month, I finished the monthly accounting report.」は、過去形の finished を正しく使えています。「last month」は特定の時期なので、過去形になります。
+
+Next is your project. Shall we go on, or do you have a question first?
+
+T29 [7.31] STUDENT: Yes, let's go on.
+
+T30 [7.34] TUTOR: では、プロジェクトについて話しましょう。Try starting with "I worked on a project to…".
+    [board 7.34] PAGE "Conversation: a project you're proud of"
+    [board 7.35] showProblem {"problem":{"statement":"What is one project you have worked on that you are particularly proud of? Answer in English, starting with \"I worked on a project to…
+
+T31 [7.55] STUDENT: I worked on a project to implement the new tax system this year. We finished it successfully.
+
+T32 [7.58] TUTOR: Both sentences are correct. "We finished it successfully" is a finished event, so the past simple is right.
+
+プロジェクトでのあなたの役割は何でしたか？ Try starting with "My role was…".
+    [board 7.59] showProblem {"problem":{"statement":"What was your role in the tax system project? Answer in English, starting with \"My role was…\".","format":"free-response","difficultyL
+
+T33 [7.87] STUDENT: My role was to check the new system and make sure it works correctly with our documents.
+
+T34 [7.89] TUTOR: 「make sure it works correctly」は正しく言えています。役割をはっきり説明できました。
+
+Next, a short question about the project. What was the biggest problem during the project? Try starting with "The biggest problem was…".
+    [board 7.90] showProblem {"problem":{"statement":"What was the biggest problem during the tax system project? Answer in English, starting with \"The biggest problem was…\".","format":"f
+
+T35 [8.23] STUDENT: The biggest problem was that the old system and new system did not work together at first. But we fixed it.
+
+T36 [8.27] TUTOR: That's a clear answer, and "did not work" and "fixed" are both past simple for a finished problem. 過去形で、終わった出来事を正しく説明できています。
+
+How did your team fix the problem? Try starting with "We fixed it by…".
+    [board 8.28] showProblem {"problem":{"statement":"How did your team fix the problem with the old and new systems? Answer in English, starting with \"We fixed it by…\".","format":"free-r
+    [board 8.34] annotate {"text":"The biggest problem was that the old system and new system did not work together at first.\ndid not work: past simple, a finished problem\nfixed: past 
+
+T37 [8.69] STUDENT: We fixed it by testing both systems together and adjusting the settings. We also asked the software company for help.
+
+T38 [8.73] TUTOR: 「We fixed it by testing both systems together」も「We also asked the software company for help」も正しい過去形です。解決方法まで順番に説明できました。
+
+Next question: how long did the project take? Try starting with "It took…".
+    [board 8.73] showProblem {"problem":{"statement":"How long did the tax system project take? Answer in English, starting with \"It took…\".","format":"free-response","difficultyLabel":"e
+
+T39 [9.02] STUDENT: It took about three months to finish the project from start to end.
+
+T40 [9.10] TUTOR: Three months is a clear answer. Earlier you said "a meeting that use English." Here, "that" points back to one meeting, so the verb takes -s. 「one meeting」なら「uses」、「meetings」と複数なら「use」です。
+
+Please say this sentence in English.
+    [board 9.11] CARD "I often attend meetings that use English." / 複数の meetings には use。単数の a meeting には uses を使います
+    [board 9.24] CARD "I often attend meetings that ? English."
+    [board 9.24] annotate {"text":"that points back to one thing: one meeting → uses\nmore than one thing: meetings → use","style":"highlight","rich":true,"id":"inl_mwkfg7vp_3","placeBef
+
+T41 [9.58] STUDENT: I often attend a meeting that uses English.
+
+T42 [9.62] TUTOR: That's right. "a meeting that uses English" is correct, because the verb takes -s after a singular noun.
+
+What did you learn from this project? Try starting with "I learned…".
+    [board 9.62] showProblem {"problem":{"statement":"What did you learn from the tax system project? Answer in English, starting with \"I learned…\".","format":"free-response","difficultyL
+
+T43 [9.99] STUDENT: I learned that it is important to test the new system carefully before we use it with real data. I also learned how to work with the software company.
+
+T44 [10.04] TUTOR: Both sentences are correct. "I learned that it is important to test..." and "I learned how to work with..." are clear, and you used the past simple for a finished lesson.
+
+Now a question using the present perfect. Have you worked on any other projects since then? Try starting with "Yes, I have..." or "No, I have not...".
+    [board 10.05] showProblem {"problem":{"statement":"Have you worked on any other projects since the tax system project? Answer in English, starting with \"Yes, I have...\" or \"No, I have
+
+T45 [10.57] STUDENT: No, I have not.
+
+T46 [10.61] TUTOR: "No, I have not." is correct, and it answers the question clearly. Here is one more question about your work. What would you like to learn next at work? Try starting with "I would like to learn…".
+    [board 10.62] showProblem {"problem":{"statement":"What would you like to learn next at work? Answer in English, starting with \"I would like to learn…\".","format":"free-response","diff
+
+T47 [11.01] STUDENT: I would like to learn how to use English in meetings more confidently. I want to understand what people say quickly.
+
+T48 [11.08] TUTOR: Both sentences are correct, and your goal is clear. This conversation part is done. Next is pronunciation, which is optional.
+
+Shall we go on, or do you have a question first?
+
+T49 [11.38] STUDENT: Skip and continue.
+
+T50 [11.46] TUTOR: That's fine, we'll skip pronunciation. Let's review what you practised today.
+
+You used both grammar points well. Here are some of your own sentences.
+
+One thing you did well is that you described your project clearly, from your role to the problem and how you fixed it. One thing to improve is the verb after "a meeting that". You first said "a meeting that use English", and the correct form is "a meeting that uses English".
+
+Before we finish, can you explain the difference between these two sentences?
+
+I have worked here for five years.
+I worked here five years ago.
+
+Take your time, and I'll help if you need it.
+    [board 11.47] PAGE "Summary (まとめ)"
+    [board 11.47] annotate {"text":"Present perfect (have/has + past participle): experience that started in the past and continues now\nPast simple: a finished event at a specific time (
+    [board 11.47] CARD "I have worked for the current company for ten years." / 今も続いている経験。現在完了です
+    [board 11.48] CARD "Last month, I finished the monthly accounting report." / 先月、という特定の時期が決まっているので過去形です
+    [board 11.48] CARD "I often attend a meeting that uses English." / a meeting は単数なので、that の後の動詞に -s が付きます
+    [board 11.57] showProblem {"problem":{"statement":"Can you explain the difference between these two sentences? I have worked here for five years. I worked here five years ago.","format":
+
+T51 [12.42] STUDENT: The first one means I have been working here for five years until now. The second one means I worked there five years ago and no longer work there.
+
+T52 [12.49] TUTOR: Yes, that's exactly right. The first sentence is an experience that started in the past and continues now, and the second is a finished event five years ago. Today you talked about your job and a project you're proud of, and you used both grammar points correctly. Keep using "have worked" for things that continue, and "last year" or "ago" for things that finished. Thank you, and see you next time!
+
+Before we finish, would you like something harder, more practice, to ask me a question of your own, or to stop here?
+    [board 12.60] annotate {"text":"I have worked here for five years. = started five years ago, still working here now\nI worked here five years ago. = finished; no longer working there"
+
+T53 [13.30] STUDENT: Thank you very much. I think stop here is good for today.
+
+T54 [13.31] TUTOR: Thank you for today's lesson. You talked about your job and your tax system project, and you used the present perfect and the past simple correctly. Keep practising "a meeting that uses English" when you describe what you do. See you next time!
+
+## events
+0.10 tool_call | new_page → new page 1 "Today's lesson" · inline
+1.29 tool_call | set_goal_status → recorded
+3.10 segment_overlong | segment "overview" has run 6 substantive tutor turns without advancing
+3.86 tool_call | new_page → new page 2 "Your job" · inline
+3.91 tool_call | set_working_level → not set: wait, ask nothing: the level check is over, and their answers so far (2 with content) do not show a level yet. Say nothing of this message and ask no level question: go on with the lesson, an
+3.91 tool_call | set_goal_status → recorded
+4.00 working_level_estimate_requested | answers=7 (v2)
+4.59 tool_call | show_sentence → painted on page 2 · inline
+4.64 working_level_set | beginner source=estimate (v2)
+4.92 tool_call | new_page → not opened yet: the student is asked first
+5.28 tool_call | new_page → new page 3 "Present perfect (現在完了)" · inline
+5.30 tool_call | show_sentence → painted on page 3 · inline
+5.32 tool_call | set_goal_status → recorded
+5.74 tool_call | new_page → not opened yet: the student is asked first
+6.18 tool_call | new_page → new page 4 "Past simple (過去形)" · inline
+6.19 tool_call | show_sentence → painted on page 4 · inline
+6.21 tool_call | set_goal_status → recorded
+7.04 tool_call | new_page → not opened yet: the student is asked first
+7.07 tool_call | set_goal_status → recorded
+7.34 tool_call | new_page → new page 5 "Conversation: a project you're proud of" · inline
+9.11 tool_call | show_sentence → painted on page 5 · inline
+9.24 tool_call | show_sentence → painted on page 5 · with "Please say this sentence in English."
+9.62 segment_overlong | segment "open-conversation" has run 6 substantive tutor turns without advancing
+11.08 tool_call | new_page → not opened yet: the student is asked first
+11.11 tool_call | set_goal_status → recorded
+11.47 tool_call | new_page → new page 6 "Summary (まとめ)" · inline
+11.47 tool_call | show_sentence → painted on page 6 · inline
+11.48 tool_call | show_sentence → painted on page 6 · inline
+11.48 tool_call | show_sentence → painted on page 6 · inline
+12.52 tool_call | set_goal_status → recorded
+12.52 tool_call | set_goal_status → recorded
+12.52 tool_call | end_lesson → not ended: the session goes on. Whether to stop is the student's choice, and they have not made it. Say nothing of this message or of the clock. In one sentence of your own, ask what they would like now: som
+13.33 tool_call | end_lesson → the session is ending
+13.33 lesson_closed | end_lesson

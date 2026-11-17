@@ -1,0 +1,58 @@
+08:14:42 open fixture=gdi-real-stop arm=v2 student=gdi-v2-replay-r5-text-stop (speech off)
+08:15:27 no start orb (auto-start?)
+08:15:27 TUTOR  Hello, I'm Ryota, and welcome to your English lesson! Today we'll practise talking about your work and the projects you're involved in, using the present perfect for your experience and the past simple for finished events. Does that sound good?   [tools: annotate]
+08:15:50 STUDENT(ack) Yes, that sounds good. I am ready to start.
+08:15:56 TUTOR  Great, let's begin. Today we'll talk about your job and your projects, practise the present perfect for experience and the past simple for finished events, and ask each other follow-up questions. I'll correct your mistakes and give you a chance to try again, and pronunciation is there at the end if    [tools: new_page, show_problem]
+08:16:32 STUDENT(answer) I am a manager at a communications company in Japan.
+08:16:35 TUTOR  Thank you. A communications company manager is a useful background for today's practice. Now the second question:
+
+   [tools: show_problem]
+08:16:49 STUDENT(answer) Yes, I have worked with many international customers. I work with companies in Japan and also worldwide.
+08:16:52 TUTOR  That's a good answer, and it tells me a lot about your experience. Here is the last question.
+
+   [tools: show_problem]
+08:17:06 STUDENT(answer) I want to improve my conversation with customers before meetings. This is important because I need to build good relationship with them.
+08:17:13 TUTOR  Thank you. Building relationships with customers before meetings is a clear goal, and we'll work on it today. One small thing: we say "good relationships," with an s. Today I'll help you make your answers more accurate and more natural.
+
+
+
+Next is your job and experience. Shall we go on, or do you h   [tools: set_working_level]
+08:17:42 STUDENT(answer) Okay, please stop. I would like to end the session for now.
+08:17:46 TUTOR  
+
+Today you introduced your job and your goal of building good relationships with customers before meetings. Next time we'll work on your job and responsibilities, the present perfect, the past simple, open conversation and pronunciation. Goodbye, Josh, and see you next time!   [tools: new_page, show_sentence]
+08:18:16 input gone (locator.click: Timeout 8000ms exceeded.) — treating as closed
+08:18:16 waiting 35 s for the autosave
+
+=== gdi-real-stop / v2 · 2.8 min · session embed-1794903282717 · bundle /Users/luke/Dev/evelynlearning/.claude/worktrees/gdi-v2/docs/superpowers/plans/gdi-v2-baseline/v2audio-7/text/gdi-real-stop-v2-mwkf2kd6iwi.json
+{
+  "fixture": "gdi-real-stop",
+  "arm": "v2",
+  "minutes": 2.8,
+  "tutorTurns": 6,
+  "studentTurns": 5,
+  "complaints": {
+    "complaint_reask": 0,
+    "complaint_ignored": 0,
+    "complaint_lost": 0,
+    "move_on": 0,
+    "verdict_only": 0
+  },
+  "complaintsTotal": 0,
+  "questionEndingShare": 0.33,
+  "questionAfterAnswerShare": 0.25,
+  "wordsAfterVerdictOnly": null,
+  "tutorTurnsAfterRecapRequest": null,
+  "tutorWordsMedian": 42,
+  "tutorWordsP90": 76,
+  "verdictCuts": 0,
+  "validatorRetries": 0,
+  "narrationDrops": 0,
+  "rendersDropped": 0,
+  "firstSentenceMsP50": 2676,
+  "firstSentenceMsP95": 3621,
+  "inputTokens": 182222,
+  "outputTokens": 4670,
+  "costPerMinute": 0.003,
+  "endedBy": "tutor_close"
+}

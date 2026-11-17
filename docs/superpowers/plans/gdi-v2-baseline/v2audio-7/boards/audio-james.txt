@@ -1,0 +1,265 @@
+# embed-1794904901890 student=gdi-v2-replay-audio7-james status=completed duration=832 progress={"lessonPlanId":"gdi.trial.english.work-projects.v1","currentSegmentId":"summary","completedSegmentIds":["overview","level-check","topic-intro","present-perfect","past-simple","open-conversation","pronunciation","summary"],"updatedAt":"2026-11-17T08:55:14.184Z"}
+
+T0 [0.08] TUTOR: Hello, I'm Ryota, and welcome to your English lesson! Today we'll practise talking about your work and the projects you're involved in. We'll also look at two grammar points, the present perfect and the past simple, for your experience and for finished events. Does that sound good to you?
+    [board 0.13] PAGE "Overview"
+    [board 0.13] annotate {"text":"Talking about your work and projects\nPresent perfect: experience that started in the past and continues now\nPast simple: finished events at a specifi
+
+T1 [0.59] STUDENT: Oh, yes.
+
+T2 [0.62] TUTOR: Great. In this lesson you'll talk about your job and the projects you work on. We'll practise two grammar points: the present perfect for experience that continues now, and the past simple for finished events at a specific time. I'll also ask follow-up questions to keep the conversation going. When you make a mistake, I'll explain it and give you a chance to try again. At the end, you can practise your pronunciation if you like. First, there's a short level check so I can adjust the lesson for you. Are you ready?
+    [board 1.38] PAGE "Level check"
+
+T3 [1.38] STUDENT: Oh, yes.
+
+T4 [1.40] TUTOR: Please answer in English, and don't worry about mistakes. I just want to see what you can already do, so the lesson fits you. First question: can you tell me a little about your job? What do you do?
+
+T5 [1.86] STUDENT: I'm engineer.
+
+T6 [1.88] TUTOR: Thank you. What kind of engineering do you do?
+
+T7 [2.05] STUDENT: I make cars.
+
+T8 [2.07] TUTOR: Cars, that's interesting. Next question: have you ever worked with an international customer? If so, can you tell me about the experience?
+
+T9 [2.32] STUDENT: Uh, sorry.
+
+T10 [2.35] TUTOR: 大丈夫です。Let me ask it more simply. Have you ever worked with a customer from another country?
+
+T11 [2.58] STUDENT: Uh, sorry, I don't understand.
+
+T12 [2.60] TUTOR: No problem. Let me ask it more simply. 外国のお客さんと一緒に仕事をしたことはありますか？ Have you ever worked with a customer from another country?
+
+T13 [2.84] STUDENT: Uh, please repeat.
+
+T14 [2.92] TUTOR: Let me say it slowly. 外国のお客さんと仕事をしたことはありますか？ In English: Have... you... worked... with a customer from another country? Just tell me yes or no.
+
+T15 [3.24] STUDENT: Oh, yes.
+
+T16 [3.27] TUTOR: ありがとうございます。これでレベルチェックは終わりです。次は「Your job」、仕事について話す練習です。何か質問はありますか？それとも、このまま始めますか？
+
+T17 [3.43] STUDENT: Oh, yes.
+
+T18 [3.48] TUTOR: では、仕事について話しましょう。まず、簡単な文から始めます。
+
+このように、短い文で仕事を説明できます。例えば "I make cars." は「車を作っています」という意味です。では、あなたの仕事について、 "I am..." か "I work..." で一文言ってみてください。
+    [board 3.54] PAGE "Your job"
+    [board 3.54] annotate {"text":"I am an engineer.\nI make cars.\nI work in sales.\nI help customers.\nI joined my company three years ago.","style":"highlight","rich":true,"id":"inl_m
+
+T19 [3.80] STUDENT: Uh, I
+
+T20 [3.83] STUDENT: make car.
+
+T21 [3.87] TUTOR: Good, you make cars. One small thing: we say "I make cars," with an s on cars. Now, can you say it as a full sentence? Start with "I am an engineer" and add where you work.
+
+T22 [4.32] STUDENT: Uh, sorry? Again
+
+T23 [4.34] TUTOR: もう一度ゆっくり言います。 "I am an engineer. I make cars."
+
+では、同じように言ってみてください。 "I am an engineer."
+    [board 4.35] scrollTo {"target":"item","targetId":"inl_mwkg5oyc_2","pulse":true}
+
+T24 [4.62] STUDENT: Uh, yes. For 7 year.
+
+T25 [4.69] TUTOR: Seven years as an engineer, that's a good start. Here's the full sentence: "I have been an engineer for seven years." Next is the present perfect, for experience that started in the past and continues now. Do you have a question first, or shall we go on?
+    [board 4.70] CARD "I have been an engineer for seven years." / 私は7年間エンジニアです。
+
+T26 [5.19] STUDENT: I work here for 7 years.
+
+T27 [5.22] TUTOR: 「I work here」は今の状態ですが、「7年間ずっと」は過去から今まで続いているので、現在完了を使います。Say: "I have worked here for seven years." 「have worked」がポイントです。
+
+もう一度、言ってみてください。
+    [board 5.22] CARD "I have worked here for seven years." / 私は7年間ここで働いています。
+
+T28 [5.49] STUDENT: I have worked here for 7 years.
+
+T29 [5.51] TUTOR: Yes, that's right: "I have worked here for seven years." 現在完了の文が言えました。
+
+Next is the past simple, for finished events at a specific time.
+
+Do you have a question before we go on, or are you ready?
+
+T30 [5.88] STUDENT: Uh, time management.
+
+T31 [5.90] TUTOR: すみません、よく聞き取れませんでした。もう一度言ってもらえますか？ Next is past simple. Shall we go on? Or do you have a question first?
+    [board 6.12] PAGE "Present perfect"
+    [board 6.16] PAGE "Past simple"
+
+T32 [6.12] STUDENT: Uh, next.
+
+T33 [6.16] TUTOR: Now the past simple. We use it for something that finished at a specific time in the past, like yesterday, last year, or three years ago.
+
+「三年前に入社しました」は、この形です。 Listen: "I joined my company three years ago."
+
+Now you say one. Use "I joined" and "three years ago," or change the time to "last year."
+    [board 6.16] annotate {"text":"Past simple: a finished event at a specific time\nyesterday / last year / three years ago\nI joined my company three years ago.","style":"highlight","r
+    [board 6.17] scrollTo {"target":"item","targetId":"inl_mwkg959r_2","pulse":true}
+
+T34 [6.70] STUDENT: Uh, helps me build more cars.
+
+T35 [6.76] TUTOR: Your sentence is about helping to build cars, but I didn't catch the past form. I'll say the past simple sentence myself: "I joined my company three years ago." Now, when did you join your company? You can answer with a year or with "years ago."
+
+T36 [7.20] STUDENT: It has helped me build more cars.
+
+T37 [7.25] TUTOR: "It has helped me build more cars." is correct. You used the present perfect again, for something that started in the past and still continues.
+
+Past simple is for a finished time, like "I joined my company three years ago." Next is open conversation.
+
+Any questions first, or shall we go on?
+    [board 7.26] CARD "It has helped me build more cars." / それは私がもっと多くの車を作るのに役立ってきました。
+    [board 7.74] PAGE "Conversation"
+
+T38 [7.74] STUDENT: Uh, move on.
+
+T39 [7.77] TUTOR: Good. Let's talk about your work now. What is one project you worked on that you are proud of? Try starting with "I worked on a project to..."
+    [board 7.77] showProblem {"problem":{"statement":"What is one project you worked on that you are proud of?","format":"free-response","difficultyLabel":"easy","rich":true},"id":"inl_mwkg
+
+T40 [8.18] STUDENT: I worked on a project with a new car that can actually fly.
+
+T41 [8.20] TUTOR: Nice, a flying car! You used the past simple correctly for a finished project.
+
+What was your job in this project? For example, did you design the engine, or something else?
+    [board 8.21] CARD "I worked on a project with a new car that can actually fly." / 私は空を飛ぶことができる新しい車のプロジェクトに取り組みました。
+
+T42 [8.61] STUDENT: Uh, yes, I did. There was about uh, 10 other engineers involved in the project.
+
+T43 [8.65] TUTOR: That's a big team! One small thing: we say "There were" with a plural noun like engineers.
+
+ There were about ten other engineers involved in the project.
+
+Now, what part of the car did you work on? You can say "I worked on the..." and the part's name.
+    [board 8.66] CARD "There were about ten other engineers involved in the project." / プロジェクトには約10人の他のエンジニアが関わっていました。
+
+T44 [9.23] STUDENT: The largest or the biggest challenge was finding the technology allowing the car to lift off the ground.
+
+T45 [9.26] TUTOR: That's a clear description of a big challenge. One small thing: we say "the biggest challenge," not "the largest or the biggest." Now, how did your team solve that problem? You can start with "We..."
+    [board 9.33] CARD "The biggest challenge was finding the technology that lets the car lift off the ground." / 一番大変だったのは、車を地面から浮き上がらせる技術を見つけることでした。
+
+T46 [9.70] STUDENT: Yeah, quite a few. I actually attended maybe about 6 exhibitions throughout the year.
+
+T47 [9.74] TUTOR: Yes, that's right. "Attended" is past simple, and "throughout the year" is a finished time. Which exhibition was the most useful for your work?
+    [board 9.75] CARD "I attended about six exhibitions throughout the year." / 私は1年間で約6つの展示会に参加しました。
+
+T48 [10.16] STUDENT: Uh, Comdex in Los in Las Vegas was great because it was very informative and very modern.
+
+T49 [10.20] TUTOR: Comdex in Las Vegas sounds like a good event. Your sentence is clear and correct.
+
+What did you learn at Comdex that you used in your project?
+    [board 10.20] CARD "Comdex in Las Vegas was great because it was very informative and very modern." / ラスベガスのComdexは、とても有益で新しかったので素晴らしかったです。
+
+T50 [10.53] STUDENT: The future of technology and AI.
+
+T51 [10.57] TUTOR: Good, you learned about the future of technology and AI. In English, we say: "I learned about the future of technology and AI."
+
+「learned」は過去の形です。Now, how did this help your project? Try starting with "It helped me..."
+    [board 10.57] CARD "I learned about the future of technology and AI." / 私は技術とAIの未来について学びました。
+
+T52 [10.96] STUDENT: The speed of change.
+
+T53 [10.99] TUTOR: Yes, the speed of change is important in your work. Can you say it as a full sentence? Start with "It helped me understand..."
+
+T54 [11.32] STUDENT: It definitely has. Um, I think less.
+
+T55 [11.37] TUTOR: 「It definitely has」は、「確かにそうです」という意味で、いい答えです。
+
+ただ、「I think less」の部分がよく聞き取れませんでした。どういう意味で言いましたか？もう一度言ってもらえますか？
+    [board 11.38] CARD "It definitely has helped me understand the speed of change." / 確かに、それは私が変化のスピードを理解する助けになりました。
+
+T56 [11.61] STUDENT: It's helped me be more efficient with my time.
+
+T57 [11.64] TUTOR: That's right. "It's helped" is the short form of "It has helped," and you used it for something that started and still continues. Now, are you working on a new project now?
+    [board 11.65] CARD "It has helped me be more efficient with my time." / それは私が時間をより効率よく使う助けになってきました。
+
+T58 [12.03] STUDENT: Yes, I attended about 6 exhibitions last year.
+
+T59 [12.06] TUTOR: Good, "attended" with "last year" is the past simple for a finished time.
+
+What is the new project about? Tell me in one or two sentences.
+
+T60 [12.36] STUDENT: How much longer is this is this lesson?
+
+T61 [12.39] TUTOR: あと約8分です。まだ時間がありますので、ゆっくり続けましょう。
+
+Let's go back to your question. What is the new project about? You can say one or two sentences, and start with "I am working on..."
+
+T62 [12.74] STUDENT: Please move on to pronunciation practice.
+
+T63 [12.78] TUTOR: わかりました。発音の練習をしましょう。単語とひと文、どちらがいいですか？
+    [board 12.83] PAGE "Pronunciation"
+
+T64 [13.01] STUDENT: Uh, just a little bit of individual words.
+
+T65 [13.04] TUTOR: Let's start with "responsibilities." Listen, then repeat after me: responsibilities.
+
+T66 [13.26] STUDENT: I said individual words.
+
+T67 [13.30] TUTOR: わかりました、単語の練習ですね。もう一度、"responsibilities" と言ってみてください。
+
+T68 [13.47] STUDENT: Sorry, I have to finish now.
+
+T69 [13.52] TUTOR: Thank you, James. Today you practised "I have worked here for seven years" for experience and "I attended about six exhibitions throughout the year" for a finished time. Next time, look at when to use the present perfect and when to use the past simple. お疲れさまでした、さようなら！
+    [board 13.54] PAGE "Summary"
+    [board 13.54] CARD "I have worked here for seven years." / 私は7年間ここで働いています。
+    [board 13.54] CARD "I attended about six exhibitions throughout the year." / 私は1年間で約6つの展示会に参加しました。
+
+## events
+0.13 tool_call | new_page → new page 1 "Overview" · inline
+0.13 v2_board_timing | new_page: inline, with sentence 5 of 4 (stretch from 1), 1 started — now
+1.38 tool_call | new_page → new page 2 "Level check" · inline
+1.38 v2_board_timing | new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — now
+2.91 tool_call | set_working_level → Level set to beginner. Do not tell the learner which level you set; just continue the lesson.
+2.92 working_level_set | beginner (v2)
+3.27 segment_overlong | segment "level-check" has run 6 substantive tutor turns without advancing
+3.48 tool_call | new_page → new page 3 "Your job" · inline
+3.48 v2_board_timing | new_page: inline, with sentence 3 of 2 (stretch from 1), 1 started — held
+4.35 tool_call | show_sentence → not painted again: already on the board (page 3); the board has scrolled back to it · inline
+4.70 tool_call | show_sentence → painted on page 3 · inline
+4.70 v2_board_timing | show_sentence: inline, with sentence 1 of 4 (stretch from 1), 1 started — now
+5.22 tool_call | show_sentence → painted on page 3 · inline
+5.22 v2_board_timing | show_sentence: inline, with sentence 1 of 4 (stretch from 1), 1 started — now
+5.53 tool_call | set_goal_status → recorded
+5.90 segment_overlong | segment "topic-intro" has run 6 substantive tutor turns without advancing
+6.12 tool_call | new_page → new page 4 "Present perfect" · inline
+6.12 v2_board_timing | new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — now
+6.16 tool_call | new_page → new page 5 "Past simple" · inline
+6.16 v2_board_timing | new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — now
+6.17 tool_call | show_sentence → not painted again: already on the board (page 5); the board has scrolled back to it · inline
+7.26 tool_call | show_sentence → painted on page 5 · inline
+7.26 v2_board_timing | show_sentence: inline, with sentence 1 of 3 (stretch from 1), 1 started — now
+7.74 tool_call | new_page → new page 6 "Conversation" · inline
+7.74 v2_board_timing | new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — now
+7.77 tool_call | set_goal_status → recorded
+8.21 tool_call | show_sentence → painted on page 6 · inline
+8.21 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — now
+8.66 tool_call | show_sentence → painted on page 6 · inline
+8.66 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — now
+9.33 tool_call | show_sentence → painted on page 6 · inline
+9.33 v2_board_timing | show_sentence: inline, with sentence 1 of 4 (stretch from 1), 2 started — now
+9.75 tool_call | show_sentence → painted on page 6 · inline
+9.75 v2_board_timing | show_sentence: inline, with sentence 1 of 3 (stretch from 1), 1 started — now
+10.20 tool_call | show_sentence → painted on page 6 · inline
+10.20 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — now
+10.57 segment_overlong | segment "open-conversation" has run 6 substantive tutor turns without advancing
+10.57 tool_call | show_sentence → painted on page 6 · inline
+10.57 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — now
+11.38 tool_call | show_sentence → painted on page 6 · inline
+11.38 v2_board_timing | show_sentence: inline, with sentence 1 of 2 (stretch from 1), 0 started — held
+11.65 tool_call | show_sentence → painted on page 6 · inline
+11.65 v2_board_timing | show_sentence: inline, with sentence 1 of 3 (stretch from 1), 1 started — now
+12.78 tool_call | new_page → new page 7 "Pronunciation" · inline
+12.78 v2_board_timing | new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — held
+13.04 tool_call | practise_pronunciation → armed: their next spoken reply is recorded and scored against "responsibilities.". Stop after asking them to say it; say nothing about how it sounds until the score is in the facts.
+13.04 pronunciation_armed | #1 "responsibilities." (v2)
+13.26 pronunciation_clip_sent | #1 1365ms peak=-8.6dBFS "responsibilities." (v2)
+13.28 pronunciation_failed | #1 cut not_attempted (v2)
+13.30 tool_call | practise_pronunciation → armed: their next spoken reply is recorded and scored against "responsibilities.". Stop after asking them to say it; say nothing about how it sounds until the score is in the facts.
+13.30 pronunciation_armed | #2 "responsibilities." (v2)
+13.47 pronunciation_clip_sent | #2 1195ms peak=-7.0dBFS "responsibilities." (v2)
+13.48 pronunciation_failed | #2 cut not_attempted (v2)
+13.52 tool_call | new_page → new page 8 "Summary" · inline
+13.52 v2_board_timing | new_page: inline, with sentence 1 of 0 (stretch from 1), 0 started — held
+13.52 tool_call | show_sentence → painted on page 8 · inline
+13.52 v2_board_timing | show_sentence: inline, with sentence 1 of 3 (stretch from 1), 1 started — held
+13.53 tool_call | show_sentence → painted on page 8 · inline
+13.53 v2_board_timing | show_sentence: inline, with sentence 1 of 3 (stretch from 1), 1 started — held
+13.54 tool_call | end_lesson → the session is ending
+13.54 lesson_closed | end_lesson

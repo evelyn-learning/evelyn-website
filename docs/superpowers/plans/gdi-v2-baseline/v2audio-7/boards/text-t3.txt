@@ -1,0 +1,233 @@
+# embed-1794903397327 student=gdi-v2-replay-r5-text-t3 status=active duration=900 progress={"lessonPlanId":"gdi.trial.english.work-projects.v1","currentSegmentId":"summary","completedSegmentIds":["overview","level-check","topic-intro","present-perfect","past-simple","open-conversation","pronunciation"],"updatedAt":"2026-11-17T08:29:25.952Z"}
+
+T0 [0.05] TUTOR: Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and the projects you're involved in, and practise two grammar points: the present perfect for experience, and the past simple for finished events. Does that sound good to you?
+    [board 0.11] annotate {"text":"Today's lesson: talking about your work and projects\nPresent perfect: have/has + past participle, for experience that continues now (I have worked her
+
+T1 [1.15] STUDENT: I'm ready.
+
+T2 [1.18] TUTOR: Great. First, a short, friendly level check so I can adjust the lesson for you. Please answer in English, and don't worry about mistakes.
+
+Question 1: Can you tell me a little about your job? What do you do?
+    [board 1.19] PAGE "Level check"
+
+T3 [1.61] STUDENT: Yes, I'm a sales manager, uh the GM, general manager, and I just supporting for the all division in the company and of course most of the part of the management.
+
+T4 [1.64] TUTOR: Thank you, that's a clear picture of your role. Question 2: Have you ever worked with an international customer? If so, can you tell me about the experience?
+
+T5 [1.89] STUDENT: Yes, I have working with the international customer for sometimes. Uh, we are supporting for the the different country, like the Southeast Asia and the uh Europe area.
+
+T6 [1.92] TUTOR: Question 3: What is one skill you'd like to improve in your English, and why is it important to you?
+
+T7 [2.13] STUDENT: Uh, I think the the most important skill is uh speaking fluently without the the long pause. Because in the sales area, I need to communicate with the client quickly and uh smoothly, so the fluent speaking is very important for me.
+
+T8 [2.18] TUTOR: Thank you, that gives me a good picture. Today we'll focus on making your grammar more accurate and your answers smoother, especially when you talk about your work.
+
+Next is your job and experience. Shall we go on, or do you have a question first?
+    [board 2.64] PAGE "Your job and experience"
+
+T9 [2.60] STUDENT: Yes, let's go on.
+
+T10 [2.64] TUTOR: ここでは、仕事の説明と経験を話す練習をします。まず、現在完了と過去形の違いを見ておきましょう。詳しくは次の練習で扱います。
+
+Now, a question about your work: What are your main responsibilities at work? Please give me at least two sentences.
+    [board 2.65] annotate {"text":"We explain responsibilities, experience and achievements.\nI work in sales, and I help customers find the right products.\nI have worked with internati
+
+T11 [3.00] STUDENT: My main responsibility in sales area is uh contact for our clients and supporting for the each division member and suggesting for the new product clients. Uh, I am also managing the the team member and uh looking for the new business opportunity.
+
+T12 [3.08] TUTOR: Good, you explained your responsibilities clearly, and "managing the team" is a useful phrase. Now we'll move on to the present perfect. Earlier you said "I have working", and the correct form is "I have worked".
+
+Shall we go on, or do you have a question first?
+    [board 3.55] PAGE "Present perfect"
+
+T13 [3.48] STUDENT: Yes, I understand. Let's go on.
+
+T14 [3.55] TUTOR: 現在完了は「過去に始まり、今も続いている経験や状態」を話すときに使います。たとえば "I have worked here for five years." は、今も働いているという意味です。
+
+Here is a question for you. Please answer with a full sentence.
+    [board 3.55] annotate {"text":"Present perfect: have/has + past participle\nWe use it for experience that started in the past and continues now.\nI have worked here for five years.\n
+    [board 3.56] showProblem {"problem":{"statement":"Have you worked for your current company for a long time? Answer in English, starting with \"I have worked…\".","format":"free-response
+
+T15 [3.86] STUDENT: I have worked for our company for a long time. It takes about uh around the ten years.
+
+T16 [3.90] TUTOR: That's right: "I have worked for our company" is the present perfect, and it shows you started in the past and still work there. For the second part, we say "for about ten years", not "it takes about ten years".
+
+Shall we go on, or do you have a question first?
+    [board 3.91] CARD "I have worked for our company for about ten years." / 現在完了＋for＋期間。経験が今も続いていることを表します
+    [board 4.41] PAGE "Past simple"
+
+T17 [4.38] STUDENT: Yes, I understand. Let's go on.
+
+T18 [4.41] TUTOR: Past simple is for something that is finished and happened at a specific time. When you say the time, use the past simple, not the present perfect.
+
+Here is a question for you. Answer with a full sentence.
+    [board 4.41] annotate {"text":"Past simple: subject + past-tense verb\nWe use it for a finished event at a specific time in the past.\nI joined the company in 2022.\nWe attended an i
+    [board 4.42] showProblem {"problem":{"statement":"Did you attend any business events or exhibitions last year? Answer in English with a full sentence.","format":"free-response","difficu
+
+T19 [4.83] STUDENT: Yes, I attended the uh some business event in the uh Japan last year. It's kind of the networking events, looking for the new business partner.
+
+T20 [4.86] TUTOR: Yes, "I attended" is the right past simple form, because "last year" is a specific time in the past. One small thing: we say "in Japan" without "the".
+
+Which networking event did you go to, and who did you meet there?
+    [board 4.93] CARD "I attended a networking event in Japan last year." / 「in Japan」は「the」を付けません。last yearは過去の特定の時期です
+
+T21 [5.33] STUDENT: Yes, I met someone. We came at the the new partner or the related for the new business with customers. Uh, it was very good opportunity for me to expand the the network in the Japan market.
+
+T22 [5.37] TUTOR: Good, "I met someone" is the past simple, and it fits the finished event in Japan last year. For the business part, we say "we talked about a new partner" rather than "we came at the new partner."
+
+What did you talk about with that person?
+    [board 5.38] CARD "We talked about a new business partner." / 話した内容は about で示します
+    [board 5.45] annotate {"text":"\"came at the new partner\" → talk about (talk about a new partner)","style":"warning","rich":true,"id":"inl_mwkfbw2t_2"}
+
+T23 [5.87] STUDENT: Uh, we talked about the the new product and uh the market situation in the Southeast Asia. And uh, we discussed about the the possibility to work together for the future business opportunity.
+
+T24 [5.91] TUTOR: One small thing: we say "discussed the possibility", without "about". Your past simple "we talked" and "we discussed" were both correct.
+
+That finishes the past simple part. Now let's have a conversation about your work.
+
+Here is a question for you. Take your time, and use the hint if it helps.
+    [board 5.92] PAGE "Conversation about your work"
+    [board 5.92] CARD "We discussed the possibility of working together." / discussは「about」なしで直接目的語を取ります
+    [board 5.92] showProblem {"problem":{"statement":"What is one project you've worked on that you're particularly proud of?","format":"free-response","difficultyLabel":"medium","rich":tru
+
+T25 [6.42] STUDENT: Uh, let me see is uh one project I worked in the supporting for the the SNS networking contents. My rule is to manage for the SNS networking content member. It was very interesting project because uh we could reach to the many customer through the the social media platform.
+
+T26 [6.46] TUTOR: That sounds like a useful project, and reaching many customers through social media is a strong achievement. You said "I worked in the supporting for the SNS networking contents." We say "I worked on a project to support…", so try saying your project in one full sentence starting with "I worked on a project to…".
+    [board 6.47] CARD "I worked on a project to support our SNS networking content." / 「～に取り組んだ」はwork on、「～を支援する」はsupportを直接使います
+    [board 6.56] annotate {"text":"work on a project to + verb (the aim of the project)","style":"highlight","rich":true,"id":"inl_mwkfdahz_2"}
+
+T27 [7.06] STUDENT: I worked on a project to support the the SNS networking content member. Uh, the aim is to reach the many customer through the social media platform and uh to build the the strong relationship with the client.
+
+T28 [7.11] TUTOR: Your sentence has the right structure: "I worked on a project to support..." Small fix: we say "reach many customers", with "customers" in the plural. What was the biggest challenge in that project, and how did you handle it?
+    [board 7.17] annotate {"text":"\"reach many customers\": we say \"customers\" in the plural after \"many\".","style":"warning","rich":true,"id":"inl_mwkfe43h_1"}
+
+T29 [7.56] STUDENT: Uh, the biggest challenge was uh to coordinate between the the different division member and the the SNS content creator. We have many opinion and uh sometimes difficult to decide which content is the best. So I organized the the meeting and uh we discussed together to find the the common direction for the project.
+
+T30 [7.58] TUTOR: Good, you explained the challenge and how you solved it, and "discussed together" is correct without "about". Have you worked on a similar project since then?
+
+T31 [7.85] STUDENT: Uh, not exactly the same project, but I have working on the similar task to support for the the content creation in the different division. It is still continuing now, so uh the experience from the the first project is very helpful for me.
+
+T32 [7.90] TUTOR: Not quite. After "have" we need "been" before the -ing form, because the task is still going on now. Try the sentence again, starting with "I have been working…".
+    [board 7.91] annotate {"text":"have/has + been + -ing: an activity that started in the past and is still going on\nI have been working on a similar task.","style":"highlight","rich":
+
+T33 [8.26] STUDENT: I have been working on a similar task to support for the the content creation in the different division. It is still continuing now, so uh the experience from the the first project is very helpful for me.
+
+T34 [8.30] TUTOR: Your tense is right now: "have been working" shows the task is still going on. The remaining error is "support for", which should be "support". Here is the full sentence:
+
+Your turn now. Please ask me a question about my work or the experience of a project.
+    [board 8.31] CARD "I have been working on a similar task to support the content creation in different divisions." / have been working は今も続いている活動。support の後に for は付けません
+
+T35 [8.77] STUDENT: Uh, Ryota, can you tell me uh what kind of project you have been working on in your company? And uh how long have you been working on this project?
+
+T36 [8.83] TUTOR: Your question is well formed: "how long have you been working on this project" uses the same present perfect pattern we practised. I'm a language teacher, so my projects are about helping students. Recently I've worked on a project to improve our lesson materials for working adults. Does that answer your question?
+
+Now, I'd like to hear your answer. What project have you been working on, and how long have you been working on it?
+
+T37 [9.49] STUDENT: Uh, I already answered this. I have been working on the content creation task in the different division, and it is still continuing now from the the first project.
+
+T38 [9.54] TUTOR: You're right, sorry. Your answer is clear: you have been working on it, and it is still going on now. How long have you been working on it so far?
+
+T39 [9.86] STUDENT: Uh, I have been working on this project for about uh one year and a half. It started from the the last year and uh we are still continuing to improve the the content quality and the the customer engagement.
+
+T40 [9.91] TUTOR: Yes, "I have been working on this project for about one and a half years" is correct. It shows the work started in the past and is still going on. What results have you seen from the project so far?
+    [board 9.92] CARD "I have been working on this project for about one and a half years." / for と期間で、今も続いている活動を表します
+
+T41 [10.35] STUDENT: I'm not sure about it. Uh, but I think the the engagement from the customer is increasing, and uh we received the positive feedback from the the division member. The the project is helping to build the the stronger relationship with the client through the social media.
+
+T42 [10.41] TUTOR: You can describe the results clearly, and "the engagement is increasing" is a good phrase. Since the feedback is still coming in, we can say "we have received" with the present perfect. We also don't need "the" before "positive feedback".
+
+This part of our conversation is done. Next is an optional pronunciation practice, where we work on saying a few useful words and sentences clearly. Shall we go on, or do you have a question first?
+    [board 10.42] CARD "We have received positive feedback from the division members." / 今も続いている結果は現在完了で表します。feedbackの前にtheは付けません
+    [board 11.10] PAGE "Pronunciation"
+
+T43 [11.07] STUDENT: Yes, let's go on with the pronunciation practice.
+
+T44 [11.10] TUTOR: Good. Here are your options:
+1) Individual words
+2) A complete sentence
+3) Speaking more naturally
+4) Skip and continue
+
+Which one would you like? Since this lesson is typed, I can't hear your voice, so I'll help with the stress and the linking of words.
+    [board 11.10] showProblem {"problem":{"statement":"Would you like to practise your pronunciation? Choose one: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 
+
+T45 [11.57] STUDENT: Uh, I think option 3, speaking more naturally, is good for me. Because I want to improve the the fluency and uh reduce the the long pause when I am speaking.
+
+T46 [11.60] TUTOR: Option 3 it is. Try this sentence at a steady pace, without stopping between the words. The stressed words are marked.
+
+Say it aloud a few times, then type it back to me when you're ready.
+    [board 11.61] CARD "I have been working on this project for about one and a half years." / 文の流れを止めず、強く言う語を意識して、一息で言いましょう
+
+T47 [12.00] STUDENT: I have been working on a project to support the SNS networking content members for about one and a half years.
+
+T48 [12.13] TUTOR: Your typed sentence is fully right: "I have been working on a project to support the SNS networking content members for about one and a half years." I can only check your words here, not your sound, so that completes the pronunciation practice. Now the summary.
+
+Shall we go on, or do you have a question first?
+    [board 12.71] PAGE "Summary"
+
+T49 [12.61] STUDENT: Yes, let's go on to the summary.
+
+T50 [12.71] TUTOR: Today you talked about your work, your responsibilities and your projects. Here are two of your own sentences to keep.
+
+For experience that continues now, you said:
+
+For a finished event at a specific time, you said:
+
+One thing you did well was use the present perfect for a project that is still going on. One thing to improve is "discuss", which takes no "about" after it.
+
+Before we finish, can you explain the difference between these two sentences? I have worked here for five years. I worked here five years ago. Take your time; I'll help you if you need it.
+    [board 12.71] annotate {"text":"Present perfect (have/has + past participle): experience that started in the past and continues now\nPast simple: a finished event at a specific time (
+    [board 12.72] CARD "I have worked for our company for about ten years." / 今も続いている経験は現在完了で表します
+    [board 12.72] CARD "I attended a networking event in Japan last year." / 特定の過去の時期は過去形で表します
+    [board 12.73] CARD "We discussed the possibility of working together." / discussは「about」なしで使います
+
+T51 [13.59] STUDENT: Uh, yes. The first sentence 'I have worked here for five years' means uh I started working five years ago and I am still working now. But the second sentence 'I worked here five years ago' means uh I worked in the past, but maybe I am not working there now. So the the present perfect is for the the continuing experience, and the past simple is for the the finished event.
+
+T52 [13.63] TUTOR: Yes, that's exactly right. "I have worked here for five years" means you started five years ago and still work there. "I worked here five years ago" is a finished time in the past, and it doesn't say whether you still work there.
+
+Well done today. You explained your job and a project you're proud of, and you asked me a question of your own. Keep using "discuss" without "about", and keep practising "I have been working on…" for things that are still going on. Thank you for the lesson, and see you next time!
+
+Would you like to try something harder, do more practice, ask me a question of your own, or stop here?
+    [board 13.75] annotate {"text":"Present perfect: have/has + past participle, for experience that started in the past and continues now.\nPast simple: a finished event at a specific ti
+    [board 13.75] showTable {"headers":["","I have worked here for five years","I worked here five years ago"],"rows":[["Time","from five years ago until now","five years ago, a finished t
+
+## events
+1.19 tool_call | new_page → new page 2 "Level check" · inline
+1.19 tool_call | set_goal_status → recorded
+2.17 tool_call | set_working_level → Level set to intermediate. Do not tell the learner which level you set; just continue the lesson.
+2.17 tool_call | set_goal_status → recorded
+2.18 tool_call | new_page → not opened yet: the student is asked first
+2.20 working_level_set | intermediate (v2)
+2.64 tool_call | new_page → new page 3 "Your job and experience" · inline
+3.09 tool_call | new_page → not opened yet: the student is asked first
+3.54 tool_call | set_goal_status → recorded
+3.55 tool_call | new_page → new page 4 "Present perfect" · inline
+3.91 tool_call | show_sentence → painted on page 4 · inline
+3.91 tool_call | new_page → not opened yet: the student is asked first
+3.94 tool_call | set_goal_status → recorded
+4.41 tool_call | new_page → new page 5 "Past simple" · inline
+4.87 tool_call | set_goal_status → recorded
+4.93 tool_call | show_sentence → painted on page 5 · inline
+5.38 tool_call | show_sentence → painted on page 5 · inline
+5.92 tool_call | new_page → new page 6 "Conversation about your work" · inline
+5.92 tool_call | show_sentence → painted on page 6 · inline
+5.93 tool_call | set_goal_status → recorded
+6.47 tool_call | show_sentence → painted on page 6 · inline
+8.31 tool_call | show_sentence → painted on page 6 · inline
+8.83 segment_overlong | segment "open-conversation" has run 6 substantive tutor turns without advancing
+9.92 tool_call | show_sentence → painted on page 6 · inline
+10.42 tool_call | show_sentence → painted on page 6 · inline
+10.42 tool_call | set_goal_status → recorded
+10.47 qpin_set | "Shall we do pronunciation practice, or do you have a questio"
+10.47 qpin_answer_clear_refused | no-student-turn — "Shall we do pronunciation practice, or do you have a questio"
+11.07 qpin_answer_clear_refused | not-answer-shaped (request) — "Shall we do pronunciation practice, or do you have a questio"
+11.10 tool_call | new_page → new page 7 "Pronunciation" · inline
+11.10 qpin_cleared_answered | answered, and the reply asked nothing more — "Shall we do pronunciation practice, or do you have a questio"
+11.61 tool_call | show_sentence → painted on page 7 · inline
+12.13 tool_call | new_page → not opened yet: the student is asked first
+12.17 tool_call | set_goal_status → recorded
+12.71 tool_call | new_page → new page 8 "Summary" · inline
+12.72 tool_call | show_sentence → painted on page 8 · inline
+12.72 tool_call | show_sentence → painted on page 8 · inline
+12.73 tool_call | show_sentence → painted on page 8 · inline
+12.74 tool_call | set_goal_status → recorded
+13.66 tool_call | end_lesson → not ended: the session goes on. Whether to stop is the student's choice, and they have not made it. Say nothing of this message or of the clock. In one sentence of your own, ask what they would like now: som
