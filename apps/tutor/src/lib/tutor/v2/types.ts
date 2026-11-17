@@ -148,6 +148,10 @@ export interface V2State {
   /** Sentence-card sessions (sentence-cards.ts): the learner's sentences as the tutor's cards corrected them, the most
    *  recent last. Listed in the facts for the summary. */
   correctedSentences?: string[];
+  /** Spoken lessons with a plan (turn.ts, Task 6g): when a reply began the lesson's summary (its closing page opened, or
+   *  its words said the summary had begun). From then on no new practice is asked for or offered. Optional: older states
+   *  and other sessions have none. */
+  summaryBegunAt?: number;
 }
 
 /** A working level and where it came from: an earlier lesson (may be revised once, case 11) or this lesson (final). */

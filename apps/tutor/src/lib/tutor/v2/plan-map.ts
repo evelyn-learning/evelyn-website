@@ -8,6 +8,7 @@
 import type { LessonPlan, Segment } from '../lesson-plan/types';
 import { TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PASSED_PART_FACT, TUTOR_V2_PLAN_AS_WRITTEN } from '../orchestrator/flags';
 import { V2_CLOSING_PAGE, headingWords } from './part-close';
+import { stripBoardBlocks } from './board-inline';
 import type { GoalStatus, V2State } from './types';
 
 /** What a written lesson plan says about one part beyond its materials (Segment and its free-form metadata,
@@ -184,7 +185,9 @@ export function v2PassedParts(plan: LessonPlan, state: Pick<V2State, 'goals' | '
  *  kill switch. */
 export function v2PassedPartFact(plan: LessonPlan | undefined, state: V2State, closing: boolean, enabled: boolean = TUTOR_V2_PASSED_PART_FACT): string[] {
   if (!enabled || !plan || closing || state.closed) return [];
-  const passed = v2PassedParts(plan, state);
+  // Task 6g: a part offered twice and not taken up is not offered again (v2PartOfferFacts names it as next time).
+  const out = v2OfferedOut(plan, state);
+  const passed = v2PassedParts(plan, state).filter((seg) => !out.has(seg.id));
   if (!passed.length) return [];
   const names = passed.map((seg) => `the ${v2PartOf(seg).label} part`);
   const list = names.length === 1 ? names[0]! : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
@@ -223,7 +226,8 @@ const partNames = (segs: Segment[]) => {
  *  once the lesson has closed. `enabled` is the kill switch. */
 export function v2UnreachedAtCloseFact(plan: LessonPlan | undefined, state: V2State, phase: 'near' | 'closing' | null, enabled: boolean = TUTOR_V2_PASSED_PART_CLOSE): string[] {
   if (!enabled || !plan || !phase || state.closed) return [];
-  const left = v2UnreachedAtClose(plan, state);
+  const out = v2OfferedOut(plan, state);
+  const left = v2UnreachedAtClose(plan, state).filter((seg) => !out.has(seg.id));
   if (!left.length) return [];
   const list = partNames(left); const one = left.length === 1; const it = one ? 'it' : 'them';
   const head = `${list[0]!.toUpperCase()}${list.slice(1)} ${one ? 'was' : 'were'} not reached`;
@@ -234,9 +238,11 @@ export function v2UnreachedAtCloseFact(plan: LessonPlan | undefined, state: V2St
 
 /** With time left, the offer in place of a held summary page, when parts were not reached (v2UnreachedAtClose): it names
  *  them and lets the student choose, in one line. Null when nothing was missed. */
-export function v2UnreachedOffer(plan: LessonPlan | undefined, state: Pick<V2State, 'goals' | 'board' | 'workingLevel'>, enabled: boolean = TUTOR_V2_PASSED_PART_CLOSE): string | null {
+export function v2UnreachedOffer(plan: LessonPlan | undefined, state: Pick<V2State, 'goals' | 'board' | 'workingLevel'> & { history?: V2State['history'] }, enabled: boolean = TUTOR_V2_PASSED_PART_CLOSE): string | null {
   if (!enabled || !plan) return null;
-  const left = v2UnreachedAtClose(plan, state);
+  // Task 6g: not a part already offered twice and not taken up.
+  const out = state.history ? v2OfferedOut(plan, { ...state, history: state.history }) : new Set<string>();
+  const left = v2UnreachedAtClose(plan, state).filter((seg) => !out.has(seg.id));
   if (!left.length) return null;
   const list = partNames(left).replace(/\bthe (\S)/g, (_m, c: string) => `the ${c.toLowerCase()}`);
   const one = left.length === 1;
@@ -249,11 +255,7 @@ export function v2UnreachedOffer(plan: LessonPlan | undefined, state: Pick<V2Sta
  *  most easily); null when none is unreached or `said` already names each. */
 export function v2NextTimeLine(plan: LessonPlan | undefined, state: Pick<V2State, 'goals' | 'board' | 'workingLevel'>, said: string): string | null {
   if (!plan) return null;
-  const missing = v2UnreachedAtClose(plan, state).filter(v2PartIsOptional).filter((seg) => {
-    const p = v2PartOf(seg); const label = p.label ?? '';
-    const named = headingWords(label).every((w) => said.toLowerCase().includes(w.slice(0, 5))) || Object.values(p.labelLocalized ?? {}).some((n) => said.includes(n));
-    return !named;
-  });
+  const missing = v2MissedAtClose(plan, state).filter(v2PartIsOptional).filter((seg) => !v2PartNamedIn(seg, said));
   if (!missing.length) return null;
   const names = partNames(missing).replace(/\bthe (\S)/g, (_m, c: string) => `the ${c.toLowerCase()}`);
   return `We didn't get to ${names} today, so that's for next time.`;
@@ -269,9 +271,81 @@ export function v2PagePartLabel(plan: LessonPlan | undefined, title: string): st
 
 /** Task 6f: the line naming every plan part not reached as next time (v2UnreachedAtClose), said where a summary the reply
  *  has already begun opens, in place of the offer to do them first. Null when none was missed. */
-export function v2NextTimeAllLine(plan: LessonPlan | undefined, state: Pick<V2State, 'goals' | 'board' | 'workingLevel'>): string | null {
+export function v2NextTimeAllLine(plan: LessonPlan | undefined, state: Pick<V2State, 'goals' | 'board' | 'workingLevel'>, said: string = ''): string | null {
   if (!plan) return null;
-  const left = v2UnreachedAtClose(plan, state);
+  // Task 6g: parts the words already said name are left out (`said`: a reply complete before the line goes in).
+  const left = v2MissedAtClose(plan, state).filter((seg) => !said || !v2PartNamedIn(seg, said));
   if (!left.length) return null;
   return `We didn't get to ${partNames(left).replace(/\bthe (\S)/g, (_m, c: string) => `the ${c.toLowerCase()}`)} today, so that's for next time.`;
+}
+
+/** Whether `text` names a plan part: every word of its authored name (by its first five letters), or its name in another
+ *  language. A part with no name words counts as named (nothing to say it by). */
+export function v2PartNamedIn(seg: Segment, text: string): boolean {
+  const p = v2PartOf(seg); const label = p.label ?? '';
+  return headingWords(label).every((w) => text.toLowerCase().includes(w.slice(0, 5))) || Object.values(p.labelLocalized ?? {}).some((n) => text.includes(n));
+}
+
+/** Task 6g: a part taken up: a status of shown or demonstrated, or a page of its own. */
+const takenUp = (seg: Segment, state: Pick<V2State, 'goals' | 'board'>) => {
+  const g = state.goals[seg.id]?.status;
+  return g === 'shown' || g === 'demonstrated' || state.board.pages.some((pg) => pageOfPart(seg, pg.title));
+};
+
+/** The plan parts the close names as next time (Task 6g, PASSED_PART_CLOSE): those not reached (v2UnreachedAtClose), and
+ *  an optional part not taken up wherever it stands: no page of its own and no shown or demonstrated status, so marked
+ *  skipped or never marked. Tester B's lesson skipped pronunciation and named it nowhere (v2audio-6f); a part the model
+ *  marks skipped counted as reached, and was never named. Same plans as v2UnreachedAtClose: every part named. `skipped`
+ *  false: v2UnreachedAtClose alone, as before. */
+export function v2MissedAtClose(plan: LessonPlan, state: Pick<V2State, 'goals' | 'board' | 'workingLevel'>, skipped: boolean = TUTOR_V2_PASSED_PART_CLOSE): Segment[] {
+  const left = v2UnreachedAtClose(plan, state);
+  const segs = plan.segments;
+  if (!skipped || segs.length < 2 || !segs.every((seg) => !!v2PartOf(seg).label)) return left;
+  return segs.filter((seg, i) => left.includes(seg) || (i < segs.length - 1 && v2PartIsOptional(seg) && !takenUp(seg, state)));
+}
+
+/** The most times an optional part is offered while it is not taken up (Task 6g): once, and once more. Tester A heard
+ *  pronunciation offered four times in nine turns (v2audio-6f T58, T68, T72, T74). */
+export const V2_MAX_PART_OFFERS = 2;
+const ASKS_END = /(?:[?？]|か[。．]?)["'」』）)]*\s*$/;
+const SENTENCES = /(?<=[.!?]["'”’)]*)\s+|(?<=[。！？][」』)）"”]*)\s*/;
+const historyText = (h: V2State['history'][number]) => (typeof h.content === 'string' ? h.content : h.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '));
+
+/** How many of the tutor's replies offered `seg`: a sentence that asks and names the part ("Would you like to practise
+ *  your pronunciation next…?", 「…発音の練習をするか、どちらにしますか？」), or the runtime's own offer ("Before the summary,
+ *  there is still the pronunciation part. Would you like to do it now…?"). */
+export function v2PartOffers(seg: Segment, history: V2State['history']): number {
+  let n = 0;
+  for (const h of history) {
+    if (h.role !== 'assistant') continue;
+    const xs = stripBoardBlocks(historyText(h)).split(SENTENCES).map((x) => x.trim()).filter(Boolean);
+    if (xs.some((x, i) => ASKS_END.test(x) && (v2PartNamedIn(seg, x) || (i > 0 && /^Before the summary, there is still\b/.test(xs[i - 1]!) && v2PartNamedIn(seg, xs[i - 1]!))))) n += 1;
+  }
+  return n;
+}
+
+/** The optional parts not taken up that have been offered V2_MAX_PART_OFFERS times or more: not offered again. */
+export function v2OfferedOut(plan: LessonPlan, state: Pick<V2State, 'goals' | 'board' | 'history'>, enabled: boolean = TUTOR_V2_PASSED_PART_CLOSE): Set<string> {
+  const out = new Set<string>();
+  if (!enabled || plan.segments.length < 2 || !plan.segments.every((seg) => !!v2PartOf(seg).label)) return out;
+  for (const seg of plan.segments.slice(0, -1)) if (v2PartIsOptional(seg) && !takenUp(seg, state) && v2PartOffers(seg, state.history) >= V2_MAX_PART_OFFERS) out.add(seg.id);
+  return out;
+}
+
+/** The facts lines counting the offers of an optional part not taken up (Task 6g): offered once, it may be offered once
+ *  more, before the summary; offered twice, it is not offered again and is named in the summary as next time. Not once the
+ *  lesson has closed. `enabled` is the kill switch (PASSED_PART_CLOSE). */
+export function v2PartOfferFacts(plan: LessonPlan | undefined, state: V2State, enabled: boolean = TUTOR_V2_PASSED_PART_CLOSE): string[] {
+  if (!enabled || !plan || state.closed || plan.segments.length < 2 || !plan.segments.every((seg) => !!v2PartOf(seg).label)) return [];
+  const lines: string[] = [];
+  for (const seg of plan.segments.slice(0, -1)) {
+    if (!v2PartIsOptional(seg) || takenUp(seg, state)) continue;
+    const n = v2PartOffers(seg, state.history);
+    if (!n) continue;
+    const name = `The ${v2PartOf(seg).label} part`;
+    lines.push(n >= V2_MAX_PART_OFFERS
+      ? `${name} has been offered ${n} times and not taken up: do not offer it again; name it in your summary, in one short line, as something for next time`
+      : `${name} has been offered once and not taken up: offer it at most once more, and only before the summary; if they do not take it up then, name it in your summary as something for next time`);
+  }
+  return lines;
 }

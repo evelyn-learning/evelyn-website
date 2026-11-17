@@ -113,6 +113,18 @@ export function v2SpeechParts(sentence: string, languages: readonly string[] | u
 /** A tutor reply that asks them to say or try a sentence. */
 const PRACTICE_ASK = /\b(?:say|try|repeat)\b[^.?!]*\b(?:it|this|that|sentence|again|once more|back|after me)\b|\bnow you say\b|\byour turn\b|もう一度|言ってみて|言ってください/i;
 const QUOTED = /「([^」]{6,})」|"([^"]{6,})"|“([^”]{6,})”/g;
+/** Task 6g: an offer of more practice ("Shall we do one quick practice on…?", 「もう一つ練習しますか？」). */
+const PRACTICE_OFFER = /\b(?:one (?:more|quick|last|short) (?:practice|exercise|try|sentence)|more practice|practi[cs]e (?:more|again|one more)|another (?:practice|exercise|sentence|try))\b|もう(?:一つ|ひとつ|少し)練習|練習(?:しますか|しましょうか)/i;
+/** Task 6g: a sentence that asks them to say or try a sentence, or offers more practice: a question, or an ask ("Please
+ *  say this sentence once more."). Not a sentence that only talks about practice ("Try to say it this way next time" in a
+ *  summary is advice, and goes out). */
+export function v2IsPracticeAsk(sentence: string): boolean {
+  const s = sentence.trim();
+  if (!PRACTICE_ASK.test(s) && !PRACTICE_OFFER.test(s)) return false;
+  // Advice for later ("Try to say it this way next time.") asks nothing now.
+  if (/\bnext time\b|次回|次の機会/i.test(s)) return false;
+  return /[?？]["'”’」』)）]*$/.test(s) || /^(?:please|now|try|say|repeat|let'?s|can|could|would|shall|will you)\b/i.test(s) || /もう一度|言ってみて|言ってください|練習しますか|練習しましょうか/.test(s);
+}
 /** A bare yes or ok: an answer to a check question, never a try at a sentence. */
 export const V2_BARE_YES = /^\s*(?:yes|yeah|yep|yup|ok|okay|sure|alright|all right|mhm|uh[- ]?huh|i see|got it|はい|ええ|うん|わかりました)\s*[.!。！]*\s*$/i;
 /** What a reply asks them to say: undefined when it asks for no sentence, null when it names none (an ask "again"),

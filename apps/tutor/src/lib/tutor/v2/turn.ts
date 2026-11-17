@@ -26,16 +26,16 @@ import { BoardInlineStream, boardBlocksIn, inlineToolCall, insertBlock, stripBoa
 import { speaksMaths, unwrittenEquations } from './spoken-maths';
 import { saidCovers, sentenceCardToSay, unsaidAsk, unsaidBoardItem, asksAnywhere, noteSentencesToSay, pointsBackAtBoard } from './board-timing';
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
-import { renderFacts, V2_NO_ASK_RECHECK_S, V2_TIME_UP_MIN, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
+import { renderFacts, v2SummaryBegun, V2_NO_ASK_RECHECK_S, V2_TIME_UP_MIN, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
 import { v2WrapDue } from './time-box';
 import { planGoalIds, renderPlanMap, v2NextTimeAllLine, v2PagePartLabel, v2NextTimeLine, v2PartOf, v2UnreachedOffer } from './plan-map';
 import { stripToolTalk } from './tool-talk';
 import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
 import { V2_CLOSING_PAGE, endsAsking, leftOpen, mayOpenPart, namesPart, partOffer, v2FrameDue } from './part-close';
-import { ReplyGate, V2_PART_FRAME } from './reply-gate';
+import { ReplyGate, isPartFrame } from './reply-gate';
 import { heardAsWords } from './heard';
-import { v2LanguagesSection } from './languages';
+import { v2IsPracticeAsk, v2LanguagesSection } from './languages';
 import { V2_LEVEL_WAIT, V2_LEVEL_WAIT_OVER, V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2MarkLevelKnownParts, v2ReopenLevelCheck, v2WorkingLevelSection } from './working-level';
 import { V2_PRACTISE_PRONUNCIATION_TOOL, v2ApplyPractisePronunciation, v2ConsumePronunciation, v2PronunciationOn, v2PronunciationSection } from './pronunciation';
 import { v2NoteCorrectedSentence, v2SentenceCardsOn, v2SentenceCardsSection } from './sentence-cards';
@@ -319,6 +319,9 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     if (!asked && !homeworkDone && session.timeBoxMinutes && left > session.timeBoxMinutes * 0.2) {
       // Said to the student as the tutor's own thought. The first wording was repeated to them: "The system says
       // there are about seven minutes left and you haven't asked to stop" (embed-1794595194384).
+      // Task 6g (CLOSE_ONE_QUESTION): once the summary has begun, the menu offers no more practice: gdi-real-james's review began
+      // with eight minutes left, and the refusal's "something harder, more practice" brought two offers of practice (v2audio-6f).
+      if (!discussion && v2SummaryBegun(state)) return 'not ended: the session goes on. Whether to stop is the student\'s choice, and they have not made it. Say nothing of this message or of the clock. The summary has begun, so offer no more practice: in one sentence of your own, ask whether they have a question about today\'s lesson or would like to stop here.';
       return `not ended: the session goes on. Whether to stop is the student's choice, and they have not made it. Say nothing of this message or of the clock. In one sentence of your own, ask what they would like now: something harder, more practice, a question of their own, or to stop here.`;
     }
     state.closed = true;
@@ -573,6 +576,15 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // F3, F4: a goodbye waits for the reply to be complete (reply-gate.ts).
   const holdGoodbye = gated && (TUTOR_V2_CLOSE_ONE_QUESTION || TUTOR_V2_PASSED_PART_CLOSE);
   let framesDropped = 0;
+  // Task 6g (CLOSE_ONE_QUESTION): the summary began in an earlier reply.
+  const summaryBefore = gated && !!session.plan && v2SummaryBegun(state);
+  // Task 6g: in a reply that may close the lesson, a practice ask waits for the next sentence and is dropped when the summary
+  // or a goodbye follows it (reply-gate.ts closeAsk): tester B's last reply asked for a retry and then gave the summary.
+  const closeAsk = gated && TUTOR_V2_CLOSE_ONE_QUESTION && !!session.plan && (selfCloseOpen || closingTurn || summaryBefore) ? v2IsPracticeAsk : null;
+  // A closing page opened in this turn (for summaryBegunAt), and whether a next-time line was said.
+  let closingOpened = false; let nextTimeSaid = false;
+  // The reply's whole text, while a page held until it was complete is let go (D1): the next-time line checks it.
+  let releaseText = '';
   // F5: cards said one after another under one lead-in ("Here are two sentences…" and two cards).
   let cardRun = false;
   // Task 6f: notes and tables of example sentences are spoken in a spoken language lesson only (maths and science notes
@@ -593,9 +605,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       if (firstTextMs === null && t.trim()) firstTextMs = Date.now() - t0;
       saidChars += t.length; saidNow += t;
       input.onText?.(t);
-    }, { dropFrame: gated && TUTOR_V2_PART_OFFER_ONCE && !frameDue && !!session.plan, holdGoodbye });
+    }, { dropFrame: gated && TUTOR_V2_PART_OFFER_ONCE && !frameDue && !!session.plan, holdGoodbye, closeAsk, summaryBegun: V2_SUMMARY_BEGUN });
     const hold = (block: InlineBlock) => {
-      gate.flush();
+      gate.flush(); gate.releaseAsk();
       // A held summary page with plan parts not reached: the offer names them and lets the student choose (Task 6e).
       const missed = closesLesson(block.body.trim()) ? v2UnreachedOffer(session.plan, state) : null;
       // The question check only when the last part change did not ask it; an ask ending in the second language is an ask (Task 6e).
@@ -626,10 +638,19 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           // Fix round 1 (minors 6, 7): begun in the last sentence or two before the page, not anywhere in the reply; and the
           // page is let through only when there is a next-time line to say in place of the offer.
           const beganNow = part.block.kind === 'page' && V2_SUMMARY_BEGUN.test(lastSentences(saidNow, 2));
-          const summaryLine = gated && TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME && beganNow && !discussion && closesLesson(part.block.body) && !nextTimeAt && !boardHasPage(part.block.body) && !state.closed && !!v2UnreachedOffer(session.plan, state) ? v2NextTimeAllLine(session.plan, state) : null;
+          const closingPage = part.block.kind === 'page' && !discussion && closesLesson(part.block.body);
+          // Task 6g (PASSED_PART_CLOSE): the line is also said where the summary page opens when the reply that opens it closes
+          // the lesson (a page held until the reply was complete, let go by its end_lesson: tester B's last reply named the
+          // part nowhere), or the summary began in an earlier reply; and for a part offered twice or skipped, not only one
+          // the held offer would name.
+          const lineDue = beganNow || (TUTOR_V2_PASSED_PART_CLOSE && (releasing || summaryBefore));
+          const summaryLine = gated && TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME && lineDue && closingPage && !nextTimeAt && !nextTimeSaid && !boardHasPage(part.block.body) && !state.closed && (TUTOR_V2_PASSED_PART_CLOSE || !!v2UnreachedOffer(session.plan, state)) ? v2NextTimeAllLine(session.plan, state, releasing ? releaseText : '') : null;
           const summaryBegun = !!summaryLine;
-          if (summaryLine) { nextTimeAt = { raw: part.block.raw, line: summaryLine }; gate.push(` ${summaryLine} `); gate.flush(); }
-          if (part.block.kind === 'page' && !discussion && !summaryBegun && (frameDue || (closesLesson(part.block.body) && !!v2UnreachedOffer(session.plan, state))) && !boardHasPage(part.block.body) && !state.closed && !closingTurn && !releasing && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length })) {
+          const holdIt = part.block.kind === 'page' && !discussion && !summaryBegun && !(summaryBefore && closingPage) && (frameDue || (closesLesson(part.block.body) && !!v2UnreachedOffer(session.plan, state))) && !boardHasPage(part.block.body) && !state.closed && !closingTurn && !releasing && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length });
+          // Task 6g: the summary begins here, so a practice ask waiting before it is dropped; any other page lets it go.
+          if (part.block.kind === 'page' && !holdIt) { if (closingPage) { gate.summaryBegins(); closingOpened = true; } else gate.releaseAsk(); }
+          if (summaryLine) { nextTimeAt = { raw: part.block.raw, line: summaryLine }; nextTimeSaid = true; gate.push(` ${summaryLine} `); gate.flush(); }
+          if (holdIt) {
             // In the box's last fifth the tutor may close by itself, and a reply that does is a closing turn: whether it
             // does is known only when the reply is complete, so the page and what follows it wait until then (D1).
             // Only a page that closes the lesson waits: any other is held at once and the offer streams as before
@@ -680,9 +701,11 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       // with all that followed it; any other is held at the page, as at once before (D1).
       const waiting: InlinePart[] = pendingHold; pendingHold = null;
       const block = (waiting[0] as { block: InlineBlock }).block;
-      if (response.content.some((b) => b.type === 'tool_use' && b.name === 'end_lesson')) { releasing = true; try { take(waiting); gate.flush(); } finally { releasing = false; } }
+      if (response.content.some((b) => b.type === 'tool_use' && b.name === 'end_lesson')) { releasing = true; releaseText = response.content.map((b) => (b.type === 'text' ? b.text : '')).join(' '); try { take(waiting); gate.flush(); } finally { releasing = false; releaseText = ''; } }
       else hold(block);
     }
+    // Task 6g: the reply is complete; a practice ask still waiting goes out (one before a held goodbye waits for the close).
+    if (!gate.holdsGoodbye) gate.releaseAsk();
     const nextTime = nextTimeAt as { raw: string; line: string } | null;
     if (nextTime) {
       for (const b of response.content) if (b.type === 'text' && b.text.includes(nextTime.raw)) { b.text = b.text.replace(nextTime.raw, `${nextTime.line}\n${nextTime.raw}`); break; }
@@ -739,13 +762,28 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         const line = TUTOR_V2_PASSED_PART_CLOSE && closing ? v2NextTimeLine(session.plan, state, `${saidNow} ${gate.held}`) : null;
         const firstHeld = gate.held.split(/(?<=[.!?。！？])\s+/)[0] ?? '';
         if (line && firstHeld) for (const b of response.content) if (b.type === 'text' && b.text.includes(firstHeld)) { b.text = b.text.replace(firstHeld, `${line} ${firstHeld}`); break; }
+        if (line) nextTimeSaid = true;
         gate.releaseHeld(line ?? undefined);
+      }
+    } else if (gated && TUTOR_V2_PASSED_PART_CLOSE && session.plan && !nextTimeSaid) {
+      // Task 6g: a close with no goodbye the gate could hold still names an optional part it skipped, at its end, when the
+      // reply has not: a close accepted now, or the student's stop. Every lesson that skips one names it at the close.
+      const ended = toolCalls.slice(callsBefore).find((c) => c.name === 'end_lesson');
+      const accepted = (!!ended && !/^not /.test(ended.outcome)) || (TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid));
+      const line = accepted ? v2NextTimeLine(session.plan, state, saidNow) : null;
+      if (line) {
+        nextTimeSaid = true;
+        gate.push(` ${line}`); gate.flush();
+        const last = [...response.content].reverse().find((b): b is Anthropic.TextBlock => b.type === 'text');
+        if (last) last.text = `${last.text.trimEnd()} ${line}`; else response.content.push({ type: 'text', text: line, citations: null } as Anthropic.TextBlock);
+        spoken.splice(spokenBefore); rawSpoken.splice(rawBefore);
+        for (const block of response.content) if (block.type === 'text') { const words = wordsOf(block.text); if (words) { spoken.push(words); rawSpoken.push(block.text.trim()); } }
       }
     }
     if (gate.removed.length) {
       // What did not go out leaves the reply as stored and as spoken (a dropped frame, a dropped goodbye).
       for (const gone of gate.removed) removeFrom(gone);
-      framesDropped += gate.removed.filter((x) => V2_PART_FRAME.test(x)).length;
+      framesDropped += gate.removed.filter((x) => isPartFrame(x)).length;
       spoken.splice(spokenBefore); rawSpoken.splice(rawBefore);
       for (const block of response.content) if (block.type === 'text') { const words = wordsOf(block.text); if (words) { spoken.push(words); rawSpoken.push(block.text.trim()); } }
     }
@@ -1058,6 +1096,13 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     }
   }
 
+  // Task 6g (CLOSE_ONE_QUESTION): the summary has begun: its closing page opened, or its words said so, once most of the
+  // plan is behind the lesson (an early "Quick recap" page is not its summary). From the next turn, no new practice.
+  if (gated && TUTOR_V2_CLOSE_ONE_QUESTION && session.plan && typeof state.summaryBegunAt !== 'number' && !state.closed && (closingOpened || V2_SUMMARY_BEGUN.test(spoken.join(' ')))) {
+    const before = session.plan.segments.slice(0, -1);
+    const reached = before.filter((seg) => !!state.goals[seg.id] || state.board.pages.some((pg) => !!v2PartOf(seg).label && v2PagePartLabel(session.plan, pg.title) === v2PartOf(seg).label)).length;
+    if (before.length && reached * 2 >= before.length) state.summaryBegunAt = nowMs;
+  }
   state.history = [...state.history, ...stored];
   // Fed back as a fact next turn: how long the tutor has been talking without writing.
   const painted = toolCalls.some((c) => !V2_CONTROL_TOOL_NAMES.has(c.name) && !/^not /.test(c.outcome));

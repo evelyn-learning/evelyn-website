@@ -1794,3 +1794,10 @@ export const TUTOR_V2_FRAME_NAMES_OPENED = process.env.NEXT_PUBLIC_TUTOR_V2_FRAM
  *  in one reply (Task 6f, v2audio-6e2 T60). Default ON; NEXT_PUBLIC_TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME=off ⇒ held with the
  *  offer, as before. */
 export const TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME = process.env.NEXT_PUBLIC_TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME !== 'off';
+
+/** Tutor brain v2 (v2/working-level.ts, lessons with a level check): set_working_level is described as called after the
+ *  reply's words, in the same response, its result a receipt. Called alone first, it ended the model call with no words,
+ *  and the words came from a second call: the reply that closes the level check (and asks the first part-change frame)
+ *  took 4.2–8.9 s to its first sentence in all four real-voice runs, tester B's 11.1 s clip-end to reply (Task 6g,
+ *  v2audio-6f). Default ON; NEXT_PUBLIC_TUTOR_V2_LEVEL_WITH_WORDS=off ⇒ the tool's description as before. */
+export const TUTOR_V2_LEVEL_WITH_WORDS = process.env.NEXT_PUBLIC_TUTOR_V2_LEVEL_WITH_WORDS !== 'off';

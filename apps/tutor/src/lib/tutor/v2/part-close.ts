@@ -1,7 +1,7 @@
 import { stripBoardBlocks } from './board-inline';
 import { TUTOR_V2_PART_OFFER_ONCE } from '../orchestrator/flags';
 import type { V2State } from './types';
-import { V2_PART_FRAME } from './reply-gate';
+import { isPartFrame } from './reply-gate';
 /**
  * Tutor brain v2 — a part is closed before the next is opened.
  *
@@ -31,6 +31,9 @@ export function namesPart(title: string, text: string): boolean {
 const STEERS = /\b(?:move on|go on|go ahead|carry on|keep going|continue|skip (?:this|that|it)|next (?:one|question|problem|topic|part|section|thing)|another (?:one|problem|question|example|reaction)|some other|something else|a different|(?:can|could|will|would) (?:you|we) (?:give|do|try|move|go|show|have|start)|give me (?:a|an|another|one|some)|let'?s (?:move|go on|do another|try another|start))\b/i;
 /** The tutor's last reply left the way open: it offered what comes next, or checked in. */
 const OFFERS = /\b(?:next is|next up|ready|shall we|any questions?|a question first|make sense|with me|is that clear|all clear|so far|sound good)\b/i;
+/** Task 6g (PART_OFFER_ONCE): the same, in Japanese (「次に進みますか、それとも先に質問がありますか？」). */
+const OFFERS_JA = /(?:次|先)に進|進んでも|に進みますか|に進みましょうか|質問(?:が|は)(?:あります|ありません)か/;
+const offers = (text: string, ja: boolean = TUTOR_V2_PART_OFFER_ONCE) => OFFERS.test(text) || (ja && OFFERS_JA.test(text));
 
 /** Whether a sentence ends as a question. With `secondLanguage`, a question in the support language counts too: a
  *  bilingual ask ends on its Japanese ("…Shall we go on to the present perfect now? 次に現在完了を学びます。進んでも
@@ -43,7 +46,7 @@ export function endsAsking(sentence: string, secondLanguage: boolean = TUTOR_V2_
 /** The tutor's last reply ended by asking whether to go on (or checking in), and the student has answered. */
 export function leftOpen(lastTutor: string, studentSaid: string | null): boolean {
   const sentences = stripBoardBlocks(lastTutor).split(/(?<=[.?!])\s+/).map((s) => s.trim()).filter(Boolean);
-  return !!studentSaid && endsAsking(sentences[sentences.length - 1] ?? '') && OFFERS.test(sentences.slice(-2).join(' '));
+  return !!studentSaid && endsAsking(sentences[sentences.length - 1] ?? '') && offers(sentences.slice(-2).join(' '));
 }
 
 export interface PartTurn { title: string; studentSaid: string | null; lastTutor: string; pagesOpen: number }
@@ -54,7 +57,7 @@ export function mayOpenPart(t: PartTurn): boolean {
   if (student && (STEERS.test(student) || namesPart(t.title, student))) return true;
   const sentences = stripBoardBlocks(t.lastTutor).split(/(?<=[.?!])\s+/).map((s) => s.trim()).filter(Boolean);
   const last = sentences[sentences.length - 1] ?? '';
-  return endsAsking(last) && student !== '' && (OFFERS.test(sentences.slice(-2).join(' ')) || namesPart(t.title, t.lastTutor));
+  return endsAsking(last) && student !== '' && (offers(sentences.slice(-2).join(' ')) || namesPart(t.title, t.lastTutor));
 }
 const QUESTION_CHECK = /\b(?:a question first|any questions?(?! about)|questions? (?:before|so far))\b/i;
 const replyText = (h: V2State['history'][number]) => (typeof h.content === 'string' ? h.content : h.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '));
@@ -85,7 +88,11 @@ export function partOffer(title: string, named: boolean, askQuestion: boolean = 
 export const V2_MAX_PART_FRAMES = 2;
 /** A frame sentence: asking whether to go on, alone or with "or do you have a question first?" ("any questions so far?"
  *  in the middle of a part is a check-in, not a frame: fix round 2, minor a). */
-const hasFrame = (text: string) => stripBoardBlocks(text).split(/(?<=[.!?。！？])\s+/).some((x) => V2_PART_FRAME.test(x.trim()));
+/** Task 6g (PART_OFFER_ONCE): a Japanese frame counts as one, and Japanese sentences are cut after 。！？ with no space
+ *  after them ("…ここまでです。次に進みますか、それとも先に質問がありますか？" was one piece, and tester A heard a frame at
+ *  two part changes running, v2audio-6f). */
+const SENTENCE_CUT = /(?<=[.!?]["'”’)]*)\s+|(?<=[。！？][」』)）"”]*)\s*/;
+const hasFrame = (text: string, ja: boolean = TUTOR_V2_PART_OFFER_ONCE) => stripBoardBlocks(text).split(ja ? SENTENCE_CUT : /(?<=[.!?。！？])\s+/).some((x) => isPartFrame(x.trim(), ja));
 const PAGE_BLOCK = /<board\s+page\b/;
 /** Whether this lesson may ask at a part change whether to go on (and whether they have a question first): fewer than
  *  V2_MAX_PART_FRAMES asked so far, and none at the last part change. The frame came at every part change, by the model

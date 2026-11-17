@@ -20,7 +20,7 @@ import { discussionOf } from './discussion';
 import { v2PartOf } from './plan-map';
 import { v2Progress } from './progress';
 import type { V2Session, V2State, V2WorkingLevel } from './types';
-import { TUTOR_V2_LEVEL_CHECK_MIN_ANSWERS, TUTOR_V2_LEVEL_RECONFIRM } from '../orchestrator/flags';
+import { TUTOR_V2_LEVEL_CHECK_MIN_ANSWERS, TUTOR_V2_LEVEL_RECONFIRM, TUTOR_V2_LEVEL_WITH_WORDS } from '../orchestrator/flags';
 
 const SKIPPED_FOR_LEVEL = 'working level known from an earlier lesson';
 
@@ -32,7 +32,7 @@ export function v2LevelCheckOn(session: V2Session): boolean {
 
 export const V2_SET_WORKING_LEVEL_TOOL: Anthropic.Tool = {
   name: 'set_working_level',
-  description: 'Record the learner\'s working level, judged from what they actually said (how much of the lesson\'s language they used, how complete and accurate it was), whatever language they answered in. The learner does not see it. Call it once, when the level check is answered; when the facts give a level remembered from an earlier lesson, call it only if their answers show another level.',
+  description: `Record the learner's working level, judged from what they actually said (how much of the lesson's language they used, how complete and accurate it was), whatever language they answered in. The learner does not see it. Call it once, when the level check is answered; when the facts give a level remembered from an earlier lesson, call it only if their answers show another level.${TUTOR_V2_LEVEL_WITH_WORDS ? ' Call it after your reply\'s words, in the same response: its result is only a receipt, and there is nothing to wait for before you speak.' : ''}`,
   input_schema: {
     type: 'object',
     properties: {

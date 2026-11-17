@@ -13,7 +13,13 @@
  *
  * The client cuts sentences again for speech (sentences.ts); this gate only decides which go out and when. It never
  * changes a sentence's words. Pure apart from its output callback.
+ *
+ * Task 6g (v2audio-6f): the frame in Japanese is a frame too (tester A heard 「次に進みますか、それとも先に質問がありますか？」
+ * at a second change running); a goodbye with no farewell word ("Thank you for today's lesson, and well done!") is held
+ * like one; and at the close a practice ask waits for the next sentence, so a reply that goes on into its summary or
+ * goodbye does not also ask for a retry no one can give (tester B's last reply).
  */
+import { TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PASSED_PART_CLOSE } from '../orchestrator/flags';
 
 /** The part-change frame: asking whether to go on, alone or with the question check. Matched on a whole sentence. */
 export const V2_PART_FRAME = /^(?:(?:so|okay|ok|now|then|great|good|alright|all right)[,!.]?\s+)*(?:shall we (?:go on|move on|continue|start)|are you ready (?:for (?:that|it|the next part|this)|to (?:go on|move on|start))|ready to (?:go on|move on))\b[^.?!]*\?["'”’]*$|^[^.?!]*\bor do you have (?:a|any) questions? (?:first|before we (?:go on|move on|start))\?["'”’]*$/i;
@@ -21,6 +27,29 @@ export const V2_PART_FRAME = /^(?:(?:so|okay|ok|now|then|great|good|alright|all 
 /** Fix round 2 (N1): farewells only. "take care", "have a nice weekend", "see you then" and "bye," are also lesson
  *  phrases and lesson talk ("Take care with the sign…"), and holding on them held the rest of a mid-lesson reply. */
 export const V2_GOODBYE = /\b(?:see you (?:next time|soon|again)|goodbye|good-bye|bye for now)\b|お疲れ(?:様|さま)でした|またお会いしましょう|また次回お会い/i;
+/** Task 6g (PASSED_PART_CLOSE): a lesson's closing thanks is a goodbye too. Tester B's and gdi-real-james's closes had no
+ *  farewell word ("Thank you for today's lesson, and well done!"), so the goodbye was never held and the line naming
+ *  the part not reached was never said before it (v2audio-6f finding 1). Only thanks for the lesson as a whole, never
+ *  "thank you for trying" or a thanks for an answer. */
+export const V2_GOODBYE_THANKS = /\bthanks?(?: you)?(?: (?:so|very) much)? for (?:today'?s (?:lesson|class|session)|the lesson today|(?:the |this |your )?(?:lesson|class|session)(?: today)?|today)\b|今日の(?:レッスン|授業)は(?:ここまで|これで終わり)|今日はここまで(?:です|にしましょう)/i;
+/** Whether a sentence (its quoted spans already taken out) is a goodbye. `wide`: the closing thanks counts too. */
+export function isGoodbye(sentence: string, wide: boolean = TUTOR_V2_PASSED_PART_CLOSE): boolean {
+  return V2_GOODBYE.test(sentence) || (wide && V2_GOODBYE_THANKS.test(sentence));
+}
+
+/** Task 6g (PART_OFFER_ONCE): the frame in Japanese. Asking whether to go on (次に進みますか, 先に進んでもいいですか,
+ *  過去形に進みましょうか), or the question check that goes with it (それとも先に質問がありますか, 進む前に何か質問は
+ *  ありますか), in a sentence that ends as a question. "質問はありますか？" alone is a check-in, as "any questions so far?"
+ *  is in English; "仕事は順調に進みますか？" asks about their work. */
+const JA_GO_ON = /(?:(?:次|先|つぎ|さき)[^。！？?]{0,20}?|(?<!順調|うまく|スムーズ)(?:に|へ))(?:進(?:みますか|みましょうか|んで(?:も)?(?:いい|よい|よろしい|大丈夫)(?:です|でしょう)?か)|行きますか|行きましょうか|移りますか|移りましょうか)/;
+const JA_QUESTION_FIRST = /それとも[^。！？?]*質問|(?:進む|移る|行く)前に[^。！？?]*質問/;
+const JA_ASKS = /(?:[?？]|か[。．]?)["'」』）)]*\s*$/;
+export const V2_PART_FRAME_JA = { test: (s: string) => JA_ASKS.test(s) && (JA_GO_ON.test(s) || JA_QUESTION_FIRST.test(s)) };
+/** Whether a whole sentence is a part-change frame. `ja`: the Japanese forms count too (the kill switch's old matcher
+ *  is the English one only). */
+export function isPartFrame(sentence: string, ja: boolean = TUTOR_V2_PART_OFFER_ONCE): boolean {
+  return V2_PART_FRAME.test(sentence) || (ja && V2_PART_FRAME_JA.test(sentence));
+}
 /** Quoted words are a phrase being taught ("We say 'Goodbye!'"), not the tutor's own goodbye. */
 const QUOTED_SPANS = /"[^"]*"|“[^”]*”|「[^」]*」|『[^』]*』|‘[^’]*’/g;
 
@@ -54,6 +83,13 @@ export interface ReplyGateOptions {
   dropFrame: boolean;
   /** Hold a goodbye, and everything after it, until the reply is complete (F3, F4). */
   holdGoodbye: boolean;
+  /** Task 6g (CLOSE_ONE_QUESTION): in a reply that may close the lesson, a practice ask ("Please say this sentence once
+   *  more.") waits until the next sentence: it goes out before a sentence that goes on with the lesson, and is dropped
+   *  when what follows begins the summary or says goodbye. Once the summary has begun in the reply, a later practice
+   *  ask is dropped. The predicate says which sentences are practice asks; absent: no such hold. */
+  closeAsk?: ((sentence: string) => boolean) | null;
+  /** The words that say the summary has begun (turn.ts V2_SUMMARY_BEGUN), for closeAsk. */
+  summaryBegun?: RegExp;
 }
 
 export class ReplyGate {
@@ -75,12 +111,15 @@ export class ReplyGate {
   private perSentence = false;
   /** The sentences of the card just said, by their words: the model's own repeat of one of them is not said again. */
   private echoes = new Set<string>();
+  /** Task 6g: a practice ask waiting for the next sentence (raw text), and whether the summary has begun in this reply. */
+  private ask: string | null = null;
+  private summaryStarted = false;
 
   constructor(private readonly out: (text: string) => void, private readonly opts: ReplyGateOptions) {}
 
   /** Nothing to drop or hold: words go out as they come, cut nowhere (fix round 2, N4: with the gate's work off, the
    *  stream is the stream as before it existed). A card waiting for the next sentence still holds them until then. */
-  private get passThrough(): boolean { return !this.opts.dropFrame && !this.opts.holdGoodbye && this.card === null && !this.echoes.size; }
+  private get passThrough(): boolean { return !this.opts.dropFrame && !this.opts.holdGoodbye && !this.opts.closeAsk && this.card === null && !this.echoes.size; }
 
   push(text: string): void {
     if (this.passThrough && !this.buf) { this.emit(text); return; }
@@ -92,12 +131,12 @@ export class ReplyGate {
   flush(): void { this.drain(true); this.releaseCard(); }
 
   /** A sentence card to say where it stands. It goes out before the next sentence, unless that sentence says it. */
-  speakCard(sentence: string, opts: { perSentence?: boolean } = {}): void { this.drain(true); this.releaseCard(); this.card = sentence; this.perSentence = !!opts.perSentence; this.echoes.clear(); }
+  speakCard(sentence: string, opts: { perSentence?: boolean } = {}): void { this.drain(true); this.releaseAsk(); this.releaseCard(); this.card = sentence; this.perSentence = !!opts.perSentence; this.echoes.clear(); }
 
   /** Words to say where a block stands only if the sentence after it points back at them (Task 6f: "ここにある文を、
    *  ひとつずつ読んでみてください。" after a note of example sentences). Said just before that sentence; dropped when the
    *  next sentence does not point back, or a block or the end comes first. */
-  speakCardIf(sentence: string, when: (next: string) => boolean, opts: { perSentence?: boolean } = {}): void { this.drain(true); this.releaseCard(); this.card = sentence; this.cardIf = when; this.perSentence = !!opts.perSentence; this.echoes.clear(); }
+  speakCardIf(sentence: string, when: (next: string) => boolean, opts: { perSentence?: boolean } = {}): void { this.drain(true); this.releaseAsk(); this.releaseCard(); this.card = sentence; this.cardIf = when; this.perSentence = !!opts.perSentence; this.echoes.clear(); }
 
   /** Whether a goodbye is being held. */
   get holdsGoodbye(): boolean { return this.holding; }
@@ -107,6 +146,8 @@ export class ReplyGate {
   /** Let the held goodbye go, with `before` said first (a line naming a part for next time). */
   releaseHeld(before?: string): void {
     const text = this.heldParts.join(''); this.heldParts = []; this.holding = false;
+    // Task 6g: a practice ask before the goodbye cannot be answered: it goes with the close.
+    this.dropAsk();
     if (before) this.out(`${before} `);
     if (text) this.out(text);
   }
@@ -115,7 +156,18 @@ export class ReplyGate {
   dropHeld(): void {
     for (const p of this.heldParts) if (p.trim()) this.removed.push(p.trim());
     this.heldParts = []; this.holding = false;
+    // Task 6g: the lesson goes on, so a practice ask held before the goodbye stands.
+    this.releaseAsk();
   }
+
+  /** Task 6g: a practice ask is waiting for what comes after it. */
+  get holdsAsk(): boolean { return this.ask !== null; }
+  /** Let a waiting practice ask go out: the reply goes on with the lesson, or is complete. */
+  releaseAsk(): void { const a = this.ask; this.ask = null; if (a) this.emit(a); }
+  /** Drop a waiting practice ask: what follows it closes the lesson. */
+  dropAsk(): void { const a = this.ask; this.ask = null; if (a?.trim()) this.removed.push(a.trim()); }
+  /** The summary begins here (a closing page opens): a waiting practice ask is dropped, and so is any later one. */
+  summaryBegins(): void { if (!this.opts.closeAsk) return; this.drain(true); this.dropAsk(); this.summaryStarted = true; }
 
   /** `next`: the sentence about to go out after the card (a sentence of the card it already says is left out). */
   private releaseCard(next?: string): void {
@@ -144,7 +196,15 @@ export class ReplyGate {
 
   private sentence(s: string): void {
     const core = s.trim();
-    if (!core) { if (this.holding) this.heldParts.push(s); else this.emit(s); return; }
+    if (!core) { if (this.holding) this.heldParts.push(s); else if (this.ask !== null) this.ask += s; else this.emit(s); return; }
+    // Task 6g: what follows a waiting practice ask decides it. The summary beginning or a goodbye closes the lesson, so the
+    // ask is dropped (a goodbye keeps it until the close is known: see releaseHeld, dropHeld); anything else, it goes out.
+    if (this.opts.closeAsk) {
+      const begins = !!this.opts.summaryBegun?.test(core);
+      if (begins) { this.dropAsk(); this.summaryStarted = true; }
+      else if (this.summaryStarted && !this.holding && this.opts.closeAsk(core)) { this.removed.push(core); return; }
+      else if (this.ask !== null && !this.holding && !(this.opts.holdGoodbye && isGoodbye(core.replace(QUOTED_SPANS, ' ')))) this.releaseAsk();
+    }
     if (this.card !== null && this.cardIf) {
       const when = this.cardIf; this.cardIf = null;
       if (when(core)) this.releaseCard(core); else this.card = null;
@@ -157,8 +217,9 @@ export class ReplyGate {
     }
     // Fix round 1 (minor 3): a note sentence already said where the note stands, which the model then reads itself.
     if (this.echoes.size && this.echoes.has(norm(core))) { this.removed.push(core); return; }
-    if (this.opts.dropFrame && !this.holding && V2_PART_FRAME.test(core)) { this.removed.push(core); return; }
-    if (this.holding || (this.opts.holdGoodbye && V2_GOODBYE.test(core.replace(QUOTED_SPANS, ' ')))) { this.holding = true; this.heldParts.push(s); return; }
+    if (this.opts.dropFrame && !this.holding && isPartFrame(core)) { this.removed.push(core); return; }
+    if (this.holding || (this.opts.holdGoodbye && isGoodbye(core.replace(QUOTED_SPANS, ' ')))) { this.holding = true; this.heldParts.push(s); return; }
+    if (this.opts.closeAsk && this.ask === null && this.opts.closeAsk(core)) { this.ask = s; return; }
     this.emit(s);
   }
 

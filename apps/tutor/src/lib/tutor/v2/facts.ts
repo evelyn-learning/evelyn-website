@@ -9,7 +9,7 @@ import { stripBoardBlocks } from './board-inline';
 import { TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_OPENER_FACT, TUTOR_V2_PART_OFFER_ONCE } from '../orchestrator/flags';
 import { v2FrameDue } from './part-close';
 import { v2HomeworkFacts, v2HomeworkGuardFacts, v2SheetFacts } from './homework-facts';
-import { renderGoalStatus, v2PassedPartFact, v2UnreachedAtCloseFact } from './plan-map';
+import { renderGoalStatus, v2PartOfferFacts, v2PassedPartFact, v2UnreachedAtCloseFact } from './plan-map';
 import type { V2Session, V2State } from './types';
 import { discussionOf, effectiveMinutes, lastReplyNotes, renderThinking } from './discussion';
 import { v2WorkingLevelFacts } from './working-level';
@@ -108,6 +108,11 @@ export function v2QuestionCheckFact(state: V2State, enabled: boolean = TUTOR_V2_
   return enabled && !v2FrameDue(state.history) ? ['part changes: the ask whether to go on (or whether they have a question first) is not due at the next one: when this part is done, say so, name what comes next and begin it in the same reply'] : [];
 }
 
+/** Task 6g (CLOSE_ONE_QUESTION): a reply of this lesson has begun its summary (turn.ts sets summaryBegunAt). */
+export function v2SummaryBegun(state: V2State, enabled: boolean = TUTOR_V2_CLOSE_ONE_QUESTION): boolean {
+  return enabled && typeof state.summaryBegunAt === 'number' && !state.closed;
+}
+
 export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts): string {
   const usedMin = Math.max(0, Math.round((f.nowMs - state.startedAtMs) / 60000));
   const discussion = !!discussionOf(session.plan);
@@ -115,6 +120,9 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // minutes" ran to 10.4).
   const box = discussion ? effectiveMinutes(session.timeBoxMinutes, state.thinking) : session.timeBoxMinutes;
   const left = box ? box - (f.nowMs - state.startedAtMs) / 60000 : 0;
+  // Task 6g: the summary has begun (turn.ts): "time for more" no longer stands (gdi-real-james, v2audio-6f: the review began,
+  // and the next two replies offered more practice).
+  const summaryBegun = v2SummaryBegun(state);
   const lines = [
     // A discussion runs 8–12 minutes and may close early once the person has chosen where to go next: the teaching
     // line's "time for more, not at its close" would hold it open.
@@ -126,7 +134,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
       ? `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > V2_TIME_UP_MIN ? `about ${Math.round(left)} left` : 'the time is up'}` : ''}; the session ends when ${session.homeworkSheet ? 'the sheet' : 'this problem'} is done`
       // Past the host's wrap minute the wrap is said here, a fact for the next reply: spoken into the lesson by the client
       // on v1, it cut into the menu the tutor was reading (tester-2, time-box.ts).
-      : `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > V2_TIME_UP_MIN && v2WrapDue(session, (f.nowMs - state.startedAtMs) / 60000) ? `about ${Math.round(left)} minutes left: finish this exchange, then summary` : left > session.timeBoxMinutes * 0.2 ? `about ${Math.round(left)} left, which is time for more: the lesson is not at its close unless the student asks to stop` : left > V2_TIME_UP_MIN ? `about ${Math.round(left)} left: the close is near` : 'the time is up'}` : ''}`,
+      : `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > V2_TIME_UP_MIN && v2WrapDue(session, (f.nowMs - state.startedAtMs) / 60000) ? `about ${Math.round(left)} minutes left: finish this exchange, then summary` : left > session.timeBoxMinutes * 0.2 && summaryBegun ? `about ${Math.round(left)} left` : left > session.timeBoxMinutes * 0.2 ? `about ${Math.round(left)} left, which is time for more: the lesson is not at its close unless the student asks to stop` : left > V2_TIME_UP_MIN ? `about ${Math.round(left)} left: the close is near` : 'the time is up'}` : ''}`,
     `board:\n  ${renderBoard(state.board)}`,
   ];
   if ((state.repliesSinceBoard ?? 0) >= 1) lines.push(`board last written on: ${state.repliesSinceBoard} ${state.repliesSinceBoard === 1 ? 'reply' : 'replies'} ago`);
@@ -143,7 +151,10 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     // Near or at the close, a part not reached is offered in one line or named in the summary as next time (Task 6e);
     // not beside the passed-part line, which already says to offer it.
     const near = !!session.timeBoxMinutes && left <= session.timeBoxMinutes * 0.2;
-    if (!discussion && !passed.length) lines.push(...v2UnreachedAtCloseFact(session.plan, state, closing ? 'closing' : near ? 'near' : null));
+    if (!discussion && !passed.length) lines.push(...v2UnreachedAtCloseFact(session.plan, state, closing || summaryBegun ? 'closing' : near ? 'near' : null));
+    // Task 6g: an optional part offered and not taken up is offered at most once more (tester A: four offers in nine turns).
+    if (!discussion) lines.push(...v2PartOfferFacts(session.plan, state));
+    if (!discussion && summaryBegun) lines.push('the summary has begun: from here, no new practice, exercise or offer of more practice unless they ask for it. Answer what they say and bring the lesson to its close');
     // Task 6e fix round 1 (F4): tester B was asked about a question or the summary in two turns running.
     if (!discussion && TUTOR_V2_CLOSE_ONE_QUESTION && (closing || near) && !state.closed) lines.push('at the close: at most one question in a reply, never one you asked in your last reply, and nothing after a goodbye');
   }
