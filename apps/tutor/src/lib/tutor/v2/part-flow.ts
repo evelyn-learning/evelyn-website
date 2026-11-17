@@ -64,7 +64,7 @@ export function v2OpenPagePart(plan: LessonPlan, board: V2Board, kept: boolean =
 }
 
 /** The part in hand: the part whose page is open; the level check (no page of its own) once its goal is marked after the
- *  page before it, until the next part's page opens.
+ *  page before it, until the next part's page opens (with LEVEL_CHECK_CHIP: until its level is set, then the part after it).
  *  Task 7g (LEVEL_CHECK_CHIP, `chip`): also from the reply that begins it (level-check-count.ts v2LevelCheckBegun: a level
  *  question asked after the overview's exchange), and once its level is set this lesson: mic test 2 (embed-1794941004529, flags
  *  1–2) had "Overview" lit through the whole check, as the model marked no goal for it. A level skipped (known from an earlier
@@ -75,8 +75,12 @@ export function v2PartInHand(plan: LessonPlan, state: View, kept: boolean = TUTO
   const l = open + 1;
   if (l < plan.segments.length && isLevelPart(plan, l) && !paged(plan, state.board, l)) {
     const g = state.goals[plan.segments[l]!.id]?.status;
+    // Fix round 1 (I3, the controller's ruling): the level check ends at set_working_level. From that reply it is done (green)
+    // and the part after it is the part in hand, its page or not yet: "Level check" lit and green at once, and practice answers
+    // in that stretch with no card line, came of keeping it in hand until the next page.
+    if (chip && state.workingLevel?.from === 'this_lesson' && g !== 'skipped') { const nx = v2NextPart(plan, state, l); return nx >= 0 ? nx : l; }
     if (g && g !== 'skipped') return l;
-    if (chip && g !== 'skipped' && (state.workingLevel?.from === 'this_lesson' || (!state.workingLevel && !!state.history && v2LevelCheckBegun(plan, state.history)))) return l;
+    if (chip && g !== 'skipped' && !state.workingLevel && !!state.history && v2LevelCheckBegun(plan, state.history)) return l;
   }
   return open;
 }
@@ -111,7 +115,10 @@ export function v2PageForPart(plan: LessonPlan, state: View, title: string): { i
   const k = v2PartOfPage(plan, title);
   if (k >= 0) return { index: k, title };
   if (!state.board.pages.length) return null;
-  let next = v2NextPart(plan, state, v2PartInHand(plan, state));
+  const cur = v2PartInHand(plan, state);
+  // Fix round 1 (I3): the part in hand without a page of its own yet (the part after a level check just set) is the part an
+  // unnamed page opens, not the one after it.
+  let next = cur > 0 && !paged(plan, state.board, cur) && !isLevelPart(plan, cur) ? cur : v2NextPart(plan, state, cur);
   // Final review M5: never a level check (it has no page by design): a check that ended with no level (its budget spent) left
   // it "next", and an unnamed teaching page was retitled "Level check" and lit that chip. The part after it instead.
   while (next >= 0 && isLevelPart(plan, next)) next = v2NextPart(plan, state, next);

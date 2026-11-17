@@ -1,6 +1,8 @@
 /// <reference types="node" />
-// Task 7g: run with NEXT_PUBLIC_TUTOR_V2_CARD_EVERY_SENTENCE=off (package.json): it pins the Task 7b facts line (one card at
-// most); scripts/test-brain-v2-mic2-7g.ts covers the switch on (every sentence listed, the rest owed) and off.
+// Task 7g: runs twice (package.json): with NEXT_PUBLIC_TUTOR_V2_CARD_EVERY_SENTENCE=off it pins the Task 7b facts line (one card
+// at most); `-7g-on` runs it under the default, where the 7g line ("their answer just now had N sentences of their own…") takes its
+// place: the same gating (no line for one-language, typed, maths, homework, small talk, the level check, a sentence already
+// carded), checked against whichever line the switch writes (fix round 1, I4).
 /**
  * Tutor brain v2 — the learner's sentence on the board as it should be (Task 7b, v2/learner-card.ts, BOARD_LEARNER_SENTENCE).
  *   npm run test:brain-v2-learner-card
@@ -11,7 +13,12 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import { spawnSync } from 'node:child_process';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
-import { TUTOR_V2_BOARD_LEARNER_SENTENCE } from '../src/lib/tutor/orchestrator/flags';
+import { TUTOR_V2_BOARD_LEARNER_SENTENCE, TUTOR_V2_CARD_EVERY_SENTENCE } from '../src/lib/tutor/orchestrator/flags';
+/** The learner-sentence facts line under either switch (7b's, or 7g's), and its wording checks. */
+const LINE = TUTOR_V2_CARD_EVERY_SENTENCE ? /their answer just now had \d+ sentences? of their own/ : /a sentence of theirs/;
+const LINE_ASKS = TUTOR_V2_CARD_EVERY_SENTENCE ? /their answer just now had 1 sentence of their own: .*as they said it \(without fillers\) when it is right; your corrected sentence, the changed words stressed, with a short Japanese gloss/ : /their words just now answered your ask with a sentence of theirs: .*Japanese gloss/;
+const LINE_RIGHT = TUTOR_V2_CARD_EVERY_SENTENCE ? /their answer just now had 1 sentence of their own: .*as they said it \(without fillers\) when it is right/ : /their words just now answered your ask with a sentence of theirs: .*as they said it \(without fillers\) when it is right/;
+const LINE_LIMITS = TUTOR_V2_CARD_EVERY_SENTENCE ? /one sentence card per sentence[\s\S]*none of their mistake, none for small talk/ : /One card in this reply at most; none of their mistake, none for small talk/;
 import { boardBlocksIn, stripBoardBlocks } from '../src/lib/tutor/v2/board-inline';
 import { applyToModelBoard } from '../src/lib/tutor/v2/board';
 import { renderFacts } from '../src/lib/tutor/v2/facts';
@@ -69,7 +76,7 @@ const factsOf = (x: Run) => { const u = x.seen[0]!.messages[x.seen[0]!.messages.
 
 async function offChild() {
   const a = await run(spoken, SAID_YEARS, REPLY_YEARS);
-  console.log(`OFF_JSON ${JSON.stringify({ flag: TUTOR_V2_BOARD_LEARNER_SENTENCE, cards: cards(a).length, fact: /a sentence of theirs/.test(factsOf(a)), stored: storedText(a) === REPLY_YEARS })}`);
+  console.log(`OFF_JSON ${JSON.stringify({ flag: TUTOR_V2_BOARD_LEARNER_SENTENCE, cards: cards(a).length, fact: LINE.test(factsOf(a)), stored: storedText(a) === REPLY_YEARS })}`);
 }
 
 async function main() {
@@ -188,7 +195,7 @@ async function main() {
     check('a line after a practice ask, a request for a sentence, or a question about them', v2LearnerSentenceFacts(spoken, asked('Please say the sentence again.'), SAID_YEARS).length === 1
       && v2LearnerSentenceFacts(spoken, asked('Answer with one sentence that starts with "Last year, I…"'), SAID_EXPO).length === 1
       && v2LearnerSentenceFacts(spoken, asked('Good. What did you do last year?'), SAID_EXPO).length === 1);
-    check('it says one card at most and none for small talk', /One card in this reply at most; none of their mistake, none for small talk/.test(v2LearnerSentenceFacts(spoken, asked(), SAID_YEARS)[0] ?? ''));
+    check(TUTOR_V2_CARD_EVERY_SENTENCE ? 'it asks for a card per sentence and none for small talk' : 'it says one card at most and none for small talk', LINE_LIMITS.test(v2LearnerSentenceFacts(spoken, asked(), SAID_YEARS)[0] ?? ''));
   }
 
   console.log('the board check (same-sentence de-dup)');
@@ -216,7 +223,7 @@ async function main() {
     check('stored where it stood: after the quote\'s sentence, before the ask', /five years\." <board sentence stress="have \| worked \| years">I have worked at Acme Corp for five years\.<\/board> Can you say it once more\?$/.test(stored), stored);
     check('the stored words read as before', stripBoardBlocks(stored) === REPLY_YEARS);
     check('recorded among their corrected sentences (the summary\'s cards)', (a.r.state.correctedSentences ?? []).includes('I have worked at Acme Corp for five years.'), a.r.state.correctedSentences);
-    check('the learner-sentence fact was in this turn\'s facts', /their words just now answered your ask with a sentence of theirs: .*Japanese gloss/.test(factsOf(a)), factsOf(a));
+    check('the learner-sentence fact was in this turn\'s facts', LINE_ASKS.test(factsOf(a)), factsOf(a));
   }
 
   console.log('right first time');
@@ -227,7 +234,7 @@ async function main() {
     check('the card is not read aloud again', a.said.replace(/\s+/g, ' ').trim() === REPLY_EXPO_QUOTED, a.said);
     const b = await run(spoken, SAID_EXPO, REPLY_EXPO_UNQUOTED);
     check('praised without a quote: no runtime card (a "That\'s right." may not cover the whole sentence)', cards(b).length === 0, b.calls);
-    check('…and the facts asked for it: the sentence as said when right, the corrected form when corrected', /their words just now answered your ask with a sentence of theirs: .*as they said it \(without fillers\) when it is right/.test(factsOf(b)), factsOf(b));
+    check('…and the facts asked for it: the sentence as said when right, the corrected form when corrected', LINE_RIGHT.test(factsOf(b)), factsOf(b));
   }
 
   console.log('the level check: none while it runs');
@@ -236,7 +243,7 @@ async function main() {
     const st = asked();
     check('rule off while the level is not set and the check not over', !v2LearnerCardsOn(lc, st, SAID_YEARS));
     const a = await run(lc, SAID_YEARS, REPLY_YEARS, st);
-    check('no card and no facts line in a level-check reply', cards(a).length === 0 && !/a sentence of theirs/.test(factsOf(a)), { calls: a.calls, facts: factsOf(a) });
+    check('no card and no facts line in a level-check reply', cards(a).length === 0 && !LINE.test(factsOf(a)), { calls: a.calls, facts: factsOf(a) });
     const set: V2State = { ...newV2State(1), workingLevel: { level: 'intermediate', from: 'this_lesson' } } as V2State;
     check('once the level is set, the rule runs', v2LearnerCardsOn(lc, set, SAID_YEARS));
   }
@@ -246,7 +253,7 @@ async function main() {
     const st = asked(); applyToModelBoard(st.board, 'p', 'new_page', { title: 'Your job' });
     applyToModelBoard(st.board, 'c', 'show_sentence', { sentence: 'I collected money from my office colleagues online.' });
     const a = await run(spoken, 'I collected money from my office colleagues online.', 'Yes, that\'s right: "I collected money from my office colleagues online." Now, have you worked on any other projects?', st);
-    check('no card painted, and no facts line asking for one', cards(a).length === 0 && a.calls.every((c) => c.name !== 'show_sentence') && !/a sentence of theirs/.test(factsOf(a)), { calls: a.calls });
+    check('no card painted, and no facts line asking for one', cards(a).length === 0 && a.calls.every((c) => c.name !== 'show_sentence') && !LINE.test(factsOf(a)), { calls: a.calls });
     check('the board still holds the one card', a.r.state.board.pages.flatMap((p) => p.items).filter((it) => it.tool === 'show_sentence').length === 1);
   }
 
@@ -319,10 +326,10 @@ async function main() {
     const homework: V2Session = { ...spoken, homework: { text: 'Translate: I have worked here for five years.', verified: false, hasFigure: false } };
     for (const [name, sess] of [['a one-language spoken lesson', english], ['a typed bilingual lesson', typed], ['a maths voice lesson', maths], ['homework', homework]] as const) {
       const a = await run(sess, SAID_YEARS, REPLY_YEARS);
-      check(`${name}: no runtime card, no facts line, the stored reply as written`, cards(a).length === 0 && !/a sentence of theirs/.test(factsOf(a)) && storedText(a) === REPLY_YEARS, { calls: a.calls.map((c) => c.name) });
+      check(`${name}: no runtime card, no facts line, the stored reply as written`, cards(a).length === 0 && !LINE.test(factsOf(a)) && storedText(a) === REPLY_YEARS, { calls: a.calls.map((c) => c.name) });
     }
-    check('renderFacts off: no line', !/a sentence of theirs/.test(renderFacts(spoken, newV2State(1), { nowMs: 60000, heard: SAID_YEARS, learnerCards: false })));
-    check('renderFacts on: the line', /a sentence of theirs/.test(renderFacts(spoken, asked(), { nowMs: 60000, heard: SAID_YEARS })));
+    check('renderFacts off: no line', !LINE.test(renderFacts(spoken, newV2State(1), { nowMs: 60000, heard: SAID_YEARS, learnerCards: false })));
+    check('renderFacts on: the line', LINE.test(renderFacts(spoken, asked(), { nowMs: 60000, heard: SAID_YEARS })));
     check('the facts line names no tenant or learner', !/gdi|nagoya|praveen|ryota|ken\b/i.test(v2LearnerSentenceFacts(spoken, asked(), SAID_YEARS).join(' ')) && v2LearnerSentenceFacts(spoken, asked(), SAID_YEARS).length === 1);
   }
 

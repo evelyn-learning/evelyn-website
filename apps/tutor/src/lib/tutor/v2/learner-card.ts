@@ -330,9 +330,21 @@ function askedForSentence(history: Anthropic.MessageParam[]): boolean {
   return sentences.some((x) => v2IsPracticeAsk(x) || SENTENCE_REQUEST.test(x)) || QUESTION_ABOUT_THEM.test(sentences[sentences.length - 1] ?? '');
 }
 
-/** Task 7g (CARD_EVERY_SENTENCE): words of an answer that are no practice sentence of theirs: a request ("one more", "let's
- *  move on", "can we…", "please…"), a question to the tutor, or saying they did not catch or understand. */
-const NOT_PRACTICE = /^(?:(?:uh|um|er|ok(?:ay)?|so|well|and|yes|yeah|no)[,.]?\s+)*(?:let'?s|let us|can (?:we|you|i)|could (?:we|you|i)|shall we|may i|please|i(?:'d| would) like (?:to (?:move|go|stop|skip|try|do|practi[cs]e|ask)|another|one more|more)|i want to (?:move|go|stop|skip|try|ask)|one more|move on|next (?:part|one|question)|go on|i have (?:a|one) question|sorry)\b|\b(?:(?:don'?t|didn'?t|do not|did not) (?:understand|get it|catch)|say (?:that|it) again|repeat (?:that|it|the question)|more slowly)\b/i;
+/** Task 7g (CARD_EVERY_SENTENCE), fix round 1 (I1): a sentence that is no practice sentence of theirs is one whose WHOLE shape
+ *  is a request to the tutor about the lesson itself: move on, one more, say it again, slower, "I didn't catch that", "I have a
+ *  question" (fillers, a yes or a no, a sorry and a "please" around it). Anything with content beyond the ask is theirs ("I want
+ *  to go to Canada next year.", "I'd like to try a new job in marketing.", "My customers don't understand Japanese very well.",
+ *  "Sorry I was late, I work in sales."): when in doubt it is listed. Bare yeses and questions are left out by v2LearnerSentence. */
+const LEAD = String.raw`^(?:(?:uh|um|er|ok(?:ay)?|so|well|and|yes|yeah|no|sorry|oh)[,.!]?\s+)*(?:please\s+)?`;
+const TAIL = String.raw`(?:\s+(?:now|then|again|today))?(?:,?\s*(?:please|thank you|thanks))?[.!]*$`;
+const LESSON_ASK = new RegExp([
+  String.raw`(?:let'?s|let us|can we|could we|shall we|may we|i(?:'d| would) like to|i want to)\s+(?:please\s+)?(?:(?:(?:move|go|carry) on|continue)(?: (?:to|with) the next (?:part|topic|section|one|question|exercise|sentence))?|skip(?: (?:this|it|that|ahead|this part))?|stop(?: here)?|finish(?: here)?|do (?:another|one more|it again|that again|some more|more)(?: (?:one|sentence|exercise|question|practice))?|try (?:again|it again|that again|another(?: one| sentence)?|one more(?: time)?)|go to the next (?:part|topic|one|question|section)|practi[cs]e (?:more|again|some more|a (?:bit|little) more)|take a break)`,
+  String.raw`(?:i(?:'d| would) like|i want|give me|can i (?:have|do|try)|could i (?:have|do|try))\s+(?:another|one more|more)(?: (?:practice|exercise|sentence|question|try|one))?`,
+  String.raw`(?:one more(?: (?:time|try|one|sentence|exercise|round))?|(?:the )?next (?:part|one|question|topic)|(?:(?:move|go|carry) on|continue)(?: (?:to|with) the next (?:part|topic|section|one|question|exercise))?|again|more slowly|slower)`,
+  String.raw`(?:(?:can|could|would) you\s+)?(?:say (?:that|it) again(?: (?:more )?slowly)?|repeat(?: (?:that|it|the question|the sentence|please))?|(?:speak|talk|say (?:that|it)) (?:more )?slowly|speak slower|slow down)`,
+  String.raw`i (?:didn'?t|did not|don'?t|do not|can'?t|cannot|couldn'?t) (?:understand|get|catch|hear|follow)(?: (?:that|it|you|this|the question|what you said|very well|well))?`,
+  String.raw`i have (?:a|one|another) question(?: (?:for you|about (?:that|this|it)))?`,
+].map((x) => `${LEAD}${x}${TAIL}`).join('|'), 'i');
 const SPLIT = /(?<=[.!?。！？]["'”’」)]*)\s+/;
 
 /** Task 7g: each sentence of the learner's answer as a sentence of theirs (v2LearnerSentence: fillers out, four words or more,
@@ -341,7 +353,7 @@ export function v2LearnerSentences(said: string | null | undefined): string[] {
   const out: string[] = []; const seen = new Set<string>();
   for (const raw of (said ?? '').replace(/\s+/g, ' ').trim().split(SPLIT)) {
     const piece = raw.trim();
-    if (!piece || piece.startsWith('[') || NOT_PRACTICE.test(piece)) continue;
+    if (!piece || piece.startsWith('[') || LESSON_ASK.test(piece)) continue;
     const s = v2LearnerSentence(piece);
     if (!s || seen.has(key(s))) continue;
     seen.add(key(s)); out.push(s);
@@ -360,7 +372,17 @@ export function v2PracticeAnswerSentences(session: V2Session, state: V2State, he
     const seg = plan.segments[v2PartInHand(plan, state)];
     if (!seg || seg.kind === 'hook' || v2PartOf(seg).skipWhenLevelKnown) return [];
   }
-  return v2LearnerSentences(heard).filter((x) => !v2SentenceOnBoard(state.board, x, state.correctedSentences ?? []));
+  return v2LearnerSentences(heard).filter((x) => !v2SentenceCarded(state.board, x, state.correctedSentences ?? []));
+}
+
+/** Task 7g fix round 1 (I2, the controller's ruling): a sentence of theirs is up already only as a sentence card (any page) or
+ *  among their corrected sentences; the same words in a note or an example on the page do not card it ("I work with
+ *  international clients." stood in the "Your job" page's example note and was left off, flag 3). */
+export function v2SentenceCarded(board: V2Board, sentence: string, corrected: readonly string[] = []): boolean {
+  const k = key(sentence);
+  if (!k) return true;
+  if (corrected.some((c) => key(c) === k)) return true;
+  return board.pages.some((pg) => pg.items.some((it) => it.tool === 'show_sentence' && key(it.summary) === k));
 }
 
 /** Whether a card's sentence is this sentence of theirs, as said or corrected: most of the card's words are in it and most of
@@ -379,7 +401,7 @@ export function v2SentencesNotCarded(sentences: readonly string[], cards: readon
   return sentences.filter((s) => {
     const at = left.findIndex((c) => cardIsOf(c, s));
     if (at >= 0) { left.splice(at, 1); return false; }
-    return !v2SentenceOnBoard(board, s, corrected);
+    return !v2SentenceCarded(board, s, corrected);
   });
 }
 
@@ -389,7 +411,7 @@ export const V2_REPLY_MISHEARD = /\b(?:didn'?t (?:quite )?(?:catch|hear|get)|did
 /** Task 7g: the facts line for the sentences of their last answer the last reply left off the board (once; those up since
  *  are dropped). */
 export function v2CardsOwedFacts(state: V2State, enabled: boolean = TUTOR_V2_CARD_EVERY_SENTENCE): string[] {
-  const owed = enabled ? (state.cardsOwed ?? []).filter((x) => !v2SentenceOnBoard(state.board, x, state.correctedSentences ?? [])) : [];
+  const owed = enabled ? (state.cardsOwed ?? []).filter((x) => !v2SentenceCarded(state.board, x, state.correctedSentences ?? [])) : [];
   if (!owed.length) return [];
   return [`not carded in your last reply: ${owed.length === 1 ? 'this sentence' : 'these sentences'} of their last answer (as heard): ${owed.map((x) => JSON.stringify(x)).join('; ')}. Put ${owed.length === 1 ? 'it' : 'each'} on the board in this reply, as it should be said, one sentence card each (the changed words stressed, a short gloss), where you mention it`];
 }

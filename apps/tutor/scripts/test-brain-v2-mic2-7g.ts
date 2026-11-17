@@ -95,9 +95,20 @@ async function scenario() {
   out.cardLineInCheck = /answer just now had|answered your ask with a sentence/.test(r.facts);
   r = await turn(st, 'We sell washing machines and refrigerators.', 'Have you ever worked with an international customer? If so, can you tell me about the experience?'); st = r.state;
   r = await turn(st, 'Yes, I work with customers in Canada.', 'What is one skill you would like to improve in your English, and why is it important to you?'); st = r.state;
-  out.beforeSet = chips(st);
+  out.beforeSet = chips(st); out.beforeSetState = st;
   r = await turn(st, 'Speaking, because I talk with foreign customers.', FLAG2, [tool('set_working_level', { level: 'intermediate', evidence: 'short sentences' })]); st = r.state;
   out.afterSet = chips(st); out.afterSetTitle = st.board.pages[st.board.current]?.title;
+  // Fix round 1 (I3): set_working_level in a reply that opens no page: the check is over at once (green, not lit); the part after
+  // it is in hand; a practice answer in that stretch gets its card line; an unnamed page then opens as that part's page.
+  {
+    let s3 = (await turn(out.beforeSetState as V2State, 'Speaking, because I talk with foreign customers.', 'Thank you, that is very helpful. Let\'s start with your work. Can you say one sentence about your job?', [tool('set_working_level', { level: 'intermediate', evidence: 'short sentences' })])).state;
+    out.setNoPage = chips(s3);
+    const ans = await turn(s3, 'I work in the sales division. I sell washing machines.', 'Good. <board page>Talking about work</board> Tell me more.');
+    out.setNoPageLine = /their answer just now had 2 sentences/.test(ans.facts);
+    out.setNoPagePage = ans.state.board.pages[ans.state.board.current]?.title;
+    s3 = ans.state;
+  }
+  delete out.beforeSetState;
   // ── 2. Every sentence of his answer (flag 3).
   const atJob = st;
   r = await turn(atJob, JOB_ANSWER, ONE_CARD); st = r.state;
@@ -106,6 +117,10 @@ async function scenario() {
   out.oldLine = /One card in this reply at most/.test(factsJob);
   out.owed = st.cardsOwed ?? null;
   out.practiceAfterAnswer = st.practiceSaid?.['topic-intro'] ?? 0;
+  {
+    const nc = await turn(st, 'Thank you.', 'Here it is. <board sentence>I work with international clients.</board> What do you like about your job?');
+    out.noteCard = nc.calls.find((c) => c.name === 'show_sentence')?.outcome ?? null;
+  }
   // The round trip the route makes keeps what is owed.
   const back = v2ScopeCarried(v2ReadClientState(JSON.parse(JSON.stringify(st)))!, session);
   out.owedRoundTrip = back.cardsOwed ?? null;
@@ -146,6 +161,9 @@ async function main() {
   check('…at flag 1 ("What kind of products do you sell?", no goal marked): still the level check', o.atFlag1.lit === 'level-check', o.atFlag1);
   check('…and at its last question', o.beforeSet.lit === 'level-check', o.beforeSet);
   check('set_working_level, and the "Your job" page opens in the same reply: level check green, "Your job" lit', o.afterSet.lit === 'topic-intro' && o.afterSet.green.includes('level-check') && o.afterSet.green.includes('overview') && o.afterSetTitle === 'Your job', o.afterSet);
+  check('fix round 1 (I3): set_working_level with no page: Level check green and not lit, "Your job" in hand', o.setNoPage?.lit === 'topic-intro' && o.setNoPage.green.includes('level-check') && !o.setNoPage.green.includes('topic-intro'), o.setNoPage);
+  check('…a practice answer in that stretch gets its card line', o.setNoPageLine === true);
+  check('…and an unnamed page then opens as "Your job" (not the part after it)', o.setNoPagePage === 'Your job', o.setNoPagePage);
   check('nothing counted as practice during the level check (7f practiceSaid)', o.practiceInCheck === null, o.practiceInCheck);
   check('no card line during the level check', o.cardLineInCheck === false);
   {
@@ -159,9 +177,11 @@ async function main() {
   }
 
   console.log('2. every sentence of a practice answer on the board (flag 3)');
-  // "I work with international clients." is the page's own example note, word for word: up already (the 7b de-dup), so not listed.
-  check('the facts list his sentences not up already (3 of 4: one is the page\'s example, word for word) and ask for a card each', typeof o.listLine === 'string' && /3 sentences/.test(o.listLine) && /home appliances division/.test(o.listLine) && /I sell washing machine to customer\./.test(o.listLine) && !/international clients/.test(o.listLine) && /five years ago/.test(o.listLine) && /one sentence card per sentence/.test(o.listLine) && !o.oldLine, o.listLine);
-  check('the reply carded one: the other two are owed', JSON.stringify(o.owed) === JSON.stringify(['I work in the home appliances division.', 'I sell washing machine to customer.']), o.owed);
+  // Fix round 1 (I2): "I work with international clients." stands word for word in the page's example note; flag 3 names it as
+  // left off, so it is listed and owed like the others (only a sentence card of it would make it up already).
+  check('the facts list his four sentences, the one in the page\'s example note too, and ask for a card each', typeof o.listLine === 'string' && /4 sentences/.test(o.listLine) && /home appliances division/.test(o.listLine) && /I sell washing machine to customer\./.test(o.listLine) && /I work with international clients\./.test(o.listLine) && /five years ago/.test(o.listLine) && /one sentence card per sentence/.test(o.listLine) && !o.oldLine, o.listLine);
+  check('the reply carded one: the other three are owed', JSON.stringify(o.owed) === JSON.stringify(['I work in the home appliances division.', 'I sell washing machine to customer.', 'I work with international clients.']), o.owed);
+  check('a card of the sentence in the example note paints (a sentence card is its own form, not a repeat of the note)', /^painted/.test(o.noteCard ?? ''), o.noteCard);
   check('…and the round trip keeps them', JSON.stringify(o.owedRoundTrip) === JSON.stringify(o.owed), o.owedRoundTrip);
   check('the next reply\'s facts name them ("not carded in your last reply")', typeof o.owedLine === 'string' && /home appliances division/.test(o.owedLine) && /washing machine/.test(o.owedLine), o.owedLine);
   check('owed once: the turn after owes only its own answer\'s uncarded sentence, not the earlier ones again', JSON.stringify(o.owedAfter) === JSON.stringify(['I like meeting customers.']), o.owedAfter);
@@ -169,6 +189,10 @@ async function main() {
   check('7f agrees: the answer counts once toward the part\'s practice', o.practiceAfterAnswer === 1, o.practiceAfterAnswer);
   {
     check('requests, questions and "I didn\'t catch that" are no sentences of theirs', v2LearnerSentences('One more, please.').length === 0 && v2LearnerSentences('Let\'s move on to the next part.').length === 0 && v2LearnerSentences('Sorry, I didn\'t catch that.').length === 0 && v2LearnerSentences('Could you repeat the question please?').length === 0 && v2LearnerSentences('Yes, okay.').length === 0 && v2LearnerSentences('I\'d like to do another exercise.').length === 0);
+    const theirs = ['I want to go to Canada next year.', 'I\'d like to try a new job in marketing.', 'I would like more holidays every year.', 'My customers don\'t understand Japanese very well.', 'Go on business trips twice a month.', 'I want to move on to a bigger company.'];
+    check('fix round 1 (I1): statements about their life with "I want", "I\'d like", "don\'t understand", "go on" are theirs', theirs.every((x) => v2LearnerSentences(x).length === 1), theirs.map((x) => v2LearnerSentences(x)));
+    check('…and "Sorry I was late, I work in sales." is listed (the sorry aside)', JSON.stringify(v2LearnerSentences('Sorry I was late, I work in sales.')) === JSON.stringify(['I was late, I work in sales.']));
+    check('…while asks about the lesson are not ("Let\'s move on to the next part.", "Can we do one more?", "Please say that again.", "I don\'t understand the question.", "I have a question.")', ['Let\'s move on to the next part.', 'Can we do one more?', 'Please say that again slowly.', 'Okay, I don\'t understand the question.', 'I have a question.', 'Could you speak more slowly, please?'].every((x) => v2LearnerSentences(x).length === 0));
     check('fillers out, a repeat once', JSON.stringify(v2LearnerSentences('Uh, I work in sales. I work in sales. Um, I help customers with orders.')) === JSON.stringify(['I work in sales.', 'I help customers with orders.']), v2LearnerSentences('Uh, I work in sales. I work in sales. Um, I help customers with orders.'));
     const board = { pages: [{ title: 'Your job', items: [] }], current: 0 };
     check('a corrected card counts for its sentence (plurals added); one card covers one sentence', JSON.stringify(v2SentencesNotCarded(['I sell washing machine to customer.', 'I work with international clients.'], ['I sell washing machines to customers.'], board)) === JSON.stringify(['I work with international clients.']));
@@ -199,7 +223,7 @@ async function main() {
       return line ? JSON.parse(line.slice('OFF_JSON '.length)) : { error: res.stderr };
     };
     const a = child('LEVEL_CHECK_CHIP');
-    check('LEVEL_CHECK_CHIP off: the overview lit through the whole check (as at flag 1); the rest as on', a.flags?.chip === false && a.atQ1?.lit === 'overview' && a.atFlag1?.lit === 'overview' && a.afterSet?.lit === 'topic-intro' && Array.isArray(a.owed) && a.owed.length === 2 && a.questionCard?.difficulty === null && a.clockStart === 1.3 * MIN, a);
+    check('LEVEL_CHECK_CHIP off: the overview lit through the whole check (as at flag 1); the rest as on', a.flags?.chip === false && a.atQ1?.lit === 'overview' && a.atFlag1?.lit === 'overview' && a.afterSet?.lit === 'topic-intro' && Array.isArray(a.owed) && a.owed.length === 3 && a.questionCard?.difficulty === null && a.clockStart === 1.3 * MIN, a);
     const b = child('CARD_EVERY_SENTENCE');
     check('CARD_EVERY_SENTENCE off: the 7b line (one card at most), nothing owed; the rest as on', b.flags?.every === false && b.listLine === null && b.owed === null && b.owedLine === null && b.atFlag1?.lit === 'level-check' && b.questionCard?.difficulty === null, b);
     const c = child('QUESTION_CARD');
