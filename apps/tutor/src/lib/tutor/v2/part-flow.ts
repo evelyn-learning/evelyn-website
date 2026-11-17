@@ -10,7 +10,7 @@
  *   - the lit chip is the part whose page is open (a level check, which has no page, while it runs);
  *   - a part is green when the lesson has moved past it after teaching it; the level check when the level is set.
  * And by the product owner's decision (PART_ASK_EVERY), every part change after the level check is asked first, in words
- * that vary through the lesson. Pure: no flags read here, the callers gate.
+ * that vary through the lesson. Pure: the callers gate (Task 7e: PART_POSITION_KEPT is the default of a parameter).
  */
 import type { LessonPlan } from '../lesson-plan/types';
 import { stripBoardBlocks } from './board-inline';
@@ -18,6 +18,7 @@ import { PART_OFFERS, V2_CLOSING_PAGE, endsAsking } from './part-close';
 import { V2_OFFER_SHAPE, v2IsPageOfPart, v2PartNamedIn, v2PartOf } from './plan-map';
 import { V2_PART_FRAME_JA, isPartFrame } from './reply-gate';
 import type { V2Board, V2State } from './types';
+import { TUTOR_V2_PART_POSITION_KEPT } from '../orchestrator/flags';
 
 type View = Pick<V2State, 'board' | 'goals' | 'workingLevel'> & { closed?: boolean };
 
@@ -36,8 +37,16 @@ export function v2PartOfPage(plan: LessonPlan, title: string): number {
 const isLevelPart = (plan: LessonPlan, i: number) => !!plan.segments[i] && v2PartOf(plan.segments[i]!).skipWhenLevelKnown;
 const paged = (plan: LessonPlan, board: V2Board, i: number) => board.pages.some((pg) => v2PartOfPage(plan, pg.title) === i);
 
-/** The part of the page in view, or of the nearest page before it that is a part's; -1: none. */
-export function v2OpenPagePart(plan: LessonPlan, board: V2Board): number {
+/** The part of the page in view, or of the nearest page before it that is a part's; -1: none.
+ *  Task 7e (PART_POSITION_KEPT, `kept`): the furthest part reached instead: the part of the newest part page, a page of a part
+ *  already paged being a revisit. A page in view is only where the tutor is looking: `go_to_page` back to "Past simple" for
+ *  more examples moved the part in hand back, and the runtime's ask named conversation again (v2audio-7 Tester A T77–T78). */
+export function v2OpenPagePart(plan: LessonPlan, board: V2Board, kept: boolean = TUTOR_V2_PART_POSITION_KEPT): number {
+  if (kept) {
+    const seen = new Set<number>(); let at = -1;
+    for (const pg of board.pages) { const k = v2PartOfPage(plan, pg.title); if (k >= 0 && !seen.has(k)) { seen.add(k); at = k; } }
+    return at;
+  }
   for (let i = Math.min(board.current, board.pages.length - 1); i >= 0; i--) {
     const k = v2PartOfPage(plan, board.pages[i]!.title);
     if (k >= 0) return k;
@@ -47,8 +56,8 @@ export function v2OpenPagePart(plan: LessonPlan, board: V2Board): number {
 
 /** The part in hand: the part whose page is open; the level check (no page of its own) once its goal is marked after the
  *  page before it, until the next part's page opens. */
-export function v2PartInHand(plan: LessonPlan, state: View): number {
-  const open = v2OpenPagePart(plan, state.board);
+export function v2PartInHand(plan: LessonPlan, state: View, kept: boolean = TUTOR_V2_PART_POSITION_KEPT): number {
+  const open = v2OpenPagePart(plan, state.board, kept);
   if (open < 0) return 0;
   const l = open + 1;
   if (l < plan.segments.length && isLevelPart(plan, l) && !paged(plan, state.board, l)) {
@@ -297,6 +306,15 @@ export function v2PartAskLine(o: { next: string; done?: string; named: boolean; 
  *  perfect, "joins the past and now" as Past simple, "Good job!" as Your job, and the ask went out with no name. */
 export function v2PartNamedLate(seg: LessonPlan['segments'][number], text: string): boolean {
   return v2PartNamedIn(seg, stripBoardBlocks(text).split(SENTENCES).map((x) => x.trim()).filter(Boolean).slice(-2).join(' '));
+}
+
+/** Task 7e (HELD_PART_RELEASE): the part of a page held for an ask that was asked (not unasked), not lapsed and not opened;
+ *  -1: none. */
+export function v2HeldPartWaiting(plan: LessonPlan, state: View & Pick<V2State, 'heldPage' | 'history'>): number {
+  const h = state.heldPage;
+  if (!h || h.unasked || v2TutorReplies(state.history) - h.at > V2_HELD_PAGE_REPLIES) return -1;
+  const i = plan.segments.findIndex((s) => s.id === h.part);
+  return i >= 0 && !paged(plan, state.board, i) ? i : -1;
 }
 
 /** Task 7c fix round 1: a page held unasked is still owed its ask: not lapsed and not opened. */

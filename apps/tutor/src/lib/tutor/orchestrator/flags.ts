@@ -1849,6 +1849,25 @@ export const TUTOR_V2_BOARD_LEARNER_SENTENCE = process.env.NEXT_PUBLIC_TUTOR_V2_
  *  lessons. Default ON; NEXT_PUBLIC_TUTOR_V2_ASK_NO_CHECKIN=off ⇒ as before. */
 export const TUTOR_V2_ASK_NO_CHECKIN = process.env.NEXT_PUBLIC_TUTOR_V2_ASK_NO_CHECKIN !== 'off';
 
+/** Tutor brain v2 (v2/part-flow.ts, v2/progress.ts, v2/turn.ts; labelled plans in spoken lessons, as PART_PAGE_CHIP): the
+ *  lesson's position is the furthest part reached, the part of the newest part page (a page of a part already paged is a
+ *  revisit), not the page in view. Going back to an earlier page for a learner's question is a look, not a move: after
+ *  `go_to_page` back to "Past simple" the runtime's ask named "conversation" again right after the model offered
+ *  pronunciation, and the lit chip jumped back (Task 7e, v2audio-7 Tester A T77–T78). And the runtime appends no part ask
+ *  (after a dropped repeat, or one owed by a page held unasked) to a reply that already carries a part ask. Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_PART_POSITION_KEPT=off ⇒ the part in hand follows the page in view, as before. */
+export const TUTOR_V2_PART_POSITION_KEPT = process.env.NEXT_PUBLIC_TUTOR_V2_PART_POSITION_KEPT !== 'off';
+
+/** Tutor brain v2 (v2/turn.ts, v2/part-flow.ts; with PART_ASK_EVERY in spoken labelled-plan lessons): the model's own part
+ *  ask ("Next is the present perfect… Do you have a question first, or shall we go on?") holds the part it names as a held
+ *  page, as the runtime's own ask does, so an answer that is neither yes nor a question keeps the part waiting (the facts say
+ *  to answer and ask again) instead of being forgotten on the next reply; and a held part the lesson has moved through
+ *  without a yes opens its page where the lesson asks to go on past it (a part ask or a held page for a later part), so page,
+ *  chip and part agree from there. v2audio-7 James T25–T33: "I work here for 7 years." answered the ask, the present perfect
+ *  was taught on the "Your job" page with that chip lit, and its page opened only with the past simple's (Task 7e). Default
+ *  ON; NEXT_PUBLIC_TUTOR_V2_HELD_PART_RELEASE=off ⇒ as before. */
+export const TUTOR_V2_HELD_PART_RELEASE = process.env.NEXT_PUBLIC_TUTOR_V2_HELD_PART_RELEASE !== 'off';
+
 /** Tutor brain v2 voice client (v2/spoken-sounds.ts, TutorVoiceV2.tsx) and the second-language prompt section
  *  (v2/languages.ts): a sound written with phonetic symbols ("/z/", "/ʃ/", "[θ]") is spoken in words ("the z sound", "a
  *  buzzing z sound"); the board and the stored reply keep the symbols. "a buzzing /z/ sound, not /s/" was read with its

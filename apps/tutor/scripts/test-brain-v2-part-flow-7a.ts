@@ -25,7 +25,7 @@ import { v2Progress } from '../src/lib/tutor/v2/progress';
 import { renderFacts, v2AskEveryOn } from '../src/lib/tutor/v2/facts';
 import { runV2Turn, type V2ModelCall } from '../src/lib/tutor/v2/turn';
 import { newV2State, type V2Session, type V2State, type V2ToolCall } from '../src/lib/tutor/v2/types';
-import { TUTOR_V2_PART_ASK_EVERY, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_STATE_CARRY } from '../src/lib/tutor/orchestrator/flags';
+import { TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_PART_ASK_EVERY, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_STATE_CARRY } from '../src/lib/tutor/orchestrator/flags';
 
 let passed = 0; let failed = 0;
 const check = (label: string, ok: boolean, detail?: unknown) => {
@@ -226,7 +226,8 @@ async function main() {
     // I1: the model asks itself, with no page block: "Yes." with no block opens the part's page.
     const ask = 'Good, that\'s your job covered. Next is the present perfect. Any questions first, or shall we go on?';
     let t = await turn(base(), 'I sell washing machines to customers.', ask);
-    check('I1 (setup): the model\'s own ask, no page held', !t.state.heldPage && openTitle(t.state) === 'Your job', t.spoken);
+    // Task 7e (HELD_PART_RELEASE): the model's own ask now holds the part it names, as the runtime's does.
+    check('I1 (setup): the model\'s own ask, the page not opened (held for the named part since 7e)', (TUTOR_V2_HELD_PART_RELEASE ? t.state.heldPage?.part === 'present-perfect' : !t.state.heldPage) && openTitle(t.state) === 'Your job', t.spoken);
     t = await turn(t.state, 'Yes.', 'Have you ever worked with a customer from another country?');
     check('I1: "Yes." to the model\'s own ask, no block in the reply: the present perfect page opens', openTitle(t.state) === 'Present perfect' && t.calls[0]?.agreed === true && chips(t.state).lit === 'present-perfect', { open: openTitle(t.state), calls: t.calls.map((c) => c.name) });
     // …an ask that names no part: the part after the one in hand.

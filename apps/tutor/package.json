@@ -241,6 +241,7 @@
     "test:brain-v2-one-question-7c": "npx tsx scripts/test-brain-v2-one-question-7c.ts",
     "test:brain-v2-close-7d": "npx tsx scripts/test-brain-v2-close-7d.ts",
     "test:brain-v2-final-7": "npx tsx scripts/test-brain-v2-final-7.ts",
+    "test:brain-v2-replay-7e": "npx tsx scripts/test-brain-v2-replay-7e.ts",
     "test:brain-v2-pronunciation": "npx tsx scripts/test-brain-v2-pronunciation.ts",
     "test:brain-v2-working-level": "npx tsx scripts/test-brain-v2-working-level.ts",
     "test:brain-v2-sentence-cards": "npx tsx scripts/test-brain-v2-sentence-cards.ts",

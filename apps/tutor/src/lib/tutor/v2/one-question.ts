@@ -22,8 +22,10 @@ export function v2ReplySentences(text: string): string[] {
 
 /** Words that may lead an ask ("Okay, now please say it."). */
 const LEAD = /^(?:(?:okay|ok|so|now|then|right|good|great|alright|all right|and|next|this time|once more|one more time|again)[,!.:]?\s+)*/i;
-/** An imperative that hands the turn over: please say / say it / repeat / try / tell me / give me / now you … / your turn. */
-const HAND_OVER = /^(?:please[,]?\s+)?(?:say\b|repeat\b|read (?:it|this|that|the|them|these|aloud|out)\b|try\b|tell me\b|give me\b|you (?:say|try|repeat)\b|your turn\b|have a go\b|let me hear\b|go ahead\b|over to you\b)/i;
+/** An imperative that hands the turn over: please say / say it / repeat / try / tell me / give me / now you … / your turn.
+ *  Task 7e: "Start with: I have worked in accounting for…", "Please answer with a number: …" (v2audio-7 Tester A T26, T34),
+ *  "complete the sentence", "fill in the blank": each got "Does that make sense so far?" after it. */
+const HAND_OVER = /^(?:please[,]?\s+)?(?:say\b|repeat\b|read (?:it|this|that|the|them|these|aloud|out)\b|try\b|tell me\b|give me\b|you (?:say|try|repeat)\b|your turn\b|have a go\b|let me hear\b|go ahead\b|over to you\b|(?:start|begin) (?:with|by)\b|(?:answer|reply) (?:with|in|using)\b|(?:complete|finish) (?:the|this|that|it)\b|fill in\b)/i;
 /** The lesson's Japanese asks: 言ってみてください, もう一度 … ください, 繰り返してください, 読んでみてください. */
 const HAND_OVER_JA = /言ってみて|言ってください|もう一度[^。！？?]*(?:ください|ましょう)|繰り返して(?:ください|みて)|(?:話して|教えて|読んで|発音して)(?:みて)?ください/;
 /** Advice for later is no ask ("Try to say it this way next time."). */
@@ -54,7 +56,19 @@ function endsHandingOver(sentences: string[]): boolean {
 export function v2ReplyAsks(text: string): boolean {
   const plain = stripBoardBlocks(text);
   const old = plain.split(/(?<=[.?!])\s+/).filter((x) => x.trim());
-  return asksAnywhere(old) || endsHandingOver(v2ReplySentences(plain));
+  const now = v2ReplySentences(plain);
+  return asksAnywhere(old) || endsHandingOver(now) || now.some(v2AsksInJapanese);
+}
+
+/** Task 7e: a Japanese question with no question mark, ending か (「…次に進みますか。」, 「もう一度言ってもらえますか。」,
+ *  「…ましょうか」, 「…ですか」), counts as a question wherever it stands, as a "?" does (board-timing.ts asksAnywhere): the
+ *  part ask 「質問がありますか、それとも次に進みますか。」 got "Is that clear, or shall I go over it again?" after it (v2audio-7
+ *  Tester A T54; T71 the same after 「もう一度言ってもらえますか。」 and an explanation). Not 「そうですか。」 (an "I see"). */
+const JA_ASKS = /[\u3040-\u30ff\u4e00-\u9fff](?:か|かな|かね)[。．]?["'”’)\]」』）]*$/u;
+const JA_I_SEE = /^(?:(?:あ|ああ|あっ|へえ|へー|なるほど|そう)[、,]?\s*)*そう(?:です|でした|なんです)?か[。！!]?$/u;
+export function v2AsksInJapanese(sentence: string): boolean {
+  const s = sentence.trim();
+  return JA_ASKS.test(s) && !JA_I_SEE.test(s);
 }
 
 /** Whether a reply hands the turn over for an ask the runtime would add after it (a part ask, an offer): its last sentence is a
