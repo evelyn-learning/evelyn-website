@@ -46,6 +46,10 @@ export const V2_UNWRITTEN_WORDS = 30;
 export const V2_CHECK_INS = ['Does that make sense so far?', 'Are you with me so far?', 'Is that clear, or shall I go over it again?', 'Does that make sense?'];
 const V2_FIGURE_TOOL_NAMES = new Set(['show_free_body_diagram', 'show_number_line', 'show_function_graph', 'show_table', 'show_timeline', 'show_graphic_organizer', 'show_geometry', 'show_venn_diagram', 'show_tree', 'show_stats', 'show_lewis_constructed', 'show_cycle_diagram', 'show_concept_map', 'show_map', 'show_diagram', 'show_sketch', 'show_circuit', 'show_ray_diagram', 'show_drawn_figure']);
 export const V2_MAX_MODEL_CALLS = 5;
+/** The longest answer key kept for a problem of the tutor's own. */
+export const V2_OWN_KEY_CHARS = 700;
+/** Asked on a clean page, with the problem alone: the same model that agreed with a wrong root mid-lesson solves it right. */
+export const V2_OWN_KEY = 'A tutor has just set a student the problem below. Work it out yourself, carefully and completely, so the tutor can check the student\'s work against yours. Then write the answer key as plain text in under 110 words: each step that produces a value the student will have to find (with the value), then the final answer. Check every value by substituting it back before you write it. If the problem cannot be answered as it is written, say so in one sentence instead. Write the key only: no greeting, no advice on teaching.';
 export const V2_MAX_TOKENS = 8000;
 export const V2_NOTE_MAX_CHARS = 1500;
 export const V2_MAX_GAPS = 12;
@@ -81,6 +85,8 @@ export interface V2TurnInput {
   boardPass?: boolean;
   /** Run the maths check after a reply that spoke mathematics. Default: on for real model calls, off for a stubbed one. */
   mathsCheck?: boolean;
+  /** Work out, after the reply, a problem the tutor set that is not the plan's. Default: on for real model calls, off for a stubbed one. */
+  ownKey?: boolean;
   callModel?: V2ModelCall;
   applyBoard?: V2BoardPort;
   onText?: (delta: string) => void;
@@ -447,6 +453,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           o = applyBoard(state.board, block.id, block.name, args);
         }
         outcome = o.painted ? o.detail : `not painted: ${o.detail}`;
+        // A problem of the tutor's own making has no answer in the plan: it is worked out apart, after this reply.
+        if (put && !planGoal && o.painted) state.ownKeys = { ...(state.ownKeys ?? {}), [block.id]: '' };
         if (planGoal) {
           if (o.painted) state.problemCards = { ...(state.problemCards ?? {}), [planGoal]: block.id };
           // A problem of the plan on the board is that part of the plan begun, whether or not the tutor records
@@ -850,6 +858,28 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     } catch { /* the reply stands without it */ }
   }
 
+  // The answer key for a problem the tutor made up. The plan's problems come with their answers and were judged
+  // right all lesson; on its own problem the tutor had nothing to judge by, and told a student who solved
+  // 3x² − 3 = 0 as x = ±√3 that the roots were right, twice, until the student corrected it (AP Calculus BC,
+  // portal-8e2d86f3; replayed, 5 replies of 8 agreed). Given the problem worked out beforehand, 0 of 8 did. So each
+  // such problem is solved once on a clean page while the student is reading it, and the result is a fact from the
+  // next turn on (facts.ts). Left unworked by an interrupted turn, it is worked at the end of the next.
+  const unworked = Object.entries(state.ownKeys ?? {}).filter(([id, key]) => !key && state.board.pages.some((pg) => pg.items.some((it) => it.id === id))).slice(-2);
+  const ownKeys: Promise<Array<[string, string]>> = (input.ownKey ?? (!input.callModel && process.env.TUTOR_V2_OWN_KEY !== 'off')) && unworked.length && !state.closed && !input.signal?.aborted
+    ? Promise.all(unworked.map(([id]) => {
+      const item = state.board.pages.flatMap((pg) => pg.items).find((it) => it.id === id);
+      return callModel({
+        model: '', max_tokens: 3000, thinking: { type: 'adaptive' }, output_config: { effort: 'medium' },
+        messages: [{ role: 'user', content: `${V2_OWN_KEY}\n\nThe problem:\n${item?.summary ?? ''}` }],
+      } as unknown as Anthropic.MessageCreateParamsNonStreaming, undefined, input.signal).then((response): [string, string] => {
+        usage.inputTokens += response.usage.input_tokens; usage.outputTokens += response.usage.output_tokens;
+        usage.cacheReadTokens += response.usage.cache_read_input_tokens ?? 0; usage.cacheCreationTokens += response.usage.cache_creation_input_tokens ?? 0;
+        const text = response.content.filter((b): b is Anthropic.TextBlock => b.type === 'text').map((b) => b.text).join(' ').replace(/\s+/g, ' ').trim();
+        return [id, text.slice(0, V2_OWN_KEY_CHARS)];
+      }).catch((): [string, string] => [id, '']);
+    }))
+    : Promise.resolve([]);
+
   const fix = await mathsCheck;
   if (fix && !state.closed && !input.signal?.aborted) {
     const words = `One correction: ${fix}`;
@@ -859,6 +889,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const textBlock = [...((holder?.content as Anthropic.ContentBlockParam[] | undefined) ?? [])].reverse().find((c): c is Anthropic.TextBlockParam => c.type === 'text');
     if (textBlock) textBlock.text = `${textBlock.text}\n\n${words}`;
   }
+
+  for (const [id, key] of await ownKeys) if (key && state.ownKeys) state.ownKeys = { ...state.ownKeys, [id]: key };
 
   // A spoken reply that asks the student nothing leaves them not knowing whose move it is. Going on unasked a
   // moment later turned a page the student was still reading and talked over their answer (AP Lit and AP Calc BC,

@@ -55,6 +55,9 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
       : `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > closeDueMinutes(session.timeBoxMinutes) ? `about ${Math.round(left)} left, which is time for more: the lesson is not at its close unless the student asks to stop` : left > 0.75 ? `about ${Math.max(1, Math.round(left))} left: tell the student so now, once and in a few words, then use what is left for the one thing that matters most (finish the step in hand, or say what to take away), and close when that is done. Do not start anything new` : 'the time is up: close now, in a sentence or two'}` : ''}`,
     `board:\n  ${renderBoard(state.board)}`,
   ];
+  // The answer to a problem of the tutor's own that is on the page in view (turn.ts, ownKeys): the latest one.
+  const keyed = [...(state.board.pages[state.board.current]?.items ?? [])].reverse().find((it) => state.ownKeys?.[it.id]);
+  if (keyed) lines.push(`the problem on the board that you set yourself ("${keyed.summary.replace(/\s+/g, ' ').slice(0, 70)}…"), worked out apart from the lesson for your checking (the student has not seen this; check each thing they say about it against this before you agree or disagree): ${state.ownKeys![keyed.id]}`);
   if ((state.repliesSinceBoard ?? 0) >= 1) lines.push(`board last written on: ${state.repliesSinceBoard} ${state.repliesSinceBoard === 1 ? 'reply' : 'replies'} ago`);
   if (state.boardProblems?.length) lines.push(`not painted in your last reply:\n${state.boardProblems.map((x) => `  - ${x}`).join('\n')}`);
   if (session.homework) lines.push(...v2HomeworkFacts(session.homework, state.homework));

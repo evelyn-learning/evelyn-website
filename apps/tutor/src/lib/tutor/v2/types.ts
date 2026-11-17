@@ -99,6 +99,10 @@ export interface V2State {
   problemCards?: Record<string, string>;
   /** When the board last showed each part of the plan to be the one in hand (progress.ts). */
   partsSeen?: Record<string, number>;
+  /** Problems the tutor set that are not the plan's: board item id → the problem worked out apart from the lesson,
+   *  for the tutor to check answers by ('' until it has been worked). The plan's problems carry their answers;
+   *  these had none, and the tutor agreed with a wrong answer (AP Calculus BC, portal-8e2d86f3). */
+  ownKeys?: Record<string, string>;
   /** Gaps the tutor has found in what the student knows, with how far each has been worked on. Optional: older states have none. */
   gaps?: V2Gap[];
   board: V2Board;

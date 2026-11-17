@@ -901,6 +901,27 @@ async function main() {
     }
     check('a thought about the student is not said to them', stripToolTalk("Take your time. The student is still thinking, so I'll stay quiet.") === 'Take your time.' && stripToolTalk('One student at 8 hours scored only 50. I will mark the student on the plot.') !== '' && !mentionsTool('The student who studied 8 hours scored 50.'));
   }
+  {
+    // A problem the tutor makes up is worked out apart, and the result is a fact from the next turn on (portal-8e2d86f3).
+    const ownText = 'Try this one. <board problem>For f(x) = x^3 - 3x on the closed interval [-2, 3], find the absolute maximum and the absolute minimum.</board> Start with the candidates.';
+    const ownSeen: Anthropic.MessageCreateParamsNonStreaming[] = [];
+    const ownCall: V2ModelCall = async (p, onText) => { ownSeen.push(structuredClone(p)); if (ownSeen.length === 1) { onText?.(ownText); return msg([{ type: 'text', text: ownText }], 'end_turn'); } return msg([{ type: 'text', text: "f'(x) = 3x² − 3 = 0 gives x = −1 and x = 1. Absolute max 18 at x = 3." }], 'end_turn'); };
+    const ownVoice: V2Session = { ...session, mode: 'voice' };
+    const ro = await runV2Turn({ session: ownVoice, state: newV2State(1_000_000), studentSaid: 'ok', callModel: ownCall, boardPass: false, ownKey: true });
+    const keys = Object.entries(ro.state.ownKeys ?? {});
+    check('a problem of the tutor\'s own is worked out after the reply that set it', keys.length === 1 && /x = −1 and x = 1/.test(keys[0][1]) && ownSeen.length === 2 && /x\^3 - 3x/.test(JSON.stringify(ownSeen[1].messages)) && !ownSeen[1].system, keys);
+    check('its worked answer is a fact while its card is on the page in view', /you set yourself[\s\S]*x = −1 and x = 1/.test(renderFacts(ownVoice, ro.state, { nowMs: 1_060_000 })));
+    const away = structuredClone(ro.state); away.board.pages.push({ title: 'Next', items: [] }); away.board.current = away.board.pages.length - 1;
+    check('and not once the board has moved to another page', !/you set yourself/.test(renderFacts(ownVoice, away, { nowMs: 1_060_000 })));
+    // Interrupted before it was worked: the next turn works it.
+    const left = structuredClone(ro.state); left.ownKeys = { [keys[0]?.[0] ?? 'x']: '' };
+    const again = stub([msg([{ type: 'text', text: 'Take your time.' }], 'end_turn'), msg([{ type: 'text', text: 'x = −1 and x = 1; max 18.' }], 'end_turn')]);
+    const ra = await runV2Turn({ session: ownVoice, state: left, studentSaid: 'one moment', callModel: again.call, boardPass: false, ownKey: true });
+    check('a problem left unworked by an interrupted turn is worked at the end of the next', /max 18/.test(ra.state.ownKeys?.[keys[0]?.[0] ?? 'x'] ?? ''), ra.state.ownKeys);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require('fs') as typeof import('fs'); const path = require('path') as typeof import('path');
+    check('the endpoint keeps the worked answers between turns', /ownKeys \? \{ ownKeys \}/.test(fs.readFileSync(path.join(__dirname, '../src/app/api/tutor/brain-v2/turn/route.ts'), 'utf8')));
+  }
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);
 }

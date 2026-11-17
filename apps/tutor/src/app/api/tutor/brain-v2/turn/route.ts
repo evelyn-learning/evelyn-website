@@ -58,7 +58,8 @@ function readState(raw: unknown): V2State | null {
   const map = <T,>(x: unknown, ok: (v: unknown) => v is T): Record<string, T> | undefined => { if (!x || typeof x !== 'object' || Array.isArray(x)) return undefined; const out = Object.fromEntries(Object.entries(x as Record<string, unknown>).filter((e): e is [string, T] => ok(e[1])).slice(0, 60)); return Object.keys(out).length ? out : undefined; };
   const problemCards = map(s.problemCards, (v): v is string => typeof v === 'string' && v.length < 80);
   const partsSeen = map(s.partsSeen, (v): v is number => typeof v === 'number' && Number.isFinite(v));
-  return { ...(problemCards ? { problemCards } : {}), ...(partsSeen ? { partsSeen } : {}), history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), ...(thinking ? { thinking } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}), ...(homework ? { homework } : {}) };
+  const ownKeys = map(s.ownKeys, (v): v is string => typeof v === 'string' && v.length <= 800);
+  return { ...(problemCards ? { problemCards } : {}), ...(partsSeen ? { partsSeen } : {}), ...(ownKeys ? { ownKeys } : {}), history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), ...(thinking ? { thinking } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}), ...(homework ? { homework } : {}) };
 }
 
 export async function POST(req: NextRequest) {
