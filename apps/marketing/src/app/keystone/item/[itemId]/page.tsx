@@ -29,12 +29,15 @@ export default async function ItemPage({
   const base = await ksBase();
   const { itemId } = await params;
   const sp = await searchParams;
-  const data = await getItem(itemId, sp.v ? Number(sp.v) : undefined);
+  // For reviewer/tech, getItem returns the item as they see it: stage via visibleStage, version = the released one.
+  const data = await getItem(itemId, sp.v ? Number(sp.v) : undefined, user.role);
   if (!data) notFound();
   const { item, solution, activity, versions } = data;
-  const ctx = parseCtx(sp);
+  const parsed = parseCtx(sp);
+  // "ready" is not a list Castle Rock has; treat it as no stage filter.
+  const ctx = parsed.stage === "ready" && user.role !== "evelyn" ? { ...parsed, stage: undefined } : parsed;
   const q = ctxQuery(ctx);
-  const filter = { stage: ctx.stage, subject: ctx.subject };
+  const filter = { stage: ctx.stage, subject: ctx.subject, role: user.role };
   const listName = ctxLabel({ stage: ctx.stage, subject: ctx.subject });
   const [nb, queue] = await Promise.all([neighbours(itemId, filter), reviewQueue()]);
   const useList = isFiltered(ctx) || !!ctx.from || user.role !== "reviewer";
@@ -81,7 +84,7 @@ export default async function ItemPage({
             </div>
           </div>
           <div className="ks-meta">
-            <StageChip stage={item.stage} />
+            <StageChip stage={item.stage} role={user.role} />
             {versions.length > 0 && (
               <span>
                 Version{" "}

@@ -9,7 +9,7 @@ import JSZip from "jszip";
 import { parseQtiItem, passageHtml, readQtiZip } from "./qti";
 import { parseCsv } from "./sheet";
 import { cleanPastedHtml, splitNote } from "./note";
-import { STAGES, STAGE_LABEL, STAGE_HELP, STAGE_OWNER, VERDICTS } from "./config";
+import { STAGES, STAGE_LABEL, STAGE_HELP, STAGE_OWNER, VERDICTS, visibleStage } from "./config";
 import { renderForSolaro, texToLinear, toXhtml } from "./solaro";
 
 // render: math, figures, table captions, images, sanitising
@@ -151,6 +151,16 @@ async function passageTests() {
   assert.equal(STAGE_OWNER.changes_requested, "evelyn");
   assert.equal(STAGE_OWNER.item_data, "tech");
   assert.equal(STAGE_OWNER.rejected, null);
+
+  // "ready" (passed our checks, not yet released) reads as drafting to Castle Rock
+  assert.equal(visibleStage("ready", "reviewer"), "drafting");
+  assert.equal(visibleStage("ready", "tech"), "drafting");
+  assert.equal(visibleStage("ready", "evelyn"), "ready");
+  assert.equal(visibleStage("key_query", "reviewer"), "key_query");
+  assert.equal(STAGE_OWNER.key_query, "reviewer");
+  assert.equal(STAGE_OWNER.ready, "evelyn");
+  assert.deepEqual(STAGES.slice(1, 3), ["drafting", "ready"]);
+  assert.equal(STAGES[STAGES.indexOf("item_data") + 1], "key_query");
 }
 
 // sheet

@@ -21,15 +21,17 @@ export default async function ItemsPage({
   const user = await requireUser();
   const base = await ksBase();
   const sp = await searchParams;
-  const stage = STAGES.includes(sp.stage as Stage) ? (sp.stage as Stage) : undefined;
+  // "ready" is Evelyn's own hold: Castle Rock has no such tab (it reads as Drafting for them).
+  const tabs: readonly Stage[] = user.role === "evelyn" ? STAGES : STAGES.filter((s) => s !== "ready");
+  const stage = tabs.includes(sp.stage as Stage) ? (sp.stage as Stage) : undefined;
   const subject = SUBJECTS.includes(sp.subject as (typeof SUBJECTS)[number]) ? sp.subject : undefined;
   const search = (sp.q ?? "").trim().slice(0, 80);
 
   // An exact item number goes straight to the item.
   if (/^\d+$/.test(search) && (await itemExists(search))) redirect(await ksHref(`/item/${search}`));
 
-  const filter = { stage, subject, search: search || undefined };
-  const [matched, counts] = await Promise.all([countItems(filter), stageCounts()]);
+  const filter = { stage, subject, search: search || undefined, role: user.role };
+  const [matched, counts] = await Promise.all([countItems(filter), stageCounts(user.role)]);
   const { page, pages, skip, from, to } = pageOf(sp.page, matched);
   const rows = await listItems(filter, { skip, limit: PAGE_SIZE });
   const verdicts = await latestVerdicts(rows.map((r) => r.itemId));
@@ -69,7 +71,7 @@ export default async function ItemsPage({
         </div>
         <div className="ks-tabs">
           <Link href={href({ subject, q: search })} className={!stage ? "on" : ""}>All · {total}</Link>
-          {STAGES.map((s) => (
+          {tabs.map((s) => (
             <Link key={s} href={href({ stage: s, subject, q: search })} className={stage === s ? "on" : ""}>
               {STAGE_LABEL[s]} · {counts[s]}
             </Link>
@@ -85,7 +87,7 @@ export default async function ItemsPage({
         </div>
         <section className="ks-card">
           {pager}
-          <ItemsTable rows={rows} base={base} verdicts={verdicts} linkQuery={ctxQuery({ stage, subject })} />
+          <ItemsTable rows={rows} base={base} verdicts={verdicts} linkQuery={ctxQuery({ stage, subject })} role={user.role} />
           {pager}
         </section>
       </main>

@@ -42,6 +42,8 @@ export type ItemDoc = {
   player?: { entry: string; voice?: string; height: number; note?: string; attachedAt: Date };
   stage: Stage;
   version: number;
+  /** Highest solution version released to review (Castle Rock never sees above it). Undefined on rows from before 2026-11-17: treat as `version`. */
+  releasedVersion?: number;
   showcase: boolean;
   priorStatus?: string;
   reviewNote?: string;
@@ -62,6 +64,8 @@ export type SolutionDoc = {
   author: string;
   note?: string;
   createdAt: Date;
+  /** When this version was released to review; unset while it is held (stage `ready`, or a draft). */
+  releasedAt?: Date;
 };
 
 export type ActivityDoc = {
@@ -156,6 +160,7 @@ function defineModels(conn: Connection): Models {
     },
     stage: { type: String, index: true },
     version: { type: Number, default: 0 },
+    releasedVersion: Number,
     showcase: { type: Boolean, default: false },
     priorStatus: String,
     reviewNote: String,
@@ -174,6 +179,7 @@ function defineModels(conn: Connection): Models {
     author: String,
     note: String,
     createdAt: { type: Date, default: () => new Date() },
+    releasedAt: Date,
   });
   Solution.index({ itemId: 1, version: 1 }, { unique: true });
   const Activity = new Schema<ActivityDoc>({

@@ -5,7 +5,7 @@ import { can, SECTIONS, STAGES, STAGE_LABEL, VERDICTS, type SectionKind, type St
 import { changePassword, requireUser, signIn } from "@/lib/keystone/auth";
 import { ksHref } from "@/lib/keystone/paths";
 import { ks } from "@/lib/keystone/db";
-import { addComment, saveSolution, setStage, setVerdict } from "@/lib/keystone/store";
+import { addComment, releaseSolution, saveSolution, setStage, setVerdict } from "@/lib/keystone/store";
 import { nextInQueue } from "@/lib/keystone/queries";
 import { ctxQuery, parseCtx } from "@/lib/keystone/listctx";
 
@@ -46,7 +46,7 @@ export async function reviewAction(_prev: ReviewResult, form: FormData): Promise
   }
   revalidatePath("/keystone", "layout");
   const ctx = parseCtx(new URLSearchParams(String(form.get("ctx") || "").replace(/^\?/, "")));
-  const next = await nextInQueue(itemId, { stage: ctx.stage, subject: ctx.subject });
+  const next = await nextInQueue(itemId, { stage: ctx.stage, subject: ctx.subject, role: user.role });
   if (next) return { go: await ksHref(`/item/${next}${ctxQuery(ctx)}`) };
   // End of the list: back to it (or to the overview when reviewing the queue).
   return { go: await ksHref(ctx.stage || ctx.subject ? `/items${ctxQuery({ stage: ctx.stage, subject: ctx.subject })}` : `/?done=1`) };
@@ -84,6 +84,12 @@ export async function setStageAction(form: FormData) {
   if (!STAGES.includes(stage)) return;
   if (stage === "delivered" ? !can.deliver(user.role) : !can.edit(user.role)) return;
   await setStage(itemId, stage, user, `Status set to ${STAGE_LABEL[stage]}.`);
+  // Putting an item in review by hand releases its latest version, so the reviewer sees what they are asked to review.
+  if (stage === "in_review") {
+    const { Item } = await ks();
+    const item = await Item.findOne({ itemId }).select("version releasedVersion").lean();
+    if (item?.version && (item.releasedVersion ?? item.version) < item.version) await releaseSolution(itemId, user, { log: false });
+  }
   revalidatePath("/keystone", "layout");
 }
 

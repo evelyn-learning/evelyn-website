@@ -1,12 +1,13 @@
 import Link from "next/link";
-import { ITEM_TYPE_LABEL, OWNER_LABEL, STAGE_LABEL, STAGE_OWNER, VERDICTS, type Stage, type Verdict } from "@/lib/keystone/config";
+import { ITEM_TYPE_LABEL, OWNER_LABEL, STAGE_LABEL, STAGE_OWNER, VERDICTS, visibleStage, type Role, type Stage, type Verdict } from "@/lib/keystone/config";
 import type { ActivityDoc } from "@/lib/keystone/db";
 import type { ItemRow } from "@/lib/keystone/queries";
 import { splitNote } from "@/lib/keystone/note";
 import { NoteBody } from "./NoteBody";
 
-/** The status, and under it whose move it is ("with Evelyn"), so nobody has to guess. */
-export function StageChip({ stage }: { stage: Stage }) {
+/** The status as `role` sees it, and under it whose move it is ("with Evelyn"), so nobody has to guess. */
+export function StageChip({ stage: raw, role }: { stage: Stage; role?: Role }) {
+  const stage = role ? visibleStage(raw, role) : raw;
   const owner = STAGE_OWNER[stage];
   return (
     <span className="ks-stage">
@@ -47,6 +48,7 @@ export function ItemsTable({
   verdicts,
   showStage = true,
   linkQuery = "",
+  role,
 }: {
   rows: ItemRow[];
   base: string;
@@ -54,6 +56,8 @@ export function ItemsTable({
   linkQuery?: string;
   verdicts?: Map<string, { verdict: string; body?: string }>;
   showStage?: boolean;
+  /** Whose eyes: stage chips read through visibleStage. */
+  role?: Role;
 }) {
   if (!rows.length) return <div className="ks-empty">Nothing here.</div>;
   return (
@@ -103,7 +107,7 @@ export function ItemsTable({
                 </td>
                 {showStage && (
                   <td>
-                    <StageChip stage={r.stage} />
+                    <StageChip stage={r.stage} role={role} />
                   </td>
                 )}
                 <td>{r.version ? `v${r.version}` : "–"}</td>

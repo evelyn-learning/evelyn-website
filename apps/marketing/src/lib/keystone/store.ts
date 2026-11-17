@@ -25,7 +25,12 @@ export async function log(entry: Omit<ActivityDoc, "createdAt"> & { createdAt?: 
   await Item.updateOne({ itemId: entry.itemId }, { $set: { lastActivityAt: createdAt } });
 }
 
-/** Saves a new solution version. `submit` sends it for review; otherwise it stays a draft. */
+/**
+ * Saves a new solution version. `submit` sends it for review at once
+ * (releases it); otherwise it stays a draft that Castle Rock cannot see.
+ * `stage: "ready"` holds it after our checks: saved, not released, until
+ * releaseSolution is called.
+ */
 export async function saveSolution(
   itemId: string,
   sections: { kind: SectionKind; md: string }[],
@@ -43,8 +48,13 @@ export async function saveSolution(
     author: actor.name,
     note: opts.note,
   });
+  // A row from before releasedVersion existed counts as released up to its current version; pin that before moving on.
+  const legacy = item.releasedVersion === undefined ? { releasedVersion: item.version || 0 } : {};
+  await Item.updateOne({ itemId }, { $set: { version, ...legacy, updatedAt: new Date() } });
+  // The revision row below is the log entry for the release too.
+  if (opts.submit && opts.stage !== "ready") await releaseSolution(itemId, actor, { log: false });
   const stage: Stage = opts.stage ?? (opts.submit ? "in_review" : "drafting");
-  await Item.updateOne({ itemId }, { $set: { version, stage, updatedAt: new Date() } });
+  await Item.updateOne({ itemId }, { $set: { stage, updatedAt: new Date() } });
   await log({
     itemId,
     version,
@@ -55,6 +65,24 @@ export async function saveSolution(
     role: actor.role,
   });
   return version;
+}
+
+/**
+ * Releases the item's latest solution version to review: Castle Rock can see
+ * it from now on. Logs a "Sent for review." revision unless `log: false`
+ * (saveSolution logs its own row).
+ */
+export async function releaseSolution(itemId: string, actor: Actor, opts: { log?: boolean } = {}) {
+  const { Item, Solution } = await ks();
+  const item = await Item.findOne({ itemId }).lean();
+  if (!item) throw new Error(`item ${itemId} not found`);
+  if (!item.version) throw new Error(`item ${itemId} has no solution to release`);
+  const now = new Date();
+  await Solution.updateOne({ itemId, version: item.version, releasedAt: { $exists: false } }, { $set: { releasedAt: now } });
+  await Item.updateOne({ itemId }, { $set: { releasedVersion: item.version, stage: "in_review", updatedAt: now } });
+  if (opts.log ?? true) {
+    await log({ itemId, version: item.version, type: "revision", body: "Sent for review.", username: actor.username, name: actor.name, role: actor.role });
+  }
 }
 
 export async function setVerdict(itemId: string, verdict: Verdict, comment: string, actor: Actor) {
@@ -140,6 +168,7 @@ export async function ingestQtiItems(items: QtiItem[], actor: Actor, uploadId: s
         keySource: q.key ? "castle-rock" : "evelyn",
         stage: "received",
         version: 0,
+        releasedVersion: 0,
         showcase: false,
         source: "upload",
         order: ++order,

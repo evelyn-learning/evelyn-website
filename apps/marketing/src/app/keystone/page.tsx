@@ -29,12 +29,12 @@ export default async function Overview({ searchParams }: { searchParams: Promise
   const user = await requireUser();
   const base = await ksBase();
   const { done } = await searchParams;
-  const counts = await stageCounts();
+  const counts = await stageCounts(user.role);
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
 
   if (user.role === "reviewer") {
-    const waiting = await listItems({ stage: "in_review" });
-    const feed = await recentActivity({ roles: ["evelyn"], types: ["revision", "comment"], limit: 8 });
+    const waiting = await listItems({ stage: "in_review", role: user.role });
+    const feed = await recentActivity({ roles: ["evelyn"], types: ["revision", "comment"], limit: 8, viewer: user.role });
     return (
       <>
         <TopBar user={user} on="home" />
@@ -51,7 +51,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
               </Link>
             )}
           </div>
-          <Stats counts={counts} base={base} stages={["in_review", "changes_requested", "item_data", "approved", "delivered", "rejected"]} />
+          <Stats counts={counts} base={base} stages={["in_review", "changes_requested", "item_data", "key_query", "approved", "delivered", "rejected"]} />
           <div className="ks-grid" style={{ gridTemplateColumns: "minmax(0,2fr) minmax(0,1fr)" }}>
             <section className="ks-card">
               <h2>Waiting for review</h2>
@@ -78,11 +78,11 @@ export default async function Overview({ searchParams }: { searchParams: Promise
   }
 
   if (user.role === "tech") {
-    const approved = await listItems({ stage: "approved" });
-    const needData = await listItems({ stage: "item_data" });
+    const approved = await listItems({ stage: "approved", role: user.role });
+    const needData = await listItems({ stage: "item_data", role: user.role });
     const dataAsks = await latestVerdicts(needData.map((r) => r.itemId));
     const uploads = await recentUploads(6);
-    const feed = await recentActivity({ limit: 8, types: ["verdict", "stage", "upload"] });
+    const feed = await recentActivity({ limit: 8, types: ["verdict", "stage", "upload"], viewer: user.role });
     return (
       <>
         <TopBar user={user} on="home" />
@@ -225,7 +225,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
           </div>
           <div style={{ color: "var(--muted)", fontSize: 14 }}>{total} items in all · {counts.approved + counts.delivered} approved</div>
         </div>
-        <Stats counts={counts} base={base} stages={["received", "drafting", "in_review", "changes_requested", "item_data", "approved", "delivered", "rejected"]} />
+        <Stats counts={counts} base={base} stages={["received", "drafting", "ready", "in_review", "changes_requested", "item_data", "key_query", "approved", "delivered", "rejected"]} />
         <div className="ks-grid" style={{ gridTemplateColumns: "minmax(0,3fr) minmax(0,2fr)" }}>
           <section className="ks-card">
             <h2>Needs Evelyn</h2>

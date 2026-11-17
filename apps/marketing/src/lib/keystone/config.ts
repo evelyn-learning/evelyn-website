@@ -38,13 +38,22 @@ export const can = {
  *   item_data          the question as exported is incomplete → Castle Rock technical re-sends it,
  *                      or wrong                                 then it returns to Evelyn by itself
  *   rejected           the item itself is wrong / withdrawn   → nobody; closed
+ *
+ * Two stages for the solutions pipeline (2026-11-17):
+ *   ready      the solution passed our checks but is not released to review
+ *              yet; Castle Rock sees it as `drafting` (see visibleStage) and
+ *              never sees an unreleased version
+ *   key_query  our working reaches a different answer from the key; the
+ *              reviewer confirms the key or corrects the item
  */
 export const STAGES = [
   "received",
   "drafting",
+  "ready",
   "in_review",
   "changes_requested",
   "item_data",
+  "key_query",
   "approved",
   "delivered",
   "rejected",
@@ -54,9 +63,11 @@ export type Stage = (typeof STAGES)[number];
 export const STAGE_LABEL: Record<Stage, string> = {
   received: "Received",
   drafting: "Drafting",
+  ready: "Ready",
   in_review: "In review",
   changes_requested: "Solution changes",
   item_data: "Item data needed",
+  key_query: "Key query",
   approved: "Approved",
   delivered: "Delivered to SOLARO",
   rejected: "Rejected",
@@ -65,9 +76,11 @@ export const STAGE_LABEL: Record<Stage, string> = {
 export const STAGE_HELP: Record<Stage, string> = {
   received: "Question received; the solution is not written yet.",
   drafting: "Evelyn is writing the solution.",
+  ready: "Solution passed our checks; waiting to go to review.",
   in_review: "Waiting for Castle Rock's review.",
   changes_requested: "Castle Rock asked for changes to the solution; Evelyn is revising.",
   item_data: "The question as exported is incomplete or wrong. Castle Rock re-sends the item (Upload items); it then returns to Evelyn.",
+  key_query: "Our working reaches a different answer from the key. Castle Rock confirms the key or corrects the item.",
   approved: "Approved by Castle Rock; ready to package for SOLARO.",
   delivered: "Packaged and handed to SOLARO.",
   rejected: "Castle Rock withdrew this item; no solution is needed. Re-sending a corrected item reopens it.",
@@ -77,13 +90,24 @@ export const STAGE_HELP: Record<Stage, string> = {
 export const STAGE_OWNER: Record<Stage, Role | null> = {
   received: "evelyn",
   drafting: "evelyn",
+  ready: "evelyn",
   in_review: "reviewer",
   changes_requested: "evelyn",
   item_data: "tech",
+  key_query: "reviewer",
   approved: null,
   delivered: null,
   rejected: null,
 };
+
+/**
+ * The stage as a role sees it. `ready` is our own hold before review, so
+ * Castle Rock (reviewer, tech) sees it as `drafting`, the same as any
+ * unreleased work.
+ */
+export function visibleStage(stage: Stage, role: Role): Stage {
+  return stage === "ready" && role !== "evelyn" ? "drafting" : stage;
+}
 
 export const OWNER_LABEL: Record<Role, string> = {
   evelyn: "Evelyn",
