@@ -18,12 +18,13 @@ import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import { ReplyGate } from '../src/lib/tutor/v2/reply-gate';
 import { leftOpen, mayOpenPart } from '../src/lib/tutor/v2/part-close';
+import { v2ReadCarried } from '../src/lib/tutor/v2/state-carry';
 import { V2_PART_ASKS, v2AskRepeats, v2MoveAnswer, v2PartAskLine, v2PartInHand, v2PartsDone, v2PendingPart, v2PlanLabelled } from '../src/lib/tutor/v2/part-flow';
 import { v2Progress } from '../src/lib/tutor/v2/progress';
 import { renderFacts, v2AskEveryOn } from '../src/lib/tutor/v2/facts';
 import { runV2Turn, type V2ModelCall } from '../src/lib/tutor/v2/turn';
 import { newV2State, type V2Session, type V2State, type V2ToolCall } from '../src/lib/tutor/v2/types';
-import { TUTOR_V2_PART_ASK_EVERY, TUTOR_V2_PART_PAGE_CHIP } from '../src/lib/tutor/orchestrator/flags';
+import { TUTOR_V2_PART_ASK_EVERY, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_STATE_CARRY } from '../src/lib/tutor/orchestrator/flags';
 
 let passed = 0; let failed = 0;
 const check = (label: string, ok: boolean, detail?: unknown) => {
@@ -49,10 +50,10 @@ const labelOf = (id: string) => (GDI.segments.find((s) => s.id === id)!.metadata
 
 interface Step { state: V2State; spoken: string; calls: V2ToolCall[]; text: string }
 let clock = 60_000;
-async function turn(state: V2State, said: string | null, text: string, after: unknown[] = [], s: V2Session = session): Promise<Step> {
+async function turn(state: V2State, said: string | null, text: string, after: unknown[] = [], s: V2Session = session, partFlags?: { pageChip?: boolean; askEvery?: boolean }): Promise<Step> {
   const calls: V2ToolCall[] = []; let out = '';
   clock += 30_000;
-  const r = await runV2Turn({ session: s, state, studentSaid: said, callModel: streaming(text, after), nowMs: clock, boardPass: false, mathsCheck: false, onToolCall: (c) => calls.push(c), onText: (t) => { out += t; } });
+  const r = await runV2Turn({ session: s, state, studentSaid: said, callModel: streaming(text, after), nowMs: clock, boardPass: false, mathsCheck: false, onToolCall: (c) => calls.push(c), onText: (t) => { out += t; }, ...(partFlags ? { partFlags } : {}) });
   return { state: r.state, spoken: out, calls, text: r.spoken };
 }
 /** The chip strip as the learner sees it. */
@@ -208,9 +209,71 @@ async function main() {
     u0 = { ...newV2State(0), history: spent.slice(0, 4), board: { pages: [{ title: 'Lesson overview', items: [] }], current: 0 } };
     ur = await turn({ ...u0, heldPage: { title: 'Your job', part: 'topic-intro', at: 2 } }, 'Yes.', 'Tell me about your job.', [], s);
     check('unlabelled: a yes opens no page by itself', !ur.calls.some((c) => c.name === 'new_page') && openTitle(ur.state) === 'Lesson overview');
-    check('pending part: none for an unlabelled plan is asked of part-flow (labelled callers only), and none lapsed', v2PendingPart(GDI, { ...newV2State(0), heldPage: { title: 'Past simple', part: 'past-simple', at: 0 }, history: Array.from({ length: 10 }, () => ({ role: 'assistant' as const, content: 'x' })) }, '', 'yes') === null);
+    check('pending part: a held page lapses after more than three tutor replies (labelled plan)', v2PendingPart(GDI, { ...newV2State(0), heldPage: { title: 'Past simple', part: 'past-simple', at: 0 }, history: Array.from({ length: 10 }, () => ({ role: 'assistant' as const, content: 'x' })) }, '', 'yes') === null);
     const doneNone = v2PartsDone(GDI, { board: { pages: [{ title: 'Lesson overview', items: [] }, { title: 'Past simple', items: [] }], current: 1 }, goals: { 'present-perfect': { status: 'skipped', at: 1 } }, workingLevel: undefined }, v2PartInHand(GDI, { board: { pages: [{ title: 'Lesson overview', items: [] }, { title: 'Past simple', items: [] }], current: 1 }, goals: {}, workingLevel: undefined }));
     check('A4: parts the lesson skipped without teaching are not green (job, present perfect marked skipped; level not set)', !doneNone[1] && !doneNone[2] && !doneNone[3] && doneNone[0], doneNone);
+  }
+
+  console.log('4. fix round 1');
+  {
+    // Each case starts early in the 20-minute box (the walk above used most of it; a time-up turn is a closing turn).
+    clock = 60_000;
+    const base = (extra: Partial<V2State> = {}): V2State => ({ ...newV2State(0), workingLevel: { level: 'intermediate', from: 'this_lesson' }, goals: { overview: { status: 'shown', at: 1 }, 'topic-intro': { status: 'shown', at: 2 } }, board: { pages: [{ title: 'Lesson overview', items: [] }, { title: 'Your job', items: [] }], current: 1 }, history: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'Tell me about your job.' }], ...extra });
+    // I1: the model asks itself, with no page block: "Yes." with no block opens the part's page.
+    const ask = 'Good, that\'s your job covered. Next is the present perfect. Any questions first, or shall we go on?';
+    let t = await turn(base(), 'I sell washing machines to customers.', ask);
+    check('I1 (setup): the model\'s own ask, no page held', !t.state.heldPage && openTitle(t.state) === 'Your job', t.spoken);
+    t = await turn(t.state, 'Yes.', 'Have you ever worked with a customer from another country?');
+    check('I1: "Yes." to the model\'s own ask, no block in the reply: the present perfect page opens', openTitle(t.state) === 'Present perfect' && t.calls[0]?.agreed === true && chips(t.state).lit === 'present-perfect', { open: openTitle(t.state), calls: t.calls.map((c) => c.name) });
+    // …an ask that names no part: the part after the one in hand.
+    t = await turn(base(), 'I sell washing machines.', 'Great answer. Shall we go on?');
+    t = await turn(t.state, 'Okay.', 'Have you ever worked abroad?');
+    check('I1: an ask naming no part opens the part after the one in hand', openTitle(t.state) === 'Present perfect', openTitle(t.state));
+    // …the runtime's own ask after a dropped repeat.
+    const said = 'Shall we go on, or do you have a question first?';
+    t = await turn(base({ history: [{ role: 'user', content: 'x' }, { role: 'assistant', content: `Next is your job. ${said}` }] }), 'I sell washing machines.', `Good. Next is present perfect. ${said}`);
+    check('I1 (setup): the repeat dropped, the runtime asks in new words', !!askOf(t.spoken) && askOf(t.spoken) !== said, t.spoken);
+    t = await turn(t.state, 'Yes, let\'s go on.', 'Have you ever worked abroad?');
+    check('I1: "yes" to the runtime\'s replacement ask opens the page', openTitle(t.state) === 'Present perfect', openTitle(t.state));
+    // …but never into the summary, and not when they ask something.
+    t = await turn(base(), 'I sell washing machines.', 'That is all for today\'s parts. Next is the summary. Shall we go on?');
+    t = await turn(t.state, 'Yes.', 'Here is a quick summary.');
+    check('I1: an ask naming the summary opens nothing by itself (the close keeps its rules)', openTitle(t.state) === 'Your job');
+    t = await turn(base(), 'I sell washing machines.', ask);
+    t = await turn(t.state, 'Please explain that again.', 'Of course. The present perfect joins the past to now.');
+    check('I2: "Please explain that again." to the ask releases nothing', openTitle(t.state) === 'Your job');
+    // I2: declines and redirects.
+    const declines = ['Okay, skip it.', 'Let\'s skip to the summary.', 'Yes, skip it please.', 'Good question, I would rather skip.', 'Please explain that again.', 'Can you repeat that?', 'No thanks.', 'いいえ、スキップします。', 'Let\'s do the summary instead.'];
+    check('I2: a decline or a redirect is never a go', declines.every((x) => v2MoveAnswer(x) !== 'go'), declines.filter((x) => v2MoveAnswer(x) === 'go'));
+    const offer = 'You used it well. Would you like to practise your pronunciation for a few minutes, or skip it and go to the summary?';
+    const conv = (): V2State => base({ goals: { ...base().goals, 'present-perfect': { status: 'shown', at: 3 }, 'past-simple': { status: 'shown', at: 4 } }, board: { pages: [{ title: 'Lesson overview', items: [] }, { title: 'Your job', items: [] }, { title: 'Present perfect', items: [] }, { title: 'Past simple', items: [] }, { title: 'Conversation', items: [] }], current: 4 }, history: [{ role: 'user', content: 'x' }, { role: 'assistant', content: offer }] });
+    for (const no of ['Okay, skip it.', 'Let\'s skip to the summary.', 'Yes, skip it please.', 'Good question, I would rather skip.']) {
+      const r = await turn(conv(), no, 'Alright. Here is a quick summary of today.');
+      check(`I2: "${no}" to the pronunciation offer opens no pronunciation page; the chip stays on the conversation`, openTitle(r.state) === 'Conversation' && chips(r.state).lit === 'open-conversation' && !chips(r.state).green.includes('open-conversation'), { open: openTitle(r.state), chips: chips(r.state) });
+    }
+    check('I2: to the choice, a bare yes or naming the part takes it up; "Okay, let\'s go." does not', v2PendingPart(GDI, conv(), offer, 'Yes.')?.title === 'Pronunciation' && v2PendingPart(GDI, conv(), offer, 'Uh, yes, practice pronunciation.')?.title === 'Pronunciation' && v2PendingPart(GDI, conv(), offer, 'Okay, let\'s go.') === null);
+    // M2.
+    check('M2: "No." to a questions-first ask is a go; with no such ask, not; "Can we go on?" is a go', v2MoveAnswer('No.', ask) === 'go' && v2MoveAnswer('Nope, no questions.', ask) === 'go' && v2MoveAnswer('No.', 'Shall we go on?') === 'other' && v2MoveAnswer('No.') === 'other' && v2MoveAnswer('Can we go on?') === 'go' && v2MoveAnswer('Can we go on to the past simple?') === 'go');
+    // M1.
+    const h1: V2State['history'] = [{ role: 'assistant', content: 'Shall we move on to conversation?' }];
+    check('M1: asks naming different parts are not repeats; the same one is', !v2AskRepeats('Shall we move on to pronunciation?', h1, GDI) && v2AskRepeats('Shall we move on to conversation?', h1, GDI) && v2AskRepeats('Shall we move on to pronunciation?', h1));
+    // M3: one page block in the stored reply when the yes-reply writes the released page itself.
+    let m3 = await turn(base(), 'I sell washing machines.', ask);
+    m3 = await turn(m3.state, 'Yes.', 'Great.\n<board page>Present perfect</board>\nHave you ever worked abroad?');
+    const lastStored = (() => { const h = [...m3.state.history].reverse().find((x) => x.role === 'assistant')!; return typeof h.content === 'string' ? h.content : h.content.map((c) => (c.type === 'text' ? c.text : '')).join(''); })();
+    check('M3: the stored reply holds one page block for the released page, at its head', (lastStored.match(/<board page>/g) ?? []).length === 1 && lastStored.startsWith('<board page>Present perfect</board>'), lastStored);
+    // M5: a labelled plan with both flags off: the 57d4aa6f path (6e budget offer, no held page in the state, yes opens nothing).
+    let off = await turn(base(), 'I have worked here five years.', 'Good, that is right.\n<board page>Past simple</board>\nLast month is finished.', [], session, { pageChip: false, askEvery: false });
+    check('M5: flags off, labelled plan: held with the old offer, no page kept in the state', /Next is past simple\. Shall we go on, or do you have a question first\?$/.test(off.spoken) && !off.state.heldPage && openTitle(off.state) === 'Your job', off.spoken);
+    off = await turn(off.state, 'Yes.', 'Last month is a finished time.', [], session, { pageChip: false, askEvery: false });
+    check('M5: …and "Yes." with no page block opens nothing', openTitle(off.state) === 'Your job' && !off.calls.some((c) => c.name === 'new_page'));
+    // Controller ruling: the route's state reading keeps what the turn wrote for the next turn.
+    const carried = v2ReadCarried({ summaryBegunAt: 1_700_000, repliesSinceBoard: 2.7, boardProblems: ['note "x": too wide', 3, '', ...Array.from({ length: 20 }, (_, i) => `p${i}`)], heldPage: { title: 'Past simple', part: 'past-simple', at: 4 } });
+    check('state carry: summaryBegunAt, repliesSinceBoard (whole), boardProblems (strings, last 12), heldPage survive', carried.summaryBegunAt === 1_700_000 && carried.repliesSinceBoard === 2 && carried.boardProblems?.length === 12 && carried.boardProblems[11] === 'p19' && carried.heldPage?.part === 'past-simple', carried);
+    check('state carry: a session that never set them gets nothing added; malformed values are dropped', JSON.stringify(v2ReadCarried({ history: [], note: '' })) === '{}' && JSON.stringify(v2ReadCarried({ summaryBegunAt: 'x', repliesSinceBoard: -1, boardProblems: 'no', heldPage: { title: 1 } })) === '{}');
+    check('state carry: kill switch off: only the held page, as before; on by default', JSON.stringify(v2ReadCarried({ summaryBegunAt: 5, repliesSinceBoard: 1, boardProblems: ['a'] }, false)) === '{}' && TUTOR_V2_STATE_CARRY === true);
+    const routeSrc = readFileSync(join(__dirname, '..', 'src', 'app', 'api', 'tutor', 'brain-v2', 'turn', 'route.ts'), 'utf8');
+    check('state carry: the turn route reads them through v2ReadCarried', /const carried = v2ReadCarried\(s\)/.test(routeSrc) && /\.\.\.carried/.test(routeSrc));
   }
 
   console.log(`\n${passed} passed, ${failed} failed`);

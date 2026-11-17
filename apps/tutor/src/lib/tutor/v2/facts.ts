@@ -49,6 +49,8 @@ export interface V2TurnFacts {
   levelReopened?: boolean;
   /** Task 7a: the page of this part opened as this reply begins, on the student's yes (part-flow.ts). */
   partOpened?: string;
+  /** Task 7a fix round 1, tests only: PART_ASK_EVERY for this turn (default: the flag). */
+  partAskEvery?: boolean;
 }
 
 /** A quoted span at the very start of a reply, in any of the quote pairs a tutor uses: 「…」, 『…』, “…”, "…", ‘…’, '…'. */
@@ -186,7 +188,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   lines.push(...v2OpenerFact(session, state));
   // The question check at a part change, once in a while (Task 6e); at every part change in a spoken lesson whose plan parts
   // all have names (Task 7a, PART_ASK_EVERY).
-  if (session.plan && !discussion && v2AskEveryOn(session)) lines.push(...v2PartAskFacts(session.plan, state, f.partOpened));
+  if (session.plan && !discussion && v2AskEveryOn(session, f.partAskEvery)) lines.push(...v2PartAskFacts(session.plan, state, f.partOpened));
   else if (session.plan && !discussion) lines.push(...v2QuestionCheckFact(state));
   lines.push(`your note: ${state.note.trim() || '(empty — nothing written yet)'}`);
   const thinking = discussion ? renderThinking(state.thinking) : '';

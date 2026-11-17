@@ -101,26 +101,48 @@ export function v2PartChangeAsked(plan: LessonPlan, state: View, index: number):
   return !plan.segments.slice(0, cur + 1).every((seg, i) => seg.kind === 'hook' || isLevelPart(plan, i));
 }
 
+const SENTENCES = /(?<=[.!?]["'”’)]*)\s+|(?<=[。！？][」』)）"”]*)\s*/;
 const FILLER = '(?:(?:uh|um|er|erm|ah|oh|well|so|okay|ok|hmm)[,.]?\\s+)*';
 const GO = new RegExp(`^${FILLER}(?:yes|yeah|yep|yup|ya|sure|ok(?:ay)?|alright|all right|fine|go on|go ahead|carry on|let'?s|move on|we (?:can )?(?:move|go) on|next|continue|ready|i'?m ready|no,? (?:more )?questions?|nope|no,? (?:let'?s|go|move)|please|of course|sounds good|good|great|right|got it|understood)\\b`, 'i');
 const QUESTION = new RegExp(`[?？]\\s*$|^${FILLER}(?:(?:yes|yeah)[,.]?\\s+)?(?:what|why|how|when|where|which|who|whose|can|could|would|should|is|are|do|does|did|may|i have (?:a|one) question|i(?:'ve| have) got (?:a|one) question|a question|question|wait|sorry|pardon|excuse me|i don'?t (?:understand|get it|know)|what'?s)\\b|質問|わかりません|分かりません`, 'i');
 const GO_JA = /^(?:はい|ええ|うん|お願いします|大丈夫|進みましょう|次へ|次に|いいです|オーケー)/;
 
+/** Fix round 1 (review I2): a decline or a redirect anywhere in the answer is no go-ahead, whatever it opens with ("Okay,
+ *  skip it.", "Let's skip to the summary.", "Please explain that again." were all read as yes). */
+const DECLINE = /\b(?:skip|rather not|no,? thanks?|no,? thank you|summary|instead|again|explain|repeat|not (?:now|yet|today)|later|don'?t (?:want|need)|stop)\b|スキップ|飛ばし|やめ|いいえ|結構です|もう一度|説明|まとめ|あとで|後で/i;
+/** Asking to go on is a go, not a question ("Can we go on?"). */
+const ASKS_TO_GO = new RegExp(`^${FILLER}(?:(?:yes|yeah)[,.]?\\s+)?(?:can|could|shall|may) we (?:go on|move on|continue|start)\\b`, 'i');
+/** A bare no, to an ask that offers a question first: no questions, so go on (review M2). */
+const BARE_NO = new RegExp(`^${FILLER}(?:no|nope|nah)(?:,? (?:thanks?|thank you|questions?|i'?m (?:fine|good|ok(?:ay)?)))?[.!]*$`, 'i');
+/** "No questions." is a go whatever was asked. */
+const NO_QUESTIONS = new RegExp(`^${FILLER}(?:no|nope),? (?:more )?questions?\\b`, 'i');
+/** A part ask that offers a question first ("Any questions first, or shall we go on?"). */
+const QUESTIONS_FIRST = /\b(?:questions?|ask (?:something|anything))\b|質問/i;
+
 /** The student's answer to "shall we go on, or do you have a question first?": 'go' (yes, let's, no questions), 'question'
- *  (they ask something: answered first, then the move), or 'other' (no, skip, an answer to something else). */
-export function v2MoveAnswer(said: string | null): 'go' | 'question' | 'other' {
+ *  (they ask something: answered first, then the move), or 'other' (skip, not now, an answer to something else).
+ *  `lastTutor`: the reply they answer; when its last sentence is a part ask that offers a question first, a bare "No." is a go. */
+export function v2MoveAnswer(said: string | null, lastTutor: string = ''): 'go' | 'question' | 'other' {
   const s = (said ?? '').trim();
   if (!s) return 'other';
+  const last = stripBoardBlocks(lastTutor).split(SENTENCES).map((x) => x.trim()).filter(Boolean).pop() ?? '';
+  if (NO_QUESTIONS.test(s)) return 'go';
+  if (BARE_NO.test(s)) return last && v2IsPartAsk(last) && QUESTIONS_FIRST.test(last) ? 'go' : 'other';
+  if (DECLINE.test(s)) return 'other';
+  if (ASKS_TO_GO.test(s)) return 'go';
   if (QUESTION.test(s)) return 'question';
   return GO.test(s) || GO_JA.test(s) ? 'go' : 'other';
 }
+/** An unambiguous yes on its own ("Yes.", "Sure, please."): the only go-ahead to a choice offer that does not name the part. */
+const BARE_YES = new RegExp(`^${FILLER}(?:yes|yeah|yep|sure|ok(?:ay)?|alright|all right|of course|はい|ええ)(?:,?\\s*(?:please|let'?s do (?:it|that)|i'?d like (?:that|to)|お願いします))?[.!。！]*$`, 'i');
+/** A choice offer: the part, or something else ("…, or skip it and go to the summary?"). */
+const CHOICE = /\bor (?:skip|go straight|move on|go on|finish|stop|leave|do|go to)\b|それとも|どちら/i;
 
 /** The tutor replies in a history. */
 export const v2TutorReplies = (history: V2State['history']) => history.filter((h) => h.role === 'assistant').length;
 /** A held page waits this many tutor replies for its yes (a question answered, then asked again); then it lapses. */
 export const V2_HELD_PAGE_REPLIES = 3;
 
-const SENTENCES = /(?<=[.!?]["'”’)]*)\s+|(?<=[。！？][」』)）"”]*)\s*/;
 const asks = (x: string) => /(?:[?？]|か[。．]?)["'」』）)]*\s*$/.test(x);
 
 /** The part whose page is waiting for the student's yes: the page held at the last part change (not lapsed), or a part the
@@ -133,13 +155,32 @@ export function v2PendingPart(plan: LessonPlan, state: View & Pick<V2State, 'his
     const index = plan.segments.findIndex((seg) => seg.id === held.part);
     if (index >= 0 && !paged(plan, state.board, index)) return { index, title: held.title };
   }
-  const offers = stripBoardBlocks(lastTutor).split(SENTENCES).map((x) => x.trim()).filter((x) => asks(x) && V2_OFFER_SHAPE.test(x));
-  if (!offers.length) return null;
   const cur = v2PartInHand(plan, state);
+  const sentences = stripBoardBlocks(lastTutor).split(SENTENCES).map((x) => x.trim()).filter(Boolean);
+  // Fix round 1 (review I1): a part ask the reply ends on ("Next is the present perfect. Any questions first, or shall we go
+  // on?", the model's own or the runtime's after a dropped repeat), with no page held: the part its last two sentences name,
+  // else the part after the one in hand. Never the part in hand, one already paged, or the closing part.
+  const lastAsk = sentences[sentences.length - 1] ?? '';
+  if (lastAsk && v2IsPartAsk(lastAsk)) {
+    const two = sentences.slice(-2).join(' ');
+    const namedNow = plan.segments.map((seg, i) => ({ seg, i })).filter(({ seg }) => !!v2PartOf(seg).label && v2PartNamedIn(seg, two));
+    const others = namedNow.filter(({ i }) => i !== cur);
+    // Two parts named ("pronunciation, or shall we move on to the summary?"): only the one their words name.
+    const pickNow = others.length > 1 ? others.find(({ seg }) => !!said && v2PartNamedIn(seg, said)) ?? null : others[0] ?? null;
+    if (others.length > 1 && !pickNow) return null;
+    const index = pickNow ? pickNow.i : namedNow.length ? -1 : v2NextPart(plan, state, cur);
+    if (index >= 0 && index !== cur && index < plan.segments.length - 1 && !paged(plan, state.board, index)) return { index, title: v2PartOf(plan.segments[index]!).label! };
+    return null;
+  }
+  const offers = sentences.filter((x) => asks(x) && V2_OFFER_SHAPE.test(x));
+  if (!offers.length) return null;
   const text = offers.join(' ');
   const named = plan.segments.map((seg, i) => ({ seg, i })).filter(({ seg, i }) => i !== cur && i < plan.segments.length - 1 && !paged(plan, state.board, i) && !!v2PartOf(seg).label && v2PartNamedIn(seg, text));
   if (!named.length) return null;
   const theirs = said ? named.find(({ seg }) => v2PartNamedIn(seg, said)) : undefined;
+  // Fix round 1 (review I2): to a choice ("…, or skip it and go to the summary?") only their naming the part or a bare yes
+  // takes it up.
+  if (!theirs && CHOICE.test(text) && !BARE_YES.test((said ?? '').trim())) return null;
   const at = (seg: (typeof named)[number]['seg']) => text.toLowerCase().indexOf((v2PartOf(seg).label ?? '').toLowerCase().split(/\s+/)[0]!.slice(0, 5));
   const pick = theirs ?? [...named].sort((x, y) => at(x.seg) - at(y.seg))[0]!;
   return { index: pick.i, title: v2PartOf(pick.seg).label! };
@@ -187,9 +228,12 @@ export const v2IsPartAsk = (sentence: string) => isPartFrame(sentence) || (endsA
 
 /** Whether `sentence` is a part-change ask said before in the lesson word for word, or one word apart. Only such a repeat
  *  is dropped now that every part change is asked (a different ask, in other words, goes out). */
-export function v2AskRepeats(sentence: string, history: V2State['history']): boolean {
+export function v2AskRepeats(sentence: string, history: V2State['history'], plan?: LessonPlan): boolean {
   if (!v2IsPartAsk(sentence.trim())) return false;
-  return tutorSentences(history).some((x) => v2IsPartAsk(x) && nearSame(x, sentence));
+  // Fix round 1 (review M1): asks that name different parts are different asks ("…to conversation?" / "…to pronunciation?").
+  const names = (x: string) => (plan ? plan.segments.filter((seg) => !!v2PartOf(seg).label && v2PartNamedIn(seg, x)).map((seg) => seg.id).join(',') : '');
+  const mine = names(sentence);
+  return tutorSentences(history).some((x) => v2IsPartAsk(x) && names(x) === mine && nearSame(x, sentence));
 }
 
 /** The line in place of a held page, or after a repeated ask that was dropped: one line on the part just done, the next part
@@ -214,7 +258,7 @@ export function v2PartAskLine(o: { next: string; done?: string; named: boolean; 
 /** The facts lines for part changes in a spoken lesson whose parts all have names (PART_ASK_EVERY). `opened`: the part whose
  *  page opened as this reply begins, on their yes. */
 export function v2PartAskFacts(plan: LessonPlan, state: View & Pick<V2State, 'heldPage' | 'history'>, opened?: string): string[] {
-  const lines = ['part changes: at every change to the next plan part after the level check, close the part just done in one short line that says what was done, name the next part by its plan name, and ask whether they have a question first or would like to go on; never in the same words as an earlier ask in this lesson. Begin the next part only after they answer: its page opens then. The summary keeps its own rules'];
+  const lines = ['part changes: at every change to the next plan part after the level check, close the part just done in one short line that says what was done, name the next part by its plan name, and ask whether they have a question first or would like to go on; never in the same words as an earlier ask in this lesson. Begin the next part only after they answer: its page opens then. Not before the summary or the close: going into the summary is not asked this way'];
   if (opened) lines.push(`they said yes to going on: the "${opened}" page is open now, headed by the part's name; begin that part in this reply, and do not open its page again`);
   else if (state.heldPage && v2TutorReplies(state.history) - state.heldPage.at <= V2_HELD_PAGE_REPLIES && !paged(plan, state.board, plan.segments.findIndex((s) => s.id === state.heldPage!.part))) lines.push(`part change waiting: they were asked whether to go on to the ${state.heldPage.title} part. If they asked something, answer it first and then ask again, in one short line in new words, whether to go on`);
   return lines;

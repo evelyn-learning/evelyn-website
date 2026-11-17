@@ -116,6 +116,8 @@ export interface V2TurnInput {
   /** A board call this session must not paint, and why (homework-turn.ts: a key value, a figure already on
    *  screen). Asked before the board is touched; the reason goes back to the model as the call's result. */
   boardGuard?: (name: string, args: Record<string, unknown>) => string | null;
+  /** Task 7a fix round 1 (review M5), tests only: the PART_PAGE_CHIP / PART_ASK_EVERY switches for this turn (default: the flags). */
+  partFlags?: { pageChip?: boolean; askEvery?: boolean };
 }
 
 /** What the student's grade asks of the tutor's pace. The constitution says to teach at their level; a grade 7
@@ -360,14 +362,14 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const lastTutorText = (() => { const m = [...state.history].reverse().find((h) => h.role === 'assistant' && (typeof h.content === 'string' || h.content.some((c) => c.type === 'text'))); return !m ? '' : typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '); })();
   // Task 7a (PART_PAGE_CHIP, PART_ASK_EVERY): spoken teaching lessons whose plan parts all have names. Chip, page and part
   // move together (part-flow.ts), and every part change after the level check is asked first.
-  const partFlow = TUTOR_V2_PART_PAGE_CHIP && session.mode === 'voice' && !discussion && !session.homework && !session.homeworkSheet && v2PlanLabelled(session.plan);
-  const askEvery = v2AskEveryOn(session);
+  const partFlow = (input.partFlags?.pageChip ?? TUTOR_V2_PART_PAGE_CHIP) && session.mode === 'voice' && !discussion && !session.homework && !session.homeworkSheet && v2PlanLabelled(session.plan);
+  const askEvery = v2AskEveryOn(session, input.partFlags?.askEvery);
   // A part change the student has said yes to opens its page as the reply begins, whether or not the reply writes it again:
   // the present perfect page held at 6.64 never opened after "yes, we move on", and the part was taught on the job's page;
   // pronunciation, taken up after the offer, ran on the conversation's page (mic test 1, embed-1794882458629). Opened before
   // the facts, so the board they show is the board the reply speaks over.
   let released: V2ToolCall | null = null; let releasedFrom = -1;
-  if (partFlow && session.plan && input.studentSaid !== null && !state.closed && !closingTurn && v2MoveAnswer(input.studentSaid) === 'go') {
+  if (partFlow && session.plan && input.studentSaid !== null && !state.closed && !closingTurn && v2MoveAnswer(input.studentSaid, lastTutorText) === 'go') {
     const pending = v2PendingPart(session.plan, state, lastTutorText, input.studentSaid);
     if (pending) {
       const id = `inl_${nowMs.toString(36)}_0`; const args = { title: pending.title }; releasedFrom = state.board.current;
@@ -375,7 +377,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       if (o.painted) released = { id, name: 'new_page', args, outcome: o.detail, inline: true, agreed: true };
     }
   }
-  const facts = renderFacts(session, state, { ...input.facts, nowMs, heard: input.studentSaid, ...(TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid) ? { stopAsked: true } : {}), ...(levelReopened ? { levelReopened: true } : {}), ...(released ? { partOpened: String(released.args.title) } : {}) });
+  const facts = renderFacts(session, state, { ...input.facts, nowMs, heard: input.studentSaid, ...(TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid) ? { stopAsked: true } : {}), ...(levelReopened ? { levelReopened: true } : {}), ...(released ? { partOpened: String(released.args.title) } : {}), ...(input.partFlags?.askEvery !== undefined ? { partAskEvery: input.partFlags.askEvery } : {}) });
   // A reply that closes the session: the student's words ask to stop, or the time is up (V2_TIME_UP_MIN, as the facts
   // say it). A page it opens is the summary's, and is never held for "shall we go on?" (part-close.ts): held, "Sorry, I
   // have to finish now." in a two-page lesson got "Next is summary. Shall we go on?" and the summary, its sentence cards,
@@ -601,7 +603,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const frameDue = askEvery ? true : frameDueOld;
   // …and a frame the model writes is dropped only when it repeats an earlier ask word for word (or a frame about the summary
   // when the 6e budget would have dropped it: the close keeps its rules).
-  const dropFrameIf = askEvery ? (x: string) => v2AskRepeats(x, state.history) || (TUTOR_V2_PART_OFFER_ONCE && !frameDueOld && isPartFrame(x) && V2_CLOSING_PAGE.test(x)) : null;
+  const dropFrameIf = askEvery ? (x: string) => v2AskRepeats(x, state.history, session.plan) || (TUTOR_V2_PART_OFFER_ONCE && !frameDueOld && isPartFrame(x) && V2_CLOSING_PAGE.test(x)) : null;
   // F3, F4: a goodbye waits for the reply to be complete (reply-gate.ts).
   const holdGoodbye = gated && (TUTOR_V2_CLOSE_ONE_QUESTION || TUTOR_V2_PASSED_PART_CLOSE);
   let framesDropped = 0;
@@ -691,7 +693,11 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           let pagePart: { index: number; title: string } | null = null;
           if (part.block.kind === 'page' && (partFlow || askEvery) && session.plan && !closesLesson(part.block.body)) {
             const title = part.block.body.trim();
-            if (released && (v2PartOfPage(session.plan, title) === v2PartOfPage(session.plan, String(released.args.title)) || title.replace(/\s+/g, '').toLowerCase() === String(released.args.title).replace(/\s+/g, '').toLowerCase())) continue;
+            if (released && (v2PartOfPage(session.plan, title) === v2PartOfPage(session.plan, String(released.args.title)) || title.replace(/\s+/g, '').toLowerCase() === String(released.args.title).replace(/\s+/g, '').toLowerCase())) {
+              // Fix round 1 (review M3): out of the stored reply too, so the history holds one page block for it (at its head).
+              retitles.push([part.block.raw, '']);
+              continue;
+            }
             pagePart = boardHasPage(title) ? null : v2PageForPart(session.plan, state, title);
             // Its heading is the part's name, so the chip, the page and "Next is…" name one part.
             if (partFlow && pagePart && pagePart.title !== title) part = { block: { ...part.block, body: pagePart.title } };

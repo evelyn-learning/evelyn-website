@@ -25,6 +25,7 @@ import { v2ReadCorrectedSentences } from '@/lib/tutor/v2/sentence-cards';
 import { TUTOR_PRONUNCIATION_ASSESS, TUTOR_WORKING_LEVEL } from '@/lib/tutor/orchestrator/flags';
 import { parseTutorLanguages } from '@/lib/tutor/voice/tts-language';
 import type { V2Session, V2State, V2ToolCall } from '@/lib/tutor/v2/types';
+import { v2ReadCarried } from '@/lib/tutor/v2/state-carry';
 
 export const runtime = 'nodejs';
 
@@ -62,10 +63,9 @@ function readState(raw: unknown): V2State | null {
   const workingLevel = v2ReadWorkingLevel(s.workingLevel);
   const pronunciation = v2ReadPronunciation(s.pronunciation);
   const correctedSentences = v2ReadCorrectedSentences(s.correctedSentences);
-  // Task 7a: the page held while the student is asked whether to go on (part-flow.ts).
-  const h = s.heldPage as Partial<NonNullable<V2State['heldPage']>> | undefined;
-  const heldPage = h && typeof h === 'object' && typeof h.title === 'string' && typeof h.part === 'string' && typeof h.at === 'number' && Number.isFinite(h.at) ? { title: h.title.slice(0, 80), part: h.part.slice(0, 80), at: h.at } : undefined;
-  return { ...(heldPage ? { heldPage } : {}), ...(workingLevel ? { workingLevel } : {}), ...(pronunciation ? { pronunciation } : {}), ...(correctedSentences ? { correctedSentences } : {}), history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), ...(thinking ? { thinking } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}), ...(homework ? { homework } : {}) };
+  // Task 7a (and its fix round 1): the held page, when the summary began, replies since the board, what was not painted.
+  const carried = v2ReadCarried(s);
+  return { ...carried, ...(workingLevel ? { workingLevel } : {}), ...(pronunciation ? { pronunciation } : {}), ...(correctedSentences ? { correctedSentences } : {}), history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), ...(thinking ? { thinking } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}), ...(homework ? { homework } : {}) };
 }
 
 export async function POST(req: NextRequest) {

@@ -1821,3 +1821,10 @@ export const TUTOR_V2_PART_PAGE_CHIP = process.env.NEXT_PUBLIC_TUTOR_V2_PART_PAG
  *  "on its own whim" with no ask (Task 7a, embed-1794882458629). Default ON; NEXT_PUBLIC_TUTOR_V2_PART_ASK_EVERY=off ⇒
  *  the 6e budget, as before. */
 export const TUTOR_V2_PART_ASK_EVERY = process.env.NEXT_PUBLIC_TUTOR_V2_PART_ASK_EVERY !== 'off';
+
+/** Tutor brain v2 (v2/state-carry.ts, the brain-v2 turn route): the state fields the turn writes for the next turn survive
+ *  the route's reading of the client's state: when the summary began (Task 6g CLOSE_ONE_QUESTION's close guards), how many
+ *  replies since the board was written, and what was not painted last reply. The route rebuilt the state from a fixed list
+ *  of fields and dropped all three, so those facts lines and the 6g guards never ran in a real session (Task 7a fix round
+ *  1). Default ON; NEXT_PUBLIC_TUTOR_V2_STATE_CARRY=off ⇒ dropped, as before. */
+export const TUTOR_V2_STATE_CARRY = process.env.NEXT_PUBLIC_TUTOR_V2_STATE_CARRY !== 'off';
