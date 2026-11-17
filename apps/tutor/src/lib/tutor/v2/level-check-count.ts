@@ -71,6 +71,11 @@ export interface V2LevelCheckCount {
   classified: boolean;
 }
 
+/** Final review M4: a question about them, not the overview's "Does that sound good?" / "Are you ready?": the level check has
+ *  begun with it. */
+const ABOUT_THEM = /^(?:(?:so|okay|ok|now|great|good|first|let'?s (?:begin|start)|to start)[,.!]?\s+)*(?:what|how|where|when|why|which|who|have you|has your|did you|do you|are you|were you|can you|could you|would you|tell me)\b[^?]*\?["'”’]*$/i;
+const NOT_LEVEL = /\b(?:ready|sound(?:s)? good|okay|ok|all right|alright|clear|make sense|any questions?|shall we|start the lesson)\b/i;
+const lastOf = (t: string) => stripBoardBlocks(t).split(/(?<=[.!?。！？]["'”’」)]*)\s+/).map((x) => x.trim()).filter(Boolean).pop() ?? '';
 const textOf = (m: Anthropic.MessageParam) => (typeof m.content === 'string' ? m.content : m.content.map((b) => (b.type === 'text' ? b.text : '')).join(' '));
 const isOwnWords = (m: Anthropic.MessageParam) => m.role === 'user' && !textOf(m).trim().startsWith('[');
 
@@ -79,13 +84,26 @@ const isOwnWords = (m: Anthropic.MessageParam) => m.role === 'user' && !textOf(m
 export function v2CountLevelCheck(plan: LessonPlan | null | undefined, history: Anthropic.MessageParam[], heard: string | null | undefined, hasContent: (text: string) => boolean): V2LevelCheckCount {
   const questions = v2LevelCheckQuestions(plan);
   // Each of the learner's replies with the tutor's reply just before it.
-  const pairs: Array<{ tutor: string; said: string }> = [];
-  let tutor = '';
+  // `begun` (final review M4): the level check had begun when the tutor asked it: a reply after the one that marked a part
+  // before the check (the overview), or a reply that asks a question about them. Small talk before it ("Sounds good, I'm a
+  // little nervous today." to the opener) is no answer to a level question.
+  const pairs: Array<{ tutor: string; said: string; begun: boolean }> = [];
+  const levelAt = plan ? plan.segments.findIndex((seg) => v2PartOf(seg).skipWhenLevelKnown) : -1;
+  const before = new Set(levelAt > 0 ? plan!.segments.slice(0, levelAt).map((seg) => seg.id) : []);
+  let tutor = ''; let begun = false; let markedBefore = false;
   for (const m of history) {
-    if (m.role === 'assistant') { const t = textOf(m); if (t.trim()) tutor = t; continue; }
-    if (isOwnWords(m)) { pairs.push({ tutor, said: textOf(m) }); tutor = ''; }
+    if (m.role === 'assistant') {
+      const t = textOf(m);
+      if (t.trim()) { tutor = t; if (markedBefore) begun = true; }
+      if (Array.isArray(m.content) && m.content.some((b) => b.type === 'tool_use' && b.name === 'set_goal_status' && before.has(String((b.input as { goal?: unknown } | null)?.goal ?? '')))) markedBefore = true;
+      continue;
+    }
+    if (isOwnWords(m)) {
+      if (ABOUT_THEM.test(lastOf(tutor)) && !NOT_LEVEL.test(lastOf(tutor))) begun = true;
+      pairs.push({ tutor, said: textOf(m), begun }); tutor = '';
+    }
   }
-  if (heard) pairs.push({ tutor, said: heard });
+  if (heard) { if (ABOUT_THEM.test(lastOf(tutor)) && !NOT_LEVEL.test(lastOf(tutor))) begun = true; pairs.push({ tutor, said: heard, begun }); }
   const all = questions.map((_, i) => i);
   const start = questions.length ? pairs.findIndex((p) => v2MatchLevelQuestion(p.tutor, questions, all) >= 0) : -1;
   if (start < 0) {
@@ -102,8 +120,9 @@ export function v2CountLevelCheck(plan: LessonPlan | null | undefined, history: 
   }
   // Fix round 1 (M4): answers before the first question in the plan's words answered the check's questions in other words:
   // counted as questions, as the gate counts them, so the check is never done only after five answers.
-  const before = pairs.slice(0, start).filter((p) => hasContent(p.said)).length;
-  const n = Math.min(answered.size + extra + before, V2_LEVEL_CHECK_QUESTIONS);
+  // Final review M4: only from when the check began (not the overview's small talk).
+  const earlier = pairs.slice(0, start).filter((p) => p.begun && hasContent(p.said)).length;
+  const n = Math.min(answered.size + extra + earlier, V2_LEVEL_CHECK_QUESTIONS);
   return { answered: n, followUp, done: n >= V2_LEVEL_CHECK_QUESTIONS, classified: true };
 }
 

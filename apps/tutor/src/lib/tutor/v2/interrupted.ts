@@ -25,7 +25,9 @@ export function foldInterruptedTurn(state: V2State, studentBlock: string, heard:
     results.push({ type: 'tool_result', tool_use_id: call.id, content: call.outcome });
     // The board record follows what was painted. Notes and goal marks made in a cut turn
     // are not replayed: the model will set them again if they still hold.
-    if (!V2_CONTROL_TOOL_NAMES.has(call.name) && !/^not painted/.test(call.outcome)) applyToModelBoard(next.board, call.id, call.name, call.args);
+    // Final review M6: no call whose outcome begins "not " (a page held for their yes is "not opened yet: …"): applied, the
+    // held page stood open in the record, its chip lit, and the held page was lost.
+    if (!V2_CONTROL_TOOL_NAMES.has(call.name) && !/^not /.test(call.outcome)) applyToModelBoard(next.board, call.id, call.name, call.args);
   }
   next.history = [
     ...next.history,

@@ -13,9 +13,13 @@
  *  - the facts say the summary reply ends with one invitation to ask questions and does not end the lesson;
  *  - an end_lesson before the invitation is refused with what to do instead (its goodbye is dropped: reply-gate.ts); a
  *    second one in the same reply ends the turn there, open, on the invitation (fix round 1, I2);
- *  - the invitation is recorded (state.closeInvitedAt) when that refusal is given, or when a reply ends by asking whether they
- *    have questions; from then on the close is never refused for it (answered or ignored, the lesson can always end), and
- *    the facts say to answer briefly, then say goodbye and close.
+ *  - final review I2: an end_lesson in a reply that already ends on the invitation is answered WAIT (the turn ends there,
+ *    open), never "ask whether they have questions" again (two invitations back to back); a refused close whose reply then
+ *    ends on no question gets the runtime's invitation (V2_CLOSE_INVITE_LINE), spoken and stored;
+ *  - the invitation is recorded (state.closeInvitedAt) only when the reply's last sentence spoken is one, and (final review
+ *    I3) the summary has begun (an earlier reply, a closing page, or this reply's own words): a bare "any questions?" during
+ *    pronunciation closed the lesson with no summary. From then on the close is never refused for it (answered or ignored,
+ *    the lesson can always end), and the facts say to answer briefly (the summary first if none was given), then close.
  * Earlier than the last fifth an "any questions?" is an ordinary question: it records nothing, and the close is refused as it
  * was before this task (fix round 1, I1: an invitation recorded at 12 min had the facts say "end the lesson in this reply"
  * every turn while the close was refused every turn).
@@ -26,8 +30,9 @@ import { TUTOR_V2_CLOSE_INVITES_QUESTIONS } from '../orchestrator/flags';
 import type { LessonPlan } from '../lesson-plan/types';
 import { stripBoardBlocks } from './board-inline';
 import { discussionOf } from './discussion';
-import { endsAsking } from './part-close';
+import { V2_CLOSING_PAGE, endsAsking } from './part-close';
 import { v2NextTimeLine } from './plan-map';
+import { isPartFrame } from './reply-gate';
 import { V2_TIME_UP_MIN, v2CloseOpenByClock } from './time-box';
 import type { V2Session, V2State } from './types';
 
@@ -50,6 +55,9 @@ export function v2CloseInviteOwed(session: V2Session, state: V2State, ctx: { now
 
 /** The result of an end_lesson refused for the invitation. Said as the tutor's own next step, as the other refused closes are. */
 export const V2_CLOSE_INVITE_REFUSAL = 'not ended: there is time for their questions. Say nothing of this message or of the clock, and say no goodbye now. If you have not given the summary, give it; then end this reply with one short question, in your own words and in the lesson\'s language, asking whether they have any questions before you finish. Close after their answer.';
+/** Final review I2: the runtime's own invitation, said when a refused close leaves the reply ending on no question (the
+ *  model's next call was only a goodbye, or nothing). Spoken and stored, so the lesson never hands over with no question. */
+export const V2_CLOSE_INVITE_LINE = 'Do you have any questions before we finish?';
 /** …and a second end_lesson in the same reply: the turn ends there, the lesson open, waiting for their answer (fix round 1, I2). */
 export const V2_CLOSE_INVITE_WAIT = 'not ended: wait for their answer to your question. Say nothing of this message.';
 
@@ -57,7 +65,10 @@ export const V2_CLOSE_INVITE_WAIT = 'not ended: wait for their answer to your qu
  *  reply" where the close would be refused). */
 export function v2CloseInviteFacts(session: V2Session, state: V2State, ctx: { nowMs: number; stopAsked: boolean; enabled?: boolean }): string[] {
   if (!v2CloseInviteOn(session, ctx.enabled) || state.closed) return [];
-  if (typeof state.closeInvitedAt === 'number') return v2CloseOpenByClock(session, state, ctx.nowMs) ? ['questions before the close: you have asked whether they have any questions before you finish. If they asked one, answer it briefly; then say goodbye and end the lesson in this reply'] : [];
+  // Final review I3: the summary is part of the close; when no summary has begun (no summary page, no summary reply), it comes
+  // first, in a few words.
+  const summaryGiven = typeof state.summaryBegunAt === 'number' || state.board.pages.some((pg) => V2_CLOSING_PAGE.test(pg.title));
+  if (typeof state.closeInvitedAt === 'number') return v2CloseOpenByClock(session, state, ctx.nowMs) ? [`questions before the close: you have asked whether they have any questions before you finish. If they asked one, answer it briefly; ${summaryGiven ? '' : 'if you have not given the summary yet, give it in a few words first; '}then say goodbye and end the lesson in this reply`] : [];
   if (!v2CloseInviteOwed(session, state, ctx)) return [];
   return ['questions before the close: there is time for their questions, so the reply that gives the summary does not end the lesson: it ends with one question, in your own words, asking whether they have any questions before you finish (that is its one question; no goodbye in it). The lesson ends on their answer'];
 }
@@ -70,10 +81,12 @@ const INVITES = [
   /^(?:\w+[,.!]?\s+){0,3}(?:is there )?anything (?:else )?(?:you(?:'d| would) like to ask|you want to ask)(?: (?:me|before (?:we|i) (?:finish|end)))?\?["'”’)]*$/i,
   /(?:何か|ほかに|他に)?(?:質問|聞きたいこと)(?:は|が)(?:あります|ありません)か[。？?]?\s*$/u,
 ];
-/** The reply's last sentence invites their questions. */
+/** The reply's last sentence invites their questions. Curly apostrophes read as straight ones (final review M3). Never a
+ *  part-change frame (「次に進みますか、それとも先に質問がありますか？」 ends as the Japanese invitation does): it asks whether
+ *  to go on. */
 export function v2ReplyInvites(lastSentence: string): boolean {
-  const s = lastSentence.trim();
-  return endsAsking(s, true) && INVITES.some((re) => re.test(s));
+  const s = lastSentence.trim().replace(/[‘’]/g, "'");
+  return endsAsking(s, true) && INVITES.some((re) => re.test(s)) && !isPartFrame(s, true);
 }
 
 /** The next-time line for the runtime's goodbye at the box (useV2Turns armHardStop), when the summary began and no reply said

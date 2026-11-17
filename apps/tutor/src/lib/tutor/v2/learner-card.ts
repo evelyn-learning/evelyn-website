@@ -40,6 +40,8 @@ import { TUTOR_V2_BOARD_LEARNER_SENTENCE } from '../orchestrator/flags';
 import { languageNameOf } from '../voice/language-request';
 import { stripBoardBlocks, type InlineBlock, type InlinePart } from './board-inline';
 import { v2IsPracticeAsk } from './languages';
+import { v2IsPartAsk } from './part-flow';
+import { v2ReplyInvites } from './close-invite';
 import { v2IsCorrectionOf, v2SentenceCardsOn, v2SentenceTokens as tokens } from './sentence-cards';
 import type { V2Board, V2Session, V2State } from './types';
 import { v2LevelCheckOn, v2LevelCheckOver } from './working-level';
@@ -320,12 +322,17 @@ function askedForSentence(history: Anthropic.MessageParam[]): boolean {
   if (!last) return false;
   const text = stripBoardBlocks(typeof last.content === 'string' ? last.content : last.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '));
   const sentences = text.split(/(?<=[.!?。！？]["'”’」)]*)\s+/).map((x) => x.trim()).filter(Boolean);
+  // Final review M1: a reply that ends on a part ask or the close's invitation asked whether to go on or for their questions,
+  // not for a sentence ("Yes, let's go on to the present perfect." got the card line).
+  const end = sentences[sentences.length - 1] ?? '';
+  if (end && (v2IsPartAsk(end) || v2ReplyInvites(end))) return false;
   return sentences.some((x) => v2IsPracticeAsk(x) || SENTENCE_REQUEST.test(x)) || QUESTION_ABOUT_THEM.test(sentences[sentences.length - 1] ?? '');
 }
 
 /** The facts line: their words just now answered an ask for a sentence (the rule's sessions only, not after the summary began). */
 export function v2LearnerSentenceFacts(session: V2Session, state: V2State, heard: string | null | undefined, enabled: boolean = TUTOR_V2_BOARD_LEARNER_SENTENCE): string[] {
-  if (!v2LearnerCardsOn(session, state, heard, enabled)) return [];
+  // Final review M1: not once their questions before the close were invited: the next reply answers and closes.
+  if (!v2LearnerCardsOn(session, state, heard, enabled) || typeof state.closeInvitedAt === 'number') return [];
   const s = v2LearnerSentence(heard);
   if (!s || !askedForSentence(state.history) || v2SentenceOnBoard(state.board, s, state.correctedSentences ?? [])) return [];
   const support = languageNameOf(session.languages![1]!.toLowerCase().split(/[-_]/)[0]!);

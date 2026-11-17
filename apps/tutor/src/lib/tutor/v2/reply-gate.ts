@@ -205,8 +205,13 @@ export class ReplyGate {
   /** Task 7c fix round 1: the reply has ended (this model call's words are complete, or it stops at a held page): a check-in
    *  waiting after a hand-over is the trailing second question, and is dropped. */
   dropTrailingCheckIn(): void { const c = this.checkIn; this.checkIn = null; if (c?.trim()) this.removed.push(c.trim()); }
-  /** Drop a waiting practice ask: what follows it closes the lesson. */
-  dropAsk(): void { const a = this.ask; this.ask = null; if (a?.trim()) this.removed.push(a.trim()); }
+  /** Drop a waiting practice ask: what follows it closes the lesson. Final review M2: a check-in waiting after it goes too: it
+   *  was released mid-reply before the summary ("Does that make sense so far?"), and with the close's invitation after the
+   *  summary the reply asked twice. */
+  dropAsk(): void {
+    const a = this.ask; this.ask = null; if (a?.trim()) this.removed.push(a.trim());
+    if (a !== null) { const c = this.checkIn; this.checkIn = null; this.handedOver = false; if (c?.trim()) this.removed.push(c.trim()); }
+  }
   /** The summary begins here (a closing page opens): a waiting practice ask is dropped, and so is any later one. */
   summaryBegins(): void { if (!this.opts.closeAsk) return; this.drain(true); this.dropAsk(); this.summaryStarted = true; }
 

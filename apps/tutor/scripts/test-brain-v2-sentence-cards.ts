@@ -186,8 +186,10 @@ async function main() {
     const read = v2ReadCorrectedSentences([...st.correctedSentences, 3, '', null]);
     check(`the route keeps the last ${V2_MAX_CORRECTED_SENTENCES}, strings only`, read?.length === V2_MAX_CORRECTED_SENTENCES && read[0] === 'Sentence number 4 here.', read);
     check('the route drops a malformed value', v2ReadCorrectedSentences('x') === undefined && v2ReadCorrectedSentences([]) === undefined);
-    const route = readFileSync(join(__dirname, '..', 'src', 'app', 'api', 'tutor', 'brain-v2', 'turn', 'route.ts'), 'utf8');
-    check('the route reads them into the state', /v2ReadCorrectedSentences\(s\.correctedSentences\)/.test(route));
+    // Final review: the route's state reading lives in v2/client-state.ts (v2ReadClientState), which the route calls.
+    const route = readFileSync(join(__dirname, '..', 'src', 'lib', 'tutor', 'v2', 'client-state.ts'), 'utf8');
+    const routeFile = readFileSync(join(__dirname, '..', 'src', 'app', 'api', 'tutor', 'brain-v2', 'turn', 'route.ts'), 'utf8');
+    check('the route reads them into the state', /v2ReadCorrectedSentences\(s\.correctedSentences\)/.test(route) && /v2ReadClientState\(body\.state\)/.test(routeFile));
     const quoted = renderFacts(bilingual, { ...newV2State(1), correctedSentences: ['He said "yes" to the plan.', 'I met a customer.'] }, { nowMs: 60000 });
     check('a sentence with a double quote keeps its own quote in the facts (review 4c M5)', quoted.includes('their corrected sentences so far: "He said \\"yes\\" to the plan."; "I met a customer."'), quoted);
   }

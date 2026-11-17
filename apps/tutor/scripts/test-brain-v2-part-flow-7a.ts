@@ -321,7 +321,9 @@ async function main() {
       && none(v2ScopeCarried(full(), { ...session, plan: disc })) && none(v2ScopeCarried(full(), { ...session, mode: 'text' })) && none(v2ScopeCarried(full(), { ...session, plan: undefined })));
     check('state scope: the held page is not touched by the scope', v2ScopeCarried({ ...full(), heldPage: { title: 'A', part: 'a', at: 1 } }, { ...session, mode: 'text' }).heldPage?.part === 'a');
     const routeSrc = readFileSync(join(__dirname, '..', 'src', 'app', 'api', 'tutor', 'brain-v2', 'turn', 'route.ts'), 'utf8');
-    check('state carry: the turn route reads them through v2ReadCarried and scopes them to the session', /const carried = v2ReadCarried\(s\)/.test(routeSrc) && /\.\.\.carried/.test(routeSrc) && /v2ScopeCarried\(state, session\)/.test(routeSrc));
+    // Final review: the route's state reading moved to v2/client-state.ts (v2ReadClientState).
+    const readSrc = readFileSync(join(__dirname, '..', 'src', 'lib', 'tutor', 'v2', 'client-state.ts'), 'utf8');
+    check('state carry: the turn route reads them through v2ReadCarried and scopes them to the session', /const carried = v2ReadCarried\(s, carry\)/.test(readSrc) && /\.\.\.carried/.test(readSrc) && /v2ReadClientState\(body\.state\)/.test(routeSrc) && /v2ScopeCarried\(state, session\)/.test(routeSrc));
   }
 
   console.log(`\n${passed} passed, ${failed} failed`);

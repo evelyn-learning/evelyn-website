@@ -253,9 +253,10 @@ async function main() {
 
   console.log('6. G: the state carried; the kill switches');
   {
-    check('closeInvitedAt is carried, validated and bounded', v2ReadCarried({ closeInvitedAt: 123 }).closeInvitedAt === 123 && v2ReadCarried({ closeInvitedAt: 'x' }).closeInvitedAt === undefined && v2ReadCarried({ closeInvitedAt: -1 }).closeInvitedAt === undefined && v2ReadCarried({ closeInvitedAt: Infinity }).closeInvitedAt === undefined && v2ReadCarried({ closeInvitedAt: 123 }, false).closeInvitedAt === undefined);
-    const scoped = v2ScopeCarried({ ...newV2State(0), closeInvitedAt: 5 }, { mode: 'text', plan: GDI });
-    check('…and dropped for a lesson it does not apply to', scoped.closeInvitedAt === undefined && v2ScopeCarried({ ...newV2State(0), closeInvitedAt: 5 }, { mode: 'voice', plan: GDI }).closeInvitedAt === 5);
+    check('closeInvitedAt is carried, validated and bounded (final review I6: with STATE_CARRY off too)', v2ReadCarried({ closeInvitedAt: 123 }).closeInvitedAt === 123 && v2ReadCarried({ closeInvitedAt: 'x' }).closeInvitedAt === undefined && v2ReadCarried({ closeInvitedAt: -1 }).closeInvitedAt === undefined && v2ReadCarried({ closeInvitedAt: Infinity }).closeInvitedAt === undefined && v2ReadCarried({ closeInvitedAt: 123 }, false).closeInvitedAt === 123);
+    const scoped = v2ScopeCarried({ ...newV2State(0), closeInvitedAt: 5 }, { mode: 'text', plan: GDI, languages: ['en', 'ja'] });
+    check('…and dropped for a lesson it does not apply to (final review I6: a one-language voice lesson too, or the switch off)', scoped.closeInvitedAt === undefined && v2ScopeCarried({ ...newV2State(0), closeInvitedAt: 5 }, { mode: 'voice', plan: GDI, languages: ['en', 'ja'] }).closeInvitedAt === 5
+      && v2ScopeCarried({ ...newV2State(0), closeInvitedAt: 5 }, { mode: 'voice', plan: GDI }).closeInvitedAt === undefined && v2ScopeCarried({ ...newV2State(0), closeInvitedAt: 5 }, { mode: 'voice', plan: GDI, languages: ['en', 'ja'] }, false).closeInvitedAt === undefined);
     // Fix round 1 (M10): the runtime's goodbye at the box carries the next-time line the summary reply left for the close.
     const begun = closeState({ summaryBegunAt: min(17.6), history: [u('x'), a('Here is a quick summary. Any questions before we finish?')] });
     check('M10: the box\'s goodbye gets the line when the summary began and no reply said it', v2HardStopNextTime(lang, GDI, begun) === "We didn't get to the pronunciation part today, so that's for next time.");

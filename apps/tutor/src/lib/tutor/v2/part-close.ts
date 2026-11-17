@@ -40,7 +40,10 @@ const offers = (text: string, ja: boolean = TUTOR_V2_PART_OFFER_ONCE, strict = f
 /** Task 7a (PART_ASK_EVERY): an ask about moving on to the next part, not a check-in. "Does that make sense so far?" left the
  *  way open, and a "Past simple" page opened in the reply that was still praising a present perfect sentence (mic test 1,
  *  embed-1794882458629 t≈9.17). */
-export const PART_OFFERS = /\b(?:next is|next up|shall we|go on|move on|ready|a question (?:first|before)|any questions? (?:first|before)|questions? before)\b/i;
+// Final review I1: "questions before" only before moving on (go on / move on / continue / start), never "before we finish":
+// "Any questions before we finish?" is the close's invitation (close-invite.ts), and read as a part ask it was dropped as a
+// repeat of the overview's "Any questions before we start?".
+export const PART_OFFERS = /\b(?:next is|next up|shall we|go on|move on|ready|(?:a|any) questions? first|(?:a |any )?questions? before (?:we|i|you) (?:go on|move on|continue|start))\b/i;
 const PART_OFFERS_JA = new RegExp(`${JA_WORD_START}(?:次|先)(?:に|へ)(?:進|行き|移り)|${JA_WORD_START}次の(?:パート|部分|ところ|項目|テーマ|トピック|セクション|ステップ|練習|課題|内容)(?:に|へ)|(?:進む|移る)前に`, 'u');
 
 /** Whether a sentence ends as a question. With `secondLanguage`, a question in the support language counts too: a

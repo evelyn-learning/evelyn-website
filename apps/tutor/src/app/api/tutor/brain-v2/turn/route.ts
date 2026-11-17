@@ -15,17 +15,15 @@ import { denyIfNoDemoAccess } from '@/lib/tutor/demo-gate/enforce';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { embedTokenPartnerClaim } from '@/lib/tutor/portal/embed-token';
 import { resolvePartnerSessionOptions } from '@/lib/tutor/portal/partner-session-options';
-import { readHomeworkState, v2HomeworkFor, v2SheetFor } from '@/lib/tutor/v2/homework';
+import { v2HomeworkFor, v2SheetFor } from '@/lib/tutor/v2/homework';
 import { runV2HomeworkTurn, runV2SheetTurn } from '@/lib/tutor/v2/homework-turn';
 import { runV2Turn } from '@/lib/tutor/v2/turn';
 import { v2HeardForBrain } from '@/lib/tutor/v2/heard';
-import { v2ReadWorkingLevel } from '@/lib/tutor/v2/working-level';
-import { v2ReadPronunciation } from '@/lib/tutor/v2/pronunciation';
-import { v2ReadCorrectedSentences } from '@/lib/tutor/v2/sentence-cards';
 import { TUTOR_PRONUNCIATION_ASSESS, TUTOR_WORKING_LEVEL } from '@/lib/tutor/orchestrator/flags';
 import { parseTutorLanguages } from '@/lib/tutor/voice/tts-language';
 import type { V2Session, V2State, V2ToolCall } from '@/lib/tutor/v2/types';
-import { v2ReadCarried, v2ScopeCarried } from '@/lib/tutor/v2/state-carry';
+import { v2ScopeCarried } from '@/lib/tutor/v2/state-carry';
+import { v2ReadClientState } from '@/lib/tutor/v2/client-state';
 
 export const runtime = 'nodejs';
 
@@ -42,32 +40,6 @@ interface TurnBody {
 
 const bad = (message: string) => new Response(JSON.stringify({ error: message }), { status: 400, headers: { 'Content-Type': 'application/json' } });
 
-function readState(raw: unknown): V2State | null {
-  const s = raw as Partial<V2State> | null;
-  if (!s || typeof s !== 'object') return null;
-  if (!Array.isArray(s.history) || typeof s.note !== 'string' || typeof s.goals !== 'object' || s.goals === null) return null;
-  if (!s.board || !Array.isArray(s.board.pages) || typeof s.board.current !== 'number') return null;
-  if (typeof s.startedAtMs !== 'number' || !Number.isFinite(s.startedAtMs)) return null;
-  const gaps = Array.isArray(s.gaps) ? s.gaps.filter((g) => g && typeof g.what === 'string' && typeof g.status === 'string').slice(-12) : undefined;
-  const homework = readHomeworkState(s.homework);
-  const t = s.thinking as Partial<NonNullable<V2State['thinking']>> | undefined;
-  const strs = (x: unknown, n: number) => (Array.isArray(x) ? x.filter((v): v is string => typeof v === 'string').slice(-n) : []);
-  const thinking = t && typeof t === 'object' ? {
-    position: typeof t.position === 'string' ? t.position.slice(0, 300) : '', weighed: strs(t.weighed, 12), shifts: strs(t.shifts, 6),
-    ...(typeof t.example === 'string' ? { example: t.example.slice(0, 240) } : {}),
-    ...(typeof t.direction === 'string' ? { direction: t.direction.slice(0, 240) } : {}),
-    ...(t.justComplicated === true ? { justComplicated: true } : {}),
-    ...(typeof t.theirMinutes === 'number' && Number.isFinite(t.theirMinutes) ? { theirMinutes: Math.min(60, Math.max(2, Math.round(t.theirMinutes))) } : {}),
-    ...(typeof t.complications === 'number' && Number.isFinite(t.complications) ? { complications: Math.min(20, Math.max(0, Math.round(t.complications))) } : {}),
-  } : undefined;
-  const workingLevel = v2ReadWorkingLevel(s.workingLevel);
-  const pronunciation = v2ReadPronunciation(s.pronunciation);
-  const correctedSentences = v2ReadCorrectedSentences(s.correctedSentences);
-  // Task 7a (and its fix round 1): the held page, when the summary began, replies since the board, what was not painted.
-  const carried = v2ReadCarried(s);
-  return { ...carried, ...(workingLevel ? { workingLevel } : {}), ...(pronunciation ? { pronunciation } : {}), ...(correctedSentences ? { correctedSentences } : {}), history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), ...(thinking ? { thinking } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}), ...(homework ? { homework } : {}) };
-}
-
 export async function POST(req: NextRequest) {
   const denied = await denyIfNoDemoAccess(req, 'brain-stream');
   if (denied) return denied;
@@ -76,7 +48,7 @@ export async function POST(req: NextRequest) {
   try { body = (await req.json()) as TurnBody; } catch { return bad('Invalid JSON body'); }
   const cfg = body.session ?? {};
   if (typeof cfg.subject !== 'string' || !cfg.subject || typeof cfg.level !== 'string') return bad('session.subject and session.level are required');
-  const state = readState(body.state);
+  const state = v2ReadClientState(body.state);
   if (!state) return bad('state is missing or malformed');
   if (state.closed) return bad('the session is closed');
   const saidRaw = body.studentSaid === null || body.studentSaid === undefined ? null : typeof body.studentSaid === 'string' ? body.studentSaid.slice(0, MAX_STUDENT_CHARS) : undefined;

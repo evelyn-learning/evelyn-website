@@ -88,7 +88,10 @@ export function v2PageForPart(plan: LessonPlan, state: View, title: string): { i
   const k = v2PartOfPage(plan, title);
   if (k >= 0) return { index: k, title };
   if (!state.board.pages.length) return null;
-  const next = v2NextPart(plan, state, v2PartInHand(plan, state));
+  let next = v2NextPart(plan, state, v2PartInHand(plan, state));
+  // Final review M5: never a level check (it has no page by design): a check that ended with no level (its budget spent) left
+  // it "next", and an unnamed teaching page was retitled "Level check" and lit that chip. The part after it instead.
+  while (next >= 0 && isLevelPart(plan, next)) next = v2NextPart(plan, state, next);
   // Never the closing part by elimination: an unnamed page is not taken for the summary (its own rules decide the close).
   return next < 0 || next === plan.segments.length - 1 ? null : { index: next, title: v2PartOf(plan.segments[next]!).label! };
 }
@@ -116,8 +119,22 @@ const ASKS_TO_GO = new RegExp(`^${FILLER}(?:(?:yes|yeah)[,.]?\\s+)?(?:can|could|
 const BARE_NO = new RegExp(`^${FILLER}(?:no|nope|nah)(?:,? (?:thanks?|thank you|questions?|i'?m (?:fine|good|ok(?:ay)?)))?[.!]*$`, 'i');
 /** "No questions." is a go whatever was asked. */
 const NO_QUESTIONS = new RegExp(`^${FILLER}(?:no|nope),? (?:more )?questions?\\b`, 'i');
-/** A part ask that offers a question first ("Any questions first, or shall we go on?"). */
-const QUESTIONS_FIRST = /\b(?:questions?|ask (?:something|anything))\b|質問/i;
+/** A part ask that offers a question first ("Any questions first, or shall we go on?"; final review I4: "…is there anything
+ *  you would like to ask first?"). */
+const QUESTIONS_FIRST = /\b(?:questions?|ask (?:something|anything)|(?:like|want) to ask)\b|質問/i;
+/** Final review I4: "no questions, I'm ready" in the words learners use, to an ask that offers a question first. Mic test 1's
+ *  flag 5 shape came back on the runtime's own asks: "No, I'm ready.", "I don't have any questions.", "Nothing.", "No, it's
+ *  okay." were read as `other` and 「質問はありません。」 as a question, so the held page never opened. */
+const NO_QUESTIONS_READY = new RegExp([
+  `^${FILLER}(?:(?:no|nope|nah)[,.!]?\\s+)?(?:i'?m|i am) (?:ready|fine|good|ok(?:ay)?|all right|alright)\\b`,
+  `^${FILLER}(?:(?:no|nope|nah)[,.!]?\\s+)?i (?:don'?t|do not|haven'?t got) (?:have )?(?:any|a|one)(?: (?:more |other |further )?questions?)?(?:[,.!]|\\s+(?:thanks?|thank you|now|today|for now|at the moment|right now)|$)`,
+  `^${FILLER}(?:(?:no|nope|nah)[,.!]?\\s+)?(?:nothing|none)(?:\\s+(?:really|at all|for now|right now|thanks?|thank you))?(?:[,.!]|$)`,
+  `^${FILLER}(?:no|nope|nah)[,.!]?\\s+(?:it'?s|that'?s|it is|that is|all) (?:ok(?:ay)?|fine|all right|alright|good)\\b`,
+  `^${FILLER}(?:no|nope|nah)[,.!]?\\s+(?:all good|i'?m good|we can go on|go ahead|please (?:go on|continue))\\b`,
+].join('|'), 'i');
+const NO_QUESTIONS_READY_JA = /^(?:(?:いいえ|いや|ううん)[、,]?\s*)?(?:(?:特に)?質問は(?:特に)?(?:ありません|ないです|ない|大丈夫です?)|(?:特に)?(?:ありません|ないです)|大丈夫(?:です)?)(?:[。！!、,]|$)/u;
+/** …unless the answer goes on to ask for something else ("No, I'm fine, but can you explain that again?"). */
+const READY_BUT = /\b(?:but|skip|again|explain|repeat|wait|summary|instead)\b|[?？]|でも|けど|もう一度|説明|スキップ|まとめ/i;
 
 /** The student's answer to "shall we go on, or do you have a question first?": 'go' (yes, let's, no questions), 'question'
  *  (they ask something: answered first, then the move), or 'other' (skip, not now, an answer to something else).
@@ -127,6 +144,8 @@ export function v2MoveAnswer(said: string | null, lastTutor: string = ''): 'go' 
   if (!s) return 'other';
   const last = stripBoardBlocks(lastTutor).split(SENTENCES).map((x) => x.trim()).filter(Boolean).pop() ?? '';
   if (NO_QUESTIONS.test(s)) return 'go';
+  // Final review I4: ahead of the decline and question checks (「いいえ」 is a decline word, 「質問」 a question's).
+  if ((NO_QUESTIONS_READY.test(s) || NO_QUESTIONS_READY_JA.test(s)) && !READY_BUT.test(s) && last && v2IsPartAsk(last) && QUESTIONS_FIRST.test(last)) return 'go';
   if (BARE_NO.test(s)) return last && v2IsPartAsk(last) && QUESTIONS_FIRST.test(last) ? 'go' : 'other';
   if (DECLINE.test(s)) return 'other';
   if (ASKS_TO_GO.test(s)) return 'go';
@@ -271,6 +290,13 @@ export function v2PartAskLine(o: { next: string; done?: string; named: boolean; 
   const lead = /[?？]$/.test(next) ? `Next: ${next}` : pick(NEXTS, (f) => f(next));
   const close = o.done ? pick(CLOSES, (f) => f(v2PartNameSaid(o.done!))) : '';
   return [close, lead, ask].filter(Boolean).join(' ');
+}
+
+/** Final review I5: whether a reply names a part for its ask: every word of the part's name (plan-map.ts v2PartNamedIn) in
+ *  the reply's last two sentences. Half the words anywhere counted "Perfect, that is exactly right!" as naming Present
+ *  perfect, "joins the past and now" as Past simple, "Good job!" as Your job, and the ask went out with no name. */
+export function v2PartNamedLate(seg: LessonPlan['segments'][number], text: string): boolean {
+  return v2PartNamedIn(seg, stripBoardBlocks(text).split(SENTENCES).map((x) => x.trim()).filter(Boolean).slice(-2).join(' '));
 }
 
 /** Task 7c fix round 1: a page held unasked is still owed its ask: not lapsed and not opened. */
