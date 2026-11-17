@@ -19,6 +19,12 @@ export type UserDoc = {
 
 export type SessionDoc = { token: string; username: string; expiresAt: Date; createdAt: Date };
 
+/**
+ * Raised when our working reaches a different answer from Castle Rock's key.
+ * Not a solution: the reviewer sees only our answer, their key and this working.
+ */
+export type KeyQueryDoc = { ourAnswer: string; workingHtml: string; raisedAt: Date; reviewerReason?: string; answeredAt?: Date };
+
 export type OptionDoc = { label: string; html: string; md?: string };
 
 export type ItemDoc = {
@@ -46,6 +52,8 @@ export type ItemDoc = {
   /** Animated (voiced) player attached to the item: files under assets/<itemId>/player/. */
   player?: { entry: string; voice?: string; height: number; note?: string; attachedAt: Date };
   stage: Stage;
+  /** The latest key query (kept for the record once answered). Undefined on items never queried. */
+  keyQuery?: KeyQueryDoc;
   version: number;
   /** Highest solution version released to review (Castle Rock never sees above it). Undefined on rows from before 2026-11-17: treat as `version`. */
   releasedVersion?: number;
@@ -188,6 +196,10 @@ function defineModels(conn: Connection): Models {
       required: false,
     },
     stage: { type: String, index: true },
+    keyQuery: {
+      type: new Schema({ ourAnswer: String, workingHtml: String, raisedAt: Date, reviewerReason: String, answeredAt: Date }, { _id: false }),
+      required: false,
+    },
     version: { type: Number, default: 0 },
     releasedVersion: Number,
     releasedAnswer: String,

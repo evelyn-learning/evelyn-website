@@ -149,7 +149,10 @@ async function passageTests() {
 
   // every stage has a label, a help line and an owner entry; every verdict leads to a stage
   for (const s of STAGES) assert.ok(STAGE_LABEL[s] && STAGE_HELP[s] && s in STAGE_OWNER, `stage ${s} is described`);
-  assert.deepEqual(Object.values(VERDICTS).map((v) => v.stage), ["approved", "changes_requested", "item_data", "rejected"]);
+  assert.deepEqual(Object.values(VERDICTS).map((v) => v.stage), ["approved", "changes_requested", "item_data", "rejected", "drafting"]);
+  assert.equal(VERDICTS.key_right.verb, "confirmed the key of");
+  assert.equal(VERDICTS.key_right.needsSolution, false, "a key query is answered without a solution");
+  assert.equal(VERDICTS.key_right.needsNote, "Please say why the key is right.");
   assert.equal(STAGE_OWNER.changes_requested, "evelyn");
   assert.equal(STAGE_OWNER.item_data, "tech");
   assert.equal(STAGE_OWNER.rejected, null);

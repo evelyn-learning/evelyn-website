@@ -2,10 +2,17 @@
  * Keystone routing walk, safe on the live site: makes its own item (990001,
  * with a reading passage) and uses throwaway reviewer / tech sign-ins.
  *
- *   upload (passage shown) → Evelyn writes → reviewer: Item data, with markup
+ *   upload (passage shown) → key query raised by script → reviewer: The key is
+ *   right (reason required) → Evelyn writes → reviewer: Item data, with markup
  *   pasted in the note (collapsed, renders as a table) → tech sees "Waiting on
  *   you", re-sends → back with Evelyn → revise → reviewer: Fix solution →
- *   revise → reviewer: Reject → reviewer: Approve (a decision can be changed).
+ *   revise → reviewer: Reject → reviewer: Approve (a decision can be changed)
+ *   → key query raised on the approved item (no solution shown, Approve and Fix
+ *   solution refused by the server) → tech re-sends → back with Evelyn.
+ *
+ * The key queries are raised through the lib (as the pipeline does), so the
+ * script needs the app's database settings too: KEYSTONE_MONGODB_URI (or
+ * MONGODB_URI) and KEYSTONE_DB_NAME when it is not castle_rock_review.
  *
  *   KS_BASE=https://keystone.evelynlearning.com KS_PW_PRAVEEN=… \
  *   KS_REVIEWER=qa-reviewer KS_PW_REVIEWER=… KS_TECH=qa-tech KS_PW_TECH=… KS_SHOTS=<dir> \
@@ -19,6 +26,8 @@ import { chromium, type Page } from "playwright";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import JSZip from "jszip";
+import { closeKs, ks } from "../src/lib/keystone/db";
+import { raiseKeyQuery, setVerdict, type Actor } from "../src/lib/keystone/store";
 
 const BASE = process.env.KS_BASE!;
 const SHOTS = process.env.KS_SHOTS || "/tmp/ks-routing-shots";
@@ -28,6 +37,10 @@ const USERS = {
   reviewer: { u: process.env.KS_REVIEWER || "qa-reviewer", p: process.env.KS_PW_REVIEWER! },
   tech: { u: process.env.KS_TECH || "qa-tech", p: process.env.KS_PW_TECH! },
 };
+
+/** The pipeline's actor when it raises a key query. */
+const PIPELINE: Actor = { username: "praveen", name: "Evelyn Learning", role: "evelyn" };
+const REVIEWER_ACTOR: Actor = { username: USERS.reviewer.u, name: "QA reviewer", role: "reviewer" };
 
 let step = 0;
 async function shot(page: Page, name: string) {
@@ -101,6 +114,43 @@ async function main() {
   ok(await page.isVisible(".ks-question .cr-passage:has-text('The ferry leaves the harbour at seven')"), "the reading passage is shown above the stem");
   ok((await page.locator(".ks-question .cr-passage-title").evaluate((e) => getComputedStyle(e).fontWeight)) >= "600", "passage title is styled");
   ok((await stageOf(page)) === "Received with Evelyn", "new item: Received · with Evelyn");
+
+  // 1b. Our two solves agree with each other, not with the key: the pipeline raises a key query.
+  await raiseKeyQuery(ITEM, "A", "QA TEST. The passage says the ferry leaves at **noon**, so the answer is A.", PIPELINE);
+  ok((await stageOf(page)) === "Key query with Castle Rock review", "key query raised: Key query · with Castle Rock review");
+  ok(await page.isVisible(".ks-feed li:has-text('queried the key of')"), "history: queried the key of the item");
+  await signIn(page, "reviewer");
+  const kqWaiting = page.locator("section.ks-keyqueries");
+  ok(
+    /Key queries waiting on you · 1/.test((await kqWaiting.textContent()) ?? "") && (await kqWaiting.locator(`a:has-text('${ITEM}')`).count()) === 1,
+    "reviewer overview: 'Key queries waiting on you · 1' lists the item",
+  );
+  await page.goto(`${BASE}/item/${ITEM}`);
+  const panel = page.locator(".ks-keyquery");
+  const panelText = ((await panel.textContent()) ?? "").replace(/\s+/g, " ");
+  ok(/Our answer\s*A/.test(panelText) && /Your key\s*B/.test(panelText), "panel shows our answer (A) and their key (B)");
+  ok(/Our working/.test(panelText) && (await panel.locator("strong:has-text('noon')").count()) === 1, "panel shows our working, rendered");
+  ok((await page.locator(".ks-section").count()) === 0, "no solution shown on a key query");
+  for (const b of ["The key is right", "Item data", "Reject item", "Comment"]) ok(await page.isVisible(`.ks-bar button:has-text('${b}')`), `review bar has '${b}'`);
+  for (const b of ["Approve", "Fix solution"]) ok((await page.locator(`.ks-bar button:has-text('${b}')`).count()) === 0, `review bar has no '${b}' on a key query`);
+  await page.locator("h1").click();
+  await page.keyboard.press("r");
+  ok(await page.evaluate(() => document.activeElement?.tagName === "TEXTAREA"), "R with an empty box puts the cursor in the box (reason required)");
+  await page.keyboard.press("Escape");
+  await page.click(".ks-bar button:has-text('The key is right')");
+  await page.waitForSelector(".ks-bar .msg");
+  ok(((await page.textContent(".ks-bar .msg")) ?? "").includes("Please say why the key is right."), "'The key is right' without a reason is refused");
+  await shot(page, "reviewer-key-query");
+  await page.fill(".ks-bar textarea", "QA TEST: the passage says seven, so B is right.");
+  await Promise.all([left(page), page.click(".ks-bar button:has-text('The key is right')")]);
+  ok((await stageOf(page)) === "Drafting with Evelyn", "The key is right → Drafting · with Evelyn");
+  ok(await page.isVisible(".ks-feed li:has-text('confirmed the key of')"), "history: confirmed the key of the item");
+  {
+    const { Item } = await ks();
+    const kq = (await Item.findOne({ itemId: ITEM }).lean())?.keyQuery;
+    ok(kq?.reviewerReason === "QA TEST: the passage says seven, so B is right." && !!kq?.answeredAt, "the reviewer's reason is kept on the key query");
+  }
+  await signIn(page, "evelyn");
   await revise(page, "QA TEST. The ferry leaves at seven, so the answer is B.", "QA TEST: first version");
   ok((await stageOf(page)) === "In review with Castle Rock review", "sent for review: In review · with Castle Rock review");
   await shot(page, "evelyn-in-review");
@@ -174,8 +224,27 @@ async function main() {
   await Promise.all([left(page), page.keyboard.press("a")]);
   ok((await stageOf(page)) === "Approved", "a decision can be changed: A → Approved");
 
+  // 6. A key query on an item with a released solution: no solution shown, solution verdicts refused; re-sending returns it.
+  await raiseKeyQuery(ITEM, "A", "QA TEST. Second query: noon, so A.", PIPELINE);
+  await page.goto(`${BASE}/item/${ITEM}`);
+  ok(await page.isVisible(".ks-keyquery"), "key query panel shown");
+  ok((await page.locator(".ks-section").count()) === 0, "the released solution is not shown on a key query");
+  for (const v of ["approved", "changes"] as const) {
+    const err = await setVerdict(ITEM, v, "QA TEST", REVIEWER_ACTOR).then(() => "", (e: Error) => e.message);
+    ok(err !== "", `server refuses '${v}' on a key query (${err})`);
+  }
+  await signIn(page, "tech");
+  ok(/Updated: 990001/.test(await upload(page, zip)), "tech re-sends the queried item");
+  ok((await stageOf(page)) === "Drafting with Evelyn", "re-sent key query returns: Drafting · with Evelyn");
+  {
+    const { Item } = await ks();
+    const kq = (await Item.findOne({ itemId: ITEM }).lean())?.keyQuery;
+    ok(kq?.reviewerReason === "Item re-sent." && !!kq?.answeredAt, "the key query is kept, answered by the re-send");
+  }
+
   ok(errors.length === 0, `no browser errors${errors.length ? ": " + errors.join(" | ") : ""}`);
   await browser.close();
+  await closeKs();
   console.log("ROUTING WALK PASSED");
 }
 

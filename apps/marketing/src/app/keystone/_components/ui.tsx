@@ -149,6 +149,8 @@ export function Feed({ rows, base, empty = "No activity yet." }: { rows: Activit
                 ? "refreshed the question of"
             : a.type === "revision" && a.version === 1
               ? "wrote the solution for"
+              : a.type === "stage" && a.stage === "key_query" && a.body?.startsWith("Queried the key")
+                ? "queried the key of"
               : a.type === "stage" && a.body?.startsWith("Downloaded")
                 ? "downloaded"
                 : a.type === "stage" && a.body?.startsWith("Delivered")

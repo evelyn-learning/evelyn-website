@@ -10,8 +10,11 @@ import type { QtiItem } from "./qti";
 
 export type Actor = { username: string; name: string; role: ActivityDoc["role"] };
 
+/** Image paths in markdown resolve to the item's assets. */
+const imageResolver = (itemId: string) => (src: string) => (/^(https?:|\/)/.test(src) ? src : assetUrl(itemId, src.split("/").pop()!));
+
 export function renderSections(itemId: string, sections: { kind: SectionKind; md: string }[]): SectionDoc[] {
-  const resolveImage = (src: string) => (/^(https?:|\/)/.test(src) ? src : assetUrl(itemId, src.split("/").pop()!));
+  const resolveImage = imageResolver(itemId);
   return SECTIONS.flatMap((kind) => {
     const s = sections.find((x) => x.kind === kind);
     if (!s || !s.md.trim()) return [];
@@ -86,19 +89,39 @@ export async function releaseSolution(itemId: string, actor: Actor, opts: { log?
   }
 }
 
+/**
+ * Our working reaches `ourAnswer`, not the key: puts the item to the reviewer
+ * as a key query instead of writing a solution. The working is stored as HTML.
+ * Nothing here releases a solution.
+ */
+export async function raiseKeyQuery(itemId: string, ourAnswer: string, workingMd: string, actor: Actor) {
+  const { Item } = await ks();
+  const item = await Item.findOne({ itemId }).select("itemId").lean();
+  if (!item) throw new Error(`item ${itemId} not found`);
+  const now = new Date();
+  const keyQuery = { ourAnswer: ourAnswer.trim(), workingHtml: renderMarkdown(workingMd, { resolveImage: imageResolver(itemId) }), raisedAt: now };
+  await Item.updateOne({ itemId }, { $set: { stage: "key_query", keyQuery, updatedAt: now } });
+  await log({ itemId, type: "stage", stage: "key_query", body: "Queried the key.", username: actor.username, name: actor.name, role: actor.role, createdAt: now });
+}
+
 export async function setVerdict(itemId: string, verdict: Verdict, comment: string, actor: Actor) {
   const { Item } = await ks();
   const item = await Item.findOne({ itemId }).lean();
   if (!item) throw new Error(`item ${itemId} not found`);
   const rule = VERDICTS[verdict];
   if (!rule) throw new Error("Unknown decision.");
+  // A key query is not a solution: it is answered by confirming the key, flagging the item data or rejecting the item.
+  if (item.stage === "key_query" && rule.needsSolution) throw new Error("This item is a key query: confirm the key, flag the item data or reject the item.");
+  if (verdict === "key_right" && item.stage !== "key_query") throw new Error("There is no key query on this item.");
   // A question can be flagged or rejected before any solution exists; a solution verdict needs one.
   if (rule.needsSolution && !item.version) throw new Error("There is no solution to review yet.");
   // Never judge a version Castle Rock cannot see.
   if (rule.needsSolution && !canJudgeSolution(item)) throw new Error("A new version is being prepared; there is nothing to review yet.");
   if (rule.needsNote && !comment.trim()) throw new Error(rule.needsNote);
   const stage: Stage = rule.stage;
-  await Item.updateOne({ itemId }, { $set: { stage, updatedAt: new Date() } });
+  const now = new Date();
+  const answered = verdict === "key_right" ? { "keyQuery.reviewerReason": comment.trim(), "keyQuery.answeredAt": now } : {};
+  await Item.updateOne({ itemId }, { $set: { stage, updatedAt: now, ...answered } });
   await log({
     itemId,
     version: item.version,
@@ -170,15 +193,17 @@ export async function ingestQtiItems(items: QtiItem[], actor: Actor, uploadId: s
       updatedAt: new Date(),
     };
     const existing = await Item.findOne({ itemId: q.itemId }).lean();
-    // Re-sending an item that was waiting on its data (or was rejected) hands it back to Evelyn.
-    const reopened = !!existing && (existing.stage === "item_data" || existing.stage === "rejected");
+    // Re-sending an item that was waiting on its data (or was rejected, or its key queried) hands it back to Evelyn.
+    const reopened = !!existing && (existing.stage === "item_data" || existing.stage === "rejected" || existing.stage === "key_query");
+    // A re-sent key query stays on the item for the record, answered by the re-send.
+    const answered = existing?.stage === "key_query" ? { "keyQuery.answeredAt": new Date(), "keyQuery.reviewerReason": "Item re-sent." } : {};
     if (existing) {
       const stage: Stage = reopened ? (existing.version ? "drafting" : "received") : existing.stage;
       // Only a course that itself came from metadata is refreshed from it; a sheet course, or a row from before
       // courseSource existed (undefined, possibly a sheet course), is kept as it is.
       const { course: metadataCourse, ...withoutCourse } = fields;
       const keep = existing.courseSource === "metadata" ? { ...withoutCourse, course: metadataCourse } : withoutCourse;
-      await Item.updateOne({ itemId: q.itemId }, { $set: { ...keep, stage, receivedAt: new Date() } });
+      await Item.updateOne({ itemId: q.itemId }, { $set: { ...keep, ...answered, stage, receivedAt: new Date() } });
       updated.push(q.itemId);
     } else {
       // Spreadsheet rows that arrived before the item: every batch listing it, newest first; each field comes

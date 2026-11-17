@@ -88,6 +88,12 @@
 .ks-sentback .ks-ask { margin-top: 6px; color: var(--ink); }
 .ks-sentback .when { font-size: 12px; color: var(--muted); }
 .ks-waiting { border-color: #c9b8ea; }
+.ks-keyqueries { border-color: #f0c4a8; }
+.ks-keyquery { border-color: #f0c4a8; }
+.ks-kq { display: flex; gap: 24px; flex-wrap: wrap; margin: 8px 0 12px; }
+.ks-kq dt { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.ks-kq dd { margin: 2px 0 0; font-size: 20px; font-weight: 700; }
+.ks-keyquery h4 { margin: 0 0 6px; }
 .ks-note { background: var(--warn-soft); color: #5b3a00; border-radius: 6px; padding: 8px 12px; font-size: 14px; margin-bottom: 12px; }
 .ks-note.info { background: var(--accent-soft); color: #173a5a; }
 .ks-empty { color: var(--muted); padding: 18px 0; text-align: center; }

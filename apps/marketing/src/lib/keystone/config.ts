@@ -140,6 +140,8 @@ export const VERDICTS = {
   changes: { stage: "changes_requested", verb: "asked for solution changes on", needsSolution: true, needsNote: "Please say what needs to change in the solution." },
   item_data: { stage: "item_data", verb: "flagged missing item data on", needsSolution: false, needsNote: "Please say what is missing or wrong in the question." },
   rejected: { stage: "rejected", verb: "rejected", needsSolution: false, needsNote: "Please say why the item is rejected." },
+  /** Only on a key_query item: our working was wrong, the key stands; back to Evelyn to write the solution. */
+  key_right: { stage: "drafting", verb: "confirmed the key of", needsSolution: false, needsNote: "Please say why the key is right." },
 } as const satisfies Record<string, { stage: Stage; verb: string; needsSolution: boolean; needsNote: string }>;
 export type Verdict = keyof typeof VERDICTS;
 

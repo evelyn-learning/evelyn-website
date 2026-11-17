@@ -34,6 +34,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
 
   if (user.role === "reviewer") {
     const waiting = await listItems({ stage: "in_review", role: user.role });
+    const keyQueries = await listItems({ stage: "key_query", role: user.role });
     const feed = await recentActivity({ roles: ["evelyn"], types: ["revision", "comment"], limit: 8, viewer: user.role });
     return (
       <>
@@ -52,6 +53,21 @@ export default async function Overview({ searchParams }: { searchParams: Promise
             )}
           </div>
           <Stats counts={counts} base={base} stages={["in_review", "changes_requested", "item_data", "key_query", "approved", "delivered", "rejected"]} />
+          {keyQueries.length > 0 && (
+            <section className="ks-card ks-keyqueries" style={{ marginBottom: 16 }}>
+              <h2>Key queries waiting on you · {keyQueries.length}</h2>
+              <p className="ks-sub" style={{ marginBottom: 8 }}>
+                Our working reaches a different answer from your key. Open each item to see our answer, your key and our working, then
+                confirm the key (<b>R</b>), flag the item data (<b>D</b>) or reject the item (<b>X</b>).
+              </p>
+              <ItemsTable rows={keyQueries.slice(0, CAP)} base={base} showStage={false} linkQuery="?stage=key_query" />
+              {keyQueries.length > CAP && (
+                <Link className="ks-more" href={`${base}/items?stage=key_query`}>
+                  See all {keyQueries.length} key queries →
+                </Link>
+              )}
+            </section>
+          )}
           <div className="ks-grid" style={{ gridTemplateColumns: "minmax(0,2fr) minmax(0,1fr)" }}>
             <section className="ks-card">
               <h2>Waiting for review</h2>
@@ -70,7 +86,8 @@ export default async function Overview({ searchParams }: { searchParams: Promise
           <p className="ks-sub" style={{ marginTop: 14 }}>
             On an item: <b>A</b> approves. To send it back, write the reason in the box first, then <b>C</b> when the solution needs
             changes (goes to Evelyn), <b>D</b> when the question is incomplete or wrong as exported (goes to Castle Rock technical), or{" "}
-            <b>X</b> to reject the item itself. <b>J</b>/<b>K</b> move to the next or previous item.
+            <b>X</b> to reject the item itself. On a key query, <b>R</b> confirms the key (with the reason in the box).{" "}
+            <b>J</b>/<b>K</b> move to the next or previous item.
           </p>
         </main>
       </>
@@ -221,6 +238,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
               {todo.length === 1 ? "item needs" : "items need"} Evelyn · {counts.changes_requested} with solution changes, {counts.received} new
               {counts.drafting ? `, ${counts.drafting} drafting` : ""}
               {counts.item_data ? ` · ${counts.item_data} with Castle Rock technical for item data` : ""}
+              {counts.key_query ? ` · ${counts.key_query} key ${counts.key_query === 1 ? "query" : "queries"} with Castle Rock review` : ""}
             </div>
           </div>
           <div style={{ color: "var(--muted)", fontSize: 14 }}>{total} items in all · {counts.approved + counts.delivered} approved</div>

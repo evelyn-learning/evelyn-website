@@ -42,7 +42,9 @@ export default async function ItemPage({
   const listName = ctxLabel({ stage: ctx.stage, subject: ctx.subject });
   const [nb, queue] = await Promise.all([neighbours(itemId, filter), reviewQueue()]);
   const useList = isFiltered(ctx) || !!ctx.from || user.role !== "reviewer";
-  const viewingOld = !!solution && solution.version !== item.version;
+  // A key query is not a solution: its panel takes the solution's place, for every role.
+  const keyQuery = item.stage === "key_query";
+  const viewingOld = !keyQuery && !!solution && solution.version !== item.version;
 
   const qi = queue.indexOf(itemId);
   const nextWaiting = queue.length ? queue[(qi + 1) % queue.length] : null;
@@ -86,7 +88,7 @@ export default async function ItemPage({
           </div>
           <div className="ks-meta">
             <StageChip stage={item.stage} role={user.role} />
-            {versions.length > 0 && (
+            {versions.length > 0 && !keyQuery && (
               <span>
                 Version{" "}
                 {versions
@@ -196,33 +198,56 @@ export default async function ItemPage({
             )}
           </section>
 
-          <section className="ks-card">
-            <div className="ks-sol-head">
-              <h3>Evelyn&apos;s solution{solution ? ` · v${solution.version}` : ""}</h3>
-              {item.player && (
-                <PlayerButton
-                  src={playerUrl(item.itemId, item.player.entry)}
-                  itemId={item.itemId}
-                  height={item.player.height || 620}
-                  voice={item.player.voice}
-                  note={item.player.note}
-                />
-              )}
-            </div>
-            {solution ? (
-              solution.sections.map((s, i) => (
-                <div key={s.kind} className="ks-section">
-                  <h2>
-                    <span className="n">{i + 1}</span>
-                    {sectionTitle(s.kind, item.course) ?? SECTION_TITLE[s.kind]}
-                  </h2>
-                  <div className="ks-prose" dangerouslySetInnerHTML={{ __html: s.html }} />
+          {keyQuery ? (
+            <section className="ks-card ks-keyquery">
+              <h3>Key query</h3>
+              <p className="ks-sub">{STAGE_HELP.key_query}</p>
+              <dl className="ks-kq">
+                <div>
+                  <dt>Our answer</dt>
+                  <dd>{item.keyQuery?.ourAnswer || "–"}</dd>
                 </div>
-              ))
-            ) : (
-              <div className="ks-empty">{STAGE_HELP[item.stage]}</div>
-            )}
-          </section>
+                <div>
+                  <dt>Your key</dt>
+                  <dd>{item.key || "–"}</dd>
+                </div>
+              </dl>
+              <h4>Our working</h4>
+              {item.keyQuery?.workingHtml ? (
+                <div className="ks-prose" dangerouslySetInnerHTML={{ __html: item.keyQuery.workingHtml }} />
+              ) : (
+                <div className="ks-empty">No working recorded.</div>
+              )}
+            </section>
+          ) : (
+            <section className="ks-card">
+              <div className="ks-sol-head">
+                <h3>Evelyn&apos;s solution{solution ? ` · v${solution.version}` : ""}</h3>
+                {item.player && (
+                  <PlayerButton
+                    src={playerUrl(item.itemId, item.player.entry)}
+                    itemId={item.itemId}
+                    height={item.player.height || 620}
+                    voice={item.player.voice}
+                    note={item.player.note}
+                  />
+                )}
+              </div>
+              {solution ? (
+                solution.sections.map((s, i) => (
+                  <div key={s.kind} className="ks-section">
+                    <h2>
+                      <span className="n">{i + 1}</span>
+                      {sectionTitle(s.kind, item.course) ?? SECTION_TITLE[s.kind]}
+                    </h2>
+                    <div className="ks-prose" dangerouslySetInnerHTML={{ __html: s.html }} />
+                  </div>
+                ))
+              ) : (
+                <div className="ks-empty">{STAGE_HELP[item.stage]}</div>
+              )}
+            </section>
+          )}
         </div>
 
         <section className="ks-card" style={{ marginTop: 16 }}>
