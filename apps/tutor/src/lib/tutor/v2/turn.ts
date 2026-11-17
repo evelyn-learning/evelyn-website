@@ -40,6 +40,7 @@ import { v2IsPracticeAsk, v2LanguagesSection } from './languages';
 import { V2_LEVEL_WAIT, V2_LEVEL_WAIT_OVER, V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2MarkLevelKnownParts, v2ReopenLevelCheck, v2WorkingLevelSection } from './working-level';
 import { V2_PRACTISE_PRONUNCIATION_TOOL, v2ApplyPractisePronunciation, v2ConsumePronunciation, v2PronunciationOn, v2PronunciationSection } from './pronunciation';
 import { v2NoteCorrectedSentence, v2SentenceCardsOn, v2SentenceCardsSection } from './sentence-cards';
+import { LearnerCardWatch, v2LearnerCardsOn, v2SentenceOnBoard } from './learner-card';
 import { v2StopAsked } from './stop-signal';
 import { TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME } from '../orchestrator/flags';
 import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, V2_DISCUSSION_CONSTITUTION, directionAsked, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap } from './discussion';
@@ -640,6 +641,12 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Task 6f: notes and tables of example sentences are spoken in a spoken language lesson only (maths and science notes
   // stay on the board, as before).
   const languageLesson = (session.languages?.length ?? 0) >= 2 || !!session.pronunciation;
+  // Task 7b (BOARD_LEARNER_SENTENCE): the learner's sentence as it should be, carded where the reply quotes it and writes no
+  // card (learner-card.ts). Two corrections and a praised sentence were only spoken (mic test 1, embed-1794882458629).
+  const learnerWatch = gated && input.studentSaid && v2LearnerCardsOn(session, state, input.studentSaid)
+    ? new LearnerCardWatch(input.studentSaid, (s) => v2SentenceOnBoard(state.board, s, state.correctedSentences ?? [])) : null;
+  const cardsIn = (parts: InlinePart[]) => (learnerWatch ? learnerWatch.feed(parts) : parts);
+  let learnerStored = 0;
   // Task 7a: the page opened on their yes turns as the reply begins (TutorVoiceV2: an agreed page before any words).
   if (released) { pageTurnAt = 0; pageBefore = releasedFrom; toolCalls.push(released); input.onToolCall?.(released); }
   for (; modelCalls < V2_MAX_MODEL_CALLS;) {
@@ -754,7 +761,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           // Fix round 3: spoken teaching lessons only (not voice homework or a discussion).
           if (part.block.kind === 'sentence' && gated && TUTOR_V2_SAY_SENTENCE_CARD) {
             // Fix round 1 (minor 3): a practice ask the gate holds is part of what was said before the card.
-            const say = sentenceCardToSay(part.block.body, `${saidNow}${gate.heldAsk}`, { leadIn: true, continuing: cardRun });
+            // Task 7b: never the runtime's own card: its sentence is the reply's quote, already said.
+            const say = learnerWatch?.isOwn(part.block.raw) ? null : sentenceCardToSay(part.block.body, `${saidNow}${gate.heldAsk}`, { leadIn: true, continuing: cardRun });
             if (say) { saidCards.set(part.block.raw, say); sinceWords = []; gate.speakCard(say); cardRun = true; }
           }
           // Task 6f: a note or a table of example sentences a lead-in points at is spoken there too (board-timing.ts
@@ -775,8 +783,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // Fix round 1 (I3): when the words end, the last sentence goes out (it waited for the white space after it, or for the
     // call to return, behind any trailing tool calls), and a practice ask still waiting goes too, unless a closing page waits
     // on the end of the reply (pendingHold) or a goodbye is held: their outcome decides it.
-    const response = await callModel(params, (delta) => take(inline.push(delta)), input.signal, (type) => { if (type !== 'text' || pendingHold) return; gate.flush(); if (!pendingHold && !gate.holdsGoodbye) gate.releaseAsk(); });
-    take(inline.flush());
+    const response = await callModel(params, (delta) => take(cardsIn(inline.push(delta))), input.signal, (type) => { if (type !== 'text' || pendingHold) return; gate.flush(); if (!pendingHold && !gate.holdsGoodbye) gate.releaseAsk(); });
+    take(cardsIn(inline.flush()));
+    if (learnerWatch) take(learnerWatch.end());
     gate.flush();
     if (pendingHold) {
       // The reply is complete. One that calls end_lesson (accepted: this is the last fifth) is the close, and its page opens
@@ -790,6 +799,11 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     if (!gate.holdsGoodbye) gate.releaseAsk();
     askDrops += gate.framesDroppedIf;
     for (const [from, to] of retitles.splice(0)) for (const b of response.content) if (b.type === 'text' && b.text.includes(from)) { b.text = b.text.replace(from, to); break; }
+    // Task 7b: the runtime's card is stored where it was written, after the sentence that quotes it.
+    for (const w of learnerWatch?.written.slice(learnerStored) ?? []) {
+      learnerStored += 1;
+      for (const b of response.content) { if (b.type !== 'text') continue; const at = b.text.indexOf(w.after); if (at >= 0) { const end = at + w.after.length; b.text = `${b.text.slice(0, end)} ${w.raw}${b.text.slice(end)}`; break; } }
+    }
     const nextTime = nextTimeAt as { raw: string; line: string } | null;
     if (nextTime) {
       for (const b of response.content) if (b.type === 'text' && b.text.includes(nextTime.raw)) { b.text = b.text.replace(nextTime.raw, `${nextTime.line}\n${nextTime.raw}`); break; }

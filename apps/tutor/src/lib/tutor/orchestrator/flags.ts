@@ -1828,3 +1828,12 @@ export const TUTOR_V2_PART_ASK_EVERY = process.env.NEXT_PUBLIC_TUTOR_V2_PART_ASK
  *  of fields and dropped all three, so those facts lines and the 6g guards never ran in a real session (Task 7a fix round
  *  1). Default ON; NEXT_PUBLIC_TUTOR_V2_STATE_CARRY=off ⇒ dropped, as before. */
 export const TUTOR_V2_STATE_CARRY = process.env.NEXT_PUBLIC_TUTOR_V2_STATE_CARRY !== 'off';
+
+/** Tutor brain v2 (v2/learner-card.ts, v2/turn.ts, v2/facts.ts, spoken lessons taught in two languages): a sentence the
+ *  learner says goes on the board as a sentence card as it should be. When the reply quotes the corrected form of their
+ *  sentence ("we say "…"") or quotes their sentence as right ("That's right: "…"") and writes no card, the runtime writes
+ *  the card where the quote stands (the changed words stressed); a facts line asks for the card when their words were a
+ *  sentence. Not while the level check runs, never twice for one sentence. Two corrections and a sentence praised were
+ *  only spoken (Task 7b, mic test 1, embed-1794882458629). Default ON; NEXT_PUBLIC_TUTOR_V2_BOARD_LEARNER_SENTENCE=off ⇒
+ *  cards from the model alone, as before. */
+export const TUTOR_V2_BOARD_LEARNER_SENTENCE = process.env.NEXT_PUBLIC_TUTOR_V2_BOARD_LEARNER_SENTENCE !== 'off';

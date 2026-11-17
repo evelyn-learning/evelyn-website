@@ -16,6 +16,7 @@ import { discussionOf, effectiveMinutes, lastReplyNotes, renderThinking } from '
 import { v2WorkingLevelFacts } from './working-level';
 import { v2PronunciationFacts, v2TextSoundFacts } from './pronunciation';
 import { v2SentenceCardsFacts } from './sentence-cards';
+import { v2LearnerSentenceFacts } from './learner-card';
 import { v2PracticeAskFacts, v2RetryFacts } from './languages';
 import { v2PartDueFact, v2WrapDue } from './time-box';
 
@@ -51,6 +52,8 @@ export interface V2TurnFacts {
   partOpened?: string;
   /** Task 7a fix round 1, tests only: PART_ASK_EVERY for this turn (default: the flag). */
   partAskEvery?: boolean;
+  /** Task 7b, tests only: BOARD_LEARNER_SENTENCE for this turn (default: the flag). */
+  learnerCards?: boolean;
 }
 
 /** A quoted span at the very start of a reply, in any of the quote pairs a tutor uses: 「…」, 『…』, “…”, "…", ‘…’, '…'. */
@@ -184,6 +187,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   if (!session.homework && !session.homeworkSheet && !discussion) lines.push(...v2PracticeAskFacts(session.languages, state.history, f.heard));
   // The learner's corrected sentences, for the summary's sentence cards (sentence-cards.ts).
   lines.push(...v2SentenceCardsFacts(session, state));
+  // Task 7b (BOARD_LEARNER_SENTENCE): their words just now were a sentence: it goes on the board as it should be (learner-card.ts).
+  if (!summaryBegun) lines.push(...v2LearnerSentenceFacts(session, state, f.heard, f.learnerCards));
   // How the last reply opened, so the next does not open the same way (D10).
   lines.push(...v2OpenerFact(session, state));
   // The question check at a part change, once in a while (Task 6e); at every part change in a spoken lesson whose plan parts
