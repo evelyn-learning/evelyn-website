@@ -22,7 +22,7 @@ web) and **portal-contract**.
 | Product | Repo / app | Deploy | Process | Tenant gate |
 |---|---|---|---|---|
 | Tutor engine, all tenants | evelynlearning `apps/tutor` | `deploy-tutor.sh` | `evelyn-tutor` :3007 | partner row (`lib/tutor/portal/partner-session-options.ts`), build flag default ON (`orchestrator/flags.ts`), plan kind |
-| GAC engine | same code | `deploy-tutor-gac.sh` — **only when GAC is told** | `evelyn-tutor-gac` :3008 | `TUTOR_NO_REVEAL_LEDGER_PARTNERS`, `homework-problem` plan kind, GAC env keys (fallback off, drawn answers) |
+| GAC engine | same code | `deploy-tutor-gac.sh` — the only way to deploy :3008 (sets the GAC env keys); not pinned since 2026-11-16 | `evelyn-tutor-gac` :3008 | `TUTOR_NO_REVEAL_LEDGER_PARTNERS`, `homework-problem` plan kind, GAC env keys (fallback off, drawn answers) |
 | GDI and partner previews | same code | `deploy-tutor-demo.sh` | `evelyn-tutor-demo` :3009 | `sessionAllowsNonLatin(tutorLanguages)`, `gdi-demo` partner row |
 | Marketing site + back office | evelynlearning `apps/marketing` | `deploy-marketing.sh` | `evelyn-marketing` :3001 | — |
 | Crimsora / evelyntutor / GreenApple web | academy (one codebase) | `deploy-crimsora.sh` / `deploy-evelyntutor.com.sh` / `deploy-greenapple.sh` | `<tenant>-web` + `<tenant>-api` | tenant env file, tenant config in the app |
@@ -47,8 +47,9 @@ there is two deploys.
   (With `--no-push` it only gates.) Deploy happens between the gate and the
   push: merge → GATE → deploy → push.
 * **No long-lived tenant branches, ever.** A client freeze pins a deploy
-  (the build id on the box), never a branch. GAC during a freeze: fixes land
-  on main; :3008 moves only on Praveen's word.
+  (the build id on the box), never a branch. During a freeze, fixes land on
+  main and the frozen instance moves only on Praveen's word. No freeze is
+  active: GAC's ended 2026-11-16.
 * Root checkouts are never deployed from (the deploy scripts refuse).
 
 ## 4. Gate before any deploy
@@ -90,8 +91,10 @@ there is two deploys.
   would bake empty pages). `DEPLOY_CHECK=1` stops before touching the
   server. After merging into any academy checkout run `npm ci` there.
 * After every deploy: process Ready, the public URL answers 200, and the
-  **other** engine build ids are unchanged. GAC :3008 and GreenApple web move
-  only when GAC has been told.
+  **other** engine build ids are unchanged. GAC :3008 (`deploy-tutor-gac.sh`)
+  and GreenApple web (`deploy-greenapple.sh`) deploy like the other
+  instances since GAC's freeze ended (2026-11-16); after a :3008 deploy check
+  its env keys survived and note the rollback build id.
 * A deploy over **3 minutes is a script bug**, not a cost of doing business.
 * Env key changes go to both engine env files (`deploy-tutor-gac.sh` swaps
   its three GAC keys in).
