@@ -21,7 +21,10 @@ export function closeDueMinutes(timeBoxMinutes: number): number {
  *  (Algebra 1, portal-50a1e584). A question is not a request to wait ("wait, why is it negative?"). */
 export function asksToWait(said: string): boolean {
   const s = said.toLowerCase().replace(/[’]/g, "'");
-  if (s.includes('?')) return false;
+  const WAIT = /\b(?:pause|hold on|hang on|bear with me|be right back|brb|(?:give me|wait|just|one)\s+(?:(?:a|one)\s+)?(?:sec(?:ond)?|min(?:ute)?|moment)s?)\b/;
+  // "Can you give me a second, please?" is the request itself, written down with a question mark; the tutor
+  // answered it by explaining the answer five seconds later (portal-84f8660d).
+  if (s.includes('?')) return s.split(/(?<=\?)/).every((part) => !part.includes('?') || (WAIT.test(part) && /\b(?:can|could|would|will|may|mind)\b/.test(part) && !/\b(?:why|what|how|when|where|who|which)\b/.test(part)));
   return /\b(?:pause|hold on|hang on|bear with me|be right back|brb|(?:give me|wait|just|one)\s+(?:(?:a|one)\s+)?(?:sec(?:ond)?|min(?:ute)?|moment)s?)\b/.test(s);
 }
 

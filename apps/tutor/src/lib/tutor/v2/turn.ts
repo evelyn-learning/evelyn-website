@@ -18,7 +18,7 @@
 import { drawFigure } from './drawn-figures';
 import { typesetMaths } from './rich-text';
 import { closeDueMinutes } from './close-heard';
-import { goalForProblem, wholeProblem } from './progress';
+import { goalForProblem, goalForTitle, wholeProblem } from './progress';
 import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient } from '../ai/model-registry';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
@@ -456,6 +456,11 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           if (!g) state.goals[planGoal] = { status: 'shown', at: nowMs };
           else if (g.status === 'shown' && !o.painted) state.goals[planGoal] = { ...g, at: nowMs };
         }
+        // A page headed for a part of the plan, or that part's passage, is the lesson on that part.
+        if (session.plan && !discussion && o.painted && (block.name === 'new_page' || block.name === 'show_passage')) {
+          const part = block.name === 'new_page' ? goalForTitle(session.plan, String(args.title ?? '')) : goalForProblem(session.plan, String(args.text ?? ''));
+          if (part) state.partsSeen = { ...(state.partsSeen ?? {}), [part]: nowMs };
+        }
         if (o.turnTo !== undefined) turnsTo = o.turnTo;
         if (!o.painted) { if (page && was) page.items.push(was); replaces = undefined; }
         if (!o.painted && o.pointAt && !boardOnly) { pointsAt = o.pointAt; outcome = turnsTo !== undefined ? `not painted again: ${o.detail}; the board has turned back to that page and shows it. Carry on with it there: what you write next goes on that page` : `not painted again: ${o.detail}; the board has scrolled back to it`; }
@@ -492,7 +497,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     return !failed;
   };
   // How much had been said when the reply turned to a new page (-1: it did not).
-  let saidChars = 0; let pageTurnAt = -1; let pageBefore = -1; let markBeforeTurn = false;
+  let saidChars = 0; let pageTurnAt = -1; let pageBefore = -1; let pagesBefore = 0; let markBeforeTurn = false;
   // The item of this reply that a check addition belongs above (see the check's additions, below).
   let placeAbove: string | undefined;
   // The student was asked whether to go on and has answered: the page for the next part turns as the reply
@@ -536,7 +541,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
             input.onToolCall?.({ id: `held_${nowMs.toString(36)}`, name: 'new_page', args: { title: part.block.body.trim() }, outcome: 'not opened yet: the student is asked first' });
             continue;
           }
-          if (part.block.kind === 'page' && pageTurnAt < 0) { pageTurnAt = saidChars; pageBefore = state.board.current; }
+          if (part.block.kind === 'page' && pageTurnAt < 0) { pageTurnAt = saidChars; pageBefore = state.board.current; pagesBefore = state.board.pages.length; }
           if (part.block.kind === 'page') {
             const from = state.board.current; // A line of working is not carried: written just before the turn, it closes what came
             // before it: the count of domains for the molecule just answered was moved onto the next part's page
@@ -794,6 +799,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       const namesNewPage = (atWord: number) => atWord >= partBeginsAtWord;
       const beforeTurn = (b: InlineBlock) => {
         if (pageTurnAt < 0 || pageBefore < 0 || b.kind === 'page') return false;
+        // Turned BACK to a page for a look, nothing belongs on the page left behind: a second copy of a note was
+        // recorded on the practice page and shown on the page turned to (portal-84f8660d).
+        if (state.board.pages.length <= pagesBefore) return false;
         const want = letters(b.attrs.with ?? '').slice(0, 3);
         if (want.length >= 2) for (let at = 0; at + want.length <= saidLetters.length; at++) if (want.every((w, k) => saidLetters[at + k] === w)) return at < leadAtWord && !namesNewPage(at);
         // The check sometimes quotes the problem card rather than a sentence ("Two 6 Ω resistors are connected in
@@ -829,7 +837,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         const nextAny = b.kind === 'problem' || b.kind === 'page' ? undefined : inlinePainted.map((x) => ({ id: x.id, at: after.indexOf(x.raw), card: x.label.startsWith('problem') })).filter((x) => x.at >= 0 && onPage.has(x.id)).sort((x, y) => x.at - y.at)[0];
         // A figure drawn for a problem stands under its card, as in a book: put above, it pushed the card down two
         // seconds after the student had begun to read it (biology, embed-1794520770137).
-        const next = nextAny && b.kind === 'figure' && nextAny.card ? undefined : nextAny;
+        // The board is written top to bottom: a card that arrives later goes under what is already up. Written in
+        // above, it pushed a table and a note down while the student was reading them (AP US Government,
+        // portal-84f8660d, twice). TUTOR_V2_BOARD_INSERTS=on brings the old placing back.
+        const next = process.env.TUTOR_V2_BOARD_INSERTS !== 'on' || (nextAny && b.kind === 'figure' && nextAny.card) ? undefined : nextAny;
         placeAbove = next?.id;
         let ok = false; try { ok = settleInline(b, true); } finally { placeAbove = undefined; }
         if (!ok) continue;
@@ -852,7 +863,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // A spoken reply that asks the student nothing leaves them not knowing whose move it is. Going on unasked a
   // moment later turned a page the student was still reading and talked over their answer (AP Lit and AP Calc BC,
   // 2026-11-11: "give the student the chance to say yes, I get this"). The reply ends by handing over instead.
-  if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && spoken.length && !toolCalls.some((c) => c.name === 'keep_listening' || c.name === 'end_lesson') && !asksAnywhere(spoken.join(' ').split(/(?<=[.?!])\s+/))) {
+  if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && spoken.length && !toolCalls.some((c) => c.name === 'keep_listening' || c.name === 'end_lesson') && !asksAnywhere(spoken.join(' ').split(/(?<=[.?!])\s+/))
+    // With the close due the tutor is saying goodbye: "Good work today." was followed by "Are you with me so far?" (portal-84f8660d).
+    && !(session.timeBoxMinutes && session.timeBoxMinutes - (nowMs - state.startedAtMs) / 60000 <= closeDueMinutes(session.timeBoxMinutes))) {
     const ins = discussion ? DISCUSSION_CHECK_INS : V2_CHECK_INS;
     const words = ins[state.history.length % ins.length];
     input.onText?.(`\n\n${words}`);

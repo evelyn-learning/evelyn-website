@@ -27,7 +27,8 @@ import { runV2Turn, v2SessionPart, v2StudentBlock, type V2ModelCall, V2_CHECK_IN
 import { newV2State, type V2Session } from '../src/lib/tutor/v2/types';
 import { paintsOnBoard, streamV2Turn } from '../src/lib/tutor/v2/client';
 import { gradeOfLevel, isMathsSubject, isScienceSubject } from '../src/lib/tutor/v2/session-kind';
-import { v2Progress, goalForProblem, wholeProblem } from '../src/lib/tutor/v2/progress';
+import { v2Progress, goalForProblem, goalForTitle, wholeProblem } from '../src/lib/tutor/v2/progress';
+import { SEED_AP_APGOV_U2_PRESIDENCY } from '../src/lib/tutor/lesson-plan/seeds/ap-apgov-u2-presidency';
 import { closeDueMinutes, reopensClose, asksToWait } from '../src/lib/tutor/v2/close-heard';
 import { v2Background } from '../src/lib/tutor/v2/background';
 import { V2_MASTERY_DOWN, V2_MASTERY_UP, V2_MASTERY_UP_MIXED, v2Mastery, v2MemoryLines, v2ProfileCommit } from '../src/lib/tutor/v2/memory';
@@ -264,7 +265,7 @@ async function main() {
     const orderCall: V2ModelCall = async (params, onText) => { if (/board check/.test(lastOf(params))) return msg([{ type: 'text', text: '1: none\n<board equation with="Yes, du = dx and v">du = dx,\\quad v = -\\cos x</board>\n3: none' }], 'end_turn'); onText?.(parts8); return msg([{ type: 'text', text: parts8 }], 'end_turn'); };
     const ord = await runV2Turn({ session: voice, state: st6(), studentSaid: 'du is dx and v is negative cos x', callModel: orderCall });
     const ordItems = ord.state.board.pages[0].items.filter((it) => it.tool === 'show_equation');
-    check('what the check writes for an earlier sentence goes above the item that followed it', ordItems.length === 2 && /du=dx/.test(ordItems[0].core ?? '') && ord.toolCalls.find((c) => /du = dx/.test(String(c.args.latex)))?.before === ordItems[1].id, { ordItems, calls: ord.toolCalls });
+    check('what the check writes for an earlier sentence goes under what is already up, never above it', ordItems.length === 2 && /du=dx/.test(ordItems[1].core ?? '') && ord.toolCalls.every((c) => c.before === undefined), { ordItems, calls: ord.toolCalls });
     // Round 9 (biology, embed-1794520770137).
     const heldCalls: Array<{ name: string; outcome: string }> = [];
     await runV2Turn({ session: physics, state: pages7(), studentSaid: 'Uh, yes, they do.', callModel: say7(flip), boardPass: false, onToolCall: (c) => heldCalls.push(c) });
@@ -350,7 +351,9 @@ async function main() {
     check('a before-and-after pair is two catalogue figures, and half a pair is refused', boardMisfit('show_diagram', pair) === null && /radius is missing/.test(String(boardMisfit('show_diagram', { type: 'before_after', params: { ...pair.params, after: { kind: 'rotation', params: {} } } }))) && /at is the place along/.test(String(boardMisfit('show_diagram', { type: 'rigid_body', params: { forces: [{ at: 3, direction: 'down', label: '5 N' }] } }))) && boardMisfit('show_diagram', { type: 'rigid_body', params: { forces: [{ at: 0.2, direction: 'down', label: '5 N' }], supports: [{ at: 0.5 }] } }) === null, pair);
     check('each subject is offered its own tool figures', /\n  boxplot: /.test(`\n${figureCatalogueFor({ subject: 'math', topic: 'ap-statistics', level: '12' })}`) && /annotated_passage/.test(figureCatalogueFor({ subject: 'ela', topic: 'ap-english-lit', level: '11' })) && /rigid_body[\s\S]*before_after|before_after[\s\S]*rigid_body/.test(physCat) && /molecule/.test(figureCatalogueFor({ subject: 'sci', topic: 'chemistry', level: '11' })) && !/molecule|boxplot/.test(physCat), physCat.length);
     const stmt = stub([msg([{ type: 'text', text: 'Yes, it never stops. The program crashes with a StackOverflowError.' }], 'end_turn')]);
-    const rStmt = await runV2Turn({ session: voice, state: { ...newV2State(1_000_000), history: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'What happens?' }] }, studentSaid: 'it goes on forever', callModel: stmt.call, boardPass: false });
+    const rStmt = await runV2Turn({ session: voice, state: { ...newV2State(1_000_000), history: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'What happens?' }] }, studentSaid: 'it goes on forever', nowMs: 1_000_000 + 60000, callModel: stmt.call, boardPass: false });
+    const rBye = await runV2Turn({ session: { ...voice, timeBoxMinutes: 30 }, state: { ...newV2State(1_000_000), history: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'What happens?' }] }, studentSaid: 'ok', nowMs: 1_000_000 + 29 * 60000, callModel: stub([msg([{ type: 'text', text: 'Good work today.' }], 'end_turn')]).call, boardPass: false });
+    check('with the close due, a goodbye is not followed by a check-in', rBye.spoken === 'Good work today.', rBye.spoken);
     check('a spoken reply that asks nothing ends by handing the turn over', V2_CHECK_INS.some((c) => rStmt.spoken.endsWith(c)) && V2_CHECK_INS.some((c) => JSON.stringify(rStmt.state.history[rStmt.state.history.length - 1]).includes(c)), rStmt.spoken);
     const asked = stub([msg([{ type: 'text', text: 'Have you met the disc method before? Picture the region spinning around the axis.' }], 'end_turn')]);
     const ra = await runV2Turn({ session: voice, state: { ...newV2State(1_000_000), history: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'Hello.' }] }, studentSaid: 'ok', callModel: asked.call, boardPass: false });
@@ -863,6 +866,21 @@ async function main() {
     const rso = await runV2Turn({ session: dSession, state: asked, studentSaid: 'My department, I think.', nowMs: 1_000_000 + 9 * 60000, callModel: selfOrder.call });
     check('an order to itself is never said, and a close with nothing left to say still closes in words', rso.state.closed && !/Record the direction/.test(rso.spoken) && rso.spoken === 'Thank you for thinking this through with me. The direction you chose: a talk with my department.', rso.spoken);
     check('the verdict-word scan catches praise and passes a plain acknowledgement', DISCUSSION_VERDICT_WORDS.test('Excellent point.') && DISCUSSION_VERDICT_WORDS.test("That's right, Jo.") && !DISCUSSION_VERDICT_WORDS.test('Tying it to what the student decides is a useful test.'));
+  }
+  {
+    // AP US Government, portal-84f8660d: the lesson went concept → common-mistake check → concept → worked example.
+    const pp = SEED_AP_APGOV_U2_PRESIDENCY; const C = 'concept-presidency-formal-informal-powers'; const M = 'misconception-executive-orders-are-laws'; const W = 'worked-federalist-70-energy';
+    check('a page is known for the part of the plan its heading belongs to', ['Formal powers', 'War Powers Resolution', 'Executive agreements', 'Bargaining and the bully pulpit', 'The 22nd Amendment'].every((t) => goalForTitle(pp, t) === C) && goalForTitle(pp, 'Federalist No. 70') === W && goalForTitle(pp, 'Practice') === null && goalForTitle(pp, 'Page 1') === null && goalForTitle(pp, 'Recap') === 'recap');
+    check('a passage on the board is the worked example that reads it', goalForProblem(pp, 'Energy in the Executive is a leading character in the definition of good Government. ... Decision, activity, secrecy, and despatch, will generally characterize the proceedings of one man, in a much more eminent degree than the proceedings of any greater number.') === W);
+    const done = { [M]: { status: 'demonstrated' as const, at: 3 } };
+    check('the part in hand is the one the board is on', v2Progress(pp, {}, { [C]: 1 }).currentSegmentId === C && v2Progress(pp, done, { [C]: 4 }).currentSegmentId === C && v2Progress(pp, { ...done, [C]: { status: 'shown', at: 5 } }, { [C]: 6, [W]: 7 }).currentSegmentId === W);
+    check('a part the board never showed is not counted done because a later one is', !v2Progress(pp, done, { [C]: 4 }).completedSegmentIds.includes(W) && v2Progress(pp, done, { [C]: 4 }).completedSegmentIds.includes('hook') && v2Progress(pp, done).completedSegmentIds.includes(W));
+    check('a request to wait put as a question is still one', asksToWait('Wait, uh, can you give me a second, please?') && asksToWait('Could you hold on a minute?') && !asksToWait('hold on, what does that mean?'));
+    const nb = { pages: [{ title: 'p', items: [] as never[] }], current: 0 };
+    const q = 'sends U.S. troops into hostilities and Congress never declares war or authorizes the use of force, what must happen after 60 days under the War Powers Resolution?';
+    const note = 'Executive agreement: a deal with a foreign government, made without Senate ratification\nTreaty: needs two-thirds of the Senate\nDurability: ';
+    check('a card in slightly other words is not put up twice on a page', applyToModelBoard(nb, 'a', 'show_problem', { statement: `If a president ${q}` }).painted && !applyToModelBoard(nb, 'b', 'show_problem', { statement: `If the President ${q}` }).painted && applyToModelBoard(nb, 'c', 'show_problem', { statement: 'Troops were sent into hostilities on day 1. On day 20, Congress passes a law authorizing the use of force. Does the 60-day withdrawal deadline still apply? Say yes or no, and why.' }).painted
+      && applyToModelBoard(nb, 'd', 'annotate', { text: `${note}a successor president can withdraw from an executive agreement alone` }).painted && !applyToModelBoard(nb, 'e', 'annotate', { text: `${note}?` }).painted && applyToModelBoard(nb, 'f', 'annotate', { text: 'Declaring war: Congress only\nOrdering troops into hostilities: the President, as commander-in-chief' }).painted);
   }
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);

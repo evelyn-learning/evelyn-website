@@ -324,7 +324,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
         if (silentReply && !realtimeRef.current?.isSpeechPending()) showState('listening');
         // One early recheck, and only when the silence answered the student's own words: a silent answer
         // to a silence check-in goes back to the ordinary schedule (it looped every 12 s, embed-1794339843244).
-        const recheck = silentReply && lastTurnWasStudentRef.current;
+        const recheck = silentReply && lastTurnWasStudentRef.current && !asksToWait(lastStudentSaidRef.current);
         // A reply that asked the student nothing leaves them not knowing whose move it is (the tutor made a
         // statement and waited 44 s, embed-1794355900794). It learns of the silence early, once, and can go on.
         const said = turnSentencesRef.current;

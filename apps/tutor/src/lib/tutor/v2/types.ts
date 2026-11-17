@@ -97,6 +97,8 @@ export interface V2State {
   goals: Record<string, { status: GoalStatus; why?: string; at?: number }>;
   /** The board card of each plan problem that has been put up: goal id → item id (turn.ts). */
   problemCards?: Record<string, string>;
+  /** When the board last showed each part of the plan to be the one in hand (progress.ts). */
+  partsSeen?: Record<string, number>;
   /** Gaps the tutor has found in what the student knows, with how far each has been worked on. Optional: older states have none. */
   gaps?: V2Gap[];
   board: V2Board;

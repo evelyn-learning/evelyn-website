@@ -52,13 +52,43 @@ export function wholeProblem(plan: LessonPlan, statement: string): { goal: strin
   return /\(a\)[\s\S]*\(b\)/.test(authored) ? { goal, statement: authored } : null;
 }
 
-export function v2Progress(plan: LessonPlan, goals: V2State['goals']): V2Progress {
+const TITLE_FILLER = new Set(['the', 'a', 'an', 'and', 'or', 'of', 'in', 'on', 'to', 'for', 'with', 'vs', 'versus', 'no', 'page', 'part', 'about', 'more', 'what', 'how', 'why', 'is', 'are']);
+const RECAP_TITLE = /\b(?:recap|summary|review|takeaways?|wrap(?:ping)?[- ]up|key points|what to remember)\b/i;
+function titleWords(text: string): string[] {
+  return (text.toLowerCase().match(/[a-z]+|\d+[a-z]*/g) ?? []).filter((w) => !TITLE_FILLER.has(w)).map((w) => (w.length > 4 && w.endsWith('s') ? w.slice(0, -1) : w));
+}
+/** The part of the plan a board page is about, by its heading: the first part, in the plan's order, whose own
+ *  material uses every word of the heading. The opening and the recap touch on everything and are not judged
+ *  this way; a recap is known by a heading that says so. A heading of one word says too little to go by.
+ *  The tutor records progress rarely and after the fact: a lesson went from the concept to the common-mistake
+ *  check and back, then to the worked example, with "Try" shown as the part in hand for twenty minutes
+ *  (AP US Government, portal-84f8660d). */
+export function goalForTitle(plan: LessonPlan, title: string): string | null {
+  if (RECAP_TITLE.test(title)) return plan.segments.find((s) => s.kind === 'recap')?.id ?? null;
+  const want = [...new Set(titleWords(title))];
+  if (want.length < 2) return null;
+  for (const seg of plan.segments) {
+    if (seg.kind === 'hook' || seg.kind === 'recap') continue;
+    const s = seg as unknown as Record<string, unknown>;
+    const flat = (v: unknown): string => (typeof v === 'string' ? v : Array.isArray(v) ? v.map(flat).join(' ') : v && typeof v === 'object' ? Object.values(v as Record<string, unknown>).map(flat).join(' ') : '');
+    const has = new Set(titleWords([s.goal, s.keyIdeas, s.vocabulary, s.problem, s.question, s.steps].map(flat).join(' ')));
+    if (want.every((w) => has.has(w))) return seg.id;
+  }
+  return null;
+}
+
+/** `seen` is when the board last showed each part to be the one in hand (a page headed for it, its passage):
+ *  the tutor's own record says when a part was finished, this says where the lesson is. */
+export function v2Progress(plan: LessonPlan, goals: V2State['goals'], seen: Record<string, number> = {}): V2Progress {
   // A part that is only told has no moment at which the student finishes it, and a tutor that does not record it
   // leaves it open for the whole lesson. Once the lesson has reached a later part, it is behind the student.
-  const reachedIdx = plan.segments.reduce((last, seg, i) => (goals[seg.id]?.status ? i : last), -1);
+  const evidence = Object.keys(seen).length > 0;
+  const reachedIdx = plan.segments.reduce((last, seg, i) => (goals[seg.id]?.status || seen[seg.id] ? i : last), -1);
   const done = plan.segments.map((seg, i) => {
     const status = goals[seg.id]?.status;
-    return status === 'demonstrated' || status === 'skipped' || (status === 'shown' && TOLD_ONLY.has(seg.kind)) || (!status && TOLD_ONLY.has(seg.kind) && i < reachedIdx);
+    return status === 'demonstrated' || status === 'skipped' || (status === 'shown' && TOLD_ONLY.has(seg.kind)) || (!status && TOLD_ONLY.has(seg.kind) && i < reachedIdx
+      // Where the board says which parts the lesson has been on, a part it never showed was passed over, not done.
+      && (!evidence || !!seen[seg.id] || seg.kind === 'hook'));
   });
   const completedSegmentIds = plan.segments.filter((_, i) => done[i]).map((s) => s.id);
   // The part in hand: one the tutor has opened and not finished, else the one after the furthest finished.
@@ -74,7 +104,10 @@ export function v2Progress(plan: LessonPlan, goals: V2State['goals']): V2Progres
   // took the check first, and Recap was shown as the part in hand all through the practice problem
   // (AP US Government, portal-1115afec).
   const passedOver = stamped && done[stamped.i] ? plan.segments.findIndex((seg, i) => i < stamped.i && !done[i] && !goals[seg.id]?.status && plan.segments.slice(0, i).some((s2, k) => done[k] || goals[s2.id]?.status)) : -1;
-  const at = stamped ? (!done[stamped.i] ? stamped.i : passedOver >= 0 ? passedOver : after >= 0 ? after : stamped.i) : open >= 0 ? open : Math.max(0, next);
+  // The board's word on where the lesson is, when it is the latest word and that part is not finished.
+  const shown = plan.segments.map((seg, i) => ({ i, at: seen[seg.id] ?? 0 })).filter((x) => x.at > 0).sort((a, b) => b.at - a.at)[0];
+  const onBoard = shown && shown.at >= (stamped?.at ?? 0) && goals[plan.segments[shown.i].id]?.status !== 'demonstrated' && goals[plan.segments[shown.i].id]?.status !== 'skipped' ? shown.i : -1;
+  const at = onBoard >= 0 ? onBoard : stamped ? (!done[stamped.i] ? stamped.i : passedOver >= 0 ? passedOver : after >= 0 ? after : stamped.i) : open >= 0 ? open : Math.max(0, next);
   const currentSegmentId = plan.segments[at]?.id ?? '';
   const reached = (kind: string, need: (status: string | undefined) => boolean) => plan.segments.some((seg) => seg.kind === kind && need(goals[seg.id]?.status));
   const milestone: TutorMilestone | null = reached('recap', (s) => s === 'shown' || s === 'demonstrated') ? 'recap_reached'
