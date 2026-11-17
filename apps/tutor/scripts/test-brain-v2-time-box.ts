@@ -119,7 +119,8 @@ async function main() {
     const r18 = await turn(lesson, 1.8);
     check('1.8 min left on a timed link (past the wrap minute): "Yes, please." opens the summary page, without the offer', opened(r18), [r18.toolCalls.map((c) => `${c.name} ${c.outcome}`), r18.spoken]);
     const r5 = await turn(lesson, 5, 'Good, that is right. <board page>Past simple</board> Now, what did you do last week?');
-    check('5 min left: a new part\'s page is still held, with the offer in its place', r5.state.board.pages.length === 2 && !r5.toolCalls.some((c) => c.name === 'new_page') && /Next is past simple\. Shall we go on/.test(r5.spoken), [r5.toolCalls.map((c) => c.outcome), r5.spoken]);
+    // Task 7a: a plan whose parts all have names asks in varied words ("…Next is past simple. Any questions first, or shall we go on?").
+    check('5 min left: a new part\'s page is still held, with the offer in its place', r5.state.board.pages.length === 2 && !r5.toolCalls.some((c) => c.name === 'new_page') && /Next is past simple\. [^.]*(?:go on|ready)[^.]*\?$/.test(r5.spoken), [r5.toolCalls.map((c) => c.outcome), r5.spoken]);
     const rNo = await turn({ ...lesson, wrapMinutes: undefined }, 1.8);
     check('no wrap minute from the host: 1.8 min left is not a closing turn, the page is held as before', !opened(rNo), rNo.spoken);
   }

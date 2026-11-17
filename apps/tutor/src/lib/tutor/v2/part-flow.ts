@@ -1,0 +1,221 @@
+/**
+ * Tutor brain v2 — the plan's parts, the board's pages and the part chips move together (Task 7a).
+ *
+ * Mic test 1 (embed-1794882458629) saw the three disagree: the chips lit the part after the last goal marked ("Your job"
+ * green and "Present perfect" lit while the job was still being talked about); a present perfect page held for "shall we
+ * go on?" never opened after "yes, we move on", and the part was taught on the job's page; a "Past simple" page opened
+ * in a reply still praising a present perfect sentence; pronunciation ran on the conversation's page. One rule, for
+ * plans whose every part has an authored name (the only plans whose pages can be told apart by part):
+ *   - a part starts with its own page, headed by its name;
+ *   - the lit chip is the part whose page is open (a level check, which has no page, while it runs);
+ *   - a part is green when the lesson has moved past it after teaching it; the level check when the level is set.
+ * And by the product owner's decision (PART_ASK_EVERY), every part change after the level check is asked first, in words
+ * that vary through the lesson. Pure: no flags read here, the callers gate.
+ */
+import type { LessonPlan } from '../lesson-plan/types';
+import { stripBoardBlocks } from './board-inline';
+import { PART_OFFERS, V2_CLOSING_PAGE, endsAsking } from './part-close';
+import { V2_OFFER_SHAPE, v2IsPageOfPart, v2PartNamedIn, v2PartOf } from './plan-map';
+import { isPartFrame } from './reply-gate';
+import type { V2Board, V2State } from './types';
+
+type View = Pick<V2State, 'board' | 'goals' | 'workingLevel'> & { closed?: boolean };
+
+/** A plan whose every part has an authored name (Tasks 6c/6e gate the same way). */
+export function v2PlanLabelled(plan: LessonPlan | null | undefined): plan is LessonPlan {
+  return !!plan && plan.segments.length >= 2 && plan.segments.every((seg) => !!v2PartOf(seg).label);
+}
+
+/** The part whose page a heading is (its name in the heading), a summary heading the last part's; -1: none. */
+export function v2PartOfPage(plan: LessonPlan, title: string): number {
+  const i = plan.segments.findIndex((seg) => v2IsPageOfPart(seg, title));
+  if (i >= 0) return i;
+  return V2_CLOSING_PAGE.test(title) ? plan.segments.length - 1 : -1;
+}
+
+const isLevelPart = (plan: LessonPlan, i: number) => !!plan.segments[i] && v2PartOf(plan.segments[i]!).skipWhenLevelKnown;
+const paged = (plan: LessonPlan, board: V2Board, i: number) => board.pages.some((pg) => v2PartOfPage(plan, pg.title) === i);
+
+/** The part of the page in view, or of the nearest page before it that is a part's; -1: none. */
+export function v2OpenPagePart(plan: LessonPlan, board: V2Board): number {
+  for (let i = Math.min(board.current, board.pages.length - 1); i >= 0; i--) {
+    const k = v2PartOfPage(plan, board.pages[i]!.title);
+    if (k >= 0) return k;
+  }
+  return -1;
+}
+
+/** The part in hand: the part whose page is open; the level check (no page of its own) once its goal is marked after the
+ *  page before it, until the next part's page opens. */
+export function v2PartInHand(plan: LessonPlan, state: View): number {
+  const open = v2OpenPagePart(plan, state.board);
+  if (open < 0) return 0;
+  const l = open + 1;
+  if (l < plan.segments.length && isLevelPart(plan, l) && !paged(plan, state.board, l)) {
+    const g = state.goals[plan.segments[l]!.id]?.status;
+    if (g && g !== 'skipped') return l;
+  }
+  return open;
+}
+
+/** Which parts are done (green). The level check: the level is set. The part in hand: only once the lesson has closed.
+ *  A part before it: taught (its page was open, or it was marked shown or demonstrated); one skipped untaught is not. A
+ *  part after it (the tutor turned back): its page was open. A goal mark alone never makes a part green before its page. */
+export function v2PartsDone(plan: LessonPlan, state: View, cur: number = v2PartInHand(plan, state)): boolean[] {
+  return plan.segments.map((seg, i) => {
+    if (isLevelPart(plan, i)) return !!state.workingLevel;
+    const g = state.goals[seg.id]?.status;
+    const taught = paged(plan, state.board, i) || g === 'shown' || g === 'demonstrated';
+    if (i === cur) return !!state.closed && taught;
+    if (i < cur) return taught;
+    return paged(plan, state.board, i);
+  });
+}
+
+/** The part after `from` in the plan, past a level check whose level is set; -1: none. */
+export function v2NextPart(plan: LessonPlan, state: View, from: number): number {
+  for (let i = from + 1; i < plan.segments.length; i++) {
+    if (isLevelPart(plan, i) && (state.workingLevel || state.goals[plan.segments[i]!.id]?.status === 'skipped')) continue;
+    return i;
+  }
+  return -1;
+}
+
+/** The part a new page opens, and the heading it opens under. A heading that names a part is that part's page. Any other
+ *  heading (not the lesson's first page) opens the next part, under that part's name ("Your project" was the conversation
+ *  part, and its chip, page and "Next is…" named three things). Null: the opening page, or no part left but the closing one. */
+export function v2PageForPart(plan: LessonPlan, state: View, title: string): { index: number; title: string } | null {
+  const k = v2PartOfPage(plan, title);
+  if (k >= 0) return { index: k, title };
+  if (!state.board.pages.length) return null;
+  const next = v2NextPart(plan, state, v2PartInHand(plan, state));
+  // Never the closing part by elimination: an unnamed page is not taken for the summary (its own rules decide the close).
+  return next < 0 || next === plan.segments.length - 1 ? null : { index: next, title: v2PartOf(plan.segments[next]!).label! };
+}
+
+/** Whether a page for part `index` is a part change that is asked first: a part other than the one in hand, after the lesson
+ *  has begun (the level check, and an opening part before it, go straight on: the ruling for the first teaching part). */
+export function v2PartChangeAsked(plan: LessonPlan, state: View, index: number): boolean {
+  const cur = v2PartInHand(plan, state);
+  if (index === cur) return false;
+  return !plan.segments.slice(0, cur + 1).every((seg, i) => seg.kind === 'hook' || isLevelPart(plan, i));
+}
+
+const FILLER = '(?:(?:uh|um|er|erm|ah|oh|well|so|okay|ok|hmm)[,.]?\\s+)*';
+const GO = new RegExp(`^${FILLER}(?:yes|yeah|yep|yup|ya|sure|ok(?:ay)?|alright|all right|fine|go on|go ahead|carry on|let'?s|move on|we (?:can )?(?:move|go) on|next|continue|ready|i'?m ready|no,? (?:more )?questions?|nope|no,? (?:let'?s|go|move)|please|of course|sounds good|good|great|right|got it|understood)\\b`, 'i');
+const QUESTION = new RegExp(`[?？]\\s*$|^${FILLER}(?:(?:yes|yeah)[,.]?\\s+)?(?:what|why|how|when|where|which|who|whose|can|could|would|should|is|are|do|does|did|may|i have (?:a|one) question|i(?:'ve| have) got (?:a|one) question|a question|question|wait|sorry|pardon|excuse me|i don'?t (?:understand|get it|know)|what'?s)\\b|質問|わかりません|分かりません`, 'i');
+const GO_JA = /^(?:はい|ええ|うん|お願いします|大丈夫|進みましょう|次へ|次に|いいです|オーケー)/;
+
+/** The student's answer to "shall we go on, or do you have a question first?": 'go' (yes, let's, no questions), 'question'
+ *  (they ask something: answered first, then the move), or 'other' (no, skip, an answer to something else). */
+export function v2MoveAnswer(said: string | null): 'go' | 'question' | 'other' {
+  const s = (said ?? '').trim();
+  if (!s) return 'other';
+  if (QUESTION.test(s)) return 'question';
+  return GO.test(s) || GO_JA.test(s) ? 'go' : 'other';
+}
+
+/** The tutor replies in a history. */
+export const v2TutorReplies = (history: V2State['history']) => history.filter((h) => h.role === 'assistant').length;
+/** A held page waits this many tutor replies for its yes (a question answered, then asked again); then it lapses. */
+export const V2_HELD_PAGE_REPLIES = 3;
+
+const SENTENCES = /(?<=[.!?]["'”’)]*)\s+|(?<=[。！？][」』)）"”]*)\s*/;
+const asks = (x: string) => /(?:[?？]|か[。．]?)["'」』）)]*\s*$/.test(x);
+
+/** The part whose page is waiting for the student's yes: the page held at the last part change (not lapsed), or a part the
+ *  last reply offered by name ("Would you like to practise your pronunciation…?", "Shall we move on to the past simple?")
+ *  that has no page yet and is not the part in hand nor the closing part (the close keeps its own rules). A part the
+ *  student's words name comes first. Null: none. */
+export function v2PendingPart(plan: LessonPlan, state: View & Pick<V2State, 'history' | 'heldPage'>, lastTutor: string, said: string | null): { index: number; title: string } | null {
+  const held = state.heldPage;
+  if (held && v2TutorReplies(state.history) - held.at <= V2_HELD_PAGE_REPLIES) {
+    const index = plan.segments.findIndex((seg) => seg.id === held.part);
+    if (index >= 0 && !paged(plan, state.board, index)) return { index, title: held.title };
+  }
+  const offers = stripBoardBlocks(lastTutor).split(SENTENCES).map((x) => x.trim()).filter((x) => asks(x) && V2_OFFER_SHAPE.test(x));
+  if (!offers.length) return null;
+  const cur = v2PartInHand(plan, state);
+  const text = offers.join(' ');
+  const named = plan.segments.map((seg, i) => ({ seg, i })).filter(({ seg, i }) => i !== cur && i < plan.segments.length - 1 && !paged(plan, state.board, i) && !!v2PartOf(seg).label && v2PartNamedIn(seg, text));
+  if (!named.length) return null;
+  const theirs = said ? named.find(({ seg }) => v2PartNamedIn(seg, said)) : undefined;
+  const at = (seg: (typeof named)[number]['seg']) => text.toLowerCase().indexOf((v2PartOf(seg).label ?? '').toLowerCase().split(/\s+/)[0]!.slice(0, 5));
+  const pick = theirs ?? [...named].sort((x, y) => at(x.seg) - at(y.seg))[0]!;
+  return { index: pick.i, title: v2PartOf(pick.seg).label! };
+}
+
+/** A part's name as said in a sentence ("Your job" → "your job"; a name that starts with a proper noun keeps it). */
+export function v2PartNameSaid(label: string): string {
+  const t = label.trim().replace(/[.:;,]+$/, '');
+  return /^[A-Z][a-z]/.test(t) && !/^[A-Z][a-z]+'s\b/.test(t) ? t[0]!.toLowerCase() + t.slice(1) : t;
+}
+
+const CLOSES = [(p: string) => `Good, that's ${p} covered.`, (p: string) => `That's ${p} done.`, (p: string) => `Well done, we've finished ${p}.`, (p: string) => `Nice work on ${p}.`, (p: string) => `Okay, ${p} is done.`];
+const NEXTS = [(n: string) => `Next is ${n}.`, (n: string) => `Next up is ${n}.`, (n: string) => `Next comes ${n}.`, (n: string) => `Next we have ${n}.`];
+/** The asks: each says "go on" or "ready" and offers a question first (part-close.ts PART_OFFERS reads them as the ask). */
+export const V2_PART_ASKS = ['Any questions first, or shall we go on?', 'Shall we move on, or is there anything you would like to ask first?', 'Do you have a question before we go on, or are you ready?', 'Ready to go on, or would you like to ask something first?', 'Shall we go on, or do you have a question first?'];
+
+const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean);
+const replyText = (h: V2State['history'][number]) => (typeof h.content === 'string' ? h.content : h.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '));
+const tutorSentences = (history: V2State['history']) => history.filter((h) => h.role === 'assistant').flatMap((h) => stripBoardBlocks(replyText(h)).split(SENTENCES)).map((x) => x.trim()).filter(Boolean);
+
+/** Whether two sentences are the same words, or one word apart (a run of Japanese: the same characters, or two apart). */
+function nearSame(a: string, b: string): boolean {
+  const x = norm(a); const y = norm(b);
+  if (!x.length || !y.length) return false;
+  if (x.length === 1 && y.length === 1) {
+    const p = x[0]!; const q = y[0]!;
+    if (p === q) return true;
+    return p.length >= 8 && Math.abs(p.length - q.length) <= 2 && editDistance([...p], [...q]) <= 2;
+  }
+  return x.join(' ') === y.join(' ') || (Math.min(x.length, y.length) >= 4 && editDistance(x, y) <= 1);
+}
+function editDistance(a: string[], b: string[]): number {
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const row = [i];
+    for (let j = 1; j <= b.length; j++) row[j] = Math.min(prev[j]! + 1, row[j - 1]! + 1, prev[j - 1]! + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = row;
+  }
+  return prev[b.length]!;
+}
+
+/** A sentence asking whether to go on to the next part: the frame (reply-gate.ts isPartFrame, English and Japanese) or an
+ *  ask about moving on (PART_OFFERS) that ends as a question. */
+export const v2IsPartAsk = (sentence: string) => isPartFrame(sentence) || (endsAsking(sentence) && PART_OFFERS.test(sentence));
+
+/** Whether `sentence` is a part-change ask said before in the lesson word for word, or one word apart. Only such a repeat
+ *  is dropped now that every part change is asked (a different ask, in other words, goes out). */
+export function v2AskRepeats(sentence: string, history: V2State['history']): boolean {
+  if (!v2IsPartAsk(sentence.trim())) return false;
+  return tutorSentences(history).some((x) => v2IsPartAsk(x) && nearSame(x, sentence));
+}
+
+/** The line in place of a held page, or after a repeated ask that was dropped: one line on the part just done, the next part
+ *  by name, and the ask, never in the words of an earlier one in the lesson. `named`: the reply already named the next
+ *  part, so only the ask. `done`: the part just done (none: no closing words). */
+export function v2PartAskLine(o: { next: string; done?: string; named: boolean; history: V2State['history'] }): string {
+  const said = new Set(tutorSentences(o.history).map((x) => norm(x).join(' ')));
+  const fresh = (x: string) => !said.has(norm(x).join(' '));
+  const before = tutorSentences(o.history).filter((x) => v2IsPartAsk(x)).length;
+  const pick = <T,>(xs: T[], make: (x: T) => string): string => {
+    for (let k = 0; k < xs.length; k++) { const s = make(xs[(before + k) % xs.length]!); if (fresh(s)) return s; }
+    return make(xs[before % xs.length]!);
+  };
+  const ask = pick(V2_PART_ASKS, (x) => x);
+  if (o.named) return ask;
+  const next = v2PartNameSaid(o.next);
+  const lead = /[?？]$/.test(next) ? `Next: ${next}` : pick(NEXTS, (f) => f(next));
+  const close = o.done ? pick(CLOSES, (f) => f(v2PartNameSaid(o.done!))) : '';
+  return [close, lead, ask].filter(Boolean).join(' ');
+}
+
+/** The facts lines for part changes in a spoken lesson whose parts all have names (PART_ASK_EVERY). `opened`: the part whose
+ *  page opened as this reply begins, on their yes. */
+export function v2PartAskFacts(plan: LessonPlan, state: View & Pick<V2State, 'heldPage' | 'history'>, opened?: string): string[] {
+  const lines = ['part changes: at every change to the next plan part after the level check, close the part just done in one short line that says what was done, name the next part by its plan name, and ask whether they have a question first or would like to go on; never in the same words as an earlier ask in this lesson. Begin the next part only after they answer: its page opens then. The summary keeps its own rules'];
+  if (opened) lines.push(`they said yes to going on: the "${opened}" page is open now, headed by the part's name; begin that part in this reply, and do not open its page again`);
+  else if (state.heldPage && v2TutorReplies(state.history) - state.heldPage.at <= V2_HELD_PAGE_REPLIES && !paged(plan, state.board, plan.segments.findIndex((s) => s.id === state.heldPage!.part))) lines.push(`part change waiting: they were asked whether to go on to the ${state.heldPage.title} part. If they asked something, answer it first and then ask again, in one short line in new words, whether to go on`);
+  return lines;
+}

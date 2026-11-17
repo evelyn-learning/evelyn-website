@@ -158,7 +158,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   const planRef = useRef<LessonPlan | null>(null); const reportedRef = useRef(''); const milestoneRef = useRef<TutorMilestone | null>(null);
   const reportProgress = useCallback(() => {
     const plan = planRef.current; if (!plan) return;
-    const now = v2Progress(plan, stateRef.current.goals);
+    const now = v2Progress(plan, stateRef.current.goals, stateRef.current);
     const sig = `${now.currentSegmentId}|${now.completedSegmentIds.join(',')}`;
     if (sig !== reportedRef.current) { reportedRef.current = sig; p.current.onLessonPlanProgress?.({ plan, currentSegmentId: now.currentSegmentId }); p.current.onCompletedSegmentsChange?.(now.completedSegmentIds); }
     if (now.milestone && now.milestone !== milestoneRef.current) { milestoneRef.current = now.milestone; p.current.onMilestone?.(now.milestone); }

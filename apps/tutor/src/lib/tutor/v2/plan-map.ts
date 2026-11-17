@@ -153,6 +153,8 @@ const pageOfPart = (seg: Segment, title: string): boolean => {
   const all = want.length > 0 && want.every((w) => have.some((x) => x === w || (w.length >= 5 && x.startsWith(w.slice(0, 5)))));
   return all || Object.values(p.labelLocalized ?? {}).some((n) => squash(n) === squash(title));
 };
+/** Task 7a: whether a page heading is the part's page (pageOfPart), for part-flow.ts. */
+export const v2IsPageOfPart = pageOfPart;
 
 /** The plan parts the lesson went past without reaching (Task 6c, ruling 3). The board has a page for a later part,
  *  and the parts between it and the last part reached before it were never reached: no status recorded, no page of
@@ -323,14 +325,14 @@ export function v2PartOffers(seg: Segment, history: V2State['history']): number 
   for (const h of history) {
     if (h.role !== 'assistant') continue;
     const xs = stripBoardBlocks(historyText(h)).split(SENTENCES).map((x) => x.trim()).filter(Boolean);
-    if (xs.some((x, i) => ASKS_END.test(x) && ((OFFER_SHAPE.test(x) && v2PartNamedIn(seg, x)) || (i > 0 && /^Before the summary, there is still\b/.test(xs[i - 1]!) && v2PartNamedIn(seg, xs[i - 1]!))))) n += 1;
+    if (xs.some((x, i) => ASKS_END.test(x) && ((V2_OFFER_SHAPE.test(x) && v2PartNamedIn(seg, x)) || (i > 0 && /^Before the summary, there is still\b/.test(xs[i - 1]!) && v2PartNamedIn(seg, xs[i - 1]!))))) n += 1;
   }
   return n;
 }
 /** Fix round 1 (minor 2): an offer or a choice, not any question that names the part ("How was your pronunciation
  *  class?"). */
 // Fix round 2 (minor): "or" only as a choice about doing the part ("…, or skip it?", "…, or move on?").
-const OFFER_SHAPE = /\b(?:would you like|do you want|want to|shall we|how about|or (?:skip|move on|go on|keep|continue|go straight|finish|stop|leave))\b|どちら|しますか|しましょうか|やりますか|やってみますか|どうですか|それとも/i;
+export const V2_OFFER_SHAPE = /\b(?:would you like|do you want|want to|shall we|how about|or (?:skip|move on|go on|keep|continue|go straight|finish|stop|leave))\b|どちら|しますか|しましょうか|やりますか|やってみますか|どうですか|それとも/i;
 
 /** The optional parts not taken up that have been offered V2_MAX_PART_OFFERS times or more: not offered again. */
 export function v2OfferedOut(plan: LessonPlan, state: Pick<V2State, 'goals' | 'board' | 'history'>, enabled: boolean = TUTOR_V2_PASSED_PART_CLOSE): Set<string> {

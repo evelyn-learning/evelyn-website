@@ -152,6 +152,10 @@ export interface V2State {
    *  its words said the summary had begun). From then on no new practice is asked for or offered. Optional: older states
    *  and other sessions have none. */
   summaryBegunAt?: number;
+  /** Task 7a (PART_PAGE_CHIP), spoken lessons whose plan parts all have names: the page of the next part, held while the
+   *  student is asked whether to go on (`title`: the part's name; `part`: its goal id; `at`: the tutor replies in the
+   *  history when it was held). It opens on their yes, whether or not the reply writes it again. */
+  heldPage?: { title: string; part: string; at: number };
 }
 
 /** A working level and where it came from: an earlier lesson (may be revised once, case 11) or this lesson (final). */

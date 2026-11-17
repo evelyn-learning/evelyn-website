@@ -1801,3 +1801,23 @@ export const TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME = process.env.NEXT_PUBLIC_TUTOR_V2
  *  took 4.2–8.9 s to its first sentence in all four real-voice runs, tester B's 11.1 s clip-end to reply (Task 6g,
  *  v2audio-6f). Default ON; NEXT_PUBLIC_TUTOR_V2_LEVEL_WITH_WORDS=off ⇒ the tool's description as before. */
 export const TUTOR_V2_LEVEL_WITH_WORDS = process.env.NEXT_PUBLIC_TUTOR_V2_LEVEL_WITH_WORDS !== 'off';
+
+/** Tutor brain v2 (v2/progress.ts, v2/part-flow.ts, v2/turn.ts, plans whose every part has an authored name): the part
+ *  chips, the board pages and the lesson's parts move together. A part starts with its own page, headed by the part's
+ *  name: a page held for "shall we go on?" opens on the learner's yes even when the reply does not write it again, and a
+ *  part offered by name (optional pronunciation) opens its page when taken up. The lit chip is the part whose page is
+ *  open; a part turns green when the lesson moves past it after teaching it; the level check turns green when the level
+ *  is set. The chips lit the part after the last goal marked, so "Your job" went green and "Present perfect" lit while
+ *  the job was still being talked about; the held present perfect page never opened after "yes, we move on"; and
+ *  pronunciation ran on the conversation's page (Task 7a, mic test 1, embed-1794882458629). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_PART_PAGE_CHIP=off ⇒ chips from the goal marks and pages from the model alone, as before. */
+export const TUTOR_V2_PART_PAGE_CHIP = process.env.NEXT_PUBLIC_TUTOR_V2_PART_PAGE_CHIP !== 'off';
+
+/** Tutor brain v2 (v2/turn.ts, v2/part-flow.ts, v2/facts.ts, spoken lessons whose every plan part has an authored name):
+ *  every part change after the level check is asked first, in one line that closes the part just done, names the next
+ *  and asks whether they have a question or shall go on, in words that vary through the lesson. The Task 6e budget
+ *  (PART_OFFER_ONCE: two asks a lesson, never two changes running) is dropped for these lessons; a frame repeated word
+ *  for word is still dropped. The product owner's decision after mic test 1: past simple and the conversation opened
+ *  "on its own whim" with no ask (Task 7a, embed-1794882458629). Default ON; NEXT_PUBLIC_TUTOR_V2_PART_ASK_EVERY=off ⇒
+ *  the 6e budget, as before. */
+export const TUTOR_V2_PART_ASK_EVERY = process.env.NEXT_PUBLIC_TUTOR_V2_PART_ASK_EVERY !== 'off';

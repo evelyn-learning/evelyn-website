@@ -36,7 +36,12 @@ const OFFERS = /\b(?:next is|next up|ready|shall we|any questions?|a question fi
 // Fix round 2: 次/先 starting a word (not 取引先, 出張先, 目次).
 // Fix round 3: 行き and 移り as in isPartFrame (「じゃ次に行きましょうか？」).
 const OFFERS_JA = new RegExp(`${JA_WORD_START}(?:次|先)(?:に|へ)(?:進|行き|移り)|${JA_WORD_START}次の(?:パート|部分|ところ|項目|テーマ|トピック|セクション|ステップ|練習|課題|内容)(?:に|へ)|(?:進む|移る)前に|質問(?:が|は)(?:あります|ありません)か`, 'u');
-const offers = (text: string, ja: boolean = TUTOR_V2_PART_OFFER_ONCE) => OFFERS.test(text) || (ja && OFFERS_JA.test(text));
+const offers = (text: string, ja: boolean = TUTOR_V2_PART_OFFER_ONCE, strict = false) => (strict ? PART_OFFERS : OFFERS).test(text) || (ja && (strict ? PART_OFFERS_JA : OFFERS_JA).test(text));
+/** Task 7a (PART_ASK_EVERY): an ask about moving on to the next part, not a check-in. "Does that make sense so far?" left the
+ *  way open, and a "Past simple" page opened in the reply that was still praising a present perfect sentence (mic test 1,
+ *  embed-1794882458629 t≈9.17). */
+export const PART_OFFERS = /\b(?:next is|next up|shall we|go on|move on|ready|a question (?:first|before)|any questions? (?:first|before)|questions? before)\b/i;
+const PART_OFFERS_JA = new RegExp(`${JA_WORD_START}(?:次|先)(?:に|へ)(?:進|行き|移り)|${JA_WORD_START}次の(?:パート|部分|ところ|項目|テーマ|トピック|セクション|ステップ|練習|課題|内容)(?:に|へ)|(?:進む|移る)前に`, 'u');
 
 /** Whether a sentence ends as a question. With `secondLanguage`, a question in the support language counts too: a
  *  bilingual ask ends on its Japanese ("…Shall we go on to the present perfect now? 次に現在完了を学びます。進んでも
@@ -47,12 +52,14 @@ export function endsAsking(sentence: string, secondLanguage: boolean = TUTOR_V2_
 }
 
 /** The tutor's last reply ended by asking whether to go on (or checking in), and the student has answered. */
-export function leftOpen(lastTutor: string, studentSaid: string | null): boolean {
+/** `strict` (Task 7a): only an ask about moving on (PART_OFFERS) leaves it open, not a check-in. */
+export function leftOpen(lastTutor: string, studentSaid: string | null, strict = false): boolean {
   const sentences = stripBoardBlocks(lastTutor).split(/(?<=[.?!])\s+/).map((s) => s.trim()).filter(Boolean);
-  return !!studentSaid && endsAsking(sentences[sentences.length - 1] ?? '') && offers(sentences.slice(-2).join(' '));
+  return !!studentSaid && endsAsking(sentences[sentences.length - 1] ?? '') && offers(sentences.slice(-2).join(' '), TUTOR_V2_PART_OFFER_ONCE, strict);
 }
 
-export interface PartTurn { title: string; studentSaid: string | null; lastTutor: string; pagesOpen: number }
+/** `strict` (Task 7a): the last reply's ask must be about moving on (PART_OFFERS), not a check-in. */
+export interface PartTurn { title: string; studentSaid: string | null; lastTutor: string; pagesOpen: number; strict?: boolean }
 /** May this reply turn to a new page headed `title` now? */
 export function mayOpenPart(t: PartTurn): boolean {
   if (t.pagesOpen <= 1) return true; // the lesson is only beginning
@@ -60,7 +67,7 @@ export function mayOpenPart(t: PartTurn): boolean {
   if (student && (STEERS.test(student) || namesPart(t.title, student))) return true;
   const sentences = stripBoardBlocks(t.lastTutor).split(/(?<=[.?!])\s+/).map((s) => s.trim()).filter(Boolean);
   const last = sentences[sentences.length - 1] ?? '';
-  return endsAsking(last) && student !== '' && (offers(sentences.slice(-2).join(' ')) || namesPart(t.title, t.lastTutor));
+  return endsAsking(last) && student !== '' && (offers(sentences.slice(-2).join(' '), TUTOR_V2_PART_OFFER_ONCE, !!t.strict) || namesPart(t.title, t.lastTutor));
 }
 const QUESTION_CHECK = /\b(?:a question first|any questions?(?! about)|questions? (?:before|so far))\b/i;
 const replyText = (h: V2State['history'][number]) => (typeof h.content === 'string' ? h.content : h.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '));

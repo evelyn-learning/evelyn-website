@@ -41,6 +41,9 @@ function streaming(text: string, after: unknown[] = []) {
 }
 const repoRoot = join(__dirname, '..', '..', '..');
 const GDI = parseLessonPlan(JSON.parse(readFileSync(join(repoRoot, 'docs', 'whitelabel', 'gdi', 'plans', 'gdi-work-projects-v1.json'), 'utf8'))) as LessonPlan;
+/** Task 7a: a plan whose parts all have names asks every part change (PART_ASK_EVERY, test-brain-v2-part-flow-7a.ts); the
+ *  6e budget and frame drop pinned here still hold for plans without part names: the same plan with its names taken away. */
+const GDI_6E = { ...GDI, segments: GDI.segments.map((x) => ({ ...x, metadata: { ...(x.metadata ?? {}), label: undefined } })) } as LessonPlan;
 const lang: V2Session = { studentName: 'Ken', subject: 'English', level: 'adult', mode: 'voice', timeBoxMinutes: 20, languages: ['en', 'ja'] };
 const pagesAt = (titles: string[], extra: Partial<V2State> = {}): V2State => ({ ...newV2State(0), board: { pages: titles.map((title) => ({ title, items: [] })), current: titles.length - 1 }, ...extra });
 const level = { workingLevel: { level: 'intermediate', from: 'this_lesson' } } as Partial<V2State>;
@@ -86,7 +89,7 @@ async function main() {
     check('…and once its page opened, two frames are spent: not due at the next change either', !v2FrameDue(after));
     check('a Japanese frame answered opens the page (no second ask)', mayOpenPart({ title: 'Past simple', studentSaid: 'はい', lastTutor: `現在完了は、ここまでです。${T40}`, pagesOpen: 4 }));
     // The whole turn: the frame is not due, and the model writes it in Japanese.
-    const r = await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(['Lesson overview', 'Level check', 'Your job', 'Present perfect'], { history: hist.slice(0, 7), goals: { overview: { status: 'shown', at: 0 } }, ...level }), studentSaid: 'Yes.', callModel: streaming(`経理の仕事の年数は、こう言います。現在完了は、ここまでです。${T40}`).call, boardPass: false, mathsCheck: false, nowMs: 9 * 60000 });
+    const r = await runV2Turn({ session: { ...lang, plan: GDI_6E }, state: pagesAt(['Lesson overview', 'Level check', 'Your job', 'Present perfect'], { history: hist.slice(0, 7), goals: { overview: { status: 'shown', at: 0 } }, ...level }), studentSaid: 'Yes.', callModel: streaming(`経理の仕事の年数は、こう言います。現在完了は、ここまでです。${T40}`).call, boardPass: false, mathsCheck: false, nowMs: 9 * 60000 });
     check('in a whole turn: not said, not stored', !r.spoken.includes('次に進みますか') && !JSON.stringify(r.state.history.slice(-1)).includes('次に進みますか'), r.spoken);
     check('the kill switch is on by default', TUTOR_V2_PART_OFFER_ONCE === true);
   }

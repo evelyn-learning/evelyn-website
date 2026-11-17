@@ -96,6 +96,9 @@ function nextCut(buf: string): number {
 export interface ReplyGateOptions {
   /** Drop a part-change frame the model writes (F1: the frame is not due at this part change). */
   dropFrame: boolean;
+  /** Task 7a (PART_ASK_EVERY): drop a part-change ask only when this says so (one said before word for word), where
+   *  `dropFrame` would drop every frame. */
+  dropFrameIf?: ((sentence: string) => boolean) | null;
   /** Hold a goodbye, and everything after it, until the reply is complete (F3, F4). */
   holdGoodbye: boolean;
   /** Task 6g (CLOSE_ONE_QUESTION): in a reply that may close the lesson, a practice ask ("Please say this sentence once
@@ -132,12 +135,14 @@ export class ReplyGate {
   /** Task 6g: a practice ask waiting for the next sentence (raw text), and whether the summary has begun in this reply. */
   private ask: string | null = null;
   private summaryStarted = false;
+  /** Task 7a: asks dropped by dropFrameIf (a repeat, which the runtime's own ask in new words replaces). */
+  framesDroppedIf = 0;
 
   constructor(private readonly out: (text: string) => void, private readonly opts: ReplyGateOptions) {}
 
   /** Nothing to drop or hold: words go out as they come, cut nowhere (fix round 2, N4: with the gate's work off, the
    *  stream is the stream as before it existed). A card waiting for the next sentence still holds them until then. */
-  private get passThrough(): boolean { return !this.opts.dropFrame && !this.opts.holdGoodbye && !this.opts.closeAsk && this.card === null && !this.echoes.size; }
+  private get passThrough(): boolean { return !this.opts.dropFrame && !this.opts.dropFrameIf && !this.opts.holdGoodbye && !this.opts.closeAsk && this.card === null && !this.echoes.size; }
 
   push(text: string): void {
     if (this.passThrough && !this.buf) { this.emit(text); return; }
@@ -239,6 +244,7 @@ export class ReplyGate {
     // Fix round 1 (minor 3): a note sentence already said where the note stands, which the model then reads itself.
     if (this.echoes.size && this.echoes.has(norm(core))) { this.removed.push(core); return; }
     if (this.opts.dropFrame && !this.holding && isPartFrame(core)) { this.removed.push(core); return; }
+    if (this.opts.dropFrameIf && !this.holding && this.opts.dropFrameIf(core)) { this.removed.push(core); this.framesDroppedIf += 1; return; }
     if (this.holding || (this.opts.holdGoodbye && isGoodbye(core.replace(QUOTED_SPANS, ' ')))) { this.holding = true; this.heldParts.push(s); return; }
     if (this.opts.closeAsk && this.opts.holdAsk !== false && this.ask === null && this.opts.closeAsk(core)) { this.ask = s; return; }
     this.emit(s);

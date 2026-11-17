@@ -8,6 +8,8 @@
 import type { LessonPlan } from '../lesson-plan/types';
 import type { TutorMilestone } from '../orchestrator/types';
 import type { V2State } from './types';
+import { TUTOR_V2_PART_PAGE_CHIP } from '../orchestrator/flags';
+import { v2PartInHand, v2PartsDone, v2PlanLabelled } from './part-flow';
 
 export interface V2Progress { currentSegmentId: string; completedSegmentIds: string[]; milestone: TutorMilestone | null }
 
@@ -16,7 +18,17 @@ export interface V2Progress { currentSegmentId: string; completedSegmentIds: str
  *  problem that has only been put up is still in front of them. */
 const TOLD_ONLY = new Set(['hook', 'concept', 'worked_example', 'recap', 'extension']);
 
-export function v2Progress(plan: LessonPlan, goals: V2State['goals']): V2Progress {
+/** `view` (Task 7a, PART_PAGE_CHIP): the board, the working level and whether the lesson has closed. With it, a plan whose
+ *  every part has a name reads the part in hand off the page in view and green off the lesson having moved past a part
+ *  (part-flow.ts): "the part after the last goal marked" lit "Present perfect" while the job was still being talked about
+ *  (mic test 1, embed-1794882458629). Other plans, and no view, as before. `enabled` is the kill switch. */
+export function v2Progress(plan: LessonPlan, goals: V2State['goals'], view?: Pick<V2State, 'board' | 'workingLevel' | 'closed'>, enabled: boolean = TUTOR_V2_PART_PAGE_CHIP): V2Progress {
+  if (view && enabled && v2PlanLabelled(plan) && view.board?.pages) {
+    const state = { ...view, goals };
+    const cur = v2PartInHand(plan, state);
+    const doneNow = v2PartsDone(plan, state, cur);
+    return { currentSegmentId: plan.segments[cur]?.id ?? '', completedSegmentIds: plan.segments.filter((_, i) => doneNow[i]).map((s) => s.id), milestone: v2Milestone(plan, goals) };
+  }
   const done = plan.segments.map((seg) => {
     const status = goals[seg.id]?.status;
     return status === 'demonstrated' || status === 'skipped' || (status === 'shown' && TOLD_ONLY.has(seg.kind));
@@ -32,10 +44,13 @@ export function v2Progress(plan: LessonPlan, goals: V2State['goals']): V2Progres
   const after = stamped ? done.findIndex((d, i) => i > stamped.i && !d) : -1;
   const at = stamped ? (!done[stamped.i] ? stamped.i : after >= 0 ? after : stamped.i) : open >= 0 ? open : Math.max(0, next);
   const currentSegmentId = plan.segments[at]?.id ?? '';
+  return { currentSegmentId, completedSegmentIds, milestone: v2Milestone(plan, goals) };
+}
+
+function v2Milestone(plan: LessonPlan, goals: V2State['goals']): TutorMilestone | null {
   const reached = (kind: string, need: (status: string | undefined) => boolean) => plan.segments.some((seg) => seg.kind === kind && need(goals[seg.id]?.status));
-  const milestone: TutorMilestone | null = reached('recap', (s) => s === 'shown' || s === 'demonstrated') ? 'recap_reached'
+  return reached('recap', (s) => s === 'shown' || s === 'demonstrated') ? 'recap_reached'
     : reached('try_yourself', (s) => s === 'demonstrated') ? 'first_try_yourself_success'
     : reached('concept', (s) => s === 'shown' || s === 'demonstrated') ? 'first_concept_complete'
     : null;
-  return { currentSegmentId, completedSegmentIds, milestone };
 }

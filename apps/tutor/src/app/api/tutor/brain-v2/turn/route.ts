@@ -62,7 +62,10 @@ function readState(raw: unknown): V2State | null {
   const workingLevel = v2ReadWorkingLevel(s.workingLevel);
   const pronunciation = v2ReadPronunciation(s.pronunciation);
   const correctedSentences = v2ReadCorrectedSentences(s.correctedSentences);
-  return { ...(workingLevel ? { workingLevel } : {}), ...(pronunciation ? { pronunciation } : {}), ...(correctedSentences ? { correctedSentences } : {}), history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), ...(thinking ? { thinking } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}), ...(homework ? { homework } : {}) };
+  // Task 7a: the page held while the student is asked whether to go on (part-flow.ts).
+  const h = s.heldPage as Partial<NonNullable<V2State['heldPage']>> | undefined;
+  const heldPage = h && typeof h === 'object' && typeof h.title === 'string' && typeof h.part === 'string' && typeof h.at === 'number' && Number.isFinite(h.at) ? { title: h.title.slice(0, 80), part: h.part.slice(0, 80), at: h.at } : undefined;
+  return { ...(heldPage ? { heldPage } : {}), ...(workingLevel ? { workingLevel } : {}), ...(pronunciation ? { pronunciation } : {}), ...(correctedSentences ? { correctedSentences } : {}), history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), ...(thinking ? { thinking } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}), ...(homework ? { homework } : {}) };
 }
 
 export async function POST(req: NextRequest) {

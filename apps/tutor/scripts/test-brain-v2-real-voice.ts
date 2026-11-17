@@ -49,6 +49,9 @@ const src = (p: string) => readFileSync(join(__dirname, '..', p), 'utf8');
 const repoRoot = join(__dirname, '..', '..', '..');
 const GDI = parseLessonPlan(JSON.parse(readFileSync(join(repoRoot, 'docs', 'whitelabel', 'gdi', 'plans', 'gdi-work-projects-v1.json'), 'utf8'))) as LessonPlan;
 const lang: V2Session = { studentName: 'Ken', subject: 'English', level: 'adult', mode: 'voice', timeBoxMinutes: 20, languages: ['en', 'ja'] };
+/** Task 7a: a plan whose parts all have names asks every part change (PART_ASK_EVERY, test-brain-v2-part-flow-7a.ts); the
+ *  6e budget and frame drop pinned here still hold for plans without part names: the same plan with its names taken away. */
+const GDI_6E = { ...GDI, segments: GDI.segments.map((x) => ({ ...x, metadata: { ...(x.metadata ?? {}), label: undefined } })) } as LessonPlan;
 const pagesAt = (titles: string[], extra: Partial<V2State> = {}): V2State => ({ ...newV2State(0), board: { pages: titles.map((title) => ({ title, items: [] })), current: titles.length - 1 }, ...extra });
 
 async function main() {
@@ -135,13 +138,13 @@ async function main() {
     check('the offer, when due, is the whole frame', partOffer('Past simple', false) === 'Next is past simple. Shall we go on, or do you have a question first?');
     const reply = 'Yes, that is right: for ten years. This part is done. Next is the past simple. Shall we go on, or do you have a question first? <board page>Past simple</board> We use it for finished events.';
     const heardQ: string[] = [];
-    const notDue = await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(['Lesson overview', 'Level check', 'Present perfect'], { history: withQ }), studentSaid: 'I have worked here for ten years.', callModel: streaming(reply).call, onText: (d) => heardQ.push(d), boardPass: false, mathsCheck: false, nowMs: 8 * 60000 });
+    const notDue = await runV2Turn({ session: { ...lang, plan: GDI_6E }, state: pagesAt(['Lesson overview', 'Level check', 'Present perfect'], { history: withQ }), studentSaid: 'I have worked here for ten years.', callModel: streaming(reply).call, onText: (d) => heardQ.push(d), boardPass: false, mathsCheck: false, nowMs: 8 * 60000 });
     check('not due: the model\'s own frame is dropped (not said, not stored) and the page opens', !/Shall we go on|question first/.test(heardQ.join('')) && !/Shall we go on/.test(notDue.spoken) && !/Shall we go on/.test(JSON.stringify(notDue.state.history.slice(withQ.length))) && notDue.state.board.pages.some((pg) => pg.title === 'Past simple') && /Next is the past simple\./.test(notDue.spoken), { said: heardQ.join(''), spoken: notDue.spoken });
     check('…and no check-in is added in its place', !/Does that make sense|with me so far|go over it again/.test(notDue.spoken), notDue.spoken);
-    const due = await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(['Lesson overview', 'Level check', 'Present perfect'], { history: withNone }), studentSaid: 'I have worked here for ten years.', callModel: streaming('Yes, that is right: for ten years. <board page>Past simple</board> Now the past simple.').call, boardPass: false, mathsCheck: false, nowMs: 8 * 60000 });
+    const due = await runV2Turn({ session: { ...lang, plan: GDI_6E }, state: pagesAt(['Lesson overview', 'Level check', 'Present perfect'], { history: withNone }), studentSaid: 'I have worked here for ten years.', callModel: streaming('Yes, that is right: for ten years. <board page>Past simple</board> Now the past simple.').call, boardPass: false, mathsCheck: false, nowMs: 8 * 60000 });
     check('due: the page is held and the runtime asks the whole frame, as before', /Next is past simple\. Shall we go on, or do you have a question first\?$/.test(due.spoken) && !due.state.board.pages.some((pg) => pg.title === 'Past simple'), due.spoken);
     const f = v2QuestionCheckFact({ ...newV2State(0), history: withQ });
-    check('the facts say so when not due, for the frame the tutor writes itself', f.length === 1 && /part changes: the ask whether to go on \(or whether they have a question first\) is not due at the next one: when this part is done, say so, name what comes next and begin it in the same reply/.test(f[0]!) && renderFacts({ ...lang, plan: GDI }, { ...newV2State(0), history: withQ }, { nowMs: 60000, heard: 'ok' }).includes('part changes: the ask whether to go on') && v2QuestionCheckFact({ ...newV2State(0), history: withNone }).length === 0);
+    check('the facts say so when not due, for the frame the tutor writes itself', f.length === 1 && /part changes: the ask whether to go on \(or whether they have a question first\) is not due at the next one: when this part is done, say so, name what comes next and begin it in the same reply/.test(f[0]!) && renderFacts({ ...lang, plan: GDI_6E }, { ...newV2State(0), history: withQ }, { nowMs: 60000, heard: 'ok' }).includes('part changes: the ask whether to go on') && v2QuestionCheckFact({ ...newV2State(0), history: withNone }).length === 0);
     check('kill switch off: neither', v2QuestionCheckFact({ ...newV2State(0), history: withQ }, false).length === 0 && TUTOR_V2_PART_OFFER_ONCE === true);
   }
 

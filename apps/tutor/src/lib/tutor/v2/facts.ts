@@ -6,7 +6,8 @@
  */
 import { renderBoard } from './board';
 import { stripBoardBlocks } from './board-inline';
-import { TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_OPENER_FACT, TUTOR_V2_PART_OFFER_ONCE } from '../orchestrator/flags';
+import { TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_OPENER_FACT, TUTOR_V2_PART_ASK_EVERY, TUTOR_V2_PART_OFFER_ONCE } from '../orchestrator/flags';
+import { v2PartAskFacts, v2PlanLabelled } from './part-flow';
 import { v2FrameDue } from './part-close';
 import { v2HomeworkFacts, v2HomeworkGuardFacts, v2SheetFacts } from './homework-facts';
 import { renderGoalStatus, v2PartOfferFacts, v2PassedPartFact, v2UnreachedAtCloseFact } from './plan-map';
@@ -46,6 +47,8 @@ export interface V2TurnFacts {
   stopAsked?: boolean;
   /** Their words just now said the level remembered from an earlier lesson does not fit (working-level.ts v2ReopenLevelCheck). */
   levelReopened?: boolean;
+  /** Task 7a: the page of this part opened as this reply begins, on the student's yes (part-flow.ts). */
+  partOpened?: string;
 }
 
 /** A quoted span at the very start of a reply, in any of the quote pairs a tutor uses: 「…」, 『…』, “…”, "…", ‘…’, '…'. */
@@ -106,6 +109,12 @@ export function v2OpenerFact(session: V2Session, state: V2State, enabled: boolea
  *  6e fix round 1, F1: five times for tester B). `enabled` is the kill switch. */
 export function v2QuestionCheckFact(state: V2State, enabled: boolean = TUTOR_V2_PART_OFFER_ONCE): string[] {
   return enabled && !v2FrameDue(state.history) ? ['part changes: the ask whether to go on (or whether they have a question first) is not due at the next one: when this part is done, say so, name what comes next and begin it in the same reply'] : [];
+}
+
+/** Task 7a (PART_ASK_EVERY): a spoken teaching lesson (not homework, not a discussion) whose plan parts all have names: every
+ *  part change is asked. `enabled` is the kill switch. */
+export function v2AskEveryOn(session: V2Session, enabled: boolean = TUTOR_V2_PART_ASK_EVERY): boolean {
+  return enabled && session.mode === 'voice' && !session.homework && !session.homeworkSheet && !discussionOf(session.plan) && v2PlanLabelled(session.plan);
 }
 
 /** Task 6g (CLOSE_ONE_QUESTION): a reply of this lesson has begun its summary (turn.ts sets summaryBegunAt). */
@@ -175,8 +184,10 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   lines.push(...v2SentenceCardsFacts(session, state));
   // How the last reply opened, so the next does not open the same way (D10).
   lines.push(...v2OpenerFact(session, state));
-  // The question check at a part change, once in a while (Task 6e).
-  if (session.plan && !discussion) lines.push(...v2QuestionCheckFact(state));
+  // The question check at a part change, once in a while (Task 6e); at every part change in a spoken lesson whose plan parts
+  // all have names (Task 7a, PART_ASK_EVERY).
+  if (session.plan && !discussion && v2AskEveryOn(session)) lines.push(...v2PartAskFacts(session.plan, state, f.partOpened));
+  else if (session.plan && !discussion) lines.push(...v2QuestionCheckFact(state));
   lines.push(`your note: ${state.note.trim() || '(empty — nothing written yet)'}`);
   const thinking = discussion ? renderThinking(state.thinking) : '';
   if (thinking) lines.push(thinking);

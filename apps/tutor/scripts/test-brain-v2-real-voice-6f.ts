@@ -48,6 +48,9 @@ const factsSent = (seen: Anthropic.MessageCreateParamsNonStreaming[]) => JSON.st
 const src = (p: string) => readFileSync(join(__dirname, '..', p), 'utf8');
 const repoRoot = join(__dirname, '..', '..', '..');
 const GDI = parseLessonPlan(JSON.parse(readFileSync(join(repoRoot, 'docs', 'whitelabel', 'gdi', 'plans', 'gdi-work-projects-v1.json'), 'utf8'))) as LessonPlan;
+/** Task 7a: a plan whose parts all have names asks every part change (PART_ASK_EVERY, test-brain-v2-part-flow-7a.ts); the
+ *  6e budget and frame drop pinned here still hold for plans without part names: the same plan with its names taken away. */
+const GDI_6E = { ...GDI, segments: GDI.segments.map((x) => ({ ...x, metadata: { ...(x.metadata ?? {}), label: undefined } })) } as LessonPlan;
 const lang: V2Session = { studentName: 'Ken', subject: 'English', level: 'adult', mode: 'voice', timeBoxMinutes: 20, languages: ['en', 'ja'] };
 const pron: V2Session = { ...lang, plan: GDI, pronunciation: true };
 const pagesAt = (titles: string[], extra: Partial<V2State> = {}): V2State => ({ ...newV2State(0), board: { pages: titles.map((title) => ({ title, items: [] })), current: titles.length - 1 }, ...extra });
@@ -204,14 +207,14 @@ async function main() {
     const t20 = 'Yes, that\'s right: "I have worked here for seven years." You started in the past and you still work here now. <board page>Present perfect</board> Now the present perfect.';
     const goalsAfter = [{ type: 'tool_use', id: 'g1', name: 'set_goal_status', input: { goal: 'level-check', status: 'shown' } }, { type: 'tool_use', id: 'g2', name: 'set_goal_status', input: { goal: 'topic-intro', status: 'shown' } }];
     const w1 = watching(t20, goalsAfter);
-    const r = await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(B, { goals: { overview: { status: 'shown' as const, at: 0 } }, ...level, history }), studentSaid: 'I have worked here for seven years.', callModel: w1.call, onText: (d) => w1.heardNow.push(d), boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
+    const r = await runV2Turn({ session: { ...lang, plan: GDI_6E }, state: pagesAt(B, { goals: { overview: { status: 'shown' as const, at: 0 } }, ...level, history }), studentSaid: 'I have worked here for seven years.', callModel: w1.call, onText: (d) => w1.heardNow.push(d), boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
     check('T20 shape: the frame names present perfect, heard before the call ends (no wait)', /Next is present perfect\. Shall we go on, or do you have a question first\?/.test(w1.atEnd()) && r.state.board.pages.length === B.length, w1.atEnd());
     check('…and the stored reply says what was heard', /Next is present perfect\./.test(JSON.stringify(r.state.history)));
     const w2 = watching('Great. <board page>Past simple</board> Now the past simple.');
-    await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt([...B, 'Present perfect'], { goals: { overview: { status: 'shown' as const, at: 0 } }, ...level, history }), studentSaid: 'I have worked here for seven years.', callModel: w2.call, onText: (d) => w2.heardNow.push(d), boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
+    await runV2Turn({ session: { ...lang, plan: GDI_6E }, state: pagesAt([...B, 'Present perfect'], { goals: { overview: { status: 'shown' as const, at: 0 } }, ...level, history }), studentSaid: 'I have worked here for seven years.', callModel: w2.call, onText: (d) => w2.heardNow.push(d), boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
     check('an ordinary "Great. <page>": the frame goes out at once', /Great\.[\s\S]*Next is past simple\. Shall we go on/.test(w2.atEnd()), w2.atEnd());
     const w3 = watching('Great. <board page>Some other heading</board> Now this.');
-    await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(B, { ...level, history }), studentSaid: 'I have worked here for seven years.', callModel: w3.call, onText: (d) => w3.heardNow.push(d), boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
+    await runV2Turn({ session: { ...lang, plan: GDI_6E }, state: pagesAt(B, { ...level, history }), studentSaid: 'I have worked here for seven years.', callModel: w3.call, onText: (d) => w3.heardNow.push(d), boardPass: false, mathsCheck: false, nowMs: 5 * 60000 });
     check('a page of no plan part: named by its heading, at once', /Next is some other heading\. Shall we go on/.test(w3.atEnd()), w3.atEnd());
     check('the kill switch is on by default', TUTOR_V2_FRAME_NAMES_OPENED === true);
   }

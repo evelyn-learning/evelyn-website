@@ -237,6 +237,7 @@
     "test:brain-v2-real-voice": "npx tsx scripts/test-brain-v2-real-voice.ts",
     "test:brain-v2-real-voice-6f": "npx tsx scripts/test-brain-v2-real-voice-6f.ts",
     "test:brain-v2-real-voice-6g": "npx tsx scripts/test-brain-v2-real-voice-6g.ts",
+    "test:brain-v2-part-flow-7a": "npx tsx scripts/test-brain-v2-part-flow-7a.ts",
     "test:brain-v2-pronunciation": "npx tsx scripts/test-brain-v2-pronunciation.ts",
     "test:brain-v2-working-level": "npx tsx scripts/test-brain-v2-working-level.ts",
     "test:brain-v2-sentence-cards": "npx tsx scripts/test-brain-v2-sentence-cards.ts",
