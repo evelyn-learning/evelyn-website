@@ -107,7 +107,10 @@ export function v2Progress(plan: LessonPlan, goals: V2State['goals'], seen: Reco
   // The board's word on where the lesson is, when it is the latest word and that part is not finished.
   const shown = plan.segments.map((seg, i) => ({ i, at: seen[seg.id] ?? 0 })).filter((x) => x.at > 0).sort((a, b) => b.at - a.at)[0];
   const onBoard = shown && shown.at >= (stamped?.at ?? 0) && goals[plan.segments[shown.i].id]?.status !== 'demonstrated' && goals[plan.segments[shown.i].id]?.status !== 'skipped' ? shown.i : -1;
-  const at = onBoard >= 0 ? onBoard : stamped ? (!done[stamped.i] ? stamped.i : passedOver >= 0 ? passedOver : after >= 0 ? after : stamped.i) : open >= 0 ? open : Math.max(0, next);
+  // A part just finished stays the one shown until the board moves on: the next in the plan's order is a guess,
+  // and the tutor often goes elsewhere (Praveen, 2026-11-17). With no word from the board all lesson, the plan's
+  // order is all there is to go by.
+  const at = onBoard >= 0 ? onBoard : stamped && evidence ? stamped.i : stamped ? (!done[stamped.i] ? stamped.i : passedOver >= 0 ? passedOver : after >= 0 ? after : stamped.i) : open >= 0 ? open : Math.max(0, next);
   const currentSegmentId = plan.segments[at]?.id ?? '';
   const reached = (kind: string, need: (status: string | undefined) => boolean) => plan.segments.some((seg) => seg.kind === kind && need(goals[seg.id]?.status));
   const milestone: TutorMilestone | null = reached('recap', (s) => s === 'shown' || s === 'demonstrated') ? 'recap_reached'
