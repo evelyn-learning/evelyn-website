@@ -46,10 +46,13 @@ export function isGoodbye(sentence: string, wide: boolean = TUTOR_V2_PASSED_PART
 // (「海外出張に行きますか？」, 「次の会議に行きますか？」, 「プロジェクトはスケジュール通りに進みますか？」), which were dropped,
 // stripped from the history and counted as frames.
 const JA_GO_ON_VERB = '(?:進(?:みますか|みましょうか|んで(?:も)?(?:いい|よい|よろしい|大丈夫)(?:です|でしょう)?か)|行きますか|行きましょうか|移りますか|移りましょうか)';
+/** Fix round 2 (I1 residual): 次/先 starts a word: not 取引先, 出張先 or 目次. At the sentence's start, after a mark, or after
+ *  では／じゃあ. */
+export const JA_WORD_START = '(?:(?<![\\p{Script=Han}\\p{Script=Katakana}\\p{Script=Hiragana}])|(?<=では|じゃあ|それでは|じゃ))';
 /** A bare go-on: no object or destination ("次に進みますか", "先へ進みましょうか"). */
-const JA_BARE_GO_ON = new RegExp(`(?:次|先|つぎ|さき)(?:に|へ)${JA_GO_ON_VERB}`);
+const JA_BARE_GO_ON = new RegExp(`${JA_WORD_START}(?:次|先|つぎ|さき)(?:に|へ)${JA_GO_ON_VERB}`, 'u');
 /** Going on to the next part of the lesson ("次の部分に進んでもいいですか"). */
-const JA_NEXT_PART = new RegExp(`次の(?:パート|部分|ところ|項目|テーマ|トピック|セクション|ステップ|練習|課題|内容)(?:に|へ)${JA_GO_ON_VERB}`);
+const JA_NEXT_PART = new RegExp(`${JA_WORD_START}次の(?:パート|部分|ところ|項目|テーマ|トピック|セクション|ステップ|練習|課題|内容)(?:に|へ)${JA_GO_ON_VERB}`, 'u');
 /** Any go-on, only beside the question check ("過去形に進みますか、それとも先に質問がありますか"). */
 const JA_ANY_GO_ON = new RegExp(`(?:に|へ)${JA_GO_ON_VERB}`);
 const JA_OR_QUESTION = /それとも[^。！？?]*質問/;

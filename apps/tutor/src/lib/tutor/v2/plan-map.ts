@@ -329,7 +329,8 @@ export function v2PartOffers(seg: Segment, history: V2State['history']): number 
 }
 /** Fix round 1 (minor 2): an offer or a choice, not any question that names the part ("How was your pronunciation
  *  class?"). */
-const OFFER_SHAPE = /\b(?:would you like|do you want|want to|shall we|how about|or)\b|どちら|しますか|しましょうか|やりますか|やってみますか|どうですか|それとも/i;
+// Fix round 2 (minor): "or" only as a choice about doing the part ("…, or skip it?", "…, or move on?").
+const OFFER_SHAPE = /\b(?:would you like|do you want|want to|shall we|how about|or (?:skip|move on|go on|keep|continue|go straight|finish|stop|leave))\b|どちら|しますか|しましょうか|やりますか|やってみますか|どうですか|それとも/i;
 
 /** The optional parts not taken up that have been offered V2_MAX_PART_OFFERS times or more: not offered again. */
 export function v2OfferedOut(plan: LessonPlan, state: Pick<V2State, 'goals' | 'board' | 'history'>, enabled: boolean = TUTOR_V2_PASSED_PART_CLOSE): Set<string> {

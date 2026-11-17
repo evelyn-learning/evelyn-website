@@ -60,6 +60,10 @@ async function main() {
     check('the kill switch off: the English matcher only', !isPartFrame(T40, false) && isPartFrame('Shall we go on?', false));
     const ordinary = ['海外出張に行きますか？', '次の会議に行きますか？', 'プロジェクトはスケジュール通りに進みますか？', '来週は大阪へ行きますか？', '次はどの部署に移りますか？'];
     check('fix round 1 (I1): ordinary questions with a destination are not frames', ordinary.every((x) => !isPartFrame(x)), ordinary.filter((x) => isPartFrame(x)));
+    const compounds = ['取引先に行きますか？', '出張先へ行きますか？', '目次に移りますか？', '目次の部分に移りますか？'];
+    check('fix round 2: 次/先 inside a word (取引先, 出張先, 目次) is no frame', compounds.every((x) => !isPartFrame(x)), compounds.filter((x) => isPartFrame(x)));
+    check('…while 次に/先へ at the start, after 、, では or じゃあ still is', ['次に進みますか？', 'では次に進みますか？', 'じゃあ、先へ進みましょうか？', 'それでは、次の部分に進んでもいいですか。'].every((x) => isPartFrame(x)));
+    check('…and they open no page', !mayOpenPart({ title: 'Past simple', studentSaid: 'はい', lastTutor: '出張先へ進んでもいいですか？', pagesOpen: 4 }) && !mayOpenPart({ title: 'Past simple', studentSaid: 'はい', lastTutor: '取引先に進みますか？', pagesOpen: 4 }) && mayOpenPart({ title: 'Past simple', studentSaid: 'はい', lastTutor: 'では次に進みますか？', pagesOpen: 4 }));
     check('…nor do they open a page as a frame would', !mayOpenPart({ title: 'Past simple', studentSaid: 'はい', lastTutor: 'プロジェクトはスケジュール通りに進みますか？', pagesOpen: 4 }));
     const og: string[] = []; const gg = new ReplyGate((t) => og.push(t), { dropFrame: true, holdGoodbye: false });
     for (const x of ordinary) gg.push(x); gg.flush();
@@ -93,6 +97,7 @@ async function main() {
     check('two offers counted, in English and Japanese; the overview\'s "Does that sound good?" is none', v2PartOffers(pron, offers) === 2, v2PartOffers(pron, offers));
     check('fix round 1 (minor 2): a question that names the part but offers nothing is no offer', v2PartOffers(pron, [a('How was your pronunciation class at school?')]) === 0);
     const nameless = { ...pron, metadata: { optional: true } } as typeof pron;
+    check('fix round 2 (minor): "or" counts only as a choice about doing it', v2PartOffers(pron, [a('Was pronunciation or grammar harder for you?')]) === 0 && v2PartOffers(pron, [a('Shall we practise pronunciation now, or skip it?')]) === 1 && v2PartOffers(pron, [a('Pronunciation now, or move on?')]) === 1);
     check('…and a part with no name words is never offered by every question', v2PartOffers(nameless, [a('Would you like to try another one?')]) === 0);
     check('the runtime\'s own offer counts (its ask names the part the sentence before)', v2PartOffers(pron, [a('Before the summary, there is still the pronunciation part. Would you like to do it now, or go straight to the summary?')]) === 1);
     const st = pagesAt(B, { goals: goalsB, ...level, history: offers });
@@ -211,6 +216,25 @@ async function main() {
     await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(B, { goals: { ...goalsB, pronunciation: { status: 'skipped', at: 0 } }, ...level, history: hist }), studentSaid: 'Sorry, I have to finish now.', callModel: call3, onText: (d) => heard3.push(d), boardPass: false, mathsCheck: false, nowMs: 12 * 60000 });
     const h3 = heard3.join('');
     check('minor 1: no line in the middle of a turn that goes on; one at the closing turn\'s last call', !/Of course\.\s*We didn't get to/.test(h3) && (h3.match(/We didn't get to/g) ?? []).length <= 1 && /Thank you, Ken\.[\s\S]*We didn't get to the pronunciation part/.test(h3), h3);
+  }
+
+  console.log('7. fix round 2 (N1): the next-time line once a lesson, only on a reply that closes');
+  {
+    const wrap: V2Session = { ...lang, plan: GDI, wrapMinutes: 18 };
+    const hist: H = [u('hi'), a('<board page>Lesson overview</board> Hello.'), u('ok'), a('Good. What did you do last year?')];
+    const base = pagesAt([...B], { goals: { ...goalsB, pronunciation: { status: 'skipped', at: 0 } }, ...level, history: hist });
+    const said: string[] = [];
+    const r1 = await runV2Turn({ session: wrap, state: base, studentSaid: 'I attended a fair.', callModel: streaming('Good. Here is a quick summary: you used the present perfect and the past simple.').call, onText: (d) => said.push(d), boardPass: false, mathsCheck: false, nowMs: 18.2 * 60000 });
+    const r2 = await runV2Turn({ session: wrap, state: r1.state, studentSaid: 'Thank you.', callModel: streaming('To sum up, you did well today.').call, onText: (d) => said.push(d), boardPass: false, mathsCheck: false, nowMs: 18.8 * 60000 });
+    const n = (said.join('').match(/We didn't get to/g) ?? []).length;
+    check('two wrap-due turns that sum up: the line once, not at every one', n === 1, said.join(' | '));
+    void r2;
+    const s3: string[] = [];
+    await runV2Turn({ session: wrap, state: pagesAt([...B], { goals: { ...goalsB, pronunciation: { status: 'skipped', at: 0 } }, ...level, history: hist }), studentSaid: 'I attended a fair.', callModel: streaming('Nearly right. Please say this sentence once more.').call, onText: (d) => s3.push(d), boardPass: false, mathsCheck: false, nowMs: 18.2 * 60000 });
+    check('a wrap-due reply that ends in a practice ask: no line', !/We didn't get to/.test(s3.join('')), s3.join(''));
+    const s4: string[] = [];
+    await runV2Turn({ session: wrap, state: pagesAt([...B], { goals: { ...goalsB, pronunciation: { status: 'skipped', at: 0 } }, ...level, history: hist }), studentSaid: 'I attended a fair.', callModel: streaming('Good. What else did you do last year?').call, onText: (d) => s4.push(d), boardPass: false, mathsCheck: false, nowMs: 18.2 * 60000 });
+    check('a wrap-due reply that does not close: no line', !/We didn't get to/.test(s4.join('')), s4.join(''));
   }
 
   console.log('5. the slow first frame: set_working_level is called after the words (two model calls in all four runs)');
