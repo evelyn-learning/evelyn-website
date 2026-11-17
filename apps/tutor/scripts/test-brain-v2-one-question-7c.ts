@@ -22,7 +22,9 @@ import { TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_SPOKEN_SOUNDS } from '../src/lib/tuto
 import { asksAnywhere } from '../src/lib/tutor/v2/board-timing';
 import { v2LanguagesSection } from '../src/lib/tutor/v2/languages';
 import { v2HandsOver, v2IsCheckIn, v2ReplyAsks, v2ReplySentences } from '../src/lib/tutor/v2/one-question';
-import { V2_PART_ASKS } from '../src/lib/tutor/v2/part-flow';
+import { V2_PART_ASKS, v2PendingPart } from '../src/lib/tutor/v2/part-flow';
+import { renderFacts } from '../src/lib/tutor/v2/facts';
+import { v2ReadCarried } from '../src/lib/tutor/v2/state-carry';
 import { ReplyGate } from '../src/lib/tutor/v2/reply-gate';
 import { v2SpeakSounds } from '../src/lib/tutor/v2/spoken-sounds';
 import { V2_CHECK_INS, runV2Turn, type V2ModelCall } from '../src/lib/tutor/v2/turn';
@@ -126,9 +128,34 @@ async function main() {
     const out: string[] = []; const g = new ReplyGate((t) => out.push(t), { dropFrame: false, holdGoodbye: false });
     g.push('Please say it again. Does that make sense so far? '); g.flush();
     check('the gate without dropCheckIn passes the check-in (typed lessons, homework, discussions)', out.join('').includes('Does that make sense so far?'));
-    const out2: string[] = []; const g2 = new ReplyGate((t) => out2.push(t), { dropFrame: false, holdGoodbye: false, dropCheckIn: true });
-    g2.push('Does that make sense so far? Please say it again. '); g2.flush();
+    const out2: string[] = []; const g2 = new ReplyGate((t) => out2.push(t), { dropFrame: false, holdGoodbye: true, dropCheckIn: true });
+    g2.push('Does that make sense so far? Please say it again. '); g2.flush(); g2.dropTrailingCheckIn();
     check('…with it, a check-in before the ask stays (only one after an ask goes)', out2.join('').includes('Does that make sense so far?') && g2.removed.length === 0);
+    // Fix round 1, M3: dropCheckIn alone does not make the gate cut: the stream goes out in the pieces it came in.
+    const pieces = ['Please say', ' it again. Does th', 'at make sense so far? '];
+    const out3: string[] = []; const g3 = new ReplyGate((t) => out3.push(t), { dropFrame: false, holdGoodbye: false, dropCheckIn: true });
+    for (const x of pieces) g3.push(x);
+    g3.flush(); g3.dropTrailingCheckIn();
+    check('M3: dropCheckIn alone leaves the stream as it came (piece for piece; nothing dropped)', JSON.stringify(out3) === JSON.stringify(pieces) && g3.removed.length === 0, out3);
+
+    console.log('2b. fix round 1 (I1): a hand-over counts only as the reply\'s last sentence');
+    const notAsks = ['Say we have 5 apples.', 'Say you earn 10 dollars an hour.', 'Try not to worry.', 'Try thinking of it as a ramp.', 'Give me a second to draw it.', 'Tell me if you need a break.', 'Go ahead and imagine a ball rolling.', 'Say that the line is steep.', 'Try to remember the rule.'];
+    for (const x of notAsks) check(`not an ask even last: "${x}"`, !v2HandsOver(x));
+    const sci: V2Session = { studentName: 'Sam', subject: 'Science', level: 'Grade 7', mode: 'voice', topic: 'Forces' };
+    const p1 = await turn(maths, newV2State(0), 'What is subtraction?', 'Say you have 5 apples and eat 2. Then 3 are left. Subtraction takes away. Does that make sense?');
+    check('maths: the model\'s own check-in after a hypothetical "Say…" is kept (the reply\'s only question)', /Subtraction takes away\.\s*Does that make sense\?\s*$/.test(p1.spoken) && /Does that make sense\?/.test(p1.stored), p1.spoken);
+    const p2 = await turn(maths, newV2State(0), 'ok', 'Try thinking of the slope as steepness. A slope of 2 rises 2 for each 1 across. That is the key idea.');
+    check('maths: a statement reply that opens "Try thinking…" still gets the runtime\'s check-in', checkIns(p2.spoken) === 1, p2.spoken);
+    const p3 = await turn(sci, newV2State(0), 'Why does it speed up?', 'Say a ball rolls down a ramp. Gravity pulls it down the slope, so it speeds up. Does that make sense so far?');
+    check('science: the model\'s check-in after a scene-setting "Say…" is kept', /speeds up\.\s*Does that make sense so far\?\s*$/.test(p3.spoken), p3.spoken);
+    const p4 = await turn(sci, newV2State(0), 'ok', 'Give me a second to draw it. Gravity pulls the ball down. Friction slows it.');
+    check('science: "Give me a second…" earlier in a statement reply: the check-in still comes', checkIns(p4.spoken) === 1, p4.spoken);
+    const p5 = await turn(lesson, midPart(), 'Okay.', 'Please say it again. Then we will look at the next sentence. That is the plan.');
+    check('an ask earlier in the reply, statements after it: the check-in comes (the ask is not where the reply ends)', checkIns(p5.spoken) === 1, p5.spoken);
+    const p6 = await turn(lesson, midPart(), 'Okay.', 'Please say it again. Does that make sense so far? Then we will go on to the next one.');
+    check('a check-in after the ask with more words after it: said where it stands (not trailing)', /again\.\s*Does that make sense so far\?\s*Then we will go on/.test(p6.spoken) && /Does that make sense so far\?/.test(p6.stored), p6.spoken);
+    const p7 = await turn(lesson, midPart(), 'Yes, I work with Canada customer, uh, sell 25 washing machine last month.', `${T836}\n\nDoes that make sense so far?`);
+    check('t≈8.36 as the model might write it: ask, card, check-in: the check-in dropped (the card between does not count)', checkIns(p7.spoken) === 0 && checkIns(p7.stored) === 0 && /Please say that sentence again\./.test(p7.spoken), p7.spoken);
   }
 
   console.log('3. no offer or part ask after a reply that asks');
@@ -138,9 +165,22 @@ async function main() {
     const held = c.calls.find((x) => x.name === 'new_page');
     check('the page is held (not opened) and nothing after it is said', !!held && /not opened yet/.test(held.outcome) && c.state.board.pages[c.state.board.current]?.title === 'Present perfect' && !/Last month/.test(c.spoken), c.calls.map((x) => x.outcome));
     check('…no part ask after the model\'s question: one question in the reply', !V2_PART_ASKS.some((x) => c.spoken.includes(x)) && /working with them\?\s*$/.test(c.spoken) && checkIns(c.spoken) === 0, c.spoken);
-    check('…and no page waits for a yes: nothing was asked about it', !c.state.heldPage, c.state.heldPage);
+    check('…the page waits marked unasked, and the outcome does not claim they were asked', c.state.heldPage?.part === 'past-simple' && c.state.heldPage.unasked === true && /held until they are asked/.test(held?.outcome ?? ''), { held: c.state.heldPage, outcome: held?.outcome });
     const c2 = await turn(lesson, midPart(), 'I have worked with Canadian customers.', 'Good. Please say it once more.\n<board page>Past simple</board>\nLast month is finished.');
-    check('a practice ask before the page: the same', !V2_PART_ASKS.some((x) => c2.spoken.includes(x)) && /once more\.\s*$/.test(c2.spoken) && !c2.state.heldPage, c2.spoken);
+    check('a practice ask before the page: the same', !V2_PART_ASKS.some((x) => c2.spoken.includes(x)) && /once more\.\s*$/.test(c2.spoken) && c2.state.heldPage?.unasked === true, c2.spoken);
+    // Fix round 1 (I2): the part change owed is asked on the next reply, and a yes then opens the page.
+    check('I2: a yes to the other question opens nothing (an unasked page is not agreed)', v2PendingPart(GDI, c.state, 'Good. What do you like most about working with them?', 'Yes.') === null);
+    const facts2 = renderFacts(lesson, c.state, { nowMs: 130_000, heard: 'x' });
+    check('I2: next turn, the facts say the part change is owed and to ask, naming it', /part change owed: the "Past simple" page is waiting, and they have not been asked yet/.test(facts2) && /go on to past simple/.test(facts2), facts2.split('\n').filter((l) => /part change/.test(l)));
+    const t2 = await turn(lesson, c.state, 'I like their kindness.', 'That is lovely. Kindness matters a lot with customers.');
+    check('I2 turn 2: a reply that asks nothing ends with the part ask naming past simple; the page now waits for a yes', V2_PART_ASKS.some((x) => t2.spoken.includes(x)) && /past simple/i.test(t2.spoken) && t2.state.heldPage?.part === 'past-simple' && !t2.state.heldPage.unasked && checkIns(t2.spoken) === 0 && V2_PART_ASKS.some((x) => t2.stored.includes(x)), { spoken: t2.spoken, held: t2.state.heldPage });
+    const t3 = await turn(lesson, t2.state, 'Yes.', 'Great. Last month is a finished time, so we say "sold".');
+    check('I2 turn 3: "Yes." opens the Past simple page', t3.state.board.pages[t3.state.board.current]?.title === 'Past simple' && t3.calls[0]?.agreed === true && !t3.state.heldPage, { open: t3.state.board.pages[t3.state.board.current]?.title, calls: t3.calls.map((x) => x.name) });
+    const t2b = await turn(lesson, c.state, 'I like their kindness.', 'That is lovely. Have you ever visited Canada?');
+    check('I2: a turn-2 reply that asks something else gets no part ask; the change stays owed', !V2_PART_ASKS.some((x) => t2b.spoken.includes(x)) && t2b.state.heldPage?.unasked === true, { spoken: t2b.spoken, held: t2b.state.heldPage });
+    const t2c = await turn(lesson, c.state, 'I like their kindness.', 'That is lovely. Next is the past simple. Ready to go on, or would you like to ask something first?');
+    check('I2: the reply asks the part change itself: the page waits for a yes, nothing added', !t2c.spoken.includes('\n\n') && t2c.state.heldPage?.part === 'past-simple' && !t2c.state.heldPage.unasked, { spoken: t2c.spoken, held: t2c.state.heldPage });
+    check('I2: the route keeps the marker (state carry), and drops a bad one', v2ReadCarried({ heldPage: { title: 'Past simple', part: 'past-simple', at: 2, unasked: true } }).heldPage?.unasked === true && v2ReadCarried({ heldPage: { title: 'Past simple', part: 'past-simple', at: 2, unasked: 'yes' } }).heldPage?.unasked === undefined);
     const c3 = await turn(lesson, midPart(), 'I have worked with Canadian customers.', 'Good, that is right.\n<board page>Past simple</board>\nLast month is finished.');
     check('a reply that asks nothing: the part ask comes as before, and the page waits', V2_PART_ASKS.some((x) => c3.spoken.includes(x)) && c3.state.heldPage?.part === 'past-simple', c3.spoken);
     const c4 = await turn(lesson, midPart(), 'I have worked with Canadian customers.', 'Why the present perfect? Because the time runs up to now. That is right.\n<board page>Past simple</board>\nLast month is finished.');
@@ -173,13 +213,17 @@ async function main() {
       ['the /ʃ/ in "she"', 'the sh sound in "she"'],
       ['the sound /tʃ/ is in "chair".', 'the sound ch is in "chair".'],
       ['a long /iː/ sound', 'a long ee sound'],
-      ['It is [z], not [s].', 'It is the z sound, not the s sound.'],
+      ['the [z] sound', 'the z sound'],
+      ['the /ɜː/ sound in "bird"', 'the er sound in "bird"'],
+      ['the /ʊə/ vowel', 'the oor vowel'],
+      ['the /ɘ/ vowel', 'the vowel'],
+      ['Say /ɘ/ now.', 'Say this sound now.'],
       ['Listen: [θ] and [ð].', 'Listen: the th sound and the voiced th sound.'],
       ['「/z/」の音です。', '「z」の音です。'],
       ['/r/ and /l/ are different.', 'the r sound and the l sound are different.'],
     ];
     for (const [x, want] of cases) check(`"${x}" → "${want}"`, v2SpeakSounds(x) === want, v2SpeakSounds(x));
-    const untouched = ['Three quarters is 3/4 of it.', 'The meeting is on 11/16/2026.', 'Bring your passport and/or your ID.', 'We drove at 60 km/h.', 'See https://example.com/a/b/ for more.', 'Open /usr/local/bin now.', 'He wrote [sic] in the letter.', 'The concentration [OH] matters.', '[a]nd so on', 'either/or', 'A/B testing', 'w/o sugar', 'The ratio 1/2/3.', 'Type /help/ for help.'];
+    const untouched = ['Three quarters is 3/4 of it.', 'The meeting is on 11/16/2026.', 'Bring your passport and/or your ID.', 'We drove at 60 km/h.', 'See https://example.com/a/b/ for more.', 'Open /usr/local/bin now.', 'He wrote [sic] in the letter.', 'The concentration [OH] matters.', '[a]nd so on', 'either/or', 'A/B testing', 'w/o sugar', 'The ratio 1/2/3.', 'Type /help/ for help.', 'Choose [a] or [b].', 'It is [z], not [s].'];
     for (const x of untouched) check(`untouched: "${x}"`, v2SpeakSounds(x) === x, v2SpeakSounds(x));
     const src = readFileSync(join(__dirname, '..', 'src', 'app', 'tutor', 'components', 'v2', 'TutorVoiceV2.tsx'), 'utf8');
     check('only the voice\'s text: the plain-speech transform applies it (behind the flag); the board, the caption and the stored reply never see it', /plainSpeech = useCallback\(\(sentence: string, rewrite[^\n]*TUTOR_V2_SPOKEN_SOUNDS \? v2SpeakSounds\(sentence\) : sentence/.test(src) && (src.match(/v2SpeakSounds\(/g) ?? []).length === 1);

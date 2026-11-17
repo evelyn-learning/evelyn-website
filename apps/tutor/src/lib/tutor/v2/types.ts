@@ -154,8 +154,10 @@ export interface V2State {
   summaryBegunAt?: number;
   /** Task 7a (PART_PAGE_CHIP), spoken lessons whose plan parts all have names: the page of the next part, held while the
    *  student is asked whether to go on (`title`: the part's name; `part`: its goal id; `at`: the tutor replies in the
-   *  history when it was held). It opens on their yes, whether or not the reply writes it again. */
-  heldPage?: { title: string; part: string; at: number };
+   *  history when it was held). It opens on their yes, whether or not the reply writes it again. Task 7c fix round 1
+   *  (`unasked`): held at a reply that already asked something else, so not yet asked about: no yes opens it; the next
+   *  reply asks (the facts say so, and the runtime asks when that reply asks nothing). */
+  heldPage?: { title: string; part: string; at: number; unasked?: true };
 }
 
 /** A working level and where it came from: an earlier lesson (may be revised once, case 11) or this lesson (final). */

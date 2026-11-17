@@ -8,7 +8,7 @@
  * ("…"sold." Please say it: "…"" + "Is that clear, or shall I go over it again?") and t≈12.6.
  *
  * Here: a reply's sentences cut after closing quotes too; an imperative that hands the turn over counts as an ask (the
- * family of Task 6e F2's "Now you say it"); a reply asks when any sentence of it does; and a check-in sentence, which the
+ * family of Task 6e F2's "Now you say it") when it is the reply's last sentence (fix round 1); and a check-in sentence, which the
  * model's own trailing "Does that make sense so far?" after a practice ask is dropped as. Pure: the callers gate.
  */
 import { asksAnywhere } from './board-timing';
@@ -28,29 +28,41 @@ const HAND_OVER = /^(?:please[,]?\s+)?(?:say\b|repeat\b|read (?:it|this|that|the
 const HAND_OVER_JA = /言ってみて|言ってください|もう一度[^。！？?]*(?:ください|ましょう)|繰り返して(?:ください|みて)|(?:話して|教えて|読んで|発音して)(?:みて)?ください/;
 /** Advice for later is no ask ("Try to say it this way next time."). */
 const LATER = /\bnext time\b|次回|次の機会/i;
+/** Fix round 1 (review I1): imperatives that explain or set a scene, not asks: "Say you have 5 apples…", "Try thinking of it
+ *  as a ramp.", "Give me a second to draw it.", "Tell me if you need a break." ("Please say that sentence again." is an ask.) */
+const NOT_AN_ASK = /^(?:please[,]?\s+)?(?:say (?:you|we|they|he|she|there|for example|if)\b|say that (?!sentence|again|once|word|one|phrase|back|aloud|out loud)|try (?:not to|to (?:think|imagine|picture|remember)|thinking|imagining|picturing|remembering)\b|give me a (?:second|moment|minute|sec)\b|tell me (?:if|when|whenever)\b|go ahead and (?:imagine|picture|think)\b)|\bif you (?:need|want|like)\b/i;
 
 /** Whether a sentence hands the turn over by asking them to say, try or tell something (or is a practice ask, Task 6g). */
 export function v2HandsOver(sentence: string): boolean {
   const s = sentence.trim().replace(/^["'“‘(「『]+/, '');
   if (!s || LATER.test(s)) return false;
-  return HAND_OVER.test(s.replace(LEAD, '')) || HAND_OVER_JA.test(s) || v2IsPracticeAsk(s);
+  const bare = s.replace(LEAD, '');
+  if (NOT_AN_ASK.test(bare)) return false;
+  return HAND_OVER.test(bare) || HAND_OVER_JA.test(s) || v2IsPracticeAsk(s);
 }
 
-/** Whether a reply asks them anything: a question anywhere, an instruction at its end (board-timing.ts asksAnywhere, on the
- *  old cut and on the cut after quotes, so nothing that asked before stops asking), or a hand-over anywhere. */
+/** Fix round 1 (controller ruling, review I1): a hand-over counts by its place, not its words alone: only as the reply's last
+ *  spoken sentence, where a check-in or an offer added after it would be a second thing to answer. Earlier in a reply an
+ *  imperative never counts ("Say you have 5 apples and eat 2. Then 3 are left." is an explanation). */
+function endsHandingOver(sentences: string[]): boolean {
+  const last = sentences[sentences.length - 1];
+  return !!last && v2HandsOver(last);
+}
+
+/** Whether a reply asks them anything, for the runtime's check-in: what asked before (board-timing.ts asksAnywhere on the old
+ *  cut, so nothing that asked before stops asking), or its last sentence, cut after quotes too, hands over. */
 export function v2ReplyAsks(text: string): boolean {
   const plain = stripBoardBlocks(text);
   const old = plain.split(/(?<=[.?!])\s+/).filter((x) => x.trim());
-  const now = v2ReplySentences(plain);
-  return asksAnywhere(old) || asksAnywhere(now) || now.some(v2HandsOver);
+  return asksAnywhere(old) || endsHandingOver(v2ReplySentences(plain));
 }
 
 /** Whether a reply hands the turn over for an ask the runtime would add after it (a part ask, an offer): its last sentence is a
- *  question, or any sentence hands over. A question further back may be rhetorical ("Why? Because the slope is 2."), and
- *  the offer after such a reply is the only question in it. */
+ *  question or hands over. A question further back may be rhetorical ("Why? Because the slope is 2."), and the offer after
+ *  such a reply is the only question in it. */
 export function v2ReplyHandsOver(text: string): boolean {
   const now = v2ReplySentences(stripBoardBlocks(text));
-  return /(?:[?？]|か[。．]?)["'”’)\]」』）]*$/.test(now[now.length - 1] ?? '') || now.some(v2HandsOver);
+  return /(?:[?？]|か[。．]?)["'”’)\]」』）]*$/.test(now[now.length - 1] ?? '') || endsHandingOver(now);
 }
 
 /** A check-in: a whole sentence that only asks whether they follow ("Does that make sense so far?", "Is that clear, or shall

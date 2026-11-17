@@ -4,9 +4,10 @@
  * Mic test 1 (embed-1794882458629, t≈16.42): "The ending of "was" is a buzzing /z/ sound, not /s/." reached the voice with
  * its slashes; the plain-speech chain (TutorVoiceV2.tsx speakSlashes) read "/s/" as "per second". For the voice only, a
  * sound between slashes ("/z/", "/ʃ/", "/tʃ/", "/iː/": one to four IPA letters, or one or two plain ones) or in phonetic
- * brackets ("[z]", "[θ]") becomes words: "the z sound", or just "z" where "sound" is already beside it ("a buzzing z
- * sound"). The board and the stored reply keep the symbols. Fractions, dates, "and/or", "km/h", URLs and paths are left:
- * the symbol must stand alone between spaces or punctuation, with no digit, capital or dot in it. Pure.
+ * brackets ("[θ]"; plain letters only with "sound" beside: "the [z] sound") becomes words: "the z sound", or just
+ * "z" where "sound" is already beside it ("a buzzing z sound"). The board and the stored reply keep the symbols.
+ * Fractions, dates, "and/or", "km/h", URLs and paths are left: the symbol must stand alone between spaces or punctuation,
+ * with no digit, capital or dot in it. Pure.
  */
 import { IPA_SPOKEN } from '../voice/tts-pronunciation';
 
@@ -26,10 +27,29 @@ function letters(inner: string): string | null {
   return base;
 }
 
-/** The sound's name in words: "θ" → "th", "tʃ" → "ch", "z" → "z". */
-function nameOf(inner: string, base: string): string {
-  return IPA_SPOKEN[inner] ?? IPA_SPOKEN[inner.replace(/[ˈˌ]/g, '')] ?? IPA_SPOKEN[base] ?? base;
+/** Fix round 1 (review M2): English vowels and other symbols the shared map leaves out, named as a learner hears them. */
+const MORE_NAMES: Record<string, string> = {
+  'ɜː': 'er', 'ɜ': 'er', 'ɝ': 'er', 'ɚ': 'er', 'ʊə': 'oor', 'ɪə': 'ear', 'eə': 'air', 'ɛə': 'air', 'aʊ': 'ow', 'ɔɪ': 'oy',
+  'ʌ': 'uh', 'ɒ': 'o', 'ɑ': 'ah', 'ɛ': 'e', 'e': 'e', 'uː': 'oo', 'u': 'oo', 'i': 'ee', 'ɔ': 'or', 'o': 'oh', 'ɐ': 'uh',
+  'j': 'y', 'ɡ': 'g', 'ɫ': 'l', 'ɾ': 'quick t', 'ʔ': 'glottal stop', 'ʍ': 'wh', 'x': 'kh', 'ɲ': 'ny', 'ʎ': 'ly',
+};
+/** A name the voice can say: plain letters and spaces. */
+const SAYABLE = /^[a-z ]+$/;
+
+/** The sound's name in words ("θ" → "th", "tʃ" → "ch", "ɜː" → "er", "z" → "z"), or null when there is none to say (an IPA
+ *  symbol no map names is never read out raw). */
+function nameOf(inner: string, base: string): string | null {
+  const plain = inner.replace(/[ˈˌ]/g, '');
+  const name = IPA_SPOKEN[inner] ?? IPA_SPOKEN[plain] ?? MORE_NAMES[plain] ?? IPA_SPOKEN[base] ?? MORE_NAMES[base] ?? base;
+  return SAYABLE.test(name) ? name : null;
 }
+
+/** A word that names what the symbol is, beside it: "a buzzing /z/ sound", "the /ʊə/ vowel", 「/z/」の音. */
+const KIND_AFTER = /^\s*(?:(?:sounds?|vowels?|consonants?|diphthongs?)\b|[」』]?\s*の?音)/iu;
+const KIND_BEFORE = /\b(?:sounds?|vowels?|consonants?|diphthongs?)\s*$/i;
+
+/** A symbol taken out with nothing in its place (its space goes with it). */
+const GONE = '\u0001';
 
 /** The speech text with each written sound in words. `text` is one sentence (or part of one) about to be spoken. */
 export function v2SpeakSounds(text: string): string {
@@ -40,14 +60,18 @@ export function v2SpeakSounds(text: string): string {
     if (!BEFORE.test(before) || !AFTER.test(after)) return m;
     const base = letters(inner);
     if (!base) return m;
+    const kindBeside = KIND_AFTER.test(after) || KIND_BEFORE.test(before);
     // Plain letters: one or two ("/s/", "/th/"), or a longer spelling of a sound ("/igh/"): "/help/" and "/api/" are words or
-    // paths. In brackets only a single letter or an IPA symbol: "[sic]", "[a]nd" and "[OH]" are not sounds.
+    // paths. Fix round 1 (review M1): in brackets, plain letters only with "sound" beside them ("Choose [a] or [b]." is a
+    // choice); IPA in brackets is always a sound. "[sic]", "[a]nd" and "[OH]" are never sounds.
     const ascii = /^[a-z]+$/.test(base);
     if (ascii && base.length > 2 && !LONG_SPELLINGS.has(base)) return m;
-    if (bracketed !== undefined && ascii && base.length > 1) return m;
+    if (bracketed !== undefined && ascii && (base.length > 1 || !kindBeside)) return m;
     const name = nameOf(inner, base);
-    if (/^\s*(?:sounds?\b|[」』]?\s*の?音)/iu.test(after) || /\bsounds?\s*$/i.test(before)) return name;
+    // An IPA symbol with no name: "this sound", or no word at all where the kind is already said ("the /ɘ/ vowel" → "the vowel").
+    if (name === null) return kindBeside ? GONE : /\b(?:the|a|an|this|that)\s+$/i.test(before) ? 'sound' : 'this sound';
+    if (kindBeside) return name;
     if (/\b(?:the|a|an|this|that)\s+$/i.test(before)) return `${name} sound`;
     return `the ${name} sound`;
-  });
+  }).replace(/\u0001 ?/g, '');
 }

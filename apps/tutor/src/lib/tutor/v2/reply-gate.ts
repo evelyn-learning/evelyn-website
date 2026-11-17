@@ -112,10 +112,12 @@ export interface ReplyGateOptions {
   holdAsk?: boolean;
   /** The words that say the summary has begun (turn.ts V2_SUMMARY_BEGUN), for closeAsk. */
   summaryBegun?: RegExp;
-  /** Task 7c (ASK_NO_CHECKIN): drop a check-in ("Does that make sense so far?") that follows an ask handing the turn over
-   *  ("Please say that sentence again."): one question per reply. */
+  /** Task 7c (ASK_NO_CHECKIN): drop a check-in ("Does that make sense so far?") that ends the reply straight after an ask
+   *  handing the turn over ("Please say that sentence again."; board blocks between them do not count): one question per
+   *  reply. Fix round 1: only there (a check-in with more words after it goes out, before them), and only while the gate cuts
+   *  sentences for its other work: alone it does not make the gate cut, so a stream with nothing else to do is unchanged. */
   dropCheckIn?: boolean;
-  /** Task 7c: the reply handed the turn over before this gate's words (an earlier model call of the same reply). */
+  /** Task 7c: the reply's last sentence before this gate's words (an earlier model call of the same reply) handed over. */
   handedOver?: boolean;
 }
 
@@ -143,14 +145,17 @@ export class ReplyGate {
   private summaryStarted = false;
   /** Task 7a: asks dropped by dropFrameIf (a repeat, which the runtime's own ask in new words replaces). */
   framesDroppedIf = 0;
-  /** Task 7c: an ask handing the turn over has gone out (or waits, held) in this reply. */
+  /** Task 7c: the last sentence that went out (or waits, held as a practice ask) handed the turn over. */
   private handedOver: boolean;
+  /** Task 7c fix round 1: a check-in straight after a hand-over, waiting to see whether the reply ends there (then dropped,
+   *  dropTrailingCheckIn) or goes on (then said, before what follows). */
+  private checkIn: string | null = null;
 
   constructor(private readonly out: (text: string) => void, private readonly opts: ReplyGateOptions) { this.handedOver = !!opts.handedOver; }
 
   /** Nothing to drop or hold: words go out as they come, cut nowhere (fix round 2, N4: with the gate's work off, the
    *  stream is the stream as before it existed). A card waiting for the next sentence still holds them until then. */
-  private get passThrough(): boolean { return !this.opts.dropFrame && !this.opts.dropFrameIf && !this.opts.holdGoodbye && !this.opts.closeAsk && !this.opts.dropCheckIn && this.card === null && !this.echoes.size; }
+  private get passThrough(): boolean { return !this.opts.dropFrame && !this.opts.dropFrameIf && !this.opts.holdGoodbye && !this.opts.closeAsk && this.card === null && this.checkIn === null && !this.echoes.size; }
 
   push(text: string): void {
     if (this.passThrough && !this.buf) { this.emit(text); return; }
@@ -196,7 +201,10 @@ export class ReplyGate {
   /** The practice ask waiting, as words (fix round 1, minor 3: a card's lead-in is judged with it). */
   get heldAsk(): string { return this.ask ?? ''; }
   /** Let a waiting practice ask go out: the reply goes on with the lesson, or is complete. */
-  releaseAsk(): void { const a = this.ask; this.ask = null; if (a) this.emit(a); }
+  releaseAsk(): void { const a = this.ask; this.ask = null; if (a) this.out(a); }
+  /** Task 7c fix round 1: the reply has ended (this model call's words are complete, or it stops at a held page): a check-in
+   *  waiting after a hand-over is the trailing second question, and is dropped. */
+  dropTrailingCheckIn(): void { const c = this.checkIn; this.checkIn = null; if (c?.trim()) this.removed.push(c.trim()); }
   /** Drop a waiting practice ask: what follows it closes the lesson. */
   dropAsk(): void { const a = this.ask; this.ask = null; if (a?.trim()) this.removed.push(a.trim()); }
   /** The summary begins here (a closing page opens): a waiting practice ask is dropped, and so is any later one. */
@@ -232,7 +240,7 @@ export class ReplyGate {
     if (!core) { if (this.holding) this.heldParts.push(s); else if (this.ask !== null) this.ask += s; else this.emit(s); return; }
     // Task 7c (ASK_NO_CHECKIN): after an ask that hands the turn over, a check-in is a second question: dropped (a practice
     // ask waiting before it stays waiting).
-    if (this.opts.dropCheckIn && this.handedOver && !this.holding && v2IsCheckIn(core)) { this.removed.push(core); return; }
+    if (this.opts.dropCheckIn && this.handedOver && !this.holding && this.checkIn === null && v2IsCheckIn(core)) { this.checkIn = s; return; }
     // Task 6g: what follows a waiting practice ask decides it. The summary beginning or a goodbye closes the lesson, so the
     // ask is dropped (a goodbye keeps it until the close is known: see releaseHeld, dropHeld); anything else, it goes out.
     if (this.opts.closeAsk) {
@@ -257,10 +265,14 @@ export class ReplyGate {
     if (this.opts.dropFrame && !this.holding && isPartFrame(core)) { this.removed.push(core); return; }
     if (this.opts.dropFrameIf && !this.holding && this.opts.dropFrameIf(core)) { this.removed.push(core); this.framesDroppedIf += 1; return; }
     if (this.holding || (this.opts.holdGoodbye && isGoodbye(core.replace(QUOTED_SPANS, ' ')))) { this.holding = true; this.heldParts.push(s); return; }
-    if (this.opts.dropCheckIn && v2HandsOver(core)) this.handedOver = true;
+    if (this.opts.dropCheckIn) this.handedOver = v2HandsOver(core);
     if (this.opts.closeAsk && this.opts.holdAsk !== false && this.ask === null && this.opts.closeAsk(core)) { this.ask = s; return; }
     this.emit(s);
   }
 
-  private emit(text: string): void { if (text) this.out(text); }
+  /** Words going out; a check-in waiting before them was not the reply's end, so it goes first. */
+  private emit(text: string): void {
+    if (this.checkIn !== null && text.trim()) { const c = this.checkIn; this.checkIn = null; this.handedOver = false; this.out(c); }
+    if (text) this.out(text);
+  }
 }

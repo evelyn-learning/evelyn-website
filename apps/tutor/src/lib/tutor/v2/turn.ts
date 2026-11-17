@@ -34,7 +34,7 @@ import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
 import { V2_CLOSING_PAGE, endsAsking, leftOpen, mayOpenPart, namesPart, partOffer, v2FrameDue } from './part-close';
 import { ReplyGate, isPartFrame } from './reply-gate';
-import { v2AskRepeats, v2IsPartAsk, v2MoveAnswer, v2NextPart, v2PageForPart, v2PartAskLine, v2PartChangeAsked, v2PartInHand, v2PartOfPage, v2PendingPart, v2PlanLabelled, v2TutorReplies } from './part-flow';
+import { v2AskRepeats, v2HeldPageOwed, v2IsPartAsk, v2MoveAnswer, v2NextPart, v2PageForPart, v2PartAskLine, v2PartChangeAsked, v2PartInHand, v2PartOfPage, v2PendingPart, v2PlanLabelled, v2TutorReplies } from './part-flow';
 import { heardAsWords } from './heard';
 import { v2IsPracticeAsk, v2LanguagesSection } from './languages';
 import { v2HandsOver, v2ReplyAsks, v2ReplyHandsOver, v2ReplySentences } from './one-question';
@@ -670,9 +670,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       if (firstTextMs === null && t.trim()) firstTextMs = Date.now() - t0;
       saidChars += t.length; saidNow += t;
       input.onText?.(t);
-    }, { dropFrame: gated && TUTOR_V2_PART_OFFER_ONCE && !frameDue && !!session.plan, dropFrameIf, holdGoodbye, closeAsk, holdAsk: summaryDue, summaryBegun: V2_SUMMARY_BEGUN, dropCheckIn: oneQuestion, handedOver: oneQuestion && v2ReplySentences(saidNow).some(v2HandsOver) });
+    }, { dropFrame: gated && TUTOR_V2_PART_OFFER_ONCE && !frameDue && !!session.plan, dropFrameIf, holdGoodbye, closeAsk, holdAsk: summaryDue, summaryBegun: V2_SUMMARY_BEGUN, dropCheckIn: oneQuestion, handedOver: oneQuestion && v2HandsOver(v2ReplySentences(saidNow).pop() ?? '') });
     const hold = (block: InlineBlock, part?: { index: number; title: string } | null) => {
-      gate.flush(); gate.releaseAsk();
+      gate.flush(); gate.releaseAsk(); gate.dropTrailingCheckIn();
       // A held summary page with plan parts not reached: the offer names them and lets the student choose (Task 6e).
       const missed = closesLesson(block.body.trim()) ? v2UnreachedOffer(session.plan, state) : null;
       // The question check only when the last part change did not ask it; an ask ending in the second language is an ask (Task 6e).
@@ -696,7 +696,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       const offer = unasked ? '' : missed ?? (askedNow ? '' : nextPart ? v2PartAskLine({ next: nextPart.title, done: doneLabel, named: namesPart(nextPart.title, saidNow), history: state.history }) : partOffer(named, namesPart(block.body, saidNow) || namesPart(named, saidNow)));
       heldAt = { raw: block.raw, offer, ...(plan && part && partFlow ? { part: { id: plan.segments[part.index]!.id, title: partLabel } } : {}), ...(unasked ? { unasked } : {}) };
       if (offer) { input.onText?.(`\n\n${offer}`); saidChars += offer.length + 2; }
-      input.onToolCall?.({ id: `held_${nowMs.toString(36)}`, name: 'new_page', args: { title: block.body.trim() }, outcome: 'not opened yet: the student is asked first' });
+      input.onToolCall?.({ id: `held_${nowMs.toString(36)}`, name: 'new_page', args: { title: block.body.trim() }, outcome: unasked ? 'not opened yet: held until they are asked whether to go on' : 'not opened yet: the student is asked first' });
     };
     const take = (parts: InlinePart[]) => {
       for (let part of parts) {
@@ -807,6 +807,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     }
     // Task 6g: the reply is complete; a practice ask still waiting goes out (one before a held goodbye waits for the close).
     if (!gate.holdsGoodbye) gate.releaseAsk();
+    // Task 7c fix round 1: this call's words are complete; a check-in straight after a hand-over ended them, and is dropped.
+    gate.dropTrailingCheckIn();
     askDrops += gate.framesDroppedIf;
     for (const [from, to] of retitles.splice(0)) for (const b of response.content) if (b.type === 'text' && b.text.includes(from)) { b.text = b.text.replace(from, to); break; }
     // Task 7b: the runtime's card is stored where it was written, after the sentence that quotes it.
@@ -1216,6 +1218,27 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     }
   }
 
+  // Task 7c fix round 1 (review I2): a page held unasked at an earlier reply is owed its ask. A reply that asks nothing (and
+  // turns no page, holds none) ends with the part ask, and the page then waits for their yes as any held page does.
+  let owedPartAsked = false;
+  const owed = oneQuestion && askEvery && partFlow && session.plan && state.heldPage?.unasked && v2HeldPageOwed(session.plan, state) ? state.heldPage : null;
+  if (owed && session.plan && !heldAt && !askedPart && !state.closed && !input.signal?.aborted && spoken.length && !toolCalls.some((c) => (c.name === 'new_page' && !/^not /.test(c.outcome)) || c.name === 'keep_listening' || c.name === 'end_lesson')) {
+    const said = spoken.join(' ');
+    const last = v2ReplySentences(stripBoardBlocks(said)).pop() ?? '';
+    if (v2IsPartAsk(last)) owedPartAsked = true;
+    else if (!v2ReplyHandsOver(said)) {
+      const plan = session.plan; const inHand = v2PartInHand(plan, state);
+      const done = inHand >= 0 && plan.segments[inHand]!.kind !== 'hook' && !v2PartOf(plan.segments[inHand]!).skipWhenLevelKnown ? v2PartOf(plan.segments[inHand]!).label : undefined;
+      const words = v2PartAskLine({ next: owed.title, done, named: namesPart(owed.title, said), history: [...state.history, ...stored] });
+      input.onText?.(`\n\n${words}`);
+      spoken.push(words);
+      const holder = [...stored].reverse().find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));
+      const textBlock = [...((holder?.content as Anthropic.ContentBlockParam[] | undefined) ?? [])].reverse().find((c): c is Anthropic.TextBlockParam => c.type === 'text');
+      if (textBlock) textBlock.text = `${textBlock.text}\n\n${words}`; else stored.push({ role: 'assistant', content: [{ type: 'text', text: words }] });
+      owedPartAsked = true;
+    }
+  }
+
   // A spoken reply that asks the student nothing leaves them not knowing whose move it is. Going on unasked a
   // moment later turned a page the student was still reading and talked over their answer (AP Lit and AP Calc BC,
   // 2026-11-11: "give the student the chance to say yes, I get this"). The reply ends by handing over instead.
@@ -1262,9 +1285,11 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Task 7a: the page held for their yes waits in the state; a page opened (or the close) lets it go.
   if (partFlow) {
     const held = heldAt as { part?: { id: string; title: string }; unasked?: boolean } | null;
-    // Task 7c: a page held with no ask (the reply asked something else) waits for no yes: nothing was asked about it.
-    if (held?.part && !held.unasked && !state.closed) state.heldPage = { title: held.part.title, part: held.part.id, at: v2TutorReplies(state.history) };
+    // Task 7c: a page held with no ask (the reply asked something else) waits marked `unasked`: no yes opens it, and the next
+    // reply owes its ask (fix round 1); once asked (the runtime's ask, or the reply's own part ask) it waits as any held page.
+    if (held?.part && !state.closed) state.heldPage = { title: held.part.title, part: held.part.id, at: v2TutorReplies(state.history), ...(held.unasked ? { unasked: true as const } : {}) };
     else if (askedPart && !held && !state.closed) state.heldPage = { title: askedPart.title, part: askedPart.id, at: v2TutorReplies(state.history) };
+    else if (owed && owedPartAsked && !state.closed) state.heldPage = { title: owed.title, part: owed.part, at: v2TutorReplies(state.history) };
     else if (state.closed || toolCalls.some((c) => c.name === 'new_page' && !/^not /.test(c.outcome))) delete state.heldPage;
   }
   // Fed back as a fact next turn: how long the tutor has been talking without writing.
