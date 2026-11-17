@@ -20,13 +20,13 @@ export function releasedFor(item: Pick<ItemDoc, "version" | "releasedVersion">, 
 }
 
 /** The item as this role sees it: stage via visibleStage, version capped at the released one, the released answer. */
-function asSeenBy<T extends Pick<ItemDoc, "stage" | "version" | "releasedVersion" | "evelynAnswer" | "releasedAnswer">>(item: T, role?: Role): T {
+export function asSeenBy<T extends Pick<ItemDoc, "stage" | "version" | "releasedVersion" | "evelynAnswer" | "releasedAnswer">>(item: T, role?: Role): T {
   if (seesUnreleased(role)) return item;
   return { ...item, stage: visibleStage(item.stage, role!), version: releasedFor(item, role), evelynAnswer: answerSeenBy(item, role!) };
 }
 
 /** Stages a stage filter matches for this role: `drafting` includes `ready` for Castle Rock; `ready` is no filter for them. */
-function stagesFor(stage: Stage | Stage[] | undefined, role?: Role): Stage[] | undefined {
+export function stagesFor(stage: Stage | Stage[] | undefined, role?: Role): Stage[] | undefined {
   if (!stage) return undefined;
   const list = Array.isArray(stage) ? stage : [stage];
   if (seesUnreleased(role)) return list;
@@ -150,12 +150,14 @@ export async function neighbours(
 
 /**
  * Activity as this role may see it: for Castle Rock, revisions of a version
- * not yet released are dropped, and other rows above the released version
- * lose their version number.
+ * not yet released and moves to Ready are dropped, and other rows above the
+ * released version lose their version number.
  */
-function activitySeenBy(rows: ActivityDoc[], released: (itemId: string) => number, role?: Role): ActivityDoc[] {
+export function activitySeenBy(rows: ActivityDoc[], released: (itemId: string) => number, role?: Role): ActivityDoc[] {
   if (seesUnreleased(role)) return rows;
+  const toReady = (a: ActivityDoc) => a.type === "stage" && (a.stage ? a.stage === "ready" : /\bReady\b/.test(a.body ?? ""));
   return rows.flatMap((a) => {
+    if (toReady(a)) return [];
     if (!a.version || a.version <= released(a.itemId)) return [a];
     return a.type === "revision" ? [] : [{ ...a, version: undefined }];
   });

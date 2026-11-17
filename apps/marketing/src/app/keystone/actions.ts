@@ -5,7 +5,7 @@ import { can, SECTIONS, STAGES, STAGE_LABEL, VERDICTS, type SectionKind, type St
 import { changePassword, requireUser, signIn } from "@/lib/keystone/auth";
 import { ksHref } from "@/lib/keystone/paths";
 import { ks } from "@/lib/keystone/db";
-import { addComment, releaseSolution, saveSolution, setStage, setVerdict } from "@/lib/keystone/store";
+import { addComment, releaseIfHeld, saveSolution, setStage, setVerdict } from "@/lib/keystone/store";
 import { nextInQueue } from "@/lib/keystone/queries";
 import { ctxQuery, parseCtx } from "@/lib/keystone/listctx";
 
@@ -83,13 +83,9 @@ export async function setStageAction(form: FormData) {
   const stage = String(form.get("stage")) as Stage;
   if (!STAGES.includes(stage)) return;
   if (stage === "delivered" ? !can.deliver(user.role) : !can.edit(user.role)) return;
+  // A status that puts the solution in front of Castle Rock releases its latest version first.
+  if (stage === "in_review" || stage === "approved" || stage === "delivered") await releaseIfHeld(itemId, user);
   await setStage(itemId, stage, user, `Status set to ${STAGE_LABEL[stage]}.`);
-  // Putting an item in review by hand releases its latest version, so the reviewer sees what they are asked to review.
-  if (stage === "in_review") {
-    const { Item } = await ks();
-    const item = await Item.findOne({ itemId }).select("version releasedVersion").lean();
-    if (item?.version && (item.releasedVersion ?? item.version) < item.version) await releaseSolution(itemId, user, { log: false });
-  }
   revalidatePath("/keystone", "layout");
 }
 

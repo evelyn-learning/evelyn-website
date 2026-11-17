@@ -11,6 +11,8 @@ import { parseCsv } from "./sheet";
 import { cleanPastedHtml, splitNote } from "./note";
 import { STAGES, STAGE_LABEL, STAGE_HELP, STAGE_OWNER, VERDICTS, answerSeenBy, canJudgeSolution, visibleStage } from "./config";
 import { renderForSolaro, texToLinear, toXhtml } from "./solaro";
+import { activitySeenBy, asSeenBy, stagesFor } from "./queries";
+import type { ActivityDoc } from "./db";
 
 // render: math, figures, table captions, images, sanitising
 {
@@ -177,6 +179,30 @@ async function passageTests() {
   assert.equal(answerSeenBy(ans, "evelyn"), "C");
   assert.equal(answerSeenBy({ evelynAnswer: "C", releasedVersion: 0 }, "reviewer"), "", "nothing released: no answer");
   assert.equal(answerSeenBy({ evelynAnswer: "C" }, "reviewer"), "C", "legacy row");
+
+  // list filters as Castle Rock means them
+  assert.deepEqual(stagesFor("drafting", "reviewer"), ["drafting", "ready"]);
+  assert.equal(stagesFor("ready", "reviewer"), undefined, "no Ready tab for Castle Rock");
+  assert.deepEqual(stagesFor("ready", "evelyn"), ["ready"]);
+
+  // an item as each role sees it
+  const held2 = { stage: "ready" as const, version: 2, releasedVersion: 1, evelynAnswer: "B", releasedAnswer: "A" };
+  const seen = asSeenBy(held2, "reviewer");
+  assert.deepEqual([seen.version, seen.stage, seen.evelynAnswer], [1, "drafting", "A"]);
+  assert.deepEqual(asSeenBy(held2, "evelyn"), held2);
+
+  // the history as Castle Rock sees it
+  const at = new Date();
+  const who = { username: "u", name: "U", role: "evelyn" as const, createdAt: at };
+  const rows: ActivityDoc[] = [
+    { itemId: "1", version: 2, type: "revision", body: "Revised to version 2.", ...who },
+    { itemId: "1", type: "stage", stage: "ready", body: "Status set to Ready.", ...who },
+    { itemId: "1", type: "stage", body: "Status set to Ready.", ...who },
+    { itemId: "1", version: 1, type: "verdict", verdict: "approved", ...who, role: "reviewer" },
+  ];
+  const kept = activitySeenBy(rows, () => 1, "reviewer");
+  assert.deepEqual(kept.map((a) => a.type), ["verdict"], "unreleased revision and Ready rows dropped");
+  assert.equal(activitySeenBy(rows, () => 1, "evelyn").length, 4);
 }
 
 // sheet

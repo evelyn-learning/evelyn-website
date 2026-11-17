@@ -75,6 +75,8 @@ export type ActivityDoc = {
   version?: number;
   type: "verdict" | "comment" | "revision" | "stage" | "upload";
   verdict?: Verdict;
+  /** For type "stage": the stage set (rows before 2026-11-17 only name it in `body`). */
+  stage?: Stage;
   body?: string;
   username: string;
   name: string;
@@ -190,6 +192,7 @@ function defineModels(conn: Connection): Models {
     version: Number,
     type: String,
     verdict: String,
+    stage: String,
     body: String,
     username: String,
     name: String,

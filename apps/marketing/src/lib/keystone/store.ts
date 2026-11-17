@@ -1,4 +1,4 @@
-import { SECTIONS, VERDICTS, canJudgeSolution, type SectionKind, type Stage, type Verdict } from "./config";
+import { SECTIONS, VERDICTS, canJudgeSolution, releasedVersionOf, type SectionKind, type Stage, type Verdict } from "./config";
 import { ks, type ActivityDoc, type ItemDoc, type SectionDoc } from "./db";
 import { renderInline, renderMarkdown } from "./render";
 import { assetUrl, saveAsset } from "./assets";
@@ -122,7 +122,18 @@ export async function addComment(itemId: string, body: string, actor: Actor) {
 export async function setStage(itemId: string, stage: Stage, actor: Actor, note?: string) {
   const { Item } = await ks();
   await Item.updateOne({ itemId }, { $set: { stage, updatedAt: new Date() } });
-  await log({ itemId, type: "stage", body: note || stage, ...actor });
+  await log({ itemId, type: "stage", stage, body: note || stage, ...actor });
+}
+
+/**
+ * Releases the latest version if it is held (not yet released). For a hand-set
+ * status that puts the solution in front of Castle Rock (in review, approved,
+ * delivered); no activity row of its own (the stage row says what happened).
+ */
+export async function releaseIfHeld(itemId: string, actor: Actor): Promise<void> {
+  const { Item } = await ks();
+  const item = await Item.findOne({ itemId }).select("version releasedVersion").lean();
+  if (item?.version && releasedVersionOf(item) < item.version) await releaseSolution(itemId, actor, { log: false });
 }
 
 /** Adds or refreshes items from a QTI upload. Existing solutions and stages are kept. */

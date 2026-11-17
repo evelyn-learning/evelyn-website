@@ -1,5 +1,5 @@
 import JSZip from "jszip";
-import { ITEM_TYPE_LABEL, SECTION_TITLE } from "./config";
+import { ITEM_TYPE_LABEL, SECTION_TITLE, answerSeenBy, releasedVersionOf } from "./config";
 import { ks, type ItemDoc, type SolutionDoc } from "./db";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
@@ -93,8 +93,12 @@ export async function buildExport(itemIds: string[]): Promise<Uint8Array> {
   const zip = new JSZip();
   const manifest = [["item_id", "subject", "course", "item_type", "key", "evelyn_answer", "version", "approved_at", "sections", "qti_package", "animated"]];
 
-  for (const item of items) {
-    const sol = await Solution.findOne({ itemId: item.itemId, version: item.version }).lean<SolutionDoc>();
+  for (const raw of items) {
+    // Only what Castle Rock has seen goes out: the released version and the answer released with it.
+    const released = releasedVersionOf(raw);
+    if (!released) continue;
+    const item: ItemDoc = { ...raw, version: released, evelynAnswer: answerSeenBy(raw, "tech") };
+    const sol = await Solution.findOne({ itemId: item.itemId, version: released }).lean<SolutionDoc>();
     if (!sol) continue;
     const approval = await Activity.findOne({ itemId: item.itemId, type: "verdict", verdict: "approved" }).sort({ createdAt: -1 }).lean();
     const approvedAt = approval?.createdAt ? new Date(approval.createdAt).toISOString() : "";
