@@ -146,10 +146,29 @@ export const v2PracticeMoreLine = (history: V2State['history']) => V2_PRACTICE_M
 /** The learner asks for more practice ("Can we do some more practice?", "another exercise", 「もっと練習したい」). */
 // Fix round 1 (C1): practice, exercises, sentences to make or another try only; never questions or examples ("No more questions,
 // thank you." answers the close's invitation; "one more question: …" is a question), and never a negated phrase.
-const MORE_PRACTICE = /\b(?:(?:some |a (?:bit|little) )?more|another|extra|one more)\s+(?:(?:practice|practise|speaking|pronunciation)\s+)?(?:practi[cs]e|practi[cs]ing|exercises?|drills?|sentences? (?:to (?:make|say|try)|practi[cs]e)|tries|try|go|rounds?)\b|\b(?:practi[cs]e|try) (?:some |a (?:bit|little) )?more\b|\bkeep practi[cs]ing\b|\b(?:do|try|make|say) (?:another|one more) (?:sentence|one)\b|もっと練習|もう少し練習|練習(?:を)?もっと|もう一つ練習|もう一回練習/i;
-/** A negated or declining phrase: "no more practice", "I don't need more exercises", 「練習はもういい」. */
-const DECLINES_MORE = /\b(?:no|not|never|without|enough)\b[^.?!]{0,30}\b(?:more|another|extra)\b|n't\b[^.?!]{0,30}\b(?:more|another|extra|practi[cs]e)\b|\bno (?:need|thanks?|thank you)\b|(?:練習|もう)(?:は)?(?:もう)?(?:いい|大丈夫|結構)|いりません|要りません/i;
-export const v2AsksMorePractice = (said: string | null | undefined) => !!said && MORE_PRACTICE.test(said) && !DECLINES_MORE.test(said);
+// Fix round 2 (R1): a request is asked of the tutor now, sentence by sentence: a request frame (can / could / may we or I, let me,
+// let's, I'd like, I want, give me, please, or a question) with practice words; never a statement of the learner's own practice
+// ("I will practise more at home", "I'll keep practising", 「もっと練習します」), never a negated sentence. A "No," that answers
+// "any questions?" is set aside first: "No, I'd like another exercise." is a request; "No, thanks." is nothing.
+const PRACTICE_WORDS = /\b(?:more|another|extra|one more)\b[^.?!]{0,25}?\b(?:practi[cs]e|practi[cs]ing|exercises?|drills?|sentences?|tries|try|go|rounds?)\b|\b(?:practi[cs]e|try) (?:some |a (?:bit|little) )?more\b|\b(?:keep|continue) practi[cs]ing\b|\b(?:do|try|make|say) (?:another|one more) (?:sentence|one|exercise)\b/i;
+const REQUEST_FRAME = /\b(?:can|could|may|shall)\s+(?:we|i|you)\b|\blet(?:'s| me| us)\b|\bi(?:'d| would) (?:like|love)\b|\bi want\b|\b(?:give|show) me\b|\bplease\b|\?\s*$/i;
+/** The learner's own practice, not something asked of the tutor now. */
+const OWN_INTENT = /\b(?:i'?ll|i will|i'm going to|i am going to|i'm gonna|i plan to|i'?m planning to)\b|\b(?:at home|later|tomorrow|next time|tonight|by myself|on my own|with my (?:team|colleagues|friends|family|teacher))\b/i;
+/** A negated or declining sentence (after any leading "No," that answers the invitation). */
+const NEGATED = /\b(?:no|not|never|without|enough|nothing)\b|n't\b/i;
+const DECLINE_LEAD = /^\s*(?:(?:no|nope|nah|not yet|no problem|i don'?t know|no,? thanks?|no,? thank you)\s*[,.!]\s*)+/i;
+const ASK_JA = /(?:もっと|もう少し|もう一回|もう一度|もう一問|もう一つ)[^。！？]{0,10}?(?:したい|やりたい|お願い|ください|できますか|しませんか|しましょう)|練習(?:を)?(?:もっと|もう少し)[^。！？]{0,6}?(?:したい|お願い)/;
+const OWN_INTENT_JA = /練習します|頑張ります|家で|自分で|あとで|後で/;
+const DECLINES_JA = /(?:練習|もう)(?:は)?(?:もう)?(?:いい|大丈夫|結構)|いりません|要りません|ありません/;
+export const v2AsksMorePractice = (said: string | null | undefined): boolean => {
+  if (!said) return false;
+  return said.split(/(?<=[.!?。！？])\s*/).some((raw) => {
+    const s = raw.replace(DECLINE_LEAD, '').trim();
+    if (!s) return false;
+    if (/[぀-ヿ一-鿿]/.test(s)) return ASK_JA.test(s) && !OWN_INTENT_JA.test(s) && !DECLINES_JA.test(s);
+    return PRACTICE_WORDS.test(s) && REQUEST_FRAME.test(s) && !OWN_INTENT.test(s) && !NEGATED.test(s);
+  });
+};
 
 /** Task 7f E: the facts line when the learner asks for more practice at the close: given while more than
  *  V2_MORE_PRACTICE_MIN_LEFT minutes remain to the hard stop, else declined plainly and named for next time. */
