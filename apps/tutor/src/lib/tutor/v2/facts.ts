@@ -19,6 +19,7 @@ import { v2SentenceCardsFacts } from './sentence-cards';
 import { v2LearnerSentenceFacts } from './learner-card';
 import { v2PracticeAskFacts, v2RetryFacts } from './languages';
 import { v2PartDueFact, v2WrapDue } from './time-box';
+import { v2CloseInviteFacts } from './close-invite';
 
 /** After the tutor chose to keep listening: how long the student stays silent before it is told so (TutorVoiceV2).
  *  At that point silence is no longer open to it: it kept listening twice and the student sat with a blank
@@ -171,6 +172,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     if (!discussion && summaryBegun) lines.push('the summary has begun: from here, no new practice, exercise or offer of more practice unless they ask for it. Answer what they say and bring the lesson to its close');
     // Task 6e fix round 1 (F4): tester B was asked about a question or the summary in two turns running.
     if (!discussion && TUTOR_V2_CLOSE_ONE_QUESTION && (closing || near) && !state.closed) lines.push('at the close: at most one question in a reply, never one you asked in your last reply, and nothing after a goodbye');
+    // Task 7d (CLOSE_INVITES_QUESTIONS): the summary reply ends by inviting their questions, and the lesson ends on their answer.
+    if (!discussion) lines.push(...v2CloseInviteFacts(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked, near: closing || near || summaryBegun }));
   }
   // Where the parts' minutes put the lesson now, so it paces itself to the box (time-box.ts).
   const partDue = v2PartDueFact(session, state, f.nowMs, !!session.timeBoxMinutes && left <= V2_TIME_UP_MIN);

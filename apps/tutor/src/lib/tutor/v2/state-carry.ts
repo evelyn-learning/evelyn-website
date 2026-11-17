@@ -11,14 +11,16 @@ export const V2_MAX_BOARD_PROBLEMS = 12;
 const PROBLEM_CHARS = 300;
 
 /** Task 7a fix round 1: when the summary began, replies since the board was written, what was not painted last reply (all
- *  under STATE_CARRY, `enabled`), and the page held for their yes (Task 7a). */
-export function v2ReadCarried(raw: unknown, enabled: boolean = TUTOR_V2_STATE_CARRY): Pick<V2State, 'heldPage' | 'summaryBegunAt' | 'repliesSinceBoard' | 'boardProblems'> {
+ *  under STATE_CARRY, `enabled`), and the page held for their yes (Task 7a). Task 7d: when questions were invited before
+ *  the close (under STATE_CARRY too). */
+export function v2ReadCarried(raw: unknown, enabled: boolean = TUTOR_V2_STATE_CARRY): Pick<V2State, 'heldPage' | 'summaryBegunAt' | 'repliesSinceBoard' | 'boardProblems' | 'closeInvitedAt'> {
   const s = (raw && typeof raw === 'object' ? raw : {}) as Partial<Record<keyof V2State, unknown>>;
-  const out: Pick<V2State, 'heldPage' | 'summaryBegunAt' | 'repliesSinceBoard' | 'boardProblems'> = {};
+  const out: Pick<V2State, 'heldPage' | 'summaryBegunAt' | 'repliesSinceBoard' | 'boardProblems' | 'closeInvitedAt'> = {};
   const h = s.heldPage as Partial<NonNullable<V2State['heldPage']>> | undefined;
   if (h && typeof h === 'object' && typeof h.title === 'string' && typeof h.part === 'string' && typeof h.at === 'number' && Number.isFinite(h.at)) out.heldPage = { title: h.title.slice(0, 80), part: h.part.slice(0, 80), at: h.at, ...(h.unasked === true ? { unasked: true as const } : {}) };
   if (!enabled) return out;
   if (typeof s.summaryBegunAt === 'number' && Number.isFinite(s.summaryBegunAt) && s.summaryBegunAt > 0) out.summaryBegunAt = s.summaryBegunAt;
+  if (typeof s.closeInvitedAt === 'number' && Number.isFinite(s.closeInvitedAt) && s.closeInvitedAt > 0) out.closeInvitedAt = s.closeInvitedAt;
   if (typeof s.repliesSinceBoard === 'number' && Number.isFinite(s.repliesSinceBoard) && s.repliesSinceBoard >= 0) out.repliesSinceBoard = Math.min(1000, Math.floor(s.repliesSinceBoard));
   if (Array.isArray(s.boardProblems)) {
     const list = s.boardProblems.filter((x): x is string => typeof x === 'string' && !!x.trim()).slice(-V2_MAX_BOARD_PROBLEMS).map((x) => x.slice(0, PROBLEM_CHARS));
@@ -37,6 +39,6 @@ export function v2CarryApplies(session: Pick<V2Session, 'mode' | 'plan' | 'homew
 
 /** The state as the turn gets it: the carried fields dropped (as before Task 7a) for a session they do not apply to. Mutates. */
 export function v2ScopeCarried(state: V2State, session: Pick<V2Session, 'mode' | 'plan' | 'homework' | 'homeworkSheet'>): V2State {
-  if (!v2CarryApplies(session)) { delete state.summaryBegunAt; delete state.repliesSinceBoard; delete state.boardProblems; }
+  if (!v2CarryApplies(session)) { delete state.summaryBegunAt; delete state.repliesSinceBoard; delete state.boardProblems; delete state.closeInvitedAt; }
   return state;
 }

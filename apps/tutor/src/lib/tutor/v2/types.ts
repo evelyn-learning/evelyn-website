@@ -158,6 +158,9 @@ export interface V2State {
    *  (`unasked`): held at a reply that already asked something else, so not yet asked about: no yes opens it; the next
    *  reply asks (the facts say so, and the runtime asks when that reply asks nothing). */
   heldPage?: { title: string; part: string; at: number; unasked?: true };
+  /** Task 7d (CLOSE_INVITES_QUESTIONS), spoken plan-led second-language lessons: when the learner was invited to ask
+   *  questions before the close (close-invite.ts). From then on the close is never refused for the invitation. */
+  closeInvitedAt?: number;
 }
 
 /** A working level and where it came from: an earlier lesson (may be revised once, case 11) or this lesson (final). */

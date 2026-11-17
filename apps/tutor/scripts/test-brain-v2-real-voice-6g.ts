@@ -131,7 +131,9 @@ async function main() {
     const after = [{ type: 'tool_use', id: 'g1', name: 'set_goal_status', input: { goal: 'pronunciation', status: 'skipped' } }, { type: 'tool_use', id: 'e1', name: 'end_lesson', input: { because: 'time_nearly_used', summary: 'x' } }];
     const heard: string[] = [];
     const hist: H = [u('hi'), a('Your meaning is clear. The one thing to fix is "have to use". Can you say that sentence once more?')];
-    const r = await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(B, { goals: goalsB, ...level, history: hist }), studentSaid: 'Yes, I have working with the international customer for sometimes.', callModel: streaming(t54, after).call, onText: (d) => heard.push(d), boardPass: false, mathsCheck: false, nowMs: 16.2 * 60000 });
+    // Task 7d (CLOSE_INVITES_QUESTIONS): their questions already invited, so this reply is the close (the summary reply that
+    // invites first: test-brain-v2-close-7d.ts).
+    const r = await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(B, { goals: goalsB, ...level, history: hist, closeInvitedAt: 1 }), studentSaid: 'Yes, I have working with the international customer for sometimes.', callModel: streaming(t54, after).call, onText: (d) => heard.push(d), boardPass: false, mathsCheck: false, nowMs: 16.2 * 60000 });
     const h = heard.join('');
     check('the summary page opens and the lesson closes', r.state.board.pages.some((p) => p.title === 'Summary') && r.state.closed, h);
     check('the part is named as next time, once, where the summary opens', /not "working\."\s+We didn't get to the pronunciation part today, so that's for next time\.[\s\S]*Today you described/.test(h) && (h.match(/We didn't get to/g) ?? []).length === 1, h);

@@ -1855,3 +1855,20 @@ export const TUTOR_V2_ASK_NO_CHECKIN = process.env.NEXT_PUBLIC_TUTOR_V2_ASK_NO_C
  *  slashes, "/s/" as "per second" (Task 7c, mic test 1, embed-1794882458629). Speech of lessons that are not maths or
  *  science only. Default ON; NEXT_PUBLIC_TUTOR_V2_SPOKEN_SOUNDS=off ⇒ the symbols reach the voice, as before. */
 export const TUTOR_V2_SPOKEN_SOUNDS = process.env.NEXT_PUBLIC_TUTOR_V2_SPOKEN_SOUNDS !== 'off';
+
+/** Tutor brain v2 (v2/level-check-count.ts, v2/working-level.ts facts): the level check counted in every turn's facts. Plan
+ *  questions answered and the one follow-up the whole check may ask are counted from the history ("level check: 2 of 3
+ *  questions answered, the one follow-up used"); a re-ask after a reply with no answer in it ("I don't understand") is the
+ *  same question. Once three are answered the facts say to set the level now and move on. Lessons whose plan has a
+ *  level-check part only. Mic test 1: six tutor turns and five questions where the plan says three (Task 7d,
+ *  embed-1794882458629). Default ON; NEXT_PUBLIC_TUTOR_V2_LEVEL_CHECK_CAP=off ⇒ the uncounted line, as before. */
+export const TUTOR_V2_LEVEL_CHECK_CAP = process.env.NEXT_PUBLIC_TUTOR_V2_LEVEL_CHECK_CAP !== 'off';
+
+/** Tutor brain v2 (v2/close-invite.ts, v2/turn.ts, v2/facts.ts): questions before the close. In a spoken plan-led
+ *  second-language lesson, when the summary is given with time left (more than the time-up minute) and the learner has not
+ *  asked to stop, the summary reply ends with one invitation to ask questions and does not end the lesson; it ends on
+ *  their answer. An end_lesson before the invitation is refused once with what to do instead; after it (answered or not)
+ *  the close is never refused for it again. Time up, a firm stop and the host's End close as before. Mic test 1: the
+ *  summary, the goodbye and end_lesson came in one reply with 2.4 min left (Task 7d, embed-1794882458629). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_CLOSE_INVITES_QUESTIONS=off ⇒ as before. */
+export const TUTOR_V2_CLOSE_INVITES_QUESTIONS = process.env.NEXT_PUBLIC_TUTOR_V2_CLOSE_INVITES_QUESTIONS !== 'off';

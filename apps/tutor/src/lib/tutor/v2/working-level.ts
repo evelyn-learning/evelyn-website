@@ -20,7 +20,8 @@ import { discussionOf } from './discussion';
 import { v2PartOf } from './plan-map';
 import { v2Progress } from './progress';
 import type { V2Session, V2State, V2WorkingLevel } from './types';
-import { TUTOR_V2_LEVEL_CHECK_MIN_ANSWERS, TUTOR_V2_LEVEL_RECONFIRM, TUTOR_V2_LEVEL_WITH_WORDS } from '../orchestrator/flags';
+import { TUTOR_V2_LEVEL_CHECK_CAP, TUTOR_V2_LEVEL_CHECK_MIN_ANSWERS, TUTOR_V2_LEVEL_RECONFIRM, TUTOR_V2_LEVEL_WITH_WORDS } from '../orchestrator/flags';
+import { v2CountLevelCheck, v2LevelCheckCountLine, v2LevelCheckPart } from './level-check-count';
 
 const SKIPPED_FOR_LEVEL = 'working level known from an earlier lesson';
 
@@ -143,7 +144,7 @@ export function v2LevelCheckOver(session: V2Session, state: V2State, heard: stri
 
 /** The facts lines for the working level (levelCheck sessions only). `heard` is the student's words this turn;
  *  `reopened`: their words just now said the remembered level does not fit (v2ReopenLevelCheck). */
-export function v2WorkingLevelFacts(session: V2Session, state: V2State, heard: string | null | undefined, opts: { reopened?: boolean; reconfirm?: boolean } = {}): string[] {
+export function v2WorkingLevelFacts(session: V2Session, state: V2State, heard: string | null | undefined, opts: { reopened?: boolean; reconfirm?: boolean; cap?: boolean } = {}): string[] {
   if (!v2LevelCheckOn(session)) return [];
   const wl = state.workingLevel;
   const reconfirm = opts.reconfirm ?? TUTOR_V2_LEVEL_RECONFIRM;
@@ -153,9 +154,14 @@ export function v2WorkingLevelFacts(session: V2Session, state: V2State, heard: s
   if (!wl && v2LevelCheckOver(session, state, heard)) return ['working level: not set, and the level check is over: do not check it again. Pitch at intermediate and adjust to how they speak; if their level becomes clear, call set_working_level once'];
   if (!wl) {
     const support = session.languages && session.languages.length > 1 ? `a few words of ${languageNameOf(session.languages[1]!)}` : 'an example';
+    // Task 7d (LEVEL_CHECK_CAP, mic test 1: six turns and five questions where the plan says three): the check counted, where
+    // the plan has a level-check part (level-check-count.ts).
+    const count = (opts.cap ?? TUTOR_V2_LEVEL_CHECK_CAP) && v2LevelCheckPart(session.plan) ? v2CountLevelCheck(session.plan, state.history, heard, v2AnswerHasContent) : null;
+    if (count?.done) return [...reopened, `working level: not known yet. ${v2LevelCheckCountLine(count)}`];
     return [
       ...reopened,
       'working level: not known yet. Find it with three short conversational questions, one at a time (the plan\'s level-check part), then call set_working_level',
+      ...(count ? [v2LevelCheckCountLine(count)] : []),
       // Findings case 1: "Could you please rephrase that?" / "Sorry, I don't understand" got the NEXT question on v1.
       `when they ask you to rephrase or say they did not understand, that is not an answer: ask the same question again, more simply (first in simpler English, then with ${support}); go to the next question only once they have answered this one`,
     ];

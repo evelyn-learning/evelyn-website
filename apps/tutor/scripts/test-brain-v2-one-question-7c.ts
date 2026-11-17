@@ -221,6 +221,13 @@ async function main() {
       ['Listen: [θ] and [ð].', 'Listen: the th sound and the voiced th sound.'],
       ['「/z/」の音です。', '「z」の音です。'],
       ['/r/ and /l/ are different.', 'the r sound and the l sound are different.'],
+      // Task 7d (7c re-review): a plain letter between slashes is ambiguous between IPA and phonics: spoken as the letter.
+      ['/i/ as in sit', 'the i sound as in sit'],
+      ['/j/ as in jam', 'the j sound as in jam'],
+      ['/x/ in box', 'the x sound in box'],
+      ['/u/ as in cup', 'the u sound as in cup'],
+      ['/o/ as in hot', 'the o sound as in hot'],
+      ['the /ʌ/ sound in "cup"', 'the uh sound in "cup"'],
     ];
     for (const [x, want] of cases) check(`"${x}" → "${want}"`, v2SpeakSounds(x) === want, v2SpeakSounds(x));
     const untouched = ['Three quarters is 3/4 of it.', 'The meeting is on 11/16/2026.', 'Bring your passport and/or your ID.', 'We drove at 60 km/h.', 'See https://example.com/a/b/ for more.', 'Open /usr/local/bin now.', 'He wrote [sic] in the letter.', 'The concentration [OH] matters.', '[a]nd so on', 'either/or', 'A/B testing', 'w/o sugar', 'The ratio 1/2/3.', 'Type /help/ for help.', 'Choose [a] or [b].', 'It is [z], not [s].'];

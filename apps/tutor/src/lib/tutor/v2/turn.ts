@@ -43,6 +43,7 @@ import { V2_PRACTISE_PRONUNCIATION_TOOL, v2ApplyPractisePronunciation, v2Consume
 import { v2NoteCorrectedSentence, v2SentenceCardsOn, v2SentenceCardsSection } from './sentence-cards';
 import { LearnerCardWatch, v2LearnerCardsOn, v2SentenceOnBoard } from './learner-card';
 import { v2StopAsked } from './stop-signal';
+import { V2_CLOSE_INVITE_REFUSAL, v2CloseInviteOn, v2CloseInviteOwed, v2ReplyInvites } from './close-invite';
 import { TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME } from '../orchestrator/flags';
 import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, V2_DISCUSSION_CONSTITUTION, directionAsked, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap } from './discussion';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, V2_NOTE_OWN_ANSWER_TOOL, V2_SET_CURRENT_PROBLEM_TOOL, v2Tools } from './tools';
@@ -361,6 +362,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const closingTurn = (TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid)) || leftMin <= V2_TIME_UP_MIN
     // Lessons only: the wrap fact is the lesson's time line, and homework and a discussion are paced by their own (review 5a M2).
     || (!discussion && !session.homework && !session.homeworkSheet && v2WrapDue(session, (nowMs - state.startedAtMs) / 60000));
+  // Task 7d (CLOSE_INVITES_QUESTIONS): their questions are still to be invited before the close (close-invite.ts). As the turn
+  // began: an invitation given in this turn does not lift the refusal for the rest of it.
+  const inviteOwed = v2CloseInviteOwed(session, state, { nowMs, stopAsked: TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid) });
+  let inviteRefused = false;
   const lastTutorText = (() => { const m = [...state.history].reverse().find((h) => h.role === 'assistant' && (typeof h.content === 'string' || h.content.some((c) => c.type === 'text'))); return !m ? '' : typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '); })();
   // Task 7a (PART_PAGE_CHIP, PART_ASK_EVERY): spoken teaching lessons whose plan parts all have names. Chip, page and part
   // move together (part-flow.ts), and every part change after the level check is asked first.
@@ -505,6 +510,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         // The reply ended on the offer of the next part: a session that ended here would end on a question nobody
         // answers, with no summary (D1). The close comes after their answer.
         : block.name === 'end_lesson' && heldAt && TUTOR_V2_CLOSE_OPENS_SUMMARY ? 'not ended: this reply ends by asking the student whether to go on, and they have not answered yet. Say nothing of this message. Close after their answer.'
+        // Task 7d: in the box's last fifth (earlier, applyControlTool refuses with its own question), with time left and no
+        // request to stop, the close waits for their questions. Refused once: a second call in the same reply closes (the
+        // model's next call repeated the whole reply each time it was refused), and from the next turn on it is never refused.
+        : block.name === 'end_lesson' && inviteOwed && !inviteRefused && args.because !== 'student_asked' && !!session.timeBoxMinutes && leftMin <= session.timeBoxMinutes * 0.2 ? (() => { inviteRefused = true; return V2_CLOSE_INVITE_REFUSAL; })()
         : applyControlTool(state, session, block.name, args, nowMs, input.studentSaid);
     } else {
       // An object written as its JSON text is the object: a tree's root arrived as a string and the board drew
@@ -607,7 +616,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // when the 6e budget would have dropped it: the close keeps its rules).
   const dropFrameIf = askEvery ? (x: string) => v2AskRepeats(x, state.history, session.plan) || (TUTOR_V2_PART_OFFER_ONCE && !frameDueOld && isPartFrame(x) && V2_CLOSING_PAGE.test(x)) : null;
   // F3, F4: a goodbye waits for the reply to be complete (reply-gate.ts).
-  const holdGoodbye = gated && (TUTOR_V2_CLOSE_ONE_QUESTION || TUTOR_V2_PASSED_PART_CLOSE);
+  const holdGoodbye = gated && (TUTOR_V2_CLOSE_ONE_QUESTION || TUTOR_V2_PASSED_PART_CLOSE || v2CloseInviteOn(session));
   let framesDropped = 0;
   // Task 7c (ASK_NO_CHECKIN): one question per reply, in spoken teaching lessons (the check-in's own guard reaches every
   // spoken lesson, below).
@@ -735,8 +744,11 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           // part nowhere), or the summary began in an earlier reply; and for a part offered twice or skipped, not only one
           // the held offer would name.
           const lineDue = beganNow || (TUTOR_V2_PASSED_PART_CLOSE && (releasing || summaryBefore));
-          const summaryLine = gated && TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME && lineDue && closingPage && !nextTimeAt && !nextTimeSaid && !boardHasPage(part.block.body) && !state.closed && (TUTOR_V2_PASSED_PART_CLOSE || !!v2UnreachedOffer(session.plan, state)) ? v2NextTimeAllLine(session.plan, state, `${releasing ? releaseText : ''} ${nextTimeBefore}`.trim()) : null;
-          const summaryBegun = !!summaryLine;
+          const lineHere = gated && TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME && lineDue && closingPage && !nextTimeAt && !nextTimeSaid && !boardHasPage(part.block.body) && !state.closed && (TUTOR_V2_PASSED_PART_CLOSE || !!v2UnreachedOffer(session.plan, state)) ? v2NextTimeAllLine(session.plan, state, `${releasing ? releaseText : ''} ${nextTimeBefore}`.trim()) : null;
+          const summaryBegun = !!lineHere;
+          // Task 7d: not said while their questions are still to be invited (the page still opens): the line goes on the reply
+          // that closes.
+          const summaryLine = inviteOwed ? null : lineHere;
           // Task 7a (PART_ASK_EVERY): a page of the part in hand, or the first teaching part after the level check, is no part
           // change and goes straight on; a check-in does not leave the way open (mayOpenPart strict).
           const partChange = !askEvery || closingPage || !pagePart || !session.plan || v2PartChangeAsked(session.plan, state, pagePart.index);
@@ -865,7 +877,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // line naming an optional part that was not reached, when the reply has not named it (gdi-real-josh's stop goodbye).
     if (gate.holdsGoodbye) {
       const ended = toolCalls.slice(callsBefore).find((c) => c.name === 'end_lesson');
-      if (ended && /^not /.test(ended.outcome) && TUTOR_V2_CLOSE_ONE_QUESTION) gate.dropHeld();
+      if (ended && /^not /.test(ended.outcome) && (TUTOR_V2_CLOSE_ONE_QUESTION || ended.outcome === V2_CLOSE_INVITE_REFUSAL)) gate.dropHeld();
       else {
         // Fix round 2 (N1): only a goodbye that closes the lesson (a close accepted now, or a closing turn) gets the line.
         const closing = closingTurn || (!!ended && !/^not /.test(ended.outcome));
@@ -891,7 +903,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       // Fix round 3: an accepted end_lesson is a real close: a closing question at its end does not stop the line, which goes
       // before that question in the stored reply (it was said already, so in speech the line follows it).
       const endedNow = !!ended && !/^not /.test(ended.outcome);
-      const line = closes && !heldAt && (endedNow || (!v2IsPracticeAsk(lastSaid) && !endsAsking(lastSaid))) ? v2NextTimeLine(session.plan, state, `${saidNow} ${nextTimeBefore}`) : null;
+      // Task 7d: a reply that does not close while their questions are still to be invited says it later, on the close.
+      const line = closes && !heldAt && (endedNow || !inviteOwed) && (endedNow || (!v2IsPracticeAsk(lastSaid) && !endsAsking(lastSaid))) ? v2NextTimeLine(session.plan, state, `${saidNow} ${nextTimeBefore}`) : null;
       if (line) {
         nextTimeSaid = true;
         gate.push(` ${line}`); gate.flush();
@@ -1281,6 +1294,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const reached = before.filter((seg) => !!state.goals[seg.id] || state.board.pages.some((pg) => !!v2PartOf(seg).label && v2PagePartLabel(session.plan, pg.title) === v2PartOf(seg).label)).length;
     if (before.length && reached * 2 >= before.length) state.summaryBegunAt = nowMs;
   }
+  // Task 7d: their questions were invited: the refusal asked for it, or a reply near the close ended asking about questions.
+  // From the next turn the close is never refused for it.
+  if (inviteOwed && !state.closed && (inviteRefused || ((selfCloseOpen || closingTurn || closingOpened || typeof state.summaryBegunAt === 'number') && v2ReplyInvites(lastSentences(stripBoardBlocks(spoken.join(' ')), 1))))) state.closeInvitedAt = nowMs;
   state.history = [...state.history, ...stored];
   // Task 7a: the page held for their yes waits in the state; a page opened (or the close) lets it go.
   if (partFlow) {

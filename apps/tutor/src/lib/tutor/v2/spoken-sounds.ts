@@ -40,6 +40,9 @@ const SAYABLE = /^[a-z ]+$/;
  *  symbol no map names is never read out raw). */
 function nameOf(inner: string, base: string): string | null {
   const plain = inner.replace(/[ˈˌ]/g, '');
+  // Task 7d (7c re-review): plain letters are ambiguous between IPA and phonics ("/i/ as in sit", "/u/ as in cup"), so a
+  // name for them could be the wrong sound: they are spoken as written. MORE_NAMES is for non-ASCII symbols only.
+  if (/^[a-z]+$/.test(plain)) return plain;
   const name = IPA_SPOKEN[inner] ?? IPA_SPOKEN[plain] ?? MORE_NAMES[plain] ?? IPA_SPOKEN[base] ?? MORE_NAMES[base] ?? base;
   return SAYABLE.test(name) ? name : null;
 }
