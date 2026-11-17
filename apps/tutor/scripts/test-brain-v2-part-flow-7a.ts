@@ -277,6 +277,17 @@ async function main() {
       const r = await turn(base({ history: [{ role: 'user', content: 'x' }, { role: 'assistant', content: q }] }), 'Yes.', 'Good. Say it once more: I sell washing machines.');
       check(`fix round 2: whole turn, "Yes." to "${q}": no page opens, the chip stays on "Your job"`, openTitle(r.state) === 'Your job' && chips(r.state).lit === 'topic-intro' && !r.calls.some((c) => c.name === 'new_page'), { open: openTitle(r.state), calls: r.calls.map((c) => c.name) });
     }
+    // Fix round 3 (controller ruling): the no-name fallback only for a frame about the lesson moving on.
+    const keepTalking = ['Can you go on?', 'Can you go on to tell me about your team?', 'Nice. Ready for the next step?', 'Let us look at the next part of your answer. Ready?', 'Shall we go on to the next sentence?', 'Ready to go on to the next example?'];
+    for (const q of keepTalking) for (const yes of ['Yes.', 'Okay.', 'Sure.']) {
+      check(`fix round 3: "${yes}" to "${q}": nothing pending`, v2PendingPart(GDI, base({ history: [{ role: 'user', content: 'x' }, { role: 'assistant', content: q }] }), q, yes) === null);
+    }
+    for (const q of keepTalking) {
+      const r = await turn(base({ history: [{ role: 'user', content: 'x' }, { role: 'assistant', content: q }] }), 'Yes.', 'Good. Tell me one more thing about your team.');
+      check(`fix round 3: whole turn, "Yes." to "${q}": no page opens, the chip stays on "Your job"`, openTitle(r.state) === 'Your job' && chips(r.state).lit === 'topic-intro' && !r.calls.some((c) => c.name === 'new_page'), { open: openTitle(r.state), calls: r.calls.map((c) => c.name) });
+    }
+    check('fix round 3: an ask naming the part opens it (the normal model-written route)', v2PendingPart(GDI, base(), 'Good, that\'s your job covered. Next is the past simple. Ready to go on?', 'Yes.')?.title === 'Past simple');
+    check('fix round 3: the facts line says the ask names the next part by its plan name', renderFacts(session, base(), { nowMs: 120_000, heard: 'x' }).includes('by its plan name in the ask itself'));
     check('fix round 2: the frame or a move-on cue with no part named still opens the next part', v2PendingPart(GDI, base(), 'Good. Shall we move on?', 'Yes.')?.title === 'Present perfect' && v2PendingPart(GDI, base(), 'Good work. Any questions first, or shall we go on?', 'Yes.')?.title === 'Present perfect' && v2PendingPart(GDI, base(), 'お疲れさまでした。次に進みますか？', 'はい')?.title === 'Present perfect');
     check('fix round 2: the runtime\'s "…or do you have a question first?" is no choice of parts', v2PendingPart(GDI, base(), 'Would you like to practise pronunciation now, or do you have a question first?', 'Okay.')?.title === 'Pronunciation');
     check('fix round 2: "No, let us move on." to a questions-first ask is a go', v2MoveAnswer('No, let us move on.', ask) === 'go' && v2MoveAnswer('Let us move on.') === 'go');

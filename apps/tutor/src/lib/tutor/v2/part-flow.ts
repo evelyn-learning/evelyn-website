@@ -16,7 +16,7 @@ import type { LessonPlan } from '../lesson-plan/types';
 import { stripBoardBlocks } from './board-inline';
 import { PART_OFFERS, V2_CLOSING_PAGE, endsAsking } from './part-close';
 import { V2_OFFER_SHAPE, v2IsPageOfPart, v2PartNamedIn, v2PartOf } from './plan-map';
-import { JA_WORD_START, isPartFrame } from './reply-gate';
+import { V2_PART_FRAME_JA, isPartFrame } from './reply-gate';
 import type { V2Board, V2State } from './types';
 
 type View = Pick<V2State, 'board' | 'goals' | 'workingLevel'> & { closed?: boolean };
@@ -144,8 +144,14 @@ export const v2TutorReplies = (history: V2State['history']) => history.filter((h
 /** A held page waits this many tutor replies for its yes (a question answered, then asked again); then it lapses. */
 export const V2_HELD_PAGE_REPLIES = 3;
 
-/** An explicit cue that the lesson moves to its next part (fix round 2). */
-const MOVE_ON = new RegExp(`\\b(?:move on to|go on to|next is|next up|next part|the next (?:part|section|topic|step)|(?:move|go) on\\b(?! (?:and|with|telling|talking|about|from)))|${JA_WORD_START}(?:次|先)(?:に|へ)(?:進|行き|移り)|${JA_WORD_START}次の(?:パート|部分|項目|テーマ|トピック|セクション|ステップ)`, 'iu');
+/** Fix round 3 (controller ruling): the no-name fallback's only frame. Its subject is the lesson moving on: "shall we / let's /
+ *  let us / can we / could we / ready to / would you like to / do you want to" + "go on | move on | continue", bare or "to the
+ *  next part/section/topic", ending the clause ("Shall we move on?", "…, or shall we go on?", "Ready to go on, or…"). Not
+ *  "Can you go on?" (keep talking), "go on to tell me…", "the next sentence/example/step", "the next part of your answer"
+ *  (a yes to those opened the next part's page). In Japanese, the Task 6g frame forms. */
+const MOVE_FRAME = /\b(?:shall we|let'?s|let us|can we|could we|(?:are you )?ready to|would you like to|do you want to)\s+(?:go on|move on|continue)(?:\s+to the next (?:part|section|topic) of (?:the|our|today'?s) lesson|\s+to the next (?:part|section|topic))?\s*(?:[,?？]|$|\s+or\b|\s+now\b)/i;
+const NOT_THE_LESSON = /\bnext (?:sentence|example|one|question|exercise|word|step|line|item|try)\b|\bpart of your\b/i;
+const movesOn = (sentence: string) => (MOVE_FRAME.test(sentence) || V2_PART_FRAME_JA.test(sentence)) && !NOT_THE_LESSON.test(sentence);
 const asks = (x: string) => /(?:[?？]|か[。．]?)["'」』）)]*\s*$/.test(x);
 
 /** The part whose page is waiting for the student's yes: the page held at the last part change (not lapsed), or a part the
@@ -171,10 +177,10 @@ export function v2PendingPart(plan: LessonPlan, state: View & Pick<V2State, 'his
     // Two parts named ("pronunciation, or shall we move on to the summary?"): only the one their words name.
     const pickNow = others.length > 1 ? others.find(({ seg }) => !!said && v2PartNamedIn(seg, said)) ?? null : others[0] ?? null;
     if (others.length > 1 && !pickNow) return null;
-    // Fix round 2: the part after the one in hand only for the frame itself or an explicit move-on cue, never for a bare "shall
-    // we"/"ready"/"go on": "Shall we try another sentence?", "Ready for the next one?" are practice asks, and a yes to them
-    // opened the next part's page.
-    const index = pickNow ? pickNow.i : namedNow.length ? -1 : (isPartFrame(lastAsk) || MOVE_ON.test(two)) ? v2NextPart(plan, state, cur) : -1;
+    // Fix rounds 2–3: the part after the one in hand only for a frame about the lesson moving on (movesOn), never for a bare
+    // "shall we"/"ready"/"go on": "Shall we try another sentence?", "Can you go on?" are practice asks, and a yes to them
+    // opened the next part's page. Otherwise the part comes from the held page or the part named in the ask.
+    const index = pickNow ? pickNow.i : namedNow.length ? -1 : movesOn(lastAsk) ? v2NextPart(plan, state, cur) : -1;
     if (index >= 0 && index !== cur && index < plan.segments.length - 1 && !paged(plan, state.board, index)) return { index, title: v2PartOf(plan.segments[index]!).label! };
     return null;
   }
@@ -264,7 +270,7 @@ export function v2PartAskLine(o: { next: string; done?: string; named: boolean; 
 /** The facts lines for part changes in a spoken lesson whose parts all have names (PART_ASK_EVERY). `opened`: the part whose
  *  page opened as this reply begins, on their yes. */
 export function v2PartAskFacts(plan: LessonPlan, state: View & Pick<V2State, 'heldPage' | 'history'>, opened?: string): string[] {
-  const lines = ['part changes: at every change to the next plan part after the level check, close the part just done in one short line that says what was done, name the next part by its plan name, and ask whether they have a question first or would like to go on; never in the same words as an earlier ask in this lesson. Begin the next part only after they answer: its page opens then. Not before the summary or the close: going into the summary is not asked this way'];
+  const lines = ['part changes: at every change to the next plan part after the level check, close the part just done in one short line that says what was done, name the next part by its plan name in the ask itself ("Next is <its name>. …"), and ask whether they have a question first or would like to go on; never in the same words as an earlier ask in this lesson. Begin the next part only after they answer: its page opens then. Not before the summary or the close: going into the summary is not asked this way'];
   if (opened) lines.push(`they said yes to going on: the "${opened}" page is open now, headed by the part's name; begin that part in this reply, and do not open its page again`);
   else if (state.heldPage && v2TutorReplies(state.history) - state.heldPage.at <= V2_HELD_PAGE_REPLIES && !paged(plan, state.board, plan.segments.findIndex((s) => s.id === state.heldPage!.part))) lines.push(`part change waiting: they were asked whether to go on to the ${state.heldPage.title} part. If they asked something, answer it first and then ask again, in one short line in new words, whether to go on`);
   return lines;
