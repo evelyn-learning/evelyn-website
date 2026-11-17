@@ -30,7 +30,10 @@ import { renderFacts } from '../src/lib/tutor/v2/facts';
 import { v2ReadCarried } from '../src/lib/tutor/v2/state-carry';
 import { ReplyGate } from '../src/lib/tutor/v2/reply-gate';
 import { v2SpeakSounds } from '../src/lib/tutor/v2/spoken-sounds';
-import { V2_CHECK_INS, runV2Turn, type V2ModelCall } from '../src/lib/tutor/v2/turn';
+import { V2_CHECK_INS, runV2Turn as runV2TurnRaw, type V2ModelCall } from '../src/lib/tutor/v2/turn';
+import { seedPractice7f } from './v2-seed-practice-7f';
+// Task 7f fix round 1: with SEED_7F_PRACTICE (the `-7f-on` script) every part starts with its practice sentences said.
+const runV2Turn = seedPractice7f(runV2TurnRaw);
 import { newV2State, type V2Session, type V2State, type V2ToolCall } from '../src/lib/tutor/v2/types';
 import { rewriteForTTS, speakDataRuns, speakLessonNotation, speakNumberPlurals, speakSlashes } from '../src/lib/tutor/voice/tts-pronunciation';
 

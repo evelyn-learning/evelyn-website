@@ -26,7 +26,10 @@ import { DISCUSSION_PLAN_KIND } from '../src/lib/tutor/v2/discussion';
 import { V2_PART_ASKS, v2AskRepeats, v2MoveAnswer, v2PartAskLine, v2PartInHand, v2PartsDone, v2PendingPart, v2PlanLabelled } from '../src/lib/tutor/v2/part-flow';
 import { v2Progress } from '../src/lib/tutor/v2/progress';
 import { renderFacts, v2AskEveryOn } from '../src/lib/tutor/v2/facts';
-import { runV2Turn, type V2ModelCall } from '../src/lib/tutor/v2/turn';
+import { runV2Turn as runV2TurnRaw, type V2ModelCall } from '../src/lib/tutor/v2/turn';
+import { seedPractice7f } from './v2-seed-practice-7f';
+// Task 7f fix round 1: with SEED_7F_PRACTICE (the `-7f-on` script) every part starts with its practice sentences said.
+const runV2Turn = seedPractice7f(runV2TurnRaw);
 import { newV2State, type V2Session, type V2State, type V2ToolCall } from '../src/lib/tutor/v2/types';
 import { TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_PART_ASK_EVERY, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_STATE_CARRY } from '../src/lib/tutor/orchestrator/flags';
 

@@ -1926,7 +1926,7 @@ export const TUTOR_V2_MORE_PRACTICE = process.env.NEXT_PUBLIC_TUTOR_V2_MORE_PRAC
  *  session length is a target, not a cutoff. A v2 lesson may run TUTOR_V2_OVERRUN_MIN minutes past it: "the time is up" and the
  *  runtime's hard stop with its goodbye move to target + margin; a pooled sitting's wall-clock cap gets the same margin (never
  *  past the pool's remaining balance), and the pool is charged wall-clock for it; the visible timer counts on past the target
- *  with no alarm. v1 sessions are untouched. Praveen's decision after mic test 2 (embed-1794941004529, Task 7f F). Default ON;
+ *  with no alarm. v1 sessions are untouched. The owner's decision after mic test 2 (embed-1794941004529, Task 7f F). Default ON;
  *  NEXT_PUBLIC_TUTOR_V2_TIME_OVERRUN=off ⇒ the hard stop at the box, as before. */
 export const TUTOR_V2_TIME_OVERRUN = process.env.NEXT_PUBLIC_TUTOR_V2_TIME_OVERRUN !== 'off';
 /** The overrun margin in minutes (TUTOR_V2_TIME_OVERRUN): 5, or NEXT_PUBLIC_TUTOR_V2_OVERRUN_MIN (0–30). */

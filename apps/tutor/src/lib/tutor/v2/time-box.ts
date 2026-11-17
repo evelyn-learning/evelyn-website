@@ -10,7 +10,7 @@
  * this one."), and it cut into the menu the tutor was reading (tester-2 at 18:26). And v2 ended at the box in the
  * middle of a sentence with no goodbye.
  *
- * Task 7f (Praveen, after mic test 2, embed-1794941004529): the box is a target, not a cutoff. A taught lesson may run
+ * Task 7f (the owner's decision after mic test 2, embed-1794941004529): the box is a target, not a cutoff. A taught lesson may run
  * TUTOR_V2_OVERRUN_MIN (5) minutes past it: "the time is up" and the hard stop move to target + margin (F); the parts keep
  * their own minutes (B); the tutor closes by itself when the plan's content is done or at the wrap minute, not at the box's
  * last fifth (D).

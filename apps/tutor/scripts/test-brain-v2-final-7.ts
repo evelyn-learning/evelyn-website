@@ -34,7 +34,10 @@ import { v2LearnerSentenceFacts } from '../src/lib/tutor/v2/learner-card';
 import { ReplyGate } from '../src/lib/tutor/v2/reply-gate';
 import { v2IsPracticeAsk } from '../src/lib/tutor/v2/languages';
 import { foldInterruptedTurn } from '../src/lib/tutor/v2/interrupted';
-import { V2_SUMMARY_BEGUN, runV2Turn, type V2ModelCall } from '../src/lib/tutor/v2/turn';
+import { V2_SUMMARY_BEGUN, runV2Turn as runV2TurnRaw, type V2ModelCall } from '../src/lib/tutor/v2/turn';
+import { seedPractice7f } from './v2-seed-practice-7f';
+// Task 7f fix round 1: with SEED_7F_PRACTICE (the `-7f-on` script) every part starts with its practice sentences said.
+const runV2Turn = seedPractice7f(runV2TurnRaw);
 import { newV2State, type V2Session, type V2State } from '../src/lib/tutor/v2/types';
 
 let passed = 0; let failed = 0;

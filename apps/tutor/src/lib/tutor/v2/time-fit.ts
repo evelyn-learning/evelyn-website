@@ -1,5 +1,5 @@
 /**
- * Tutor brain v2 — Task 7f: no rushing a lesson to fit the clock (Praveen's decisions after mic test 2, embed-1794941004529:
+ * Tutor brain v2 — Task 7f: no rushing a lesson to fit the clock (the owner's decisions after mic test 2, embed-1794941004529:
  * a 25-minute plan in a 20-minute box had every part thinned to one learner sentence, the summary began at 15.9 minutes with
  * two parts not taught, and "Can we do some more practice?" was refused).
  *
@@ -94,8 +94,13 @@ export function v2TimeFitAfterReply(plan: LessonPlan | undefined, state: V2State
   state.timeFit = named || shown >= V2_DROP_TELL_TURNS ? { dropped: fit.dropped, told: true } : { dropped: fit.dropped, shown };
 }
 
-/** Task 7f C: a practice part: a teaching part (v2TeachingPart). */
-export const v2PracticePart = v2TeachingPart;
+/** Task 7f C: a practice part: a teaching part (v2TeachingPart) whose practice is sentences of the learner's own. Fix round 1
+ *  (I1): not a part the plan marks as pronunciation practice (`metadata.pronunciation`: words and sentences to say): its
+ *  tries are single words and read-aloud lines, never counted as sentences, and the part was held until the wrap minute. */
+export function v2PracticePart(plan: LessonPlan, i: number): boolean {
+  const seg = plan.segments[i];
+  return v2TeachingPart(plan, i) && !!seg && !v2PartOf(seg).pronunciation;
+}
 
 /** The learner's words ask to move on ("Let's move on", "Can we go to the next part?", 「次に進みましょう」). */
 const MOVE_ON_ASKED = /\b(?:let'?s|let us|can we|could we|shall we|i(?:'d| would) like to|i want to)\s+(?:please\s+)?(?:move on|go on to the next|go to the next|skip (?:this|it|ahead)|do the next)\b|\b(?:move on|next part|next topic),? please\b|^\s*(?:(?:ok(?:ay)?|yes|so)[,.]?\s+)?(?:move on|next part|next topic|skip(?: this| it)?)[.!]?\s*$|次に進(?:みたい|みましょう|んで)|次へ(?:行きましょう|お願いします)/i;
@@ -139,8 +144,12 @@ export const V2_PRACTICE_MORE_LINES = ['Before we go on, let\'s practise this a 
 export const v2PracticeMoreLine = (history: V2State['history']) => V2_PRACTICE_MORE_LINES[history.filter((h) => h.role === 'assistant').length % V2_PRACTICE_MORE_LINES.length]!;
 
 /** The learner asks for more practice ("Can we do some more practice?", "another exercise", 「もっと練習したい」). */
-const MORE_PRACTICE = /\b(?:(?:some |a (?:bit|little) )?more|another|extra|one more)\s+(?:practi[cs]e|exercises?|examples?|sentences?|questions?|tries|try|rounds?)\b|\bpracti[cs]e (?:some )?more\b|\bkeep practi[cs]ing\b|もっと練習|もう少し練習|練習(?:を)?もっと|もう一つ練習/i;
-export const v2AsksMorePractice = (said: string | null | undefined) => !!said && MORE_PRACTICE.test(said);
+// Fix round 1 (C1): practice, exercises, sentences to make or another try only; never questions or examples ("No more questions,
+// thank you." answers the close's invitation; "one more question: …" is a question), and never a negated phrase.
+const MORE_PRACTICE = /\b(?:(?:some |a (?:bit|little) )?more|another|extra|one more)\s+(?:(?:practice|practise|speaking|pronunciation)\s+)?(?:practi[cs]e|practi[cs]ing|exercises?|drills?|sentences? (?:to (?:make|say|try)|practi[cs]e)|tries|try|go|rounds?)\b|\b(?:practi[cs]e|try) (?:some |a (?:bit|little) )?more\b|\bkeep practi[cs]ing\b|\b(?:do|try|make|say) (?:another|one more) (?:sentence|one)\b|もっと練習|もう少し練習|練習(?:を)?もっと|もう一つ練習|もう一回練習/i;
+/** A negated or declining phrase: "no more practice", "I don't need more exercises", 「練習はもういい」. */
+const DECLINES_MORE = /\b(?:no|not|never|without|enough)\b[^.?!]{0,30}\b(?:more|another|extra)\b|n't\b[^.?!]{0,30}\b(?:more|another|extra|practi[cs]e)\b|\bno (?:need|thanks?|thank you)\b|(?:練習|もう)(?:は)?(?:もう)?(?:いい|大丈夫|結構)|いりません|要りません/i;
+export const v2AsksMorePractice = (said: string | null | undefined) => !!said && MORE_PRACTICE.test(said) && !DECLINES_MORE.test(said);
 
 /** Task 7f E: the facts line when the learner asks for more practice at the close: given while more than
  *  V2_MORE_PRACTICE_MIN_LEFT minutes remain to the hard stop, else declined plainly and named for next time. */

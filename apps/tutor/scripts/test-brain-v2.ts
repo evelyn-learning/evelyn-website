@@ -1,6 +1,5 @@
-// Task 7f: run with NEXT_PUBLIC_TUTOR_V2_CLOSE_BY_CONTENT=off (package.json): it pins the behaviour
-// before Task 7f (the box's last fifth, the fitted part minutes, the stop at the box, part changes with no practice count);
-// scripts/test-brain-v2-time-7f.ts covers the switches on, and each one off alone.
+// Task 7f: runs with the default switches (test:brain-v2) and with NEXT_PUBLIC_TUTOR_V2_CLOSE_BY_CONTENT=off
+// (test:brain-v2-before-7f), the one check that differs being flag-aware.
 import { BoardInlineStream, boardBlocksIn, inlineToolCall, stripBoardBlocks } from '../src/lib/tutor/v2/board-inline';
 import { richBlocks, typesetMaths, typesetPowers } from '../src/lib/tutor/v2/rich-text';
 import { circuitNetlist, figureCatalogueFor } from '../src/lib/tutor/v2/figure-catalogue';
@@ -9,7 +8,7 @@ import { mayOpenPart, partOffer } from '../src/lib/tutor/v2/part-close';
 import { mentionsTool } from '../src/lib/tutor/v2/tool-talk';
 import { applyToModelBoard, renderBoard, boardMisfit, spacedRoman, taskOnly, wordsAsText } from '../src/lib/tutor/v2/board';
 import { anchorSentenceFinal, anchorSentenceIndex, asksAloud, inlineSentenceIndex, saidCovers, unsaidAsk, unsaidBoardItem, asksAnywhere } from '../src/lib/tutor/v2/board-timing';
-import { TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM } from '../src/lib/tutor/orchestrator/flags';
+import { TUTOR_V2_CLOSE_BY_CONTENT, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM } from '../src/lib/tutor/orchestrator/flags';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { speaksMaths, unwrittenEquations } from '../src/lib/tutor/v2/spoken-maths';
 import { renderFacts, V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S } from '../src/lib/tutor/v2/facts';
@@ -416,7 +415,9 @@ async function main() {
     const re = await runV2Turn({ session, state: newV2State(1_000_000), studentSaid: 'e', nowMs: 1_000_000 + 10 * 60000, callModel: early.call });
     check('the tutor cannot end the lesson by itself with time left: it is sent back to offer the choice', !re.state.closed && re.modelCalls === 2 && /not ended/.test(re.toolCalls[0].outcome));
     const late = stub([msg([{ type: 'text', text: 'Time is nearly up. Well done.' }, { type: 'tool_use', id: 'z2', name: 'end_lesson', input: { because: 'time_nearly_used', summary: 's' } }], 'tool_use')]);
-    const rl = await runV2Turn({ session, state: newV2State(1_000_000), studentSaid: 'e', nowMs: 1_000_000 + 22 * 60000, callModel: late.call });
+    // Task 7f D (CLOSE_BY_CONTENT): with no host wrap, the close by the clock opens at the wrap minute, box − 2 (23 of 25), not
+    // in the box's last fifth (20): at 22 the end_lesson was refused and the one-reply stub ran out (the crash with the flag on).
+    const rl = await runV2Turn({ session, state: newV2State(1_000_000), studentSaid: 'e', nowMs: 1_000_000 + (TUTOR_V2_CLOSE_BY_CONTENT ? 23.2 : 22) * 60000, callModel: late.call });
     check('near the end of the time it can', rl.state.closed);
   }
   {
@@ -659,7 +660,7 @@ async function main() {
   const tEnd = await runV2Turn({ session: { ...s13, timeBoxMinutes: 30 }, state: newV2State(0), studentSaid: 'x is 3', facts: { nowMs: 22 * 60000 }, nowMs: 22 * 60000, callModel: ended.call, boardPass: false });
   const refusal = tEnd.toolCalls.find((c) => c.name === 'end_lesson')?.outcome ?? '';
   check('a close refused with time left is not worded as something to repeat to the student', /^not ended/.test(refusal) && !/minutes remain|has not asked/.test(refusal) && !tEnd.state.closed, refusal);
-  check('the facts say how much time is left and that the close is not due', /about 8 left, which is time for more/.test(renderFacts(s13, newV2State(0), { nowMs: 22 * 60000 })) && /the close is near/.test(renderFacts(s13, newV2State(0), { nowMs: 26 * 60000 })), renderFacts(s13, newV2State(0), { nowMs: 22 * 60000 }).split('\n')[1]);
+  check('the facts say how much time is left and that the close is not due', /about 8 left, which is time for more/.test(renderFacts(s13, newV2State(0), { nowMs: 22 * 60000 })) && (TUTOR_V2_CLOSE_BY_CONTENT ? /finish this exchange, then summary/.test(renderFacts(s13, newV2State(0), { nowMs: 28.2 * 60000 })) : /the close is near/.test(renderFacts(s13, newV2State(0), { nowMs: 26 * 60000 }))), renderFacts(s13, newV2State(0), { nowMs: 22 * 60000 }).split('\n')[1]);
   const planP = { segments: [{ id: 'hook', kind: 'hook' }, { id: 'c', kind: 'concept' }, { id: 't1', kind: 'try_yourself' }, { id: 't2', kind: 'try_yourself' }, { id: 'mis', kind: 'misconception_check' }, { id: 'recap', kind: 'recap' }] } as never;
   const goalsP = { hook: { status: 'shown', at: 1 }, c: { status: 'shown', at: 2 }, t1: { status: 'shown', at: 3 }, t2: { status: 'demonstrated', at: 4 }, mis: { status: 'shown', at: 9 } } as never;
   check('the part in hand is the one the tutor last marked, not one left open earlier', v2Progress(planP, goalsP).currentSegmentId === 'mis' && v2Progress(planP, { ...(goalsP as object), mis: { status: 'demonstrated', at: 9 } } as never).currentSegmentId === 'recap' && v2Progress(planP, { hook: { status: 'shown' } } as never).currentSegmentId === 'c', v2Progress(planP, goalsP).currentSegmentId);

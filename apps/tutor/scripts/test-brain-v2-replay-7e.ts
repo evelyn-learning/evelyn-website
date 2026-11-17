@@ -23,7 +23,10 @@ import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import { v2AsksInJapanese, v2HandsOver, v2ReplyAsks, v2ReplyHandsOver } from '../src/lib/tutor/v2/one-question';
 import { V2_PART_ASKS, v2OpenPagePart, v2PartInHand } from '../src/lib/tutor/v2/part-flow';
 import { v2Progress } from '../src/lib/tutor/v2/progress';
-import { V2_CHECK_INS, runV2Turn, type V2ModelCall } from '../src/lib/tutor/v2/turn';
+import { V2_CHECK_INS, runV2Turn as runV2TurnRaw, type V2ModelCall } from '../src/lib/tutor/v2/turn';
+import { seedPractice7f } from './v2-seed-practice-7f';
+// Task 7f fix round 1: with SEED_7F_PRACTICE (the `-7f-on` script) every part starts with its practice sentences said.
+const runV2Turn = seedPractice7f(runV2TurnRaw);
 import { newV2State, type V2Session, type V2State, type V2ToolCall } from '../src/lib/tutor/v2/types';
 import { TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_PART_POSITION_KEPT } from '../src/lib/tutor/orchestrator/flags';
 

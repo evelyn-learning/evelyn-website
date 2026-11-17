@@ -21,7 +21,8 @@ import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import { TUTOR_V2_CLOSE_BY_CONTENT, TUTOR_V2_MORE_PRACTICE, TUTOR_V2_OVERRUN_MIN, TUTOR_V2_PART_MIN_PRACTICE, TUTOR_V2_TIME_NO_SQUEEZE, TUTOR_V2_TIME_OVERRUN } from '../src/lib/tutor/orchestrator/flags';
 import { renderFacts } from '../src/lib/tutor/v2/facts';
 import { v2CloseOpen, v2HardStopMinutes, v2LeftToStopMin, v2OverrunMin, v2PartDueFact, v2PartDueNow, v2PlanContentDone, v2TimeFlags } from '../src/lib/tutor/v2/time-box';
-import { V2_PRACTICE_MORE_LINES, v2AsksMorePractice, v2PartsToDrop } from '../src/lib/tutor/v2/time-fit';
+import { V2_PRACTICE_MORE_LINES, v2AsksMorePractice, v2PartsToDrop, v2PracticePart } from '../src/lib/tutor/v2/time-fit';
+import { V2_CLOSE_INVITE_REFUSAL, V2_CLOSE_INVITE_WAIT } from '../src/lib/tutor/v2/close-invite';
 import { v2NextTimeLine, v2UnreachedOffer } from '../src/lib/tutor/v2/plan-map';
 import { v2MemoryLines, v2ProfileCommit } from '../src/lib/tutor/v2/memory';
 import { v2ReadClientState } from '../src/lib/tutor/v2/client-state';
@@ -160,6 +161,16 @@ async function main() {
     check('the switch off for the turn: not counted, the page held for the part ask as in 7a', !off.r.state.practiceSaid && !isMore(off.r.spoken) && /past simple/i.test(off.r.spoken) && /\?$/.test(off.r.spoken), off.r.spoken);
   }
 
+  console.log('C fix round 1 (I1): a pronunciation (word-drill) part is not held by the sentence count');
+  {
+    const pron = GDI.segments.findIndex((x) => x.id === 'pronunciation');
+    check('the plan marks it (metadata.pronunciation): not a practice part; the past simple is', !v2PracticePart(GDI, pron) && v2PracticePart(GDI, GDI.segments.findIndex((x) => x.id === 'past-simple')));
+    const box30: V2Session = { ...lang, timeBoxMinutes: 30, wrapMinutes: 28 };
+    const drill = at([...FIVE, 'Pronunciation'], { goals: allDone, history: [u('x'), a('Say this word: responsibilities.')] });
+    const r = await run(box30, drill, 'Responsibilities.', [{ text: 'Very good, that was clear. <board page>Summary</board> Here is a quick summary of today.' }], 24);
+    check('a 30-minute box, a word said in the drill at 24: no count, no "practice in this part", no ask for another sentence', !r.r.state.practiceSaid && !/practice in this part/.test(r.facts) && !isMore(r.heard), [r.heard, r.r.state.practiceSaid]);
+  }
+
   console.log('D. the close by content or the wrap minute, not the box\'s last fifth');
   {
     const notDone = at(FIVE, { goals: { overview: { status: 'shown', at: 0 }, 'level-check': { status: 'shown', at: 0 }, 'topic-intro': { status: 'shown', at: 0 } }, timeFit: { dropped: ['pronunciation'], told: true }, history: [u('x'), a('What did you do on your last project?')] });
@@ -192,7 +203,11 @@ async function main() {
 
   console.log('E. more practice at the close');
   {
-    check('the ask is heard', ['Can we do some more practice?', 'Could I practise more?', 'One more exercise, please.', 'もっと練習したいです。'].every(v2AsksMorePractice) && !v2AsksMorePractice('That is all for me.'));
+    const asks = ['Can we do some more practice?', 'Could I practise more?', 'One more exercise, please.', 'もっと練習したいです。', 'Can I try another sentence?', 'Can we practice a bit more?'];
+    check('the ask is heard', asks.every(v2AsksMorePractice), asks.filter((x) => !v2AsksMorePractice(x)));
+    // Fix round 1 (C1): answers about questions, examples, and negated phrases are never a request for practice.
+    const notAsks = ['No more questions, thank you.', 'No, I have no more questions.', "I don't have any more questions.", 'Can I ask one more question?', 'I have another question.', 'Could you give me more examples?', 'No more practice, thank you.', "I don't need more exercises.", 'That is all for me.', '練習はもういいです。', '質問はありません。'];
+    check('…and not: questions, examples, negated or declining phrases', notAsks.every((x) => !v2AsksMorePractice(x)), notAsks.filter(v2AsksMorePractice));
     const begun = at([...FIVE, 'Summary'], { goals: allDone, summaryBegunAt: 1, timeFit: { dropped: ['pronunciation'], told: true }, history: [u('x'), a('Here is a quick summary of today. Do you have any questions?')] });
     const e17 = await run(lang, begun, 'Can we do some more practice?', [{ text: 'Of course! Here is one more.', after: end() }, { text: 'Tell me about a project you have finished. Use the past simple.' }], 17);
     check('minute 17, the summary begun: honoured (the facts say there is time), and the close waits for it', /they asked for more practice, and there is time for it \(about 8 minutes/.test(e17.facts) && !e17.r.state.closed && e17.calls.some((c) => /^end_lesson: not ended: they asked for more practice/.test(c)), [e17.calls, e17.facts.slice(-600)]);
@@ -203,6 +218,23 @@ async function main() {
     check('the 6g rule stays: once the summary has begun, no NEW practice is offered by the tutor', /the summary has begun: from here, no new practice, exercise or offer of more practice unless they ask for it/.test(e17.facts));
     const eOff = await run(lang, begun, 'Can we do some more practice?', [{ text: 'Sure.' }], 17, { morePractice: false });
     check('the switch off for the turn: no line', !/they asked for more practice/.test(eOff.facts));
+  }
+
+  console.log('the 7d invitation with B–F on (fix round 1, I2 and C1): asked once, and the lesson ends on their answer');
+  {
+    const closeSt = (extra: Partial<V2State> = {}) => at([...FIVE, 'Summary'], { goals: allDone, timeFit: { dropped: ['pronunciation'], told: true }, summaryBegunAt: 1, history: [u('x'), a('Here is a quick summary of today: you used the present perfect and the past simple.')], ...extra });
+    const INVITE = 'Do you have any questions before we finish?';
+    const s1 = await run(lang, at([...FIVE], { goals: allDone, timeFit: { dropped: ['pronunciation'], told: true }, history: [u('x'), a('Tell me about your project.')] }), 'We made a new catalogue last year.', [{ text: 'Well done. Here is a quick summary: you used the present perfect and the past simple. See you next time!', after: end() }, { text: 'Bye!', after: end() }], 17);
+    check('minute 17, parts done: the summary reply\'s close is refused once for the invitation, the second end_lesson waits; not closed; the runtime\'s invitation ends it', !s1.r.state.closed && s1.calls.some((c) => c === `end_lesson: ${V2_CLOSE_INVITE_REFUSAL}`) && s1.calls.some((c) => c === `end_lesson: ${V2_CLOSE_INVITE_WAIT}`) && s1.r.spoken.trim().endsWith(INVITE) && typeof s1.r.state.closeInvitedAt === 'number', [s1.calls, s1.r.spoken]);
+    const answers = ['No more questions, thank you.', 'No, I have no more questions.', "I don't have any more questions.", 'No, thank you.', '質問はありません。'];
+    for (const ans of answers) {
+      const t = await run(lang, closeSt({ closeInvitedAt: 2, history: [u('x'), a(`Here is a quick summary of today. ${INVITE}`)] }), ans, [{ text: 'Thank you for today. See you next time!', after: end() }, { text: 'Goodbye!' }], 17.5);
+      check(`"${ans}" at 17.5: the lesson ends on it (no more-practice line, no refusal)`, t.r.state.closed && !/they asked for more practice/.test(t.facts) && t.calls.every((c) => !/^end_lesson: not ended/.test(c)), [t.calls, t.facts.slice(-500)]);
+    }
+    const q = await run(lang, closeSt({ closeInvitedAt: 2, history: [u('x'), a(`Here is a quick summary of today. ${INVITE}`)] }), 'One more question: what is the difference between been and gone?', [{ text: '"Gone" means they are still there; "been" means they came back. Thank you for today, see you next time!', after: end() }, { text: 'Goodbye!' }], 17.5);
+    check('"One more question: …" is a question: no more-practice line, answered, and the lesson may end', q.r.state.closed && !/they asked for more practice/.test(q.facts) && /questions before the close: you have asked/.test(q.facts), [q.calls]);
+    const more = await run(lang, closeSt({ closeInvitedAt: 2, history: [u('x'), a(`Here is a quick summary of today. ${INVITE}`)] }), 'Can we do some more practice?', [{ text: 'Of course!', after: end() }, { text: 'Tell me about your last trip, using the past simple.' }], 17.5);
+    check('"Can we do some more practice?" to the invitation at 17.5: practice first (the close refused for it)', !more.r.state.closed && more.calls.some((c) => /^end_lesson: not ended: they asked for more practice/.test(c)), more.calls);
   }
 
   console.log('F. the target and the margin');
