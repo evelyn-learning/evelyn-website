@@ -15,7 +15,8 @@
  *    confused reply is never cut short;
  *  - a second follow-up's answer counts as a plan question's (the facts said no more follow-ups; a plan question asked in
  *    words of the model's own is counted that way too, so the count is bounded either way).
- * Counting starts at the first reply that asks a plan question (the overview's "Are you ready?" is not the check); a plan
+ * Answers with content before the first reply that asks a plan question in its words count as questions asked in other words
+ * (fix round 1, M4: as the gate counts them; the overview's "Okay." has no content); a plan
  * whose questions cannot be read, or whose questions were never asked in their words, counts every answer with content as a
  * question, as the gate on set_working_level does (working-level.ts v2LevelSetTooEarly): never stuck at "0 of 3".
  * Pure, client-safe.
@@ -29,7 +30,7 @@ import { v2PartOf } from './plan-map';
 export const V2_LEVEL_CHECK_QUESTIONS = 3;
 
 const SMALL = new Set(('the and you your you\'d you\'re can could would will what which when where who how why about that this these those with have has had '
-  + 'are was were for any one some me more like intofrom them they their there here then than just also very much does did do is it its '
+  + 'are was were for any one some me more like into from them they their there here then than just also very much does did do is it its '
   + 'not but our out get got let let\'s ever if so').split(/\s+/));
 const contentWords = (t: string) => [...new Set((t.toLowerCase().replace(/[’]/g, "'").match(/[a-z]+(?:'[a-z]+)?/g) ?? []).filter((w) => w.length >= 3 && !SMALL.has(w)))];
 const same = (a: string, b: string) => a === b || (a.length >= 5 && b.length >= 5 && a.slice(0, 5) === b.slice(0, 5));
@@ -99,7 +100,10 @@ export function v2CountLevelCheck(plan: LessonPlan | null | undefined, history: 
     if (!hasContent(p.said)) continue;
     if (pending !== null) { answered.add(pending); pending = null; } else if (!followUp) followUp = true; else extra += 1;
   }
-  const n = Math.min(answered.size + extra, V2_LEVEL_CHECK_QUESTIONS);
+  // Fix round 1 (M4): answers before the first question in the plan's words answered the check's questions in other words:
+  // counted as questions, as the gate counts them, so the check is never done only after five answers.
+  const before = pairs.slice(0, start).filter((p) => hasContent(p.said)).length;
+  const n = Math.min(answered.size + extra + before, V2_LEVEL_CHECK_QUESTIONS);
   return { answered: n, followUp, done: n >= V2_LEVEL_CHECK_QUESTIONS, classified: true };
 }
 

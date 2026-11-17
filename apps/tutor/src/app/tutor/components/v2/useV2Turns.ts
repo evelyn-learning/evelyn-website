@@ -29,6 +29,7 @@ import { mentionsTool } from '@/lib/tutor/v2/tool-talk';
 import { newV2State, type V2State, type V2ToolCall } from '@/lib/tutor/v2/types';
 import { TUTOR_LESSON_CLOSE_AUTO_END, TUTOR_V2_TIME_BOX, TUTOR_WORKING_LEVEL, TUTOR_WORKING_LEVEL_ESTIMATE } from '@/lib/tutor/orchestrator/flags';
 import { v2HardStop } from '@/lib/tutor/v2/time-box';
+import { v2HardStopNextTime } from '@/lib/tutor/v2/close-invite';
 import { goodbyeLine } from '@/lib/tutor/voice/timebox-lines';
 import { parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
 import { v2LevelEstimateDue, v2SeedWorkingLevel, v2WorkingLevelCommit } from '@/lib/tutor/v2/working-level';
@@ -495,7 +496,10 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       endingRef.current = true;
       p.current.onDebugEvent?.('v2_time_limit', `${minutes} min`);
       // A lesson that has already said its goodbye (kept open by its partner) is not said goodbye to twice.
-      const farewell = TUTOR_V2_TIME_BOX && !stateRef.current.closed ? goodbyeLine(p.current.studentName) : null;
+      const bye = TUTOR_V2_TIME_BOX && !stateRef.current.closed ? goodbyeLine(p.current.studentName) : null;
+      // Task 7d fix round 1 (M10): the next-time line waits for the reply that closes; when the box comes first, its goodbye says it.
+      const nextTime = bye ? v2HardStopNextTime({ mode: p.current.mode, plan: planRef.current ?? undefined, languages: p.current.tutorLanguages, pronunciation: p.current.pronunciation }, planRef.current, stateRef.current) : null;
+      const farewell = bye && nextTime ? `${nextTime} ${bye}` : bye;
       // The microphone closes: the student's words are no longer answered, and must not cut the goodbye.
       if (farewell) setClosed(true);
       const wait = p.current.closeDelayMs;

@@ -18,7 +18,7 @@ import { v2PronunciationFacts, v2TextSoundFacts } from './pronunciation';
 import { v2SentenceCardsFacts } from './sentence-cards';
 import { v2LearnerSentenceFacts } from './learner-card';
 import { v2PracticeAskFacts, v2RetryFacts } from './languages';
-import { v2PartDueFact, v2WrapDue } from './time-box';
+import { V2_TIME_UP_MIN, v2PartDueFact, v2WrapDue } from './time-box';
 import { v2CloseInviteFacts } from './close-invite';
 
 /** After the tutor chose to keep listening: how long the student stays silent before it is told so (TutorVoiceV2).
@@ -29,9 +29,8 @@ export const V2_WAITED_RECHECK_S = 5;
  *  explained something and stopped leaves the student to say "got it" before the lesson moves (AP CS A,
  *  embed-1794440489707; it was 6 s, and the student spoke first). */
 export const V2_NO_ASK_RECHECK_S = 2;
-/** Minutes left at or below which the time is up: the facts say so, a close is no longer argued with, and a page the
- *  closing reply opens is never held (turn.ts). */
-export const V2_TIME_UP_MIN = 1.5;
+/** Minutes left at or below which the time is up (time-box.ts). */
+export { V2_TIME_UP_MIN };
 
 export interface V2TurnFacts {
   nowMs: number;
@@ -173,7 +172,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     // Task 6e fix round 1 (F4): tester B was asked about a question or the summary in two turns running.
     if (!discussion && TUTOR_V2_CLOSE_ONE_QUESTION && (closing || near) && !state.closed) lines.push('at the close: at most one question in a reply, never one you asked in your last reply, and nothing after a goodbye');
     // Task 7d (CLOSE_INVITES_QUESTIONS): the summary reply ends by inviting their questions, and the lesson ends on their answer.
-    if (!discussion) lines.push(...v2CloseInviteFacts(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked, near: closing || near || summaryBegun }));
+    if (!discussion) lines.push(...v2CloseInviteFacts(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked }));
   }
   // Where the parts' minutes put the lesson now, so it paces itself to the box (time-box.ts).
   const partDue = v2PartDueFact(session, state, f.nowMs, !!session.timeBoxMinutes && left <= V2_TIME_UP_MIN);

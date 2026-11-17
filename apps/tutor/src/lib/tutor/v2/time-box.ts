@@ -16,6 +16,17 @@ import { discussionOf } from './discussion';
 import { v2PartOf } from './plan-map';
 import type { V2Session, V2State } from './types';
 
+/** Minutes left at or below which the time is up: the facts say so, a close is no longer argued with, and a page the
+ *  closing reply opens is never held (turn.ts). Here, a leaf module, so close-invite.ts reads it too (facts.ts re-exports it). */
+export const V2_TIME_UP_MIN = 1.5;
+
+/** The clock lets the tutor close by itself: no box, or the box's last fifth (turn.ts applyControlTool's end_lesson rule; a
+ *  student's request or a finished homework close at any time). Task 7d: the invitation to ask questions lives only here. */
+export function v2CloseOpenByClock(session: Pick<V2Session, 'timeBoxMinutes'>, state: Pick<V2State, 'startedAtMs'>, nowMs: number): boolean {
+  if (!session.timeBoxMinutes) return true;
+  return session.timeBoxMinutes - (nowMs - state.startedAtMs) / 60000 <= session.timeBoxMinutes * 0.2;
+}
+
 /** How long the speech the tutor has under way at the box may run on before the goodbye. Bounded: a partner's minute
  *  pool is charged to the wall clock, with POOL_CHARGE_SLACK_SEC (120 s) of slack past the box. */
 export const V2_HARD_STOP_TAIL_MAX_MS = 20000;

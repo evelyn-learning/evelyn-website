@@ -229,9 +229,7 @@ async function main() {
     check('the next-time line names the part', v2NextTimeAllLine(GDI, pagesAt(B, { goals, ...level })) === "We didn't get to the pronunciation part today, so that's for next time.");
     const t60 = 'Good work today. Before we finish, here is a quick summary. <board page>Summary</board><board note>You practised the present perfect and the past simple.</board> You used "have worked" well.';
     const heard: string[] = [];
-    // Task 7d (CLOSE_INVITES_QUESTIONS): with their questions still to be invited the line waits for the reply that closes
-    // (test-brain-v2-close-7d.ts); invited already, it is said where the summary opens, as here.
-    const r = await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(B, { goals, ...level, closeInvitedAt: 1, history: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'After "will", use the base verb. Can you say the sentence again?' }] }), studentSaid: 'My responsibility in sales area is contact for our client.', callModel: streaming(t60).call, onText: (d) => heard.push(d), boardPass: false, mathsCheck: false, nowMs: 12 * 60000 });
+    const r = await runV2Turn({ session: { ...lang, plan: GDI }, state: pagesAt(B, { goals, ...level, history: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'After "will", use the base verb. Can you say the sentence again?' }] }), studentSaid: 'My responsibility in sales area is contact for our client.', callModel: streaming(t60).call, onText: (d) => heard.push(d), boardPass: false, mathsCheck: false, nowMs: 12 * 60000 });
     const h = heard.join('');
     check('not held: no "Before the summary, there is still…" after the summary began', !/Before the summary, there is still/.test(h) && r.state.board.pages.some((p) => p.title === 'Summary'), h);
     check('the part named as next time, where the summary opens', /here is a quick summary\.\s+We didn't get to the pronunciation part today, so that's for next time\./.test(h) && /that's for next time/.test(r.spoken), h);
