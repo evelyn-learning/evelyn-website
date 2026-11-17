@@ -1,5 +1,6 @@
+import { Types } from "mongoose";
 import { SECTIONS, VERDICTS, canJudgeSolution, releasedVersionOf, type SectionKind, type Stage, type Verdict } from "./config";
-import { ks, type ActivityDoc, type ItemDoc, type SectionDoc } from "./db";
+import { ks, type ActivityDoc, type BatchRow, type ItemDoc, type SectionDoc } from "./db";
 import { renderInline, renderMarkdown } from "./render";
 import { assetUrl, saveAsset } from "./assets";
 import type { QtiItem } from "./qti";
@@ -138,7 +139,7 @@ export async function releaseIfHeld(itemId: string, actor: Actor): Promise<void>
 
 /** Adds or refreshes items from a QTI upload. Existing solutions and stages are kept. */
 export async function ingestQtiItems(items: QtiItem[], actor: Actor, uploadId: string) {
-  const { Item } = await ks();
+  const { Item, Batch } = await ks();
   const created: string[] = [];
   const updated: string[] = [];
   const maxOrder = (await Item.findOne().sort({ order: -1 }).lean())?.order ?? 0;
@@ -171,19 +172,31 @@ export async function ingestQtiItems(items: QtiItem[], actor: Actor, uploadId: s
     const reopened = !!existing && (existing.stage === "item_data" || existing.stage === "rejected");
     if (existing) {
       const stage: Stage = reopened ? (existing.version ? "drafting" : "received") : existing.stage;
-      await Item.updateOne({ itemId: q.itemId }, { $set: { ...fields, stage } });
+      // A course that came from the spreadsheet is not overwritten by QTI metadata.
+      const { course: _metadataCourse, ...withoutCourse } = fields;
+      const keep = existing.courseSource === "sheet" ? withoutCourse : { ...fields, courseSource: "metadata" as const };
+      await Item.updateOne({ itemId: q.itemId }, { $set: { ...keep, stage, receivedAt: new Date() } });
       updated.push(q.itemId);
     } else {
+      // A spreadsheet row that arrived before the item applies now (the latest batch listing it wins).
+      const batch = await Batch.findOne({ itemIds: q.itemId }).sort({ receivedAt: -1 }).lean();
+      const row = batch?.rows.find((r) => r.itemId === q.itemId);
+      const now = new Date();
       await Item.create({
         itemId: q.itemId,
         ...fields,
+        ...(row?.subject ? { subject: row.subject } : {}),
+        ...(row?.course ? { course: row.course } : {}),
+        courseSource: row?.course ? "sheet" : "metadata",
+        ...(batch ? { batchId: batch.batchId } : {}),
+        receivedAt: batch ? new Date(Math.max(batch.receivedAt.getTime(), now.getTime())) : now,
         evelynAnswer: "",
         keySource: q.key ? "castle-rock" : "evelyn",
         stage: "received",
         version: 0,
         releasedVersion: 0,
         releasedAnswer: "",
-        showcase: false,
+        showcase: row?.showcase ?? false,
         source: "upload",
         order: ++order,
         createdAt: new Date(),
@@ -201,18 +214,31 @@ export async function ingestQtiItems(items: QtiItem[], actor: Actor, uploadId: s
   return { created, updated };
 }
 
-/** Applies a manifest spreadsheet row: course/subject hints and the showcase flag. */
-export async function applySheetRow(
-  row: { itemId: string; subject?: string; course?: string; showcase?: boolean },
-  actor: Actor,
-): Promise<"updated" | "missing"> {
+/** Records a spreadsheet upload as a batch; its parsed rows are kept so rows for items not uploaded yet can be applied later. */
+export async function createBatch(filename: string, uploadedBy: string, rows: BatchRow[], batchId?: string): Promise<string> {
+  const { Batch } = await ks();
+  const id = batchId ?? new Types.ObjectId().toString();
+  await Batch.create({ batchId: id, filename, itemIds: rows.map((r) => r.itemId), rows, receivedAt: new Date(), uploadedBy });
+  return id;
+}
+
+/** Applies a manifest spreadsheet row: the course (which now counts as the sheet's), subject, showcase flag and batch. */
+export async function applySheetRow(row: BatchRow, actor: Actor, batchId?: string): Promise<"updated" | "missing"> {
   const { Item } = await ks();
+  const item = await Item.findOne({ itemId: row.itemId }).select("createdAt").lean();
+  if (!item) return "missing";
   const set: Partial<ItemDoc> = {};
   if (row.subject) set.subject = row.subject;
-  if (row.course) set.course = row.course;
+  if (row.course) {
+    set.course = row.course;
+    set.courseSource = "sheet";
+  }
   if (row.showcase !== undefined) set.showcase = row.showcase;
-  const res = await Item.updateOne({ itemId: row.itemId }, { $set: set });
-  if (!res.matchedCount) return "missing";
+  if (batchId) {
+    set.batchId = batchId;
+    set.receivedAt = new Date(Math.max(Date.now(), item.createdAt?.getTime() ?? 0));
+  }
+  await Item.updateOne({ itemId: row.itemId }, { $set: set });
   void actor;
   return "updated";
 }

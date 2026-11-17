@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/keystone/auth";
 import { ksBase } from "@/lib/keystone/paths";
-import { ITEM_TYPE_LABEL, OWNER_LABEL, SECTION_TITLE, STAGES, STAGE_HELP, STAGE_LABEL, STAGE_OWNER, can } from "@/lib/keystone/config";
+import { ITEM_TYPE_LABEL, OWNER_LABEL, SECTION_TITLE, STAGES, STAGE_HELP, STAGE_LABEL, STAGE_OWNER, can, sectionTitle } from "@/lib/keystone/config";
 import { getItem, neighbours, reviewQueue } from "@/lib/keystone/queries";
 import { setStageAction } from "../../actions";
 import { TopBar } from "../../_components/TopBar";
@@ -208,7 +208,7 @@ export default async function ItemPage({
                 <div key={s.kind} className="ks-section">
                   <h2>
                     <span className="n">{i + 1}</span>
-                    {SECTION_TITLE[s.kind]}
+                    {sectionTitle(s.kind, item.course) ?? SECTION_TITLE[s.kind]}
                   </h2>
                   <div className="ks-prose" dangerouslySetInnerHTML={{ __html: s.html }} />
                 </div>

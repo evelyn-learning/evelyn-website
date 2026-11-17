@@ -1,5 +1,5 @@
 import JSZip from "jszip";
-import { ITEM_TYPE_LABEL, SECTION_TITLE, answerSeenBy, releasedVersionOf } from "./config";
+import { ITEM_TYPE_LABEL, SECTION_TITLE, sectionTitle, answerSeenBy, releasedVersionOf } from "./config";
 import { ks, type ItemDoc, type SolutionDoc } from "./db";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
@@ -34,7 +34,7 @@ async function build(item: ItemDoc, sol: SolutionDoc): Promise<{ sections: { tit
   for (const s of sol.sections) {
     const r: Omit<Built, "images"> = await renderForSolaro(s.md, `${item.itemId}-${s.kind}`, resolveImage);
     files.push(...r.files);
-    sections.push({ title: SECTION_TITLE[s.kind], html: toXhtml(r.html) });
+    sections.push({ title: sectionTitle(s.kind, item.course) ?? SECTION_TITLE[s.kind], html: toXhtml(r.html) });
   }
   return { sections, files, images: [...images] };
 }
@@ -130,7 +130,7 @@ export async function buildExport(itemIds: string[]): Promise<Uint8Array> {
         animated = "";
       }
     }
-    dir.file("solution.md", sol.sections.map((s) => `## ${SECTION_TITLE[s.kind]}\n\n${s.md}\n`).join("\n"));
+    dir.file("solution.md", sol.sections.map((s) => `## ${sectionTitle(s.kind, item.course) ?? SECTION_TITLE[s.kind]}\n\n${s.md}\n`).join("\n"));
 
     let qtiName = "";
     if (item.qti?.apip) {

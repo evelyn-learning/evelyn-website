@@ -46,6 +46,11 @@ export type ItemDoc = {
   releasedVersion?: number;
   /** evelynAnswer as it was when the solution was released; what Castle Rock sees. */
   releasedAnswer?: string;
+  /** Where `course` came from: only a spreadsheet value counts (QTI metadata is unreliable). Undefined on older rows. */
+  courseSource?: "sheet" | "metadata";
+  batchId?: string;
+  /** When the item (or its spreadsheet row) last arrived, whichever is later. */
+  receivedAt?: Date;
   showcase: boolean;
   priorStatus?: string;
   reviewNote?: string;
@@ -95,7 +100,20 @@ export type UploadDoc = {
   createdAt: Date;
 };
 
+export type BatchRow = { itemId: string; subject?: string; course?: string; showcase?: boolean };
+
+/** One spreadsheet upload. batchId is the sheet Upload's _id. `rows` keeps every parsed row so one for an item not uploaded yet applies when it arrives. */
+export type BatchDoc = {
+  batchId: string;
+  filename: string;
+  itemIds: string[];
+  rows: BatchRow[];
+  receivedAt: Date;
+  uploadedBy: string;
+};
+
 type Models = {
+  Batch: Model<BatchDoc>;
   User: Model<UserDoc>;
   Session: Model<SessionDoc>;
   Item: Model<ItemDoc>;
@@ -166,6 +184,9 @@ function defineModels(conn: Connection): Models {
     version: { type: Number, default: 0 },
     releasedVersion: Number,
     releasedAnswer: String,
+    courseSource: String,
+    batchId: String,
+    receivedAt: Date,
     showcase: { type: Boolean, default: false },
     priorStatus: String,
     reviewNote: String,
@@ -209,7 +230,16 @@ function defineModels(conn: Connection): Models {
     messages: [String],
     createdAt: { type: Date, default: () => new Date() },
   });
+  const Batch = new Schema<BatchDoc>({
+    batchId: { type: String, required: true, unique: true },
+    filename: String,
+    itemIds: [String],
+    rows: [new Schema({ itemId: String, subject: String, course: String, showcase: Boolean }, { _id: false })],
+    receivedAt: { type: Date, default: () => new Date() },
+    uploadedBy: String,
+  });
   return {
+    Batch: conn.model<BatchDoc>("Batch", Batch, "batches"),
     User: conn.model<UserDoc>("User", User, "users"),
     Session: conn.model<SessionDoc>("Session", Session, "sessions"),
     Item: conn.model<ItemDoc>("Item", Item, "items"),

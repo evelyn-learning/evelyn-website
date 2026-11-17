@@ -155,6 +155,34 @@ export const SECTION_TITLE: Record<SectionKind, string> = {
   errors: "Common errors",
 };
 
+/** Alberta diploma courses: the only ones whose second section is a "Diploma-style answer". */
+export const DIPLOMA_COURSES = ["Math 30-1", "Math 30-2", "Biology 30", "Chemistry 30", "Physics 30", "Science 30"] as const;
+
+/** Second-section title for every other course. null until the client says what to call it; the pipeline holds such items. */
+export const OTHER_COURSE_SECTION_TITLE: string | null = null;
+
+/**
+ * A course string as the spreadsheet wrote it, mapped to the canonical diploma
+ * name when it is one ("Mathematics 30–1", " math 30-1 "); anything else comes
+ * back trimmed and unchanged.
+ */
+export function normaliseCourse(course: string): string {
+  const trimmed = course.trim();
+  const folded = trimmed
+    .toLowerCase()
+    .replace(/[\u2010-\u2015\u2212]/g, "-")
+    .replace(/\s*-\s*/g, "-")
+    .replace(/\s+/g, " ")
+    .replace(/^mathematics\b/, "math");
+  return DIPLOMA_COURSES.find((c) => c.toLowerCase() === folded) ?? trimmed;
+}
+
+/** The title of a solution section for an item of `course`; null where the title is not decided (diploma, other courses). */
+export function sectionTitle(kind: SectionKind, course: string): string | null {
+  if (kind !== "diploma") return SECTION_TITLE[kind];
+  return (DIPLOMA_COURSES as readonly string[]).includes(normaliseCourse(course)) ? SECTION_TITLE.diploma : OTHER_COURSE_SECTION_TITLE;
+}
+
 export const SUBJECTS = ["Mathematics", "Biology", "Chemistry", "Physics"] as const;
 
 export const ITEM_TYPE_LABEL: Record<string, string> = {
