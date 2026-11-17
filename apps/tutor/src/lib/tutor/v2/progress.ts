@@ -20,6 +20,7 @@ const TOLD_ONLY = new Set(['hook', 'concept', 'worked_example', 'recap', 'extens
 function problemTokens(text: string): string[] {
   return text.toLowerCase().replace(/[−–]/g, '-').replace(/\\[a-z]+|[$\\{}]/g, ' ').match(/[a-z]+|-?\d+(?:\.\d+)?/g) ?? [];
 }
+const PROBLEM_FILLER = new Set(['the', 'and', 'for', 'with', 'that', 'this', 'which', 'what', 'from', 'are', 'was', 'were', 'has', 'have', 'its', 'their', 'your', 'you', 'say', 'give', 'find', 'explain', 'describe', 'each', 'all', 'one', 'who', 'how', 'why', 'does', 'did', 'not', 'but', 'then', 'than', 'into', 'about', 'context']);
 /** The part of the plan a problem on the board belongs to: the one whose authored problem (or common-mistake
  *  question) it shares most of its wording with, pair of words by pair of words, when that is most of the shorter
  *  of the two. A problem of the tutor's own making belongs to none. */
@@ -37,7 +38,19 @@ export function goalForProblem(plan: LessonPlan, statement: string): string | nu
     const share = both / Math.min(mine.size, theirs.size);
     if (share >= 0.6 && (!best || share > best.share)) best = { id: seg.id, share };
   }
-  return best?.id ?? null;
+  if (best) return best.id;
+  // A problem in words is put in the tutor's own: "arm span (x, in cm) against height" for "arm span (x, cm) vs
+  // height". No pair of words in a row survives that, and no plan problem was known all lesson (AP Statistics,
+  // portal-b8ee9d0f). There the words that carry it are compared, and the part must stand clear of the next best.
+  const carry = (text: string) => new Set(problemTokens(text).filter((w) => /\d/.test(w) || (w.length >= 3 && !PROBLEM_FILLER.has(w))));
+  const words = carry(statement);
+  if (words.size < 6) return null;
+  const scored = plan.segments.map((seg) => {
+    const s = seg as unknown as { problem?: unknown; question?: unknown };
+    const theirs = carry(typeof s.problem === 'string' ? s.problem : typeof s.question === 'string' ? s.question : '');
+    return { id: seg.id, share: theirs.size < 6 ? 0 : [...words].filter((x) => theirs.has(x)).length / Math.min(words.size, theirs.size) };
+  }).sort((a, b) => b.share - a.share);
+  return scored[0] && scored[0].share >= 0.65 && scored[0].share - (scored[1]?.share ?? 0) >= 0.15 ? scored[0].id : null;
 }
 
 /** A plan problem in parts, "(a) … (b) … (c) …", is one problem: the student works down it with every part in

@@ -28,6 +28,7 @@ import { newV2State, type V2Session } from '../src/lib/tutor/v2/types';
 import { paintsOnBoard, streamV2Turn } from '../src/lib/tutor/v2/client';
 import { gradeOfLevel, isMathsSubject, isScienceSubject } from '../src/lib/tutor/v2/session-kind';
 import { v2Progress, goalForProblem, goalForTitle, wholeProblem } from '../src/lib/tutor/v2/progress';
+import { SEED_AP_STATS_U2_SCATTERPLOTS } from '../src/lib/tutor/lesson-plan/seeds/ap-stats-u2-scatterplots';
 import { SEED_AP_APGOV_U2_PRESIDENCY } from '../src/lib/tutor/lesson-plan/seeds/ap-apgov-u2-presidency';
 import { closeDueMinutes, reopensClose, asksToWait } from '../src/lib/tutor/v2/close-heard';
 import { v2Background } from '../src/lib/tutor/v2/background';
@@ -882,6 +883,23 @@ async function main() {
     const note = 'Executive agreement: a deal with a foreign government, made without Senate ratification\nTreaty: needs two-thirds of the Senate\nDurability: ';
     check('a card in slightly other words is not put up twice on a page', applyToModelBoard(nb, 'a', 'show_problem', { statement: `If a president ${q}` }).painted && !applyToModelBoard(nb, 'b', 'show_problem', { statement: `If the President ${q}` }).painted && applyToModelBoard(nb, 'c', 'show_problem', { statement: 'Troops were sent into hostilities on day 1. On day 20, Congress passes a law authorizing the use of force. Does the 60-day withdrawal deadline still apply? Say yes or no, and why.' }).painted
       && applyToModelBoard(nb, 'd', 'annotate', { text: `${note}a successor president can withdraw from an executive agreement alone` }).painted && !applyToModelBoard(nb, 'e', 'annotate', { text: `${note}?` }).painted && applyToModelBoard(nb, 'f', 'annotate', { text: 'Declaring war: Congress only\nOrdering troops into hostilities: the President, as commander-in-chief' }).painted);
+  }
+  {
+    // AP Statistics, portal-b8ee9d0f: every plan problem was put in the tutor's own words.
+    const sp = SEED_AP_STATS_U2_SCATTERPLOTS;
+    check('a plan problem reworded by the tutor is still known for its part', goalForProblem(sp, 'For each pair, say which variable is explanatory and which is response: hours of sleep and reaction time.') === 'try-explan-response'
+      && goalForProblem(sp, 'A scatterplot of hours studied (x) against exam score (y) for 30 students. The points form a fairly tight upward band, with one student at 8 hours who scored only 50. What is the direction of the relationship, in context?') === 'worked-describe'
+      && goalForProblem(sp, 'A scatterplot of arm span (x, in cm) against height (y, in cm) for 50 people. The points cluster tightly around a straight upward line, with no clear outliers. Describe the scatterplot with all four DUFS parts, in context.') === 'try-describe'
+      && goalForProblem(sp, 'A scatterplot of car age (x, in years) against resale value (y, in thousands of dollars) for 40 cars. The points fall steeply at first, then level off, with no clear outliers. Describe the scatterplot with all four DUFS parts, in context.') === null
+      && goalForTitle(sp, 'Explanatory and response variables') === 'concept-scatter');
+    {
+      // Each field the turn keeps in the state must be let through by the endpoint, or it is gone by the next turn.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const fs = require('fs') as typeof import('fs'); const path = require('path') as typeof import('path');
+      const route = fs.readFileSync(path.join(__dirname, '../src/app/api/tutor/brain-v2/turn/route.ts'), 'utf8');
+      check('the endpoint keeps what the board has shown of the plan between turns', /partsSeen \? \{ partsSeen \}/.test(route) && /problemCards \? \{ problemCards \}/.test(route));
+    }
+    check('a thought about the student is not said to them', stripToolTalk("Take your time. The student is still thinking, so I'll stay quiet.") === 'Take your time.' && stripToolTalk('One student at 8 hours scored only 50. I will mark the student on the plot.') !== '' && !mentionsTool('The student who studied 8 hours scored 50.'));
   }
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);
