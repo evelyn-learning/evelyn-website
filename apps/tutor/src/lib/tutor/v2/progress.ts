@@ -50,7 +50,20 @@ export function goalForProblem(plan: LessonPlan, statement: string): string | nu
     const theirs = carry(typeof s.problem === 'string' ? s.problem : typeof s.question === 'string' ? s.question : '');
     return { id: seg.id, share: theirs.size < 6 ? 0 : [...words].filter((x) => theirs.has(x)).length / Math.min(words.size, theirs.size) };
   }).sort((a, b) => b.share - a.share);
-  return scored[0] && scored[0].share >= 0.65 && scored[0].share - (scored[1]?.share ?? 0) >= 0.15 ? scored[0].id : null;
+  if (scored[0] && scored[0].share >= 0.65 && scored[0].share - (scored[1]?.share ?? 0) >= 0.15) return scored[0].id;
+  // A problem about one formula is that formula, whatever words ask for it: "For f(x) = x³ − 12x: (a) intervals of
+  // increase/decrease; (b) local extrema" was put up as "…find the intervals where f is increasing and where it is
+  // decreasing…", and its part of the plan was never shown as begun (AP Calculus BC, portal-8e2d86f3). The card's
+  // formula must be the formula of exactly one plan problem.
+  const formulas = (text: string) => new Set((text.replace(/[⁰¹²³⁴-⁹]/g, (c) => `^${'⁰¹²³⁴⁵⁶⁷⁸⁹'.indexOf(c)}`).replace(/[−–]/g, '-').replace(/\*/g, '').toLowerCase().match(/(?:[a-z]\([a-z]\)\s*=\s*)?[\d.]*[a-z)](?:\^\d+)?(?:\s*[+\-/]\s*[\d.]*(?:[a-z(][a-z)]?(?:\^\d+)?)?)+/g) ?? []).map((x) => x.replace(/\s+/g, '').replace(/^[a-z]\([a-z]\)=/, '')).filter((x) => x.length >= 5 && /\d/.test(x) && /[a-z]/.test(x)));
+  const have = formulas(statement);
+  if (!have.size) return null;
+  const owners = plan.segments.filter((seg) => {
+    const s = seg as unknown as { problem?: unknown; question?: unknown };
+    const theirs = formulas(typeof s.problem === 'string' ? s.problem : typeof s.question === 'string' ? s.question : '');
+    return [...have].some((x) => theirs.has(x));
+  });
+  return owners.length === 1 ? owners[0].id : null;
 }
 
 /** A plan problem in parts, "(a) … (b) … (c) …", is one problem: the student works down it with every part in
