@@ -150,15 +150,18 @@ export const v2PracticeMoreLine = (history: V2State['history']) => V2_PRACTICE_M
 // let's, I'd like, I want, give me, please, or a question) with practice words; never a statement of the learner's own practice
 // ("I will practise more at home", "I'll keep practising", 「もっと練習します」), never a negated sentence. A "No," that answers
 // "any questions?" is set aside first: "No, I'd like another exercise." is a request; "No, thanks." is nothing.
-const PRACTICE_WORDS = /\b(?:more|another|extra|one more)\b[^.?!]{0,25}?\b(?:practi[cs]e|practi[cs]ing|exercises?|drills?|sentences?|tries|try|go|rounds?)\b|\b(?:practi[cs]e|try) (?:some |a (?:bit|little) )?more\b|\b(?:keep|continue) practi[cs]ing\b|\b(?:do|try|make|say) (?:another|one more) (?:sentence|one|exercise)\b/i;
+const PRACTICE_WORDS = /\b(?:more|another|extra|one more)\b[^.?!]{0,25}?\b(?:practi[cs]e|practi[cs]ing|exercises?|drills?|sentences?|tries|try|go|rounds?)\b|\b(?:practi[cs]e|try) (?:some |a (?:bit|little) )?more\b|\b(?:keep|continue) practi[cs]ing\b|\b(?:do|try|make|say) (?:another|one more) (?:sentence|one|exercise)\b|\b(?:do|try|have) one more\b|\bone more (?:time|try|go|round)\b|\b(?:do|try) (?:it|that|this) again\b/i;
+/** Fix round 3: the bare ask, "Uh, one more." / "One more, please." (fillers aside; never "one more question"). */
+const BARE_ONE_MORE = /^(?:(?:uh|um|er|ok(?:ay)?|yes|yeah|so|well)[,.]?\s+)*(?:just\s+)?one more(?:\s+(?:time|try|go|round|one))?(?:,?\s+please)?\s*[.!?]?$/i;
 const REQUEST_FRAME = /\b(?:can|could|may|shall)\s+(?:we|i|you)\b|\blet(?:'s| me| us)\b|\bi(?:'d| would) (?:like|love)\b|\bi want\b|\b(?:give|show) me\b|\bplease\b|\?\s*$/i;
 /** The learner's own practice, not something asked of the tutor now. */
-const OWN_INTENT = /\b(?:i'?ll|i will|i'm going to|i am going to|i'm gonna|i plan to|i'?m planning to)\b|\b(?:at home|later|tomorrow|next time|tonight|by myself|on my own|with my (?:team|colleagues|friends|family|teacher))\b/i;
+const OWN_INTENT = /\b(?:i'?ll|i will|i'm going to|i am going to|i'm gonna|i plan to|i'?m planning to)\b|\b(?:at home|later|tomorrow|next time|next week|next lesson|next session|(?:in|at|for) (?:the|our) next (?:lesson|session|class)|another (?:day|time)|tonight|by myself|on my own|with my (?:team|colleagues|friends|family|teacher))\b/i;
 /** A negated or declining sentence (after any leading "No," that answers the invitation). */
 const NEGATED = /\b(?:no|not|never|without|enough|nothing)\b|n't\b/i;
 const DECLINE_LEAD = /^\s*(?:(?:no|nope|nah|not yet|no problem|i don'?t know|no,? thanks?|no,? thank you)\s*[,.!]\s*)+/i;
-const ASK_JA = /(?:もっと|もう少し|もう一回|もう一度|もう一問|もう一つ)[^。！？]{0,10}?(?:したい|やりたい|お願い|ください|できますか|しませんか|しましょう)|練習(?:を)?(?:もっと|もう少し)[^。！？]{0,6}?(?:したい|お願い)/;
-const OWN_INTENT_JA = /練習します|頑張ります|家で|自分で|あとで|後で/;
+const ASK_JA = /(?:もっと|もう少し|もう(?:一|1|１)回|もう一度|もう(?:一|1|１)問|もう(?:一|1|１)つ)[^。！？]{0,10}?(?:したい|やりたい|お願い|ください|できますか|しませんか|しましょう)|練習(?:を)?(?:もっと|もう少し)[^。！？]{0,6}?(?:したい|お願い)/;
+// Fix round 3: a wish about a later session (次回 / 今度 / 次は / 来週 / 次のレッスン) is no request for practice now.
+const OWN_INTENT_JA = /練習します|頑張ります|家で|自分で|あとで|後で|次回|今度|次は|来週|次のレッスン|次の授業|また次/;
 const DECLINES_JA = /(?:練習|もう)(?:は)?(?:もう)?(?:いい|大丈夫|結構)|いりません|要りません|ありません/;
 export const v2AsksMorePractice = (said: string | null | undefined): boolean => {
   if (!said) return false;
@@ -166,6 +169,7 @@ export const v2AsksMorePractice = (said: string | null | undefined): boolean => 
     const s = raw.replace(DECLINE_LEAD, '').trim();
     if (!s) return false;
     if (/[぀-ヿ一-鿿]/.test(s)) return ASK_JA.test(s) && !OWN_INTENT_JA.test(s) && !DECLINES_JA.test(s);
+    if (BARE_ONE_MORE.test(s)) return true;
     return PRACTICE_WORDS.test(s) && REQUEST_FRAME.test(s) && !OWN_INTENT.test(s) && !NEGATED.test(s);
   });
 };
