@@ -16,10 +16,20 @@
  * last fifth (D).
  */
 import type { LessonPlan } from '../lesson-plan/types';
-import { TUTOR_V2_CLOSE_BY_CONTENT, TUTOR_V2_MORE_PRACTICE, TUTOR_V2_OVERRUN_MIN, TUTOR_V2_PART_MIN_PRACTICE, TUTOR_V2_TIME_BOX, TUTOR_V2_TIME_NO_SQUEEZE, TUTOR_V2_TIME_OVERRUN } from '../orchestrator/flags';
+import { TUTOR_V2_CLOCK_FROM_START, TUTOR_V2_CLOSE_BY_CONTENT, TUTOR_V2_MORE_PRACTICE, TUTOR_V2_OVERRUN_MIN, TUTOR_V2_PART_MIN_PRACTICE, TUTOR_V2_TIME_BOX, TUTOR_V2_TIME_NO_SQUEEZE, TUTOR_V2_TIME_OVERRUN } from '../orchestrator/flags';
 import { discussionOf } from './discussion';
 import { v2IsPageOfPart, v2OfferedOut, v2PartIsOptional, v2PartOf } from './plan-map';
 import type { V2Session, V2State } from './types';
+
+/** Task 7g (CLOCK_FROM_START): the engine's clock starts with the session (the tap that opens it, or the first typed message:
+ *  where the visible timer starts), not when the page mounted (useV2Turns' newV2State): mic test 2 (embed-1794941004529) ran
+ *  about a minute ahead of the learner's timer. Only a session nothing has been said in: a resumed one keeps its start (and its
+ *  true elapsed time). The same object when nothing changes. Every reader of `startedAtMs` (facts, time-box, turn, memory's
+ *  duration, the hard stop's resume offset) then reads the session's start. */
+export function v2StartClock(state: V2State, nowMs: number, enabled: boolean = TUTOR_V2_CLOCK_FROM_START): V2State {
+  if (!enabled || state.history.length || state.closed || state.startedAtMs === nowMs) return state;
+  return { ...state, startedAtMs: nowMs };
+}
 
 /** Task 7f's switches, B to F, as one value: each its own flag (default on); tests pass some off for one turn. */
 export interface V2TimeFlags { noSqueeze: boolean; minPractice: boolean; closeByContent: boolean; morePractice: boolean; overrun: boolean }

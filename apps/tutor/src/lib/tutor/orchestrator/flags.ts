@@ -1935,3 +1935,31 @@ export const TUTOR_V2_OVERRUN_MIN = (() => {
   const n = Number(process.env.NEXT_PUBLIC_TUTOR_V2_OVERRUN_MIN);
   return process.env.NEXT_PUBLIC_TUTOR_V2_OVERRUN_MIN !== undefined && process.env.NEXT_PUBLIC_TUTOR_V2_OVERRUN_MIN !== '' && Number.isFinite(n) && n >= 0 && n <= 30 ? n : 5;
 })();
+
+/** Tutor brain v2 (v2/part-flow.ts, v2/progress.ts): the level check's chip lights while it runs (Task 7g, mic test 2,
+ *  embed-1794941004529 flags 1–2: "Overview" stayed lit through the whole check, then "Level check" went green and "Your job"
+ *  lit at once). A plan part with no page of its own (the level check: never a page, final-7 M5) is the part in hand from the
+ *  reply that begins it (a level question asked after the overview's exchange, or a goal mark) until the next part's page
+ *  opens; an unnamed opening page ("Page 1") is the first part's page. Default ON; NEXT_PUBLIC_TUTOR_V2_LEVEL_CHECK_CHIP=off
+ *  ⇒ as before (lit only once its goal is marked, and never after an unnamed opening page). */
+export const TUTOR_V2_LEVEL_CHECK_CHIP = process.env.NEXT_PUBLIC_TUTOR_V2_LEVEL_CHECK_CHIP !== 'off';
+
+/** Tutor brain v2 (v2/learner-card.ts, v2/turn.ts, v2/facts.ts): every sentence of a practice answer goes on the board,
+ *  corrected, one card each (Task 7g, mic test 2 flag 3: of several sentences about his job one was carded, a second only
+ *  after he asked). The facts list the answer's sentences and ask for a card for each; the sentences the reply left uncarded
+ *  are owed in the next reply's facts. Same sessions as BOARD_LEARNER_SENTENCE (spoken two-language lessons, not during the
+ *  overview or the level check). Default ON; NEXT_PUBLIC_TUTOR_V2_CARD_EVERY_SENTENCE=off ⇒ the Task 7b line (one card at
+ *  most), nothing owed. */
+export const TUTOR_V2_CARD_EVERY_SENTENCE = process.env.NEXT_PUBLIC_TUTOR_V2_CARD_EVERY_SENTENCE !== 'off';
+
+/** Tutor brain v2 (v2/turn.ts): in a spoken lesson that teaches a language, a practice question written as a problem card
+ *  is a plain question card: no difficulty label, headed "Question" (Task 7g, mic test 2 flag 5: "Did you attend any business
+ *  events…?" went up under "EASY / Problem"). Maths and science problem cards are unchanged. Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_QUESTION_CARD=off ⇒ as before. */
+export const TUTOR_V2_QUESTION_CARD = process.env.NEXT_PUBLIC_TUTOR_V2_QUESTION_CARD !== 'off';
+
+/** Tutor brain v2 (useV2Turns, v2/time-box.ts): the engine's clock starts when the session starts (the tap that opens it,
+ *  or the first typed message: where the visible timer starts), not when the page mounted the hook (Task 7g, mic test 2:
+ *  the engine ran about a minute ahead, "we're nearly out of time" with 5 minutes on screen). A resumed session keeps its
+ *  start. Default ON; NEXT_PUBLIC_TUTOR_V2_CLOCK_FROM_START=off ⇒ the clock from the hook's mount, as before. */
+export const TUTOR_V2_CLOCK_FROM_START = process.env.NEXT_PUBLIC_TUTOR_V2_CLOCK_FROM_START !== 'off';

@@ -16,7 +16,7 @@ import { discussionOf, effectiveMinutes, lastReplyNotes, renderThinking } from '
 import { v2WorkingLevelFacts } from './working-level';
 import { v2PronunciationFacts, v2TextSoundFacts } from './pronunciation';
 import { v2SentenceCardsFacts } from './sentence-cards';
-import { v2LearnerSentenceFacts } from './learner-card';
+import { v2CardsOwedFacts, v2LearnerSentenceFacts } from './learner-card';
 import { v2PracticeAskFacts, v2RetryFacts } from './languages';
 import { V2_TIME_UP_MIN, v2CloseOpen, v2PlanContentDone, v2LeftToStopMin, v2LessonTimeLine, v2PartDueFact, v2TimeFlags, v2WrapDue, type V2TimeFlags } from './time-box';
 import { v2MorePracticeFacts, v2PracticeFacts, v2TimeFitFacts } from './time-fit';
@@ -214,6 +214,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   lines.push(...v2SentenceCardsFacts(session, state));
   // Task 7b (BOARD_LEARNER_SENTENCE): their words just now were a sentence: it goes on the board as it should be (learner-card.ts).
   if (!summaryBegun) lines.push(...v2LearnerSentenceFacts(session, state, f.heard, f.learnerCards));
+  // Task 7g (CARD_EVERY_SENTENCE): sentences of their last answer the last reply left off the board.
+  if (!summaryBegun && !state.closed) lines.push(...v2CardsOwedFacts(state));
   // How the last reply opened, so the next does not open the same way (D10).
   lines.push(...v2OpenerFact(session, state));
   // The question check at a part change, once in a while (Task 6e); at every part change in a spoken lesson whose plan parts

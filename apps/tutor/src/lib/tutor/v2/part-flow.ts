@@ -18,9 +18,11 @@ import { PART_OFFERS, V2_CLOSING_PAGE, endsAsking } from './part-close';
 import { V2_OFFER_SHAPE, v2IsPageOfPart, v2PartNamedIn, v2PartOf } from './plan-map';
 import { V2_PART_FRAME_JA, isPartFrame } from './reply-gate';
 import type { V2Board, V2State } from './types';
-import { TUTOR_V2_PART_POSITION_KEPT } from '../orchestrator/flags';
+import { TUTOR_V2_LEVEL_CHECK_CHIP, TUTOR_V2_PART_POSITION_KEPT } from '../orchestrator/flags';
+import { v2LevelCheckBegun } from './level-check-count';
 
-type View = Pick<V2State, 'board' | 'goals' | 'workingLevel'> & { closed?: boolean };
+/** `history` (Task 7g, LEVEL_CHECK_CHIP): when present, a level check under way lights its chip before any goal is marked. */
+type View = Pick<V2State, 'board' | 'goals' | 'workingLevel'> & { closed?: boolean; history?: V2State['history'] };
 
 /** A plan whose every part has an authored name (Tasks 6c/6e gate the same way). */
 export function v2PlanLabelled(plan: LessonPlan | null | undefined): plan is LessonPlan {
@@ -35,7 +37,14 @@ export function v2PartOfPage(plan: LessonPlan, title: string): number {
 }
 
 const isLevelPart = (plan: LessonPlan, i: number) => !!plan.segments[i] && v2PartOf(plan.segments[i]!).skipWhenLevelKnown;
-const paged = (plan: LessonPlan, board: V2Board, i: number) => board.pages.some((pg) => v2PartOfPage(plan, pg.title) === i);
+/** The part of the board's page at `at`. Task 7g (LEVEL_CHECK_CHIP, `chip`): an opening page whose heading names no part
+ *  ("Page 1", written with no page block) is the first part's: mic test 2 (embed-1794941004529) opened on "Page 1", the part in
+ *  hand fell back to the overview, and the level check after it was never reached. */
+const partOfPageAt = (plan: LessonPlan, board: V2Board, at: number, chip: boolean = TUTOR_V2_LEVEL_CHECK_CHIP) => {
+  const k = v2PartOfPage(plan, board.pages[at]!.title);
+  return k < 0 && chip && at === 0 ? 0 : k;
+};
+const paged = (plan: LessonPlan, board: V2Board, i: number) => board.pages.some((_, at) => partOfPageAt(plan, board, at) === i);
 
 /** The part of the page in view, or of the nearest page before it that is a part's; -1: none.
  *  Task 7e (PART_POSITION_KEPT, `kept`): the furthest part reached instead: the part of the newest part page, a page of a part
@@ -44,25 +53,30 @@ const paged = (plan: LessonPlan, board: V2Board, i: number) => board.pages.some(
 export function v2OpenPagePart(plan: LessonPlan, board: V2Board, kept: boolean = TUTOR_V2_PART_POSITION_KEPT): number {
   if (kept) {
     const seen = new Set<number>(); let at = -1;
-    for (const pg of board.pages) { const k = v2PartOfPage(plan, pg.title); if (k >= 0 && !seen.has(k)) { seen.add(k); at = k; } }
+    board.pages.forEach((_, i) => { const k = partOfPageAt(plan, board, i); if (k >= 0 && !seen.has(k)) { seen.add(k); at = k; } });
     return at;
   }
   for (let i = Math.min(board.current, board.pages.length - 1); i >= 0; i--) {
-    const k = v2PartOfPage(plan, board.pages[i]!.title);
+    const k = partOfPageAt(plan, board, i);
     if (k >= 0) return k;
   }
   return -1;
 }
 
 /** The part in hand: the part whose page is open; the level check (no page of its own) once its goal is marked after the
- *  page before it, until the next part's page opens. */
-export function v2PartInHand(plan: LessonPlan, state: View, kept: boolean = TUTOR_V2_PART_POSITION_KEPT): number {
+ *  page before it, until the next part's page opens.
+ *  Task 7g (LEVEL_CHECK_CHIP, `chip`): also from the reply that begins it (level-check-count.ts v2LevelCheckBegun: a level
+ *  question asked after the overview's exchange), and once its level is set this lesson: mic test 2 (embed-1794941004529, flags
+ *  1–2) had "Overview" lit through the whole check, as the model marked no goal for it. A level skipped (known from an earlier
+ *  lesson) is never in hand. The level check is the only part a plan leaves without a page of its own (final-7 M5). */
+export function v2PartInHand(plan: LessonPlan, state: View, kept: boolean = TUTOR_V2_PART_POSITION_KEPT, chip: boolean = TUTOR_V2_LEVEL_CHECK_CHIP): number {
   const open = v2OpenPagePart(plan, state.board, kept);
   if (open < 0) return 0;
   const l = open + 1;
   if (l < plan.segments.length && isLevelPart(plan, l) && !paged(plan, state.board, l)) {
     const g = state.goals[plan.segments[l]!.id]?.status;
     if (g && g !== 'skipped') return l;
+    if (chip && g !== 'skipped' && (state.workingLevel?.from === 'this_lesson' || (!state.workingLevel && !!state.history && v2LevelCheckBegun(plan, state.history)))) return l;
   }
   return open;
 }

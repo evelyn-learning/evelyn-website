@@ -1,4 +1,6 @@
 /// <reference types="node" />
+// Task 7g: run with NEXT_PUBLIC_TUTOR_V2_CARD_EVERY_SENTENCE=off (package.json): it pins the Task 7b facts line (one card at
+// most); scripts/test-brain-v2-mic2-7g.ts covers the switch on (every sentence listed, the rest owed) and off.
 /**
  * Tutor brain v2 — the learner's sentence on the board as it should be (Task 7b, v2/learner-card.ts, BOARD_LEARNER_SENTENCE).
  *   npm run test:brain-v2-learner-card

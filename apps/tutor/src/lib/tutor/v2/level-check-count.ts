@@ -126,6 +126,25 @@ export function v2CountLevelCheck(plan: LessonPlan | null | undefined, history: 
   return { answered: n, followUp, done: n >= V2_LEVEL_CHECK_QUESTIONS, classified: true };
 }
 
+/** Task 7g (LEVEL_CHECK_CHIP): the level check has begun: a tutor reply has asked a plan level question in its words (in its
+ *  last two sentences), or, after the learner's first reply, ends on a question about them (the count's `begun`, above). The
+ *  overview's "Does that sound good?" is not one. Pure. */
+export function v2LevelCheckBegun(plan: LessonPlan | null | undefined, history: Anthropic.MessageParam[]): boolean {
+  if (!v2LevelCheckPart(plan)) return false;
+  const questions = v2LevelCheckQuestions(plan); const all = questions.map((_, i) => i);
+  let replied = false;
+  for (const m of history) {
+    if (m.role !== 'assistant') { if (isOwnWords(m)) replied = true; continue; }
+    const t = stripBoardBlocks(textOf(m));
+    if (!t.trim()) continue;
+    const tail = t.split(/(?<=[.!?。！？]["'”’」)]*)\s+/).map((x) => x.trim()).filter(Boolean).slice(-2).join(' ');
+    if (questions.length && v2MatchLevelQuestion(tail, questions, all) >= 0) return true;
+    const last = lastOf(t);
+    if (replied && ABOUT_THEM.test(last) && !NOT_LEVEL.test(last)) return true;
+  }
+  return false;
+}
+
 /** The facts line for the count (in place of "find it with three questions"). */
 export function v2LevelCheckCountLine(c: V2LevelCheckCount): string {
   const of = V2_LEVEL_CHECK_QUESTIONS;

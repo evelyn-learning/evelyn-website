@@ -42,10 +42,10 @@ import { v2HandsOver, v2ReplyAsks, v2ReplyHandsOver, v2ReplySentences } from './
 import { V2_LEVEL_WAIT, V2_LEVEL_WAIT_OVER, V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2MarkLevelKnownParts, v2ReopenLevelCheck, v2WorkingLevelSection } from './working-level';
 import { V2_PRACTISE_PRONUNCIATION_TOOL, v2ApplyPractisePronunciation, v2ConsumePronunciation, v2PronunciationOn, v2PronunciationSection } from './pronunciation';
 import { v2NoteCorrectedSentence, v2SentenceCardsOn, v2SentenceCardsSection } from './sentence-cards';
-import { LearnerCardWatch, v2LearnerCardsOn, v2SentenceOnBoard } from './learner-card';
+import { LearnerCardWatch, V2_REPLY_MISHEARD, v2LearnerCardsOn, v2PracticeAnswerSentences, v2SentenceOnBoard, v2SentencesNotCarded } from './learner-card';
 import { v2StopAsked } from './stop-signal';
 import { V2_CLOSE_INVITE_LINE, V2_CLOSE_INVITE_REFUSAL, V2_CLOSE_INVITE_WAIT, v2CloseInviteOn, v2CloseInviteOwed, v2ReplyInvites } from './close-invite';
-import { TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME } from '../orchestrator/flags';
+import { TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME } from '../orchestrator/flags';
 import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, V2_DISCUSSION_CONSTITUTION, directionAsked, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap } from './discussion';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, V2_NOTE_OWN_ANSWER_TOOL, V2_SET_CURRENT_PROBLEM_TOOL, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
@@ -387,6 +387,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // move together (part-flow.ts), and every part change after the level check is asked first.
   const partFlow = (input.partFlags?.pageChip ?? TUTOR_V2_PART_PAGE_CHIP) && session.mode === 'voice' && !discussion && !session.homework && !session.homeworkSheet && v2PlanLabelled(session.plan);
   const askEvery = v2AskEveryOn(session, input.partFlags?.askEvery);
+  // Task 7g (QUESTION_CARD): spoken lessons that teach a language (two teaching languages, or pronunciation measured).
+  const questionCards = TUTOR_V2_QUESTION_CARD && session.mode === 'voice' && !discussion && !session.homework && !session.homeworkSheet && ((session.languages?.length ?? 0) >= 2 || !!session.pronunciation);
   // Task 7f C (PART_MIN_PRACTICE): the learner's words count for the part in hand, before any page opens on their yes.
   if (tf.minPractice && partFlow && session.plan) v2CountPractice(session.plan, state, input.studentSaid, lastTutorText);
   // A part change the student has said yes to opens its page as the reply begins, whether or not the reply writes it again:
@@ -414,6 +416,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const atClose = summaryEarlier || typeof state.closeInvitedAt === 'number' || closingTurn || (!!session.timeBoxMinutes && v2CloseOpen(session, state, nowMs, tf.closeByContent));
   const morePractice = tf.morePractice && !discussion && !session.homework && !session.homeworkSheet && !!session.plan && !state.closed && !(TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid)) && v2AsksMorePractice(input.studentSaid) && atClose
     ? leftMin > V2_MORE_PRACTICE_MIN_LEFT : undefined;
+  // Task 7g (CARD_EVERY_SENTENCE): the sentences of their practice answer owed a card in this reply (learner-card.ts), read on
+  // the state the facts read.
+  const answerSentences = session.mode === 'voice' && !discussion && !session.homework && !session.homeworkSheet && !v2SummaryBegun(state) ? v2PracticeAnswerSentences(session, state, input.studentSaid) : [];
   const facts = renderFacts(session, state, { ...input.facts, nowMs, heard: input.studentSaid, time: tf, ...(practiceShort ? { practiceShort } : {}), ...(morePractice !== undefined ? { morePractice } : {}), ...(TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid) ? { stopAsked: true } : {}), ...(levelReopened ? { levelReopened: true } : {}), ...(released ? { partOpened: String(released.args.title) } : {}), ...(input.partFlags?.askEvery !== undefined ? { partAskEvery: input.partFlags.askEvery } : {}) });
   // A reply that closes the session: the student's words ask to stop, or the time is up (V2_TIME_UP_MIN, as the facts
   // say it). A page it opens is the summary's, and is never held for "shall we go on?" (part-close.ts): held, "Sorry, I
@@ -461,6 +466,12 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const { [SAY_WITH]: sayWithRaw, ...args } = (block.input ?? {}) as Record<string, unknown>;
     // A problem card states the task; how-to-begin sentences are cut from it (board.ts taskOnly).
     if (block.name === 'show_problem' && typeof args.statement === 'string') args.statement = taskOnly(args.statement).statement;
+    // Task 7g (QUESTION_CARD, mic test 2 flag 5): in a spoken lesson that teaches a language, a practice question is no graded
+    // problem: no difficulty label, headed "Question" ("EASY / Problem" stood over "Did you attend any business events…?").
+    if (block.name === 'show_problem' && questionCards) {
+      delete args.difficulty; delete args.source;
+      if (typeof args.title !== 'string' || !args.title.trim() || /\bproblem\b/i.test(args.title)) args.title = 'Question';
+    }
     // Dollar signs inside an equation block are a sentence with maths in it, and render as raw red source
     // ("$r^2 = 25$, \\text{ so } $r = 5$", conic sections, 2026-11-11): it goes up as a note, which reads them.
     if (block.name === 'show_equation' && typeof args.latex === 'string' && /\$[^$]+\$/.test(args.latex)) {
@@ -1450,6 +1461,14 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const painted = toolCalls.some((c) => !V2_CONTROL_TOOL_NAMES.has(c.name) && !/^not /.test(c.outcome));
   state.repliesSinceBoard = painted ? 0 : (state.repliesSinceBoard ?? 0) + 1;
   if (boardProblems.length) state.boardProblems = boardProblems; else delete state.boardProblems;
+  // Task 7g (CARD_EVERY_SENTENCE): the sentences of their answer this reply put on no card are owed in the next facts, once. Not
+  // when the reply says it did not catch them (replay v2audio-7: a card after "I didn't catch that"), was cut, or closed.
+  delete state.cardsOwed;
+  if (answerSentences.length && !state.closed && !input.signal?.aborted && !V2_REPLY_MISHEARD.test(stripBoardBlocks(spoken.join(' ')))) {
+    const cards = toolCalls.filter((c) => c.name === 'show_sentence' && (!/^not /.test(c.outcome) || !!c.pointsAt) && typeof c.args.sentence === 'string').map((c) => String(c.args.sentence));
+    const owed = v2SentencesNotCarded(answerSentences, cards, state.board, state.correctedSentences ?? []);
+    if (owed.length) state.cardsOwed = owed;
+  }
   let finalWords = stripToolTalk(spoken.join('\n\n'));
   // A discussion that closes with nothing left to say would end in silence: its closing words were an order to
   // itself, which the net above removed (replay round 8). It closes on the direction they chose instead.

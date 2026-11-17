@@ -36,11 +36,12 @@
  * session): maths and science, one-language lessons, typed lessons, homework and a discussion are unchanged.
  */
 import type Anthropic from '@anthropic-ai/sdk';
-import { TUTOR_V2_BOARD_LEARNER_SENTENCE } from '../orchestrator/flags';
+import { TUTOR_V2_BOARD_LEARNER_SENTENCE, TUTOR_V2_CARD_EVERY_SENTENCE } from '../orchestrator/flags';
 import { languageNameOf } from '../voice/language-request';
 import { stripBoardBlocks, type InlineBlock, type InlinePart } from './board-inline';
 import { v2IsPracticeAsk } from './languages';
-import { v2IsPartAsk } from './part-flow';
+import { v2IsPartAsk, v2PartInHand, v2PlanLabelled } from './part-flow';
+import { v2PartOf } from './plan-map';
 import { v2ReplyInvites } from './close-invite';
 import { v2IsCorrectionOf, v2SentenceCardsOn, v2SentenceTokens as tokens } from './sentence-cards';
 import type { V2Board, V2Session, V2State } from './types';
@@ -329,12 +330,83 @@ function askedForSentence(history: Anthropic.MessageParam[]): boolean {
   return sentences.some((x) => v2IsPracticeAsk(x) || SENTENCE_REQUEST.test(x)) || QUESTION_ABOUT_THEM.test(sentences[sentences.length - 1] ?? '');
 }
 
+/** Task 7g (CARD_EVERY_SENTENCE): words of an answer that are no practice sentence of theirs: a request ("one more", "let's
+ *  move on", "can we…", "please…"), a question to the tutor, or saying they did not catch or understand. */
+const NOT_PRACTICE = /^(?:(?:uh|um|er|ok(?:ay)?|so|well|and|yes|yeah|no)[,.]?\s+)*(?:let'?s|let us|can (?:we|you|i)|could (?:we|you|i)|shall we|may i|please|i(?:'d| would) like (?:to (?:move|go|stop|skip|try|do|practi[cs]e|ask)|another|one more|more)|i want to (?:move|go|stop|skip|try|ask)|one more|move on|next (?:part|one|question)|go on|i have (?:a|one) question|sorry)\b|\b(?:(?:don'?t|didn'?t|do not|did not) (?:understand|get it|catch)|say (?:that|it) again|repeat (?:that|it|the question)|more slowly)\b/i;
+const SPLIT = /(?<=[.!?。！？]["'”’」)]*)\s+/;
+
+/** Task 7g: each sentence of the learner's answer as a sentence of theirs (v2LearnerSentence: fillers out, four words or more,
+ *  not a question), in order, once each; requests, questions to the tutor and "I didn't catch that" left out. */
+export function v2LearnerSentences(said: string | null | undefined): string[] {
+  const out: string[] = []; const seen = new Set<string>();
+  for (const raw of (said ?? '').replace(/\s+/g, ' ').trim().split(SPLIT)) {
+    const piece = raw.trim();
+    if (!piece || piece.startsWith('[') || NOT_PRACTICE.test(piece)) continue;
+    const s = v2LearnerSentence(piece);
+    if (!s || seen.has(key(s))) continue;
+    seen.add(key(s)); out.push(s);
+  }
+  return out;
+}
+
+/** Task 7g (CARD_EVERY_SENTENCE): the sentences of their answer just now that are owed a card: the 7b rule's sessions (spoken,
+ *  two languages, not closed, not during the level check), an answer to an ask for a sentence, not during the overview (the
+ *  plan's first part, an opening hook) or the level check, not once their questions before the close were invited, and not a
+ *  sentence already up. Empty when the switch is off. */
+export function v2PracticeAnswerSentences(session: V2Session, state: V2State, heard: string | null | undefined, enabled: boolean = TUTOR_V2_CARD_EVERY_SENTENCE): string[] {
+  if (!enabled || !v2LearnerCardsOn(session, state, heard) || typeof state.closeInvitedAt === 'number' || !askedForSentence(state.history)) return [];
+  const plan = session.plan;
+  if (v2PlanLabelled(plan)) {
+    const seg = plan.segments[v2PartInHand(plan, state)];
+    if (!seg || seg.kind === 'hook' || v2PartOf(seg).skipWhenLevelKnown) return [];
+  }
+  return v2LearnerSentences(heard).filter((x) => !v2SentenceOnBoard(state.board, x, state.correctedSentences ?? []));
+}
+
+/** Whether a card's sentence is this sentence of theirs, as said or corrected: most of the card's words are in it and most of
+ *  its words are on the card (numbers in words and digits alike). */
+function cardIsOf(card: string, sentence: string): boolean {
+  const c = v2SentenceWords(card); const t = v2SentenceWords(sentence);
+  if (!c.length || !t.length) return false;
+  const inT = new Set(t); const inC = new Set(c);
+  return c.filter((w) => inT.has(w)).length / c.length >= 0.5 && t.filter((w) => inC.has(w)).length / t.length >= 0.5;
+}
+
+/** Task 7g: the sentences of theirs that no card of the reply is of (each card counts for one sentence, the closest first), and
+ *  that are not up already. */
+export function v2SentencesNotCarded(sentences: readonly string[], cards: readonly string[], board: V2Board, corrected: readonly string[] = []): string[] {
+  const left = [...cards];
+  return sentences.filter((s) => {
+    const at = left.findIndex((c) => cardIsOf(c, s));
+    if (at >= 0) { left.splice(at, 1); return false; }
+    return !v2SentenceOnBoard(board, s, corrected);
+  });
+}
+
+/** A reply that says it did not catch their words, or asks them to say it again: what it heard is not theirs to card. */
+export const V2_REPLY_MISHEARD = /\b(?:didn'?t (?:quite )?(?:catch|hear|get)|did not (?:quite )?(?:catch|hear)|couldn'?t (?:hear|catch)|could you (?:say|repeat) (?:that|it)|say (?:that|it) again|repeat (?:that|it))\b|聞き取れ|もう一度言って/i;
+
+/** Task 7g: the facts line for the sentences of their last answer the last reply left off the board (once; those up since
+ *  are dropped). */
+export function v2CardsOwedFacts(state: V2State, enabled: boolean = TUTOR_V2_CARD_EVERY_SENTENCE): string[] {
+  const owed = enabled ? (state.cardsOwed ?? []).filter((x) => !v2SentenceOnBoard(state.board, x, state.correctedSentences ?? [])) : [];
+  if (!owed.length) return [];
+  return [`not carded in your last reply: ${owed.length === 1 ? 'this sentence' : 'these sentences'} of their last answer (as heard): ${owed.map((x) => JSON.stringify(x)).join('; ')}. Put ${owed.length === 1 ? 'it' : 'each'} on the board in this reply, as it should be said, one sentence card each (the changed words stressed, a short gloss), where you mention it`];
+}
+
 /** The facts line: their words just now answered an ask for a sentence (the rule's sessions only, not after the summary began). */
 export function v2LearnerSentenceFacts(session: V2Session, state: V2State, heard: string | null | undefined, enabled: boolean = TUTOR_V2_BOARD_LEARNER_SENTENCE): string[] {
   // Final review M1: not once their questions before the close were invited: the next reply answers and closes.
   if (!v2LearnerCardsOn(session, state, heard, enabled) || typeof state.closeInvitedAt === 'number') return [];
+  const support = languageNameOf(session.languages![1]!.toLowerCase().split(/[-_]/)[0]!);
+  // Task 7g (CARD_EVERY_SENTENCE, mic test 2 flag 3): every sentence of the answer, one card each, none left off.
+  if (TUTOR_V2_CARD_EVERY_SENTENCE && enabled) {
+    const all = v2PracticeAnswerSentences(session, state, heard);
+    if (!all.length) return [];
+    const n = all.length;
+    return [`their answer just now had ${n === 1 ? '1 sentence' : `${n} sentences`} of their own: ${all.map((x, k) => `${k + 1}. ${JSON.stringify(x)}`).join(' ')}. Put ${n === 1 ? 'it' : 'every one of them'} on the board, one sentence card per sentence, as it should be said: as they said it (without fillers) when it is right; your corrected sentence, the changed words stressed, with a short ${support} gloss of the point, when you correct it. None left off, and no card for anything not in this list (none of their mistake, none for small talk)`];
+  }
   const s = v2LearnerSentence(heard);
   if (!s || !askedForSentence(state.history) || v2SentenceOnBoard(state.board, s, state.correctedSentences ?? [])) return [];
-  const support = languageNameOf(session.languages![1]!.toLowerCase().split(/[-_]/)[0]!);
   return [`their words just now answered your ask with a sentence of theirs: put it on the board as one sentence card as it should be, where you answer it: as they said it (without fillers) when it is right; your corrected sentence, the changed words stressed, with a short ${support} gloss, when you correct it. One card in this reply at most; none of their mistake, none for small talk, none when the sentence is up already`];
 }

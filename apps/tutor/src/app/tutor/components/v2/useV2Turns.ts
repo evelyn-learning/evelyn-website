@@ -28,7 +28,7 @@ import { V2_CONTROL_TOOL_NAMES } from '@/lib/tutor/v2/tool-names';
 import { mentionsTool } from '@/lib/tutor/v2/tool-talk';
 import { newV2State, type V2State, type V2ToolCall } from '@/lib/tutor/v2/types';
 import { TUTOR_LESSON_CLOSE_AUTO_END, TUTOR_V2_TIME_BOX, TUTOR_WORKING_LEVEL, TUTOR_WORKING_LEVEL_ESTIMATE } from '@/lib/tutor/orchestrator/flags';
-import { v2HardStop, v2HardStopMinutes } from '@/lib/tutor/v2/time-box';
+import { v2HardStop, v2HardStopMinutes, v2StartClock } from '@/lib/tutor/v2/time-box';
 import { v2HardStopNextTime } from '@/lib/tutor/v2/close-invite';
 import { goodbyeLine } from '@/lib/tutor/voice/timebox-lines';
 import { parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
@@ -550,6 +550,8 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   const open = useCallback(() => {
     if (openedRef.current) return;
     openedRef.current = true;
+    // Task 7g (CLOCK_FROM_START): the engine's clock starts here, with the visible timer (onSessionStarted), not at mount.
+    if (!resumedRef.current) stateRef.current = v2StartClock(stateRef.current, Date.now());
     armHardStop();
     p.current.onSessionStarted?.();
     p.current.onDebugEvent?.('start_v2', `tutor ${resumedRef.current ? 'welcomes the student back' : 'opens'} (${p.current.mode})`);
@@ -563,7 +565,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     const text = raw.trim();
     // Bracketed strings are v1 runtime markers ("[start lesson]"); v2 has no use for them.
     if (!text || /^\[/.test(text)) return;
-    if (!openedRef.current) { openedRef.current = true; p.current.onSessionStarted?.(); armHardStop(); }
+    if (!openedRef.current) { openedRef.current = true; if (!resumedRef.current) stateRef.current = v2StartClock(stateRef.current, Date.now()); p.current.onSessionStarted?.(); armHardStop(); }
     void runTurn(text);
   }, [runTurn, armHardStop]);
 

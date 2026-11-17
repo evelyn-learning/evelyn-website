@@ -21,8 +21,9 @@ const TOLD_ONLY = new Set(['hook', 'concept', 'worked_example', 'recap', 'extens
 /** `view` (Task 7a, PART_PAGE_CHIP): the board, the working level and whether the lesson has closed. With it, a plan whose
  *  every part has a name reads the part in hand off the page in view and green off the lesson having moved past a part
  *  (part-flow.ts): "the part after the last goal marked" lit "Present perfect" while the job was still being talked about
- *  (mic test 1, embed-1794882458629). Other plans, and no view, as before. `enabled` is the kill switch. */
-export function v2Progress(plan: LessonPlan, goals: V2State['goals'], view?: Pick<V2State, 'board' | 'workingLevel' | 'closed'>, enabled: boolean = TUTOR_V2_PART_PAGE_CHIP): V2Progress {
+ *  (mic test 1, embed-1794882458629). Other plans, and no view, as before. `enabled` is the kill switch.
+ *  Task 7g (LEVEL_CHECK_CHIP): the view's history lights the level check while it runs (part-flow.ts v2PartInHand). */
+export function v2Progress(plan: LessonPlan, goals: V2State['goals'], view?: Pick<V2State, 'board' | 'workingLevel' | 'closed'> & Partial<Pick<V2State, 'history'>>, enabled: boolean = TUTOR_V2_PART_PAGE_CHIP): V2Progress {
   if (view && enabled && v2PlanLabelled(plan) && view.board?.pages) {
     const state = { ...view, goals };
     const cur = v2PartInHand(plan, state);

@@ -170,6 +170,9 @@ export interface V2State {
   practiceSaid?: Record<string, number>;
   /** Task 7f C: the parts in which the learner asked to move on (their part closes without the practice count). */
   moveOnAsked?: string[];
+  /** Task 7g (CARD_EVERY_SENTENCE), spoken two-language lessons: the sentences of the learner's last practice answer that the
+   *  last reply put on no sentence card. Shown once in the next turn's facts. */
+  cardsOwed?: string[];
 }
 
 /** A working level and where it came from: an earlier lesson (may be revised once, case 11) or this lesson (final). */
