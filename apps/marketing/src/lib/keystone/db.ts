@@ -1,5 +1,5 @@
 import mongoose, { Schema, type Connection, type Model } from "mongoose";
-import { KEYSTONE_DB, type Role, type SectionKind, type Stage } from "./config";
+import { KEYSTONE_DB, type Role, type SectionKind, type Stage, type Verdict } from "./config";
 
 // Keystone keeps its own database on the shared mongod. The connection is
 // separate from the marketing app's default mongoose connection so the two
@@ -68,7 +68,7 @@ export type ActivityDoc = {
   itemId: string;
   version?: number;
   type: "verdict" | "comment" | "revision" | "stage" | "upload";
-  verdict?: "approved" | "changes";
+  verdict?: Verdict;
   body?: string;
   username: string;
   name: string;

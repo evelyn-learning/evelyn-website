@@ -8,6 +8,8 @@ import { parseItemFile } from "./item-file";
 import JSZip from "jszip";
 import { parseQtiItem, passageHtml, readQtiZip } from "./qti";
 import { parseCsv } from "./sheet";
+import { cleanPastedHtml, splitNote } from "./note";
+import { STAGES, STAGE_LABEL, STAGE_HELP, STAGE_OWNER, VERDICTS } from "./config";
 import { renderForSolaro, texToLinear, toXhtml } from "./solaro";
 
 // render: math, figures, table captions, images, sanitising
@@ -122,6 +124,33 @@ async function passageTests() {
   bare.file("item_7_apip.xml", apip);
   const missing = await readQtiZip(await bare.generateAsync({ type: "uint8array" }));
   assert.ok(missing.messages.some((m) => m.includes("passage passage_3.xml is referenced but not in the zip")), "missing passage is reported");
+}
+
+// review notes: pasted markup becomes a clean table, long notes are marked long
+{
+  const plain = splitNote("Please shorten the short answer.");
+  assert.deepEqual(plain, { text: "Please shorten the short answer.", html: null, plain: "Please shorten the short answer.", long: false });
+
+  const list = splitNote("Premises did not export.\nOocyte\n\nSperm\n\nFertilization\n\nBlastocyst");
+  assert.equal(list.text.split("\n").length, 5, "blank lines closed up");
+  assert.equal(list.long, true, "more than four lines is long");
+
+  const pasted = splitNote('The postamble: <table width="250" border="0" id="Item1_x" onclick="x()"><colgroup><col /><col /></colgroup> <tbody> <tr> <th align="center" colspan="2"><p id="Item1_y">Description</p></th> </tr> <tr> <td><p><span class="fill-in-the-blank">&nbsp;</span>A carboxylic acid</p></td> </tr> </tbody> </table><script>bad()</script><img src=x onerror=y>');
+  assert.equal(pasted.text, "The postamble:");
+  assert.ok(pasted.html!.startsWith("<table><colgroup><col /><col /></colgroup>"), "attributes dropped");
+  assert.ok(pasted.html!.includes('<th colspan="2"><p>Description</p></th>'), "colspan kept, ids dropped");
+  assert.ok(!/ id=|onclick|<script|<img|bad\(\)/.test(pasted.html!), "nothing active survives");
+  assert.equal(pasted.plain, "The postamble: Description A carboxylic acid");
+  assert.equal(pasted.long, true);
+  assert.equal(cleanPastedHtml("<a href='javascript:x'>go</a><b>b</b>").replace(/\s+/g, " ").trim(), "go <b>b</b>");
+  assert.equal(splitNote(undefined).plain, "");
+
+  // every stage has a label, a help line and an owner entry; every verdict leads to a stage
+  for (const s of STAGES) assert.ok(STAGE_LABEL[s] && STAGE_HELP[s] && s in STAGE_OWNER, `stage ${s} is described`);
+  assert.deepEqual(Object.values(VERDICTS).map((v) => v.stage), ["approved", "changes_requested", "item_data", "rejected"]);
+  assert.equal(STAGE_OWNER.changes_requested, "evelyn");
+  assert.equal(STAGE_OWNER.item_data, "tech");
+  assert.equal(STAGE_OWNER.rejected, null);
 }
 
 // sheet

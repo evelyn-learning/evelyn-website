@@ -51,7 +51,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
               </Link>
             )}
           </div>
-          <Stats counts={counts} base={base} stages={["in_review", "changes_requested", "approved", "delivered"]} />
+          <Stats counts={counts} base={base} stages={["in_review", "changes_requested", "item_data", "approved", "delivered", "rejected"]} />
           <div className="ks-grid" style={{ gridTemplateColumns: "minmax(0,2fr) minmax(0,1fr)" }}>
             <section className="ks-card">
               <h2>Waiting for review</h2>
@@ -68,7 +68,9 @@ export default async function Overview({ searchParams }: { searchParams: Promise
             </section>
           </div>
           <p className="ks-sub" style={{ marginTop: 14 }}>
-            On an item: <b>A</b> approves, <b>C</b> asks for changes (write the change in the box first), <b>J</b>/<b>K</b> move to the next or previous item.
+            On an item: <b>A</b> approves. To send it back, write the reason in the box first, then <b>C</b> when the solution needs
+            changes (goes to Evelyn), <b>D</b> when the question is incomplete or wrong as exported (goes to Castle Rock technical), or{" "}
+            <b>X</b> to reject the item itself. <b>J</b>/<b>K</b> move to the next or previous item.
           </p>
         </main>
       </>
@@ -77,6 +79,8 @@ export default async function Overview({ searchParams }: { searchParams: Promise
 
   if (user.role === "tech") {
     const approved = await listItems({ stage: "approved" });
+    const needData = await listItems({ stage: "item_data" });
+    const dataAsks = await latestVerdicts(needData.map((r) => r.itemId));
     const uploads = await recentUploads(6);
     const feed = await recentActivity({ limit: 8, types: ["verdict", "stage", "upload"] });
     return (
@@ -105,7 +109,22 @@ export default async function Overview({ searchParams }: { searchParams: Promise
               </Link>
             </div>
           </div>
-          <Stats counts={counts} base={base} stages={["received", "in_review", "approved", "delivered"]} />
+          <Stats counts={counts} base={base} stages={["item_data", "received", "in_review", "approved", "delivered"]} />
+          {needData.length > 0 && (
+            <section className="ks-card ks-waiting" style={{ marginBottom: 16 }}>
+              <h2>Waiting on you: item data needed · {needData.length}</h2>
+              <p className="ks-sub" style={{ marginBottom: 8 }}>
+                The reviewer found these questions incomplete or wrong as exported. Re-send each item on{" "}
+                <Link href={`${base}/upload`}>Upload items</Link>; it then returns to Evelyn by itself.
+              </p>
+              <ItemsTable rows={needData.slice(0, CAP)} base={base} verdicts={dataAsks} showStage={false} linkQuery="?stage=item_data" />
+              {needData.length > CAP && (
+                <Link className="ks-more" href={`${base}/items?stage=item_data`}>
+                  See all {needData.length} →
+                </Link>
+              )}
+            </section>
+          )}
           <section className="ks-card" style={{ marginBottom: 16 }}>
             <div className="ks-hero" style={{ marginBottom: 6 }}>
               <h2 style={{ margin: 0 }}>Ready for SOLARO · {approved.length}</h2>
@@ -199,20 +218,21 @@ export default async function Overview({ searchParams }: { searchParams: Promise
           <div>
             <div className="ks-big">{todo.length}</div>
             <div>
-              {todo.length === 1 ? "item needs" : "items need"} Evelyn · {counts.changes_requested} with change requests, {counts.received} new
+              {todo.length === 1 ? "item needs" : "items need"} Evelyn · {counts.changes_requested} with solution changes, {counts.received} new
               {counts.drafting ? `, ${counts.drafting} drafting` : ""}
+              {counts.item_data ? ` · ${counts.item_data} with Castle Rock technical for item data` : ""}
             </div>
           </div>
           <div style={{ color: "var(--muted)", fontSize: 14 }}>{total} items in all · {counts.approved + counts.delivered} approved</div>
         </div>
-        <Stats counts={counts} base={base} stages={["received", "drafting", "in_review", "changes_requested", "approved", "delivered"]} />
+        <Stats counts={counts} base={base} stages={["received", "drafting", "in_review", "changes_requested", "item_data", "approved", "delivered", "rejected"]} />
         <div className="ks-grid" style={{ gridTemplateColumns: "minmax(0,3fr) minmax(0,2fr)" }}>
           <section className="ks-card">
             <h2>Needs Evelyn</h2>
             <ItemsTable rows={todo.slice(0, CAP)} base={base} verdicts={verdicts} linkQuery="?from=overview" />
             {todo.length > CAP && (
               <p className="ks-more">
-                {counts.changes_requested > 0 && <Link href={`${base}/items?stage=changes_requested`}>All {counts.changes_requested} with change requests →</Link>}{" "}
+                {counts.changes_requested > 0 && <Link href={`${base}/items?stage=changes_requested`}>All {counts.changes_requested} with solution changes →</Link>}{" "}
                 {counts.received > 0 && <Link href={`${base}/items?stage=received`}>All {counts.received} new →</Link>}{" "}
                 {counts.drafting > 0 && <Link href={`${base}/items?stage=drafting`}>All {counts.drafting} drafting →</Link>}
               </p>

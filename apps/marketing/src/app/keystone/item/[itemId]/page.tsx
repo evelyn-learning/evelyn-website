@@ -2,11 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/keystone/auth";
 import { ksBase } from "@/lib/keystone/paths";
-import { ITEM_TYPE_LABEL, SECTION_TITLE, STAGES, STAGE_HELP, STAGE_LABEL, can } from "@/lib/keystone/config";
+import { ITEM_TYPE_LABEL, OWNER_LABEL, SECTION_TITLE, STAGES, STAGE_HELP, STAGE_LABEL, STAGE_OWNER, can } from "@/lib/keystone/config";
 import { getItem, neighbours, reviewQueue } from "@/lib/keystone/queries";
 import { setStageAction } from "../../actions";
 import { TopBar } from "../../_components/TopBar";
-import { Feed, StageChip } from "../../_components/ui";
+import { Feed, Note, StageChip, ago } from "../../_components/ui";
 import { ReviewBar } from "./ReviewBar";
 import { PlayerButton } from "./PlayerButton";
 import { ctxBackHref, ctxLabel, ctxQuery, isFiltered, parseCtx } from "@/lib/keystone/listctx";
@@ -44,6 +44,11 @@ export default async function ItemPage({
   const nextWaiting = queue.length ? queue[(qi + 1) % queue.length] : null;
   const prevWaiting = queue.length ? queue[(qi - 1 + queue.length) % queue.length] : null;
   const inQueue = qi >= 0;
+
+  // Sent back: say at the top what kind, whose move it is and what was asked.
+  const sentBack = item.stage === "changes_requested" || item.stage === "item_data" || item.stage === "rejected";
+  const ask = sentBack ? activity.find((a) => a.type === "verdict") : undefined;
+  const owner = STAGE_OWNER[item.stage];
 
   const keyLetters = (item.key || (item.keySource === "evelyn" ? item.evelynAnswer : "")).split(",").map((s) => s.trim());
   const isChoice = item.options.length > 0;
@@ -107,6 +112,23 @@ export default async function ItemPage({
           </div>
         </div>
 
+        {sentBack && (
+          <div className={`ks-note ks-sentback s-${item.stage}`}>
+            <b>
+              {STAGE_LABEL[item.stage]}
+              {owner ? ` · with ${OWNER_LABEL[owner]}` : ""}.
+            </b>{" "}
+            {STAGE_HELP[item.stage]}
+            {ask?.body && (
+              <div className="ks-ask">
+                <span className="when">
+                  {ask.name} · {ago(ask.createdAt)}
+                </span>
+                <Note body={ask.body} />
+              </div>
+            )}
+          </div>
+        )}
         {item.reviewNote && (
           <div className="ks-note">
             <b>Note from Evelyn:</b> {item.reviewNote}
@@ -217,7 +239,8 @@ export default async function ItemPage({
       <ReviewBar
         itemId={itemId}
         base={base}
-        canReview={can.review(user.role) && !!item.version && !viewingOld}
+        canReview={can.review(user.role) && !viewingOld}
+        hasSolution={!!item.version}
         stage={item.stage}
         ctx={q}
         position={

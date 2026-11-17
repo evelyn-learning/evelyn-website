@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { can, SECTIONS, STAGES, type SectionKind, type Stage } from "@/lib/keystone/config";
+import { can, SECTIONS, STAGES, STAGE_LABEL, VERDICTS, type SectionKind, type Stage, type Verdict } from "@/lib/keystone/config";
 import { changePassword, requireUser, signIn } from "@/lib/keystone/auth";
 import { ksHref } from "@/lib/keystone/paths";
 import { ks } from "@/lib/keystone/db";
@@ -24,7 +24,7 @@ export async function signInAction(_prev: SignInResult, form: FormData): Promise
 
 export type ReviewResult = { error?: string; go?: string; ok?: number };
 
-/** Approve / needs changes / comment from the review bar. On a verdict, moves on to the next item waiting. */
+/** Approve / send back (solution, item data, reject) / comment from the review bar. On a verdict, moves on to the next item waiting. */
 export async function reviewAction(_prev: ReviewResult, form: FormData): Promise<ReviewResult> {
   const user = await requireUser();
   const itemId = String(form.get("itemId"));
@@ -37,8 +37,10 @@ export async function reviewAction(_prev: ReviewResult, form: FormData): Promise
       revalidatePath("/keystone", "layout");
       return { ok: Date.now() };
     }
-    if (!can.review(user.role)) return { error: "Only the reviewer can approve or ask for changes." };
-    await setVerdict(itemId, intent === "approve" ? "approved" : "changes", comment, user);
+    if (!can.review(user.role)) return { error: "Only the reviewer can approve or send an item back." };
+    const verdict = (intent === "approve" ? "approved" : intent) as Verdict;
+    if (!(verdict in VERDICTS)) return { error: "Unknown decision." };
+    await setVerdict(itemId, verdict, comment, user);
   } catch (e) {
     return { error: (e as Error).message };
   }
@@ -81,7 +83,7 @@ export async function setStageAction(form: FormData) {
   const stage = String(form.get("stage")) as Stage;
   if (!STAGES.includes(stage)) return;
   if (stage === "delivered" ? !can.deliver(user.role) : !can.edit(user.role)) return;
-  await setStage(itemId, stage, user, `Stage set to ${stage.replace("_", " ")}.`);
+  await setStage(itemId, stage, user, `Status set to ${STAGE_LABEL[stage]}.`);
   revalidatePath("/keystone", "layout");
 }
 

@@ -47,6 +47,7 @@
 .ks-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff !important; }
 .ks-btn.ok { background: var(--ok); border-color: var(--ok); color: #fff !important; }
 .ks-btn.warn { background: var(--card); border-color: var(--warn); color: var(--warn) !important; }
+.ks-btn.bad { background: var(--card); border-color: var(--bad); color: var(--bad) !important; }
 .ks-btn:disabled { opacity: .5; cursor: default; }
 .ks-btn kbd { font: 11px/1 ui-monospace, monospace; border: 1px solid currentColor; border-radius: 3px; padding: 1px 4px; opacity: .75; }
 .ks-table { overflow-x: auto; }
@@ -57,6 +58,10 @@
 .ks-chip { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 1px 9px; white-space: nowrap; background: var(--soft); color: var(--muted); border: 1px solid var(--line); }
 .ks-chip.s-in_review { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
 .ks-chip.s-changes_requested { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.ks-chip.s-item_data { background: #efe9f9; color: #55309a; border-color: transparent; }
+.ks-chip.s-rejected { background: var(--bad-soft); color: var(--bad); border-color: transparent; }
+.ks-stage { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.ks-with { font-size: 12px; color: var(--muted); white-space: nowrap; }
 .ks-chip.s-approved { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
 .ks-chip.s-delivered { background: #eceff3; color: var(--ink); border-color: transparent; }
 .ks-chip.flag { background: var(--bad-soft); color: var(--bad); border-color: transparent; }
@@ -68,6 +73,19 @@
 .ks-feed li:last-child { border-bottom: 0; }
 .ks-feed .when { color: var(--muted); font-size: 12px; }
 .ks-quote { white-space: pre-wrap; background: var(--soft); border-left: 3px solid var(--line); padding: 6px 10px; margin-top: 4px; border-radius: 0 4px 4px 0; }
+/* Review notes: long ones start closed; pasted markup renders as its table or text. */
+.ks-quote { overflow-wrap: anywhere; }
+.ks-quote.clamp { max-height: 6.4em; overflow: hidden; position: relative; }
+.ks-quote.clamp::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1.6em; background: linear-gradient(to bottom, rgba(246,247,249,0), var(--soft)); }
+.ks-quote .ks-pasted { margin-top: 6px; overflow-x: auto; white-space: normal; font-size: 13px; }
+.ks-quote .ks-pasted table { width: auto; }
+.ks-notebody .ks-linkbtn { margin-top: 2px; }
+.ks-clamp3 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; }
+.ks-sentback.s-item_data { background: #efe9f9; color: #3d2273; }
+.ks-sentback.s-rejected { background: var(--bad-soft); color: #6d1414; }
+.ks-sentback .ks-ask { margin-top: 6px; color: var(--ink); }
+.ks-sentback .when { font-size: 12px; color: var(--muted); }
+.ks-waiting { border-color: #c9b8ea; }
 .ks-note { background: var(--warn-soft); color: #5b3a00; border-radius: 6px; padding: 8px 12px; font-size: 14px; margin-bottom: 12px; }
 .ks-note.info { background: var(--accent-soft); color: #173a5a; }
 .ks-empty { color: var(--muted); padding: 18px 0; text-align: center; }

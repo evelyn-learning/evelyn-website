@@ -1,4 +1,4 @@
-import { SECTIONS, type SectionKind, type Stage } from "./config";
+import { SECTIONS, VERDICTS, type SectionKind, type Stage, type Verdict } from "./config";
 import { ks, type ActivityDoc, type ItemDoc, type SectionDoc } from "./db";
 import { renderInline, renderMarkdown } from "./render";
 import { assetUrl, saveAsset } from "./assets";
@@ -57,13 +57,16 @@ export async function saveSolution(
   return version;
 }
 
-export async function setVerdict(itemId: string, verdict: "approved" | "changes", comment: string, actor: Actor) {
+export async function setVerdict(itemId: string, verdict: Verdict, comment: string, actor: Actor) {
   const { Item } = await ks();
   const item = await Item.findOne({ itemId }).lean();
   if (!item) throw new Error(`item ${itemId} not found`);
-  if (!item.version) throw new Error("There is no solution to review yet.");
-  if (verdict === "changes" && !comment.trim()) throw new Error("Please say what needs to change.");
-  const stage: Stage = verdict === "approved" ? "approved" : "changes_requested";
+  const rule = VERDICTS[verdict];
+  if (!rule) throw new Error("Unknown decision.");
+  // A question can be flagged or rejected before any solution exists; a solution verdict needs one.
+  if (rule.needsSolution && !item.version) throw new Error("There is no solution to review yet.");
+  if (rule.needsNote && !comment.trim()) throw new Error(rule.needsNote);
+  const stage: Stage = rule.stage;
   await Item.updateOne({ itemId }, { $set: { stage, updatedAt: new Date() } });
   await log({
     itemId,
@@ -123,8 +126,11 @@ export async function ingestQtiItems(items: QtiItem[], actor: Actor, uploadId: s
       updatedAt: new Date(),
     };
     const existing = await Item.findOne({ itemId: q.itemId }).lean();
+    // Re-sending an item that was waiting on its data (or was rejected) hands it back to Evelyn.
+    const reopened = !!existing && (existing.stage === "item_data" || existing.stage === "rejected");
     if (existing) {
-      await Item.updateOne({ itemId: q.itemId }, { $set: fields });
+      const stage: Stage = reopened ? (existing.version ? "drafting" : "received") : existing.stage;
+      await Item.updateOne({ itemId: q.itemId }, { $set: { ...fields, stage } });
       updated.push(q.itemId);
     } else {
       await Item.create({
@@ -145,7 +151,7 @@ export async function ingestQtiItems(items: QtiItem[], actor: Actor, uploadId: s
     await log({
       itemId: q.itemId,
       type: "upload",
-      body: existing ? "Question refreshed from an upload." : "Question received.",
+      body: reopened ? "Item re-sent; back with Evelyn." : existing ? "Question refreshed from an upload." : "Question received.",
       ...actor,
     });
   }
