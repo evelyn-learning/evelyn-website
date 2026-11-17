@@ -178,3 +178,13 @@
 .ks-find { display: flex; }
 .ks-find input { width: 110px; border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; font: inherit; font-size: 13px; background: #fff; color: var(--ink); }
 .ks-more { display: block; text-align: right; margin-top: 8px; font-size: 14px; }
+
+/* Read-only views of non-choice interactions in the question panel */
+.ks-ix { margin-top: 12px; }
+.ks-ix-label { display: block; color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+.ks-bank { margin: 0; padding-left: 22px; }
+.ks-bank li { padding: 3px 6px; border-radius: 6px; }
+.ks-bank li.key { background: var(--ok-soft); }
+.ks-match { border-collapse: collapse; width: 100%; font-size: 14px; }
+.ks-match td { border: 1px solid var(--line, #ddd); padding: 6px 8px; width: 50%; vertical-align: top; }
+.ks-match th { text-align: left; font-size: 12px; color: var(--muted); padding: 4px 8px; }

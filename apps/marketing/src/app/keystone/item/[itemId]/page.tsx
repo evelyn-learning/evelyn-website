@@ -11,6 +11,7 @@ import { ReviewBar } from "./ReviewBar";
 import { PlayerButton } from "./PlayerButton";
 import { ctxBackHref, ctxLabel, ctxQuery, isFiltered, parseCtx } from "@/lib/keystone/listctx";
 import { playerUrl } from "@/lib/keystone/assets";
+import { InteractionView } from "./InteractionView";
 
 export const dynamic = "force-dynamic";
 
@@ -162,6 +163,11 @@ export default async function ItemPage({
                 ))}
               </ol>
             )}
+            {(item.interactions ?? [])
+              .filter((i) => i.kind !== "choice")
+              .map((i, n) => (
+                <InteractionView key={n} i={i} keys={item.keys ?? {}} />
+              ))}
             {item.keySource === "castle-rock" ? (
               <div className="ks-answer">
                 <b>Key:</b> {item.key} <span style={{ color: "var(--muted)" }}>(Castle Rock)</span>

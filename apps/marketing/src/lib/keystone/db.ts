@@ -1,4 +1,5 @@
 import mongoose, { Schema, type Connection, type Model } from "mongoose";
+import type { Interaction } from "./qti-interactions";
 import { KEYSTONE_DB, type Role, type SectionKind, type Stage, type Verdict } from "./config";
 
 // Keystone keeps its own database on the shared mongod. The connection is
@@ -34,6 +35,10 @@ export type ItemDoc = {
   questionHtml: string;
   questionMd?: string;
   options: OptionDoc[];
+  /** Read-only view of every interaction in a QTI item (see qti-interactions.ts). Undefined on older rows. */
+  interactions?: Interaction[];
+  /** responseId → correct values from the QTI export. Undefined on older rows. */
+  keys?: Record<string, string[]>;
   /** Castle Rock's own worked solution from the QTI export, for reference. */
   castleRockSolutionHtml?: string;
   /** Original QTI XML (items that arrived as QTI); resource paths as used in the XML. */
@@ -163,6 +168,8 @@ function defineModels(conn: Connection): Models {
     questionHtml: String,
     questionMd: String,
     options: [Option],
+    interactions: { type: Schema.Types.Mixed },
+    keys: { type: Schema.Types.Mixed },
     castleRockSolutionHtml: String,
     qti: {
       type: new Schema(

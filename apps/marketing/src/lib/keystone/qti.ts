@@ -1,5 +1,6 @@
 import JSZip from "jszip";
 import { sanitize } from "./render";
+import { keyFor, parseInteractions, stemWithoutInteractions, type Interaction } from "./qti-interactions";
 
 // Reads SOLARO's QTI 2.1 export (Vance Schamehorn, 2026-10-29 sample): one
 // folder per item holding item_<id>_apip.xml (stem, options, key, their
@@ -20,6 +21,10 @@ export type QtiItem = {
   topic: string;
   questionHtml: string;
   options: { label: string; html: string }[];
+  /** Every interaction in the item (drop-downs, matching, drag and drop, order, written response, numerical), read-only. */
+  interactions: Interaction[];
+  /** responseId → correct values, in document order. */
+  keys: Record<string, string[]>;
   castleRockSolutionHtml: string;
   /** Files referenced by the item, keyed by the path used in the XML (e.g. "resources/Image_1.jpg"). */
   resources: Map<string, Uint8Array>;
@@ -50,7 +55,7 @@ function tag(xml: string, name: string): string {
   return m ? decode(m[1].trim()) : "";
 }
 
-function decode(s: string): string {
+export function decode(s: string): string {
   return s
     .replace(/&#x([0-9a-f]+);/gi, (_m, h: string) => String.fromCodePoint(parseInt(h, 16)))
     .replace(/&#(\d+);/g, (_m, d: string) => String.fromCodePoint(Number(d)))
@@ -70,7 +75,7 @@ function course(code: string, subject: string, grade?: number): string {
 }
 
 /** Turns a QTI fragment into plain HTML: drops ids/namespaces, keeps MathML. */
-function toHtml(xml: string): string {
+export function toHtml(xml: string): string {
   return sanitize(
     xml
       .replace(/<rubricBlock\b[\s\S]*?<\/rubricBlock>/g, "")
@@ -122,7 +127,7 @@ export function parseQtiItem(
   for (const m of body.matchAll(/<simpleChoice\b[^>]*identifier="([^"]+)"[^>]*>([\s\S]*?)<\/simpleChoice>/g)) {
     options.push({ label: m[1], html: toHtml(m[2]) });
   }
-  const stem = body.replace(/<choiceInteraction\b[\s\S]*?<\/choiceInteraction>/g, "");
+  const stem = stemWithoutInteractions(body);
   const solution = apip.match(/<modalFeedback\b[^>]*identifier="solution"[^>]*>([\s\S]*?)<\/modalFeedback>/)?.[1] ?? "";
 
   const imageRefs = [...apip.matchAll(/<img\b[^>]*\bsrc="([^"]+)"/g)].map((m) => m[1]);
@@ -141,6 +146,8 @@ export function parseQtiItem(
     topic: tag(metadata, "keyword"),
     questionHtml: toHtml(stem),
     options,
+    interactions: parseInteractions(body),
+    keys: keyFor(apip),
     castleRockSolutionHtml: solution ? toHtml(solution) : "",
     imageRefs,
     passageRefs,

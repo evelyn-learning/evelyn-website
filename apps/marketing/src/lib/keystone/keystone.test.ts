@@ -267,7 +267,7 @@ async function batchTests() {
   const actor = { username: "t", name: "T", role: "evelyn" as const };
   const q = (itemId: string, course: string) => ({
     itemId, subject: "Mathematics", course, itemType: "MC", key: "A", standards: [], topic: "t", questionHtml: "<p>q</p>",
-    options: [], castleRockSolutionHtml: "", resources: new Map<string, Uint8Array>(), raw: { apip: "", metadata: "", passages: [] },
+    options: [], interactions: [], keys: {}, castleRockSolutionHtml: "", resources: new Map<string, Uint8Array>(), raw: { apip: "", metadata: "", passages: [] },
   });
   try {
     await ingestQtiItems([q("9001", "Meta course")], actor, "up1");
