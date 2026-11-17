@@ -1515,8 +1515,14 @@ console.log('OK — tts-pronunciation rewrites validated');
   // Mathematics typed in a sentence gets its words (embed-1794336536781: "one x", "fef aye", "infinity over zeroth").
   const say = (x: string) => rewriteForTTS(x);
   assert.match(say("what's left is f'(a) over g'(a)"), /f prime of a over g prime of a/i);
-  assert.match(say('the derivative of 1/x is -1/x².'), /1 over x is -1 over x squared/);
-  assert.match(say('simplify (1/x) divided by (-1/x²)'), /\(1 over x\) divided by \(-1 over x squared/);
+  assert.match(say('the derivative of 1/x is -1/x².'), /1 over x is negative 1 over x squared/);
+  // The keyboard minus and a closed interval (AP Calculus BC, portal-8e2d86f3).
+  assert.match(say('For f(x) = x^3 - 3x on the closed interval [-2, 3], find the maximum.'), /x cubed minus 3x on the closed interval from negative 2 to 3,/);
+  assert.match(say("Your arithmetic on -27 + 36 is right, but the test needs f'(-3)."), /on negative 27 \+ 36 is right.*f prime of negative 3/);
+  assert.match(say('Find the max of x⁴ − 8x² + 1 on [-3, 2].'), /on the interval from negative 3 to 2\./);
+  assert.match(say('A well-known range of 10-15, from 2019 - 2021.'), /well-known range of 10-15, from 2019 - 2021/);
+  assert.match(say('$x^3 - 3x$ on $[-2, 3]$'), /x cubed minus 3x on the interval from minus 2 to 3/);
+  assert.match(say('simplify (1/x) divided by (-1/x²)'), /\(1 over x\) divided by \(negative 1 over x squared/);
   assert.match(say("Here's an ∞⁰ form"), /infinity to the power 0 form/);
   assert.match(say('a 1^∞ form'), /1 to the power infinity form/);
   assert.match(say('x/2 and 3x/4 and x/y'), /x over 2 and 3x over 4 and x over (y|why)/);
