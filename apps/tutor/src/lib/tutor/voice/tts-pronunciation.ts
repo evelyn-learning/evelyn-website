@@ -2272,7 +2272,7 @@ export function speakProseRelationalSigns(t: string): string {
 
 /** Task 21 §C: IPA symbols a pronunciation note writes between slashes, as
  *  the sound a learner hears named. Plain Latin letters stay as the letters. */
-const IPA_SPOKEN: Record<string, string> = {
+export const IPA_SPOKEN: Record<string, string> = {
   'ð': 'voiced th', 'θ': 'th', 'ɹ': 'r', 'r': 'r', 'ŋ': 'ng', 'ʃ': 'sh', 'ʒ': 'zh', 'æ': 'a', 'ɪ': 'i', 'ʊ': 'u',
   'ɔː': 'or', 'ɔːr': 'or', 'ɔr': 'or', 'ɑː': 'ah', 'ə': 'uh', 'iː': 'ee', 'eɪ': 'ay', 'aɪ': 'eye', 'oʊ': 'oh', 'əʊ': 'oh',
   'tʃ': 'ch', 'dʒ': 'j',

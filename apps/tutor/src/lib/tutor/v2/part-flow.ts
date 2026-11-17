@@ -151,7 +151,9 @@ export const V2_HELD_PAGE_REPLIES = 3;
  *  (a yes to those opened the next part's page). In Japanese, the Task 6g frame forms. */
 const MOVE_FRAME = /\b(?:shall we|let'?s|let us|can we|could we|(?:are you )?ready to|would you like to|do you want to)\s+(?:go on|move on|continue)(?:\s+to the next (?:part|section|topic) of (?:the|our|today'?s) lesson|\s+to the next (?:part|section|topic))?\s*(?:[,?？]|$|\s+or\b|\s+now\b)/i;
 const NOT_THE_LESSON = /\bnext (?:sentence|example|one|question|exercise|word|step|line|item|try)\b|\bpart of your\b/i;
-const movesOn = (sentence: string) => (MOVE_FRAME.test(sentence) || V2_PART_FRAME_JA.test(sentence)) && !NOT_THE_LESSON.test(sentence);
+// Task 7c (7a re-review): the runtime's own five asks, word for word, are about moving on ("Do you have a question before we go
+// on, or are you ready?" is not in the frame's shape).
+const movesOn = (sentence: string) => V2_PART_ASKS.includes(sentence.trim()) || ((MOVE_FRAME.test(sentence) || V2_PART_FRAME_JA.test(sentence)) && !NOT_THE_LESSON.test(sentence));
 const asks = (x: string) => /(?:[?？]|か[。．]?)["'」』）)]*\s*$/.test(x);
 
 /** The part whose page is waiting for the student's yes: the page held at the last part change (not lapsed), or a part the
@@ -180,7 +182,9 @@ export function v2PendingPart(plan: LessonPlan, state: View & Pick<V2State, 'his
     // Fix rounds 2–3: the part after the one in hand only for a frame about the lesson moving on (movesOn), never for a bare
     // "shall we"/"ready"/"go on": "Shall we try another sentence?", "Can you go on?" are practice asks, and a yes to them
     // opened the next part's page. Otherwise the part comes from the held page or the part named in the ask.
-    const index = pickNow ? pickNow.i : namedNow.length ? -1 : movesOn(lastAsk) ? v2NextPart(plan, state, cur) : -1;
+    // Task 7c (7a re-review): a name of the part in hand ("Good, that's your job covered. Any questions first, or shall we go
+    // on?") names no part to go to: the frame decides.
+    const index = pickNow ? pickNow.i : others.length ? -1 : movesOn(lastAsk) ? v2NextPart(plan, state, cur) : -1;
     if (index >= 0 && index !== cur && index < plan.segments.length - 1 && !paged(plan, state.board, index)) return { index, title: v2PartOf(plan.segments[index]!).label! };
     return null;
   }

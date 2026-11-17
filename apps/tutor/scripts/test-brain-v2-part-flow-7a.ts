@@ -113,9 +113,12 @@ async function main() {
   check('…stored at the head of the reply, so the history shows it', (() => { const last = [...st.history].reverse().find((h) => h.role === 'assistant')!; const t = typeof last.content === 'string' ? last.content : last.content.map((c) => (c.type === 'text' ? c.text : '')).join(''); return t.startsWith('<board page>Present perfect</board>'); })());
   check('A3/A4: present perfect lit; "Your job" green now the lesson has moved past it; the wait cleared', chips(st).lit === 'present-perfect' && chips(st).green.includes('topic-intro') && !st.heldPage, { chips: chips(st), held: st.heldPage });
   // A check-in ends the next reply; the reply after it praises and opens "Past simple" mid-way (flag 7).
-  r = await turn(st, 'Yes, I work with Canada customer, sell 25 washing machine last month.', 'Good. For your experience we say "I have worked with Canadian customers." Please say that sentence again. Does that make sense so far?');
+  const T836 = 'Good. For your experience we say "I have worked with Canadian customers." Please say that sentence again. Does that make sense so far?';
+  r = await turn(st, 'Yes, I work with Canada customer, sell 25 washing machine last month.', T836);
   st = r.state;
-  check('(setup) a check-in does not leave the way open for a part change', !leftOpen(r.text, 'I have worked with Canadian customers.', true) && !mayOpenPart({ title: 'Past simple', studentSaid: 'I have worked with Canadian customers.', lastTutor: r.text, pagesOpen: 3, strict: true }) && mayOpenPart({ title: 'Past simple', studentSaid: 'I have worked with Canadian customers.', lastTutor: r.text, pagesOpen: 3 }));
+  check('(setup) a check-in does not leave the way open for a part change', !leftOpen(T836, 'I have worked with Canadian customers.', true) && !mayOpenPart({ title: 'Past simple', studentSaid: 'I have worked with Canadian customers.', lastTutor: T836, pagesOpen: 3, strict: true }) && mayOpenPart({ title: 'Past simple', studentSaid: 'I have worked with Canadian customers.', lastTutor: T836, pagesOpen: 3 }));
+  // Task 7c (ASK_NO_CHECKIN): the check-in after the practice ask is no longer said.
+  check('(7c) the reply ends on the ask, its check-in dropped', /Please say that sentence again\.$/.test(r.text.trim()) && !/make sense/.test(r.text), r.text);
   r = await turn(st, 'I have worked with Canadian customers.', 'Yes, that\'s right. The present perfect fits.\n<board page>Past simple</board>\nYou also told me you sold 25 washing machines last month. Because last month is finished, we say "sold."');
   st = r.state;
   check('A2: the page does not open in the reply still praising the present perfect: held, the ask in its place', openTitle(st) === 'Present perfect' && !/sold 25/.test(r.spoken) && /past simple/i.test(r.spoken) && /present perfect/i.test(r.spoken.split('fits.')[1] ?? ''), r.spoken);
@@ -291,6 +294,16 @@ async function main() {
     check('fix round 2: the frame or a move-on cue with no part named still opens the next part', v2PendingPart(GDI, base(), 'Good. Shall we move on?', 'Yes.')?.title === 'Present perfect' && v2PendingPart(GDI, base(), 'Good work. Any questions first, or shall we go on?', 'Yes.')?.title === 'Present perfect' && v2PendingPart(GDI, base(), 'お疲れさまでした。次に進みますか？', 'はい')?.title === 'Present perfect');
     check('fix round 2: the runtime\'s "…or do you have a question first?" is no choice of parts', v2PendingPart(GDI, base(), 'Would you like to practise pronunciation now, or do you have a question first?', 'Okay.')?.title === 'Pronunciation');
     check('fix round 2: "No, let us move on." to a questions-first ask is a go', v2MoveAnswer('No, let us move on.', ask) === 'go' && v2MoveAnswer('Let us move on.') === 'go');
+    // Task 7c (carried from the 7a re-review): the runtime's five asks pass the no-name fallback; a name of the part in hand
+    // names no part to go to; the runtime's replacement ask records the part as a held page.
+    for (const x of V2_PART_ASKS) check(`7c: "Yes." to the runtime's own "${x}" (no part named) opens the next part`, v2PendingPart(GDI, base(), `Good work. ${x}`, 'Yes.')?.title === 'Present perfect', v2PendingPart(GDI, base(), `Good work. ${x}`, 'Yes.'));
+    const covered = 'Good, that\'s your job covered. Any questions first, or shall we go on?';
+    check('7c: "…your job covered. Any questions first, or shall we go on?" + "Yes.": the next part, not nothing (the part in hand named)', v2PendingPart(GDI, base(), covered, 'Yes.')?.title === 'Present perfect', v2PendingPart(GDI, base(), covered, 'Yes.'));
+    let c7 = await turn(base(), 'I sell washing machines to customers.', covered);
+    c7 = await turn(c7.state, 'Yes.', 'Have you ever worked with a customer from another country?');
+    check('7c: …in whole turns, the present perfect page opens on the yes', openTitle(c7.state) === 'Present perfect' && c7.calls[0]?.agreed === true, { open: openTitle(c7.state), calls: c7.calls.map((c) => c.name) });
+    const rep = await turn(base({ history: [{ role: 'user', content: 'x' }, { role: 'assistant', content: `Next is your job. ${said}` }] }), 'I sell washing machines.', `Good. Next is present perfect. ${said}`);
+    check('7c: the runtime\'s replacement ask after a dropped repeat records its part as a held page; the facts say it waits', rep.state.heldPage?.part === 'present-perfect' && rep.state.heldPage.title === 'Present perfect' && renderFacts(session, rep.state, { nowMs: clock, heard: 'x' }).includes('part change waiting: they were asked whether to go on to the Present perfect part'), rep.state.heldPage);
     // Controller ruling: the route's state reading keeps what the turn wrote for the next turn.
     const carried = v2ReadCarried({ summaryBegunAt: 1_700_000, repliesSinceBoard: 2.7, boardProblems: ['note "x": too wide', 3, '', ...Array.from({ length: 20 }, (_, i) => `p${i}`)], heldPage: { title: 'Past simple', part: 'past-simple', at: 4 } });
     check('state carry: summaryBegunAt, repliesSinceBoard (whole), boardProblems (strings, last 12), heldPage survive', carried.summaryBegunAt === 1_700_000 && carried.repliesSinceBoard === 2 && carried.boardProblems?.length === 12 && carried.boardProblems[11] === 'p19' && carried.heldPage?.part === 'past-simple', carried);

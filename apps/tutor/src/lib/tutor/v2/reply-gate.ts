@@ -20,6 +20,7 @@
  * goodbye does not also ask for a retry no one can give (tester B's last reply).
  */
 import { TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PASSED_PART_CLOSE } from '../orchestrator/flags';
+import { v2HandsOver, v2IsCheckIn } from './one-question';
 
 /** The part-change frame: asking whether to go on, alone or with the question check. Matched on a whole sentence. */
 export const V2_PART_FRAME = /^(?:(?:so|okay|ok|now|then|great|good|alright|all right)[,!.]?\s+)*(?:shall we (?:go on|move on|continue|start)|are you ready (?:for (?:that|it|the next part|this)|to (?:go on|move on|start))|ready to (?:go on|move on))\b[^.?!]*\?["'”’]*$|^[^.?!]*\bor do you have (?:a|any) questions? (?:first|before we (?:go on|move on|start))\?["'”’]*$/i;
@@ -111,6 +112,11 @@ export interface ReplyGateOptions {
   holdAsk?: boolean;
   /** The words that say the summary has begun (turn.ts V2_SUMMARY_BEGUN), for closeAsk. */
   summaryBegun?: RegExp;
+  /** Task 7c (ASK_NO_CHECKIN): drop a check-in ("Does that make sense so far?") that follows an ask handing the turn over
+   *  ("Please say that sentence again."): one question per reply. */
+  dropCheckIn?: boolean;
+  /** Task 7c: the reply handed the turn over before this gate's words (an earlier model call of the same reply). */
+  handedOver?: boolean;
 }
 
 export class ReplyGate {
@@ -137,12 +143,14 @@ export class ReplyGate {
   private summaryStarted = false;
   /** Task 7a: asks dropped by dropFrameIf (a repeat, which the runtime's own ask in new words replaces). */
   framesDroppedIf = 0;
+  /** Task 7c: an ask handing the turn over has gone out (or waits, held) in this reply. */
+  private handedOver: boolean;
 
-  constructor(private readonly out: (text: string) => void, private readonly opts: ReplyGateOptions) {}
+  constructor(private readonly out: (text: string) => void, private readonly opts: ReplyGateOptions) { this.handedOver = !!opts.handedOver; }
 
   /** Nothing to drop or hold: words go out as they come, cut nowhere (fix round 2, N4: with the gate's work off, the
    *  stream is the stream as before it existed). A card waiting for the next sentence still holds them until then. */
-  private get passThrough(): boolean { return !this.opts.dropFrame && !this.opts.dropFrameIf && !this.opts.holdGoodbye && !this.opts.closeAsk && this.card === null && !this.echoes.size; }
+  private get passThrough(): boolean { return !this.opts.dropFrame && !this.opts.dropFrameIf && !this.opts.holdGoodbye && !this.opts.closeAsk && !this.opts.dropCheckIn && this.card === null && !this.echoes.size; }
 
   push(text: string): void {
     if (this.passThrough && !this.buf) { this.emit(text); return; }
@@ -222,6 +230,9 @@ export class ReplyGate {
   private sentence(s: string): void {
     const core = s.trim();
     if (!core) { if (this.holding) this.heldParts.push(s); else if (this.ask !== null) this.ask += s; else this.emit(s); return; }
+    // Task 7c (ASK_NO_CHECKIN): after an ask that hands the turn over, a check-in is a second question: dropped (a practice
+    // ask waiting before it stays waiting).
+    if (this.opts.dropCheckIn && this.handedOver && !this.holding && v2IsCheckIn(core)) { this.removed.push(core); return; }
     // Task 6g: what follows a waiting practice ask decides it. The summary beginning or a goodbye closes the lesson, so the
     // ask is dropped (a goodbye keeps it until the close is known: see releaseHeld, dropHeld); anything else, it goes out.
     if (this.opts.closeAsk) {
@@ -246,6 +257,7 @@ export class ReplyGate {
     if (this.opts.dropFrame && !this.holding && isPartFrame(core)) { this.removed.push(core); return; }
     if (this.opts.dropFrameIf && !this.holding && this.opts.dropFrameIf(core)) { this.removed.push(core); this.framesDroppedIf += 1; return; }
     if (this.holding || (this.opts.holdGoodbye && isGoodbye(core.replace(QUOTED_SPANS, ' ')))) { this.holding = true; this.heldParts.push(s); return; }
+    if (this.opts.dropCheckIn && v2HandsOver(core)) this.handedOver = true;
     if (this.opts.closeAsk && this.opts.holdAsk !== false && this.ask === null && this.opts.closeAsk(core)) { this.ask = s; return; }
     this.emit(s);
   }

@@ -11,7 +11,7 @@
  * voice language (voice/tts-language.ts splitSentenceForTts).
  */
 import type Anthropic from '@anthropic-ai/sdk';
-import { TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_V2_CHECK_MISHEARD, TUTOR_V2_PRACTICE_ASK_CAP, TUTOR_V2_PRACTICE_VERDICT, TUTOR_V2_RETRY_COUNT } from '../orchestrator/flags';
+import { TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_V2_CHECK_MISHEARD, TUTOR_V2_PRACTICE_ASK_CAP, TUTOR_V2_PRACTICE_VERDICT, TUTOR_V2_RETRY_COUNT, TUTOR_V2_SPOKEN_SOUNDS } from '../orchestrator/flags';
 import { stripBoardBlocks } from './board-inline';
 import { languageNameOf } from '../voice/language-request';
 import { splitSentenceForTts } from '../voice/tts-language';
@@ -28,9 +28,9 @@ const SUPPORT_LINES: Record<string, string[]> = {
 };
 
 /** The session part's section for a session with a second teaching language, or null when there is none. */
-export function v2LanguagesSection(languages: readonly string[] | undefined, mode: 'text' | 'voice' = 'voice', opts: { pronunciationMeasured?: boolean; practiceVerdict?: boolean; checkMisheard?: boolean } = {}): string | null {
+export function v2LanguagesSection(languages: readonly string[] | undefined, mode: 'text' | 'voice' = 'voice', opts: { pronunciationMeasured?: boolean; practiceVerdict?: boolean; checkMisheard?: boolean; spokenSounds?: boolean } = {}): string | null {
   if (!languages || languages.length < 2) return null;
-  opts = { practiceVerdict: TUTOR_V2_PRACTICE_VERDICT, checkMisheard: TUTOR_V2_CHECK_MISHEARD, ...opts };
+  opts = { practiceVerdict: TUTOR_V2_PRACTICE_VERDICT, checkMisheard: TUTOR_V2_CHECK_MISHEARD, spokenSounds: TUTOR_V2_SPOKEN_SOUNDS, ...opts };
   const T = languageNameOf(languages[0]!);
   const code = languages[1]!.toLowerCase().split(/[-_]/)[0]!;
   const S = languageNameOf(code);
@@ -73,6 +73,8 @@ export function v2LanguagesSection(languages: readonly string[] | undefined, mod
     // "new." drew "Did you mean she helped you with the new system?", later read back as a model sentence: a reply of a
     // word or two that answers nothing is asked again, never given a meaning.
     mode === 'text' || !opts.checkMisheard ? '' : 'When a word in their sentence makes little sense where it stands, or one seems to be missing, the recogniser may have misheard: check before you correct the sentence or call it right. Ask "Did you say …?" only with a word that sounds like what was heard and fits; when nothing fits, ask them to say it again. Never guess at a meaning they did not say. A reply of a word or two that does not answer what you asked is the same: ask them to say it again, and do not build a sentence or a meaning from it.',
+    // Task 7c (SPOKEN_SOUNDS, mic test 1 t≈16.42): "a buzzing /z/ sound, not /s/" was read with its slashes.
+    mode === 'text' || !opts.spokenSounds ? '' : 'In speech, name a sound in words ("the z sound", "a buzzing z sound"), never with phonetic symbols such as /z/ or [ʃ]: the voice reads the symbols. The board may show them.',
     ...(SUPPORT_LINES[code] ?? []),
     // Findings case 4: "please stop" got a question and then the next part; "I have to finish" had to be said three times.
     'When they say they want to stop or have to go, that reply is the close: one sentence on what they practised, a goodbye, and end_lesson. No new question, no new exercise.',

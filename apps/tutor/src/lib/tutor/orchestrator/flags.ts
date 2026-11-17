@@ -1837,3 +1837,20 @@ export const TUTOR_V2_STATE_CARRY = process.env.NEXT_PUBLIC_TUTOR_V2_STATE_CARRY
  *  only spoken (Task 7b, mic test 1, embed-1794882458629). Default ON; NEXT_PUBLIC_TUTOR_V2_BOARD_LEARNER_SENTENCE=off ⇒
  *  cards from the model alone, as before. */
 export const TUTOR_V2_BOARD_LEARNER_SENTENCE = process.env.NEXT_PUBLIC_TUTOR_V2_BOARD_LEARNER_SENTENCE !== 'off';
+
+/** Tutor brain v2 (v2/one-question.ts, v2/turn.ts, v2/reply-gate.ts): one question per reply. An imperative that hands the
+ *  turn over ("Please say that sentence again.", "Please say it: "…"", "Try it again.", 「もう一度言ってみてください。」) counts
+ *  as an ask, also straight after a quoted sentence; a reply that already asks gets no check-in, no part ask and no offer
+ *  of a part not reached from the runtime (a page held for it stays held; the ask comes on a later reply); a check-in the
+ *  model writes after a practice ask ("Does that make sense so far?") is dropped, spoken and stored. Mic test 1: "Please
+ *  say that sentence again." + "Does that make sense so far?" left the learner not knowing which to answer (Task 7c,
+ *  embed-1794882458629). The check-in guard reaches every spoken v2 lesson (the check-in does); the rest, spoken teaching
+ *  lessons. Default ON; NEXT_PUBLIC_TUTOR_V2_ASK_NO_CHECKIN=off ⇒ as before. */
+export const TUTOR_V2_ASK_NO_CHECKIN = process.env.NEXT_PUBLIC_TUTOR_V2_ASK_NO_CHECKIN !== 'off';
+
+/** Tutor brain v2 voice client (v2/spoken-sounds.ts, TutorVoiceV2.tsx) and the second-language prompt section
+ *  (v2/languages.ts): a sound written with phonetic symbols ("/z/", "/ʃ/", "[θ]") is spoken in words ("the z sound", "a
+ *  buzzing z sound"); the board and the stored reply keep the symbols. "a buzzing /z/ sound, not /s/" was read with its
+ *  slashes, "/s/" as "per second" (Task 7c, mic test 1, embed-1794882458629). Speech of lessons that are not maths or
+ *  science only. Default ON; NEXT_PUBLIC_TUTOR_V2_SPOKEN_SOUNDS=off ⇒ the symbols reach the voice, as before. */
+export const TUTOR_V2_SPOKEN_SOUNDS = process.env.NEXT_PUBLIC_TUTOR_V2_SPOKEN_SOUNDS !== 'off';
