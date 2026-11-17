@@ -30,6 +30,7 @@ import { useOpenAIRealtime, type OpenAIVoice } from '@/app/tutor/hooks/useOpenAI
 import { usePerceptionWS, type PerceptionTranscript } from '@/app/tutor/hooks/usePerceptionWS';
 import { useCartesiaInkWS } from '@/app/tutor/hooks/useCartesiaInkWS';
 import { useAudioRecorder } from '@/app/tutor/hooks/useAudioRecorder';
+import { decideTutorAudioCapture } from '@/lib/tutor/voice/tutor-audio-capture';
 import { TUTOR_STT_ENGINE_INK2 } from '@/lib/tutor/orchestrator/flags';
 import { inkTurnEndTimeoutMs } from '@/lib/tutor/voice/ink-turn-end';
 import type { RealtimeHandle } from '@/lib/tutor/orchestrator/types';
@@ -453,6 +454,12 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     // fell through to plain speech and "3 A" was read as the letter (AP Physics, embed-1794500923861).
     ...(isMathsSubject(props.subject) ? { ttsTextTransform: mathsSpeech } : isScienceSubject(props.subject) ? { ttsTextTransform: scienceSpeech } : { ttsTextTransform: plainSpeech }),
   }), [onRelayTranscript, props.subject, props.ttsProvider, props.cartesiaVoiceId, props.cartesiaVoiceSpeed, languagesKey, props.speechRate, props.studentName]);
+  // Both tracks of the session recording. The tutor's is tapped where its audio is played (useOpenAIRealtime's
+  // dequeue), so only what the student heard is kept. v2 tapped the microphone alone, and every v2 replay was
+  // the student by themselves (embed-1794832831433, embed-1794829907553). A silent tutor has no track.
+  const recordOn = !!props.recordSessionId && process.env.NEXT_PUBLIC_TUTOR_RECORD_AUDIO !== 'false';
+  const recorder = useAudioRecorder({ sessionId: props.recordSessionId ?? '', enabled: recordOn });
+  const tutorAudioCapture = decideTutorAudioCapture({ recordEnabled: recordOn, sessionMode: 'voice', ttsProvider: props.ttsProvider });
   const realtime = useOpenAIRealtime({
     instructions: TRANSPORT_ONLY,
     voice: props.voice,
@@ -462,6 +469,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     onError: onRealtimeError,
     onStateChange: onRealtimeState,
     onTtsPlaybackProgress: onPlayback,
+    onTutorAudioChunk: tutorAudioCapture.capture ? recorder.pushTutorChunk : undefined,
   });
   realtimeRef.current = realtime;
 
@@ -507,7 +515,6 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     enabled: listening && !TUTOR_STT_ENGINE_INK2,
     onTranscript, onSpeechStart, onSpeechStop, onMicLevel, onTranscriptionFailed: onNoTranscript, onError: onRecogniserError,
   });
-  const recorder = useAudioRecorder({ sessionId: props.recordSessionId ?? '', enabled: !!props.recordSessionId && process.env.NEXT_PUBLIC_TUTOR_RECORD_AUDIO !== 'false' });
   useCartesiaInkWS({
     enabled: listening && TUTOR_STT_ENGINE_INK2,
     onStudentAudioFrame: recorder.pushStudentChunk,
