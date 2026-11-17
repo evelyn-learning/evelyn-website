@@ -81,7 +81,8 @@ export async function setStageAction(form: FormData) {
   const user = await requireUser();
   const itemId = String(form.get("itemId"));
   const stage = String(form.get("stage")) as Stage;
-  if (!STAGES.includes(stage)) return;
+  // A key query needs our answer and working: only raiseKeyQuery makes one.
+  if (!STAGES.includes(stage) || stage === "key_query") return;
   if (stage === "delivered" ? !can.deliver(user.role) : !can.edit(user.role)) return;
   // A status that puts the solution in front of Castle Rock releases its latest version first.
   if (stage === "in_review" || stage === "approved" || stage === "delivered") await releaseIfHeld(itemId, user);

@@ -35,9 +35,9 @@ assert.deepEqual(keyFor('<responseDeclaration identifier="A" baseType="string"><
 
 // stem: placeholders for inline, removal for block
 const stem = stemWithoutInteractions('<p>Is <inlineChoiceInteraction responseIdentifier="D"><inlineChoice identifier="a">up</inlineChoice></inlineChoiceInteraction> or <textEntryInteraction responseIdentifier="T"/>?</p><matchInteraction responseIdentifier="M"><prompt>Match.</prompt><simpleMatchSet><simpleAssociableChoice identifier="P">Cat</simpleAssociableChoice></simpleMatchSet></matchInteraction>');
-assert.equal(stem, '<p>Is <span class="fill-in-the-blank"></span> or <span class="fill-in-the-blank"></span>?</p><p>Match.</p>');
+assert.equal(stem, '<p>Is <span class="fill-in-the-blank"></span><sub class="ks-gap-id">D</sub> or <span class="fill-in-the-blank"></span><sub class="ks-gap-id">T</sub>?</p><p>Match.</p>');
 const gs = stemWithoutInteractions('<gapMatchInteraction responseIdentifier="G"><gapText identifier="W1">sun</gapText><p>The <gap identifier="G1"/> shines.</p></gapMatchInteraction>');
-assert.equal(gs, '<p>The <span class="fill-in-the-blank"></span> shines.</p>');
+assert.equal(gs, '<p>The <span class="fill-in-the-blank" data-gap="G1"></span><sub class="ks-gap-id">G1</sub> shines.</p>');
 assert.equal(stemWithoutInteractions('<p>q</p><choiceInteraction responseIdentifier="R"><simpleChoice identifier="A">a</simpleChoice></choiceInteraction>'), "<p>q</p>");
 
 // through parseQtiItem: options unchanged, interactions added, blank in stem
@@ -68,7 +68,15 @@ assert.equal(keyLine(o, { O: ["B", "A", "C"] }), "Key order: B, A, C");
 assert.equal(keyLine(m, { M: ["P1 R2", "P2  R1"] }), "Key pairs: P1 → R2; P2 → R1");
 assert.equal(keyLine({ kind: "gapMatch", responseId: "G", gaps: [], choices: [] }, { G: ["W1 G1"] }), "Key pairs: W1 → G1");
 assert.equal(keyLine(o, {}), null);
-assert.equal(keyLine({ kind: "textEntry", responseId: "T" }, { T: ["1"] }), null);
+assert.equal(keyLine({ kind: "extendedText", responseId: "T" }, { T: ["1"] }), null);
+
+assert.equal(keyLine({ kind: "textEntry", responseId: "T" }, { T: ["42"] }), "Key: 42");
+assert.equal(keyLine({ kind: "textEntry", responseId: "T" }, { T: ["1", "2"] }), "Key: 1, 2");
+assert.equal(keyLine({ kind: "textEntry", responseId: "T" }, {}), null);
+// labelled blanks
+assert.ok(gs.includes('data-gap="G1"') && gs.includes('<sub class="ks-gap-id">G1</sub>'));
+const two = stemWithoutInteractions('<p><textEntryInteraction responseIdentifier="A"/> and <textEntryInteraction responseIdentifier="B"/></p>');
+assert.ok(two.includes('>A</sub>') && two.includes('>B</sub>'));
 
 // real SOLARO samples, when present
 const sample = path.join(homedir(), "Downloads/Item146799/item_146799_apip.xml");

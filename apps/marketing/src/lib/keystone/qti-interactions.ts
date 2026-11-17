@@ -71,14 +71,22 @@ export function parseInteractions(itemBodyXml: string): Interaction[] {
 
 /** The stem with inline interactions as visible blanks and block interactions removed (shown from `interactions`). */
 export function stemWithoutInteractions(body: string): string {
-  return body.replace(ELEMENT, (_all, element: string, _attrs: string, inner = "") => {
-    if (element === "textEntryInteraction" || element === "inlineChoiceInteraction") return BLANK;
+  // With several responses a blank must say which one it is.
+  const several = [...body.matchAll(ELEMENT)].length > 1;
+  return body.replace(ELEMENT, (_all, element: string, attrs: string, inner = "") => {
+    if (element === "textEntryInteraction" || element === "inlineChoiceInteraction") {
+      const id = attr(attrs, "responseIdentifier");
+      return several && id ? `${BLANK}<sub class="ks-gap-id">${id}</sub>` : BLANK;
+    }
     if (element === "choiceInteraction") return "";
     // Keep the prompt, and for gapMatch the text around the gaps.
     const prompt = inner.match(/<prompt\b[^>]*>([\s\S]*?)<\/prompt>/)?.[1];
     const lead = prompt ? `<p>${prompt}</p>` : "";
     if (element === "gapMatchInteraction") {
-      const text = inner.replace(/<prompt\b[\s\S]*?<\/prompt>/g, "").replace(/<gapText\b[\s\S]*?<\/gapText>/g, "").replace(/<gap\b[^>]*?\/?>(?:\s*<\/gap>)?/g, BLANK);
+      const text = inner.replace(/<prompt\b[\s\S]*?<\/prompt>/g, "").replace(/<gapText\b[\s\S]*?<\/gapText>/g, "").replace(/<gap\b([^>]*?)\/?>(?:\s*<\/gap>)?/g, (_g: string, a: string) => {
+        const id = attr(a, "identifier") ?? "";
+        return `<span class="fill-in-the-blank" data-gap="${id}"></span><sub class="ks-gap-id">${id}</sub>`;
+      });
       return lead + text;
     }
     return lead;
@@ -97,11 +105,12 @@ export function keyFor(apipXml: string): Record<string, string[]> {
   return out;
 }
 
-/** One plain line for the key of an order / match / gapMatch interaction, or null when there is none. */
+/** One plain line for the key of a textEntry / order / match / gapMatch interaction, or null when there is none. */
 export function keyLine(i: Interaction, keys: Record<string, string[]>): string | null {
-  if (i.kind !== "order" && i.kind !== "match" && i.kind !== "gapMatch") return null;
+  if (i.kind !== "order" && i.kind !== "match" && i.kind !== "gapMatch" && i.kind !== "textEntry") return null;
   const vals = keys[i.responseId];
   if (!vals?.length) return null;
+  if (i.kind === "textEntry") return `Key: ${vals.join(", ")}`;
   if (i.kind === "order") return `Key order: ${vals.join(", ")}`;
   return `Key pairs: ${vals.map((v) => v.trim().split(/\s+/).join(" → ")).join("; ")}`;
 }

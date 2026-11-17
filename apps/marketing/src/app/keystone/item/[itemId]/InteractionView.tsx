@@ -22,7 +22,7 @@ export function InteractionView({ i, keys, showKey }: { i: Interaction; keys: Re
   const KeyLine = line ? <div className="ks-ix-key">{line}</div> : null;
   switch (i.kind) {
     case "textEntry":
-      return <div className="ks-ix"><span className="ks-ix-label">Answer is typed into the blank.</span></div>;
+      return <div className="ks-ix"><span className="ks-ix-label">Answer is typed into the blank.</span>{KeyLine}</div>;
     case "extendedText":
       return <div className="ks-ix"><span className="ks-ix-label">Written response: the student writes an answer in a text box.</span></div>;
     case "inlineChoice":
@@ -53,7 +53,7 @@ export function InteractionView({ i, keys, showKey }: { i: Interaction; keys: Re
       return (
         <div className="ks-ix">
           <span className="ks-ix-label">Drag into the {i.gaps.length === 1 ? "blank" : `${i.gaps.length} blanks`}:</span>
-          <Bank items={i.choices} />
+          <Bank items={i.choices} labelled />
           {KeyLine}
         </div>
       );
@@ -61,7 +61,7 @@ export function InteractionView({ i, keys, showKey }: { i: Interaction; keys: Re
       return (
         <div className="ks-ix">
           <span className="ks-ix-label">Put in order:</span>
-          <Bank items={i.choices} ordered />
+          <Bank items={i.choices} ordered labelled />
           {KeyLine}
         </div>
       );

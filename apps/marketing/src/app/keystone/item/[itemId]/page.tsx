@@ -172,7 +172,8 @@ export default async function ItemPage({
               ))}
             {item.keySource === "castle-rock" ? (
               <div className="ks-answer">
-                <b>Key:</b> {item.key} <span style={{ color: "var(--muted)" }}>(Castle Rock)</span>
+                <b>Key:</b> {Object.keys(item.keys ?? {}).length > 1 ? "shown with each part above." : item.key}{" "}
+                <span style={{ color: "var(--muted)" }}>(Castle Rock)</span>
                 {item.evelynAnswer && item.evelynAnswer !== item.key && (
                   <div style={{ color: "var(--bad)" }}>Our solution reaches {item.evelynAnswer}, which differs from the key.</div>
                 )}
@@ -257,7 +258,7 @@ export default async function ItemPage({
               <form action={setStageAction} style={{ display: "flex", gap: 6, alignItems: "center" }}>
                 <input type="hidden" name="itemId" value={itemId} />
                 <select name="stage" defaultValue={item.stage} className="ks-btn" style={{ fontWeight: 400 }}>
-                  {STAGES.map((s) => (
+                  {STAGES.filter((s) => s !== "key_query").map((s) => (
                     <option key={s} value={s}>
                       {STAGE_LABEL[s]}
                     </option>

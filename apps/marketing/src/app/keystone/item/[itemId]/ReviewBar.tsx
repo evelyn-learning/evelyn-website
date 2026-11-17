@@ -11,7 +11,7 @@ import { reviewAction, type ReviewResult } from "../../actions";
  * to send an item back, and next / previous. Sending back names whose job it
  * is: Fix solution → Evelyn; Item data → Castle Rock technical (the question
  * as exported is incomplete or wrong); Reject → the item is withdrawn.
- * Keys (when not typing): A approve, C fix solution, D item data, X reject,
+ * Keys (when not typing): A approve, R the key is right, C fix solution, D item data, X reject,
  * J next, K previous. After a verdict the server moves on to the next item
  * waiting for review.
  *

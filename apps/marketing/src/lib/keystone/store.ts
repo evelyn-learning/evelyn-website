@@ -120,7 +120,10 @@ export async function setVerdict(itemId: string, verdict: Verdict, comment: stri
   if (rule.needsNote && !comment.trim()) throw new Error(rule.needsNote);
   const stage: Stage = rule.stage;
   const now = new Date();
-  const answered = verdict === "key_right" ? { "keyQuery.reviewerReason": comment.trim(), "keyQuery.answeredAt": now } : {};
+  const answered =
+    item.stage === "key_query"
+      ? { "keyQuery.answeredAt": now, ...(verdict === "key_right" ? { "keyQuery.reviewerReason": comment.trim() } : {}) }
+      : {};
   await Item.updateOne({ itemId }, { $set: { stage, updatedAt: now, ...answered } });
   await log({
     itemId,
