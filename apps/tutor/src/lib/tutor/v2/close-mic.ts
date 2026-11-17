@@ -10,6 +10,7 @@
  */
 import { reopensClose } from './close-heard';
 import { TUTOR_V2_CLOSE_HEARS } from '../orchestrator/flags';
+import { V2_HARD_STOP_TAIL_MAX_MS } from './time-box';
 
 const CJK = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u;
 /** Japanese thanks and goodbyes (and a bare yes): the learner closing too. */
@@ -54,4 +55,21 @@ export class V2ClosingWords {
    *  not called off or ended meanwhile). */
   said(round: number = this.round): boolean { if (!this.on || round !== this.round) return false; this.on = false; return true; }
   stop(): void { this.on = false; }
+}
+
+/** Task 7h fix round 1 (I1): the box's stop landing while the closing words are still being said. Before this task the
+ *  close had already set the session ending, the box did nothing and the closing words played to the end. They still
+ *  do, bounded as any speech under way at the box is (V2_HARD_STOP_TAIL_MAX_MS, then cut); then the session ends as
+ *  the close would have (its own end, no goodbye of the box's: the close said one). The microphone closes at the box
+ *  (the caller), so nothing interrupts it. */
+export async function v2BoxDuringClose(s: { untilQuiet?: (maxMs: number) => Promise<boolean>; cut: () => void; settle: () => Promise<void>; end: () => void; ended?: () => boolean; log?: (type: string, message: string) => void }): Promise<void> {
+  s.log?.('v2_time_limit_during_close', 'the closing words play out, then the session ends');
+  if (s.untilQuiet) {
+    const quiet = await s.untilQuiet(V2_HARD_STOP_TAIL_MAX_MS);
+    if (s.ended?.()) return;
+    if (!quiet) { s.log?.('v2_time_limit_tail_cut', `speech still going after ${V2_HARD_STOP_TAIL_MAX_MS / 1000} s`); s.cut(); }
+  }
+  await s.settle();
+  if (s.ended?.()) return;
+  s.end();
 }

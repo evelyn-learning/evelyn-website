@@ -21,7 +21,8 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { V2EchoClock, V2_ECHO_TAIL_MS, v2IsEcho, type V2PlayProgress } from '../src/lib/tutor/v2/echo-window';
 import { isOwnVoice } from '../src/lib/tutor/v2/own-voice';
-import { V2ClosingWords, v2CloseCalledOff, v2CloseHears } from '../src/lib/tutor/v2/close-mic';
+import { V2ClosingWords, v2BoxDuringClose, v2CloseCalledOff, v2CloseHears } from '../src/lib/tutor/v2/close-mic';
+import { V2_HARD_STOP_TAIL_MAX_MS } from '../src/lib/tutor/v2/time-box';
 import { V2_TARGET_PAUSE_MS, markTargets, targetPauses, withTargetPauses } from '../src/lib/tutor/v2/target-pauses';
 import { v2SpeechParts } from '../src/lib/tutor/v2/languages';
 import { v2SpeakSounds } from '../src/lib/tutor/v2/spoken-sounds';
@@ -101,7 +102,7 @@ function scenario(): Record<string, unknown> {
   return out;
 }
 
-function main() {
+async function main() {
   const on = scenario();
   if (CHILD) { console.log(`OFF_JSON ${JSON.stringify(on)}`); return; }
 
@@ -136,8 +137,10 @@ function main() {
     e.clock.settled();
     // Its final arrives after the reply has drained (the recogniser's turn-end wait): still the echo, measured to its onset.
     const e2 = new Playback(REPLY, 0); const te2 = e2.starts[6]! + 300; e2.advance(te2); e2.clock.speechStart(te2, e2.progress(te2));
+    const lp = (t: number, words: string) => { e2.advance(t); e2.clock.heardWords(words, t, e2.progress(t)); };
+    lp(te2 + 900, 'Shall we'); lp(te2 + 2000, 'Shall we go on or do you'); lp(e2.endMs + 600, 'Shall we go on or do you have a question first');
     const late = judge(e2, 'Shall we go on or do you have a question first', e2.endMs + 3500);
-    check('an echo whose final comes 3.5 s after the voice stopped is still dropped (it began while the sentence played)', late.own && late.part === REPLY[6], late);
+    check('an echo whose final comes 3.5 s after the voice stopped is still dropped (its words were heard while the sentence played)', late.own && late.part === REPLY[6], late);
     // An echo that begins late in one part and runs into the next (the recogniser hears speech begin 70% into part 6).
     const e4 = new Playback(REPLY, 0); const te4 = e4.at(5, 0.7); e4.advance(te4); e4.clock.speechStart(te4, e4.progress(te4));
     check('an echo from late in one sentence on into the next is still dropped', judge(e4, 'a project you are proud of shall we go on', e4.at(6, 0.45)).own && judge(e4, 'project you are', te4 + 900, true).own);
@@ -145,6 +148,34 @@ function main() {
     const e3 = new Playback(REPLY, 0); const te3 = e3.at(5, 0.6);
     e3.advance(te3); e3.clock.heardWords('Next is conversation where we talk', te3, e3.progress(te3));
     check('an echo with no speech start: placed as many words back as it holds, still dropped', judge(e3, 'Next is conversation where we talk about a project', te3 + 1500).own);
+    // Fix round 1 C1 (the reviewer's sequence): the recogniser hears speech begin on the echo of "Here is the full
+    // sentence:" and the turn ends with no words (Ink drops an empty turn.end with no callback). The model sentence and
+    // "Now you say it." play and drain; ten seconds later the learner says it.
+    const c1 = new Playback(['Here is the full sentence:', 'I attended a robotics exhibition in Tokyo two years ago.', 'Now you say it.'], 0);
+    c1.advance(500); c1.clock.speechStart(500, c1.progress(500));
+    const tc = c1.endMs + 10_000; c1.advance(tc);
+    c1.clock.speechStart(tc, c1.progress(tc)); c1.clock.heardWords('I attended a robotics', tc + 1200, c1.progress(tc + 1200));
+    const c1Final = judge(c1, PERFECT, tc + 6000);
+    check('C1: a speech start that ended with no words does not stand for the next utterance: his repeat after silence is heard', !c1Final.own && /silent since/.test(c1Final.timing), c1Final);
+    // The same with no new speech start and no partials (only a final): the silence alone decides.
+    const c1b = new Playback(['Here is the full sentence:', 'I attended a robotics exhibition in Tokyo two years ago.', 'Now you say it.'], 0);
+    c1b.advance(500); c1b.clock.speechStart(500, c1b.progress(500));
+    const tcb = c1b.endMs + 10_000;
+    check('C1: start → no words → long silence → the learner repeats the sentence (a final alone): heard, whatever the stale start says', !judge(c1b, PERFECT, tcb).own);
+    // A start, its stop, then a start 10 s later: a new utterance, not the recogniser resuming.
+    const c1c = new Playback(REPLY, 0); c1c.advance(500); c1c.clock.speechStart(500, c1c.progress(500)); c1c.clock.speechStop(900);
+    const tcc = c1c.at(3, 0.95); c1c.advance(tcc); c1c.clock.speechStart(tcc, c1c.progress(tcc)); c1c.pausedAt = tcc + 500;
+    check('C1: a start long after the last stop begins a new utterance (flag 6 then plays as it should: heard)', !judge(c1c, 'I attended', tcc + 1200, true).own && !judge(c1c, FINAL, tcc + 6000).own);
+    // Words lost (the words watch gives up) settle the clock as a final does.
+    const c1d = new Playback(REPLY, 0); c1d.advance(500); c1d.clock.speechStart(500, c1d.progress(500)); c1d.clock.settled();
+    const tcd = c1d.at(3, 0.95); c1d.advance(tcd); c1d.clock.speechStart(tcd, c1d.progress(tcd)); c1d.pausedAt = tcd + 500;
+    check('C1: after words lost (settled) the next start is its own utterance', !judge(c1d, FINAL, tcd + 6000).own);
+    // A resume shortly after the stop (Ink's turn.resume) keeps the utterance: a real echo across it is still dropped.
+    const c1e = new Playback(REPLY, 0); const te5 = c1e.starts[5]! + 300; c1e.advance(te5); c1e.clock.speechStart(te5, c1e.progress(te5));
+    c1e.clock.speechStop(te5 + 1500); const tr = te5 + 2200; c1e.advance(tr); c1e.clock.speechStart(tr, c1e.progress(tr));
+    check('C1: a resume within the turn-end wait keeps the utterance: the echo across it is still dropped', judge(c1e, 'Next is conversation where we talk about a project you are proud of.', c1e.at(5, 0.98)).own);
+    const voiceC1 = readFileSync(join(__dirname, '..', 'src', 'app', 'tutor', 'components', 'v2', 'TutorVoiceV2.tsx'), 'utf8');
+    check('C1: the voice client tells the clock of every stop, words lost and the reset', /onSpeechStop = useCallback\(\(\) => \{ echoRef\.current\.speechStop\(Date\.now\(\)\);/.test(voiceC1) && /'v2_words_lost'[^\n]*\n[^\n]*\n\s+echoRef\.current\.settled\(\);/.test(voiceC1) && /useEffect\(\(\) => \(\) => \{ wordsWatchRef\.current\.settled\(\); echoRef\.current\.settled\(\);/.test(voiceC1));
     // Japanese echo (the Task 6 case, test-brain-v2-languages): a Japanese part playing, heard back.
     const ja = new Playback(['次の文を英語で言ってみてください。', '私は3年間ここで働いています。'], 0); const tj = ja.at(0, 0.15); ja.advance(tj); ja.clock.speechStart(tj, ja.progress(tj));
     check('a Japanese echo of the part playing is still dropped', judge(ja, '次の文を英語で言ってみてください', tj + 2500).own);
@@ -172,27 +203,57 @@ function main() {
     c.begin(); c.stop();
     check('the box (or the host) ends it first: nothing is reopened or closed by the close after that', c.heard('Can you please wait') === 'not-closing' && c.said() === false);
     const turns = readFileSync(join(__dirname, '..', 'src', 'app', 'tutor', 'components', 'v2', 'useV2Turns.ts'), 'utf8');
-    check('useV2Turns: the box\'s stop is uninterruptible (no reopening once ending; a close under way closes the microphone)', /const overClose = endingRef\.current \? 'not-closing'/.test(turns) && /endingRef\.current = true; closingRef\.current\.stop\(\);\s*if \(wasClosing\) setClosed\(true\);/.test(turns) && /if \(farewell\) setClosed\(true\);/.test(turns));
+    check('useV2Turns: the box\'s stop is uninterruptible (no reopening once ending; a close under way closes the microphone)', /const overClose = endingRef\.current \? 'not-closing'/.test(turns) && /endingRef\.current = true; closingRef\.current\.stop\(\);[\s\S]{0,200}if \(wasClosing\) \{\s*setClosed\(true\);[\s\S]{0,600}void v2BoxDuringClose\([\s\S]{0,400}end: \(\) => endOnce\(\),[\s\S]{0,200}return;/.test(turns) && /if \(farewell\) setClosed\(true\);/.test(turns));
     check('useV2Turns: a spoken close is closed once its words are said; a reopen clears the state\'s close and cuts the voice', /if \(!hears\) setClosed\(true\);/.test(turns) && /if \(!closingRef\.current\.said\(round\)\) return;\s*setClosed\(true\);/.test(turns) && /stateRef\.current = \{ \.\.\.stateRef\.current, closed: false \};/.test(turns) && /'v2_close_called_off'/.test(turns));
     const voice = readFileSync(join(__dirname, '..', 'src', 'app', 'tutor', 'components', 'v2', 'TutorVoiceV2.tsx'), 'utf8');
     check('the voice client: the microphone follows `closed`; thanks over the close do not cut it; the ending words are not paused', /const listening = started && realtime\.isConnected && !props\.standby && !turns\.closed;/.test(voice) && /isClosing\(\) && !v2CloseCalledOff\(text\)/.test(voice) && (voice.match(/turnsRef\.current\?\.isEnding\(\)\) return;/g) ?? []).length >= 1);
   }
 
+  console.log('2b CLOSE_HEARS fix round 1 (I1) — the box during the closing words');
+  {
+    const run = async (speechMs: number) => {
+      const log: string[] = []; let t = 0;
+      await v2BoxDuringClose({
+        untilQuiet: async (max) => { t += Math.min(speechMs, max); log.push(`quiet ${Math.min(speechMs, max)}`); return speechMs <= max; },
+        cut: () => log.push(`cut at ${t}`),
+        settle: async () => { log.push('settled'); },
+        end: () => log.push('end'),
+        ended: () => false,
+      });
+      return log.join(' | ');
+    };
+    const short = await run(12_000); const long = await run(55_000);
+    check('the box landing 12 s before the closing words end: they play out, then the session ends (no cut, no second goodbye)', short === 'quiet 12000 | settled | end', short);
+    check('a closing reply still going past the bound (V2_HARD_STOP_TAIL_MAX_MS) is cut there, as any speech at the box', long === `quiet ${V2_HARD_STOP_TAIL_MAX_MS} | cut at ${V2_HARD_STOP_TAIL_MAX_MS} | settled | end`, long);
+    const gone: string[] = [];
+    await v2BoxDuringClose({ untilQuiet: async () => true, cut: () => gone.push('cut'), settle: async () => {}, end: () => gone.push('end'), ended: () => true });
+    check('ended meanwhile (the End button, the host): nothing more', gone.length === 0, gone);
+  }
+
   console.log('3  TARGET_PAUSE — a short quoted target is set apart by a pause');
   {
     const f8 = speak(FLAG8, true);
-    check('flag 8: "an" and "important customer" each get a pause before and after', f8.length === 1 && f8[0] === `Please add ${BREAK}an${BREAK} before ${BREAK}important customer${BREAK}.`, f8);
+    check('flag 8: one break before "an" and one after "important customer", none between (one word apart: they share them)', f8.length === 1 && f8[0] === `Please add ${BREAK}an before important customer${BREAK}.`, f8);
+    const lone = speak('Please add "an" here.', true)[0]!;
+    check('one target: a pause before it and after it', lone === `Please add ${BREAK}an${BREAK} here.`, lone);
+    const adj = speak('Use "a" "an" "the".', true)[0]!;
+    check('adjacent targets: never two tags back to back (the first two share theirs)', adj === `Use ${BREAK}a an${BREAK} the.` && !/\/>[\s.,]*<break/.test(adj), adj);
+    const far = speak('We say "went" when the time is finished, not "goed".', true)[0]!;
+    check('two targets four or more words apart: one before the first, one between, one after the last', far === `We say ${BREAK}went${BREAK} when the time is finished, not goed${BREAK}.`, far);
+    const gaps = (t: string) => { const w = t.split(/<break[^>]*\/>/).slice(1, -1).map((x) => (x.match(/[\p{L}\p{N}]+/gu) ?? []).length); return w; };
+    check('within one part, breaks of different targets are never closer than four words', [f8[0]!, adj, far].every((t) => { const g = gaps(t); return g.length <= 1 || g.slice(1).every((n) => n >= 4); }), [gaps(far)]);
     check('before this task (or with it off) the quotes are stripped and nothing marks the words', speak(FLAG8, false)[0] === 'Please add an before important customer.' && !speak(FLAG8, false)[0]!.includes('<break'));
     const ja = speak('「an」を「important customer」の前に付けてください。', true);
-    check('a Japanese sentence quoting short English: the targets get the pauses inside the Japanese part', ja.length === 1 && ja[0] === `${BREAK}an${BREAK}を${BREAK}important customer${BREAK}の前に付けてください。`, ja);
+    check('a Japanese sentence quoting short English: the targets get their pauses inside the Japanese part (shared: one particle apart)', ja.length === 1 && ja[0] === `${BREAK}anをimportant customer${BREAK}の前に付けてください。`, ja);
     const jaLong = speak('例えば「I attended an exhibition last year.」です。', true);
     check('a Japanese sentence quoting an English sentence: its own English part (split as before), no pause', jaLong.length === 3 && jaLong[1] === 'I attended an exhibition last year.' && !jaLong.join('').includes('<break'), jaLong);
     const three = speak('We say "went", "saw" and "met", never "goed".', true)[0]!;
-    check('three or more targets in one sentence: only the first two get pauses', (three.match(/<break/g) ?? []).length === 4 && three.startsWith(`We say ${BREAK}went${BREAK}, ${BREAK}saw${BREAK} and met`), three);
+    check('three or more targets in one sentence: only the first two are targets (sharing their breaks), the rest as before', three === `We say ${BREAK}went, saw${BREAK} and met, never goed.`, three);
     const long = speak('Say "I attended a robotics exhibition in Tokyo two years ago." now.', true)[0]!;
     check('a quoted sentence (more than three words) gets none', !long.includes('<break') && long === restOfPath('Say "I attended a robotics exhibition in Tokyo two years ago." now.'), long);
     const ed = speak('Add "-ed" to "work".', true)[0]!;
-    check('an ending: "-ed" is set apart and reaches the voice as -ed (unchanged by the path; no "minus", no "dash")', ed === `Add ${BREAK}-ed${BREAK} to ${BREAK}work${BREAK}.` && !/minus|dash/i.test(ed), ed);
+    const edAlone = speak('Add "-ed" to the verb.', true)[0]!;
+    check('an ending: "-ed" is set apart and reaches the voice as -ed (unchanged by the path; no "minus", no "dash")', edAlone === `Add ${BREAK}-ed${BREAK} to the verb.` && ed === `Add ${BREAK}-ed to work${BREAK}.` && !/minus|dash/i.test(ed + edAlone), [edAlone, ed]);
     check('no tag is written before the rest of the path (it would be read: "less than break time equals…"); the marks pass through it', /less than break/.test(restOfPath(`x ${BREAK} y`)) && restOfPath(markTargets(FLAG8)).includes('an') && targetPauses('a  b') === 'a  b');
     check('a number or a sound in quotes is not a target ("6", "/z/"): as before', speak('The "6" inch pipe and the "/z/" sound.', true)[0] === restOfPath('The "6" inch pipe and the "/z/" sound.'));
     // The tags are only in what goes to the voice: the caption shows the sentence as written.
@@ -221,4 +282,4 @@ function main() {
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);
 }
-main();
+main().catch((e) => { console.error(e); process.exit(1); });

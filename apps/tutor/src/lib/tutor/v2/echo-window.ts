@@ -31,6 +31,12 @@ export const V2_ECHO_LEAD_WORDS = 1;
 /** A slow speaking rate, characters per second: the earliest the voice can be through a part. */
 const SLOW_CHARS_PER_SEC = 11.8;
 const KEEP_PARTS = 16;
+/** A speech start this long after the utterance's last stop is a new utterance, not the recogniser resuming the same
+ *  turn (Ink's turn.resume follows its eager end within the turn-end wait, at most 5.6 s). */
+export const V2_ECHO_RESUME_MS = 6000;
+/** An utterance's start older than this with no words since is stale whatever else is known (the recogniser's own
+ *  words watch gives up on a start after 45 s). */
+export const V2_ECHO_ONSET_MAX_MS = 45_000;
 
 export interface V2PlayedPart { text: string; words: string[]; base: number; startMs: number; endMs: number | null }
 /** Where playback stands in the part playing (getSpokenProgress). */
@@ -39,7 +45,11 @@ export interface V2EchoJudgement { own: boolean; score: number; part: string | n
 
 export class V2EchoClock {
   readonly parts: V2PlayedPart[] = [];
-  private onset: { atMs: number; pos: number } | null = null;
+  /** Where the utterance being heard began, and the signs of it since: its last stop, its latest words. One utterance:
+   *  cleared when it ends (words, a failure, words lost) and replaced by the next one's start. Task 7h fix round 1 C1: a
+   *  start whose turn ended with no words (Ink drops an empty turn.end without a callback) left it standing, and a
+   *  learner's repeat ten seconds later was matched against everything played since. */
+  private onset: { atMs: number; pos: number; stopAtMs: number | null; wordsAtMs: number | null } | null = null;
   private nextBase = 0;
   constructor(private readonly tailMs = V2_ECHO_TAIL_MS, private readonly lagWords = V2_ECHO_LAG_WORDS, private readonly leadWords = V2_ECHO_LEAD_WORDS) {}
 
@@ -72,27 +82,43 @@ export class V2EchoClock {
     return cur.base + (bound === 'low' ? Math.floor(f * n) : Math.min(n, Math.ceil(f * n)));
   }
 
-  /** The recogniser heard speech begin. Kept until the words are settled (a final or a failure). */
+  /** The recogniser heard speech begin. The same utterance goes on only when this is its resume (a stop shortly
+   *  before); a start with no stop since, one long after the stop, or one on a stale start begins a new utterance (the
+   *  last one ended with no words). */
   speechStart(nowMs: number, progress: V2PlayProgress | null): void {
-    if (!this.onset) this.onset = { atMs: nowMs, pos: this.position(progress, 'low') };
+    const o = this.onset;
+    const resumes = !!o && o.stopAtMs !== null && nowMs - o.stopAtMs <= V2_ECHO_RESUME_MS && nowMs - (o.wordsAtMs ?? o.atMs) <= V2_ECHO_ONSET_MAX_MS;
+    if (resumes) { o!.stopAtMs = null; return; }
+    this.onset = { atMs: nowMs, pos: this.position(progress, 'low'), stopAtMs: null, wordsAtMs: null };
   }
 
-  /** Words arrived with no speech start seen: they began about as many words back as they hold. */
+  /** The recogniser's speech stopped (its eager end): words may still follow, or a resume. */
+  speechStop(nowMs: number): void { if (this.onset) this.onset.stopAtMs = nowMs; }
+
+  /** Words so far: with no utterance under way (or a stale one), they began about as many words back as they hold. */
   heardWords(text: string, nowMs: number, progress: V2PlayProgress | null): void {
-    if (!this.onset) this.onset = { atMs: nowMs, pos: this.position(progress, 'low') - ownVoiceWords(text).length };
+    const o = this.onset;
+    if (!o || nowMs - (o.wordsAtMs ?? o.atMs) > V2_ECHO_ONSET_MAX_MS) this.onset = { atMs: nowMs, pos: this.position(progress, 'low') - ownVoiceWords(text).length, stopAtMs: null, wordsAtMs: nowMs };
+    else o.wordsAtMs = nowMs;
   }
 
-  /** The words are settled: the next speech is a new utterance. */
+  /** The utterance is over (its words arrived, the recogniser failed, the words were lost, or the session reset): the
+   *  next speech is a new utterance. */
   settled(): void { this.onset = null; }
 
   /** Whether these heard words are the tutor's own voice. `minWords`, `share`: as isOwnVoice. */
   judge(text: string, nowMs: number, progress: V2PlayProgress | null, minWords = 4, share = 0.7): V2EchoJudgement {
     const heard = ownVoiceWords(text);
-    const onset = this.onset ?? { atMs: nowMs, pos: this.position(progress, 'low') - heard.length };
-    const live = this.parts.filter((p) => p.startMs <= nowMs && (p.endMs === null || p.endMs >= onset.atMs - this.tailMs));
+    const stale = !!this.onset && nowMs - (this.onset.wordsAtMs ?? this.onset.atMs) > V2_ECHO_ONSET_MAX_MS;
+    const onset = this.onset && !stale ? this.onset : { atMs: nowMs, pos: this.position(progress, 'low') - heard.length, stopAtMs: null, wordsAtMs: null };
     const since = (t: number) => `${((nowMs - t) / 1000).toFixed(1)}s`;
+    const last = this.current();
+    // Whatever the start says: the tutor silent for longer than the tail when these words were last heard (their latest
+    // words so far, else now) means nothing is its own voice.
+    const heardAt = onset.wordsAtMs ?? nowMs;
+    const silentFor = last && last.endMs !== null ? heardAt - last.endMs : 0;
+    const live = silentFor > this.tailMs ? [] : this.parts.filter((p) => p.startMs <= nowMs && (p.endMs === null || p.endMs >= onset.atMs - this.tailMs));
     if (!live.length) {
-      const last = this.current();
       return { own: false, score: 0, part: null, timing: `words began ${since(onset.atMs)} ago; ${last?.endMs != null ? `the tutor silent since ${since(last.endMs)} ago` : 'nothing played yet'}` };
     }
     const from = onset.pos - this.lagWords;

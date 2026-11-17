@@ -260,6 +260,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const wordsWatchRef = useRef<WordsWatch>(null as unknown as WordsWatch);
   if (!wordsWatchRef.current) wordsWatchRef.current = new WordsWatch(() => {
     p.current.onDebugEvent?.('v2_words_lost', 'speech was heard and no transcript or failure followed: listening again');
+    // Task 7h fix round 1 (C1): that utterance is over; its start must not stand for the next one.
+    echoRef.current.settled(); ownPartialLoggedRef.current = false;
     if (turnsRef.current?.isEnding() || turnsRef.current?.busy || realtimeRef.current?.isSpeechPending()) return;
     showState('listening'); armSilence();
   }, undefined, TUTOR_V2_NO_WORDS_RECOVER);
@@ -617,7 +619,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     }, BARGEIN_GATE_POLL_MS);
   }, []);
   // Speech stopped before the gate passed: a blip or the tutor's own voice, not an interruption.
-  const onSpeechStop = useCallback(() => { if (soundGateRef.current) { stopSoundGate(); p.current.onDebugEvent?.('v2_bargein_gate_dropped', 'speech stopped first'); } if (flagRef.current.active) return; wordsWatchRef.current.speech('stop'); pronRef.current?.speechStop(); if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) showState('processing'); }, []);
+  const onSpeechStop = useCallback(() => { echoRef.current.speechStop(Date.now()); if (soundGateRef.current) { stopSoundGate(); p.current.onDebugEvent?.('v2_bargein_gate_dropped', 'speech stopped first'); } if (flagRef.current.active) return; wordsWatchRef.current.speech('stop'); pronRef.current?.speechStop(); if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) showState('processing'); }, []);
   const onNoTranscript = useCallback((kind: string | undefined) => {
     echoRef.current.settled(); ownPartialLoggedRef.current = false;
     wordsWatchRef.current.settled();
@@ -690,7 +692,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     turnsRef.current?.open();
   }, []);
 
-  useEffect(() => () => { wordsWatchRef.current.settled(); stopSoundGate(); pronRef.current?.disarm(); releaseBoard(); clearSilence(); if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current); turnsRef.current?.abort(); realtimeRef.current?.disconnect(); }, []);
+  useEffect(() => () => { wordsWatchRef.current.settled(); echoRef.current.settled(); stopSoundGate(); pronRef.current?.disarm(); releaseBoard(); clearSilence(); if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current); turnsRef.current?.abort(); realtimeRef.current?.disconnect(); }, []);
 
   // A resumed session waits for a tap, as any session does (audio needs one): the page shows "Continue lesson".
   useEffect(() => { if (turns.resumedRef.current && !startedRef.current) p.current.onResumeAwaitingTapChange?.(true); // eslint-disable-next-line react-hooks/exhaustive-deps

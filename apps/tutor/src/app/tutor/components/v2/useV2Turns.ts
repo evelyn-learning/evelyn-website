@@ -34,7 +34,7 @@ import { goodbyeLine } from '@/lib/tutor/voice/timebox-lines';
 import { parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
 import { v2LevelEstimateDue, v2SeedWorkingLevel, v2WorkingLevelCommit } from '@/lib/tutor/v2/working-level';
 import { v2WithPronunciationHeard, type V2PronunciationHeard } from '@/lib/tutor/v2/pronunciation';
-import { V2ClosingWords, v2CloseHears } from '@/lib/tutor/v2/close-mic';
+import { V2ClosingWords, v2BoxDuringClose, v2CloseHears } from '@/lib/tutor/v2/close-mic';
 
 export interface V2TurnsConfig {
   mode: 'text' | 'voice';
@@ -530,11 +530,24 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     const stopMin = v2HardStopMinutes(minutes, p.current.sessionStopCeilingMinutes);
     hardStopRef.current = setTimeout(() => {
       if (endingRef.current) return;
-      // Task 7h: a close still being said when the box comes is not interruptible either: the microphone closes.
+      // Task 7h: a close still being said when the box comes is not interruptible either: the microphone closes, and
+      // (fix round 1, I1) the closing words play out, bounded, then the session ends as the close would have.
       const wasClosing = closingRef.current.active;
       endingRef.current = true; closingRef.current.stop();
-      if (wasClosing) setClosed(true);
       p.current.onDebugEvent?.('v2_time_limit', `${stopMin} min (box ${minutes})`);
+      if (wasClosing) {
+        setClosed(true);
+        const settle = p.current.closeDelayMs;
+        void v2BoxDuringClose({
+          ...(p.current.untilQuiet ? { untilQuiet: p.current.untilQuiet } : {}),
+          cut: () => p.current.onCut?.(),
+          settle: () => (typeof settle === 'function' ? settle() : Promise.resolve()),
+          end: () => endOnce(),
+          ended: () => endedRef.current,
+          log: (type, message) => p.current.onDebugEvent?.(type, message),
+        });
+        return;
+      }
       // A lesson that has already said its goodbye (kept open by its partner) is not said goodbye to twice.
       const bye = TUTOR_V2_TIME_BOX && !stateRef.current.closed ? goodbyeLine(p.current.studentName) : null;
       // Task 7d fix round 1 (M10): the next-time line waits for the reply that closes; when the box comes first, its goodbye says it.
