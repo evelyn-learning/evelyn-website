@@ -5,7 +5,7 @@
 // from the marketing site.
 
 export const KEYSTONE_HOSTS = ["keystone.evelynlearning.com", "keystone.localhost"];
-export const KEYSTONE_DB = "castle_rock_review";
+export const KEYSTONE_DB = process.env.KEYSTONE_DB_NAME || "castle_rock_review";
 export const SESSION_COOKIE = "ks_session";
 export const SESSION_DAYS = 30;
 
@@ -178,9 +178,9 @@ export function normaliseCourse(course: string): string {
 }
 
 /** The title of a solution section for an item of `course`; null where the title is not decided (diploma, other courses). */
-export function sectionTitle(kind: SectionKind, course: string): string | null {
+export function sectionTitle(kind: SectionKind, course: string | undefined | null): string | null {
   if (kind !== "diploma") return SECTION_TITLE[kind];
-  return (DIPLOMA_COURSES as readonly string[]).includes(normaliseCourse(course)) ? SECTION_TITLE.diploma : OTHER_COURSE_SECTION_TITLE;
+  return (DIPLOMA_COURSES as readonly string[]).includes(normaliseCourse(course ?? "")) ? SECTION_TITLE.diploma : OTHER_COURSE_SECTION_TITLE;
 }
 
 export const SUBJECTS = ["Mathematics", "Biology", "Chemistry", "Physics"] as const;

@@ -174,31 +174,36 @@ export async function ingestQtiItems(items: QtiItem[], actor: Actor, uploadId: s
     const reopened = !!existing && (existing.stage === "item_data" || existing.stage === "rejected");
     if (existing) {
       const stage: Stage = reopened ? (existing.version ? "drafting" : "received") : existing.stage;
-      // A course that came from the spreadsheet is not overwritten by QTI metadata.
-      const { course: _metadataCourse, ...withoutCourse } = fields;
-      const keep = existing.courseSource === "sheet" ? withoutCourse : { ...fields, courseSource: "metadata" as const };
+      // Only a course that itself came from metadata is refreshed from it; a sheet course, or a row from before
+      // courseSource existed (undefined, possibly a sheet course), is kept as it is.
+      const { course: metadataCourse, ...withoutCourse } = fields;
+      const keep = existing.courseSource === "metadata" ? { ...withoutCourse, course: metadataCourse } : withoutCourse;
       await Item.updateOne({ itemId: q.itemId }, { $set: { ...keep, stage, receivedAt: new Date() } });
       updated.push(q.itemId);
     } else {
-      // A spreadsheet row that arrived before the item applies now (the latest batch listing it wins).
-      const batch = await Batch.findOne({ itemIds: q.itemId }).sort({ receivedAt: -1 }).lean();
-      const row = batch?.rows.find((r) => r.itemId === q.itemId);
+      // Spreadsheet rows that arrived before the item: every batch listing it, newest first; each field comes
+      // from the newest batch whose row carries it, batchId from the newest batch listing the item.
+      const batches = await Batch.find({ itemIds: q.itemId }).sort({ receivedAt: -1 }).lean();
+      const rows = batches.map((b) => b.rows.find((r) => r.itemId === q.itemId)).filter((r) => !!r);
+      const subject = rows.find((r) => r.subject)?.subject;
+      const course = rows.find((r) => r.course)?.course;
+      const showcase = rows.find((r) => r.showcase !== undefined)?.showcase;
       const now = new Date();
       await Item.create({
         itemId: q.itemId,
         ...fields,
-        ...(row?.subject ? { subject: row.subject } : {}),
-        ...(row?.course ? { course: row.course } : {}),
-        courseSource: row?.course ? "sheet" : "metadata",
-        ...(batch ? { batchId: batch.batchId } : {}),
-        receivedAt: batch ? new Date(Math.max(batch.receivedAt.getTime(), now.getTime())) : now,
+        ...(subject ? { subject } : {}),
+        ...(course ? { course } : {}),
+        courseSource: course ? "sheet" : "metadata",
+        ...(batches[0] ? { batchId: batches[0].batchId } : {}),
+        receivedAt: now,
         evelynAnswer: "",
         keySource: q.key ? "castle-rock" : "evelyn",
         stage: "received",
         version: 0,
         releasedVersion: 0,
         releasedAnswer: "",
-        showcase: row?.showcase ?? false,
+        showcase: showcase ?? false,
         source: "upload",
         order: ++order,
         createdAt: new Date(),
@@ -216,32 +221,30 @@ export async function ingestQtiItems(items: QtiItem[], actor: Actor, uploadId: s
   return { created, updated };
 }
 
+export type BatchRef = { batchId: string; receivedAt: Date };
+
 /** Records a spreadsheet upload as a batch; its parsed rows are kept so rows for items not uploaded yet can be applied later. */
-export async function createBatch(filename: string, uploadedBy: string, rows: BatchRow[], batchId?: string): Promise<string> {
+export async function createBatch(filename: string, uploadedBy: string, rows: BatchRow[], opts: { batchId?: string; receivedAt?: Date } = {}): Promise<BatchRef> {
   const { Batch } = await ks();
-  const id = batchId ?? new Types.ObjectId().toString();
-  await Batch.create({ batchId: id, filename, itemIds: rows.map((r) => r.itemId), rows, receivedAt: new Date(), uploadedBy });
-  return id;
+  const batchId = opts.batchId ?? new Types.ObjectId().toString();
+  const receivedAt = opts.receivedAt ?? new Date();
+  await Batch.create({ batchId, filename, itemIds: rows.map((r) => r.itemId), rows, receivedAt, uploadedBy });
+  return { batchId, receivedAt };
 }
 
 /** Applies a manifest spreadsheet row: the course (which now counts as the sheet's), subject, showcase flag and batch. */
-export async function applySheetRow(row: BatchRow, actor: Actor, batchId?: string): Promise<"updated" | "missing"> {
+export async function applySheetRow(row: BatchRow, batch: BatchRef): Promise<"updated" | "missing"> {
   const { Item } = await ks();
   const item = await Item.findOne({ itemId: row.itemId }).select("createdAt").lean();
   if (!item) return "missing";
-  const set: Partial<ItemDoc> = {};
+  const set: Partial<ItemDoc> = { batchId: batch.batchId, receivedAt: new Date(Math.max(batch.receivedAt.getTime(), item.createdAt?.getTime() ?? 0)) };
   if (row.subject) set.subject = row.subject;
   if (row.course) {
     set.course = row.course;
     set.courseSource = "sheet";
   }
   if (row.showcase !== undefined) set.showcase = row.showcase;
-  if (batchId) {
-    set.batchId = batchId;
-    set.receivedAt = new Date(Math.max(Date.now(), item.createdAt?.getTime() ?? 0));
-  }
   await Item.updateOne({ itemId: row.itemId }, { $set: set });
-  void actor;
   return "updated";
 }
 

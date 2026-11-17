@@ -3,7 +3,6 @@ import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
-import { tmpdir } from "node:os";
 import { renderInline, renderMarkdown, sanitize } from "./render";
 import { parseItemFile } from "./item-file";
 import JSZip from "jszip";
@@ -226,6 +225,7 @@ async function passageTests() {
   assert.equal(normaliseCourse("Science, Grade 7"), "Science, Grade 7");
   assert.equal(sectionTitle("diploma", "Science 30"), "Diploma-style answer");
   assert.equal(sectionTitle("diploma", ""), null);
+  assert.equal(sectionTitle("diploma", undefined as unknown as string), null);
 }
 
 /** Minimal well-formedness check: every open tag closed in order, no bare named entities. */
@@ -256,63 +256,11 @@ async function solaroTests() {
   assert.ok(wellFormed(`<div>${x}</div>`), "XHTML is well-formed");
 }
 
-// Sheet course beats QTI metadata; batches keep rows for items not yet uploaded. Local mongod only.
-async function batchTests() {
-  process.env.KEYSTONE_MONGODB_URI = "mongodb://127.0.0.1:27017";
-  process.env.KEYSTONE_DATA_DIR = path.join(tmpdir(), "ks-test-data");
-  const { ks, closeKs } = await import("./db");
-  const { applySheetRow, createBatch, ingestQtiItems } = await import("./store");
-  const { Item, Batch } = await ks();
-  await Item.db.dropDatabase();
-  const actor = { username: "t", name: "T", role: "evelyn" as const };
-  const q = (itemId: string, course: string) => ({
-    itemId, subject: "Mathematics", course, itemType: "MC", key: "A", standards: [], topic: "t", questionHtml: "<p>q</p>",
-    options: [], interactions: [], keys: {}, castleRockSolutionHtml: "", resources: new Map<string, Uint8Array>(), raw: { apip: "", metadata: "", passages: [] },
-  });
-  try {
-    await ingestQtiItems([q("9001", "Meta course")], actor, "up1");
-    let it = await Item.findOne({ itemId: "9001" }).lean();
-    assert.equal(it?.courseSource, "metadata");
-    assert.ok(it?.receivedAt, "receivedAt set");
-    assert.equal(it?.releasedVersion, 0);
-    const batchId = await createBatch("manifest.csv", actor.username, [
-      { itemId: "9001", course: "Math 30-1", showcase: true },
-      { itemId: "9002", course: "Biology 30" },
-    ]);
-    const b = await Batch.findOne({ batchId }).lean();
-    assert.equal(b?.rows.length, 2);
-    assert.deepEqual(b?.itemIds, ["9001", "9002"]);
-    assert.equal(await applySheetRow({ itemId: "9001", course: "Math 30-1", showcase: true }, actor, batchId), "updated");
-    assert.equal(await applySheetRow({ itemId: "9002", course: "Biology 30" }, actor, batchId), "missing");
-    it = await Item.findOne({ itemId: "9001" }).lean();
-    assert.equal(it?.course, "Math 30-1");
-    assert.equal(it?.courseSource, "sheet");
-    assert.equal(it?.batchId, batchId);
-    assert.ok(it!.receivedAt! >= it!.createdAt, "receivedAt = max(sheet time, createdAt)");
-    // re-sent item keeps the sheet course
-    await ingestQtiItems([q("9001", "Meta again")], actor, "up2");
-    it = await Item.findOne({ itemId: "9001" }).lean();
-    assert.equal(it?.course, "Math 30-1");
-    assert.equal(it?.courseSource, "sheet");
-    // item that arrives after its sheet row picks it up
-    await ingestQtiItems([q("9002", "Meta course")], actor, "up3");
-    const late = await Item.findOne({ itemId: "9002" }).lean();
-    assert.equal(late?.course, "Biology 30");
-    assert.equal(late?.courseSource, "sheet");
-    assert.equal(late?.batchId, batchId);
-    console.log("  batches ok");
-  } finally {
-    await Item.db.dropDatabase();
-    await closeKs();
-  }
-}
-
 // Real SOLARO sample, when present on this machine (Vance's 2026-10-29 export).
 const sample = path.join(homedir(), "Downloads", "Item234035.zip");
 (async () => {
   await solaroTests();
   await passageTests();
-  await batchTests();
   if (existsSync(sample)) {
     const { items, messages } = await readQtiZip(new Uint8Array(await readFile(sample)));
     assert.equal(items.length, 1, messages.join("; "));

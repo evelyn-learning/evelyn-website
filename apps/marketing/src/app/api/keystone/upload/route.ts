@@ -55,9 +55,9 @@ export async function POST(req: NextRequest) {
       } else if (/\.(csv|tsv|txt)$/i.test(f.name) || /\.xlsx$/i.test(f.name)) {
         const rows = /\.xlsx$/i.test(f.name) ? await parseXlsx(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer) : parseCsv(new TextDecoder().decode(buf));
         const missing: string[] = [];
-        const batchId = await createBatch(f.name, user.username, rows, String(upload._id));
+        const batch = await createBatch(f.name, user.username, rows, { batchId: String(upload._id) });
         for (const r of rows) {
-          if ((await applySheetRow(r, user, batchId)) === "updated") updated.push(r.itemId);
+          if ((await applySheetRow(r, batch)) === "updated") updated.push(r.itemId);
           else missing.push(r.itemId);
         }
         messages.push(`${rows.length} rows read.`);
