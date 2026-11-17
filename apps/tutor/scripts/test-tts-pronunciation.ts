@@ -1590,6 +1590,12 @@ console.log('OK — tts-pronunciation rewrites validated');
   assert.equal(maths9('The minus sign stays attached to the $5$.'), 'The minus sign stays attached to the 5.');
   assert.equal(maths9('It costs $5 and $3.'), 'It costs 5 dollars and 3 dollars.');
   assert.equal(speechRateForLevel('7'), 0.78); assert.equal(speechRateForLevel('9-10'), 0.88); assert.equal(speechRateForLevel('grade 4'), 0.7);
-  for (const full of ['12', 'ap', 'college', undefined]) assert.equal(speechRateForLevel(full), undefined);
+  // An AP lesson at the full rate was "a little fast" (Praveen, AP US Government, portal-ddf273bf): the oldest
+  // students and levels with no grade number are spoken to a little slower than the voice's own pace too.
+  for (const full of ['12', 'ap', 'college', undefined]) assert.equal(speechRateForLevel(full), 0.88);
+  assert.match(rewriteForTTS('Federalist No. 51 is one of those essays.'), /Federalist Number 51/);
+  assert.match(rewriteForTTS('See Nos. 10 and 51.'), /Numbers 10 and 51/);
+  assert.match(rewriteForTTS('Use the no. 3 on the list.'), /the number 3 on the list/);
+  assert.match(rewriteForTTS('No. That is not right. No 5 is there.'), /^No\. That is not right\. No 5 is there\.$/);
   for (const keep of ['The scores are 62, 66, 70, 73, 75.', 'In 1492, 1519, and 1550 to 1551.', 'It cost 1,250,000 dollars.']) assert.equal(speakDataRuns(keep), keep);
 }

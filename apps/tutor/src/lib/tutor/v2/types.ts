@@ -95,6 +95,8 @@ export interface V2State {
   note: string;
   /** `at`: when the goal was last marked, so the part in hand can be told from one left open earlier (progress.ts). */
   goals: Record<string, { status: GoalStatus; why?: string; at?: number }>;
+  /** The board card of each plan problem that has been put up: goal id → item id (turn.ts). */
+  problemCards?: Record<string, string>;
   /** Gaps the tutor has found in what the student knows, with how far each has been worked on. Optional: older states have none. */
   gaps?: V2Gap[];
   board: V2Board;
@@ -142,6 +144,8 @@ export interface V2ToolCall {
   carries?: string[];
   /** Not painted: it repeats this item on the page in view, and the board scrolls back to it. */
   pointsAt?: string;
+  /** Not painted: the item it repeats is on another page, and the board turns back to that page (its index). */
+  turnsTo?: number;
 }
 
 export interface V2TurnResult {

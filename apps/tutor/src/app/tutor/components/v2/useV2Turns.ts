@@ -282,7 +282,12 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
           p.current.onDebugEvent?.('tool_call', `${call.name}${call.name === 'set_goal_status' ? ` ${String(call.args.goal ?? '')}=${String(call.args.status ?? '')}` : call.name === 'end_lesson' ? ` because=${String(call.args.because ?? '')}` : ''} → ${call.outcome}${call.sayWith ? ` · with "${call.sayWith}"` : ''}${call.inline ? ' · inline' : ''}`);
           // Written again, a thing already on the page is pointed at: the board glides back to it and marks it
           // ("it would have been awesome had it slowly scrolled up and showed me that problem", AP Precalculus).
-          if (call.pointsAt) { p.current.onWhiteboardCommand([{ action: 'scrollTo', target: 'item', targetId: call.pointsAt, pulse: true } as unknown as WhiteboardCommand]); return; }
+          if (call.pointsAt) {
+            // On another page: the board turns back to it first, and what is written next goes there.
+            const turn = call.turnsTo !== undefined ? [{ ...(mapFunctionCallToCommand('go_to_page', { pageIndex: call.turnsTo, page: call.turnsTo + 1, title: stateRef.current.board.pages[call.turnsTo]?.title }) as unknown as Record<string, unknown>), writesThere: true } as unknown as WhiteboardCommand] : [];
+            p.current.onWhiteboardCommand([...turn, { action: 'scrollTo', target: 'item', targetId: call.pointsAt, pulse: true } as unknown as WhiteboardCommand]);
+            return;
+          }
           if (!paintsOnBoard(call, V2_CONTROL_TOOL_NAMES)) return;
           const cmd = mapFunctionCallToCommand(call.name, call.args as Record<string, unknown>);
           // The words written before and after a tool call are separate paragraphs.

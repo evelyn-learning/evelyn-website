@@ -40,6 +40,18 @@ export function goalForProblem(plan: LessonPlan, statement: string): string | nu
   return best?.id ?? null;
 }
 
+/** A plan problem in parts, "(a) … (b) … (c) …", is one problem: the student works down it with every part in
+ *  view. Put up a part at a time, part (b) was asked aloud with only (a) on the board, and part (c), asked for
+ *  again later, went up alone on the recap page (AP US Government, portal-ddf273bf). Given what the tutor is
+ *  putting up, this is the whole authored problem it belongs to, or null when it belongs to none in parts. */
+export function wholeProblem(plan: LessonPlan, statement: string): { goal: string; statement: string } | null {
+  const goal = goalForProblem(plan, statement);
+  if (!goal) return null;
+  const seg = plan.segments.find((s) => s.id === goal) as unknown as { problem?: unknown } | undefined;
+  const authored = typeof seg?.problem === 'string' ? seg.problem.trim() : '';
+  return /\(a\)[\s\S]*\(b\)/.test(authored) ? { goal, statement: authored } : null;
+}
+
 export function v2Progress(plan: LessonPlan, goals: V2State['goals']): V2Progress {
   // A part that is only told has no moment at which the student finishes it, and a tutor that does not record it
   // leaves it open for the whole lesson. Once the lesson has reached a later part, it is behind the student.

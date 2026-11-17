@@ -18,7 +18,7 @@
 import { drawFigure } from './drawn-figures';
 import { typesetMaths } from './rich-text';
 import { closeDueMinutes } from './close-heard';
-import { goalForProblem } from './progress';
+import { goalForProblem, wholeProblem } from './progress';
 import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient } from '../ai/model-registry';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
@@ -397,7 +397,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       if (same) replaces = same.id;
     }
     const sayWith = typeof sayWithRaw === 'string' && sayWithRaw.trim() ? sayWithRaw.trim() : undefined;
-    let outcome: string; let pointsAt: string | undefined;
+    let outcome: string; let pointsAt: string | undefined; let turnsTo: number | undefined;
     if (V2_CONTROL_TOOL_NAMES.has(block.name)) {
       // At the opening, and when the last reply ended on a statement and the student has waited, silence is
       // not open to the tutor: a session sat on a blank screen until the student spoke, and a tutor went quiet
@@ -425,23 +425,46 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         const page = replaces ? state.board.pages[state.board.current] : undefined;
         const was = page?.items.find((it) => it.id === replaces);
         if (page && was) page.items = page.items.filter((it) => it !== was);
-        const o = applyBoard(state.board, block.id, block.name, args); outcome = o.painted ? o.detail : `not painted: ${o.detail}`;
-        // A problem of the plan on the board is that part of the plan begun, whether or not the tutor records it:
-        // a whole lesson ran with the phases showing Hook, because no progress was recorded until the close
-        // (Algebra 1, portal-50a1e584).
-        if (o.painted && block.name === 'show_problem' && session.plan && !discussion) {
-          const put = typeof args.statement === 'string' ? args.statement : typeof (args.problem as { statement?: unknown } | undefined)?.statement === 'string' ? (args.problem as { statement: string }).statement : typeof args.problem === 'string' ? args.problem : '';
-          const goal = goalForProblem(session.plan, put);
-          if (goal && !state.goals[goal]) state.goals[goal] = { status: 'shown', at: nowMs };
+        // A problem of the plan, as the tutor is putting it up.
+        const put = block.name !== 'show_problem' || !session.plan || discussion ? '' : typeof args.statement === 'string' ? args.statement : typeof (args.problem as { statement?: unknown } | undefined)?.statement === 'string' ? (args.problem as { statement: string }).statement : typeof args.problem === 'string' ? args.problem : '';
+        const planGoal = put && session.plan ? goalForProblem(session.plan, put) : null;
+        const whole = put && session.plan ? wholeProblem(session.plan, put) : null;
+        // Its card, when it is already on the board: on whichever page it stands.
+        const cardId = planGoal ? state.problemCards?.[planGoal] : undefined;
+        const cardPage = cardId ? state.board.pages.findIndex((pg) => pg.items.some((it) => it.id === cardId)) : -1;
+        let o: V2BoardOutcome & { turnTo?: number };
+        if (cardId && cardPage >= 0 && (whole || cardPage !== state.board.current)) {
+          // Asked for again, or its next part asked: the problem is one card, and the board goes to it. From
+          // another page the board turns back to its page, so the parts and the working done on it are in
+          // view together and what is written next goes there ("show me that question again" put part (c)
+          // alone on the recap page, AP US Government, portal-ddf273bf).
+          const away = cardPage !== state.board.current;
+          if (away) state.board.current = cardPage;
+          o = { painted: false, detail: away ? `already on page ${cardPage + 1} "${state.board.pages[cardPage].title}"` : `already on the board (page ${cardPage + 1})`, pointAt: cardId, ...(away ? { turnTo: cardPage } : {}) };
+        } else {
+          // The first part of a problem in parts goes up as the whole problem.
+          if (whole && typeof args.statement === 'string') args.statement = whole.statement;
+          o = applyBoard(state.board, block.id, block.name, args);
         }
+        outcome = o.painted ? o.detail : `not painted: ${o.detail}`;
+        if (planGoal) {
+          if (o.painted) state.problemCards = { ...(state.problemCards ?? {}), [planGoal]: block.id };
+          // A problem of the plan on the board is that part of the plan begun, whether or not the tutor records
+          // it: a whole lesson ran with the phases showing Hook, because no progress was recorded until the
+          // close (Algebra 1, portal-50a1e584). Gone back to while still open, it is the part in hand again.
+          const g = state.goals[planGoal];
+          if (!g) state.goals[planGoal] = { status: 'shown', at: nowMs };
+          else if (g.status === 'shown' && !o.painted) state.goals[planGoal] = { ...g, at: nowMs };
+        }
+        if (o.turnTo !== undefined) turnsTo = o.turnTo;
         if (!o.painted) { if (page && was) page.items.push(was); replaces = undefined; }
-        if (!o.painted && o.pointAt && !boardOnly) { pointsAt = o.pointAt; outcome = `not painted again: ${o.detail}; the board has scrolled back to it`; }
+        if (!o.painted && o.pointAt && !boardOnly) { pointsAt = o.pointAt; outcome = turnsTo !== undefined ? `not painted again: ${o.detail}; the board has turned back to that page and shows it. Carry on with it there: what you write next goes on that page` : `not painted again: ${o.detail}; the board has scrolled back to it`; }
       }
     }
     const result: Anthropic.ToolResultBlockParam = { type: 'tool_result', tool_use_id: block.id, content: outcome };
     // The board pass often offers again what the reply already put up; a call of its that did nothing leaves no trace.
     if (boardOnly && /^not /.test(outcome)) return result;
-    const call: V2ToolCall = { id: block.id, name: block.name, args, outcome, ...(sayWith ? { sayWith } : {}), ...(inline && !sayWith ? { inline: true } : {}), ...(replaces && !/^not /.test(outcome) ? { replaces } : {}), ...(markBeforeTurn ? { beforeTurn: true } : {}), ...(placeAbove && !/^not /.test(outcome) ? { before: placeAbove } : {}), ...(pointsAt ? { pointsAt } : {}), ...(block.name === 'new_page' && inline && !/^not /.test(outcome) && pageAgreed ? { agreed: true } : {}), ...(carryNow.length && block.name === 'new_page' && !/^not /.test(outcome) ? { carries: carryNow } : {}) };
+    const call: V2ToolCall = { id: block.id, name: block.name, args, outcome, ...(sayWith ? { sayWith } : {}), ...(inline && !sayWith ? { inline: true } : {}), ...(replaces && !/^not /.test(outcome) ? { replaces } : {}), ...(pointsAt && turnsTo !== undefined ? { turnsTo } : {}), ...(markBeforeTurn ? { beforeTurn: true } : {}), ...(placeAbove && !/^not /.test(outcome) ? { before: placeAbove } : {}), ...(pointsAt ? { pointsAt } : {}), ...(block.name === 'new_page' && inline && !/^not /.test(outcome) && pageAgreed ? { agreed: true } : {}), ...(carryNow.length && block.name === 'new_page' && !/^not /.test(outcome) ? { carries: carryNow } : {}) };
     toolCalls.push(call);
     input.onToolCall?.(call);
     return result;

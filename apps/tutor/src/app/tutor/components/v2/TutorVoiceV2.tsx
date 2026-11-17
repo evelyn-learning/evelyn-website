@@ -572,8 +572,10 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   }, [props.handleRef, start, heard]);
 
   const flagSession = useMemo(() => {
+    // One folder per session: by student, every session's flags ran together in one file.
+    if (props.sessionId) return props.sessionId;
     try { return String(JSON.parse(atob((props.embedToken ?? '').split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).student_id || 'session'); } catch { return 'session'; }
-  }, [props.embedToken]);
+  }, [props.embedToken, props.sessionId]);
   const flagSnapshot = useCallback(() => {
     const state = turnsRef.current?.stateRef.current;
     const text = (m: { content: unknown } | undefined) => !m ? '' : typeof m.content === 'string' ? m.content : (m.content as Array<{ type: string; text?: string }>).filter((b) => b.type === 'text').map((b) => b.text).join(' ');

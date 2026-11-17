@@ -2508,6 +2508,9 @@ export function speakTypedMaths(text: string): string {
 export function rewriteForTTS(raw: string, opts?: RewriteForTTSOptions): string {
   let t = raw;
   t = speakTypedMaths(t);
+  // "No. 51" is "number 51": the voice read "Federalist No. 51" as "Federalist no 51" (AP US Government,
+  // portal-ddf273bf). Only before a numeral, and not at the start of a sentence, where "No." is the answer no.
+  t = t.replace(/(?<=[A-Za-z,;:(]\s)(N|n)os\.\s*(?=\d)/g, (_m, c: string) => `${c}umbers `).replace(/(?<=[A-Za-z,;:(]\s)(N|n)o\.\s*(?=\d)/g, (_m, c: string) => `${c}umber `);
   // A fraction over zero has no everyday reading, so the voice invents one: "0/0" was spoken as
   // "zero zeroths" (Praveen, embed-1794328944377, L'Hôpital). It is always "N over zero"; the same
   // goes for the infinity form, whose slash was otherwise left for the voice to guess at.
