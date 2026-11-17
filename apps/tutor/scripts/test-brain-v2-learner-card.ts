@@ -108,7 +108,12 @@ async function main() {
     check('I3: "Great. Now try "…"" after a right sentence: none (the tutor\'s next model, not their correction)', v2LearnerCardIn('Great. Now try "I have worked at Acme Corp since 2020."', RIGHT) === null);
     check('I3: "Now say it with "since": "…"": none', v2LearnerCardIn('Perfect. Now say it with "since": "I have worked at Acme Corp since 2020."', RIGHT) === null);
     check('I3: "we say "…"" after the reply called their sentence right: none', v2LearnerCardIn('We say "I have worked at Acme Corp since 2020."', RIGHT, { afterRight: true }) === null);
-    check('I3: their words kept whole with more added ("… last year" after "I went to Beijing"): none', v2LearnerCardIn('We say "I went to Beijing with my team last year."', 'I went to Beijing with my team.') === null);
+    check('I3: their words kept whole with more added, after the reply called them right: none', v2LearnerCardIn('We say "I went to Beijing with my team last year."', 'I went to Beijing with my team.', { afterRight: true }) === null);
+    // Fix round 2 ruling: under an explicit correction lead-in, any change is a correction (an article, a plural added).
+    const art = v2LearnerCardIn('We say "I went to the Robotics Expo in Beijing."', 'I went to Robotics Expo in Beijing.');
+    check('ruling: an article added under "we say": carded, the article stressed', art?.kind === 'correction' && JSON.stringify(art.stress) === '["the"]', art);
+    const plural = v2LearnerCardIn('The correct sentence is "I have worked at Acme Corp for five years."', 'I have worked at Acme Corp for five year.');
+    check('ruling: a plural added under "the correct sentence is": carded, the plural stressed', plural?.kind === 'correction' && JSON.stringify(plural.stress) === '["years"]', plural);
     check('I3: "you could say "…"" (an alternative, not a correction): none', v2LearnerCardIn('You could say "I have been at Acme Corp for five years."', WRONG) === null);
     check('I1: "Your pronunciation of "…" was good.": none', v2LearnerCardIn('Your pronunciation of "I work at Acme Corp for five year" was good.', WRONG) === null);
     check('I1: "You used the past correctly in "…", well done for trying.": none', v2LearnerCardIn('You used the past correctly in "I goed to Beijing last year with my boss", well done for trying.', 'I goed to Beijing last year with my boss.') === null);
@@ -126,6 +131,33 @@ async function main() {
     const w = new LearnerCardWatch(RIGHT, () => false);
     const parts = [...w.feed([{ text: 'Perfect. We say "I have worked at Acme Corp since 2020." Now you.' }]), ...w.end()];
     check('I3 in the stream: a "we say" after "Perfect." in the same reply: none', parts.every((p) => !('block' in p)), parts);
+  }
+
+  console.log('fix round 2: an acknowledgement is no verdict, and the next sentence is read (N1); quote marks pair (N2); numbers stress whole (N3)');
+  {
+    const WRONG = 'I work at Acme Corp for five year.';
+    for (const reply of ['Yes, "I work at Acme Corp for five year." Almost there: we need have worked.', 'Great, "I work at Acme Corp for five year." Let\'s fix one thing.', 'Good: "I work at Acme Corp for five year." Now one change.']) {
+      const a = await run(spoken, WRONG, reply);
+      check(`no card, nothing among their corrected sentences: ${reply}`, cards(a).length === 0 && !(a.r.state.correctedSentences ?? []).length && !/<board sentence/.test(storedText(a)) && storedText(a).startsWith(reply), { calls: a.calls, stored: storedText(a) });
+    }
+    check('"Yes,", "Good:", "Great," before their words are no verdict', ['Yes, "I work at Acme Corp for five year."', 'Good: "I work at Acme Corp for five year."', 'Great, "I work at Acme Corp for five year."'].every((x) => v2LearnerCardIn(x, WRONG) === null));
+    const SAID_RIGHT = 'I have worked at Acme Corp for five years.';
+    const held = await run(spoken, SAID_RIGHT, 'That\'s right: "I have worked at Acme Corp for five years." Almost perfect, but say "for" more clearly.');
+    check('"That\'s right: "…"" then a sentence that holds back: dropped', cards(held).length === 0, held.calls);
+    const ok = 'That\'s right: "I have worked at Acme Corp for five years." Now tell me about a project.';
+    const b = await run(spoken, SAID_RIGHT, ok);
+    check('"That\'s right: "…"" then the lesson goes on: carded, after the next sentence', cards(b).length === 1 && /a project\. ?<board sentence>I have worked at Acme Corp for five years\.<\/board>$/.test(storedText(b)) && stripBoardBlocks(storedText(b)) === ok, storedText(b));
+    check('…and the words heard are the model\'s', b.said.replace(/\s+/g, ' ').trim() === ok, b.said);
+    const w = new LearnerCardWatch(SAID_RIGHT, () => false);
+    const p1 = w.feed([{ text: 'Correct: "I have worked at Acme Corp for five years." Now tell me ' }]);
+    check('the as-said card waits; the words do not (all of them out, no card yet)', p1.every((p) => !('block' in p)) && p1.map((p) => ('text' in p ? p.text : '')).join('') === 'Correct: "I have worked at Acme Corp for five years." Now tell me ', p1);
+    const p2 = [...w.feed([{ text: 'about a project.' }]), ...w.end()];
+    check('…written once the next sentence ends without a correction', p2.some((p) => 'block' in p), p2);
+    check('N2: "…」 is no quote', v2LearnerCardIn('We say "I have worked at Acme Corp for five years.」', WRONG) === null);
+    const num = v2LearnerCardIn('We say "I sold twenty-five machines last month."', 'I sell 25 machine last month.');
+    check('N3: "twenty-five" against their "25" is not stressed', JSON.stringify(num?.stress) === '["sold","machines"]', num);
+    const num2 = v2LearnerCardIn('We say "I sold twenty five machines last month."', 'I sell 25 machine last month.');
+    check('N3: "twenty five" (spaced) is not stressed either', JSON.stringify(num2?.stress) === '["sold","machines"]', num2);
   }
 
   console.log('fix round 1: numbers alike (M5) and the facts line only after an ask (M3)');
@@ -231,12 +263,17 @@ async function main() {
     check('the next words: the card goes before them, and they go out in the same call', p2.length === 2 && 'block' in p2[0]! && 'text' in p2[1]! && p2[1].text === 'Say it once more.', p2);
   }
 
-  console.log('fix round 1 (M1): a sentence across a model block is not carded (the card is always in the stored text)');
+  console.log('fix round 1 (M1): the card is always in the stored text where it was painted');
   {
     const across = 'We say <board note>have + past participle</board> "I have worked at Acme Corp for five years." Say it once more.';
     const a = await run(spoken, SAID_YEARS, across);
-    const cs = cards(a);
-    check('none, or one stored in the reply', cs.length === 0 || boardBlocksIn(storedText(a)).some((b) => b.kind === 'sentence'), { cs, stored: storedText(a) });
+    check('a quote whose lead-in is across a model block: not carded (the sentence is read within one run of words)', cards(a).length === 0 && storedText(a) === across, { calls: a.calls, stored: storedText(a) });
+    const afterNote = 'Good. <board note>have + past participle</board> We say "I have worked at Acme Corp for five years." Say it once more.';
+    const b = await run(spoken, SAID_YEARS, afterNote);
+    check('a quote after a model block: carded', cards(b).length === 1, b.calls);
+    check('…stored right after its sentence, after the note, before the ask', storedText(b) === 'Good. <board note>have + past participle</board> We say "I have worked at Acme Corp for five years." <board sentence stress="have | worked | years">I have worked at Acme Corp for five years.</board> Say it once more.', storedText(b));
+    const order = b.calls.map((c) => c.name);
+    check('…painted after the note', order.indexOf('annotate') >= 0 && order.indexOf('annotate') < order.indexOf('show_sentence'), order);
   }
 
   console.log('one card a reply');

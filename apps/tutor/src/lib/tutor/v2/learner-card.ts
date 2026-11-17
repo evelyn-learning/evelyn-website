@@ -10,20 +10,23 @@
  *   - a runtime card only where it cannot be false (fix round 1, the controller's ruling):
  *     (a) a correction: an explicit correction lead-in right before the quote ("we say", "the correct sentence is", "it
  *         should be", "a more natural way to say it is"; after it in Japanese: 「…」と言います), whose quote changes the
- *         learner's last words by a real edit (not their words with more added), in a reply that has not called their
- *         sentence right first (then a quote is the tutor's next model sentence). Stress: the words not in theirs.
+ *         learner's last words in any way (an article, a preposition or a plural added counts: fix round 2 ruling), in a
+ *         reply that has not called their sentence right first (then a quote is the tutor's next model sentence). Stress:
+ *         the words not in theirs.
  *     (b) their words as said, framed by a verdict on the whole sentence: right before the quote ("That's right:",
- *         "Exactly:") with nothing after it in the sentence, or right after it (""…" is a clear sentence"). No stress.
- *     The card is written after the quote's sentence and waits only for the next thing in the reply (the spoken words never
- *     wait): a sentence card of the model's for the same sentence right there wins, and the runtime's is dropped. It is
- *     never spoken: its quote was. No gloss (the runtime has none).
+ *         "Correct:"; not "Yes,", "Good:", "Great,") with nothing after it in the sentence, or right after it (""…" is a
+ *         clear sentence"). No stress. Dropped when the reply's next sentence holds back or corrects ("Almost there: we need
+ *         have worked."; fix round 2, N1).
+ *     The card is written after the quote's sentence (an as-said card after the next one) and waits for the next thing in
+ *     the reply (the spoken words never wait): a sentence card of the model's for the same sentence right there wins, and
+ *     the runtime's is dropped. It is never spoken: its quote was. No gloss (the runtime has none).
  *   - a facts line when their words answered an ask for a sentence, for everything the runtime leaves: a sentence right
  *     first time praised without quoting it ("That's right." may not cover the whole sentence), an ask to say it again.
  * The runtime abstains (a missing card is better than a false one): no quote; a quote of under four words, not starting
  * with a capital, with a gap or "…" in it; a quote after "you said", "not", "instead of" or followed by "is wrong"; a
- * lead-in that only asks them to try or say it ("Now try "…"", "say it with "since": "…""); a quote that keeps all their
- * words and adds others, or under half of whose words are theirs; a quote after the reply called their sentence right; their
- * words quoted without a whole-sentence verdict framing them, praised for how they sounded ("Your pronunciation of "…" was
+ * lead-in that only asks them to try or say it ("Now try "…"", "say it with "since": "…""); a quote under half of whose
+ * words are theirs; a quote after the reply called their sentence right; quote marks that do not pair ("…」); their words
+ * quoted without a whole-sentence verdict framing them, or followed by a sentence that holds back or corrects, praised for how they sounded ("Your pronunciation of "…" was
  * good"), praised in part ("you used the past correctly in "…""), with the praise held back ("almost", "but") or corrected
  * in the same sentence ("Exactly, "…" uses work; we need have worked"); a sentence card of the model's earlier in the reply,
  * or of the same sentence right after the quote; a sentence already on the board as a card, or on the page in view, or
@@ -111,8 +114,13 @@ const CORRECTS_AFTER_JA = /^\s*(?:と言います|と言いましょう|と言�
 const MISTAKE_BEFORE = /\b(?:you said|you say|instead of|rather than|not|don't say|never say|isn't|wasn't|mistake|wrong)\b/i;
 /** Words after the quote, in the same sentence, that take it back or go on to correct it. */
 const TAKEN_BACK = /\b(?:is|was|sounds) (?:not|wrong|incorrect)\b|\b(?:isn't|wasn't|instead|but|however)\b|\b(?:we|you) (?:need|say|use|would say|should say)\b|\bshould be\b|\bchange\b/i;
-/** A verdict on the whole sentence right before the quote ("That's right:", "Yes, exactly:"). */
-const VERDICT_BEFORE = /(?:\b(?:that's|that is|it's|it is) (?:right|correct|perfect|exactly right)|\b(?:exactly|correct|perfect|well done|great|good|nicely said|yes))\s*[:,!.—–-]?\s*$/i;
+/** A verdict on the whole sentence right before the quote ("That's right:", "Correct:"). Not an acknowledgement ("Yes,",
+ *  "Good:", "Great,", a bare "Exactly,"): "Good: "<their wrong sentence>." Now one change." boarded the mistake (fix round 2,
+ *  N1). */
+const VERDICT_BEFORE = /(?:\b(?:that's|that is|it's|it is) (?:(?:exactly |perfectly |completely )?(?:right|correct)|perfect)|\b(?:correct|perfect|well done|nicely said|exactly right))\s*[:,!.—–-]?\s*$/i;
+/** The sentence after an as-said card's quote holds the praise back or corrects it ("Almost there: we need have worked.",
+ *  "Let's fix one thing."): the card is dropped (fix round 2, N1). */
+const GOES_ON_TO_CORRECT = /\b(?:almost|nearly|but|however|except|not quite|instead|one (?:small )?(?:thing|change)|small change|fix|change|correct(?:ion|ed)?|mistake|error|wrong|missing|we (?:would |'d )?(?:say|use|need|add)|you (?:need|should)|should be|more natural|better to)\b|直し|訂正/i;
 /** A verdict on the quote right after it (""…" is a clear sentence"). */
 const VERDICT_AFTER = /^\s*,?\s*(?:is|was)\s+(?:a\s+|an\s+)?(?:(?:very|really|perfectly|completely)\s+)?(?:(?:clear|good|correct|natural|great|nice|perfect|grammatical|right)\b(?:\s+(?:sentence|english))?|exactly right)/i;
 /** The quote is the object of a phrase, not the subject of the verdict ("Your pronunciation of "…" was good"). */
@@ -127,8 +135,6 @@ const RIGHT_VERDICT = /^\s*(?:(?:yes|yeah)[,!.]?\s+)?(?:(?:that's|that is|it's|i
 
 export interface V2LearnerCard { sentence: string; stress: string[]; kind: 'correction' | 'as-said' }
 
-/** `ws` keeps every word of `of` in order, with more besides: their sentence with words added (review I3). */
-const extends_ = (ws: string[], of: string[]) => { let i = 0; for (const w of ws) if (w === of[i]) i += 1; return i === of.length && ws.length > of.length; };
 
 /** The card a finished reply sentence carries for the learner's words, or null (see the header for when it abstains).
  *  `afterRight`: an earlier sentence of the reply called their sentence right. */
@@ -137,8 +143,9 @@ export function v2LearnerCardIn(sentence: string, learnerSaid: string | null | u
   if (!learner) return null;
   const theirs = v2SentenceWords(learner);
   let from = 0;
-  for (const m of sentence.matchAll(/["“「]([^"“”「」]+)["”」]/g)) {
-    const q = m[1]!.replace(/\s+/g, ' ').trim().replace(/[,;:]$/, '');
+  // Like quote marks with like (fix round 2, N2): "…」 is no quote.
+  for (const m of sentence.matchAll(/"([^"]+)"|“([^”]+)”|「([^」]+)」/g)) {
+    const q = (m[1] ?? m[2] ?? m[3]!).replace(/\s+/g, ' ').trim().replace(/[,;:]$/, '');
     const qt = v2SentenceWords(q);
     // A quoted word or two ("collected") is part of the lead-in to the next quote.
     if (qt.length < MIN_WORDS || !/^[A-Z]/.test(q) || /…|\.\.\.|_|[<>]/.test(q) || q.length > MAX_CARD_CHARS) continue;
@@ -158,12 +165,16 @@ export function v2LearnerCardIn(sentence: string, learnerSaid: string | null | u
       if (!framedBefore && !framedAfter) continue;
       return { sentence: card, stress: [], kind: 'as-said' };
     }
-    // A correction: an explicit correction lead-in, a real edit of their words (shared helper, sentence-cards.ts), and not
-    // their words with more added, nor a quote after the reply called their sentence right (the tutor's next model).
+    // A correction: an explicit correction lead-in and any change to their words (shared helper, sentence-cards.ts), an
+    // article, a preposition or a plural added among them (fix round 2, the controller's ruling: "I went to the Robotics
+    // Expo…" for "I went to Robotics Expo…"); never a quote after the reply called their sentence right (the tutor's next
+    // model sentence, extended or not: review I3).
     if (opts.afterRight || (!CORRECTS_BEFORE.test(before) && !CORRECTS_AFTER_JA.test(after))) continue;
-    if (!v2IsCorrectionOf(qt.join(' '), theirs.join(' ')) || extends_(qt, theirs)) continue;
+    if (!v2IsCorrectionOf(qt.join(' '), theirs.join(' '))) continue;
     const have = new Set(theirs);
-    const stress = [...new Set((q.match(/[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu) ?? []).filter((w) => !have.has(v2SentenceWords(w)[0] ?? '')))].slice(0, MAX_STRESS);
+    // A number in words is one word ("twenty-five", "twenty five"), compared as its digits (fix round 2, N3).
+    const words = q.replace(/\b(twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)[\s-](one|two|three|four|five|six|seven|eight|nine)\b/gi, '$1-$2').match(/[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*/gu) ?? [];
+    const stress = [...new Set(words.filter((w) => !v2SentenceWords(w).every((x) => have.has(x))))].slice(0, MAX_STRESS);
     return { sentence: card, stress, kind: 'correction' };
   }
   return null;
@@ -175,14 +186,18 @@ const SENTENCE_END = /[.!?]+["'”’)]*(?=\s)|[。！？]+[」』"”]*/g;
  * Watches one reply's streamed parts (turn.ts, between the inline stream and the turn's handling of words and blocks) and
  * writes the runtime card after the reply sentence that carries it. One card a reply; none once the model has written a
  * sentence card of its own earlier in the reply. The card waits for the next thing in the reply, white space aside: a
- * sentence card of the model's for the same sentence there wins (review I2). The words are never held: the card goes out
- * before the next words in the same part.
+ * sentence card of the model's for the same sentence there wins (review I2). A card of their words as said waits further,
+ * to the end of the next sentence, and is dropped when that sentence holds the praise back or corrects it (fix round 2,
+ * N1). The words are never held: only the card waits.
  */
 export class LearnerCardWatch {
   private cur = '';
   private done = false;
   private afterRight = false;
-  private pending: { block: InlineBlock; after: string } | null = null;
+  /** The decided card, waiting for the next thing in the reply. `check`: an as-said card, which also waits for the end of
+   *  the next sentence and is dropped when that sentence holds the praise back or corrects (fix round 2, N1). `trail`: the
+   *  reply's words from the quote's sentence on, as they stand in the stored text. */
+  private pending: { block: InlineBlock; trail: string; check: boolean } | null = null;
   /** The cards written, with the reply sentence each follows (for the stored reply). */
   readonly written: Array<{ after: string; raw: string }> = [];
   constructor(private readonly learnerSaid: string, private readonly onBoard: (sentence: string) => boolean) {}
@@ -192,18 +207,45 @@ export class LearnerCardWatch {
 
   private release(out: InlinePart[]): void {
     if (!this.pending) return;
-    this.written.push({ after: this.pending.after, raw: this.pending.block.raw });
+    this.written.push({ after: this.pending.trail.trim(), raw: this.pending.block.raw });
     out.push({ block: this.pending.block });
     this.pending = null;
   }
 
-  /** Text after a waiting card: white space passes, the card goes before the first words. */
+  /** An as-said card's next sentence (or what there is of it): dropped when it goes on to correct, else written. */
+  private settleChecked(next: string, out: InlinePart[]): void {
+    if (GOES_ON_TO_CORRECT.test(next)) this.pending = null; else this.release(out);
+  }
+
+  /** Text after a waiting card. The words always go out at once; only the card waits. A correction card goes before the
+   *  first words (white space passes); an as-said card goes after the next sentence's end, or is dropped there. */
   private textAfterPending(text: string, out: InlinePart[]): void {
-    const ws = text.match(/^\s*/)![0];
-    if (ws.length === text.length) { out.push({ text }); return; }
-    if (ws) out.push({ text: ws });
-    this.release(out);
-    out.push({ text: text.slice(ws.length) });
+    const p = this.pending!;
+    if (!p.check) {
+      const ws = text.match(/^\s*/)![0];
+      if (ws.length === text.length) { p.trail += text; out.push({ text }); return; }
+      if (ws) { p.trail += ws; out.push({ text: ws }); }
+      this.release(out);
+      out.push({ text: text.slice(ws.length) });
+      return;
+    }
+    const before = this.cur.length;
+    this.cur += text;
+    SENTENCE_END.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = SENTENCE_END.exec(this.cur))) {
+      const end = m.index + m[0].length;
+      if (!this.cur.slice(0, end).trim()) continue;
+      const at = Math.max(0, end - before);
+      if (at > 0) out.push({ text: text.slice(0, at) });
+      p.trail += text.slice(0, at);
+      this.settleChecked(this.cur.slice(0, end), out);
+      this.cur = '';
+      if (text.slice(at)) out.push({ text: text.slice(at) });
+      return;
+    }
+    p.trail += text;
+    out.push({ text });
   }
 
   feed(parts: InlinePart[]): InlinePart[] {
@@ -213,6 +255,7 @@ export class LearnerCardWatch {
       if ('block' in part) {
         // The model's own card of the same sentence right after the quote: the model's card wins (it has the gloss).
         if (this.pending && part.block.kind === 'sentence' && key(part.block.body) === key(this.pending.block.body)) this.pending = null;
+        else if (this.pending?.check) this.settleChecked(this.cur, out);
         else this.release(out);
         if (part.block.kind === 'sentence') this.done = true;
         // Fix round 1 (M1): a sentence is read only within one run of words, so the one a card follows is in the stored text.
@@ -247,7 +290,7 @@ export class LearnerCardWatch {
    *  it, is read too. */
   end(): InlinePart[] {
     const out: InlinePart[] = [];
-    if (this.pending) { this.release(out); this.cur = ''; return out; }
+    if (this.pending) { if (this.pending.check) this.settleChecked(this.cur, out); else this.release(out); this.cur = ''; return out; }
     const last = this.cur; this.cur = '';
     if (!this.done && last.trim() && this.decide(last)) this.release(out);
     return out;
@@ -262,7 +305,7 @@ export class LearnerCardWatch {
     this.done = true;
     const body = card.sentence.replace(/[<>]/g, '');
     const raw = `<board sentence${card.stress.length ? ` stress="${card.stress.join(' | ')}"` : ''}>${body}</board>`;
-    this.pending = { block: { kind: 'sentence', attrs: card.stress.length ? { stress: card.stress.join(' | ') } : {}, body, raw }, after: sentence.trim() };
+    this.pending = { block: { kind: 'sentence', attrs: card.stress.length ? { stress: card.stress.join(' | ') } : {}, body, raw }, trail: sentence, check: card.kind === 'as-said' };
     return true;
   }
 }
