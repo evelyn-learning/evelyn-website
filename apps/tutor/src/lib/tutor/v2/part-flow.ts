@@ -16,7 +16,7 @@ import type { LessonPlan } from '../lesson-plan/types';
 import { stripBoardBlocks } from './board-inline';
 import { PART_OFFERS, V2_CLOSING_PAGE, endsAsking } from './part-close';
 import { V2_OFFER_SHAPE, v2IsPageOfPart, v2PartNamedIn, v2PartOf } from './plan-map';
-import { isPartFrame } from './reply-gate';
+import { JA_WORD_START, isPartFrame } from './reply-gate';
 import type { V2Board, V2State } from './types';
 
 type View = Pick<V2State, 'board' | 'goals' | 'workingLevel'> & { closed?: boolean };
@@ -103,7 +103,7 @@ export function v2PartChangeAsked(plan: LessonPlan, state: View, index: number):
 
 const SENTENCES = /(?<=[.!?]["'”’)]*)\s+|(?<=[。！？][」』)）"”]*)\s*/;
 const FILLER = '(?:(?:uh|um|er|erm|ah|oh|well|so|okay|ok|hmm)[,.]?\\s+)*';
-const GO = new RegExp(`^${FILLER}(?:yes|yeah|yep|yup|ya|sure|ok(?:ay)?|alright|all right|fine|go on|go ahead|carry on|let'?s|move on|we (?:can )?(?:move|go) on|next|continue|ready|i'?m ready|no,? (?:more )?questions?|nope|no,? (?:let'?s|go|move)|please|of course|sounds good|good|great|right|got it|understood)\\b`, 'i');
+const GO = new RegExp(`^${FILLER}(?:yes|yeah|yep|yup|ya|sure|ok(?:ay)?|alright|all right|fine|go on|go ahead|carry on|let'?s|let us|no,? let(?:'?s| us) (?:move|go)|move on|we (?:can )?(?:move|go) on|next|continue|ready|i'?m ready|no,? (?:more )?questions?|nope|no,? (?:let'?s|go|move)|please|of course|sounds good|good|great|right|got it|understood)\\b`, 'i');
 const QUESTION = new RegExp(`[?？]\\s*$|^${FILLER}(?:(?:yes|yeah)[,.]?\\s+)?(?:what|why|how|when|where|which|who|whose|can|could|would|should|is|are|do|does|did|may|i have (?:a|one) question|i(?:'ve| have) got (?:a|one) question|a question|question|wait|sorry|pardon|excuse me|i don'?t (?:understand|get it|know)|what'?s)\\b|質問|わかりません|分かりません`, 'i');
 const GO_JA = /^(?:はい|ええ|うん|お願いします|大丈夫|進みましょう|次へ|次に|いいです|オーケー)/;
 
@@ -136,13 +136,16 @@ export function v2MoveAnswer(said: string | null, lastTutor: string = ''): 'go' 
 /** An unambiguous yes on its own ("Yes.", "Sure, please."): the only go-ahead to a choice offer that does not name the part. */
 const BARE_YES = new RegExp(`^${FILLER}(?:yes|yeah|yep|sure|ok(?:ay)?|alright|all right|of course|はい|ええ)(?:,?\\s*(?:please|let'?s do (?:it|that)|i'?d like (?:that|to)|お願いします))?[.!。！]*$`, 'i');
 /** A choice offer: the part, or something else ("…, or skip it and go to the summary?"). */
-const CHOICE = /\bor (?:skip|go straight|move on|go on|finish|stop|leave|do|go to)\b|それとも|どちら/i;
+// Fix round 2: not "or do": "…go on, or do you have a question first?" is the part ask, not a choice of parts.
+const CHOICE = /\bor (?:skip|go straight|move on|go on|finish|stop|leave|go to|do (?:something|it|that) (?:else|later))\b|それとも(?![^。？?]*質問)|どちら/i;
 
 /** The tutor replies in a history. */
 export const v2TutorReplies = (history: V2State['history']) => history.filter((h) => h.role === 'assistant').length;
 /** A held page waits this many tutor replies for its yes (a question answered, then asked again); then it lapses. */
 export const V2_HELD_PAGE_REPLIES = 3;
 
+/** An explicit cue that the lesson moves to its next part (fix round 2). */
+const MOVE_ON = new RegExp(`\\b(?:move on to|go on to|next is|next up|next part|the next (?:part|section|topic|step)|(?:move|go) on\\b(?! (?:and|with|telling|talking|about|from)))|${JA_WORD_START}(?:次|先)(?:に|へ)(?:進|行き|移り)|${JA_WORD_START}次の(?:パート|部分|項目|テーマ|トピック|セクション|ステップ)`, 'iu');
 const asks = (x: string) => /(?:[?？]|か[。．]?)["'」』）)]*\s*$/.test(x);
 
 /** The part whose page is waiting for the student's yes: the page held at the last part change (not lapsed), or a part the
@@ -168,7 +171,10 @@ export function v2PendingPart(plan: LessonPlan, state: View & Pick<V2State, 'his
     // Two parts named ("pronunciation, or shall we move on to the summary?"): only the one their words name.
     const pickNow = others.length > 1 ? others.find(({ seg }) => !!said && v2PartNamedIn(seg, said)) ?? null : others[0] ?? null;
     if (others.length > 1 && !pickNow) return null;
-    const index = pickNow ? pickNow.i : namedNow.length ? -1 : v2NextPart(plan, state, cur);
+    // Fix round 2: the part after the one in hand only for the frame itself or an explicit move-on cue, never for a bare "shall
+    // we"/"ready"/"go on": "Shall we try another sentence?", "Ready for the next one?" are practice asks, and a yes to them
+    // opened the next part's page.
+    const index = pickNow ? pickNow.i : namedNow.length ? -1 : (isPartFrame(lastAsk) || MOVE_ON.test(two)) ? v2NextPart(plan, state, cur) : -1;
     if (index >= 0 && index !== cur && index < plan.segments.length - 1 && !paged(plan, state.board, index)) return { index, title: v2PartOf(plan.segments[index]!).label! };
     return null;
   }

@@ -18,7 +18,8 @@ import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import { ReplyGate } from '../src/lib/tutor/v2/reply-gate';
 import { leftOpen, mayOpenPart } from '../src/lib/tutor/v2/part-close';
-import { v2ReadCarried } from '../src/lib/tutor/v2/state-carry';
+import { v2CarryApplies, v2ReadCarried, v2ScopeCarried } from '../src/lib/tutor/v2/state-carry';
+import { DISCUSSION_PLAN_KIND } from '../src/lib/tutor/v2/discussion';
 import { V2_PART_ASKS, v2AskRepeats, v2MoveAnswer, v2PartAskLine, v2PartInHand, v2PartsDone, v2PendingPart, v2PlanLabelled } from '../src/lib/tutor/v2/part-flow';
 import { v2Progress } from '../src/lib/tutor/v2/progress';
 import { renderFacts, v2AskEveryOn } from '../src/lib/tutor/v2/facts';
@@ -267,13 +268,36 @@ async function main() {
     check('M5: flags off, labelled plan: held with the old offer, no page kept in the state', /Next is past simple\. Shall we go on, or do you have a question first\?$/.test(off.spoken) && !off.state.heldPage && openTitle(off.state) === 'Your job', off.spoken);
     off = await turn(off.state, 'Yes.', 'Last month is a finished time.', [], session, { pageChip: false, askEvery: false });
     check('M5: …and "Yes." with no page block opens nothing', openTitle(off.state) === 'Your job' && !off.calls.some((c) => c.name === 'new_page'));
+    // Fix round 2: a yes to a practice ask with "shall we" / "ready" / "go on" in it moves nothing.
+    const practice = ['Good. Shall we try another sentence?', 'Nice. Ready for the next one?', 'Are you ready?', 'Great. Shall we practise that once more?', 'Can you go on and tell me more about your team?', 'いいですね。もう一度言ってみましょうか？'];
+    for (const q of practice) for (const yes of ['Yes.', 'Okay.', 'Sure.']) {
+      check(`fix round 2: "${yes}" to "${q}": nothing pending`, v2PendingPart(GDI, base({ history: [{ role: 'user', content: 'x' }, { role: 'assistant', content: q }] }), q, yes) === null);
+    }
+    for (const q of practice) {
+      const r = await turn(base({ history: [{ role: 'user', content: 'x' }, { role: 'assistant', content: q }] }), 'Yes.', 'Good. Say it once more: I sell washing machines.');
+      check(`fix round 2: whole turn, "Yes." to "${q}": no page opens, the chip stays on "Your job"`, openTitle(r.state) === 'Your job' && chips(r.state).lit === 'topic-intro' && !r.calls.some((c) => c.name === 'new_page'), { open: openTitle(r.state), calls: r.calls.map((c) => c.name) });
+    }
+    check('fix round 2: the frame or a move-on cue with no part named still opens the next part', v2PendingPart(GDI, base(), 'Good. Shall we move on?', 'Yes.')?.title === 'Present perfect' && v2PendingPart(GDI, base(), 'Good work. Any questions first, or shall we go on?', 'Yes.')?.title === 'Present perfect' && v2PendingPart(GDI, base(), 'お疲れさまでした。次に進みますか？', 'はい')?.title === 'Present perfect');
+    check('fix round 2: the runtime\'s "…or do you have a question first?" is no choice of parts', v2PendingPart(GDI, base(), 'Would you like to practise pronunciation now, or do you have a question first?', 'Okay.')?.title === 'Pronunciation');
+    check('fix round 2: "No, let us move on." to a questions-first ask is a go', v2MoveAnswer('No, let us move on.', ask) === 'go' && v2MoveAnswer('Let us move on.') === 'go');
     // Controller ruling: the route's state reading keeps what the turn wrote for the next turn.
     const carried = v2ReadCarried({ summaryBegunAt: 1_700_000, repliesSinceBoard: 2.7, boardProblems: ['note "x": too wide', 3, '', ...Array.from({ length: 20 }, (_, i) => `p${i}`)], heldPage: { title: 'Past simple', part: 'past-simple', at: 4 } });
     check('state carry: summaryBegunAt, repliesSinceBoard (whole), boardProblems (strings, last 12), heldPage survive', carried.summaryBegunAt === 1_700_000 && carried.repliesSinceBoard === 2 && carried.boardProblems?.length === 12 && carried.boardProblems[11] === 'p19' && carried.heldPage?.part === 'past-simple', carried);
     check('state carry: a session that never set them gets nothing added; malformed values are dropped', JSON.stringify(v2ReadCarried({ history: [], note: '' })) === '{}' && JSON.stringify(v2ReadCarried({ summaryBegunAt: 'x', repliesSinceBoard: -1, boardProblems: 'no', heldPage: { title: 1 } })) === '{}');
     check('state carry: kill switch off: only the held page, as before; on by default', JSON.stringify(v2ReadCarried({ summaryBegunAt: 5, repliesSinceBoard: 1, boardProblems: ['a'] }, false)) === '{}' && TUTOR_V2_STATE_CARRY === true);
+    // Fix round 2 (controller ruling): carried for spoken plan-led lessons only; homework, discussion and typed lessons drop
+    // them, as before.
+    const full = (): V2State => ({ ...newV2State(0), summaryBegunAt: 5, repliesSinceBoard: 3, boardProblems: ['a'] });
+    const kept = (x: V2State) => x.summaryBegunAt === 5 && x.repliesSinceBoard === 3 && x.boardProblems?.length === 1;
+    const none = (x: V2State) => x.summaryBegunAt === undefined && x.repliesSinceBoard === undefined && x.boardProblems === undefined;
+    const disc = { ...GDI, metadata: { kind: DISCUSSION_PLAN_KIND, participant: 'a teacher', orientation: 'x', cases: [{ id: 'c1', scenario: 'y' }] } } as unknown as LessonPlan;
+    check('state scope: a spoken plan lesson carries all three', kept(v2ScopeCarried(full(), session)) && v2CarryApplies(session));
+    check('state scope: homework (GAC text and voice), a discussion, a typed lesson and a voice lesson with no plan drop them (as at 57d4aa6f)',
+      none(v2ScopeCarried(full(), { ...session, mode: 'text', homework: { statement: 'x' } as never })) && none(v2ScopeCarried(full(), { ...session, homework: { statement: 'x' } as never }))
+      && none(v2ScopeCarried(full(), { ...session, plan: disc })) && none(v2ScopeCarried(full(), { ...session, mode: 'text' })) && none(v2ScopeCarried(full(), { ...session, plan: undefined })));
+    check('state scope: the held page is not touched by the scope', v2ScopeCarried({ ...full(), heldPage: { title: 'A', part: 'a', at: 1 } }, { ...session, mode: 'text' }).heldPage?.part === 'a');
     const routeSrc = readFileSync(join(__dirname, '..', 'src', 'app', 'api', 'tutor', 'brain-v2', 'turn', 'route.ts'), 'utf8');
-    check('state carry: the turn route reads them through v2ReadCarried', /const carried = v2ReadCarried\(s\)/.test(routeSrc) && /\.\.\.carried/.test(routeSrc));
+    check('state carry: the turn route reads them through v2ReadCarried and scopes them to the session', /const carried = v2ReadCarried\(s\)/.test(routeSrc) && /\.\.\.carried/.test(routeSrc) && /v2ScopeCarried\(state, session\)/.test(routeSrc));
   }
 
   console.log(`\n${passed} passed, ${failed} failed`);

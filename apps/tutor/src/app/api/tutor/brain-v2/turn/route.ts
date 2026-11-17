@@ -25,7 +25,7 @@ import { v2ReadCorrectedSentences } from '@/lib/tutor/v2/sentence-cards';
 import { TUTOR_PRONUNCIATION_ASSESS, TUTOR_WORKING_LEVEL } from '@/lib/tutor/orchestrator/flags';
 import { parseTutorLanguages } from '@/lib/tutor/voice/tts-language';
 import type { V2Session, V2State, V2ToolCall } from '@/lib/tutor/v2/types';
-import { v2ReadCarried } from '@/lib/tutor/v2/state-carry';
+import { v2ReadCarried, v2ScopeCarried } from '@/lib/tutor/v2/state-carry';
 
 export const runtime = 'nodejs';
 
@@ -121,6 +121,8 @@ export async function POST(req: NextRequest) {
     ...(homework ? { homework: homework.problem } : {}),
     ...(homeworkSheet ? { homeworkSheet: homeworkSheet.sheet } : {}),
   };
+  // Task 7a fix round 2: what the turn wrote for the next turn is kept for spoken plan-led lessons only (state-carry.ts).
+  v2ScopeCarried(state, session);
   const silenceSeconds = typeof body.silenceSeconds === 'number' && body.silenceSeconds > 0 ? body.silenceSeconds : undefined;
 
   const encoder = new TextEncoder();

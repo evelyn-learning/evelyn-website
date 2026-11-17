@@ -4,7 +4,8 @@
  * session that never set one sends and gets exactly what it did before.
  */
 import { TUTOR_V2_STATE_CARRY } from '../orchestrator/flags';
-import type { V2State } from './types';
+import type { V2Session, V2State } from './types';
+import { discussionOf } from './discussion';
 
 export const V2_MAX_BOARD_PROBLEMS = 12;
 const PROBLEM_CHARS = 300;
@@ -24,4 +25,18 @@ export function v2ReadCarried(raw: unknown, enabled: boolean = TUTOR_V2_STATE_CA
     if (list.length) out.boardProblems = list;
   }
   return out;
+}
+
+/** Fix round 2 (controller ruling): the three fields are carried only for a spoken, plan-led teaching lesson, the only kind
+ *  in which the turn sets `summaryBegunAt` (turn.ts). Homework (GAC text), discussions and typed lessons were verified live
+ *  without them and keep that: a growing "board last written on" line in a discussion that paints by design rarely would
+ *  read as a nudge. */
+export function v2CarryApplies(session: Pick<V2Session, 'mode' | 'plan' | 'homework' | 'homeworkSheet'>): boolean {
+  return session.mode === 'voice' && !!session.plan && !session.homework && !session.homeworkSheet && !discussionOf(session.plan);
+}
+
+/** The state as the turn gets it: the carried fields dropped (as before Task 7a) for a session they do not apply to. Mutates. */
+export function v2ScopeCarried(state: V2State, session: Pick<V2Session, 'mode' | 'plan' | 'homework' | 'homeworkSheet'>): V2State {
+  if (!v2CarryApplies(session)) { delete state.summaryBegunAt; delete state.repliesSinceBoard; delete state.boardProblems; }
+  return state;
 }
