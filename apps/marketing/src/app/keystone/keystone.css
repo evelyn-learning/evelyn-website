@@ -110,6 +110,9 @@
 .ks-crsol { margin-top: 14px; font-size: 14px; }
 .ks-crsol summary { cursor: pointer; color: var(--muted); font-weight: 600; }
 .ks-crsol .cr-step-title { font-weight: 700; margin-top: 8px; }
+/* Reading passage that came with a QTI item, above the stem. */
+.ks-prose .cr-passage { border-left: 3px solid #c9ced6; padding: 2px 0 2px 12px; margin: 0 0 14px; }
+.ks-prose .cr-passage-title { font-weight: 700; margin-bottom: 6px; }
 
 /* Bottom review bar */
 .ks-bar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-top: 1px solid var(--line); box-shadow: 0 -4px 14px rgba(0,0,0,.05); z-index: 20; }

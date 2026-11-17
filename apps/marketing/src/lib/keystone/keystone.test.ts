@@ -5,7 +5,8 @@ import { homedir } from "node:os";
 import path from "node:path";
 import { renderInline, renderMarkdown, sanitize } from "./render";
 import { parseItemFile } from "./item-file";
-import { parseQtiItem, readQtiZip } from "./qti";
+import JSZip from "jszip";
+import { parseQtiItem, passageHtml, readQtiZip } from "./qti";
 import { parseCsv } from "./sheet";
 import { renderForSolaro, texToLinear, toXhtml } from "./solaro";
 
@@ -85,6 +86,42 @@ Because.
   assert.ok(!q.questionHtml.includes("simpleChoice"), "options removed from stem");
   assert.ok(q.castleRockSolutionHtml.includes("cr-step-title"), "their solution kept");
   assert.deepEqual(q.imageRefs, ["resources/Image_1.png"]);
+  assert.deepEqual(q.passageRefs, []);
+
+  // Standards descriptions arrive wrapped in <p>; the list is plain text.
+  const withStd = meta.replace("</metadata>", "<SYSTEM_Standards><Standard><Code>S.1</Code><Description><p>Solve\t\tproblems.</p></Description></Standard></SYSTEM_Standards></metadata>");
+  assert.deepEqual(parseQtiItem(apip, withStd).standards, ["S.1 Solve problems."]);
+
+  // Solution-only item file (question already in the database).
+  const solOnly = parseItemFile('---\nitemId: "9"\nevelynAnswer: "A"\n---\n\n## Short answer\nA.\n', { questionOptional: true });
+  assert.deepEqual(solOnly.sections.map((s) => s.kind), ["short"]);
+  assert.throws(() => parseItemFile('---\nitemId: "9"\n---\n\n## Short answer\nA.\n'), /no Question section/);
+}
+
+// QTI reading passage: shown above the stem, kept raw for the package going back
+async function passageTests() {
+  const apip = `<assessmentItem identifier="item_7"><responseDeclaration><correctResponse><value>A</value><value>C</value></correctResponse></responseDeclaration><itemBody><rubricBlock id="passage_3" class="passage" view="candidate"><object type="text/html" data="passage_3.xml" /></rubricBlock><rubricBlock class="scoringData" view="scorer"><div><![CDATA[<Data>{A,C}=1</Data>]]></div></rubricBlock><p>Which apply?</p><choiceInteraction responseIdentifier="RESPONSE" maxChoices="0"><simpleChoice identifier="A"><p>a</p></simpleChoice><simpleChoice identifier="C"><p>c</p></simpleChoice></choiceInteraction></itemBody></assessmentItem>`;
+  const passage = `<div class="passage" id="passage_3"><div class="title">Kind</div><div class="content"><p><span class="passageRef" label="x_y">The bus came.</span></p></div></div>`;
+  assert.deepEqual(parseQtiItem(apip, "").passageRefs, ["passage_3.xml"]);
+  assert.equal(parseQtiItem(apip, "").key, "A,C");
+  assert.ok(!passageHtml(passage).includes("label="), "passage anchors dropped");
+
+  const zip = new JSZip();
+  zip.file("Item7/item_7_apip.xml", apip);
+  zip.file("Item7/passage_3.xml", passage);
+  const { items, messages } = await readQtiZip(await zip.generateAsync({ type: "uint8array" }));
+  assert.equal(items.length, 1);
+  const h = items[0].questionHtml;
+  assert.ok(h.indexOf("The bus came.") >= 0 && h.indexOf("The bus came.") < h.indexOf("Which apply?"), "passage sits above the stem");
+  assert.ok(h.includes('class="cr-passage"') && h.includes('class="cr-passage-title"'), "passage classes");
+  assert.ok(!h.includes("{A,C}=1"), "scoring data not shown");
+  assert.deepEqual(items[0].raw.passages, [{ file: "passage_3.xml", xml: passage }]);
+  assert.ok(!messages.some((m) => m.includes("passage")), "no passage warning");
+
+  const bare = new JSZip();
+  bare.file("item_7_apip.xml", apip);
+  const missing = await readQtiZip(await bare.generateAsync({ type: "uint8array" }));
+  assert.ok(missing.messages.some((m) => m.includes("passage passage_3.xml is referenced but not in the zip")), "missing passage is reported");
 }
 
 // sheet
@@ -126,6 +163,7 @@ async function solaroTests() {
 const sample = path.join(homedir(), "Downloads", "Item234035.zip");
 (async () => {
   await solaroTests();
+  await passageTests();
   if (existsSync(sample)) {
     const { items, messages } = await readQtiZip(new Uint8Array(await readFile(sample)));
     assert.equal(items.length, 1, messages.join("; "));

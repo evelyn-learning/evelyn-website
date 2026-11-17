@@ -134,6 +134,10 @@ export async function buildExport(itemIds: string[]): Promise<Uint8Array> {
       q.file(`item_${item.itemId}_apip.xml`, qtiItem(item.qti.apip, sections));
       q.file(`item_${item.itemId}_metadata.xml`, item.qti.metadata || "<metadata />");
       const resources: string[] = [];
+      for (const p of item.qti.passages ?? []) {
+        q.file(p.file, p.xml);
+        resources.push(p.file);
+      }
       for (const ref of item.qti.resources ?? []) {
         const data = await readAsset(item.itemId, ref.split("/").pop()!);
         if (data) {

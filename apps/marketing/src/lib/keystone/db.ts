@@ -37,7 +37,7 @@ export type ItemDoc = {
   /** Castle Rock's own worked solution from the QTI export, for reference. */
   castleRockSolutionHtml?: string;
   /** Original QTI XML (items that arrived as QTI); resource paths as used in the XML. */
-  qti?: { apip: string; metadata: string; resources: string[] };
+  qti?: { apip: string; metadata: string; resources: string[]; passages?: { file: string; xml: string }[] };
   /** Animated (voiced) player attached to the item: files under assets/<itemId>/player/. */
   player?: { entry: string; voice?: string; height: number; note?: string; attachedAt: Date };
   stage: Stage;
@@ -138,7 +138,18 @@ function defineModels(conn: Connection): Models {
     questionMd: String,
     options: [Option],
     castleRockSolutionHtml: String,
-    qti: { type: new Schema({ apip: String, metadata: String, resources: [String] }, { _id: false }), required: false },
+    qti: {
+      type: new Schema(
+        {
+          apip: String,
+          metadata: String,
+          resources: [String],
+          passages: [new Schema({ file: String, xml: String }, { _id: false })],
+        },
+        { _id: false },
+      ),
+      required: false,
+    },
     player: {
       type: new Schema({ entry: String, voice: String, height: Number, note: String, attachedAt: Date }, { _id: false }),
       required: false,
