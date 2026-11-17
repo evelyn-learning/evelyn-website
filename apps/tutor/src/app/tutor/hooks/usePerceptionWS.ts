@@ -54,6 +54,10 @@ export interface PerceptionSpeechEvent {
   /** Audio offset in the input buffer (server-reported). */
   audioStartMs?: number;
   audioEndMs?: number;
+  /** Ink 2 only (useCartesiaInkWS): this start is `turn.resume`, the same turn going on after a premature eager end,
+   *  not a new `turn.start`. Absent on every new turn and on other recognisers. Task 7h fix round 2 (v2's echo clock);
+   *  v1 ignores it. */
+  resume?: boolean;
 }
 
 export interface UsePerceptionWSOptions {

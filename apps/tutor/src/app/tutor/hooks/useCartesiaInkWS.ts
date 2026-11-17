@@ -87,6 +87,13 @@ export interface InkEvent {
   [k: string]: unknown;
 }
 
+/** The onSpeechStart payload for a new `turn.start` ({ tMs }, as before) or a `turn.resume` (the same turn going on after
+ *  a premature eager end: `resume: true`, which v1 ignores). Task 7h fix round 2: v2's echo clock tells a new utterance
+ *  from the same one by this, not by timing. */
+export function inkSpeechStartEvent(kind: 'start' | 'resume', tMs: number): PerceptionSpeechEvent {
+  return kind === 'resume' ? { tMs, resume: true } : { tMs };
+}
+
 /**
  * Pure delta-reconstruction, ported verbatim from
  * scripts/tutor/voice-harness/stt-clients.ts `ink2()`'s onMessage hook.
@@ -151,6 +158,9 @@ export interface UseCartesiaInkWSOptions {
    *  console.warn never reaches the server, so a turn lost here left no
    *  trace in `debugEvents`. Wire to onDebugEvent. */
   onDiagnostic?: (type: string, message: string) => void;
+  /** A turn ended with no words delivered (an empty turn.end, or a stale final dropped): the utterance it began is over.
+   *  Task 7h fix round 2 (v2's echo clock); v1 does not pass it, so nothing changes there. */
+  onTurnEndedEmpty?: (e: { tMs: number }) => void;
 }
 
 export interface UseCartesiaInkWSResult {
@@ -229,6 +239,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
     onStateChange,
     onError,
     onDiagnostic,
+    onTurnEndedEmpty,
   } = options;
 
   const [state, setStateInternal] = useState<PerceptionState>('disabled');
@@ -242,6 +253,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
   const onStateChangeRef = useRef(onStateChange);
   const onErrorRef = useRef(onError);
   const onDiagnosticRef = useRef(onDiagnostic);
+  const onTurnEndedEmptyRef = useRef(onTurnEndedEmpty);
   onSpeechStartRef.current = onSpeechStart;
   onSpeechStopRef.current = onSpeechStop;
   onPartialTranscriptRef.current = onPartialTranscript;
@@ -253,6 +265,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
   onStateChangeRef.current = onStateChange;
   onErrorRef.current = onError;
   onDiagnosticRef.current = onDiagnostic;
+  onTurnEndedEmptyRef.current = onTurnEndedEmpty;
 
   const wsRef = useRef<WebSocket | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -468,6 +481,8 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
     const deltas = reconstructInkFinals(buf.events);
     turnBuffersRef.current.delete(turnId);
     const text = rawTranscript.trim();
+    // Task 7h fix round 2: the turn's end with nothing delivered, for a caller that tracks utterances (v2's echo clock).
+    const endedEmpty = () => { try { onTurnEndedEmptyRef.current?.({ tMs: inkT0Ref.current ? Date.now() - inkT0Ref.current : 0 }); } catch {} };
     if (deltas.length === 0) {
       // Pre-round-28 this returned unconditionally — but a short utterance
       // ("4.") whose only text arrives in the turn.end's cumulative
@@ -475,11 +490,12 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
       // speech, and dropping it here was invisible (2026-07-24 silent-
       // session incident class). Deliver non-empty finals; the dispatch
       // dedupe layer downstream guards the (unobserved) duplicate case.
+      if (!text) endedEmpty(); // no transcript callback for it: only the utterance's end (Task 7h fix round 2)
       if (!text) return; // genuinely empty turn — nothing to deliver
       onDiagnosticRef.current?.('ink_no_delta_final_delivered',
         `turn ${turnId} had 0 update deltas but a non-empty final — delivering: ${JSON.stringify(text.slice(0, 80))}`);
     }
-    if (!text) return;
+    if (!text) { endedEmpty(); return; }
     reconnectAttemptsRef.current = 0;
     const now = Date.now();
     const tMs = inkT0Ref.current ? now - inkT0Ref.current : 0;
@@ -493,6 +509,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
       console.warn(`${logPrefix} stale final dropped (${latencyMs}ms open, ${countSpeechTokens(text)} token(s)): ${JSON.stringify(text)}`);
       onDiagnosticRef.current?.('ink_stale_final_dropped',
         `turn ${turnId} open ${latencyMs}ms with ${countSpeechTokens(text)} token(s) — dropped: ${JSON.stringify(text.slice(0, 80))}`);
+      endedEmpty();
       return;
     }
     console.warn(`${logPrefix} transcript (${latencyMs}ms): ${JSON.stringify(text)}`);
@@ -522,7 +539,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
         const now = Date.now();
         speechStartedAtRef.current = now;
         const tMs = inkT0Ref.current ? now - inkT0Ref.current : 0;
-        try { onSpeechStartRef.current?.({ tMs }); } catch {}
+        try { onSpeechStartRef.current?.(inkSpeechStartEvent('start', tMs)); } catch {}
         break;
       }
       case 'turn.update': {
@@ -580,7 +597,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
               const now = Date.now();
               speechStartedAtRef.current = now;
               const tMs = inkT0Ref.current ? now - inkT0Ref.current : 0;
-              try { onSpeechStartRef.current?.({ tMs }); } catch {}
+              try { onSpeechStartRef.current?.(inkSpeechStartEvent('resume', tMs)); } catch {}
             }
           }
         }

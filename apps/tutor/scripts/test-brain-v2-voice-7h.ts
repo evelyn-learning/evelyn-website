@@ -23,6 +23,7 @@ import { V2EchoClock, V2_ECHO_TAIL_MS, v2IsEcho, type V2PlayProgress } from '../
 import { isOwnVoice } from '../src/lib/tutor/v2/own-voice';
 import { V2ClosingWords, v2BoxDuringClose, v2CloseCalledOff, v2CloseHears } from '../src/lib/tutor/v2/close-mic';
 import { V2_HARD_STOP_TAIL_MAX_MS } from '../src/lib/tutor/v2/time-box';
+import { inkSpeechStartEvent } from '../src/app/tutor/hooks/useCartesiaInkWS';
 import { V2_TARGET_PAUSE_MS, markTargets, targetPauses, withTargetPauses } from '../src/lib/tutor/v2/target-pauses';
 import { v2SpeechParts } from '../src/lib/tutor/v2/languages';
 import { v2SpeakSounds } from '../src/lib/tutor/v2/spoken-sounds';
@@ -172,10 +173,37 @@ async function main() {
     check('C1: after words lost (settled) the next start is its own utterance', !judge(c1d, FINAL, tcd + 6000).own);
     // A resume shortly after the stop (Ink's turn.resume) keeps the utterance: a real echo across it is still dropped.
     const c1e = new Playback(REPLY, 0); const te5 = c1e.starts[5]! + 300; c1e.advance(te5); c1e.clock.speechStart(te5, c1e.progress(te5));
-    c1e.clock.speechStop(te5 + 1500); const tr = te5 + 2200; c1e.advance(tr); c1e.clock.speechStart(tr, c1e.progress(tr));
-    check('C1: a resume within the turn-end wait keeps the utterance: the echo across it is still dropped', judge(c1e, 'Next is conversation where we talk about a project you are proud of.', c1e.at(5, 0.98)).own);
+    c1e.clock.speechStop(te5 + 1500); const tr = te5 + 2200; c1e.advance(tr); c1e.clock.speechStart(tr, c1e.progress(tr), true);
+    check('C1 (round 2): a MARKED resume (Ink turn.resume) keeps the utterance: the echo across it, during the sentence playing, is still dropped', judge(c1e, 'Next is conversation where we talk about a project you are proud of.', c1e.at(5, 0.98)).own);
+    // Fix round 2, re-review sequence B: an echo turn at 0.5 s, its eager end at 1.2 s, an empty turn.end (no words);
+    // the learner's NEW turn 4.5 s after that stop, 95% through the model sentence. Without and with the empty-end signal.
+    const seqB = (emptyEnd: boolean) => {
+      const b2 = new Playback(['Here is the full sentence:', 'I attended a robotics exhibition in Tokyo two years ago.', 'Now you say it.'], 0);
+      b2.advance(500); b2.clock.speechStart(500, b2.progress(500)); b2.clock.speechStop(1200); if (emptyEnd) b2.clock.settled();
+      const tl = 1200 + 4500; b2.advance(tl); b2.clock.speechStart(tl, b2.progress(tl));
+      b2.pausedAt = tl + 500;
+      const part = judge(b2, 'I attended', tl + 900, true); b2.clock.heardWords('I attended', tl + 900, b2.progress(tl + 900));
+      const fin = judge(b2, PERFECT, tl + 6000);
+      return { part, fin };
+    };
+    const bNo = seqB(false); const bYes = seqB(true);
+    check('C1 round 2, sequence B: the learner\'s new turn 4.5 s after an empty echo turn is a new utterance: heard (partial pauses the tutor, final is his)', !bNo.part.own && !bNo.fin.own && !bYes.part.own && !bYes.fin.own, { bNo, bYes });
+    // Sequence C: empty echo turns every 3.5 s through a long reply (no empty-end signal at all), then the learner says the
+    // sentence played two parts back while the last part plays.
+    const LONG = ['First we look at the time words.', 'I attended a robotics exhibition in Tokyo two years ago.', 'The verb is in the past simple form.', 'Here the time is finished and known.', 'Now think of your own example from work.', 'Take a moment before you answer me.'];
+    const cc = new Playback(LONG, 0);
+    for (let t = 300; t < cc.at(5, 0.3); t += 3500) { cc.advance(t); cc.clock.speechStart(t, cc.progress(t)); cc.clock.speechStop(t + 700); }
+    const tl2 = cc.at(5, 0.4); cc.advance(tl2); cc.clock.speechStart(tl2, cc.progress(tl2)); cc.pausedAt = tl2 + 500;
+    const ccPart = judge(cc, 'I attended a', tl2 + 1000, true); cc.clock.heardWords('I attended a', tl2 + 1000, cc.progress(tl2 + 1000));
+    const ccFin = judge(cc, PERFECT, tl2 + 6000);
+    check('C1 round 2, sequence C: empty echo turns every 3.5 s through a long reply do not chain: the learner is heard', !ccPart.own && !ccFin.own, { ccPart, ccFin });
+    // The hook's payload: a new turn is { tMs }, a resume carries resume: true; an empty turn's end is signalled.
+    check('the Ink hook: turn.start gives { tMs } (as before), turn.resume gives { tMs, resume: true }', JSON.stringify(inkSpeechStartEvent('start', 5)) === '{"tMs":5}' && JSON.stringify(inkSpeechStartEvent('resume', 5)) === '{"tMs":5,"resume":true}');
+    const ink = readFileSync(join(__dirname, '..', 'src', 'app', 'tutor', 'hooks', 'useCartesiaInkWS.ts'), 'utf8');
+    const v1 = readFileSync(join(__dirname, '..', 'src', 'app', 'tutor', 'components', 'VoiceTutorRealtime.tsx'), 'utf8');
+    check('the Ink hook marks only turn.resume, signals an empty or stale-dropped turn end, and v1 neither reads the mark nor takes the signal', /case 'turn\.start'[\s\S]{0,500}inkSpeechStartEvent\('start', tMs\)/.test(ink) && /case 'turn\.resume'[\s\S]{0,700}inkSpeechStartEvent\('resume', tMs\)/.test(ink) && (ink.match(/endedEmpty\(\)/g) ?? []).length === 3 && !/onTurnEndedEmpty/.test(v1) && !/\b(?:e|event|evt)\??\.resume\b/.test(v1.slice(v1.indexOf('const perceptionOnSpeechStart'), v1.indexOf('const perceptionOnSpeechStart') + 4000)), [/case 'turn\.start'[\s\S]{0,500}inkSpeechStartEvent\('start', tMs\)/.test(ink), /case 'turn\.resume'[\s\S]{0,700}inkSpeechStartEvent\('resume', tMs\)/.test(ink), (ink.match(/endedEmpty\(\)/g) ?? []).length, /onTurnEndedEmpty/.test(v1)]);
     const voiceC1 = readFileSync(join(__dirname, '..', 'src', 'app', 'tutor', 'components', 'v2', 'TutorVoiceV2.tsx'), 'utf8');
-    check('C1: the voice client tells the clock of every stop, words lost and the reset', /onSpeechStop = useCallback\(\(\) => \{ echoRef\.current\.speechStop\(Date\.now\(\)\);/.test(voiceC1) && /'v2_words_lost'[^\n]*\n[^\n]*\n\s+echoRef\.current\.settled\(\);/.test(voiceC1) && /useEffect\(\(\) => \(\) => \{ wordsWatchRef\.current\.settled\(\); echoRef\.current\.settled\(\);/.test(voiceC1));
+    check('C1: the voice client passes the resume mark, takes the empty-turn signal, and tells the clock of every stop, words lost and the reset', /echoRef\.current\.speechStart\(Date\.now\(\), playProgress\(\), !!e\?\.resume\)/.test(voiceC1) && /onTurnEndedEmpty: onTurnEndedEmpty/.test(voiceC1) && /const onTurnEndedEmpty = useCallback\(\(\) => \{ echoRef\.current\.settled\(\);/.test(voiceC1) && /onSpeechStop = useCallback\(\(\) => \{ echoRef\.current\.speechStop\(Date\.now\(\)\);/.test(voiceC1) && /'v2_words_lost'[^\n]*\n[^\n]*\n\s+echoRef\.current\.settled\(\);/.test(voiceC1) && /useEffect\(\(\) => \(\) => \{ wordsWatchRef\.current\.settled\(\); echoRef\.current\.settled\(\);/.test(voiceC1));
     // Japanese echo (the Task 6 case, test-brain-v2-languages): a Japanese part playing, heard back.
     const ja = new Playback(['次の文を英語で言ってみてください。', '私は3年間ここで働いています。'], 0); const tj = ja.at(0, 0.15); ja.advance(tj); ja.clock.speechStart(tj, ja.progress(tj));
     check('a Japanese echo of the part playing is still dropped', judge(ja, '次の文を英語で言ってみてください', tj + 2500).own);

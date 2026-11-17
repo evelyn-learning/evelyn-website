@@ -579,8 +579,9 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const listening = started && realtime.isConnected && !props.standby && !turns.closed;
   const onTranscript = useCallback((t: PerceptionTranscript) => heard(t.text), [heard]);
   const onPartial = useCallback((x: { text: string }) => { wordsWatchRef.current.speech('partial'); setComposerStatus((was) => ({ ...was, heard: x.text })); hearingPartial(x.text); }, [hearingPartial]);
-  const onSpeechStart = useCallback(() => {
-    echoRef.current.speechStart(Date.now(), playProgress());
+  const onSpeechStart = useCallback((e?: { resume?: boolean }) => {
+    // Fix round 2: only the recogniser's own resume (Ink's turn.resume) is the same utterance; every other start is new.
+    echoRef.current.speechStart(Date.now(), playProgress(), !!e?.resume);
     if (flagRef.current.active) return;
     wordsWatchRef.current.speech('start');
     // An armed pronunciation reply starts recording here, unless the tutor's own voice is what was heard.
@@ -636,6 +637,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   // Each release is recorded with its timings, so a clipped greeting can be traced to what the microphone was doing.
   const releaseOpeningSpeech = useCallback(() => { const held = openingSpeechRef.current; if (!held) return; openingSpeechRef.current = null; const since = (t: number) => (t && tapAtRef.current ? `${t - tapAtRef.current} ms` : 'never'); p.current.onDebugEvent?.('v2_opening_speech', `released ${since(Date.now())} after the tap; microphone live at ${since(micLiveAtRef.current)}${micLiveAtRef.current ? '' : ' (the wait ran out)'}; ${held.length} sentence(s) were waiting`); for (const s of held) realtimeRef.current?.speakText(s); }, []);
   const onMicLevel = useCallback((level: number) => { if (openingSpeechRef.current && !micLiveRef.current) { micLiveRef.current = true; micLiveAtRef.current = Date.now(); setTimeout(releaseOpeningSpeech, MIC_SETTLE_MS); } if (level > MIC_SOUND_LEVEL) lastSoundAtRef.current = Date.now(); const now = Date.now(); if (now - micUiAtRef.current > 110) { micUiAtRef.current = now; setComposerStatus((was) => (Math.abs((was.level ?? 0) - level) < 0.04 && !(was.quiet && level > MIC_SOUND_LEVEL) ? was : { ...was, level, ...(level > MIC_SOUND_LEVEL ? { quiet: false } : {}) })); } }, [releaseOpeningSpeech]);
+  // Fix round 2: a turn that ended with no words is over for the echo clock (Ink gives no transcript for it).
+  const onTurnEndedEmpty = useCallback(() => { echoRef.current.settled(); ownPartialLoggedRef.current = false; }, []);
   const onInkDiagnostic = useCallback((type: string, message: string) => p.current.onDebugEvent?.(type, message), []);
   // The recogniser's microphone frames (24 kHz) feed the session recording and, when it is on, the pronunciation clip
   // (v1 Task 24 §A1 taps the same frames the recogniser hears).
@@ -654,6 +657,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     turnEndTimeoutMs: inkTurnEndTimeoutMs(props.tutorLanguages),
     onTranscript, onPartialTranscript: onPartial, onSpeechStart, onSpeechStop, onMicLevel, onTranscriptionFailed: onNoTranscript, onError: onRecogniserError,
     onDiagnostic: onInkDiagnostic,
+    onTurnEndedEmpty: onTurnEndedEmpty,
   });
   energyWindowRef.current = TUTOR_STT_ENGINE_INK2 ? ink.getEnergyWindow : perception.getEnergyWindow;
 

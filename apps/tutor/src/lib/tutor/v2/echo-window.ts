@@ -31,9 +31,6 @@ export const V2_ECHO_LEAD_WORDS = 1;
 /** A slow speaking rate, characters per second: the earliest the voice can be through a part. */
 const SLOW_CHARS_PER_SEC = 11.8;
 const KEEP_PARTS = 16;
-/** A speech start this long after the utterance's last stop is a new utterance, not the recogniser resuming the same
- *  turn (Ink's turn.resume follows its eager end within the turn-end wait, at most 5.6 s). */
-export const V2_ECHO_RESUME_MS = 6000;
 /** An utterance's start older than this with no words since is stale whatever else is known (the recogniser's own
  *  words watch gives up on a start after 45 s). */
 export const V2_ECHO_ONSET_MAX_MS = 45_000;
@@ -82,13 +79,13 @@ export class V2EchoClock {
     return cur.base + (bound === 'low' ? Math.floor(f * n) : Math.min(n, Math.ceil(f * n)));
   }
 
-  /** The recogniser heard speech begin. The same utterance goes on only when this is its resume (a stop shortly
-   *  before); a start with no stop since, one long after the stop, or one on a stale start begins a new utterance (the
-   *  last one ended with no words). */
-  speechStart(nowMs: number, progress: V2PlayProgress | null): void {
+  /** The recogniser heard speech begin. `resume`: the recogniser says this is the same turn going on (Ink's
+   *  turn.resume, marked in its payload), and the utterance goes on (unless its start is stale). Anything else is a new
+   *  turn and a new utterance, whatever came before: fix round 2, a time window could not tell a resume from a new turn
+   *  after an empty one, and the learner's start 4.5 s after an empty echo turn kept the echo's onset. */
+  speechStart(nowMs: number, progress: V2PlayProgress | null, resume = false): void {
     const o = this.onset;
-    const resumes = !!o && o.stopAtMs !== null && nowMs - o.stopAtMs <= V2_ECHO_RESUME_MS && nowMs - (o.wordsAtMs ?? o.atMs) <= V2_ECHO_ONSET_MAX_MS;
-    if (resumes) { o!.stopAtMs = null; return; }
+    if (resume && o && nowMs - (o.wordsAtMs ?? o.atMs) <= V2_ECHO_ONSET_MAX_MS) { o.stopAtMs = null; return; }
     this.onset = { atMs: nowMs, pos: this.position(progress, 'low'), stopAtMs: null, wordsAtMs: null };
   }
 
@@ -102,8 +99,8 @@ export class V2EchoClock {
     else o.wordsAtMs = nowMs;
   }
 
-  /** The utterance is over (its words arrived, the recogniser failed, the words were lost, or the session reset): the
-   *  next speech is a new utterance. */
+  /** The utterance is over (its words arrived, its turn ended with none, the recogniser failed, the words were lost, or
+   *  the session reset): the next speech is a new utterance. */
   settled(): void { this.onset = null; }
 
   /** Whether these heard words are the tutor's own voice. `minWords`, `share`: as isOwnVoice. */
