@@ -77,6 +77,9 @@ if (mode) payload.input_mode = mode;
 // lessonPlanId source) — lets a voice-mode mint reproduce a specific
 // lesson-plan-driven scenario (e.g. arith-long-division) through the embed
 // path, not just a free-conversation session on --subject/--level/--topic.
+// --name → student_name, so the tutor greets the tester as a partner's portal would have it do.
+const studentName = arg('name');
+if (studentName) payload.student_name = studentName;
 const plan = arg('plan');
 if (plan) payload.curriculum_module = plan;
 
