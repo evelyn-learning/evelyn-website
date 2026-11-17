@@ -185,6 +185,6 @@
 .ks-bank { margin: 0; padding-left: 22px; }
 .ks-bank li { padding: 3px 6px; border-radius: 6px; }
 .ks-bank li.key { background: var(--ok-soft); }
-.ks-match { border-collapse: collapse; width: 100%; font-size: 14px; }
-.ks-match td { border: 1px solid var(--line, #ddd); padding: 6px 8px; width: 50%; vertical-align: top; }
-.ks-match th { text-align: left; font-size: 12px; color: var(--muted); padding: 4px 8px; }
+.ks-match { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.ks-bank li b { margin-right: 8px; }
+.ks-ix-key { margin-top: 6px; font-size: 13px; font-weight: 600; color: var(--ok); }

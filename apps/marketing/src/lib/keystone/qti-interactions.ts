@@ -7,16 +7,17 @@ import { decode, toHtml } from "./qti";
 
 type Opt = { label: string; html: string };
 export type Interaction =
-  | { kind: "choice"; maxChoices: number; options: Opt[] }
+  | { kind: "choice"; responseId: string; maxChoices: number; options: Opt[] }
   | { kind: "textEntry"; responseId: string } // numerical or typed answer
   | { kind: "inlineChoice"; responseId: string; choices: Opt[] } // drop-down
-  | { kind: "match"; premises: Opt[]; responses: Opt[] }
-  | { kind: "gapMatch"; gaps: string[]; choices: Opt[] } // drag and drop
-  | { kind: "order"; choices: Opt[] }
+  | { kind: "match"; responseId: string; premises: Opt[]; responses: Opt[] }
+  | { kind: "gapMatch"; responseId: string; gaps: string[]; choices: Opt[] } // drag and drop
+  | { kind: "order"; responseId: string; choices: Opt[] }
   | { kind: "extendedText"; responseId: string } // written response
   | { kind: "unsupported"; element: string };
 
 const BLANK = '<span class="fill-in-the-blank"></span>';
+// Known limit: an interaction nested inside another of the same element name is not supported.
 const ELEMENT = /<(\w+Interaction)\b([^>]*?)(?:\/>|>([\s\S]*?)<\/\1>)/g;
 
 function attr(attrs: string, name: string): string | undefined {
@@ -36,23 +37,24 @@ function one(element: string, attrs: string, inner: string): Interaction {
   const responseId = attr(attrs, "responseIdentifier") ?? "RESPONSE";
   switch (element) {
     case "choiceInteraction":
-      return { kind: "choice", maxChoices: Number(attr(attrs, "maxChoices") ?? 1), options: opts(inner, "simpleChoice") };
+      return { kind: "choice", responseId, maxChoices: Number(attr(attrs, "maxChoices") ?? 1), options: opts(inner, "simpleChoice") };
     case "textEntryInteraction":
       return { kind: "textEntry", responseId };
     case "inlineChoiceInteraction":
       return { kind: "inlineChoice", responseId, choices: opts(inner, "inlineChoice") };
     case "matchInteraction": {
       const sets = [...inner.matchAll(/<simpleMatchSet\b[^>]*>([\s\S]*?)<\/simpleMatchSet>/g)].map((m) => opts(m[1], "simpleAssociableChoice"));
-      return { kind: "match", premises: sets[0] ?? [], responses: sets[1] ?? [] };
+      return { kind: "match", responseId, premises: sets[0] ?? [], responses: sets[1] ?? [] };
     }
     case "gapMatchInteraction":
       return {
         kind: "gapMatch",
+        responseId,
         gaps: [...inner.matchAll(/<gap\b([^>]*?)\/?>/g)].map((m) => attr(m[1], "identifier") ?? ""),
         choices: opts(inner, "gapText"),
       };
     case "orderInteraction":
-      return { kind: "order", choices: opts(inner, "simpleChoice") };
+      return { kind: "order", responseId, choices: opts(inner, "simpleChoice") };
     case "extendedTextInteraction":
       return { kind: "extendedText", responseId };
     default:
@@ -63,7 +65,7 @@ function one(element: string, attrs: string, inner: string): Interaction {
 export function parseInteractions(itemBodyXml: string): Interaction[] {
   const found = [...itemBodyXml.matchAll(ELEMENT)].map((m) => one(m[1], m[2], m[3] ?? ""));
   // SOLARO's numerical response has no interaction element, only a blank in the stem.
-  if (!found.length && /class="[^"]*\bfill-in-the-blank\b/.test(itemBodyXml)) return [{ kind: "textEntry", responseId: "RESPONSE" }];
+  if (!found.length && /class\s*=\s*(?:"[^"]*|'[^']*)\bfill-in-the-blank\b/.test(itemBodyXml)) return [{ kind: "textEntry", responseId: "RESPONSE" }];
   return found;
 }
 
@@ -93,4 +95,13 @@ export function keyFor(apipXml: string): Record<string, string[]> {
     out[id] = [...cr.matchAll(/<value\b[^>]*>([\s\S]*?)<\/value>/g)].map((v) => decode(v[1].trim()));
   }
   return out;
+}
+
+/** One plain line for the key of an order / match / gapMatch interaction, or null when there is none. */
+export function keyLine(i: Interaction, keys: Record<string, string[]>): string | null {
+  if (i.kind !== "order" && i.kind !== "match" && i.kind !== "gapMatch") return null;
+  const vals = keys[i.responseId];
+  if (!vals?.length) return null;
+  if (i.kind === "order") return `Key order: ${vals.join(", ")}`;
+  return `Key pairs: ${vals.map((v) => v.trim().split(/\s+/).join(" → ")).join("; ")}`;
 }

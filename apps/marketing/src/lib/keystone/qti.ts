@@ -124,8 +124,11 @@ export function parseQtiItem(
 
   const body = apip.match(/<itemBody>([\s\S]*?)<\/itemBody>/)?.[1] ?? "";
   const options: { label: string; html: string }[] = [];
-  for (const m of body.matchAll(/<simpleChoice\b[^>]*identifier="([^"]+)"[^>]*>([\s\S]*?)<\/simpleChoice>/g)) {
-    options.push({ label: m[1], html: toHtml(m[2]) });
+  // Only choiceInteraction's simpleChoice count: orderInteraction has them too and is shown from `interactions`.
+  for (const ci of body.matchAll(/<choiceInteraction\b[\s\S]*?<\/choiceInteraction>/g)) {
+    for (const m of ci[0].matchAll(/<simpleChoice\b[^>]*identifier="([^"]+)"[^>]*>([\s\S]*?)<\/simpleChoice>/g)) {
+      options.push({ label: m[1], html: toHtml(m[2]) });
+    }
   }
   const stem = stemWithoutInteractions(body);
   const solution = apip.match(/<modalFeedback\b[^>]*identifier="solution"[^>]*>([\s\S]*?)<\/modalFeedback>/)?.[1] ?? "";

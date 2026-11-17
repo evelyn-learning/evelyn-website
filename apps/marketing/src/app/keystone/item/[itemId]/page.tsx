@@ -166,7 +166,7 @@ export default async function ItemPage({
             {(item.interactions ?? [])
               .filter((i) => i.kind !== "choice")
               .map((i, n) => (
-                <InteractionView key={n} i={i} keys={item.keys ?? {}} />
+                <InteractionView key={n} i={i} keys={item.keys ?? {}} showKey={item.keySource === "castle-rock"} />
               ))}
             {item.keySource === "castle-rock" ? (
               <div className="ks-answer">

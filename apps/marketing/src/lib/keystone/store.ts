@@ -206,8 +206,8 @@ export async function ingestQtiItems(items: QtiItem[], actor: Actor, uploadId: s
         showcase: showcase ?? false,
         source: "upload",
         order: ++order,
-        createdAt: new Date(),
-        lastActivityAt: new Date(),
+        createdAt: now,
+        lastActivityAt: now,
       });
       created.push(q.itemId);
     }

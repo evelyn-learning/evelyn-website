@@ -1,13 +1,14 @@
-import type { Interaction } from "@/lib/keystone/qti-interactions";
+import { keyLine, type Interaction } from "@/lib/keystone/qti-interactions";
 
 type Opt = { label: string; html: string };
 
-function Bank({ items, keyed, ordered }: { items: Opt[]; keyed?: string[]; ordered?: boolean }) {
+function Bank({ items, keyed, ordered, labelled }: { items: Opt[]; keyed?: string[]; ordered?: boolean; labelled?: boolean }) {
   const Tag = ordered ? "ol" : "ul";
   return (
     <Tag className="ks-bank">
       {items.map((o) => (
         <li key={o.label} className={keyed?.includes(o.label) ? "key" : ""}>
+          {labelled && <b>{o.label}</b>}
           <span className="ks-prose" dangerouslySetInnerHTML={{ __html: o.html }} />
         </li>
       ))}
@@ -16,7 +17,9 @@ function Bank({ items, keyed, ordered }: { items: Opt[]; keyed?: string[]; order
 }
 
 /** Read-only view of one non-choice interaction. Nothing here is interactive. */
-export function InteractionView({ i, keys }: { i: Interaction; keys: Record<string, string[]> }) {
+export function InteractionView({ i, keys, showKey }: { i: Interaction; keys: Record<string, string[]>; showKey: boolean }) {
+  const line = showKey ? keyLine(i, keys) : null;
+  const KeyLine = line ? <div className="ks-ix-key">{line}</div> : null;
   switch (i.kind) {
     case "textEntry":
       return <div className="ks-ix"><span className="ks-ix-label">Answer is typed into the blank.</span></div>;
@@ -32,23 +35,18 @@ export function InteractionView({ i, keys }: { i: Interaction; keys: Record<stri
     case "match":
       return (
         <div className="ks-ix">
-          <span className="ks-ix-label">Match each item on the left with one on the right.</span>
-          <table className="ks-match">
-            <thead>
-              <tr>
-                <th>Match these</th>
-                <th>With these</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Array.from({ length: Math.max(i.premises.length, i.responses.length) }, (_, r) => (
-                <tr key={r}>
-                  <td dangerouslySetInnerHTML={{ __html: i.premises[r]?.html ?? "" }} />
-                  <td dangerouslySetInnerHTML={{ __html: i.responses[r]?.html ?? "" }} />
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <span className="ks-ix-label">Match each of the first list with one of the second.</span>
+          <div className="ks-match">
+            <div>
+              <span className="ks-ix-label">Match these</span>
+              <Bank items={i.premises} labelled />
+            </div>
+            <div>
+              <span className="ks-ix-label">With these</span>
+              <Bank items={i.responses} labelled />
+            </div>
+          </div>
+          {KeyLine}
         </div>
       );
     case "gapMatch":
@@ -56,6 +54,7 @@ export function InteractionView({ i, keys }: { i: Interaction; keys: Record<stri
         <div className="ks-ix">
           <span className="ks-ix-label">Drag into the {i.gaps.length === 1 ? "blank" : `${i.gaps.length} blanks`}:</span>
           <Bank items={i.choices} />
+          {KeyLine}
         </div>
       );
     case "order":
@@ -63,6 +62,7 @@ export function InteractionView({ i, keys }: { i: Interaction; keys: Record<stri
         <div className="ks-ix">
           <span className="ks-ix-label">Put in order:</span>
           <Bank items={i.choices} ordered />
+          {KeyLine}
         </div>
       );
     case "unsupported":
