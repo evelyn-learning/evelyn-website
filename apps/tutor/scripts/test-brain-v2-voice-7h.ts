@@ -239,9 +239,11 @@ async function main() {
     const adj = speak('Use "a" "an" "the".', true)[0]!;
     check('adjacent targets: never two tags back to back (the first two share theirs)', adj === `Use ${BREAK}a an${BREAK} the.` && !/\/>[\s.,]*<break/.test(adj), adj);
     const far = speak('We say "went" when the time is finished, not "goed".', true)[0]!;
-    check('two targets four or more words apart: one before the first, one between, one after the last', far === `We say ${BREAK}went${BREAK} when the time is finished, not goed${BREAK}.`, far);
+    check('two targets four or more words apart: each keeps its own break before and after (round 1b)', far === `We say ${BREAK}went${BREAK} when the time is finished, not ${BREAK}goed${BREAK}.`, far);
+    const near = speak('Say "went" and not "goed".', true)[0]!;
+    check('two targets fewer than four words apart share: before the first, after the last, none between', near === `Say ${BREAK}went and not goed${BREAK}.`, near);
     const gaps = (t: string) => { const w = t.split(/<break[^>]*\/>/).slice(1, -1).map((x) => (x.match(/[\p{L}\p{N}]+/gu) ?? []).length); return w; };
-    check('within one part, breaks of different targets are never closer than four words', [f8[0]!, adj, far].every((t) => { const g = gaps(t); return g.length <= 1 || g.slice(1).every((n) => n >= 4); }), [gaps(far)]);
+    check('within one part, breaks of different targets are never closer than four words, never back to back', [f8[0]!, adj, far, near].every((t) => { const g = gaps(t); const tags = t.split(/<break[^>]*\/>/); const inner = tags.slice(1, -1); return inner.every((x, k) => (k % 2 === 0 ? true : (x.match(/[\p{L}\p{N}]+/gu) ?? []).length >= 4)) && !/\/>[\s.,]*<break/.test(t); }), [gaps(far)]);
     check('before this task (or with it off) the quotes are stripped and nothing marks the words', speak(FLAG8, false)[0] === 'Please add an before important customer.' && !speak(FLAG8, false)[0]!.includes('<break'));
     const ja = speak('「an」を「important customer」の前に付けてください。', true);
     check('a Japanese sentence quoting short English: the targets get their pauses inside the Japanese part (shared: one particle apart)', ja.length === 1 && ja[0] === `${BREAK}anをimportant customer${BREAK}の前に付けてください。`, ja);

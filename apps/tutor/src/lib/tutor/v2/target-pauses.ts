@@ -45,9 +45,9 @@ export function markTargets(text: string): string {
 export const V2_TARGET_BREAK_MIN_WORDS = 4;
 const wordCount = (t: string) => (t.match(/[\p{L}\p{N}]+/gu) ?? []).length;
 
-/** The marks as the voice's break tags, after rewriteForTTS. One target: a break before it and one after. Several in one
- *  piece of speech: a break before the first and one after the last, and between two neighbours a single break (after
- *  the first of them) only when V2_TARGET_BREAK_MIN_WORDS words or more lie between them; never two tags back to back.
+/** The marks as the voice's break tags, after rewriteForTTS. Each target gets a break before it and one after, except
+ *  that neighbours with fewer than V2_TARGET_BREAK_MIN_WORDS words between them share: one break before the first and
+ *  one after the last, none between (so never two tags back to back). Targets that far apart or more keep their own.
  *  Fix round 1 (I2): Please add "an" before "important customer" had four breaks in five words, and "a" "an" two tags
  *  with only a space between, where the vendor warns that breaks in quick succession can make the voice hallucinate.
  *  A stray mark is removed. */
@@ -57,10 +57,12 @@ export function targetPauses(spoken: string): string {
   spans.forEach((m, i) => {
     const start = m.index ?? 0; const end = start + m[0].length;
     out += spoken.slice(at, start);
-    if (i === 0) out += BREAK;
+    const prev = spans[i - 1];
+    const apart = (a: RegExpMatchArray, b: RegExpMatchArray) => wordCount(spoken.slice((a.index ?? 0) + a[0].length, b.index ?? 0)) >= V2_TARGET_BREAK_MIN_WORDS;
+    if (!prev || apart(prev, m)) out += BREAK;
     out += m[1];
     const next = spans[i + 1];
-    if (!next || wordCount(spoken.slice(end, next.index ?? end)) >= V2_TARGET_BREAK_MIN_WORDS) out += BREAK;
+    if (!next || apart(m, next)) out += BREAK;
     at = end;
   });
   out += spoken.slice(at);

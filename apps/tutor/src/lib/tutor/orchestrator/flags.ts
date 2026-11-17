@@ -1984,7 +1984,7 @@ export const TUTOR_V2_CLOSE_HEARS = process.env.NEXT_PUBLIC_TUTOR_V2_CLOSE_HEARS
  *  target in the tutor's speech (a word, an ending such as "-ed", a phrase of at most three words; Latin script) is set apart by
  *  a short pause either side (the voice's break tag), at most two targets per speech part (a sentence, or one language part of
  *  it: each is its own generation request); targets fewer than four words apart share their breaks (one before the first,
- *  one after the last), never two tags back to back; a quoted sentence gets none and nothing on the board changes. Task 7h, mic test 2 flag 8 (embed-1794941004529): in Please add "an" before "important customer" the
+ *  one after the last, none between), never two tags back to back; targets further apart keep their own; a quoted sentence gets none and nothing on the board changes. Task 7h, mic test 2 flag 8 (embed-1794941004529): in Please add "an" before "important customer" the
  *  quoted words had no stress (the quotes are stripped before the voice). Default ON; NEXT_PUBLIC_TUTOR_V2_TARGET_PAUSE=off ⇒
  *  the quotes are stripped with no pause, as before. */
 export const TUTOR_V2_TARGET_PAUSE = process.env.NEXT_PUBLIC_TUTOR_V2_TARGET_PAUSE !== 'off';
