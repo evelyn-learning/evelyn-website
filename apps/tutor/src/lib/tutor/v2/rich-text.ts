@@ -172,7 +172,10 @@ export function typesetMaths(text: string): string {
   return inWords(line, (seg) => {
     // "∫ from a to b of" is the integral's limits, said in words.
     // "the x-axis", "the y-values": the letter is the variable.
-    const pre = seg.replace(/∫\s*from\s+(\S+)\s+to\s+(\S+)\s+of\s+/g, '∫_{$1}^{$2} ').replace(/(?<![A-Za-z$])([xy])-(axis|axes|values?|coordinates?|intercepts?)\b/g, '$$$1$$-$2');
+    const pre = seg.replace(/∫\s*from\s+(\S+)\s+to\s+(\S+)\s+of\s+/g, '∫_{$1}^{$2} ').replace(/(?<![A-Za-z$])([xy])-(axis|axes|values?|coordinates?|intercepts?)\b/g, '$$$1$$-$2')
+      // A derivative named in a sentence, "the sign of f' on each side": the mark belongs to the letter. It was set
+      // as an italic f with a plain apostrophe after it (AP Calculus BC, portal-8e2d86f3).
+      .replace(/(?<![A-Za-z$'’])([f-hF-Hy])(''?|′′?)(?![A-Za-z'’′(])/g, (_m, f: string, p: string) => `$${f}${"'".repeat(p.length)}$`);
     const toks = pre.split(/(\s+)/);
     // Chemistry is in this stretch: an arrow of reaction, or a formula with its counts.
     const chem = toks.some((t) => formula(strippedToken(t).core)?.counted) || (/→/.test(pre) && toks.some((t) => !!formula(strippedToken(t).core)));
@@ -210,7 +213,9 @@ export function typesetMaths(text: string): string {
       const before = out.slice().reverse().find((t) => t.trim()) ?? '';
       const loneVariable = run.length === 1 && /^\(?[b-hj-z]\)?$/.test(joined) && !/\d\)?$/.test(before) && !(out.every((t) => !t.trim()) && /^[.)]/.test(trail));
       const hasFormula = run.some((c) => chemToken(c, chem));
-      const single = loneVariable || (run.length === 1 && (hasFormula || DIFFERENTIAL.test(joined) || MATHS_CHARS.test(joined.replace(/[⁺⁻]/g, '')) || /^[A-Za-z]\([-−]?[A-Za-z0-9.]+(?:, ?[-−]?[A-Za-z0-9.]+)*\)$/.test(joined)) && !/^[\d.,]+$/.test(joined));
+      const single = loneVariable || (run.length === 1 && (hasFormula || DIFFERENTIAL.test(joined) || MATHS_CHARS.test(joined.replace(/[⁺⁻]/g, '')) || /^[A-Za-z](?:''?|′′?)?\([-−]?[A-Za-z0-9.]+(?:, ?[-−]?[A-Za-z0-9.]+)*\)$/.test(joined)
+        // "2x is negative": a number on x or y, said by itself. Not "2x faster".
+        || (/^\d+[xy]$/.test(joined) && !/^(?:faster|slower|more|less|as|bigger|larger|smaller|the|speed|zoom)\b/i.test(toks.slice(after).find((t) => t.trim()) ?? ''))) && !/^[\d.,]+$/.test(joined));
       // The constant of integration, said with its sign: "+ C".
       if (cores.length === 2 && /^[+−-]$/.test(cores[0]) && /^[A-Z]$/.test(cores[1]) && !chem) { out.push(`${lead}${cores[0]} $${cores[1]}$${trail}`); i = after; continue; }
       // Symbols side by side are a product: "π r²".

@@ -66,6 +66,17 @@ const PLAIN_WORDS = 'and|at|so|then|gives|give|when|if|for|the|is|are|or|to|of|w
 export function spacedRoman(latex: string): string {
   return latex.replace(/\\mathrm\s*\{((?:[^{}]|\{[^{}]*\})*)\}/g, (_m, body: string) => `\\mathrm{${body.replace(/(?<=[A-Za-z,)])[ ]+(?=[A-Za-z(])/g, '\\ ')}}`);
 }
+/** Several statements typed as one row, with \quad between them, wrap wherever the row runs out, in the middle
+ *  of a statement: "f(−3) = 81 − 72 + 1 = 10, f(−2) = 16 − 32 + 1" broke before "= −15" (AP Calculus BC,
+ *  portal-8e2d86f3). Three or more, or two long ones, go up one to a line. */
+export function stackedRow(latex: string): string {
+  if (/\\\\|\\begin\s*\{/.test(latex)) return latex;
+  const parts = latex.split(/\s*,?\s*\\q?quad\s*/).map((x) => x.trim().replace(/,$/, '').trim()).filter(Boolean);
+  const balanced = (x: string) => x.split('{').length === x.split('}').length && x.split('\\left').length === x.split('\\right').length;
+  if (parts.length < 2 || !parts.every((x) => balanced(x) && /=|<|>|\\(?:approx|le|ge|neq|implies|to)\b/.test(x))) return latex;
+  if (parts.length < 3 && latex.replace(/\\[A-Za-z]+|[{}\s]/g, '').length <= 48) return latex;
+  return `\\begin{aligned} ${parts.map((x) => `&${x}`).join(' \\\\ ')} \\end{aligned}`;
+}
 export function wordsAsText(latex: string): string {
   const re = new RegExp(String.raw`(?<![\\A-Za-z])(?:${PLAIN_WORDS})(?![A-Za-z])(?:\s+(?:${PLAIN_WORDS})(?![A-Za-z]))*`, 'gi');
   // Leave what is already inside \text{…} (and its relatives) alone.

@@ -23,7 +23,7 @@ import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient } from '../ai/model-registry';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
 import { catalogueSubjects, figureCatalogueFor, tutorFigureLines } from './figure-catalogue';
-import { applyToModelBoard, boardMisfit, renderBoard, summariseBoardCall, taskOnly, spacedRoman, wordsAsText } from './board';
+import { applyToModelBoard, boardMisfit, renderBoard, summariseBoardCall, taskOnly, spacedRoman, wordsAsText, stackedRow } from './board';
 import { BoardInlineStream, boardBlocksIn, inlineToolCall, insertBlock, stripBoardBlocks, type InlineBlock, type InlinePart } from './board-inline';
 import { speaksMaths, unwrittenEquations } from './spoken-maths';
 import { saidCovers, unsaidAsk, asksAnywhere } from './board-timing';
@@ -345,7 +345,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       for (const k of Object.keys(args)) delete args[k];
       args.text = text;
     }
-    if (block.name === 'show_equation' && typeof args.latex === 'string') args.latex = spacedRoman(wordsAsText(args.latex));
+    if (block.name === 'show_equation' && typeof args.latex === 'string') args.latex = stackedRow(spacedRoman(wordsAsText(args.latex)));
     // The label over an equation is typeset as a note is: "at x = -2" stood in plain letters above its working (embed-1794595194384).
     if (block.name === 'show_equation' && typeof args.label === 'string' && !args.label.includes('$')) args.label = typesetMaths(args.label);
     // A graph drawn on a page that already has one is the same picture with more on it: a circle went up, and
