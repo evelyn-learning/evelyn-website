@@ -2,7 +2,7 @@
  * One-off backfill for "hidden until released" (2026-11-17): everything that
  * existed before counts as released. Sets releasedAt = createdAt on every
  * solution version that has none, and releasedVersion = version on every item
- * that has none. Prints counts; safe to run twice (the second run changes 0).
+ * that has none, and releasedAnswer = evelynAnswer on every item that has none. Prints counts; safe to run twice (the second run changes 0).
  *
  *   KEYSTONE_MONGODB_URI=mongodb://… npx tsx apps/marketing/scripts/keystone-backfill-released.ts
  */
@@ -14,8 +14,9 @@ async function main() {
   const { Item, Solution } = await ks();
   const sols = await Solution.updateMany({ releasedAt: { $exists: false } }, [{ $set: { releasedAt: "$createdAt" } }]);
   const items = await Item.updateMany({ releasedVersion: { $exists: false } }, [{ $set: { releasedVersion: "$version" } }]);
+  const answers = await Item.updateMany({ releasedAnswer: { $exists: false } }, [{ $set: { releasedAnswer: { $ifNull: ["$evelynAnswer", ""] } } }]);
   console.log(`solutions: ${sols.modifiedCount} given releasedAt (${await Solution.countDocuments()} in all)`);
-  console.log(`items: ${items.modifiedCount} given releasedVersion (${await Item.countDocuments()} in all)`);
+  console.log(`items: ${items.modifiedCount} given releasedVersion, ${answers.modifiedCount} given releasedAnswer (${await Item.countDocuments()} in all)`);
   await closeKs();
 }
 

@@ -9,7 +9,7 @@ import JSZip from "jszip";
 import { parseQtiItem, passageHtml, readQtiZip } from "./qti";
 import { parseCsv } from "./sheet";
 import { cleanPastedHtml, splitNote } from "./note";
-import { STAGES, STAGE_LABEL, STAGE_HELP, STAGE_OWNER, VERDICTS, visibleStage } from "./config";
+import { STAGES, STAGE_LABEL, STAGE_HELP, STAGE_OWNER, VERDICTS, answerSeenBy, canJudgeSolution, visibleStage } from "./config";
 import { renderForSolaro, texToLinear, toXhtml } from "./solaro";
 
 // render: math, figures, table captions, images, sanitising
@@ -161,6 +161,22 @@ async function passageTests() {
   assert.equal(STAGE_OWNER.ready, "evelyn");
   assert.deepEqual(STAGES.slice(1, 3), ["drafting", "ready"]);
   assert.equal(STAGES[STAGES.indexOf("item_data") + 1], "key_query");
+
+  // a solution verdict needs the latest version to be released (legacy rows count as released)
+  const held = { version: 2, releasedVersion: 1 };
+  assert.equal(canJudgeSolution(held), false, "v2 held: nothing to approve");
+  assert.equal(canJudgeSolution({ version: 2, releasedVersion: 2 }), true, "after releaseSolution");
+  assert.equal(canJudgeSolution({ version: 1, releasedVersion: 0 }), false, "nothing released");
+  assert.equal(canJudgeSolution({ version: 3 }), true, "legacy row");
+  assert.equal(canJudgeSolution({ version: 0, releasedVersion: 0 }), false);
+
+  // the answer Castle Rock sees is the one released with the solution
+  const ans = { evelynAnswer: "C", releasedAnswer: "B", releasedVersion: 1 };
+  assert.equal(answerSeenBy(ans, "reviewer"), "B");
+  assert.equal(answerSeenBy(ans, "tech"), "B");
+  assert.equal(answerSeenBy(ans, "evelyn"), "C");
+  assert.equal(answerSeenBy({ evelynAnswer: "C", releasedVersion: 0 }, "reviewer"), "", "nothing released: no answer");
+  assert.equal(answerSeenBy({ evelynAnswer: "C" }, "reviewer"), "C", "legacy row");
 }
 
 // sheet

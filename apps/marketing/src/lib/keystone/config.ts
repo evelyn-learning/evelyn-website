@@ -109,6 +109,25 @@ export function visibleStage(stage: Stage, role: Role): Stage {
   return stage === "ready" && role !== "evelyn" ? "drafting" : stage;
 }
 
+type ReleaseState = { version?: number; releasedVersion?: number };
+
+/** Highest solution version released to review. Rows from before releasedVersion existed count as fully released. */
+export function releasedVersionOf(item: ReleaseState): number {
+  return Math.min(item.releasedVersion ?? item.version ?? 0, item.version ?? 0);
+}
+
+/** Whether a solution verdict (approve, fix solution) can be given: the latest version is the released one. */
+export function canJudgeSolution(item: ReleaseState): boolean {
+  const released = releasedVersionOf(item);
+  return released > 0 && (item.version ?? 0) <= released;
+}
+
+/** The answer `role` sees: Castle Rock sees the one released with the solution; Evelyn the working one. */
+export function answerSeenBy(item: ReleaseState & { evelynAnswer?: string; releasedAnswer?: string }, role: Role): string {
+  if (role === "evelyn" || item.releasedVersion === undefined) return item.evelynAnswer ?? "";
+  return item.releasedAnswer ?? "";
+}
+
 export const OWNER_LABEL: Record<Role, string> = {
   evelyn: "Evelyn",
   reviewer: "Castle Rock review",

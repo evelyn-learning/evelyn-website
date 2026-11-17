@@ -1,12 +1,12 @@
-import { STAGES, visibleStage, type Role, type Stage } from "./config";
+import { STAGES, answerSeenBy, releasedVersionOf, visibleStage, type Role, type Stage } from "./config";
 import { ks, type ActivityDoc, type ItemDoc, type SolutionDoc } from "./db";
 
 export type ItemRow = Pick<
   ItemDoc,
-  "itemId" | "subject" | "course" | "itemType" | "topic" | "stage" | "version" | "keySource" | "evelynAnswer" | "key" | "showcase" | "reviewNote" | "priorStatus" | "lastActivityAt" | "order" | "player" | "releasedVersion"
+  "itemId" | "subject" | "course" | "itemType" | "topic" | "stage" | "version" | "keySource" | "evelynAnswer" | "key" | "showcase" | "reviewNote" | "priorStatus" | "lastActivityAt" | "order" | "player" | "releasedVersion" | "releasedAnswer"
 >;
 
-const ROW_FIELDS = "itemId subject course itemType topic stage version releasedVersion keySource evelynAnswer key showcase reviewNote priorStatus lastActivityAt order player.entry";
+const ROW_FIELDS = "itemId subject course itemType topic stage version releasedVersion releasedAnswer keySource evelynAnswer key showcase reviewNote priorStatus lastActivityAt order player.entry";
 
 // Hidden until released: Castle Rock (reviewer, tech) never sees a solution
 // version above Item.releasedVersion, and sees stage `ready` as `drafting`.
@@ -16,14 +16,13 @@ const seesUnreleased = (role?: Role) => !role || role === "evelyn";
 
 /** Highest version this role may see. */
 export function releasedFor(item: Pick<ItemDoc, "version" | "releasedVersion">, role?: Role): number {
-  if (seesUnreleased(role)) return item.version || 0;
-  return Math.min(item.releasedVersion ?? item.version ?? 0, item.version || 0);
+  return seesUnreleased(role) ? item.version || 0 : releasedVersionOf(item);
 }
 
-/** The item as this role sees it: stage via visibleStage, version capped at the released one. */
-function asSeenBy<T extends Pick<ItemDoc, "stage" | "version" | "releasedVersion">>(item: T, role?: Role): T {
+/** The item as this role sees it: stage via visibleStage, version capped at the released one, the released answer. */
+function asSeenBy<T extends Pick<ItemDoc, "stage" | "version" | "releasedVersion" | "evelynAnswer" | "releasedAnswer">>(item: T, role?: Role): T {
   if (seesUnreleased(role)) return item;
-  return { ...item, stage: visibleStage(item.stage, role!), version: releasedFor(item, role) };
+  return { ...item, stage: visibleStage(item.stage, role!), version: releasedFor(item, role), evelynAnswer: answerSeenBy(item, role!) };
 }
 
 /** Stages a stage filter matches for this role: `drafting` includes `ready` for Castle Rock; `ready` is no filter for them. */

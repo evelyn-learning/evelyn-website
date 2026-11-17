@@ -1,4 +1,4 @@
-import { SECTIONS, VERDICTS, type SectionKind, type Stage, type Verdict } from "./config";
+import { SECTIONS, VERDICTS, canJudgeSolution, type SectionKind, type Stage, type Verdict } from "./config";
 import { ks, type ActivityDoc, type ItemDoc, type SectionDoc } from "./db";
 import { renderInline, renderMarkdown } from "./render";
 import { assetUrl, saveAsset } from "./assets";
@@ -49,7 +49,7 @@ export async function saveSolution(
     note: opts.note,
   });
   // A row from before releasedVersion existed counts as released up to its current version; pin that before moving on.
-  const legacy = item.releasedVersion === undefined ? { releasedVersion: item.version || 0 } : {};
+  const legacy = item.releasedVersion === undefined ? { releasedVersion: item.version || 0, releasedAnswer: item.version ? item.evelynAnswer || "" : "" } : {};
   await Item.updateOne({ itemId }, { $set: { version, ...legacy, updatedAt: new Date() } });
   // The revision row below is the log entry for the release too.
   if (opts.submit && opts.stage !== "ready") await releaseSolution(itemId, actor, { log: false });
@@ -79,7 +79,7 @@ export async function releaseSolution(itemId: string, actor: Actor, opts: { log?
   if (!item.version) throw new Error(`item ${itemId} has no solution to release`);
   const now = new Date();
   await Solution.updateOne({ itemId, version: item.version, releasedAt: { $exists: false } }, { $set: { releasedAt: now } });
-  await Item.updateOne({ itemId }, { $set: { releasedVersion: item.version, stage: "in_review", updatedAt: now } });
+  await Item.updateOne({ itemId }, { $set: { releasedVersion: item.version, releasedAnswer: item.evelynAnswer || "", stage: "in_review", updatedAt: now } });
   if (opts.log ?? true) {
     await log({ itemId, version: item.version, type: "revision", body: "Sent for review.", username: actor.username, name: actor.name, role: actor.role });
   }
@@ -93,6 +93,8 @@ export async function setVerdict(itemId: string, verdict: Verdict, comment: stri
   if (!rule) throw new Error("Unknown decision.");
   // A question can be flagged or rejected before any solution exists; a solution verdict needs one.
   if (rule.needsSolution && !item.version) throw new Error("There is no solution to review yet.");
+  // Never judge a version Castle Rock cannot see.
+  if (rule.needsSolution && !canJudgeSolution(item)) throw new Error("A new version is being prepared; there is nothing to review yet.");
   if (rule.needsNote && !comment.trim()) throw new Error(rule.needsNote);
   const stage: Stage = rule.stage;
   await Item.updateOne({ itemId }, { $set: { stage, updatedAt: new Date() } });
@@ -169,6 +171,7 @@ export async function ingestQtiItems(items: QtiItem[], actor: Actor, uploadId: s
         stage: "received",
         version: 0,
         releasedVersion: 0,
+        releasedAnswer: "",
         showcase: false,
         source: "upload",
         order: ++order,

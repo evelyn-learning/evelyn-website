@@ -44,6 +44,8 @@ export type ItemDoc = {
   version: number;
   /** Highest solution version released to review (Castle Rock never sees above it). Undefined on rows from before 2026-11-17: treat as `version`. */
   releasedVersion?: number;
+  /** evelynAnswer as it was when the solution was released; what Castle Rock sees. */
+  releasedAnswer?: string;
   showcase: boolean;
   priorStatus?: string;
   reviewNote?: string;
@@ -161,6 +163,7 @@ function defineModels(conn: Connection): Models {
     stage: { type: String, index: true },
     version: { type: Number, default: 0 },
     releasedVersion: Number,
+    releasedAnswer: String,
     showcase: { type: Boolean, default: false },
     priorStatus: String,
     reviewNote: String,
