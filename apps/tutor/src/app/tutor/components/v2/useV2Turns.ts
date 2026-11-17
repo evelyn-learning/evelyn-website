@@ -21,7 +21,7 @@ import { mapFunctionCallToCommand } from '@/app/tutor/hooks/toolDefinitions';
 import type { TranscriptEntry } from '@/lib/tutor/types';
 import { paintsOnBoard, streamV2Turn, type V2ClientSession } from '@/lib/tutor/v2/client';
 import { foldInterruptedTurn } from '@/lib/tutor/v2/interrupted';
-import { reopensClose } from '@/lib/tutor/v2/close-heard';
+import { closeDueMinutes, reopensClose } from '@/lib/tutor/v2/close-heard';
 import { KEYED_VERDICT_DEBUG_TYPE, formatKeyedVerdictDebug } from '@/lib/tutor/voice/keyed-verdict';
 import { SentenceStream } from '@/lib/tutor/v2/sentences';
 import { V2_CONTROL_TOOL_NAMES } from '@/lib/tutor/v2/tool-names';
@@ -108,6 +108,8 @@ export interface V2Turns {
   /** This page load picked up an earlier session (resume.ts). */
   resumedRef: MutableRefObject<boolean>;
   stateRef: MutableRefObject<V2State>;
+  /** The last reply handed the floor to the student (keep_listening). */
+  keptListeningRef: MutableRefObject<boolean>;
 }
 
 interface SketchCommand { concept?: string; labels?: string[]; title?: string; primitives?: unknown[]; fallbackCard?: { title?: string; concept: string; labels: string[] } }
@@ -172,13 +174,17 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   const endingRef = useRef(false);
   /** The tutor has closed the lesson and its closing words are still being said (voice). */
   const closingRef = useRef(false);
+  /** The last reply handed the floor to the student (keep_listening), with or without words of its own. */
+  const keptListeningRef = useRef(false);
+  /** The tutor has been told, by a turn's facts or by the timer, that the session is nearly out of time. */
+  const timeCheckedRef = useRef(false);
   const homeworkDoneRecordedRef = useRef(false);
   const [busy, setBusy] = useState(false);
   const [closed, setClosed] = useState(false);
 
   const publish = () => p.current.onTranscriptUpdate([...transcriptRef.current]);
 
-  const runTurn = useCallback(async (studentSaid: string | null, silenceSeconds?: number) => {
+  const runTurn = useCallback(async (studentSaid: string | null, silenceSeconds?: number, timeCheck?: boolean) => {
     // The closing words are still being said. Words of the student's over them call the close off, and the lesson
     // goes on from what they said; thanks and a goodbye let it end (close-heard.ts).
     if (closingRef.current) {
@@ -199,6 +205,9 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       return;
     }
     busyRef.current = true; setBusy(true); p.current.onTutorBusy?.(true);
+    keptListeningRef.current = false;
+    // A turn that starts inside the last minutes is told of the time by its facts: the timer need not say it again.
+    { const box = p.current.sessionMaxMinutes; if (box && openedRef.current && box - (Date.now() - stateRef.current.startedAtMs) / 60000 <= closeDueMinutes(box)) timeCheckedRef.current = true; }
     const stamp = Date.now();
     if (studentSaid) transcriptRef.current = [...transcriptRef.current, { id: `student-${stamp}`, timestamp: new Date(), role: 'student', text: studentSaid }];
     const tutorId = `tutor-${stamp}`;
@@ -246,6 +255,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       const done = await streamV2Turn({
         session, state: stateRef.current, studentSaid, embedToken: p.current.embedToken, signal: abort.signal,
         ...(silenceSeconds ? { silenceSeconds } : {}),
+        ...(timeCheck ? { timeCheck: true } : {}),
         ...(resumeTurnRef.current ? { resumed: true } : {}),
         onText: (delta) => {
           // Typed sessions: once the reply is appearing, the shell's "Thinking…" state is over.
@@ -301,6 +311,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       });
       letGo(); speak(sentences.flush());
       stateRef.current = done.state;
+      keptListeningRef.current = settled.some((c) => c.name === 'keep_listening' && !/^not /.test(c.outcome));
       reportSheet();
       if (done.state.closed) clearV2State(p.current.sessionId); else saveV2State(p.current.sessionId, done.state);
       reportProgress();
@@ -407,11 +418,31 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   }, []);
 
   const hardStopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timeCheckRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const runTurnRef = useRef<typeof runTurn | null>(null);
+  runTurnRef.current = runTurn;
   const armHardStop = useCallback(() => {
     const minutes = p.current.sessionMaxMinutes;
     if (!minutes || hardStopRef.current) return;
+    // Two minutes before the end the tutor says so and uses what is left well (facts.ts). A turn that happens
+    // then is told by its facts; when no one is speaking, this makes the turn happen. Without it a quiet
+    // student met the end of the session with no warning.
+    const elapsedMs = resumedRef.current ? Date.now() - stateRef.current.startedAtMs : 0;
+    const dueMs = (minutes - closeDueMinutes(minutes)) * 60000 - elapsedMs;
+    if (dueMs > 5000) {
+      let tries = 0;
+      const check = () => {
+        if (endingRef.current || closingRef.current || stateRef.current.closed || timeCheckedRef.current) return;
+        if (busyRef.current) { if (++tries <= 8) timeCheckRef.current = setTimeout(check, 4000); return; }
+        timeCheckedRef.current = true;
+        p.current.onDebugEvent?.('v2_time_check', `${closeDueMinutes(minutes)} min left of ${minutes}`);
+        void runTurnRef.current?.(null, undefined, true);
+      };
+      timeCheckRef.current = setTimeout(check, dueMs);
+    }
     hardStopRef.current = setTimeout(() => {
-      if (endingRef.current) return;
+      // The tutor is saying its closing words: they end the session themselves in a moment.
+      if (endingRef.current || closingRef.current) return;
       endingRef.current = true; closingRef.current = false;
       abortRef.current?.abort();
       p.current.onCut?.();
@@ -421,7 +452,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     // A resumed session's box runs from when the lesson first began.
     }, Math.max(5000, minutes * 60000 - (resumedRef.current ? Date.now() - stateRef.current.startedAtMs : 0)));
   }, []);
-  useEffect(() => () => { if (hardStopRef.current) clearTimeout(hardStopRef.current); }, []);
+  useEffect(() => () => { if (hardStopRef.current) clearTimeout(hardStopRef.current); if (timeCheckRef.current) clearTimeout(timeCheckRef.current); }, []);
 
   // A resume (resume.ts): the transcript and the board go back up as the page loads, and the state is the one
   // kept in this browser or, failing that, one rebuilt from the host's checkpoint.
@@ -470,5 +501,5 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   }, [commitProfile]);
   const isEnding = useCallback(() => endingRef.current, []);
 
-  return { send, open, nudge, end, abort, isEnding, busy, closed, openedRef, stateRef, resumedRef };
+  return { send, open, nudge, end, abort, isEnding, busy, closed, openedRef, stateRef, resumedRef, keptListeningRef };
 }

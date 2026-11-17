@@ -17,6 +17,9 @@ export function looksLikeCodeLine(line: string): boolean {
   const l = line.trim();
   if (!l || l.includes('$')) return false;
   if (l === '{' || l === '}') return true;
+  // A set written out, "{−3, −1, 2, 5}", ends in a brace as a block of code does. Taken for code, a note on domain
+  // and range went up as a black code listing (Algebra 1, portal-50a1e584).
+  if (/\{\s*[-−+]?[\w.π√/]{1,8}(?:\s*,\s*[-−+]?[\w.π√/…]{1,8})+\s*\}\s*[.,]?$/.test(l) || /\{\s*[-−+]?\d[\d.]*\s*\}\s*[.,]?$/.test(l)) return false;
   if (/^(?:\/\/|#\s)/.test(l)) return false;
   // Prose ends in a full stop; "x = 3;" and "f(n) {" do not.
   const bare = l.replace(/(?:\/\/|#).*$/, '');
@@ -207,7 +210,7 @@ export function typesetMaths(text: string): string {
       const before = out.slice().reverse().find((t) => t.trim()) ?? '';
       const loneVariable = run.length === 1 && /^\(?[b-hj-z]\)?$/.test(joined) && !/\d\)?$/.test(before) && !(out.every((t) => !t.trim()) && /^[.)]/.test(trail));
       const hasFormula = run.some((c) => chemToken(c, chem));
-      const single = loneVariable || (run.length === 1 && (hasFormula || DIFFERENTIAL.test(joined) || MATHS_CHARS.test(joined.replace(/[⁺⁻]/g, '')) || /^[A-Za-z]\([A-Za-z0-9, ]+\)$/.test(joined)) && !/^[\d.,]+$/.test(joined));
+      const single = loneVariable || (run.length === 1 && (hasFormula || DIFFERENTIAL.test(joined) || MATHS_CHARS.test(joined.replace(/[⁺⁻]/g, '')) || /^[A-Za-z]\([-−]?[A-Za-z0-9.]+(?:, ?[-−]?[A-Za-z0-9.]+)*\)$/.test(joined)) && !/^[\d.,]+$/.test(joined));
       // The constant of integration, said with its sign: "+ C".
       if (cores.length === 2 && /^[+−-]$/.test(cores[0]) && /^[A-Z]$/.test(cores[1]) && !chem) { out.push(`${lead}${cores[0]} $${cores[1]}$${trail}`); i = after; continue; }
       // Symbols side by side are a product: "π r²".

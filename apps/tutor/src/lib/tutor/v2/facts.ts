@@ -26,6 +26,8 @@ export interface V2TurnFacts {
   answerCheck?: string;
   /** Seconds the student was silent before this turn, when that is why the turn exists. */
   silenceSeconds?: number;
+  /** No one spoke: the turn exists because the session is nearly out of time (useV2Turns). */
+  timeCheck?: boolean;
   /** The page was reloaded and the session has just been picked up again (resume.ts). */
   resumed?: boolean;
   /** A draft of this reply was held back, and why (homework-turn.ts). */
@@ -50,7 +52,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     // Homework: a solved problem does not go on spending the student's minutes.
     session.homework || session.homeworkSheet
       ? `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > 1.5 ? `about ${Math.round(left)} left` : 'the time is up'}` : ''}; the session ends when ${session.homeworkSheet ? 'the sheet' : 'this problem'} is done`
-      : `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > closeDueMinutes(session.timeBoxMinutes) ? `about ${Math.round(left)} left, which is time for more: the lesson is not at its close unless the student asks to stop` : left > 1.5 ? `about ${Math.round(left)} left: the close is near` : 'the time is up'}` : ''}`,
+      : `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > closeDueMinutes(session.timeBoxMinutes) ? `about ${Math.round(left)} left, which is time for more: the lesson is not at its close unless the student asks to stop` : left > 0.75 ? `about ${Math.max(1, Math.round(left))} left: tell the student so now, once and in a few words, then use what is left for the one thing that matters most (finish the step in hand, or say what to take away), and close when that is done. Do not start anything new` : 'the time is up: close now, in a sentence or two'}` : ''}`,
     `board:\n  ${renderBoard(state.board)}`,
   ];
   if ((state.repliesSinceBoard ?? 0) >= 1) lines.push(`board last written on: ${state.repliesSinceBoard} ${state.repliesSinceBoard === 1 ? 'reply' : 'replies'} ago`);

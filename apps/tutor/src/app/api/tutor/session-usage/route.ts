@@ -475,7 +475,9 @@ export async function POST(req: NextRequest) {
       if (Object.keys(pushFields).length > 0) op.$push = pushFields;
       // `$max` paths never collide: the span write raises `duration` (and
       // its own span), the totals raise the three total fields.
-      const maxFields: Record<string, number> = { ...(spanWrite?.max ?? {}), ...totalsMax };
+      // `lastStartedAt`: the start of the latest attempt, so a session picked up again is listed by when it was
+      // last sat down to (admin list). $max: an older tab's late save cannot move it back.
+      const maxFields: Record<string, number | Date> = { ...(spanWrite?.max ?? {}), ...totalsMax, ...(attemptStartValid && attemptStart ? { lastStartedAt: attemptStart } : {}) };
       if (Object.keys(maxFields).length > 0) op.$max = maxFields;
 
       try {

@@ -18,6 +18,7 @@
 import { drawFigure } from './drawn-figures';
 import { typesetMaths } from './rich-text';
 import { closeDueMinutes } from './close-heard';
+import { goalForProblem } from './progress';
 import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient } from '../ai/model-registry';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
@@ -138,7 +139,7 @@ export function v2SessionPart(session: V2Session): string {
 }
 
 /** What goes in the user turn in place of the student's words when they have not spoken. */
-export function v2StudentBlock(studentSaid: string | null, state: V2State, silenceSeconds?: number, resumed?: boolean, session?: V2Session): string {
+export function v2StudentBlock(studentSaid: string | null, state: V2State, silenceSeconds?: number, resumed?: boolean, session?: V2Session, timeCheck?: boolean): string {
   if (studentSaid !== null) return studentSaid;
   if (!!discussionOf(session?.plan) && !resumed && state.history.length === 0) return DISCUSSION_OPENING;
   if (state.history.length === 0 && !resumed && session?.homework) return v2HomeworkOpener(session.homework);
@@ -147,6 +148,7 @@ export function v2StudentBlock(studentSaid: string | null, state: V2State, silen
   if (state.history.length === 0) return '[The session has just started. The student has joined and is waiting for you to begin the lesson. Greet them, then tell them what this lesson is about and what it will cover, and ask whether that sounds good. Keep all of it short: three sentences at most, the plan as two or three plain things and not a list of every step. If what is known about this student shows an earlier session, add one sentence on where that left off. Wait for their answer before teaching.]';
   // After the tutor chose to wait and nothing more came: read as "has not replied", the tutor answered a student
   // it had kept waiting with "I'm here." (algebra, portal-02fd8638).
+  if (timeCheck && state.history.length > 0) return '[No one has spoken. The session is nearly out of time: see the time below.]';
   if (Math.round(silenceSeconds ?? 0) === V2_WAITED_RECHECK_S) return '[The student has said nothing more: they had finished.]';
   return silenceSeconds ? '[The student has not replied.]' : '[The student sent nothing.]';
 }
@@ -292,7 +294,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   /** The first reply of the session: nothing has been said by either side. */
   const opening = !state.history.length && input.studentSaid === null;
   const discussion = !!discussionOf(session.plan);
-  const studentText = v2StudentBlock(input.studentSaid, state, input.facts?.silenceSeconds, input.facts?.resumed, session);
+  const studentText = v2StudentBlock(input.studentSaid, state, input.facts?.silenceSeconds, input.facts?.resumed, session, input.facts?.timeCheck);
   const facts = renderFacts(session, state, { ...input.facts, nowMs, heard: input.studentSaid });
   // "Your last reply brought in a complication" is said once, in this turn's facts; a new one sets it again.
   if (state.thinking?.justComplicated) state.thinking = { ...state.thinking, justComplicated: false };
@@ -318,7 +320,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   let firstTextMs: number | null = null;
   let modelCalls = 0;
 
-  const waitingOnTutor = session.mode === 'voice' && input.studentSaid === null && [V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S].includes(Math.round(input.facts?.silenceSeconds ?? 0));
+  const waitingOnTutor = session.mode === 'voice' && input.studentSaid === null && (input.facts?.timeCheck === true || [V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S].includes(Math.round(input.facts?.silenceSeconds ?? 0)));
   // A typed message is sent whole: there is nothing more to listen for. A tutor that kept listening to one sat
   // silent for four minutes (demo check, 2026-11-13; the voice client rechecks a silence, the typed one does not).
   const typedAndSent = session.mode === 'text' && input.studentSaid !== null;
@@ -424,6 +426,14 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         const was = page?.items.find((it) => it.id === replaces);
         if (page && was) page.items = page.items.filter((it) => it !== was);
         const o = applyBoard(state.board, block.id, block.name, args); outcome = o.painted ? o.detail : `not painted: ${o.detail}`;
+        // A problem of the plan on the board is that part of the plan begun, whether or not the tutor records it:
+        // a whole lesson ran with the phases showing Hook, because no progress was recorded until the close
+        // (Algebra 1, portal-50a1e584).
+        if (o.painted && block.name === 'show_problem' && session.plan && !discussion) {
+          const put = typeof args.statement === 'string' ? args.statement : typeof (args.problem as { statement?: unknown } | undefined)?.statement === 'string' ? (args.problem as { statement: string }).statement : typeof args.problem === 'string' ? args.problem : '';
+          const goal = goalForProblem(session.plan, put);
+          if (goal && !state.goals[goal]) state.goals[goal] = { status: 'shown', at: nowMs };
+        }
         if (!o.painted) { if (page && was) page.items.push(was); replaces = undefined; }
         if (!o.painted && o.pointAt && !boardOnly) { pointsAt = o.pointAt; outcome = `not painted again: ${o.detail}; the board has scrolled back to it`; }
       }

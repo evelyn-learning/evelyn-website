@@ -1,5 +1,5 @@
 import { BoardInlineStream, boardBlocksIn, inlineToolCall, stripBoardBlocks } from '../src/lib/tutor/v2/board-inline';
-import { richBlocks, typesetMaths, typesetPowers } from '../src/lib/tutor/v2/rich-text';
+import { richBlocks, typesetMaths, typesetPowers, looksLikeCodeLine, isCodeBody } from '../src/lib/tutor/v2/rich-text';
 import { segment, autoWrapLatex, autoWrapUnicodeMath } from '../src/lib/tutor/whiteboard/inline-math';
 import { circuitNetlist, figureCatalogueFor } from '../src/lib/tutor/v2/figure-catalogue';
 import { heardAsWords } from '../src/lib/tutor/v2/heard';
@@ -27,8 +27,8 @@ import { runV2Turn, v2SessionPart, v2StudentBlock, type V2ModelCall, V2_CHECK_IN
 import { newV2State, type V2Session } from '../src/lib/tutor/v2/types';
 import { paintsOnBoard, streamV2Turn } from '../src/lib/tutor/v2/client';
 import { gradeOfLevel, isMathsSubject, isScienceSubject } from '../src/lib/tutor/v2/session-kind';
-import { v2Progress } from '../src/lib/tutor/v2/progress';
-import { closeDueMinutes, reopensClose } from '../src/lib/tutor/v2/close-heard';
+import { v2Progress, goalForProblem } from '../src/lib/tutor/v2/progress';
+import { closeDueMinutes, reopensClose, asksToWait } from '../src/lib/tutor/v2/close-heard';
 import { v2Background } from '../src/lib/tutor/v2/background';
 import { V2_MASTERY_DOWN, V2_MASTERY_UP, V2_MASTERY_UP_MIXED, v2Mastery, v2MemoryLines, v2ProfileCommit } from '../src/lib/tutor/v2/memory';
 import { v2StateFromCheckpoint } from '../src/lib/tutor/v2/resume';
@@ -414,7 +414,7 @@ async function main() {
     const re = await runV2Turn({ session, state: newV2State(1_000_000), studentSaid: 'e', nowMs: 1_000_000 + 10 * 60000, callModel: early.call });
     check('the tutor cannot end the lesson by itself with time left: it is sent back to offer the choice', !re.state.closed && re.modelCalls === 2 && /not ended/.test(re.toolCalls[0].outcome));
     const late = stub([msg([{ type: 'text', text: 'Time is nearly up. Well done.' }, { type: 'tool_use', id: 'z2', name: 'end_lesson', input: { because: 'time_nearly_used', summary: 's' } }], 'tool_use')]);
-    const rl = await runV2Turn({ session, state: newV2State(1_000_000), studentSaid: 'e', nowMs: 1_000_000 + 22 * 60000, callModel: late.call });
+    const rl = await runV2Turn({ session, state: newV2State(1_000_000), studentSaid: 'e', nowMs: 1_000_000 + 23.5 * 60000, callModel: late.call });
     check('near the end of the time it can', rl.state.closed);
   }
   {
@@ -657,7 +657,7 @@ async function main() {
   const tEnd = await runV2Turn({ session: { ...s13, timeBoxMinutes: 30 }, state: newV2State(0), studentSaid: 'x is 3', facts: { nowMs: 22 * 60000 }, nowMs: 22 * 60000, callModel: ended.call, boardPass: false });
   const refusal = tEnd.toolCalls.find((c) => c.name === 'end_lesson')?.outcome ?? '';
   check('a close refused with time left is not worded as something to repeat to the student', /^not ended/.test(refusal) && !/minutes remain|has not asked/.test(refusal) && !tEnd.state.closed, refusal);
-  check('the facts say how much time is left and that the close is not due', /about 8 left, which is time for more/.test(renderFacts(s13, newV2State(0), { nowMs: 22 * 60000 })) && /the close is near/.test(renderFacts(s13, newV2State(0), { nowMs: 28 * 60000 })), renderFacts(s13, newV2State(0), { nowMs: 22 * 60000 }).split('\n')[1]);
+  check('the facts say how much time is left and that the close is not due', /about 8 left, which is time for more/.test(renderFacts(s13, newV2State(0), { nowMs: 22 * 60000 })) && /tell the student/.test(renderFacts(s13, newV2State(0), { nowMs: 28.5 * 60000 })), renderFacts(s13, newV2State(0), { nowMs: 22 * 60000 }).split('\n')[1]);
   const planP = { segments: [{ id: 'hook', kind: 'hook' }, { id: 'c', kind: 'concept' }, { id: 't1', kind: 'try_yourself' }, { id: 't2', kind: 'try_yourself' }, { id: 'mis', kind: 'misconception_check' }, { id: 'recap', kind: 'recap' }] } as never;
   const goalsP = { hook: { status: 'shown', at: 1 }, c: { status: 'shown', at: 2 }, t1: { status: 'shown', at: 3 }, t2: { status: 'demonstrated', at: 4 }, mis: { status: 'shown', at: 9 } } as never;
   check('the part in hand is the one the tutor last marked, not one left open earlier', v2Progress(planP, goalsP).currentSegmentId === 'mis' && v2Progress(planP, { ...(goalsP as object), mis: { status: 'demonstrated', at: 9 } } as never).currentSegmentId === 'recap' && v2Progress(planP, { hook: { status: 'shown' } } as never).currentSegmentId === 'c', v2Progress(planP, goalsP).currentSegmentId);
@@ -676,11 +676,10 @@ async function main() {
     && typesetMaths('Here $3 + 4 = 7$ and $2M$ stay.') === 'Here $3 + 4 = 7$ and $2M$ stay.', `${typesetPowers(typesetMaths(money))} | ${JSON.stringify(shownMoney(money))}`);
   check('words over the closing words call the close off; thanks and a goodbye do not', reopensClose('Wait, I have a question about Lopez.') && reopensClose('can we do one more') && reopensClose('no')
     && !reopensClose('Okay, thank you so much. Bye!') && !reopensClose('Thanks, see you next time.') && !reopensClose('yeah') && !reopensClose(' ... ') && !reopensClose('Thank you, Mr. Cole.') && reopensClose('Okay, wait.') && reopensClose('Thanks. One more?'), String(reopensClose('Thank you, Mr. Cole.')));
-  check('the close of a lesson is due with three minutes left, not a fifth of a long session', closeDueMinutes(30) === 3 && closeDueMinutes(60) === 3 && closeDueMinutes(10) === 2);
   const early = stub([msg([{ type: 'text', text: 'Good work today.' }, { type: 'tool_use', id: 'e1', name: 'end_lesson', input: { because: 'time_nearly_used', summary: 'done' } }], 'tool_use'), msg([{ type: 'text', text: 'What would you like next?' }], 'end_turn')]);
   const tEarly = await runV2Turn({ session: { ...s13, timeBoxMinutes: 30 }, state: newV2State(0), studentSaid: 'regulate commerce', facts: { nowMs: 24.4 * 60000 }, nowMs: 24.4 * 60000, callModel: early.call, boardPass: false });
   const late = stub([msg([{ type: 'text', text: 'Good work today.' }, { type: 'tool_use', id: 'e1', name: 'end_lesson', input: { because: 'time_nearly_used', summary: 'done' } }], 'tool_use')]);
-  const tLate = await runV2Turn({ session: { ...s13, timeBoxMinutes: 30 }, state: newV2State(0), studentSaid: 'regulate commerce', facts: { nowMs: 27.5 * 60000 }, nowMs: 27.5 * 60000, callModel: late.call, boardPass: false });
+  const tLate = await runV2Turn({ session: { ...s13, timeBoxMinutes: 30 }, state: newV2State(0), studentSaid: 'regulate commerce', facts: { nowMs: 28.5 * 60000 }, nowMs: 28.5 * 60000, callModel: late.call, boardPass: false });
   check('a lesson is not closed by the tutor with more than five minutes of thirty left', !tEarly.state.closed && tLate.state.closed === true && /about 6 left, which is time for more/.test(renderFacts(s13, newV2State(0), { nowMs: 24.4 * 60000 })), renderFacts(s13, newV2State(0), { nowMs: 24.4 * 60000 }).split('\n')[1]);
   check('brackets in spoken mathematics are heard as pauses and a product is said', speakGroups('the factors are (x minus 5)(x + 2), since') === 'the factors are x minus 5, times, x + 2, since' && speakGroups('1 + 2(x minus 4) equals 9') === '1 + 2 times, x minus 4, equals 9' && speakGroups('the point (3 comma 4) and (as we said) f of x') === 'the point (3 comma 4) and (as we said) f of x', speakGroups('1 + 2(x minus 4) equals 9'));
   const fig = (kind: string, params: object) => inlineToolCall(boardBlocksIn(`<board figure kind="${kind}">${JSON.stringify(params)}</board>`)[0]);
@@ -732,6 +731,18 @@ async function main() {
   const apart = nl('-2 | open | left\n5 | closed | right');
   check('two values shaded away from each other are two rays, each running on past the end of the line', apart.length === 2 && apart[0].to === -2 && apart[0].toInclusive === false && apart[0].fromOpenEnded === true && apart[1].from === 5 && apart[1].fromInclusive === true && apart[1].toOpenEnded === true && nl('4 | open | right').length === 1 && nl('4 | open | right')[0].toOpenEnded === true, JSON.stringify(apart));
   check('the turn after keeping quiet is told not to remark on the wait', /no remark about the wait/.test(renderFacts(s13, newV2State(0), { nowMs: 60000, silenceSeconds: 5 })) && v2StudentBlock(null, { ...newV2State(0), history: [{ role: 'user', content: 'x' }] } as never, 5) === '[The student has said nothing more: they had finished.]' && v2StudentBlock(null, { ...newV2State(0), history: [{ role: 'user', content: 'x' }] } as never, 75) === '[The student has not replied.]');
+  // portal-50a1e584 (Algebra 1, relations and functions).
+  check('a set of numbers at the end of a line is not program code', !looksLikeCodeLine('Domain = inputs, each once, in order: {−3, −1, 2, 5}') && !isCodeBody('Domain = inputs, each once, in order: {−3, −1, 2, 5}\nRange = outputs, each once, in order: {−6, 0, 4}') && looksLikeCodeLine('int[] a = {1, 2, 3};') && looksLikeCodeLine('if (n <= 0) { return 0; }') && looksLikeCodeLine('}'));
+  check('a function at a negative number is typeset like its fellows', typesetMaths('If f(x) = 5 − 2x, what is f(−4)? Give the number.') === 'If $f(x) = 5 - 2x$, what is $f(-4)$? Give the number.' && typesetMaths('Evaluating f(x)') === 'Evaluating $f(x)$', typesetMaths('If f(x) = 5 − 2x, what is f(−4)? Give the number.'));
+  check('a request to wait is heard as one', asksToWait("Yeah, I'm here. I I just want you to pause for a second. I'm looking at something else.") && asksToWait('hold on, give me a minute') && asksToWait('wait a sec') && asksToWait('one moment please') && !asksToWait('I waited a second and then divided') && !asksToWait('wait, why is it negative?') && !asksToWait('the answer is 3'));
+  const planR = { title: 'Relations and functions', estimatedMinutes: 25, los: [{ id: 'lo1', description: 'Tell a function from a relation.' }], segments: [{ id: 'hook', kind: 'hook' }, { id: 'c', kind: 'concept' }, { id: 'w1', kind: 'worked_example', problem: 'Is the relation {(−3, 4), (−1, 0), (2, 4), (5, −6)} a function? State its domain and range.' }, { id: 't2', kind: 'try_yourself', problem: 'If f(x) = 5 − 2x, what is f(−4)?' }, { id: 't3', kind: 'try_yourself', problem: 'The relation {(−5, 2), (−1, 7), (0, 2), (3, 9), (6, 7)} is a function. How many numbers are in its range? Type your answer as a number.' }, { id: 'mis', kind: 'misconception_check', question: 'Given f(x) = 2x + 1, a student writes f(3) = f · 3 = 3f. Another student decides f(3) means "set 2x + 1 equal to 3 and solve", getting x = 1. What went wrong in each case?' }, { id: 'recap', kind: 'recap' }] } as never;
+  check('a problem put on the board is known for the part of the plan it belongs to', goalForProblem(planR, 'Is the relation {(−3, 4), (−1, 0), (2, 4), (5, −6)} a function? If so, state its domain and range.') === 'w1' && goalForProblem(planR, 'If $f(x) = 5 - 2x$, what is f(−4)? Give the number.') === 't2' && goalForProblem(planR, 'The relation {(−5, 2), (−1, 7), (0, 2), (3, 9), (6, 7)} is a function. How many numbers are in its range? Give a number.') === 't3' && goalForProblem(planR, 'Given f(x) = 2x + 1, one student writes f(3) = 3f. Another decides f(3) means solve 2x + 1 = 3. What went wrong in each case?') === 'mis' && goalForProblem(planR, 'Is the relation {(1, 5), (2, 5), (3, 5)} a function? Say yes or no, and why.') === null, String(goalForProblem(planR, 'Given f(x) = 2x + 1, one student writes f(3) = 3f. Another decides f(3) means solve 2x + 1 = 3. What went wrong in each case?')));
+  const shownT2 = v2Progress(planR, { t2: { status: 'shown', at: 5 } } as never);
+  check('with a practice problem on the board, the parts only told before it are behind the student', shownT2.currentSegmentId === 't2' && shownT2.completedSegmentIds.join() === 'hook,c,w1', JSON.stringify(shownT2));
+    const sayR = (text: string): V2ModelCall => async (_params, onText) => { onText?.(text); return msg([{ type: 'text', text }], 'end_turn'); };
+  const tGoal = await runV2Turn({ session: { ...s13, plan: planR }, state: newV2State(0), studentSaid: 'ok', nowMs: 60000, callModel: sayR('Try this one.\n\n<board problem>If f(x) = 5 − 2x, what is f(−4)? Give the number.</board>\n\nWhat do you get?'), boardPass: false });
+  check('putting a plan problem on the board marks its part as begun, without the tutor recording it', tGoal.state.goals.t2?.status === 'shown' && !tGoal.state.goals.t3, JSON.stringify(tGoal.state.goals));
+  check('the close of a lesson is due with two minutes left, and the tutor is told to say so', closeDueMinutes(30) === 2 && closeDueMinutes(60) === 2 && closeDueMinutes(5) === 1 && /about 2 left[^\n]*tell the student/i.test(renderFacts(s13, newV2State(0), { nowMs: 28.2 * 60000 })) && /time for more/.test(renderFacts(s13, newV2State(0), { nowMs: 27 * 60000 })) && v2StudentBlock(null, { ...newV2State(0), history: [{ role: 'user', content: 'x' }] } as never, undefined, undefined, undefined, true) === '[No one has spoken. The session is nearly out of time: see the time below.]', renderFacts(s13, newV2State(0), { nowMs: 28.2 * 60000 }).split('\n')[1]);
   const triBlank = drawFigure('geometry_figure', { shape: 'triangle', sides: [3, 4, 5], sideLabels: ['a', 'b', 'c'], angleLabels: ['', '', '90°'] });
   check('an empty label on a triangle is no label, not a refusal (demo check 11-13)', 'svg' in triBlank, JSON.stringify(triBlank).slice(0, 200));
   const cellNamed = drawFigure('cell', { cellType: 'plant', organelles: ['nucleus', 'chloroplasts', 'vacuole', 'cell wall', 'mitochondria', 'lysosome'] });

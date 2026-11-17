@@ -44,6 +44,7 @@ import { isMathsSubject, isScienceSubject } from '@/lib/tutor/v2/session-kind';
 import { anchorSentenceIndex, asksAnywhere, inlineSentenceIndex } from '@/lib/tutor/v2/board-timing';
 import { summariseBoardCall } from '@/lib/tutor/v2/board';
 import { V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S } from '@/lib/tutor/v2/facts';
+import { asksToWait } from '@/lib/tutor/v2/close-heard';
 import { outsideMathSpans, speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakLessonNotation, speakLetterUnits, speakGroups, speakNumberPlurals, speakSlashes } from '@/lib/tutor/voice/tts-pronunciation';
 import { cueStop, cueTick, cueTurnAccepted, initialThinkingCue } from '@/lib/tutor/voice/thinking-cue';
 import { playThinkingPulse, playTurnChime, primeThinkingCueAudio } from '@/lib/tutor/voice/thinking-cue-audio';
@@ -211,6 +212,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   }, [props.thinkingCue]);
 
   const soonAfterSpeechRef = useRef<number | undefined>(undefined);
+  const lastStudentSaidRef = useRef('');
   const clearSilence = () => { if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; } };
   const armSilence = useCallback((soonS?: number, delayS?: number) => {
     clearSilence();
@@ -325,7 +327,10 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
         // A reply that asked the student nothing leaves them not knowing whose move it is (the tutor made a
         // statement and waited 44 s, embed-1794355900794). It learns of the silence early, once, and can go on.
         const said = turnSentencesRef.current;
-        const noAsk = !silentReply && (lastTurnWasStudentRef.current || openingTurnRef.current) && said.length > 0 && !asksAnywhere(said) && !turnsRef.current?.isEnding() && !turnsRef.current?.closed;
+        const noAsk = !silentReply && (lastTurnWasStudentRef.current || openingTurnRef.current) && said.length > 0 && !asksAnywhere(said) && !turnsRef.current?.isEnding() && !turnsRef.current?.closed
+          // The tutor said it would wait, or the student asked it to: the silence that follows is theirs to break
+          // ("pause for a second" was answered "I'll wait", and the lesson went on five seconds later, portal-50a1e584).
+          && !turnsRef.current?.keptListeningRef.current && !asksToWait(lastStudentSaidRef.current);
         lastTurnWasStudentRef.current = false;
         // The opening is the first reply only. Left on until the student spoke, a second reply before that put its
         // whole page up at once, a note, a formula and a problem together (AP Calc BC, embed-1794446765164).
@@ -410,7 +415,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     realtimeRef.current?.resumeSpeech();
     silenceStepRef.current = 0;
     if (p.current.thinkingCue) { const r = cueTurnAccepted(cueRef.current, Date.now()); cueRef.current = r.state; play(r.play); }
-    lastTurnWasStudentRef.current = true; openingTurnRef.current = false;
+    lastTurnWasStudentRef.current = true; openingTurnRef.current = false; lastStudentSaidRef.current = text;
     turnsRef.current?.send(text);
   }, [liftPause, dropBoard]);
 

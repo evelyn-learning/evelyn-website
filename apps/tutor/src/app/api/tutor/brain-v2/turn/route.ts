@@ -30,6 +30,7 @@ interface TurnBody {
   studentSaid?: unknown;
   silenceSeconds?: unknown;
   resumed?: unknown;
+  timeCheck?: unknown;
 }
 
 const bad = (message: string) => new Response(JSON.stringify({ error: message }), { status: 400, headers: { 'Content-Type': 'application/json' } });
@@ -101,7 +102,7 @@ export async function POST(req: NextRequest) {
       // A client that has gone (interrupted turn, closed tab) is not an error: stop writing, stop the model.
       const send = (event: Record<string, unknown>) => { if (req.signal.aborted) return; try { controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`)); } catch { /* stream already closed */ } };
       try {
-        const facts = { ...(silenceSeconds ? { silenceSeconds } : {}), ...(body.resumed === true ? { resumed: true } : {}) };
+        const facts = { ...(silenceSeconds ? { silenceSeconds } : {}), ...(body.resumed === true ? { resumed: true } : {}), ...(body.timeCheck === true ? { timeCheck: true } : {}) };
         const turnInput = {
           session, state, studentSaid, signal: req.signal,
           ...(Object.keys(facts).length ? { facts } : {}),
