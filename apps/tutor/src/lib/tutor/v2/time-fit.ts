@@ -11,8 +11,9 @@
  *  C (PART_MIN_PRACTICE): in a spoken lesson with a labelled plan, a practice part is not closed until the learner has said at
  *    least V2_MIN_PRACTICE practice sentences of their own in it, unless they ask to move on. Counted here (state.practiceSaid,
  *    round-tripped), told in the facts, and held in turn.ts (no goal marked done, no part ask, no next page).
- *  E (MORE_PRACTICE): a learner who asks for more practice once the summary has begun, or at the close, gets it while more
- *    than V2_MORE_PRACTICE_MIN_LEFT minutes remain to the hard stop; otherwise the tutor says there is no time left today.
+ *  E (MORE_PRACTICE): when a learner's words look like a request for more practice once the summary has begun, or at the
+ *    close, the facts say it is allowed while more than V2_MORE_PRACTICE_MIN_LEFT minutes remain to the hard stop, otherwise
+ *    that there is no time left today. It informs only (fix round 4): the model decides, and no close is refused for it.
  * Pure.
  */
 import type { LessonPlan, Segment } from '../lesson-plan/types';
@@ -143,7 +144,9 @@ export function v2PracticeFacts(plan: LessonPlan, short: { index: number; n: num
 export const V2_PRACTICE_MORE_LINES = ['Before we go on, let\'s practise this a little more. Can you say another sentence of your own?', 'Let\'s do one more before we move on. Can you make another sentence of your own with it?'];
 export const v2PracticeMoreLine = (history: V2State['history']) => V2_PRACTICE_MORE_LINES[history.filter((h) => h.role === 'assistant').length % V2_PRACTICE_MORE_LINES.length]!;
 
-/** The learner asks for more practice ("Can we do some more practice?", "another exercise", 「もっと練習したい」). */
+/** The learner's words look like a request for more practice ("Can we do some more practice?", "another exercise",
+ *  「もっと練習したい」). Fix round 4: the result only chooses a facts line (v2MorePracticeFacts); it refuses nothing, so a
+ *  misread remark costs nothing and these lists do not grow for edge cases. A plain decline is still not a request. */
 // Fix round 1 (C1): practice, exercises, sentences to make or another try only; never questions or examples ("No more questions,
 // thank you." answers the close's invitation; "one more question: …" is a question), and never a negated phrase.
 // Fix round 2 (R1): a request is asked of the tutor now, sentence by sentence: a request frame (can / could / may we or I, let me,
@@ -174,11 +177,12 @@ export const v2AsksMorePractice = (said: string | null | undefined): boolean => 
   });
 };
 
-/** Task 7f E: the facts line when the learner asks for more practice at the close: given while more than
- *  V2_MORE_PRACTICE_MIN_LEFT minutes remain to the hard stop, else declined plainly and named for next time. */
+/** Task 7f E: the facts line when the learner's words look like a request for more practice at the close: allowed while more
+ *  than V2_MORE_PRACTICE_MIN_LEFT minutes remain to the hard stop, else no time today and named for next time. Permissive
+ *  (fix round 4): the matcher can misread a closing remark, so the line leaves the reading of their meaning to the model. */
 export function v2MorePracticeFacts(granted: boolean | null, leftToStop: number): string[] {
   if (granted === null) return [];
   return [granted
-    ? `they asked for more practice, and there is time for it (about ${Math.max(1, Math.floor(leftToStop))} minutes before the session must end): give it now, one or two practice sentences on what they choose or on today's points, and do not end the lesson in this reply; then return to the close`
-    : 'they asked for more practice, and there is no time left today: say so plainly in one short sentence, name more practice as something for next time, and go on with the close'];
+    ? `more practice: their words may be a request for more practice now. If that is what they mean, it is allowed: there are about ${Math.max(1, Math.floor(leftToStop))} minutes before the session must end, so give one or two practice sentences on what they choose or on today's points, then return to the close. If they mean something else (thanks, a wish for another day, a question, a goodbye), answer that and close as you would have`
+    : 'more practice: their words may be a request for more practice now. If that is what they mean, there is no time left today: say so plainly in one short sentence, name more practice as something for next time, and go on with the close. If they mean something else, answer that and close as you would have'];
 }

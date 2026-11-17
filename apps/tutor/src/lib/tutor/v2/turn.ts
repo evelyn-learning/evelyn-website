@@ -131,8 +131,6 @@ interface V2ControlCtx {
   tf: V2TimeFlags;
   /** C: the practice part in hand is short of its sentences: its goal is not marked done yet. */
   practiceHold?: { id: string; n: number } | null;
-  /** E: they asked for more practice at the close, and there is time: the lesson does not end in this reply. */
-  morePracticeGranted?: boolean;
 }
 
 /** What the student's grade asks of the tutor's pace. The constitution says to teach at their level; a grade 7
@@ -339,8 +337,6 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     if ((session.homework || session.homeworkSheet) && studentSaid !== null && V2_BARE_ASSENT.test(studentSaid) && left > V2_TIME_UP_MIN) {
       return 'not ended: "yes" does not say whether they are finished. Ask, in one short question with one meaning, whether they have any question about it.';
     }
-    // Task 7f E: they asked for more practice at the close, and there is time: it comes first.
-    if (!asked && ctx.morePracticeGranted) return 'not ended: they asked for more practice, and there is time for it. Say nothing of this message or of the clock, and say no goodbye now. Give them the practice in this reply; the close comes after it.';
     // Task 7f D (CLOSE_BY_CONTENT): the close is open when the plan's parts are done or the wrap minute is reached (time-box.ts).
     if (!asked && !homeworkDone && !v2CloseOpen(session, state, nowMs, ctx.tf.closeByContent)) {
       // Said to the student as the tutor's own thought. The first wording was repeated to them: "The system says
@@ -411,7 +407,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Task 7f C: the practice part in hand still short of its sentences (spoken lessons with labelled plans; not at the close).
   const summaryEarlier = !!session.plan && v2SummaryBegun(state);
   const practiceShort = tf.minPractice && partFlow && askEvery && session.plan && !closingTurn && !summaryEarlier && !state.closed ? v2PracticeShort(session.plan, state) : null;
-  // Task 7f E (MORE_PRACTICE): more practice asked for once the summary has begun, or at the close.
+  // Task 7f E (MORE_PRACTICE): words that look like a request for more practice once the summary has begun, or at the close.
+  // Fix round 4: this only informs. The facts say practice is allowed (or that there is no time today) and the model decides
+  // from the learner's meaning; no end_lesson is refused for it. Enforced, each misread closing remark ("Let's do this again
+  // sometime.", 「明日もう一回お願いします。」) held a lesson open past the learner's answer to the invitation.
   const atClose = summaryEarlier || typeof state.closeInvitedAt === 'number' || closingTurn || (!!session.timeBoxMinutes && v2CloseOpen(session, state, nowMs, tf.closeByContent));
   const morePractice = tf.morePractice && !discussion && !session.homework && !session.homeworkSheet && !!session.plan && !state.closed && !(TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid)) && v2AsksMorePractice(input.studentSaid) && atClose
     ? leftMin > V2_MORE_PRACTICE_MIN_LEFT : undefined;
@@ -547,10 +546,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         // next turn on it is never refused for this.
         // Final review I2: a reply whose last sentence said is already the invitation waits for their answer: told to ask again,
         // the model asked a second invitation straight after the first.
-        // Task 7f E: more practice asked for at the close, with time for it, comes before the invitation's own refusal.
-        : block.name === 'end_lesson' && morePractice === true && args.because !== 'student_asked' && !(TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid)) ? applyControlTool(state, session, block.name, args, nowMs, input.studentSaid, { tf, practiceHold: practiceShort, morePracticeGranted: true })
         : block.name === 'end_lesson' && inviteOwed && args.because !== 'student_asked' ? (inviteRefused || v2ReplyInvites(lastSentences(stripBoardBlocks(saidNow), 1)) ? V2_CLOSE_INVITE_WAIT : V2_CLOSE_INVITE_REFUSAL)
-        : applyControlTool(state, session, block.name, args, nowMs, input.studentSaid, { tf, practiceHold: practiceShort, morePracticeGranted: morePractice === true });
+        : applyControlTool(state, session, block.name, args, nowMs, input.studentSaid, { tf, practiceHold: practiceShort });
     } else {
       // An object written as its JSON text is the object: a tree's root arrived as a string and the board drew
       // the text itself in one box (data structures, embed-1794458110435).

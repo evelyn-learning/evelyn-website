@@ -1915,9 +1915,10 @@ export const TUTOR_V2_PART_MIN_PRACTICE = process.env.NEXT_PUBLIC_TUTOR_V2_PART_
  *  Default ON; NEXT_PUBLIC_TUTOR_V2_CLOSE_BY_CONTENT=off ⇒ the last fifth, as before. */
 export const TUTOR_V2_CLOSE_BY_CONTENT = process.env.NEXT_PUBLIC_TUTOR_V2_CLOSE_BY_CONTENT !== 'off';
 
-/** Tutor brain v2 (v2/time-fit.ts, v2/turn.ts, v2/facts.ts): a learner who asks for more practice after the summary has begun,
- *  or at the close, gets it while more than 3 minutes remain to the hard stop (the box plus the overrun margin); otherwise the
- *  tutor says plainly there is no time left today and names it for next time. The tutor still offers no NEW practice once the
+/** Tutor brain v2 (v2/time-fit.ts, v2/turn.ts, v2/facts.ts): when a learner's words look like a request for more practice after
+ *  the summary has begun, or at the close, the facts say it is allowed while more than 3 minutes remain to the hard stop (the
+ *  box plus the overrun margin), otherwise that there is no time left today and to name it for next time. It informs only: no
+ *  close is refused for it, the model decides from the learner's meaning. The tutor still offers no NEW practice once the
  *  summary has begun (Task 6g). Mic test 2 (embed-1794941004529): "Can we do some more practice?" was refused (Task 7f E).
  *  Default ON; NEXT_PUBLIC_TUTOR_V2_MORE_PRACTICE=off ⇒ as before. */
 export const TUTOR_V2_MORE_PRACTICE = process.env.NEXT_PUBLIC_TUTOR_V2_MORE_PRACTICE !== 'off';

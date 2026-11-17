@@ -69,6 +69,12 @@ const run = (session: V2Session, state: V2State, said: string | null, steps: Ste
   return runV2Turn({ session, state, studentSaid: said, callModel: m.call, onText: (d) => heard.push(d), boardPass: false, mathsCheck: false, nowMs: nowMin * MIN, ...(timeFlags ? { timeFlags } : {}) })
     .then((r) => ({ r, heard: heard.join(''), facts: m.facts.join('\n'), calls: r.toolCalls.map((c) => `${c.name}: ${c.outcome}`) }));
 };
+// Task 7f E (fix round 4): the permissive facts lines, and the lines that press toward the close.
+const MORE = /more practice: their words may be a request for more practice now/;
+const ALLOWED = /If that is what they mean, it is allowed: there are about (\d+) minutes before the session must end/;
+const NO_TIME = /If that is what they mean, there is no time left today: say so plainly/;
+const BEGUN = /the summary has begun: from here, no new practice, exercise or offer of more practice unless they ask for it/;
+const PRESSURE = /then summary|the close is near|the planned time is reached|say goodbye and end the lesson in this reply/;
 const isMore = (x: string) => V2_PRACTICE_MORE_LINES.some((l) => x.includes(l));
 // Every part before the summary done; pronunciation left out for time (B).
 const allDone = { overview: { status: 'shown' as const, at: 0 }, 'level-check': { status: 'shown' as const, at: 0 }, 'topic-intro': { status: 'shown' as const, at: 0 }, 'present-perfect': { status: 'demonstrated' as const, at: 0 }, 'past-simple': { status: 'demonstrated' as const, at: 0 }, 'open-conversation': { status: 'shown' as const, at: 0 } };
@@ -85,7 +91,7 @@ async function main() {
     console.log(`OFF_JSON ${JSON.stringify({
       tf, due19: v2PartDueNow(GDI, {}, 19, 20), dropped: drop.r.state.timeFit ?? null,
       pageOpened: short.r.state.board.pages.some((p) => p.title === 'Past simple'), moreLine: isMore(short.heard),
-      closed16: sixteen.r.state.closed, moreFacts: /there is time for it/.test(more.facts), stop: v2HardStopMinutes(20), leftStop: v2LeftToStopMin(lang, { startedAtMs: 0 }, 20 * MIN),
+      closed16: sixteen.r.state.closed, moreFacts: /more practice: their words may be a request/.test(more.facts), stop: v2HardStopMinutes(20), leftStop: v2LeftToStopMin(lang, { startedAtMs: 0 }, 20 * MIN),
     })}`);
     return;
   }
@@ -218,16 +224,24 @@ async function main() {
     check('fix round 3: a wish about the next session is not a request', later.every((x) => !v2AsksMorePractice(x)), later.filter(v2AsksMorePractice));
     const short = ['Could we do one more?', 'One more, please.', 'No, one more please.', 'Can we do it again?', 'Can I try one more time?', 'もう1問お願いします', 'Uh, one more.', 'I want to practice more.'];
     check('fix round 3: …and the short asks are heard', short.every(v2AsksMorePractice), short.filter((x) => !v2AsksMorePractice(x)));
+    // Fix round 4: E informs, it does not enforce. The facts allow the practice; no end_lesson is refused for it.
     const begun = at([...FIVE, 'Summary'], { goals: allDone, summaryBegunAt: 1, timeFit: { dropped: ['pronunciation'], told: true }, history: [u('x'), a('Here is a quick summary of today. Do you have any questions?')] });
-    const e17 = await run(lang, begun, 'Can we do some more practice?', [{ text: 'Of course! Here is one more.', after: end() }, { text: 'Tell me about a project you have finished. Use the past simple.' }], 17);
-    check('minute 17, the summary begun: honoured (the facts say there is time), and the close waits for it', /they asked for more practice, and there is time for it \(about 8 minutes/.test(e17.facts) && !e17.r.state.closed && e17.calls.some((c) => /^end_lesson: not ended: they asked for more practice/.test(c)), [e17.calls, e17.facts.slice(-600)]);
+    for (const ask of ['Can we do some more practice?', 'Uh, one more.', 'もう一問お願いします']) {
+      const e17 = await run(lang, begun, ask, [{ text: 'Of course! Tell me about a project you have finished. Use the past simple.' }], 17);
+      check(`minute 17, the summary begun, "${ask}": the facts allow it (about 8 minutes to the stop), with no summary-begun line and no close pressure`, MORE.test(e17.facts) && ALLOWED.exec(e17.facts)?.[1] === '8' && !BEGUN.test(e17.facts) && !PRESSURE.test(e17.facts) && /about 8 minutes before the session must end\n/.test(e17.facts) && !e17.r.state.closed, e17.facts.slice(0, 200) + e17.facts.slice(-900));
+    }
+    const e19 = await run(lang, at([...FIVE, 'Summary'], { goals: allDone, summaryBegunAt: 1, closeInvitedAt: 2, timeFit: { dropped: ['pronunciation'], told: true }, history: [u('x'), a('Here is a quick summary of today. Do you have any questions before we finish?')] }), 'Can we do some more practice?', [{ text: 'Sure. Tell me about your last trip.' }], 19);
+    check('minute 19, past the wrap and the invitation: allowed (about 6 minutes), the time line has no "then summary", and no "end the lesson in this reply"', ALLOWED.exec(e19.facts)?.[1] === '6' && !PRESSURE.test(e19.facts) && !BEGUN.test(e19.facts), e19.facts.slice(0, 200) + e19.facts.slice(-900));
+    const eEnds = await run(lang, begun, 'Can we do some more practice?', [{ text: 'Thank you for today. See you next time!', after: end() }, { text: 'Goodbye!' }], 17);
+    check('nothing is enforced: no end_lesson is refused for more practice (the only refusal there can be is the 7d invitation\'s)', eEnds.calls.every((c) => !/more practice/.test(c)), eEnds.calls);
     const e22 = await run(lang, begun, 'Can we do some more practice?', [{ text: 'There is no time left today, so let us do more practice next time. Goodbye!' }], 22.5);
-    check('2.5 minutes to the hard stop (22.5 of 20 + 5): declined plainly, named for next time', /there is no time left today: say so plainly/.test(e22.facts), e22.facts.slice(-400));
+    check('2.5 minutes to the hard stop (22.5 of 20 + 5): no time left today, named for next time; the close lines stay', NO_TIME.test(e22.facts) && !ALLOWED.test(e22.facts) && BEGUN.test(e22.facts), e22.facts.slice(-600));
     const mid = await run(lang, at(FIVE.slice(0, 3), { timeFit: { dropped: ['pronunciation'], told: true } }), 'Can we do some more practice?', [{ text: 'Sure. How long have you lived in your city?' }], 9);
-    check('mid-lesson (not at the close): no such line, the lesson goes on as ever', !/they asked for more practice/.test(mid.facts));
-    check('the 6g rule stays: once the summary has begun, no NEW practice is offered by the tutor', /the summary has begun: from here, no new practice, exercise or offer of more practice unless they ask for it/.test(e17.facts));
+    check('mid-lesson (not at the close): no such line, the lesson goes on as ever', !MORE.test(mid.facts));
+    const plain = await run(lang, begun, 'Thank you, that was useful.', [{ text: 'I am glad.' }], 17);
+    check('the 6g rule stays: once the summary has begun, no NEW practice is offered by the tutor (the line is there in every other turn)', BEGUN.test(plain.facts) && !MORE.test(plain.facts), plain.facts.slice(-600));
     const eOff = await run(lang, begun, 'Can we do some more practice?', [{ text: 'Sure.' }], 17, { morePractice: false });
-    check('the switch off for the turn: no line', !/they asked for more practice/.test(eOff.facts));
+    check('the switch off for the turn: no line, and the summary-begun line as before', !MORE.test(eOff.facts) && BEGUN.test(eOff.facts));
   }
 
   console.log('the 7d invitation with B–F on (fix round 1, I2 and C1): asked once, and the lesson ends on their answer');
@@ -239,20 +253,30 @@ async function main() {
     const answers = ['No more questions, thank you.', 'No, I have no more questions.', "I don't have any more questions.", 'No, thank you.', '質問はありません。'];
     for (const ans of answers) {
       const t = await run(lang, closeSt({ closeInvitedAt: 2, history: [u('x'), a(`Here is a quick summary of today. ${INVITE}`)] }), ans, [{ text: 'Thank you for today. See you next time!', after: end() }, { text: 'Goodbye!' }], 17.5);
-      check(`"${ans}" at 17.5: the lesson ends on it (no more-practice line, no refusal)`, t.r.state.closed && !/they asked for more practice/.test(t.facts) && t.calls.every((c) => !/^end_lesson: not ended/.test(c)), [t.calls, t.facts.slice(-500)]);
+      check(`"${ans}" at 17.5: the lesson ends on it (no more-practice line, no refusal)`, t.r.state.closed && !MORE.test(t.facts) && t.calls.every((c) => !/^end_lesson: not ended/.test(c)), [t.calls, t.facts.slice(-500)]);
     }
     const q = await run(lang, closeSt({ closeInvitedAt: 2, history: [u('x'), a(`Here is a quick summary of today. ${INVITE}`)] }), 'One more question: what is the difference between been and gone?', [{ text: '"Gone" means they are still there; "been" means they came back. Thank you for today, see you next time!', after: end() }, { text: 'Goodbye!' }], 17.5);
-    check('"One more question: …" is a question: no more-practice line, answered, and the lesson may end', q.r.state.closed && !/they asked for more practice/.test(q.facts) && /questions before the close: you have asked/.test(q.facts), [q.calls]);
-    const home = await run(lang, closeSt({ closeInvitedAt: 2, history: [u('x'), a(`Here is a quick summary of today. ${INVITE}`)] }), 'No, thanks. I will practice more at home.', [{ text: 'That sounds great. Thank you for today, see you next time!', after: end() }, { text: 'Goodbye!' }], 17);
-    check('fix round 2: "No, thanks. I will practice more at home." to the invitation at 17: the lesson ends on it', home.r.state.closed && !/they asked for more practice/.test(home.facts) && home.calls.every((c) => !/^end_lesson: not ended/.test(c)), [home.calls]);
-    const nextJa = await run(lang, closeSt({ closeInvitedAt: 2, history: [u('x'), a(`Here is a quick summary of today. ${INVITE}`)] }), '次回もっと練習したいです。', [{ text: 'いいですね。今日はありがとうございました。', after: end() }, { text: 'さようなら。' }], 17);
-    check('fix round 3: 「次回もっと練習したいです。」 to the invitation at 17: the lesson ends on it', nextJa.r.state.closed && !/they asked for more practice/.test(nextJa.facts), nextJa.calls);
-    const oneMore = await run(lang, closeSt({ closeInvitedAt: 2, history: [u('x'), a(`Here is a quick summary of today. ${INVITE}`)] }), 'Uh, one more.', [{ text: 'Sure!', after: end() }, { text: 'Tell me what you did last weekend, in the past simple.' }], 17);
-    check('fix round 3: "Uh, one more." at 17: practice first (the close refused for it)', !oneMore.r.state.closed && oneMore.calls.some((c) => /^end_lesson: not ended: they asked for more practice/.test(c)), oneMore.calls);
-    const exercise = await run(lang, closeSt({ closeInvitedAt: 2, history: [u('x'), a(`Here is a quick summary of today. ${INVITE}`)] }), "No, I'd like another exercise.", [{ text: 'Of course!', after: end() }, { text: 'Tell me about your last trip, using the past simple.' }], 17);
-    check('fix round 2: "No, I\'d like another exercise." at 17: practice first (the close refused for it)', !exercise.r.state.closed && /they asked for more practice, and there is time for it/.test(exercise.facts) && exercise.calls.some((c) => /^end_lesson: not ended: they asked for more practice/.test(c)), exercise.calls);
-    const more = await run(lang, closeSt({ closeInvitedAt: 2, history: [u('x'), a(`Here is a quick summary of today. ${INVITE}`)] }), 'Can we do some more practice?', [{ text: 'Of course!', after: end() }, { text: 'Tell me about your last trip, using the past simple.' }], 17.5);
-    check('"Can we do some more practice?" to the invitation at 17.5: practice first (the close refused for it)', !more.r.state.closed && more.calls.some((c) => /^end_lesson: not ended: they asked for more practice/.test(c)), more.calls);
+    check('"One more question: …" is a question: no more-practice line, answered, and the lesson may end', q.r.state.closed && !MORE.test(q.facts) && /questions before the close: you have asked/.test(q.facts), [q.calls]);
+    // Fix round 4: every closing remark the three re-reviews found misread (whether the matcher still fires on it or not)
+    // ends the lesson at the minute-17 invitation: the tutor's end_lesson is accepted, nothing holds the close.
+    const invited = () => closeSt({ closeInvitedAt: 2, history: [u('x'), a(`Here is a quick summary of today. ${INVITE}`)] });
+    const falseHits = [
+      'No, thanks. I will practice more at home.', "I'll keep practicing, thank you.", 'Thank you, I want to practice more with my team.', 'いえ、ありません。もっと練習します。',
+      '次回もっと練習したいです。', '今度もっと練習したいです。', 'I want to practice more next time.',
+      "Let's do this again sometime.", '明日もう一回お願いします。', 'また明日、もう一回お願いします。', 'Could we do it again next Tuesday?',
+      'Could we do one more question?', 'Can you explain one more time?', 'もう一度説明してください。', 'Can we do this again? Thank you for today.',
+    ];
+    for (const ans of falseHits) {
+      const t = await run(lang, invited(), ans, [{ text: 'Thank you for today. See you next time!', after: end() }, { text: 'Goodbye!' }], 17);
+      check(`"${ans}" to the invitation at 17: the tutor's end_lesson is accepted`, t.r.state.closed && t.calls.some((c) => /^end_lesson: /.test(c)) && t.calls.every((c) => !/^end_lesson: not ended/.test(c)), t.calls);
+    }
+    // A clear request: the facts allow the practice; the model that gives it stays open, and the lesson ends on a later turn.
+    for (const ask of ['Uh, one more.', "No, I'd like another exercise.", 'Can we do some more practice?']) {
+      const t = await run(lang, invited(), ask, [{ text: 'Of course! Tell me what you did last weekend, in the past simple.' }], 17);
+      check(`"${ask}" to the invitation at 17: the facts allow it, no close pressure, the lesson stays open`, !t.r.state.closed && ALLOWED.test(t.facts) && !BEGUN.test(t.facts) && !PRESSURE.test(t.facts), t.facts.slice(-900));
+      const after = await run(lang, { ...t.r.state }, 'I went to Kyoto with my family.', [{ text: 'Well said. Thank you for today, see you next time!', after: end() }, { text: 'Goodbye!' }], 18);
+      check('…and after the practice the lesson ends on the next close (the invitation is not asked again)', after.r.state.closed && after.calls.every((c) => !/^end_lesson: not ended/.test(c)), after.calls);
+    }
   }
 
   console.log('F. the target and the margin');

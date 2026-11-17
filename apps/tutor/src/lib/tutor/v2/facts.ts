@@ -148,6 +148,10 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // Task 6g: the summary has begun (turn.ts): "time for more" no longer stands (gdi-real-james, v2audio-6f: the review began,
   // and the next two replies offered more practice).
   const summaryBegun = v2SummaryBegun(state);
+  // Task 7f E (fix round 4): their words look like a request for more practice and there is time for it: this turn's facts
+  // allow it, and carry no line that presses toward the close (the summary-begun line, the time line's close, "end the lesson
+  // in this reply"). Nothing is enforced: the model decides from what the learner means.
+  const morePracticeAllowed = !discussion && f.morePractice === true;
   const lines = [
     // A discussion runs 8–12 minutes and may close early once the person has chosen where to go next: the teaching
     // line's "time for more, not at its close" would hold it open.
@@ -159,7 +163,9 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
       ? `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > V2_TIME_UP_MIN ? `about ${Math.round(left)} left` : 'the time is up'}` : ''}; the session ends when ${session.homeworkSheet ? 'the sheet' : 'this problem'} is done`
       // Past the host's wrap minute the wrap is said here, a fact for the next reply: spoken into the lesson by the client
       // on v1, it cut into the menu the tutor was reading (tester-2, time-box.ts).
-      : `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${v2LessonTimeLine(session, state, f.nowMs, { summaryBegun, closeOpen, tf })}` : ''}`,
+      // Task 7f E (fix round 4): in a turn whose facts allow more practice, the time line carries no "then summary" or
+      // "the close is near": only what is left before the session must end.
+      : `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${morePracticeAllowed ? `about ${Math.max(1, Math.floor(leftStop))} minutes before the session must end` : v2LessonTimeLine(session, state, f.nowMs, { summaryBegun, closeOpen, tf })}` : ''}`,
     `board:\n  ${renderBoard(state.board)}`,
   ];
   if ((state.repliesSinceBoard ?? 0) >= 1) lines.push(`board last written on: ${state.repliesSinceBoard} ${state.repliesSinceBoard === 1 ? 'reply' : 'replies'} ago`);
@@ -181,11 +187,11 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     if (!discussion && !passed.length) lines.push(...v2UnreachedAtCloseFact(session.plan, state, closing || summaryBegun ? 'closing' : near ? 'near' : null));
     // Task 6g: an optional part offered and not taken up is offered at most once more (tester A: four offers in nine turns).
     if (!discussion) lines.push(...v2PartOfferFacts(session.plan, state));
-    if (!discussion && summaryBegun) lines.push('the summary has begun: from here, no new practice, exercise or offer of more practice unless they ask for it. Answer what they say and bring the lesson to its close');
+    if (!discussion && summaryBegun && !morePracticeAllowed) lines.push('the summary has begun: from here, no new practice, exercise or offer of more practice unless they ask for it. Answer what they say and bring the lesson to its close');
     // Task 6e fix round 1 (F4): tester B was asked about a question or the summary in two turns running.
     if (!discussion && TUTOR_V2_CLOSE_ONE_QUESTION && (closing || near) && !state.closed) lines.push('at the close: at most one question in a reply, never one you asked in your last reply, and nothing after a goodbye');
     // Task 7d (CLOSE_INVITES_QUESTIONS): the summary reply ends by inviting their questions, and the lesson ends on their answer.
-    if (!discussion) lines.push(...v2CloseInviteFacts(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun }));
+    if (!discussion && !(morePracticeAllowed && typeof state.closeInvitedAt === 'number')) lines.push(...v2CloseInviteFacts(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun }));
     // Task 7f B: the parts left out for time; C: the practice the part in hand still needs; E: more practice asked for at the close.
     if (!discussion) lines.push(...v2TimeFitFacts(session, state, tf.noSqueeze));
     if (!discussion && f.practiceShort && session.plan) lines.push(...v2PracticeFacts(session.plan, f.practiceShort));
