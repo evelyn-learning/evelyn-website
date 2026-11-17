@@ -78,6 +78,12 @@ assert.ok(gs.includes('data-gap="G1"') && gs.includes('<sub class="ks-gap-id">G1
 const two = stemWithoutInteractions('<p><textEntryInteraction responseIdentifier="A"/> and <textEntryInteraction responseIdentifier="B"/></p>');
 assert.ok(two.includes('>A</sub>') && two.includes('>B</sub>'));
 
+// ids are escaped (entity-encoded markup in an identifier must not become markup)
+const evil = "a&quot;&gt;&lt;img src=x&gt;";
+const ev = stemWithoutInteractions(`<p><textEntryInteraction responseIdentifier="${evil}"/> <textEntryInteraction responseIdentifier="B"/></p><gapMatchInteraction responseIdentifier="G"><p><gap identifier="${evil}"/></p></gapMatchInteraction>`);
+assert.ok(!ev.includes("<img"), ev);
+assert.ok(ev.includes("a&quot;&gt;&lt;img src=x&gt;"), ev);
+
 // real SOLARO samples, when present
 const sample = path.join(homedir(), "Downloads/Item146799/item_146799_apip.xml");
 if (existsSync(sample)) {

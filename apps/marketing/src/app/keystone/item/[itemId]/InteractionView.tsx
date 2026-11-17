@@ -18,7 +18,8 @@ function Bank({ items, keyed, ordered, labelled }: { items: Opt[]; keyed?: strin
 
 /** Read-only view of one non-choice interaction. Nothing here is interactive. */
 export function InteractionView({ i, keys, showKey }: { i: Interaction; keys: Record<string, string[]>; showKey: boolean }) {
-  const line = showKey ? keyLine(i, keys) : null;
+  // A single-response numerical item already shows its key in the legacy key box.
+  const line = showKey && !(i.kind === "textEntry" && Object.keys(keys).length <= 1) ? keyLine(i, keys) : null;
   const KeyLine = line ? <div className="ks-ix-key">{line}</div> : null;
   switch (i.kind) {
     case "textEntry":

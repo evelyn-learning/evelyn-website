@@ -16,6 +16,7 @@ export type Interaction =
   | { kind: "extendedText"; responseId: string } // written response
   | { kind: "unsupported"; element: string };
 
+const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 const BLANK = '<span class="fill-in-the-blank"></span>';
 // Known limit: an interaction nested inside another of the same element name is not supported.
 const ELEMENT = /<(\w+Interaction)\b([^>]*?)(?:\/>|>([\s\S]*?)<\/\1>)/g;
@@ -76,7 +77,7 @@ export function stemWithoutInteractions(body: string): string {
   return body.replace(ELEMENT, (_all, element: string, attrs: string, inner = "") => {
     if (element === "textEntryInteraction" || element === "inlineChoiceInteraction") {
       const id = attr(attrs, "responseIdentifier");
-      return several && id ? `${BLANK}<sub class="ks-gap-id">${id}</sub>` : BLANK;
+      return several && id ? `${BLANK}<sub class="ks-gap-id">${esc(id)}</sub>` : BLANK;
     }
     if (element === "choiceInteraction") return "";
     // Keep the prompt, and for gapMatch the text around the gaps.
@@ -84,7 +85,7 @@ export function stemWithoutInteractions(body: string): string {
     const lead = prompt ? `<p>${prompt}</p>` : "";
     if (element === "gapMatchInteraction") {
       const text = inner.replace(/<prompt\b[\s\S]*?<\/prompt>/g, "").replace(/<gapText\b[\s\S]*?<\/gapText>/g, "").replace(/<gap\b([^>]*?)\/?>(?:\s*<\/gap>)?/g, (_g: string, a: string) => {
-        const id = attr(a, "identifier") ?? "";
+        const id = esc(attr(a, "identifier") ?? "");
         return `<span class="fill-in-the-blank" data-gap="${id}"></span><sub class="ks-gap-id">${id}</sub>`;
       });
       return lead + text;
