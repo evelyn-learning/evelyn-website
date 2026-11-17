@@ -1861,11 +1861,11 @@ export const TUTOR_V2_PART_POSITION_KEPT = process.env.NEXT_PUBLIC_TUTOR_V2_PART
 /** Tutor brain v2 (v2/turn.ts, v2/part-flow.ts; with PART_ASK_EVERY in spoken labelled-plan lessons): the model's own part
  *  ask ("Next is the present perfect… Do you have a question first, or shall we go on?") holds the part it names as a held
  *  page, as the runtime's own ask does, so an answer that is neither yes nor a question keeps the part waiting (the facts say
- *  to answer and ask again) instead of being forgotten on the next reply; and a held part the lesson has moved through
- *  without a yes opens its page where the lesson asks to go on past it (a part ask or a held page for a later part), so page,
- *  chip and part agree from there. v2audio-7 James T25–T33: "I work here for 7 years." answered the ask, the present perfect
- *  was taught on the "Your job" page with that chip lit, and its page opened only with the past simple's (Task 7e). Default
- *  ON; NEXT_PUBLIC_TUTOR_V2_HELD_PART_RELEASE=off ⇒ as before. */
+ *  to answer and ask again) instead of being forgotten on the next reply; and the held part's page opens when the lesson
+ *  moves into it: a reply that names the held part and is not asking whether to go on opens its page before its next card
+ *  (or at its end). A part the lesson moves past opens nothing. v2audio-7 learner 2 T25–T33: a content answer to the ask,
+ *  then the present perfect taught on the "Your job" page with that chip lit (Task 7e). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_HELD_PART_RELEASE=off ⇒ as before. */
 export const TUTOR_V2_HELD_PART_RELEASE = process.env.NEXT_PUBLIC_TUTOR_V2_HELD_PART_RELEASE !== 'off';
 
 /** Tutor brain v2 voice client (v2/spoken-sounds.ts, TutorVoiceV2.tsx) and the second-language prompt section

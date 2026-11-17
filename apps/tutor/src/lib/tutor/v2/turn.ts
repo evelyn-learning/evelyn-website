@@ -28,13 +28,13 @@ import { saidCovers, sentenceCardToSay, unsaidAsk, unsaidBoardItem, asksAnywhere
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, v2AskEveryOn, v2SummaryBegun, V2_NO_ASK_RECHECK_S, V2_TIME_UP_MIN, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
 import { v2CloseOpenByClock, v2WrapDue } from './time-box';
-import { planGoalIds, renderPlanMap, v2NextTimeAllLine, v2PagePartLabel, v2NextTimeLine, v2PartIsOptional, v2PartOf, v2UnreachedOffer } from './plan-map';
+import { planGoalIds, renderPlanMap, v2NextTimeAllLine, v2PagePartLabel, v2NextTimeLine, v2PartIsOptional, v2PartNamedIn, v2PartOf, v2UnreachedOffer } from './plan-map';
 import { stripToolTalk } from './tool-talk';
 import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
 import { V2_CLOSING_PAGE, endsAsking, leftOpen, mayOpenPart, namesPart, partOffer, v2FrameDue } from './part-close';
 import { ReplyGate, isPartFrame } from './reply-gate';
-import { v2AskRepeats, v2HeldPageOwed, v2HeldPartWaiting, v2IsPartAsk, v2MoveAnswer, v2NextPart, v2PageForPart, v2PartAskLine, v2PartChangeAsked, v2PartInHand, v2PartNamedLate, v2PartOfPage, v2PendingPart, v2PlanLabelled, v2TutorReplies } from './part-flow';
+import { v2AnswerAsksOrDeclines, v2AskRepeats, v2AsksPartChange, v2HeldPageOwed, v2HeldPartWaiting, v2IsPartAsk, v2MoveAnswer, v2NextPart, v2PageForPart, v2PartAskLine, v2PartChangeAsked, v2PartInHand, v2PartNamedLate, v2PartOfPage, v2PendingPart, v2PlanLabelled, v2TutorReplies } from './part-flow';
 import { heardAsWords } from './heard';
 import { v2IsPracticeAsk, v2LanguagesSection } from './languages';
 import { v2HandsOver, v2ReplyAsks, v2ReplyHandsOver, v2ReplySentences } from './one-question';
@@ -630,21 +630,30 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const oneQuestion = gated && TUTOR_V2_ASK_NO_CHECKIN;
   // The part the runtime's replacement ask (after a dropped repeat) asked about, for the held page.
   let askedPart: { id: string; title: string } | null = null;
-  // Task 7e (HELD_PART_RELEASE): a held part the lesson has moved through without a yes opens where the lesson asks to go on
-  // past it (a page held for a later part, or a part ask naming one); its page block goes into the stored reply before that ask.
+  // Task 7e fix round 1 (HELD_PART_RELEASE, review I2): the held part's page opens when the lesson moves INTO that part: a
+  // reply that names the held part (all its heading words, or its localized name, in one sentence) and is not asking whether
+  // to go on. Opened before the reply's next card, so the card, the page and the chip agree (v2audio-7 learner 2 T27: the
+  // present perfect was taught on the "Your job" page after a content answer to the ask). Never for a part the lesson
+  // moves past: that counts as done, as in 7a.
   const releaseOn = partFlow && askEvery && TUTOR_V2_HELD_PART_RELEASE && !!session.plan;
-  let lateOpened: string | null = null;
-  const openPassedHeld = (beyond: number): boolean => {
-    if (!releaseOn || !session.plan || released || lateOpened !== null || state.closed) return false;
-    const p = v2HeldPartWaiting(session.plan, state);
-    if (p < 0 || beyond <= p) return false;
-    const id = `inl_${nowMs.toString(36)}_held`; const args = { title: state.heldPage!.title }; const from = state.board.current;
+  let movedIn: string | null = null;
+  // Not while the reply answers their question or redirect ("Please explain that again."): it asks again after (7a I2).
+  const answeredAsk = v2AnswerAsksOrDeclines(input.studentSaid, lastTutorText);
+  const movesIntoHeld = (said: string): boolean => {
+    if (!releaseOn || !session.plan || released || movedIn !== null || state.closed || closingTurn || heldAt || answeredAsk) return false;
+    const i = v2HeldPartWaiting(session.plan, state);
+    if (i < 0) return false;
+    const seg = session.plan.segments[i]!;
+    const sentences = v2ReplySentences(stripBoardBlocks(said));
+    const naming = sentences.find((x) => v2PartNamedIn(seg, x));
+    if (!naming || v2AsksPartChange(session.plan, sentences[sentences.length - 1] ?? '')) return false;
+    const id = `inl_${nowMs.toString(36)}_movein`; const args = { title: state.heldPage!.title }; const from = state.board.current;
     const o = applyBoard(state.board, id, 'new_page', args);
     if (!o.painted) return false;
     const call: V2ToolCall = { id, name: 'new_page', args, outcome: o.detail, inline: true };
     toolCalls.push(call); input.onToolCall?.(call);
     if (pageTurnAt < 0) { pageTurnAt = saidChars; pageBefore = from; }
-    lateOpened = `<board page>${args.title}</board>`;
+    movedIn = naming;
     return true;
   };
   // Task 6g (CLOSE_ONE_QUESTION): the summary began in an earlier reply.
@@ -719,7 +728,6 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       const plan = session.plan;
       const partLabel = plan && part ? v2PartOf(plan.segments[part.index]!).label ?? part.title : '';
       const nextPart = askEvery && plan && part && !missed ? { index: part.index, title: partLabel } : null;
-      if (nextPart) openPassedHeld(nextPart.index);
       const inHand = nextPart && plan ? v2PartInHand(plan, state) : -1;
       const doneLabel = inHand >= 0 && plan && plan.segments[inHand]!.kind !== 'hook' && !v2PartOf(plan.segments[inHand]!).skipWhenLevelKnown ? v2PartOf(plan.segments[inHand]!).label : undefined;
       const askedNow = nextPart ? asked && v2IsPartAsk(lastSentences(saidNow, 1)) : asked;
@@ -739,6 +747,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         if ('opening' in part) { gate.flush(); input.onBoardOpen?.(); continue; }
         if ('block' in part) {
           gate.flush();
+          // Task 7e fix round 1: a card the model writes after words that move into the held part goes on its page. Not the
+          // runtime's own learner card (an echo of their sentence, praised or corrected): a reply that praises a sentence of
+          // the held part and then asks to go on past it would open a page for a part the lesson leaves; the reply's end decides.
+          if (part.block.kind !== 'page' && !learnerWatch?.isOwn(part.block.raw)) movesIntoHeld(saidNow);
           // Task 7a: the part a page opens (part-flow.ts v2PageForPart), and the page of the part just opened on their yes, which
           // the reply writes again, is already open.
           let pagePart: { index: number; title: string } | null = null;
@@ -866,8 +878,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         if (b.type !== 'text') continue;
         if (cut) { b.text = ''; continue; }
         const at = b.text.indexOf(held.raw);
-        // Task 7e: a held part opened as this page was held goes in before the offer.
-        if (at >= 0) { b.text = `${b.text.slice(0, at).trimEnd()}${lateOpened ? `\n${lateOpened}` : ''}${held.offer ? `\n\n${held.offer}` : ''}`.trim(); cut = true; if (lateOpened) lateOpened = ''; }
+        if (at >= 0) { b.text = `${b.text.slice(0, at).trimEnd()}${held.offer ? `\n\n${held.offer}` : ''}`.trim(); cut = true; }
       }
     }
     modelCalls += 1;
@@ -1245,7 +1256,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // not said before. Not toward the closing part: the close keeps its own rules.
   // Task 7c (ASK_NO_CHECKIN): not after a reply that still asks something: one question a reply.
   // Task 7e (PART_POSITION_KEPT): never after a reply that already carries a part ask, wherever it stands.
-  const carriesPartAsk = () => TUTOR_V2_PART_POSITION_KEPT && v2ReplySentences(stripBoardBlocks(spoken.join(' '))).some((x) => v2IsPartAsk(x));
+  // Fix round 1 (review I1): a part ask by v2PendingPart's tests (a part named, or a strict move-on frame), not any "ready?".
+  const carriesPartAsk = () => TUTOR_V2_PART_POSITION_KEPT && !!session.plan && v2ReplySentences(stripBoardBlocks(spoken.join(' '))).some((x) => v2AsksPartChange(session.plan!, x));
   if (askEvery && askDrops && session.plan && !heldAt && !inviteWait && !state.closed && !input.signal?.aborted && spoken.length && !(oneQuestion && v2ReplyHandsOver(spoken.join(' '))) && !carriesPartAsk()) {
     const plan = session.plan;
     const cur = v2PartInHand(plan, state); const nx = v2NextPart(plan, state, cur);
@@ -1284,25 +1296,26 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     }
   }
 
+  // Task 7e (HELD_PART_RELEASE): a reply that moved into the held part with no card after its words opens its page now (fix
+  // round 1, review I2); the stored reply carries the page block before the sentence that named it.
+  if (releaseOn && !input.signal?.aborted && spoken.length && !toolCalls.some((c) => (c.name === 'new_page' && !/^not /.test(c.outcome)) || (c.name === 'end_lesson' && !/^not /.test(c.outcome)))) movesIntoHeld(spoken.join(' '));
+  if (movedIn) {
+    const named = movedIn; const block = `<board page>${state.board.pages[state.board.current]?.title ?? ''}</board>`;
+    const holder = stored.find((m) => m.role === 'assistant' && Array.isArray(m.content) && (m.content as Anthropic.ContentBlockParam[]).some((c) => c.type === 'text' && c.text.includes(named)));
+    const textBlock = (holder?.content as Anthropic.ContentBlockParam[] | undefined)?.find((c): c is Anthropic.TextBlockParam => c.type === 'text' && c.text.includes(named));
+    if (textBlock) { const at = textBlock.text.indexOf(named); textBlock.text = `${textBlock.text.slice(0, at)}${block}\n${textBlock.text.slice(at)}`; }
+  }
   // Task 7e (HELD_PART_RELEASE): a reply that ends on its own part ask holds the part it names (v2PendingPart on this reply, as
   // the next turn would read it), as the runtime's ask does: an answer that is neither yes nor a question then keeps it
-  // waiting, and the facts say to answer and ask again (James T25–T27: the ask was forgotten after "I work here for 7
-  // years.", and the present perfect was taught on the job's page). An ask past a held part opens that part's page first.
+  // waiting, and the facts say to answer and ask again (v2audio-7 learner 2 T25–T27: the ask was forgotten after a content
+  // answer, and the next part was taught on the old part's page).
   let ownAsk: { id: string; title: string } | null = null;
   if (releaseOn && session.plan && !heldAt && !askedPart && !owedPartAsked && !state.closed && !input.signal?.aborted && spoken.length) {
     const said = stripBoardBlocks(spoken.join(' '));
     const last = v2ReplySentences(said).pop() ?? '';
     const plan = session.plan;
     const q = last && v2IsPartAsk(last) ? v2PendingPart(plan, { ...state, heldPage: undefined }, said, null) : null;
-    if (q) {
-      ownAsk = { id: plan.segments[q.index]!.id, title: q.title };
-      if (openPassedHeld(q.index) && lateOpened) {
-        const tail = [...stored].reverse().find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));
-        const textBlock = [...((tail?.content as Anthropic.ContentBlockParam[] | undefined) ?? [])].reverse().find((c): c is Anthropic.TextBlockParam => c.type === 'text');
-        if (textBlock) { const at = textBlock.text.lastIndexOf(last); textBlock.text = at >= 0 ? `${textBlock.text.slice(0, at)}${lateOpened}\n${textBlock.text.slice(at)}` : `${textBlock.text}\n${lateOpened}`; }
-        lateOpened = '';
-      }
-    }
+    if (q) ownAsk = { id: plan.segments[q.index]!.id, title: q.title };
   }
 
   // A spoken reply that asks the student nothing leaves them not knowing whose move it is. Going on unasked a

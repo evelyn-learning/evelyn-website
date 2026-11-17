@@ -145,6 +145,13 @@ const NO_QUESTIONS_READY_JA = /^(?:(?:いいえ|いや|ううん)[、,]?\s*)?(?:
 /** …unless the answer goes on to ask for something else ("No, I'm fine, but can you explain that again?"). */
 const READY_BUT = /\b(?:but|skip|again|explain|repeat|wait|summary|instead)\b|[?？]|でも|けど|もう一度|説明|スキップ|まとめ/i;
 
+/** Task 7e fix round 1: an answer that asks something or declines / redirects ("Please explain that again."): the reply
+ *  answers it, and moving into the held part waits for the ask again. */
+export function v2AnswerAsksOrDeclines(said: string | null, lastTutor: string = ''): boolean {
+  const s = (said ?? '').trim();
+  return !!s && (v2MoveAnswer(s, lastTutor) === 'question' || DECLINE.test(s));
+}
+
 /** The student's answer to "shall we go on, or do you have a question first?": 'go' (yes, let's, no questions), 'question'
  *  (they ask something: answered first, then the move), or 'other' (skip, not now, an answer to something else).
  *  `lastTutor`: the reply they answer; when its last sentence is a part ask that offers a question first, a bare "No." is a go. */
@@ -306,6 +313,15 @@ export function v2PartAskLine(o: { next: string; done?: string; named: boolean; 
  *  perfect, "joins the past and now" as Past simple, "Good job!" as Your job, and the ask went out with no name. */
 export function v2PartNamedLate(seg: LessonPlan['segments'][number], text: string): boolean {
   return v2PartNamedIn(seg, stripBoardBlocks(text).split(SENTENCES).map((x) => x.trim()).filter(Boolean).slice(-2).join(' '));
+}
+
+/** Task 7e fix round 1 (review I1): a sentence that asks about a part change by the tests v2PendingPart applies: a part ask
+ *  that names a plan part by all its heading words, or a strict move-on frame. "Are you ready?" and "Shall we try another
+ *  sentence?" pass v2IsPartAsk (PART_OFFERS is loose) but are no part ask. */
+export function v2AsksPartChange(plan: LessonPlan, sentence: string): boolean {
+  const s = sentence.trim();
+  if (!v2IsPartAsk(s)) return false;
+  return movesOn(s) || plan.segments.some((seg) => !!v2PartOf(seg).label && v2PartNamedIn(seg, s));
 }
 
 /** Task 7e (HELD_PART_RELEASE): the part of a page held for an ask that was asked (not unasked), not lapsed and not opened;
