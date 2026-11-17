@@ -436,11 +436,11 @@ TutorSessionSchema.index({ sourcePartnerId: 1, studentId: 1, startedAt: -1 });
 // baseline had to be computed by collection scan.
 TutorSessionSchema.index({ clientIp: 1, startedAt: -1 });
 
-// TTL index: auto-delete after 180 days (also serves as startedAt query index)
-TutorSessionSchema.index(
-  { startedAt: 1 },
-  { expireAfterSeconds: 180 * 24 * 60 * 60 }
-);
+// Sessions are kept: nothing expires them (Praveen, 2026-11-17). Until then this index deleted a session 180 days
+// after its FIRST start, so one opened in July and taken again in November would have gone in January.
+// The index on the database must be dropped once for this to take effect (an index with the same key and other
+// options is not replaced): db.tutorsessions.dropIndex('startedAt_1'), after which this plain one is built.
+TutorSessionSchema.index({ startedAt: 1 });
 
 export const TutorSession =
   mongoose.models.TutorSession ||

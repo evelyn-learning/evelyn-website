@@ -45,6 +45,7 @@ import { anchorSentenceIndex, asksAnywhere, inlineSentenceIndex } from '@/lib/tu
 import { summariseBoardCall } from '@/lib/tutor/v2/board';
 import { V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S } from '@/lib/tutor/v2/facts';
 import { asksToWait } from '@/lib/tutor/v2/close-heard';
+import { useMicReacquire } from '../../hooks/useMicReacquire';
 import { outsideMathSpans, speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakLessonNotation, speakLetterUnits, speakGroups, speakNumberPlurals, speakSlashes } from '@/lib/tutor/voice/tts-pronunciation';
 import { cueStop, cueTick, cueTurnAccepted, initialThinkingCue } from '@/lib/tutor/voice/thinking-cue';
 import { playThinkingPulse, playTurnChime, primeThinkingCueAudio } from '@/lib/tutor/voice/thinking-cue-audio';
@@ -113,7 +114,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const openingTurnRef = useRef(true);
   // What the composer's status chip shows: the same states the host page is told, plus the student's words so far.
   const [composerStatus, setComposerStatus] = useState<V2ComposerStatus>({ state: 'idle' });
-  const showState = useCallback((state: 'listening' | 'hearing' | 'processing' | 'thinking' | 'speaking' | 'error') => { setComposerStatus((was) => (was.state === state ? was : { state, ...(state === 'hearing' || state === 'processing' ? { heard: was.heard } : {}), level: was.level, ...(was.quiet && state !== 'hearing' ? { quiet: true } : {}) })); p.current.onVoiceStateChange?.(state); }, []);
+  const showState = useCallback((state: 'listening' | 'hearing' | 'processing' | 'thinking' | 'speaking' | 'error') => { setComposerStatus((was) => (was.state === state ? was : { state, ...(state === 'hearing' || state === 'processing' ? { heard: was.heard } : {}), level: was.level, ...(was.quiet && state !== 'hearing' ? { quiet: true } : {}), ...(was.micChanged ? { micChanged: true } : {}) })); p.current.onVoiceStateChange?.(state); }, []);
   const micUiAtRef = useRef(0);
   const openingSpeechRef = useRef<string[] | null>([]); const micLiveRef = useRef(false); const micLiveAtRef = useRef(0); const tapAtRef = useRef(0);
   const paintedThisTurnRef = useRef<Array<{ id: string; tool: string; summary: string }>>([]);
@@ -516,6 +517,11 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const releaseOpeningSpeech = useCallback(() => { const held = openingSpeechRef.current; if (!held) return; openingSpeechRef.current = null; const since = (t: number) => (t && tapAtRef.current ? `${t - tapAtRef.current} ms` : 'never'); p.current.onDebugEvent?.('v2_opening_speech', `released ${since(Date.now())} after the tap; microphone live at ${since(micLiveAtRef.current)}${micLiveAtRef.current ? '' : ' (the wait ran out)'}; ${held.length} sentence(s) were waiting`); for (const s of held) realtimeRef.current?.speakText(s); }, []);
   const onMicLevel = useCallback((level: number) => { if (openingSpeechRef.current && !micLiveRef.current) { micLiveRef.current = true; micLiveAtRef.current = Date.now(); setTimeout(releaseOpeningSpeech, MIC_SETTLE_MS); } if (level > MIC_SOUND_LEVEL) lastSoundAtRef.current = Date.now(); const now = Date.now(); if (now - micUiAtRef.current > 110) { micUiAtRef.current = now; setComposerStatus((was) => (Math.abs((was.level ?? 0) - level) < 0.04 && !(was.quiet && level > MIC_SOUND_LEVEL) ? was : { ...was, level, ...(level > MIC_SOUND_LEVEL ? { quiet: false } : {}) })); } }, [releaseOpeningSpeech]);
   const onInkDiagnostic = useCallback((type: string, message: string) => p.current.onDebugEvent?.(type, message), []);
+  // The microphone follows the student to a new input device (AirPods taken by a phone, a headset unplugged):
+  // without it the lesson went on speaking to a student it could no longer hear (portal-1f1d7348).
+  const onMicNotice = useCallback((up: boolean) => setComposerStatus((was) => (!!was.micChanged === up ? was : { ...was, micChanged: up })), []);
+  const onMicEvent = useCallback((type: string, message: string) => p.current.onDebugEvent?.(type, message), []);
+  useMicReacquire({ enabled: listening, onDebugEvent: onMicEvent, onNotice: onMicNotice });
   usePerceptionWS({
     enabled: listening && !TUTOR_STT_ENGINE_INK2,
     onTranscript, onSpeechStart, onSpeechStop, onMicLevel, onTranscriptionFailed: onNoTranscript, onError: onRecogniserError,
