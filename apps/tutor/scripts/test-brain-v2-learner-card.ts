@@ -13,7 +13,7 @@ import { TUTOR_V2_BOARD_LEARNER_SENTENCE } from '../src/lib/tutor/orchestrator/f
 import { boardBlocksIn, stripBoardBlocks } from '../src/lib/tutor/v2/board-inline';
 import { applyToModelBoard } from '../src/lib/tutor/v2/board';
 import { renderFacts } from '../src/lib/tutor/v2/facts';
-import { LearnerCardWatch, v2LearnerCardIn, v2LearnerCardsOn, v2LearnerSentence, v2LearnerSentenceFacts, v2SentenceOnBoard } from '../src/lib/tutor/v2/learner-card';
+import { LearnerCardWatch, v2LearnerCardIn, v2LearnerCardsOn, v2LearnerSentence, v2LearnerSentenceFacts, v2SentenceOnBoard, v2SentenceWords } from '../src/lib/tutor/v2/learner-card';
 import { runV2Turn, type V2ModelCall, type V2ToolCall } from '../src/lib/tutor/v2/turn';
 import { newV2State, type V2Session, type V2State } from '../src/lib/tutor/v2/types';
 
@@ -49,7 +49,13 @@ const REPLY_EXPO_UNQUOTED = 'Yes, "I went" is the past simple, and "last year" m
 const REPLY_EXPO_QUOTED = 'That\'s right: "Last year I went to Robotics Expo in Beijing." Now let\'s talk about a project. What is one project you are proud of?';
 
 type Run = { r: Awaited<ReturnType<typeof runV2Turn>>; calls: V2ToolCall[]; events: string[]; said: string; seen: Anthropic.MessageCreateParamsNonStreaming[] };
-async function run(session: V2Session, said: string | null, reply: string, state: V2State = newV2State(1)): Promise<Run> {
+/** A state whose last tutor reply asked them for a sentence (the facts line runs only after such an ask, fix round 1 M3). */
+function asked(text = 'How long have you worked at your company? Tell me in one sentence.'): V2State {
+  const st = newV2State(1);
+  st.history = [{ role: 'user', content: [{ type: 'text', text: '[the session begins]' }] }, { role: 'assistant', content: [{ type: 'text', text }] }];
+  return st;
+}
+async function run(session: V2Session, said: string | null, reply: string, state: V2State = asked()): Promise<Run> {
   const s = stub(reply); const calls: V2ToolCall[] = []; const events: string[] = []; let text = '';
   const r = await runV2Turn({ session, state, studentSaid: said, callModel: s.call, boardPass: false, mathsCheck: false, nowMs: 60000,
     onText: (t) => { text += t; events.push(`text:${t}`); }, onToolCall: (c) => { calls.push(c); events.push(`tool:${c.name}`); } });
@@ -61,7 +67,7 @@ const factsOf = (x: Run) => { const u = x.seen[0]!.messages[x.seen[0]!.messages.
 
 async function offChild() {
   const a = await run(spoken, SAID_YEARS, REPLY_YEARS);
-  console.log(`OFF_JSON ${JSON.stringify({ flag: TUTOR_V2_BOARD_LEARNER_SENTENCE, cards: cards(a).length, fact: /were a sentence of theirs/.test(factsOf(a)), stored: storedText(a) === REPLY_YEARS })}`);
+  console.log(`OFF_JSON ${JSON.stringify({ flag: TUTOR_V2_BOARD_LEARNER_SENTENCE, cards: cards(a).length, fact: /a sentence of theirs/.test(factsOf(a)), stored: storedText(a) === REPLY_YEARS })}`);
 }
 
 async function main() {
@@ -76,10 +82,10 @@ async function main() {
 
   console.log('which quote is carded (and the abstentions)');
   const c1 = v2LearnerCardIn('Because you started in the past and still work there now, we say "I have worked at Acme Corp for five years."', SAID_YEARS);
-  check('a correction given with "we say": the corrected form, the changed words stressed', c1?.sentence === 'I have worked at Acme Corp for five years.' && JSON.stringify(c1.stress) === '["have","worked","five","years"]', c1);
+  check('a correction given with "we say": the corrected form, the changed words stressed ("five" for "5" is no change)', c1?.sentence === 'I have worked at Acme Corp for five years.' && JSON.stringify(c1.stress) === '["have","worked","years"]', c1);
   const c2 = v2LearnerCardIn('A more natural way to say it is "I haven\'t worked on any other social projects since then."', 'Um, I have worked on no other social project since then.');
   check('"a more natural way to say it is": carded, stress on what changed', c2?.sentence === "I haven't worked on any other social projects since then." && JSON.stringify(c2.stress) === '["haven\'t","any","projects"]', c2);
-  check('"Please say it with "collected": …": carded', v2LearnerCardIn('Please say it with "collected": "I collected money from my office colleagues online."', 'I collect money from my office colleague online.')?.sentence === 'I collected money from my office colleagues online.');
+  check('"Please say it with "collected": …" is an ask, not a correction lead-in: none (the facts line asks for it)', v2LearnerCardIn('Please say it with "collected": "I collected money from my office colleagues online."', 'I collect money from my office colleague online.') === null);
   const e1 = v2LearnerCardIn('"I worked on a project to donate money for climate change" is a clear sentence.', 'I worked on a project to uh donate money for climate change.');
   check('their sentence quoted and praised in the same sentence: carded as said, no stress', e1?.sentence === 'I worked on a project to donate money for climate change.' && e1.stress.length === 0, e1);
   check('right first time with no quote: no runtime card (the facts line asks for it)', v2LearnerCardIn('That\'s right.', SAID_EXPO) === null && v2LearnerCardIn('Yes, "I went" is the past simple, and "last year" makes it a finished event.', SAID_EXPO) === null);
@@ -94,6 +100,46 @@ async function main() {
   check('a correction with no lead-in that gives it ("Did you want …"): none', v2LearnerCardIn('Did you want "I have worked at Acme Corp for five years."?', SAID_YEARS) === null);
   check('a quote with a gap or "…": none', v2LearnerCardIn('Try starting with "I worked on a project to…"', 'I worked on a project.') === null);
   check('no words from them: none', v2LearnerCardIn(REPLY_YEARS, null) === null);
+
+  console.log('fix round 1: review probes (I1, I3)');
+  {
+    const RIGHT = 'I have worked at Acme Corp for five years.';
+    const WRONG = 'I work at Acme Corp for five year.';
+    check('I3: "Great. Now try "…"" after a right sentence: none (the tutor\'s next model, not their correction)', v2LearnerCardIn('Great. Now try "I have worked at Acme Corp since 2020."', RIGHT) === null);
+    check('I3: "Now say it with "since": "…"": none', v2LearnerCardIn('Perfect. Now say it with "since": "I have worked at Acme Corp since 2020."', RIGHT) === null);
+    check('I3: "we say "…"" after the reply called their sentence right: none', v2LearnerCardIn('We say "I have worked at Acme Corp since 2020."', RIGHT, { afterRight: true }) === null);
+    check('I3: their words kept whole with more added ("… last year" after "I went to Beijing"): none', v2LearnerCardIn('We say "I went to Beijing with my team last year."', 'I went to Beijing with my team.') === null);
+    check('I3: "you could say "…"" (an alternative, not a correction): none', v2LearnerCardIn('You could say "I have been at Acme Corp for five years."', WRONG) === null);
+    check('I1: "Your pronunciation of "…" was good.": none', v2LearnerCardIn('Your pronunciation of "I work at Acme Corp for five year" was good.', WRONG) === null);
+    check('I1: "You used the past correctly in "…", well done for trying.": none', v2LearnerCardIn('You used the past correctly in "I goed to Beijing last year with my boss", well done for trying.', 'I goed to Beijing last year with my boss.') === null);
+    check('I1: "Exactly, "…" uses work; we need have worked.": none', v2LearnerCardIn('Exactly, "I work at Acme Corp for five year" uses work; we need have worked.', WRONG) === null);
+    check('I1: "That\'s right: "…", but …": none', v2LearnerCardIn('That\'s right: "I work at Acme Corp for five year", but we add have.', WRONG) === null);
+    check('I1: "You sound clear: "…"": none (how it sounded)', v2LearnerCardIn('You sound clear: "I work at Acme Corp for five year."', WRONG) === null);
+    check('I1: their words quoted with praise elsewhere in the sentence, no verdict framing it: none', v2LearnerCardIn('Well, "I have worked at Acme Corp for five years" has a nice rhythm, great work.', RIGHT) === null);
+    check('the probe\'s other shapes still abstain: a 「」 quote with no lead-in, an "it is" mistake, a question, an A-or-B', v2LearnerCardIn('「I have worked at Acme Corp for five years.」です。', WRONG) === null
+      && v2LearnerCardIn('The verb in it is "I work at Acme Corp for five year" so change it.', WRONG) === null
+      && v2LearnerCardIn('Is "I have worked at Acme Corp for five years" correct?', RIGHT) === null
+      && v2LearnerCardIn('Which is right: "I work at Acme Corp for five years" or "I have worked at Acme Corp for five years"?', WRONG) === null);
+    check('Japanese lead-in after the quote: 「…」と言います is a correction', v2LearnerCardIn('「I have worked at Acme Corp for five years.」と言います。', WRONG)?.sentence === 'I have worked at Acme Corp for five years.');
+    check('an example before the real correction: the correction is carded', v2LearnerCardIn('For example "I have lived in Tokyo for five years." So we say "I have worked at Acme Corp for five years."', WRONG)?.sentence === 'I have worked at Acme Corp for five years.');
+    check('"the correct sentence is" and "it should be" are correction lead-ins', v2LearnerCardIn('The correct sentence is "I have worked at Acme Corp for five years."', WRONG)?.kind === 'correction' && v2LearnerCardIn('It should be "I have worked at Acme Corp for five years."', WRONG)?.kind === 'correction');
+    const w = new LearnerCardWatch(RIGHT, () => false);
+    const parts = [...w.feed([{ text: 'Perfect. We say "I have worked at Acme Corp since 2020." Now you.' }]), ...w.end()];
+    check('I3 in the stream: a "we say" after "Perfect." in the same reply: none', parts.every((p) => !('block' in p)), parts);
+  }
+
+  console.log('fix round 1: numbers alike (M5) and the facts line only after an ask (M3)');
+  {
+    check('"5 year" and "five year", "25" and "twenty-five" are one key', v2SentenceWords('I sold twenty-five machines for five years.').join(' ') === v2SentenceWords('I sold 25 machines for 5 years.').join(' '));
+    const st = newV2State(1); applyToModelBoard(st.board, 'c', 'show_sentence', { sentence: 'I sold twenty-five washing machines last month.' });
+    check('a card in words: the same sentence in digits is up already', v2SentenceOnBoard(st.board, 'I sold 25 washing machines last month.'));
+    check('no line when the last reply asked for no sentence (small talk, a statement)', v2LearnerSentenceFacts(spoken, asked('Nice to meet you. I am your tutor today.'), SAID_YEARS).length === 0);
+    check('no line with no reply before', v2LearnerSentenceFacts(spoken, newV2State(1), SAID_YEARS).length === 0);
+    check('a line after a practice ask, a request for a sentence, or a question about them', v2LearnerSentenceFacts(spoken, asked('Please say the sentence again.'), SAID_YEARS).length === 1
+      && v2LearnerSentenceFacts(spoken, asked('Answer with one sentence that starts with "Last year, I…"'), SAID_EXPO).length === 1
+      && v2LearnerSentenceFacts(spoken, asked('Good. What did you do last year?'), SAID_EXPO).length === 1);
+    check('it says one card at most and none for small talk', /One card in this reply at most; none of their mistake, none for small talk/.test(v2LearnerSentenceFacts(spoken, asked(), SAID_YEARS)[0] ?? ''));
+  }
 
   console.log('the board check (same-sentence de-dup)');
   {
@@ -110,17 +156,17 @@ async function main() {
   {
     const a = await run(spoken, SAID_YEARS, REPLY_YEARS);
     const cs = cards(a);
-    check('one card, the corrected sentence, its changed words stressed, no gloss', cs.length === 1 && cs[0]!.args.sentence === 'I have worked at Acme Corp for five years.' && JSON.stringify(cs[0]!.args.emphasis) === '["have","worked","five","years"]' && cs[0]!.args.gloss === undefined, cs);
+    check('one card, the corrected sentence, its changed words stressed, no gloss', cs.length === 1 && cs[0]!.args.sentence === 'I have worked at Acme Corp for five years.' && JSON.stringify(cs[0]!.args.emphasis) === '["have","worked","years"]' && cs[0]!.args.gloss === undefined, cs);
     check('painted inline, on the page in view', cs[0]?.inline === true && a.r.state.board.pages[a.r.state.board.current]!.items.some((it) => it.tool === 'show_sentence'), cs[0]);
     const ti = a.events.findIndex((e) => e === 'tool:show_sentence');
     const before = a.events.slice(0, ti).filter((e) => e.startsWith('text:')).map((e) => e.slice(5)).join('');
     check('it comes after the quote\'s sentence and before the ask (never appended after it)', /five years\."\s*$/.test(before) && !/once more/.test(before), before);
     check('never spoken twice: the words heard are the model\'s words exactly', a.said.replace(/\s+/g, ' ').trim() === REPLY_YEARS, a.said);
     const stored = storedText(a);
-    check('stored where it stood: after the quote\'s sentence, before the ask', /five years\." <board sentence stress="have \| worked \| five \| years">I have worked at Acme Corp for five years\.<\/board> Can you say it once more\?$/.test(stored), stored);
+    check('stored where it stood: after the quote\'s sentence, before the ask', /five years\." <board sentence stress="have \| worked \| years">I have worked at Acme Corp for five years\.<\/board> Can you say it once more\?$/.test(stored), stored);
     check('the stored words read as before', stripBoardBlocks(stored) === REPLY_YEARS);
     check('recorded among their corrected sentences (the summary\'s cards)', (a.r.state.correctedSentences ?? []).includes('I have worked at Acme Corp for five years.'), a.r.state.correctedSentences);
-    check('the learner-sentence fact was in this turn\'s facts', /their words just now were a sentence of theirs: .*Japanese gloss/.test(factsOf(a)), factsOf(a));
+    check('the learner-sentence fact was in this turn\'s facts', /their words just now answered your ask with a sentence of theirs: .*Japanese gloss/.test(factsOf(a)), factsOf(a));
   }
 
   console.log('right first time');
@@ -131,26 +177,26 @@ async function main() {
     check('the card is not read aloud again', a.said.replace(/\s+/g, ' ').trim() === REPLY_EXPO_QUOTED, a.said);
     const b = await run(spoken, SAID_EXPO, REPLY_EXPO_UNQUOTED);
     check('praised without a quote: no runtime card (a "That\'s right." may not cover the whole sentence)', cards(b).length === 0, b.calls);
-    check('…and the facts asked for it: the sentence as said when right, the corrected form when corrected', /their words just now were a sentence of theirs: .*as they said it \(without fillers\) when it is right/.test(factsOf(b)), factsOf(b));
+    check('…and the facts asked for it: the sentence as said when right, the corrected form when corrected', /their words just now answered your ask with a sentence of theirs: .*as they said it \(without fillers\) when it is right/.test(factsOf(b)), factsOf(b));
   }
 
   console.log('the level check: none while it runs');
   {
     const lc: V2Session = { ...spoken, levelCheck: true };
-    const st = newV2State(1);
+    const st = asked();
     check('rule off while the level is not set and the check not over', !v2LearnerCardsOn(lc, st, SAID_YEARS));
     const a = await run(lc, SAID_YEARS, REPLY_YEARS, st);
-    check('no card and no facts line in a level-check reply', cards(a).length === 0 && !/were a sentence of theirs/.test(factsOf(a)), { calls: a.calls, facts: factsOf(a) });
+    check('no card and no facts line in a level-check reply', cards(a).length === 0 && !/a sentence of theirs/.test(factsOf(a)), { calls: a.calls, facts: factsOf(a) });
     const set: V2State = { ...newV2State(1), workingLevel: { level: 'intermediate', from: 'this_lesson' } } as V2State;
     check('once the level is set, the rule runs', v2LearnerCardsOn(lc, set, SAID_YEARS));
   }
 
   console.log('a repeat of a sentence already boarded: no second card');
   {
-    const st = newV2State(1); applyToModelBoard(st.board, 'p', 'new_page', { title: 'Your job' });
+    const st = asked(); applyToModelBoard(st.board, 'p', 'new_page', { title: 'Your job' });
     applyToModelBoard(st.board, 'c', 'show_sentence', { sentence: 'I collected money from my office colleagues online.' });
     const a = await run(spoken, 'I collected money from my office colleagues online.', 'Yes, that\'s right: "I collected money from my office colleagues online." Now, have you worked on any other projects?', st);
-    check('no card painted, and no facts line asking for one', cards(a).length === 0 && a.calls.every((c) => c.name !== 'show_sentence') && !/were a sentence of theirs/.test(factsOf(a)), { calls: a.calls });
+    check('no card painted, and no facts line asking for one', cards(a).length === 0 && a.calls.every((c) => c.name !== 'show_sentence') && !/a sentence of theirs/.test(factsOf(a)), { calls: a.calls });
     check('the board still holds the one card', a.r.state.board.pages.flatMap((p) => p.items).filter((it) => it.tool === 'show_sentence').length === 1);
   }
 
@@ -161,6 +207,36 @@ async function main() {
     const cs = a.calls.filter((c) => c.name === 'show_sentence');
     check('one card, the model\'s, with its gloss', cs.length === 1 && cs[0]!.args.gloss === '現在完了', cs);
     check('the stored reply is the model\'s, byte for byte', storedText(a) === own, storedText(a));
+  }
+
+  console.log('fix round 1 (I2): the model\'s card right after the quote wins');
+  {
+    const after = 'Good. We say "I have worked at Acme Corp for five years." <board sentence stress="have | worked" gloss="現在完了">I have worked at Acme Corp for five years.</board> Say it once more.';
+    const a = await run(spoken, SAID_YEARS, after);
+    const cs = a.calls.filter((c) => c.name === 'show_sentence');
+    check('one card painted, the model\'s, with its gloss', cs.length === 1 && cs[0]!.args.gloss === '現在完了' && !/^not /.test(cs[0]!.outcome), cs);
+    check('the stored reply is the model\'s, byte for byte (one sentence block)', storedText(a) === after && boardBlocksIn(storedText(a)).filter((b) => b.kind === 'sentence').length === 1, storedText(a));
+    check('the words heard are the model\'s words', a.said.replace(/\s+/g, ' ').trim() === stripBoardBlocks(after), a.said);
+    const other = 'We say "I have worked at Acme Corp for five years." <board note>Present perfect: have + past participle</board> Say it once more.';
+    const b = await run(spoken, SAID_YEARS, other);
+    const order = b.calls.map((c) => c.name);
+    check('another block after the quote: the runtime card goes out first, where the quote stood', order.indexOf('show_sentence') >= 0 && order.indexOf('show_sentence') < order.indexOf('annotate'), order);
+    check('…stored before that block', /five years\." <board sentence[^>]*>I have worked at Acme Corp for five years\.<\/board> <board note>/.test(storedText(b)), storedText(b));
+    // The card waits; the words never do: every word up to the quote's end is out before the card is decided, and the words
+    // after it go out in the same part the card goes before.
+    const w = new LearnerCardWatch(SAID_YEARS, () => false);
+    const p1 = w.feed([{ text: 'We say "I have worked at Acme Corp for five years." ' }]);
+    check('the quote\'s sentence goes out at once, the card waits (no words held)', p1.map((p) => ('text' in p ? p.text : '')).join('') === 'We say "I have worked at Acme Corp for five years." ' && p1.every((p) => !('block' in p)), p1);
+    const p2 = w.feed([{ text: 'Say it once more.' }]);
+    check('the next words: the card goes before them, and they go out in the same call', p2.length === 2 && 'block' in p2[0]! && 'text' in p2[1]! && p2[1].text === 'Say it once more.', p2);
+  }
+
+  console.log('fix round 1 (M1): a sentence across a model block is not carded (the card is always in the stored text)');
+  {
+    const across = 'We say <board note>have + past participle</board> "I have worked at Acme Corp for five years." Say it once more.';
+    const a = await run(spoken, SAID_YEARS, across);
+    const cs = cards(a);
+    check('none, or one stored in the reply', cs.length === 0 || boardBlocksIn(storedText(a)).some((b) => b.kind === 'sentence'), { cs, stored: storedText(a) });
   }
 
   console.log('one card a reply');
@@ -188,11 +264,11 @@ async function main() {
     const homework: V2Session = { ...spoken, homework: { text: 'Translate: I have worked here for five years.', verified: false, hasFigure: false } };
     for (const [name, sess] of [['a one-language spoken lesson', english], ['a typed bilingual lesson', typed], ['a maths voice lesson', maths], ['homework', homework]] as const) {
       const a = await run(sess, SAID_YEARS, REPLY_YEARS);
-      check(`${name}: no runtime card, no facts line, the stored reply as written`, cards(a).length === 0 && !/were a sentence of theirs/.test(factsOf(a)) && storedText(a) === REPLY_YEARS, { calls: a.calls.map((c) => c.name) });
+      check(`${name}: no runtime card, no facts line, the stored reply as written`, cards(a).length === 0 && !/a sentence of theirs/.test(factsOf(a)) && storedText(a) === REPLY_YEARS, { calls: a.calls.map((c) => c.name) });
     }
-    check('renderFacts off: no line', !/were a sentence of theirs/.test(renderFacts(spoken, newV2State(1), { nowMs: 60000, heard: SAID_YEARS, learnerCards: false })));
-    check('renderFacts on: the line', /were a sentence of theirs/.test(renderFacts(spoken, newV2State(1), { nowMs: 60000, heard: SAID_YEARS })));
-    check('the facts line names no tenant or learner', !/gdi|nagoya|praveen|ryota|ken\b/i.test(v2LearnerSentenceFacts(spoken, newV2State(1), SAID_YEARS).join(' ')));
+    check('renderFacts off: no line', !/a sentence of theirs/.test(renderFacts(spoken, newV2State(1), { nowMs: 60000, heard: SAID_YEARS, learnerCards: false })));
+    check('renderFacts on: the line', /a sentence of theirs/.test(renderFacts(spoken, asked(), { nowMs: 60000, heard: SAID_YEARS })));
+    check('the facts line names no tenant or learner', !/gdi|nagoya|praveen|ryota|ken\b/i.test(v2LearnerSentenceFacts(spoken, asked(), SAID_YEARS).join(' ')) && v2LearnerSentenceFacts(spoken, asked(), SAID_YEARS).length === 1);
   }
 
   console.log('the flag off (a fresh process with NEXT_PUBLIC_TUTOR_V2_BOARD_LEARNER_SENTENCE=off)');

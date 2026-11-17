@@ -54,7 +54,9 @@ export function v2SentenceCardsSection(languages: readonly string[]): string {
   ].join('\n');
 }
 
-const tokens = (text: string) => (text.toLowerCase().replace(/’/g, "'").match(/[\p{L}\p{N}]+(?:'[\p{L}\p{N}]+)*/gu) ?? []);
+/** A sentence's words, lower case, apostrophes kept ("haven't"). Shared with learner-card.ts (Task 7b). */
+export const v2SentenceTokens = (text: string) => (text.toLowerCase().replace(/’/g, "'").match(/[\p{L}\p{N}]+(?:'[\p{L}\p{N}]+)*/gu) ?? []);
+const tokens = v2SentenceTokens;
 
 /** Whether a card's sentence reworks what the student said: most of its words are theirs, and it is not their words as they said them. */
 export function v2IsCorrectionOf(sentence: string, studentSaid: string | null | undefined): boolean {
