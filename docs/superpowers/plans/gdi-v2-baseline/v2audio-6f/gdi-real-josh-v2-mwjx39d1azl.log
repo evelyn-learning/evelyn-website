@@ -1,0 +1,74 @@
+23:51:22 open fixture=gdi-real-josh arm=v2 student=gdi-v2-audio6f-josh (audio student josh (16 clips), silent tutor voice)
+23:51:25 clicked start (1)
+23:51:34 TUTOR  Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and the projects you're involved in, and practise two grammar points: the present perfect and the past simple. Does that sound good?   [tools: annotate]
+23:51:51 STUDENT(clip #1 ok, 2.8 s) Yes.  — Yes/no readiness question, short ack appropriate
+23:51:57 HEARD  Yes.
+23:51:57 TUTOR  
+Great. First, I'd like to hear your English so the lesson fits you. Please answer in English, and don't worry about mistakes. Can you tell me a little about your job? What do you do?   [tools: new_page]
+23:52:17 STUDENT(clip #2 ok, 5.6 s) I am a manager at a communications company.  — Directly answers 'What do you do?' with job title
+23:52:25 HEARD  I am a manager at a communications company.
+23:52:25 TUTOR  Thank you. What does your team work on, and what are your main responsibilities as a manager?
+23:52:36 STUDENT(clip #6 ok, 10.7 s) My main responsibilities at work are both the training division manager and to help with sales for the division.  — Directly answers the tutor's question about main responsibilities as a manager
+23:52:49 HEARD  My main responsibilities at work are both the training division manager and to help with sales for the division.
+23:52:49 TUTOR  Got it, you manage training and also help with sales. Have you ever worked with an international customer? If so, can you tell me about that experience?
+23:53:04 STUDENT(clip #3 ok, 7.5 s) Yes, I have. I work with companies here in Japan and from all over the world.  — Directly answers the question about working with international customers
+23:53:14 HEARD  Yes, I have. I work with companies here in Japan and from all over the world.
+23:53:14 TUTOR  That sounds like a wide range of customers. Last question: what is one skill you'd like to improve in your English, and why is it important to you?
+23:53:27 STUDENT(clip #4 ok, 10.9 s) I'd like to improve my conversation with customers before meetings because I often don't know what to say.  — Directly answers the tutor's question about what skill to improve and why it matters
+23:53:45 HEARD  I'd like to improve my conversation with customers before meetings because I often don't know what to say.
+23:53:45 TUTOR  
+Thank you, that helps me a lot. Today we'll work on making your English more accurate and natural, especially when you talk about your work and meetings.
+
+
+
+Let's start with your job. What are your main responsibilities at work? Please give me at least two sentences.   [tools: new_page, annotate, set_working_level]
+23:54:06 STUDENT(clip #7 ok, 7.3 s) My main responsibilities at work are being the training division manager and helping with sales for the division.  — Tutor asks about main responsibilities; line 7 is the corrected version of line 6 (already used), providing two sentence
+23:54:15 HEARD  My main responsibilities at work are being the training division manager and helping with sales for the division.
+23:54:15 TUTOR  That's a clear answer, and it's correct. Your responsibilities are being the training division manager and helping with sales. What kind of training does your division provide?
+23:54:29 STUDENT(clip #14 ok, 8.6 s) I schedule class for many teachers and teach.  — Answers what kind of training the division provides
+23:54:43 HEARD  I schedule class for many teachers and teach.
+23:54:43 TUTOR  Good, you schedule classes for many teachers and you also teach. One small thing: with "many", we say "classes", with an s. 
+
+ I schedule classes for many teachers, and I also teach. How long have you been the training division manager?   [tools: show_sentence]
+23:55:06 STUDENT(clip #8 ok, 5.5 s) I work here for eleven year.  — Tutor asks 'How long have you been the training division manager?' - learner answers with duration at work. Line 8 is fi
+23:55:15 HEARD  I work here for 11 year.
+23:55:15 TUTOR  You said "I work here for 11 year." Since you started in the past and still work here now, we say "I have worked here for 11 years." Could you say that sentence once more?
+
+   [tools: show_sentence]
+23:55:34 STUDENT(clip #10 ok, 5.0 s) I have worked here for eleven years.  — Tutor asks learner to repeat the corrected sentence with proper grammar
+23:55:43 HEARD  I have worked here for 11 years.
+23:55:43 TUTOR  Yes, that's right, and you said it clearly. Now let's talk about the past. When did you become the training division manager?
+
+
+   [tools: new_page, show_sentence]
+23:55:57 STUDENT(clip #12 misfit, 1.6 s) わかりません。  — Learner doesn't understand the question about when they became manager; no direct answer available
+23:56:01 HEARD  わかりません。
+23:56:01 TUTOR  失礼しました。今の質問は少し難しかったですね。もっとシンプルに聞きますね。
+
+Let's try again. When did you become the training division manager? For example, "two years ago" or "in 2019." Try starting with: "I became..."
+23:56:16 STUDENT(clip #9 misfit, 4.2 s) I have worked here for eleven year.  — Learner doesn't know the answer; this line about 11 years doesn't fit the 'when' question, but it's the next unused cont
+23:56:31 HEARD  I have worked here for 11 year.
+23:56:31 TUTOR  You said "I have worked here for 11 year." Because the number is more than one, we say "11 years." Your answer to my question is still open, though. When did you become the training division manager? You can say "two years ago" or "in 2019," and start with "I became…"   [tools: annotate]
+23:56:52 STUDENT(clip #5 misfit, 3.5 s) Do you want me to start now?  — No fitting line; #5 is closest available but doesn't answer the question about when he became manager
+23:56:55 HEARD  Do you want me to start now?
+23:56:55 TUTOR  Yes, please go ahead. Take your time. You can use the hint on the board: "I became…" and then a time, like "in 2019."
+23:57:09 STUDENT(clip #13 misfit, 5.1 s) I have worked in my department for ten years.  — Learner has no direct answer to 'when did you become manager'; #13 about department tenure is closest available unused l
+23:57:19 HEARD  I have worked in my department for 10 years.
+23:57:19 TUTOR  That's correct, and you said it on your own: "I have worked in my department for 10 years." Now let's go back to the past. When did you become the training division manager? If it's easier, you can just say the year.
+23:57:37 STUDENT(clip #11 misfit, 4.3 s) I really like going to meet customers.  — Learner has no recorded answer to 'when did you become manager'; #11 is next unused line but doesn't address the questio
+23:57:47 HEARD  I really like going to meet customers.
+23:57:47 TUTOR  Meeting customers in person is a good part of the job. That also connects to today's grammar: when you talk about a specific time in the past, we use the past simple. When did you last meet a customer?   [tools: annotate]
+23:58:06 STUDENT(clip #15 misfit, 4.2 s) Okay, please stop. I would like to end the session for now.  — Learner hasn't answered the question; line 15 is an exit request, not a response to 'when did you last meet a customer?'
+23:58:10 HEARD  Okay.
+23:58:10 TUTOR  Good. Now, when did you last meet a customer? You can say "last week" or "in March," and start with "I met…"
+23:58:14 HEARD  Please. I would like to end the session. for now.
+23:58:14 TUTOR  
+Thank you, Josh. Today you talked about your job and your experience, and you practised the present perfect for experience that continues now.
+
+
+
+
+Next time, we can practise the past simple for finished events, the conversation about your projects, and pronunciation. Good luck with your meetings, a   [tools: new_page, show_sentence, show_sentence]
+23:58:38 STUDENT(end) the tutor said goodbye
+23:58:38 audio: {"sttSockets":1,"sttSocketSeconds":408,"clipSeconds":87,"silentTtsReplies":60,"mic":{"plays":15,"gum":1,"buffers":91},"otherSockets":["ws://localhost:3021/_next/hmr","wss://api.openai.com/v1/realtime"]}
+23:58:38 waiting 35 s for the autosave

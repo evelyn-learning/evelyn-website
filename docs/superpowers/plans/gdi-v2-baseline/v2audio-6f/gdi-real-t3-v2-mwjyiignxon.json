@@ -1,0 +1,1776 @@
+{
+  "fixture": "gdi-real-t3",
+  "arm": "v2",
+  "sessionId": "embed-1794875473296",
+  "startedAt": "2026-11-17T00:31:16.344Z",
+  "minutes": 18.033616666666667,
+  "turns": [
+    {
+      "role": "tutor",
+      "text": "Hello, and welcome! こんにちは。I'm Ryota, your English teacher today. In this lesson we'll talk about your work and a project you're involved in, and practise the present perfect and the past simple. Does that sound good to you?"
+    },
+    {
+      "role": "student",
+      "text": "I'm ready.",
+      "tag": "answer",
+      "clip": 1,
+      "fit": "ok",
+      "heard": "I'm ready.",
+      "why": "Readiness question; learner gives short affirmative ack"
+    },
+    {
+      "role": "tutor",
+      "text": "Great, let's begin. First, a short, friendly chat so I can see what you can already do. Please answer in English, and don't worry about mistakes.\n\n\n\nCan you tell me a little about your job? What do you do?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, I'm a sales manager in the G, I'm uh the GM uh general manager of that and I just supporting for the old division in the the company and of course most of the part of the management and the sales area for this.",
+      "tag": "answer",
+      "clip": 3,
+      "fit": "ok",
+      "heard": "Yes, I'm sales manager and the G I'm our uh the GM uh general manager, well, that's and I just supporting for the old division in the the company. And of course, most of the current of the management and the sales area for this.",
+      "why": "Tutor asks about learner's job; line 3 is first unused line describing role as GM/general manager"
+    },
+    {
+      "role": "tutor",
+      "text": "Thank you. So you manage the sales team and support the division. What kind of products does your division sell?"
+    },
+    {
+      "role": "student",
+      "text": "My main responsibility in sales area to the contact for the clients and supporting for the each division member about this and of course I have a suggesting for the uh the new uh products about to the clients.",
+      "tag": "answer",
+      "clip": 4,
+      "fit": "misfit",
+      "heard": "My main responsibility in sales area to the contact for the clients and supporting for the each division member about this. And of course, I have a suggesting for the uh the new uh products about to the clients.",
+      "why": "Learner describes responsibilities instead of products, but it's the next unused line that attempts to answer about thei"
+    },
+    {
+      "role": "tutor",
+      "text": "Thank you for explaining your role. Have you ever worked with an international customer? If so, can you tell me about the experience?"
+    },
+    {
+      "role": "student",
+      "text": "I have worked with international customer sometimes.",
+      "tag": "answer",
+      "clip": 13,
+      "fit": "ok",
+      "heard": "I have worked with international customer sometimes.",
+      "why": "Directly answers the tutor's yes/no question about working with international customers"
+    },
+    {
+      "role": "tutor",
+      "text": "Good, thank you. Which countries were those customers from?"
+    },
+    {
+      "role": "student",
+      "text": "I'm not sure about it.",
+      "tag": "answer",
+      "clip": 29,
+      "fit": "misfit",
+      "heard": "I'm not sure about it.",
+      "why": "Learner hasn't answered which countries; #29 'I'm not sure about it' is closest available response to being asked for sp"
+    },
+    {
+      "role": "tutor",
+      "text": "No problem. Let me ask it more simply: which country were your customers from? For example, the United States, China, or Thailand?"
+    },
+    {
+      "role": "student",
+      "text": "Yes.",
+      "tag": "answer",
+      "clip": 14,
+      "fit": "misfit",
+      "heard": "Yes.",
+      "why": "Learner avoids direct answer with 'Yes' rather than naming a country, but no better option fits the direct question abou"
+    },
+    {
+      "role": "tutor",
+      "text": "Sorry, I'm not sure I understood. Which country were your customers from? 例えば、アメリカ、中国、タイなど、どの国ですか。"
+    },
+    {
+      "role": "student",
+      "text": "Yes, I have been working a project with uh uh us from another content, another uh countries.",
+      "tag": "answer",
+      "clip": 15,
+      "fit": "ok",
+      "heard": "Yes, I have been working a project with uh uh us from another content, another uh countries.",
+      "why": "Learner answers about working with international customers from another country, addressing the tutor's repeated questio"
+    },
+    {
+      "role": "tutor",
+      "text": "Thank you, that's a good start. You are working on a project with customers from other countries, so we will use that. Today we'll focus on making your sentences about experience more accurate and natural.\n\n\n\nShall we go on, or do you have a question first?"
+    },
+    {
+      "role": "student",
+      "text": "I'm ready.",
+      "tag": "answer",
+      "clip": 2,
+      "fit": "ok",
+      "heard": "and lady.",
+      "why": "Readiness question; learner gives short ack"
+    },
+    {
+      "role": "tutor",
+      "text": "Sorry, I didn't catch that."
+    },
+    {
+      "role": "student",
+      "text": "I'm ready.",
+      "tag": "answer",
+      "clip": 1,
+      "fit": "ok",
+      "heard": "I'm ready.",
+      "why": "Short ack repeated; tutor asks to repeat/clarify"
+    },
+    {
+      "role": "tutor",
+      "text": "Good, let's start. We'll talk about your work and responsibilities.\n\n\n\nFor experience that continues now, we say \"I have worked with international customers for three years.\" For a finished event at a specific time, we say \"I worked with an international customer yesterday.\"\n\n\n\nNow, what are your main responsibilities at work? Please answer with at least two sentences."
+    },
+    {
+      "role": "student",
+      "text": "My main responsibility in sales area is uh contact for our clients and supporting for the each division member and suggesting for the new product clients.",
+      "tag": "answer",
+      "clip": 5,
+      "fit": "ok",
+      "heard": "My responsibility in sales area is uh contact for our clients and supporting for the EDF member and suggesting for the new product clients.",
+      "why": "Tutor asks about main responsibilities; #5 is the first unused line that directly answers this question"
+    },
+    {
+      "role": "tutor",
+      "text": "You explained your role clearly. One point to fix: after \"responsible for,\" we use the -ing form of the verb. You said \"contact,\" so the sentence should be \"I am responsible for contacting our clients.\" Can you say that sentence?"
+    },
+    {
+      "role": "student",
+      "text": "My main responsibility in the sales area is to be a contact for our clients, supporting for the each division member of of course the management for the each division member and of course uh suggesting for the new service and the project products to the clients.",
+      "tag": "answer",
+      "clip": 6,
+      "fit": "misfit",
+      "heard": "My main responsibility in the sales area is to be a contact for our clients, supporting for the each division member of of course the management for the each division member and of course uh suggesting for the new service and the project products to the clients.",
+      "why": "Tutor asks learner to repeat a corrected sentence about 'responsible for contacting,' but learner's next line #6 is a fu"
+    },
+    {
+      "role": "tutor",
+      "text": "Your answer shows your main responsibilities clearly. This time the key form, \"responsible for\" plus -ing, did not appear, so here is the correct version: \"My main responsibility is contacting our clients and supporting my team.\"\n\n\n\nThat completes our work on talking about your job. Next, we'll practise the present perfect for experience that continues now.\n\n\n\nWe use the present perfect (have or has, plus the past participle) for experience that started in the past and continues now. For example: \"I have worked here for five years.\"\n\n\n\nHave you worked for your current company for a long time?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, working for our company above over the ten years.",
+      "tag": "answer",
+      "clip": 7,
+      "fit": "ok",
+      "heard": "Yes. for our company above over the 10 years.",
+      "why": "Answers the tutor's yes/no question about working at the company for a long time"
+    },
+    {
+      "role": "tutor",
+      "text": "Not quite. You said \"for our company over the 10 years,\" but the sentence needs the present perfect verb. Please say the full answer with \"have worked\" in it."
+    },
+    {
+      "role": "student",
+      "text": "I have worked here over the ten years.",
+      "tag": "answer",
+      "clip": 8,
+      "fit": "ok",
+      "heard": "I have here over the 10 years.",
+      "why": "Learner provides the corrected sentence with 'have worked' as requested by tutor"
+    },
+    {
+      "role": "tutor",
+      "text": "Could you say the full answer once more? Start with \"I have worked for our company...\" and tell me how long."
+    },
+    {
+      "role": "student",
+      "text": "I have working for our company for a long time. It takes about uh around the ten years.",
+      "tag": "answer",
+      "clip": 9,
+      "fit": "ok",
+      "heard": "I have working for our company for a long time. It takes about uh around the 10 years.",
+      "why": "Learner's first unused attempt at answering 'how long have you worked' with present perfect form, though imperfect gramm"
+    },
+    {
+      "role": "tutor",
+      "text": "Your meaning is clear, and you have worked for the company for about 10 years. The one error is \"have working\"; after \"have\" we use the past participle, \"worked.\" So the full sentence is:\n\n\n\n I have worked for our company for about 10 years. That completes the present perfect. Next is the past simple, for things you did at a specific time in the past. Shall we go on to it, or do you have a question first?"
+    },
+    {
+      "role": "student",
+      "text": "Yes.",
+      "tag": "answer",
+      "clip": 14,
+      "fit": "ok",
+      "heard": "Yes.",
+      "why": "Readiness question; learner gives short ack"
+    },
+    {
+      "role": "tutor",
+      "text": "Let's go on. We use the past simple for things that finished at a specific time in the past.\n\n\n\n\n\nFor example, \"I attended an exhibition last year.\"\n\n\n\nDid you attend any business events or exhibitions last year? Answer in English, using the past simple."
+    },
+    {
+      "role": "student",
+      "text": "Yes, I attended the uh some business event in the uh Japan last year.",
+      "tag": "answer",
+      "clip": 16,
+      "fit": "ok",
+      "heard": "Yes, I attended the uh some business event in the uh Japan. last year.",
+      "why": "Directly answers the tutor's question about attending business events last year, using past simple 'attended'"
+    },
+    {
+      "role": "tutor",
+      "text": "You used \"attended\" correctly, because \"last year\" is a specific time in the past. One small thing: we say \"some business events\" without \"the\". The corrected sentence is:\n\n\n\n I attended some business events in Japan last year. What was the event about, and what did you do there?"
+    },
+    {
+      "role": "student",
+      "text": "Uh, it's kind of the networking events, uh, that's looking for the new uh business partner or the connecting for the the related our service.",
+      "tag": "answer",
+      "clip": 18,
+      "fit": "ok",
+      "heard": "Uh, it's kind of the networking events, uh, the looking for the new uh business partner or the connecting for the the related our service.",
+      "why": "Tutor asks what the event was about; line 18 describes the networking event's purpose"
+    },
+    {
+      "role": "tutor",
+      "text": "Networking events are a good way to find new business partners. One small thing: we say \"connect our services with related companies.\" Now let's have a more natural conversation about your work.\n\n\n\nWhat is one project you've worked on that you're particularly proud of? Try starting with \"I worked on a project to...\""
+    },
+    {
+      "role": "student",
+      "text": "I worked on a project to support SNS networking content.",
+      "tag": "answer",
+      "clip": 25,
+      "fit": "ok",
+      "heard": "I worked on a project to support SNS networking content.",
+      "why": "Tutor asks about a project; learner responds with the corrected version of line 24, starting with 'I worked on a project"
+    },
+    {
+      "role": "tutor",
+      "text": "That's a clear sentence, and \"worked on a project\" is the right past simple form. What was your role in the project, and what did you do?"
+    },
+    {
+      "role": "student",
+      "text": "Uh, my role is to manage for the member who is making for the content. uh, the talking about for the content and making for the content.",
+      "tag": "answer",
+      "clip": 26,
+      "fit": "ok",
+      "heard": "Ah, my role is to manage for the member who is making for the content uh, the talking about for the content. and making for the content. / I need to manage",
+      "why": "Answers what the learner's role was in the SNS project"
+    },
+    {
+      "role": "tutor",
+      "text": "Good, you explained your role clearly. One point: we say \"manage the team members,\" with no \"for.\" Can you say the full sentence once more?"
+    },
+    {
+      "role": "student",
+      "text": "My rule is to manage for the SNS networking content member.",
+      "tag": "answer",
+      "clip": 27,
+      "fit": "ok",
+      "heard": "My role is to manage for the assessment and networking content member.",
+      "why": "Tutor asks learner to repeat the sentence about their role; #27 is the next unused attempt at describing their role in t"
+    },
+    {
+      "role": "tutor",
+      "text": "Not quite. The verb \"manage\" goes straight to its object, so there is no \"for\" after it. Can you say the sentence again, starting with \"My role is to manage...\"?"
+    },
+    {
+      "role": "student",
+      "text": "I need to manage for the uh",
+      "tag": "answer",
+      "clip": 28,
+      "fit": "misfit",
+      "heard": "",
+      "why": "Incomplete sentence; learner struggles but this is next in order after correction request"
+    },
+    {
+      "role": "tutor",
+      "text": "Take your time. Try starting with \"My role is to manage…\", then say who you manage."
+    },
+    {
+      "role": "student",
+      "text": "Uh, I think in the future, I will supporting for the the global networking to the between the foreigner company and Japanese company with my uh our directors.",
+      "tag": "answer",
+      "clip": 30,
+      "fit": "misfit",
+      "heard": "Uh, I think in the future, I will supporting for the the global networking to the between the foreigner company and the Japanese company with my uh our directors.",
+      "why": "No line directly answers the tutor's prompt to repeat 'My role is to manage...' All remaining lines are misaligned; #30 "
+    },
+    {
+      "role": "tutor",
+      "text": "Not quite. After \"will,\" we use the base verb, so \"supporting\" becomes \"support.\" Can you say the sentence once more with that change?"
+    },
+    {
+      "role": "student",
+      "text": "one more again.",
+      "tag": "answer",
+      "clip": 32,
+      "fit": "misfit",
+      "heard": "one more again.",
+      "why": "Learner says 'one more again' as a readiness signal, but tutor is asking for a specific sentence correction. No better f"
+    },
+    {
+      "role": "tutor",
+      "text": "Sure, let's try once more. Start with \"In the future, I will...\" and tell me what you will support."
+    },
+    {
+      "role": "student",
+      "text": "Uh, not project, but I have to find for the the new uh person to exchanging for the the uh the project members.",
+      "tag": "answer",
+      "clip": 33,
+      "fit": "misfit",
+      "heard": "Uh, not project, but I have to find for the the new uh person to exchanging for the the uh the project members.",
+      "why": "Learner has exhausted attempts at the corrected sentence; #33 is next in order but doesn't match the tutor's current pro"
+    },
+    {
+      "role": "tutor",
+      "text": "Thanks for trying. I'm not sure I understood the end of your sentence. Did you mean, \"I have to find a new person to work with the project members\"?"
+    },
+    {
+      "role": "student",
+      "text": "Uh, because of the one member is will leaving to our company and the project going on, so that's why I have to find the new people.",
+      "tag": "answer",
+      "clip": 34,
+      "fit": "ok",
+      "heard": "Uh, because of is we're leaving to our company and the project going on, so that's why I have to find a new people.",
+      "why": "Learner explains the reason for finding new people, continuing the thought about project members"
+    },
+    {
+      "role": "tutor",
+      "text": "Thank you, that explains it clearly. You are leaving the company, the project is continuing, so you need to find a new person. A more natural way to say it is:\n\n\n\n I have to find a new person because I am leaving the company, and the project is continuing. Could you say that sentence once?"
+    },
+    {
+      "role": "student",
+      "text": "Uh, what I have the long at the my company, it uh connecting to the foreigner person because of a company, a lot of the foreigner and uh I have to using for my English to communicate for the each other.",
+      "tag": "answer",
+      "clip": 10,
+      "fit": "misfit",
+      "heard": "Uh, what I have the long at the my company, it uh connecting to the foreigner person because of a company, a lot of the foreigner and uh I have to using for my English to communicate for the each other.",
+      "why": "Learner has no recorded line matching this request to repeat the tutor's corrected sentence. Line #10 is next unused but"
+    },
+    {
+      "role": "tutor",
+      "text": "Your meaning is clear: many foreign people work with you, so you need English. The one thing to fix is \"have to,\" which is followed by the base verb, \"use,\" not \"using.\"\n\n\n\nCan you say that sentence once more?"
+    },
+    {
+      "role": "student",
+      "text": "Yes, I have working with the international customer for sometimes.",
+      "tag": "answer",
+      "clip": 11,
+      "fit": "misfit",
+      "heard": "Yes, I have working with the international customer for sometimes.",
+      "why": "Learner has no recorded line matching the tutor's request to repeat the corrected sentence about 'have to use.' Line #11"
+    },
+    {
+      "role": "tutor",
+      "text": "Your sentence shows that you have experience with international customers, and you explained your role clearly in this lesson. The one thing to fix is \"have,\" which is followed by \"worked,\" not \"working.\" Please say this sentence once more.\n\n\n\n\n\n\n\nToday you described your job, a project and your experience. Your past simple sentence about the business event was clear and correct. Next time, please practise the present perfect with \"have worked\" and the -ing form after \"responsible for.\"\n\n\n\n\n\n\nThank you for today's lesson, and well done! Keep practising these grammar points when you talk about your work."
+    },
+    {
+      "role": "student",
+      "text": "I have worked with international customer",
+      "tag": "answer",
+      "clip": 12,
+      "fit": "ok",
+      "heard": "",
+      "why": "Learner corrects the sentence as requested by tutor, using 'have worked' instead of 'have working'"
+    }
+  ],
+  "events": [
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no"
+    },
+    {
+      "type": "persona_resolved",
+      "message": "teacher=ryota"
+    },
+    {
+      "type": "embed_config",
+      "message": "practice_locator=no goal_note=no readiness_note=no is_trial=no open_scope=no"
+    },
+    {
+      "type": "persona_resolved",
+      "message": "teacher=ryota"
+    },
+    {
+      "type": "partner_pool_snapshot",
+      "message": "remaining=52449 cap=130920 session_max=1200 exhausted=false"
+    },
+    {
+      "type": "partner_pool_snapshot",
+      "message": "remaining=52449 cap=130920 session_max=1200 exhausted=false"
+    },
+    {
+      "type": "start_v2",
+      "message": "tutor opens (voice)"
+    },
+    {
+      "type": "v2_opening_speech",
+      "message": "released 1908 ms after the tap; microphone live at 1006 ms; 0 sentence(s) were waiting"
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 1 \"Lesson overview\" · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "new_page: inline, with sentence 4 of 5 (stretch from 1), 3 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 1 · with \"In this lesson we'll talk about your work\""
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "annotate: sentence 4 of 5, 3 started — now"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6353ms · first_sentence=2948ms · in=12261 out=1046 cr=38468 cc=0 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Does that sound good to you?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Does that sound good to you?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Does that sound good to you?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "tool_call",
+      "message": "track_gap → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 2 \"Level check\" · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "new_page: inline, with sentence 1 of 3 (stretch from 1), 0 started — held"
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"Does that sound good to you?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 11084ms · first_sentence=6548ms · in=13575 out=1340 cr=58024 cc=161 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"What do you do?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What do you do?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What do you do?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"What do you do?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2291ms · first_sentence=2122ms · in=527 out=272 cr=19395 cc=523 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794875557592 — \"What do you do?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"What kind of products does your division sell?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What kind of products does your division sell?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What kind of products does your division sell?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"What kind of products does your division sell?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2564ms · first_sentence=1925ms · in=530 out=367 cr=19918 cc=89 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794875597532 — \"What kind of products does your division sell?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"If so, can you tell me about the experience?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2447ms · first_sentence=2405ms · in=537 out=185 cr=20007 cc=203 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Which countries were those customers from?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Which countries were those customers from?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (stuck) — \"Which countries were those customers from?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1628ms · first_sentence=1534ms · in=531 out=168 cr=20210 cc=30 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794875634442 — \"Which countries were those customers from?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"For example, the United States, China, or Thailand?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"For example, the United States, China, or Thailand?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (silent) — \"For example, the United States, China, or Thailand?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1419ms · first_sentence=1332ms · in=532 out=124 cr=20240 cc=45 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794875651291 — \"For example, the United States, China, or Thailand?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Which country were your customers from?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Which country were your customers from?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Which country were your customers from?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "set_working_level → Level set to intermediate. Do not tell the learner which level you set; just continue the lesson."
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "segment_overlong",
+      "message": "segment \"level-check\" has run 6 substantive tutor turns without advancing"
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Which country were your customers from?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → not opened yet: the student is asked first"
+    },
+    {
+      "type": "working_level_set",
+      "message": "intermediate (v2)"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 9659ms · first_sentence=8854ms · in=1982 out=1149 cr=40650 cc=80 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794875671957 — \"Which country were your customers from?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (silent) — \"Shall we go on, or do you have a question first?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1979ms · first_sentence=1791ms · in=507 out=262 cr=20365 cc=360 · v2"
+    },
+    {
+      "type": "qpin_drop",
+      "message": "gist empty (model judged the \"?\" conversational)"
+    },
+    {
+      "type": "idle_nudge_v2",
+      "message": "2s of silence"
+    },
+    {
+      "type": "v2_turn_cut",
+      "message": "0 words kept, 0 tool call(s)"
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 3 \"Your job\" · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "new_page: inline, with sentence 3 of 2 (stretch from 1), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 3 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "annotate: inline, with sentence 3 of 4 (stretch from 3), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5873ms · first_sentence=2150ms · in=12735 out=845 cr=40136 cc=1362 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"What are your main responsibilities at work?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What are your main responsibilities at work?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What are your main responsibilities at work?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"What are your main responsibilities at work?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 3 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 1 of 4 (stretch from 1), 1 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 3 · with \"You said contact\""
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "annotate: sentence 3 of 4, 2 started — held"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 8947ms · first_sentence=3863ms · in=12803 out=1267 cr=41498 cc=856 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794875768736 — \"What are your main responsibilities at work?\""
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Can you say that sentence?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Can you say that sentence?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Can you say that sentence?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Can you say that sentence?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 3 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 4 \"Present perfect\" · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "new_page: inline, with sentence 4 of 4 (stretch from 3), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 4 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "annotate: inline, with sentence 5 of 6 (stretch from 5), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 4 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_problem: inline, with sentence 7 of 7 (stretch from 7), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "track_gap → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 10417ms · first_sentence=5076ms · in=13372 out=1772 cr=42354 cc=454 · v2"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 4 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 1 of 3 (stretch from 1), 1 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 4 · with \"Not quite. You said\""
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "annotate: sentence 2 of 3, 2 started — now"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6523ms · first_sentence=2453ms · in=13122 out=927 cr=42808 cc=1566 · v2"
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Please say the full answer with \"have worked\" in it.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Please say the full answer with \"have worked\" in it.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Please say the full answer with \"have worked\" in it.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Please say the full answer with \"have worked\" in it.\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2005ms · first_sentence=1892ms · in=805 out=225 cr=22187 cc=145 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794875911260 — \"Please say the full answer with \"have worked\" in it.\""
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Could you say the full answer once more?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Could you say the full answer once more?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Could you say the full answer once more?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Could you say the full answer once more?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 4 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 1 of 3 (stretch from 1), 1 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "track_gap → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 7627ms · first_sentence=2442ms · in=13393 out=1260 cr=44519 cc=263 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794875935335 — \"Could you say the full answer once more?\""
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Shall we go on to it, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Shall we go on to it, or do you have a question first?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "not-answer-shaped (silent) — \"Shall we go on to it, or do you have a question first?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 5 \"Past simple\" · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "new_page: inline, with sentence 2 of 2 (stretch from 1), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 5 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "annotate: inline, with sentence 2 of 2 (stretch from 1), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 5 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_problem: inline, with sentence 3 of 3 (stretch from 3), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 6783ms · first_sentence=1923ms · in=13700 out=1072 cr=44782 cc=1304 · v2"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 5 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 1 of 3 (stretch from 1), 1 started — now"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5626ms · first_sentence=3144ms · in=13485 out=729 cr=46086 cc=1168 · v2"
+    },
+    {
+      "type": "qpin_set",
+      "message": "\"What was the event about, and what did you do there?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What was the event about, and what did you do there?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What was the event about, and what did you do there?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"What was the event about, and what did you do there?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 6 \"Conversation\" · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "new_page: inline, with sentence 3 of 3 (stretch from 1), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_problem → painted on page 6 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_problem: inline, with sentence 4 of 5 (stretch from 4), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 7166ms · first_sentence=3271ms · in=13630 out=1115 cr=47254 cc=320 · v2"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 1805ms · first_sentence=1721ms · in=910 out=222 cr=23787 cc=543 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"What was your role in the project, and what did you do?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"What was your role in the project, and what did you do?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"What was your role in the project, and what did you do?\""
+    },
+    {
+      "type": "qpin_cleared_answered",
+      "message": "answered and affirmed — \"What was your role in the project, and what did you do?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 6 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 1 of 3 (stretch from 1), 1 started — now"
+    },
+    {
+      "type": "v2_bargein",
+      "message": "spoke over the tutor"
+    },
+    {
+      "type": "v2_turn_cut",
+      "message": "25 words kept, 1 tool call(s)"
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Can you say the full sentence once more?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Can you say the full sentence once more?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "keep_listening → listening"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2131ms · first_sentence=2131ms · in=925 out=159 cr=24409 cc=182 · v2"
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "correction — \"Can you say the full sentence once more?\""
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 9488ms · first_sentence=2469ms · in=13461 out=1419 cr=49000 cc=294 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794876152271 — \"Can you say the full sentence once more?\""
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Can you say the sentence again, starting with \"My role is to\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Can you say the sentence again, starting with \"My role is to\""
+    },
+    {
+      "type": "idle_nudge_v2",
+      "message": "75s of silence"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 2743ms · first_sentence=2576ms · in=943 out=298 cr=24647 cc=66 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794876242655 — \"Can you say the sentence again, starting with \"My role is to\""
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Try starting with \"My role is to manage…\", then say who you \""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Try starting with \"My role is to manage…\", then say who you \""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Try starting with \"My role is to manage…\", then say who you \""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "correction — \"Try starting with \"My role is to manage…\", then say who you \""
+    },
+    {
+      "type": "tool_call",
+      "message": "track_gap → recorded"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 5251ms · first_sentence=4883ms · in=928 out=905 cr=24713 cc=75 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794876270716 — \"Try starting with \"My role is to manage…\", then say who you \""
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Can you say the sentence once more with that change?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Can you say the sentence once more with that change?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Can you say the sentence once more with that change?\""
+    },
+    {
+      "type": "segment_overlong",
+      "message": "segment \"open-conversation\" has run 6 substantive tutor turns without advancing"
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "correction — \"Can you say the sentence once more with that change?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "update_session_note → saved"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3440ms · first_sentence=2302ms · in=950 out=566 cr=24788 cc=138 · v2"
+    },
+    {
+      "type": "qpin_drop",
+      "message": "gist empty (model judged the \"?\" conversational)"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 3038ms · first_sentence=2875ms · in=957 out=340 cr=24926 cc=320 · v2"
+    },
+    {
+      "type": "qpin_set_verbatim",
+      "message": "\"Did you mean, \"I have to find a new person to work with the \""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Did you mean, \"I have to find a new person to work with the \""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Did you mean, \"I have to find a new person to work with the \""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Did you mean, \"I have to find a new person to work with the \""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 6 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 1 of 3 (stretch from 1), 1 started — now"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 8768ms · first_sentence=3063ms · in=13567 out=1284 cr=49893 cc=767 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794876353058 — \"Did you mean, \"I have to find a new person to work with the \""
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Could you say that sentence once?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Could you say that sentence once?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Could you say that sentence once?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Could you say that sentence once?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 6 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 1 of 2 (stretch from 1), 1 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 6 · with \"The one thing to fix is\""
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "annotate: sentence 2 of 3, 1 started — held"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 7929ms · first_sentence=3254ms · in=13670 out=1284 cr=50660 cc=374 · v2"
+    },
+    {
+      "type": "qpin_replaced",
+      "message": "new ask in turn tutor-1794876405397 — \"Could you say that sentence once?\""
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Can you say that sentence once more?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Can you say that sentence once more?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "awaiting-tutor-turn — \"Can you say that sentence once more?\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-affirm — \"Can you say that sentence once more?\""
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 6 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 1 of 3 (stretch from 1), 1 started — now"
+    },
+    {
+      "type": "tool_call",
+      "message": "new_page → new page 7 \"Summary\" · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "new_page: carries 1 item(s) written just before it"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "new_page: inline, with sentence 4 of 3 (stretch from 1), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "annotate → painted on page 7 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "annotate: inline, with sentence 4 of 3 (stretch from 1), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 7 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 4 of 6 (stretch from 4), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 7 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 4 of 6 (stretch from 4), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 7 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 4 of 6 (stretch from 4), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "show_sentence → painted on page 7 · inline"
+    },
+    {
+      "type": "v2_board_timing",
+      "message": "show_sentence: inline, with sentence 4 of 6 (stretch from 4), 1 started — held"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "set_goal_status → recorded"
+    },
+    {
+      "type": "tool_call",
+      "message": "end_lesson → the session is ending"
+    },
+    {
+      "type": "brain_turn",
+      "message": "Brain 8251ms · first_sentence=4792ms · in=1224 out=1718 cr=25517 cc=178 · v2"
+    },
+    {
+      "type": "lesson_closed",
+      "message": "end_lesson"
+    },
+    {
+      "type": "practice_draft_upserted",
+      "message": "lo=[gdi.work-projects.past-simple,gdi.work-projects.conversation] trigger=close_tool status=200 (v2)"
+    },
+    {
+      "type": "v2_practice_assign",
+      "message": "finalize status=200"
+    },
+    {
+      "type": "qpin_set_ask",
+      "message": "gist empty: \"Please say this sentence once more.\""
+    },
+    {
+      "type": "qpin_answer_clear_refused",
+      "message": "no-student-turn — \"Please say this sentence once more.\""
+    },
+    {
+      "type": "v2_profile_commit",
+      "message": "status=200 gaps=4 mastery=[] evidence=0 turns=55"
+    }
+  ],
+  "estimatedCost": 0.0416,
+  "endedBy": "cap",
+  "audio": {
+    "sttSockets": 1,
+    "sttSocketSeconds": 972,
+    "clipSeconds": 266,
+    "silentTtsReplies": 109,
+    "mic": {
+      "plays": 28,
+      "gum": 1,
+      "buffers": 158
+    },
+    "otherSockets": [
+      "ws://localhost:3021/_next/hmr",
+      "wss://api.openai.com/v1/realtime"
+    ],
+    "picks": [
+      {
+        "n": 1,
+        "fit": "ok",
+        "why": "Readiness question; learner gives short affirmative ack",
+        "live": "I'm ready.",
+        "heard": "I'm ready.",
+        "sec": 2.05
+      },
+      {
+        "n": 3,
+        "fit": "ok",
+        "why": "Tutor asks about learner's job; line 3 is first unused line describing role as GM/general manager",
+        "live": "Yes, I'm a sales manager in the G, I'm uh the GM uh general manager of that and I just supporting for the old division in the the company and of course most of the part of the management and the sales area for this.",
+        "heard": "Yes, I'm sales manager and the G I'm our uh the GM uh general manager, well, that's and I just supporting for the old division in the the company. And of course, most of the current of the management and the sales area for this.",
+        "sec": 22.55
+      },
+      {
+        "n": 4,
+        "fit": "misfit",
+        "why": "Learner describes responsibilities instead of products, but it's the next unused line that attempts to answer about thei",
+        "live": "My main responsibility in sales area to the contact for the clients and supporting for the each division member about this and of course I have a suggesting for the uh the new uh products about to the clients.",
+        "heard": "My main responsibility in sales area to the contact for the clients and supporting for the each division member about this. And of course, I have a suggesting for the uh the new uh products about to the clients.",
+        "sec": 24.2
+      },
+      {
+        "n": 13,
+        "fit": "ok",
+        "why": "Directly answers the tutor's yes/no question about working with international customers",
+        "live": "I have worked with international customer sometimes.",
+        "heard": "I have worked with international customer sometimes.",
+        "sec": 8.05
+      },
+      {
+        "n": 29,
+        "fit": "misfit",
+        "why": "Learner hasn't answered which countries; #29 'I'm not sure about it' is closest available response to being asked for sp",
+        "live": "I'm not sure about it.",
+        "heard": "I'm not sure about it.",
+        "sec": 2.05
+      },
+      {
+        "n": 14,
+        "fit": "misfit",
+        "why": "Learner avoids direct answer with 'Yes' rather than naming a country, but no better option fits the direct question abou",
+        "live": "Yes.",
+        "heard": "Yes.",
+        "sec": 1.2
+      },
+      {
+        "n": 15,
+        "fit": "ok",
+        "why": "Learner answers about working with international customers from another country, addressing the tutor's repeated questio",
+        "live": "Yes, I have been working a project with uh uh us from another content, another uh countries.",
+        "heard": "Yes, I have been working a project with uh uh us from another content, another uh countries.",
+        "sec": 8.9
+      },
+      {
+        "n": 2,
+        "fit": "ok",
+        "why": "Readiness question; learner gives short ack",
+        "live": "I'm ready.",
+        "heard": "and lady.",
+        "sec": 2.05
+      },
+      {
+        "n": 1,
+        "fit": "ok",
+        "why": "Short ack repeated; tutor asks to repeat/clarify",
+        "live": "I'm ready.",
+        "heard": "I'm ready.",
+        "sec": 2.05
+      },
+      {
+        "n": 5,
+        "fit": "ok",
+        "why": "Tutor asks about main responsibilities; #5 is the first unused line that directly answers this question",
+        "live": "My main responsibility in sales area is uh contact for our clients and supporting for the each division member and suggesting for the new product clients.",
+        "heard": "My responsibility in sales area is uh contact for our clients and supporting for the EDF member and suggesting for the new product clients.",
+        "sec": 17.7
+      },
+      {
+        "n": 6,
+        "fit": "misfit",
+        "why": "Tutor asks learner to repeat a corrected sentence about 'responsible for contacting,' but learner's next line #6 is a fu",
+        "live": "My main responsibility in the sales area is to be a contact for our clients, supporting for the each division member of of course the management for the each division member and of course uh suggesting for the new service and the project products to the clients.",
+        "heard": "My main responsibility in the sales area is to be a contact for our clients, supporting for the each division member of of course the management for the each division member and of course uh suggesting for the new service and the project products to the clients.",
+        "sec": 26.3
+      },
+      {
+        "n": 7,
+        "fit": "ok",
+        "why": "Answers the tutor's yes/no question about working at the company for a long time",
+        "live": "Yes, working for our company above over the ten years.",
+        "heard": "Yes. for our company above over the 10 years.",
+        "sec": 5.8
+      },
+      {
+        "n": 8,
+        "fit": "ok",
+        "why": "Learner provides the corrected sentence with 'have worked' as requested by tutor",
+        "live": "I have worked here over the ten years.",
+        "heard": "I have here over the 10 years.",
+        "sec": 5.95
+      },
+      {
+        "n": 9,
+        "fit": "ok",
+        "why": "Learner's first unused attempt at answering 'how long have you worked' with present perfect form, though imperfect gramm",
+        "live": "I have working for our company for a long time. It takes about uh around the ten years.",
+        "heard": "I have working for our company for a long time. It takes about uh around the 10 years.",
+        "sec": 8.8
+      },
+      {
+        "n": 14,
+        "fit": "ok",
+        "why": "Readiness question; learner gives short ack",
+        "live": "Yes.",
+        "heard": "Yes.",
+        "sec": 1.2
+      },
+      {
+        "n": 16,
+        "fit": "ok",
+        "why": "Directly answers the tutor's question about attending business events last year, using past simple 'attended'",
+        "live": "Yes, I attended the uh some business event in the uh Japan last year.",
+        "heard": "Yes, I attended the uh some business event in the uh Japan. last year.",
+        "sec": 8.5
+      },
+      {
+        "n": 18,
+        "fit": "ok",
+        "why": "Tutor asks what the event was about; line 18 describes the networking event's purpose",
+        "live": "Uh, it's kind of the networking events, uh, that's looking for the new uh business partner or the connecting for the the related our service.",
+        "heard": "Uh, it's kind of the networking events, uh, the looking for the new uh business partner or the connecting for the the related our service.",
+        "sec": 13.65
+      },
+      {
+        "n": 25,
+        "fit": "ok",
+        "why": "Tutor asks about a project; learner responds with the corrected version of line 24, starting with 'I worked on a project",
+        "live": "I worked on a project to support SNS networking content.",
+        "heard": "I worked on a project to support SNS networking content.",
+        "sec": 5.85
+      },
+      {
+        "n": 26,
+        "fit": "ok",
+        "why": "Answers what the learner's role was in the SNS project",
+        "live": "Uh, my role is to manage for the member who is making for the content. uh, the talking about for the content and making for the content.",
+        "heard": "Ah, my role is to manage for the member who is making for the content uh, the talking about for the content. and making for the content. / I need to manage",
+        "sec": 17
+      },
+      {
+        "n": 27,
+        "fit": "ok",
+        "why": "Tutor asks learner to repeat the sentence about their role; #27 is the next unused attempt at describing their role in t",
+        "live": "My rule is to manage for the SNS networking content member.",
+        "heard": "My role is to manage for the assessment and networking content member.",
+        "sec": 7.85
+      },
+      {
+        "n": 28,
+        "fit": "misfit",
+        "why": "Incomplete sentence; learner struggles but this is next in order after correction request",
+        "live": "I need to manage for the uh",
+        "heard": "",
+        "sec": 0.65
+      },
+      {
+        "n": 30,
+        "fit": "misfit",
+        "why": "No line directly answers the tutor's prompt to repeat 'My role is to manage...' All remaining lines are misaligned; #30 ",
+        "live": "Uh, I think in the future, I will supporting for the the global networking to the between the foreigner company and Japanese company with my uh our directors.",
+        "heard": "Uh, I think in the future, I will supporting for the the global networking to the between the foreigner company and the Japanese company with my uh our directors.",
+        "sec": 14.25
+      },
+      {
+        "n": 32,
+        "fit": "misfit",
+        "why": "Learner says 'one more again' as a readiness signal, but tutor is asking for a specific sentence correction. No better f",
+        "live": "one more again.",
+        "heard": "one more again.",
+        "sec": 3.65
+      },
+      {
+        "n": 33,
+        "fit": "misfit",
+        "why": "Learner has exhausted attempts at the corrected sentence; #33 is next in order but doesn't match the tutor's current pro",
+        "live": "Uh, not project, but I have to find for the the new uh person to exchanging for the the uh the project members.",
+        "heard": "Uh, not project, but I have to find for the the new uh person to exchanging for the the uh the project members.",
+        "sec": 13.35
+      },
+      {
+        "n": 34,
+        "fit": "ok",
+        "why": "Learner explains the reason for finding new people, continuing the thought about project members",
+        "live": "Uh, because of the one member is will leaving to our company and the project going on, so that's why I have to find the new people.",
+        "heard": "Uh, because of is we're leaving to our company and the project going on, so that's why I have to find a new people.",
+        "sec": 12
+      },
+      {
+        "n": 10,
+        "fit": "misfit",
+        "why": "Learner has no recorded line matching this request to repeat the tutor's corrected sentence. Line #10 is next unused but",
+        "live": "Uh, what I have the long at the my company, it uh connecting to the foreigner person because of a company, a lot of the foreigner and uh I have to using for my English to communicate for the each other.",
+        "heard": "Uh, what I have the long at the my company, it uh connecting to the foreigner person because of a company, a lot of the foreigner and uh I have to using for my English to communicate for the each other.",
+        "sec": 18.7
+      },
+      {
+        "n": 11,
+        "fit": "misfit",
+        "why": "Learner has no recorded line matching the tutor's request to repeat the corrected sentence about 'have to use.' Line #11",
+        "live": "Yes, I have working with the international customer for sometimes.",
+        "heard": "Yes, I have working with the international customer for sometimes.",
+        "sec": 7.05
+      },
+      {
+        "n": 12,
+        "fit": "ok",
+        "why": "Learner corrects the sentence as requested by tutor, using 'have worked' instead of 'have working'",
+        "live": "I have worked with international customer",
+        "heard": "",
+        "sec": 5.1
+      }
+    ],
+    "storedTranscript": [
+      {
+        "role": "tutor",
+        "text": "Hello, and welcome! こんにちは。I'm Ryota, your English teacher today. In this lesson we'll talk about your work and a project you're involved in, and practise the present perfect and the past simple. Does that sound good to you?"
+      },
+      {
+        "role": "student",
+        "text": "I'm ready."
+      },
+      {
+        "role": "tutor",
+        "text": "Great, let's begin. First, a short, friendly chat so I can see what you can already do. Please answer in English, and don't worry about mistakes.\n\nCan you tell me a little about your job? What do you do?"
+      },
+      {
+        "role": "student",
+        "text": "Yes, I'm sales manager and the G I'm our uh the GM uh general manager, well, that's and I just supporting for the old division in the the company. And of course, most of the current of the management and the sales area for this."
+      },
+      {
+        "role": "tutor",
+        "text": "Thank you. So you manage the sales team and support the division. What kind of products does your division sell?"
+      },
+      {
+        "role": "student",
+        "text": "My main responsibility in sales area to the contact for the clients and supporting for the each division member about this. And of course, I have a suggesting for the uh the new uh products about to the clients."
+      },
+      {
+        "role": "tutor",
+        "text": "Thank you for explaining your role. Have you ever worked with an international customer? If so, can you tell me about the experience?"
+      },
+      {
+        "role": "student",
+        "text": "I have worked with international customer sometimes."
+      },
+      {
+        "role": "tutor",
+        "text": "Good, thank you. Which countries were those customers from?"
+      },
+      {
+        "role": "student",
+        "text": "I'm not sure about it."
+      },
+      {
+        "role": "tutor",
+        "text": "No problem. Let me ask it more simply: which country were your customers from? For example, the United States, China, or Thailand?"
+      },
+      {
+        "role": "student",
+        "text": "Yes."
+      },
+      {
+        "role": "tutor",
+        "text": "Sorry, I'm not sure I understood. Which country were your customers from? 例えば、アメリカ、中国、タイなど、どの国ですか。"
+      },
+      {
+        "role": "student",
+        "text": "Yes, I have been working a project with uh uh us from another content, another uh countries."
+      },
+      {
+        "role": "tutor",
+        "text": "Thank you, that's a good start. You are working on a project with customers from other countries, so we will use that. Today we'll focus on making your sentences about experience more accurate and natural.\n\nShall we go on, or do you have a question first?"
+      },
+      {
+        "role": "student",
+        "text": "and lady."
+      },
+      {
+        "role": "tutor",
+        "text": "Sorry, I didn't catch that."
+      },
+      {
+        "role": "student",
+        "text": "I'm ready."
+      },
+      {
+        "role": "tutor",
+        "text": "Good, let's start. We'll talk about your work and responsibilities.\n\nFor experience that continues now, we say \"I have worked with international customers for three years.\" For a finished event at a specific time, we say \"I worked with an international customer yesterday.\"\n\nNow, what are your main responsibilities at work? Please answer with at least two sentences."
+      },
+      {
+        "role": "student",
+        "text": "My responsibility in sales area is uh contact for our clients and supporting for the EDF member and suggesting for the new product clients."
+      },
+      {
+        "role": "tutor",
+        "text": "You explained your role clearly. One point to fix: after \"responsible for,\" we use the -ing form of the verb. You said \"contact,\" so the sentence should be \"I am responsible for contacting our clients.\" Can you say that sentence?"
+      },
+      {
+        "role": "student",
+        "text": "My main responsibility in the sales area is to be a contact for our clients, supporting for the each division member of of course the management for the each division member and of course uh suggesting for the new service and the project products to the clients."
+      },
+      {
+        "role": "tutor",
+        "text": "Your answer shows your main responsibilities clearly. This time the key form, \"responsible for\" plus -ing, did not appear, so here is the correct version: \"My main responsibility is contacting our clients and supporting my team.\"\n\nThat completes our work on talking about your job. Next, we'll practise the present perfect for experience that continues now.\n\nWe use the present perfect (have or has, plus the past participle) for experience that started in the past and continues now. For example: \"I have worked here for five years.\"\n\nHave you worked for your current company for a long time?"
+      },
+      {
+        "role": "student",
+        "text": "Yes. for our company above over the 10 years."
+      },
+      {
+        "role": "tutor",
+        "text": "Not quite. You said \"for our company over the 10 years,\" but the sentence needs the present perfect verb. Please say the full answer with \"have worked\" in it."
+      },
+      {
+        "role": "student",
+        "text": "I have here over the 10 years."
+      },
+      {
+        "role": "tutor",
+        "text": "Could you say the full answer once more? Start with \"I have worked for our company...\" and tell me how long."
+      },
+      {
+        "role": "student",
+        "text": "I have working for our company for a long time. It takes about uh around the 10 years."
+      },
+      {
+        "role": "tutor",
+        "text": "Your meaning is clear, and you have worked for the company for about 10 years. The one error is \"have working\"; after \"have\" we use the past participle, \"worked.\" So the full sentence is:\n\n I have worked for our company for about 10 years.\n\nThat completes the present perfect. Next is the past simple, for things you did at a specific time in the past. Shall we go on to it, or do you have a question first?"
+      },
+      {
+        "role": "student",
+        "text": "Yes."
+      },
+      {
+        "role": "tutor",
+        "text": "Let's go on. We use the past simple for things that finished at a specific time in the past.\n\nFor example, \"I attended an exhibition last year.\"\n\nDid you attend any business events or exhibitions last year? Answer in English, using the past simple."
+      },
+      {
+        "role": "student",
+        "text": "Yes, I attended the uh some business event in the uh Japan. last year."
+      },
+      {
+        "role": "tutor",
+        "text": "You used \"attended\" correctly, because \"last year\" is a specific time in the past. One small thing: we say \"some business events\" without \"the\". The corrected sentence is:\n\n I attended some business events in Japan last year.\n\nWhat was the event about, and what did you do there?"
+      },
+      {
+        "role": "student",
+        "text": "Uh, it's kind of the networking events, uh, the looking for the new uh business partner or the connecting for the the related our service."
+      },
+      {
+        "role": "tutor",
+        "text": "Networking events are a good way to find new business partners. One small thing: we say \"connect our services with related companies.\" Now let's have a more natural conversation about your work.\n\nWhat is one project you've worked on that you're particularly proud of? Try starting with \"I worked on a project to...\""
+      },
+      {
+        "role": "student",
+        "text": "I worked on a project to support SNS networking content."
+      },
+      {
+        "role": "tutor",
+        "text": "That's a clear sentence, and \"worked on a project\" is the right past simple form. What was your role in the project, and what did you do?"
+      },
+      {
+        "role": "student",
+        "text": "Ah, my role is to manage for the member who is making for the content uh, the talking about for the content. and making for the content."
+      },
+      {
+        "role": "tutor",
+        "text": "Good, you explained your role clearly. One point: we say \"manage the team members,\" with no \"for.\" Can you say the full sentence once more?"
+      },
+      {
+        "role": "student",
+        "text": "I need to manage"
+      },
+      {
+        "role": "student",
+        "text": "My role is to manage for the assessment and networking content member."
+      },
+      {
+        "role": "tutor",
+        "text": "Not quite. The verb \"manage\" goes straight to its object, so there is no \"for\" after it. Can you say the sentence again, starting with \"My role is to manage...\"?"
+      },
+      {
+        "role": "tutor",
+        "text": "Take your time. Try starting with \"My role is to manage…\", then say who you manage."
+      },
+      {
+        "role": "student",
+        "text": "Uh, I think in the future, I will supporting for the the global networking to the between the foreigner company and the Japanese company with my uh our directors."
+      },
+      {
+        "role": "tutor",
+        "text": "Not quite. After \"will,\" we use the base verb, so \"supporting\" becomes \"support.\" Can you say the sentence once more with that change?"
+      },
+      {
+        "role": "student",
+        "text": "one more again."
+      },
+      {
+        "role": "tutor",
+        "text": "Sure, let's try once more. Start with \"In the future, I will...\" and tell me what you will support."
+      },
+      {
+        "role": "student",
+        "text": "Uh, not project, but I have to find for the the new uh person to exchanging for the the uh the project members."
+      },
+      {
+        "role": "tutor",
+        "text": "Thanks for trying. I'm not sure I understood the end of your sentence. Did you mean, \"I have to find a new person to work with the project members\"?"
+      },
+      {
+        "role": "student",
+        "text": "Uh, because of is we're leaving to our company and the project going on, so that's why I have to find a new people."
+      },
+      {
+        "role": "tutor",
+        "text": "Thank you, that explains it clearly. You are leaving the company, the project is continuing, so you need to find a new person. A more natural way to say it is:\n\n I have to find a new person because I am leaving the company, and the project is continuing.\n\nCould you say that sentence once?"
+      },
+      {
+        "role": "student",
+        "text": "Uh, what I have the long at the my company, it uh connecting to the foreigner person because of a company, a lot of the foreigner and uh I have to using for my English to communicate for the each other."
+      },
+      {
+        "role": "tutor",
+        "text": "Your meaning is clear: many foreign people work with you, so you need English. The one thing to fix is \"have to,\" which is followed by the base verb, \"use,\" not \"using.\"\n\nCan you say that sentence once more?"
+      },
+      {
+        "role": "student",
+        "text": "Yes, I have working with the international customer for sometimes."
+      },
+      {
+        "role": "tutor",
+        "text": "Your sentence shows that you have experience with international customers, and you explained your role clearly in this lesson. The one thing to fix is \"have,\" which is followed by \"worked,\" not \"working.\" Please say this sentence once more.\n\nToday you described your job, a project and your experience. Your past simple sentence about the business event was clear and correct. Next time, please practise the present perfect with \"have worked\" and the -ing form after \"responsible for.\"\n\nThank you for today's lesson, and well done! Keep practising these grammar points when you talk about your work."
+      }
+    ]
+  }
+}

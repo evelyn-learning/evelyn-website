@@ -78,7 +78,7 @@ const log: string[] = [];
 const page_note: string[] = [];
 const say = (s: string) => { const line = `${new Date().toISOString().slice(11, 19)} ${s}`; console.log(line); log.push(line); };
 // A goodbye in either teaching language (お疲れさまでした / また次回 close a bilingual lesson).
-const AUDIO_CLOSE_RE = /\bsee you next time\b|\bgoodbye\b|\bbye for now\b|\bthank you for (?:practi[sc]ing|the lesson|your time) (?:with me )?today\b|お疲れさまでした|また次回/i;
+const AUDIO_CLOSE_RE = /\bsee you next time\b|\bgoodbye\b|\bbye for now\b|\bthank you for (?:practi[sc]ing|the lesson|your time) (?:with me )?today\b|\bthank you for today'?s lesson\b|ありがとうございました。?\s*$|お疲れさまでした|また次回/i;
 const CLOSE_RE = /\bsee you next time\b|\bthat'?s (?:all|it) for today\b|\bwe can wrap up here\b|\bthanks for working through it today\b|\bgoodbye\b|\bbye for now\b/i;
 
 type BrainTurn = { t: number; sentences: string[]; tools: string[]; board: string[]; said?: string; silence?: number };
@@ -262,8 +262,19 @@ async function main() {
       say(`STUDENT(clip #${clip.n} ${pick.fit}${clip.check !== 'ok' ? ` cut=${clip.check}` : ''}, ${sec.toFixed(1)} s) ${clip.text}  — ${pick.why}`);
       // Wait for the clip to play and the client to hear it (a turn asked with its words), up to 20 s after it ends.
       // Everything heard until the next clip plays belongs to this one (the recogniser may split it in two).
-      const playEnd = Date.now() + sec * 1000; const until = playEnd + 20000;
-      while (Date.now() < until) { await poll(); if (heardLog.length > heardBefore && Date.now() > playEnd) break; await wait(300); }
+      // Wait for the recogniser's final words, not its first fragment: a long clip can arrive as "Oh." and the rest
+      // 20 s later (v2audio-6e2, Tester B #22), which shifted every later "heard" by one clip. Done when what was heard
+      // holds at least half the clip's words and nothing new came for 2.5 s, or 30 s after the clip ended.
+      const playEnd = Date.now() + sec * 1000; const until = playEnd + 30000;
+      const want = Math.max(1, Math.ceil(clip.text.split(/\s+/).filter(Boolean).length * 0.5));
+      let lastGrow = Date.now(); let seen = heardLog.length;
+      while (Date.now() < until) {
+        await poll();
+        if (heardLog.length !== seen) { seen = heardLog.length; lastGrow = Date.now(); }
+        const words = heardLog.slice(heardBefore).join(' ').split(/\s+/).filter(Boolean).length;
+        if (heardLog.length > heardBefore && Date.now() > playEnd && Date.now() - lastGrow > 2500 && (words >= want || /[\u3040-\u30ff\u3400-\u9fff]/.test(clip.text))) break;
+        await wait(300);
+      }
       if (heardLog.length === heardBefore) say(`  (not heard within 20 s of the clip's end)`);
       const turn = { role: 'student' as const, text: clip.text, tag: 'answer' as const, clip: clip.n, fit: pick.fit, heard: '', why: pick.why };
       turns.push(turn);

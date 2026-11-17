@@ -1,0 +1,222 @@
+00:14:00 open fixture=gdi-real-t2 arm=v2 student=gdi-v2-audio6f-tester-2 (audio student tester-2 (41 clips), silent tutor voice)
+00:14:03 clicked start (1)
+00:14:10 TUTOR  Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and the projects you're involved in, and practise two useful grammar points for doing that. Does that sound good to you?   [tools: annotate]
+00:14:29 STUDENT(clip #1 ok, 1.0 s) Yes.  — Yes/no readiness question, learner says Yes
+00:14:36 HEARD  Yes.
+00:14:36 TUTOR  Great. First, you'll talk about your job and your work, and we'll practise the present perfect for experience that continues now. Then we'll practise the past simple for things that finished at a specific time. I'll give you follow-up questions to keep the conversation going, and I'll correct your m   [tools: annotate]
+00:15:20 STUDENT(clip #1 ok, 1.0 s) Yes.  — Readiness question, short ack appropriate
+00:15:27 HEARD  Yes.
+00:15:27 TUTOR  Wonderful, let's begin with a short, friendly conversation. Please answer in English, and don't worry about mistakes. My first question is: can you tell me a little about your job? What do you do?
+00:15:42 STUDENT(clip #3 ok, 7.8 s) I, I work as admin at the company.  — Directly answers the tutor's question about what the learner does
+00:15:52 HEARD  I, I work as admin at the company.
+00:15:52 TUTOR  Thank you. What kind of admin work do you do?
+00:16:00 STUDENT(clip #7 ok, 4.0 s) I do accounting and some admin work.  — Directly answers what kind of admin work the learner does
+00:16:07 HEARD  I do accounting and some admin work.
+00:16:07 TUTOR  Accounting and admin, that's a lot of responsibility. Have you ever worked with an international customer? If so, can you tell me about that experience?
+00:16:21 STUDENT(clip #17 ok, 2.5 s) Yes, I have.  — Yes/no question about experience; learner answers affirmatively
+00:16:26 HEARD  Yes, I have.
+00:16:26 TUTOR  That's great. Could you tell me a little about that customer and what you did together?
+00:16:36 STUDENT(clip #9 ok, 7.7 s) I'm checking emails and sorting out some paperwork.  — Describes work activities in response to 'what you did together'
+00:16:48 HEARD  I'm checking emails. and sorting out some paperwork.
+00:16:48 TUTOR  Okay, so you check emails and do paperwork. Are those emails from international customers?
+00:16:58 STUDENT(clip #10 ok, 5.5 s) I do emails and sorting out some documents.  — Learner rephrases previous answer about emails and documents in response to tutor's clarification question
+00:17:21 HEARD  I do emails and sorting out some documents.
+00:17:21 TUTOR  
+ありがとうございます。少しずつ話せていますよ。今日は、仕事について簡単な文で話す練習をします。たとえば、I work in accounting. のように、「私は〜で働いています」と言えます。
+
+では、同じように「私は事務の仕事をしています」を英語で言ってみてください。最初の言葉は I work です。   [tools: set_working_level, new_page, show_sentence]
+00:17:30 STUDENT(clip #2 misfit, 5.0 s) Please, could you please rephrase that, please?  — Tutor asked learner to say 'I work in admin' but learner's next line is a request to rephrase. No perfect match; this is
+00:17:37 HEARD  Please, could you please rephrase that, please?
+00:17:37 TUTOR  もちろんです。英語で「私は事務の仕事をしています」と言ってみてください。
+
+I work in ___ という形で、___ に「事務」を入れます。
+00:17:44 STUDENT(clip #4 ok, 3.1 s) Could you explain that in Japanese?  — Learner doesn't understand the Japanese explanation and asks for clarification in Japanese
+00:17:54 HEARD  Could you explain that in Japanese?
+00:17:54 TUTOR  「I work in ___」は「私は＿＿で働いています」という意味です。＿＿には、仕事の分野を入れます。事務は英語で administration と言います。
+
+
+
+「accounting」と「administration」の両方を覚えておくと、自己紹介がしやすくなります。
+
+Does that make sense so far?   [tools: show_sentence]
+00:18:04 STUDENT(clip #1 ok, 1.0 s) Yes.  — Yes/no readiness question - learner gives short ack
+00:18:08 HEARD  Yes.
+00:18:08 TUTOR  ありがとうございます。では、あなたの仕事を英語で一文で言ってみましょう。さきほど「経理と事務」と言っていましたね。最初の言葉は I work です。残りは自分で入れてみてください。
+
+Is that clear, or shall I go over it again?
+00:18:19 STUDENT(clip #5 misfit, 11.3 s) I won't uh improve my speaking skill because I often attend a meeting.  — Learner should attempt the task (I work in...), but #5 is about speaking skill. No better fit available; this is closest
+00:18:36 HEARD  that use English.
+00:18:36 TUTOR  Okay, I'll use English. Your job is accounting and administration, so you can say: "I work in accounting and administration."
+
+
+
+Now you say it. Start with "I work in."   [tools: show_sentence]
+00:19:05 STUDENT(clip #8 misfit, 1.9 s) Uh, what do you mean?  — Learner confused, asks for clarification instead of attempting the sentence as instructed
+00:19:10 HEARD  Uh, what do you mean?
+00:19:10 TUTOR  「I work in」の後ろに、あなたの仕事の分野を入れるだけです。経理と事務なら、「I work in accounting and administration.」になります。
+
+では、「I work in」から始めて、あなたの仕事を一文で言ってみてください。
+00:19:21 STUDENT(clip #11 misfit, 5.7 s) I have worked for the current company for ten years.  — picked #7 (used or unknown) → earliest unused
+00:19:32 HEARD  I have worked for the current company for 10 years.
+00:19:32 TUTOR  その文は正しいです。「10年前から今も働いている」という意味で、現在完了を使えています。
+
+
+
+
+
+Next is present perfect. Shall we go on, or do you have a question first?   [tools: show_sentence]
+00:19:45 STUDENT(clip #1 ok, 1.0 s) Yes.  — Readiness question; learner gives short ack to proceed
+00:19:55 HEARD  Yes.
+00:19:55 TUTOR  
+では、現在完了に進みましょう。現在完了は「have / has ＋ 過去分詞」で、過去に始まって今も続いている経験や期間を言うときに使います。
+
+
+次は、あなたの経理の仕事について言ってみてください。「I have done accounting for ＿ years.」の形で、年数を入れてみましょう。
+   [tools: new_page, annotate, show_problem]
+00:20:05 STUDENT(clip #12 ok, 6.0 s) I have worked for my current company for ten years.  — Learner has already said this line, but tutor is now asking for a present perfect sentence about accounting work duratio
+00:20:05 HEARD  (silence 2 s)
+00:20:05 TUTOR  ゆっくりで大丈夫ですよ。最初の言葉は I have done accounting for です。あとは年数を入れるだけです。
+
+Does that make sense so far?
+00:20:17 HEARD  I have worked for my current company for 10 years.
+00:20:17 TUTOR  その文は正しいです。"my current company" も自然な言い方ですね。では、同じ形で経理の仕事について言ってみましょう。経理の仕事は何年していますか？
+
+   [tools: show_sentence]
+00:20:25 STUDENT(clip #13 misfit, 2.0 s) Could you repeat that, please?  — Learner should answer the question about how many years doing accounting, but #13 is a request to repeat. No direct answ
+00:20:30 HEARD  Could you repeat that, please?
+00:20:30 TUTOR  もちろんです。もう一度言いますね。 "I have done accounting for ___ years." の ___ に、経理を何年しているかの数字を入れてください。
+
+
+
+Does that make sense so far?
+00:20:41 STUDENT(clip #16 ok, 1.4 s) Yes.  — Readiness question 'Does that make sense so far?' gets short ack; #16 'Yes.' is available
+00:20:45 HEARD  Yes.
+00:20:45 TUTOR  経理の仕事を何年しているか、数字で答えてみてください。最初の言葉は "I have done accounting for" です。
+
+Is that clear, or shall I go over it again?
+00:20:57 STUDENT(clip #14 misfit, 16.6 s) How to communicate with the non in not the Japanese people with not the with people with the in and not from Japan.  — Learner should answer the accounting years question, but #14 is about communicating with non-Japanese people. No better 
+00:21:17 HEARD  How to communicate with the non in not the Japanese people with not the with people with the in not from Japan.
+00:21:17 TUTOR  すみません、最後の部分がよく聞き取れませんでした。「日本人ではない人と話すこと」について聞いていますか？それとも、別の質問ですか？もう一度ゆっくり言ってもらえますか。
+00:21:22 STUDENT(clip #15 ok, 2.4 s) Could you repeat that, please?  — Learner asks tutor to repeat after unclear communication
+00:21:27 HEARD  Could you repeat that, please?
+00:21:27 TUTOR  もう一度言いますね。 "I have done accounting for ___ years." の ___ に、経理を何年しているかの数字を入れてください。たとえば「5年」なら "I have done accounting for five years." です。
+
+Does that make sense?
+00:21:41 STUDENT(clip #1 ok, 1.0 s) Yes.  — Readiness question 'Does that make sense?' gets short ack
+00:21:52 HEARD  Yes.
+00:21:52 TUTOR  経理の仕事の年数は、こう言います。
+
+
+
+ I have done accounting for five years. 現在完了は、ここまでです。次は過去形で、昨年や昨日のように終わった出来事を話すときに使います。次に進みますか、それとも先に質問がありますか？   [tools: show_sentence]
+00:21:59 STUDENT(clip #18 ok, 2.9 s) Please move on to the past simple.  — Learner asks to move on to past simple, which tutor is now introducing
+00:22:11 HEARD  Please move on to the past simple.
+00:22:11 TUTOR  
+過去形は、昨年や昨日のように、終わった出来事を話すときに使います。「動詞＋ed」の形になります。
+
+
+次は、昨年の出来事を言ってみましょう。「Last year, I ＿＿.」の形で、何か一つ言ってみてください。   [tools: new_page, annotate, show_sentence]
+00:22:19 STUDENT(clip #27 ok, 3.4 s) I finished accounting yesterday.  — Tutor asks learner to say something about last year using past tense. Line 27 'I finished accounting yesterday' is a pas
+00:22:31 HEARD  I finished accounting yesterday.
+00:22:31 TUTOR  その文は正しいです。"yesterday" という時の言葉があるので、過去形の "finished" を使えています。
+
+
+
+では、もう一つ聞かせてください。昨年、仕事で何か新しいことを始めましたか？ "Last year, I ___." の形で言ってみてください。   [tools: show_sentence]
+00:22:38 STUDENT(clip #32 ok, 20.1 s) I successfully finished the new tasks because we implemented the new tax system this year.  — Tutor asks about something new started last year; learner's line #32 is a past simple sentence about implementing a new 
+00:23:08 HEARD  I successfully finished the new tasks because we implemented the new task system this year.
+00:23:08 TUTOR  That's right, and it's a good sentence. You used the past simple "finished" and "implemented" with a specific time, "this year." I'll put it on the board.
+
+
+
+Now, what did the new task system help you do? Please answer in one short sentence.   [tools: show_sentence]
+00:23:26 STUDENT(clip #28 ok, 4.8 s) I don't really know.  — Learner uncertain about what tutor is asking; 'I don't really know' is appropriate response to vague question
+00:23:33 HEARD  I don't really know.
+00:23:33 TUTOR  わかりました、大丈夫ですよ。もっと簡単に聞きますね。新しいシステムで、メールや書類の仕事は速くなりましたか？ はい か いいえ で答えてもいいです。
+
+Did the new system make your work faster? Yes or no is fine.
+00:23:45 STUDENT(clip #19 ok, 3.6 s) No.  — Tutor asks yes/no question; learner responds with 'No.'
+00:23:52 HEARD  No, I didn't.
+00:23:52 TUTOR  そうなんですね、教えてくれてありがとうございます。では、少し話を広げましょう。仕事で、一番がんばったプロジェクトはありますか？ "I worked on a project to..." で始めてみてください。
+00:23:58 STUDENT(clip #23 ok, 3.5 s) What do you mean by important project?  — Learner asks for clarification on 'important project' before answering the new question about a project they worked on
+00:24:03 HEARD  What do you mean by important project?
+00:24:03 TUTOR     [tools: keep_listening]
+00:24:10 HEARD  (silence 5 s)
+00:24:10 TUTOR  「important project」は、あなたにとって大事な仕事のことです。たとえば、一番がんばった仕事や、会社で役に立ったと思う仕事です。小さな仕事でも大丈夫ですよ。
+
+では、そのような仕事を一つ教えてください。"I worked on a project to..." で始めてみてください。
+
+Are you with me so far?
+00:24:24 STUDENT(clip #30 ok, 10.8 s) because we implemented a new system for tax system this year and I was a successfully finished all the new taxes on time.  — Learner describes a project they worked on, answering the tutor's request to share a project they put effort into
+00:24:45 HEARD  Because we implemented a new system for tax system this year and I was successfully finished all the new taxes on time.
+00:24:45 TUTOR  新しい税務システムを導入して、期限までに税務の仕事を終えたのですね。すばらしいです。
+
+ひとつだけ直しましょう。あなたは "I was successfully finished" と言いました。過去形で「終えました」と言うときは "I successfully finished" です。
+
+
+
+もう一度、この文を言ってみてください。   [tools: show_sentence, annotate]
+00:24:53 STUDENT(clip #21 misfit, 3.6 s) No. I didn't.  — picked #32 (used or unknown) → earliest unused
+00:25:00 HEARD  No, I didn't.
+00:25:00 TUTOR  すみません、今の "No, I didn't." は、どの文への答えですか？ 「I successfully finished the new tax tasks on time.」をもう一度言ってみてもいいですし、私の直しについて質問があれば日本語でどうぞ。
+00:25:10 STUDENT(clip #22 misfit, 2.6 s) No, I have not.  — picked #32 (used or unknown) → earliest unused
+00:25:21 HEARD  No, I have not.
+00:25:21 TUTOR  The correct sentence is: I successfully finished the new tax tasks on time. You already have most of it right, so keep that sentence in mind. Would you like to practise your pronunciation next, or keep talking about your work?
+00:25:36 STUDENT(clip #26 ok, 5.3 s) Could you give me some more example of past simple?  — Learner asks for more examples instead of choosing between pronunciation practice or continuing work discussion
+00:25:48 HEARD  Could you give me some more example of past simple?
+00:25:48 TUTOR  もちろんです。過去形の例をいくつか出しますね。
+
+
+
+「先月」は英語で last month です。「Last month, I ___.」の形で、仕事で何をしたか一文で言ってみてください。   [tools: annotate, annotate]
+00:25:57 STUDENT(clip #24 ok, 2.1 s) No, I have not.  — Learner is being asked to construct a past simple sentence about work. Line #24 'No, I have not.' doesn't fit the reques
+00:26:07 HEARD  No, I have not.
+00:26:07 TUTOR  先月、仕事で何をしましたか？ 例えば "Last month, I sent..." のように、最初の言葉だけ使って一文で言ってみてください。
+
+Sorry, I'm not sure what "No, I have not" is answering. Is that about the last question, or do you need help?
+00:26:19 STUDENT(clip #29 misfit, 6.0 s) The year in tax system corporation.  — Learner struggles with the prompt; #29 is next unused content line, though it doesn't directly answer the 'Last month' q
+00:26:32 HEARD  The year in tax. system corporation.
+00:26:32 TUTOR  税務システムのことですか？ 会社で使っている税務システムについてでしたら、もう少し聞かせてください。
+
+先ほどの練習は、私の方で例を言いますね。 "Last month, I sent the invoices." 先月、請求書を送った、という意味です。
+
+   [tools: show_sentence]
+00:26:40 STUDENT(clip #31 ok, 30.4 s) that I think successfully finished the new tasks because we implement the new system for tax. year in tax system.  — Learner attempts to explain about the new tax system implementation, continuing from previous context about the project.
+00:27:14 HEARD  year in tax system.
+00:27:14 TUTOR  「今年、税務システムを導入しました」という意味ですか？ そうなら、"This year, we implemented a new tax system." と言えます。
+
+Is that what you meant? Please say yes or no.
+00:27:44 STUDENT(clip #25 ok, 1.8 s) No, I have not.  — Answering tutor's yes/no question with 'No, I have not.'
+00:27:49 HEARD  No, I have not.
+00:27:49 TUTOR  すみません、「No, I have not.」が何への答えか、まだ分かりませんでした。 先月の仕事を一文で言うか、発音の練習をするか、どちらにしますか？
+00:27:56 STUDENT(clip #33 ok, 12.5 s) that that everything was new, that we didn't know them we we didn't have a manual to follow on.  — Learner attempts to answer about last month's work with a past simple sentence about the new system and lack of manual
+00:28:15 HEARD  that that everything was new, that we didn't know. them we we didn't have a manual to follow on.
+00:28:15 TUTOR  新しいことばかりで、手本になるマニュアルもなかったのですね。大変でしたね。
+
+
+
+So, how did you learn the new tax system? Please tell me in one short sentence.   [tools: show_sentence]
+00:28:24 STUDENT(clip #34 ok, 8.9 s) I don't really remember, but maybe helps from our accounting office staff.  — Tutor asks how learner learned the new tax system; #34 answers with help from accounting office staff
+00:28:41 HEARD  I don't really remember, but maybe helps from our accounting office staff.
+00:28:41 TUTOR  それは大丈夫ですよ。経理部の人たちが手伝ってくれたのですね。過去形で言うなら、"The accounting office staff helped me." です。
+
+
+
+発音の練習をしますか、それとも、ここまでのまとめに進みますか？   [tools: show_sentence]
+00:28:49 STUDENT(clip #35 misfit, 2.4 s) I cannot share the name.  — Learner has no clear fit; #35 about not sharing a name doesn't match tutor's question about pronunciation practice or mo
+00:28:54 HEARD  I cannot share the name.
+00:28:54 TUTOR  名前は言わなくても構いません。経理部の人たちが手伝ってくれた、という話で十分です。
+
+発音の練習をしますか、それとも、ここでまとめに進みますか？
+00:28:59 STUDENT(clip #39 ok cut=fast, 0.8 s) Skip and continue.  — Tutor asking to choose between pronunciation practice or summary; learner says 'Skip and continue' to move forward
+00:29:30   (not heard within 20 s of the clip's end)
+00:30:19 HEARD  (silence 75 s)
+00:30:19 TUTOR  
+今日は、仕事の話を通して現在完了と過去形を練習しました。
+
+
+よくできたのは、「I have worked for my current company for 10 years.」を正しく言えたことです。直すところは、「I was successfully finished.」ではなく「I successfully finished.」です。
+今日はここまでにしましょう。発音の練習は、次の機会にしましょう。お疲れさまでした。ありがとうございました。   [tools: new_page, show_sentence, show_sentence]
+00:30:34 STUDENT(end) the tutor said goodbye
+00:30:34 audio: {"sttSockets":1,"sttSocketSeconds":976,"clipSeconds":214,"silentTtsReplies":203,"mic":{"plays":38,"gum":1,"buffers":278},"otherSockets":["ws://localhost:3021/_next/hmr","wss://api.openai.com/v1/realtime"]}
+00:30:34 waiting 35 s for the autosave

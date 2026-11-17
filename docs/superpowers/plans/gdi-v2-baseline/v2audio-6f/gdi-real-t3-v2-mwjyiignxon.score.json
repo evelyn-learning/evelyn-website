@@ -1,0 +1,31 @@
+{
+  "fixture": "gdi-real-t3",
+  "arm": "v2",
+  "minutes": 18,
+  "tutorTurns": 28,
+  "studentTurns": 28,
+  "complaints": {
+    "complaint_reask": 0,
+    "complaint_ignored": 0,
+    "complaint_lost": 0,
+    "move_on": 0,
+    "verdict_only": 0
+  },
+  "complaintsTotal": 0,
+  "questionEndingShare": 0.64,
+  "questionAfterAnswerShare": 0.63,
+  "wordsAfterVerdictOnly": null,
+  "tutorTurnsAfterRecapRequest": null,
+  "tutorWordsMedian": 30,
+  "tutorWordsP90": 78,
+  "verdictCuts": 0,
+  "validatorRetries": 0,
+  "narrationDrops": 0,
+  "rendersDropped": 0,
+  "firstSentenceMsP50": 2469,
+  "firstSentenceMsP95": 6548,
+  "inputTokens": 1148669,
+  "outputTokens": 22320,
+  "costPerMinute": 0.002,
+  "endedBy": "cap"
+}

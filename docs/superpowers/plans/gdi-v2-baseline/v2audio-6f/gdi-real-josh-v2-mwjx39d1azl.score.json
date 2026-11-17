@@ -1,0 +1,31 @@
+{
+  "fixture": "gdi-real-josh",
+  "arm": "v2",
+  "minutes": 7.2,
+  "tutorTurns": 16,
+  "studentTurns": 15,
+  "complaints": {
+    "complaint_reask": 0,
+    "complaint_ignored": 0,
+    "complaint_lost": 0,
+    "move_on": 0,
+    "verdict_only": 0
+  },
+  "complaintsTotal": 0,
+  "questionEndingShare": 0.63,
+  "questionAfterAnswerShare": 0.6,
+  "wordsAfterVerdictOnly": null,
+  "tutorTurnsAfterRecapRequest": null,
+  "tutorWordsMedian": 35,
+  "tutorWordsP90": 51,
+  "verdictCuts": 0,
+  "validatorRetries": 0,
+  "narrationDrops": 0,
+  "rendersDropped": 0,
+  "firstSentenceMsP50": 2098,
+  "firstSentenceMsP95": 3911,
+  "inputTokens": 689188,
+  "outputTokens": 10693,
+  "costPerMinute": 0.004,
+  "endedBy": "tutor_close"
+}

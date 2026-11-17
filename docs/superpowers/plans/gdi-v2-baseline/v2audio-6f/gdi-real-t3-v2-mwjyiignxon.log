@@ -1,0 +1,155 @@
+00:31:13 open fixture=gdi-real-t3 arm=v2 student=gdi-v2-audio6f-tester-b (audio student tester-b (33 clips), silent tutor voice)
+00:31:16 clicked start (1)
+00:31:22 TUTOR  Hello, and welcome! こんにちは。I'm Ryota, your English teacher today. In this lesson we'll talk about your work and a project you're involved in, and practise the present perfect and the past simple. Does that sound good to you?   [tools: new_page, annotate]
+00:31:41 STUDENT(clip #1 ok, 2.0 s) I'm ready.  — Readiness question; learner gives short affirmative ack
+00:31:55 HEARD  I'm ready.
+00:31:55 TUTOR  Great, let's begin. First, a short, friendly chat so I can see what you can already do. Please answer in English, and don't worry about mistakes.
+
+
+
+Can you tell me a little about your job? What do you do?   [tools: new_page]
+00:32:13 STUDENT(clip #3 ok, 22.6 s) Yes, I'm a sales manager in the G, I'm uh the GM uh general manager of that and I just supporting for the old division in the the company and of course most of the part of the management and the sales area for this.  — Tutor asks about learner's job; line 3 is first unused line describing role as GM/general manager
+00:32:40 HEARD  Yes, I'm sales manager and the G I'm our uh the GM uh general manager, well, that's and I just supporting for the old division in the the company. And of course, most of the current of the management and the sales area for this.
+00:32:40 TUTOR  Thank you. So you manage the sales team and support the division. What kind of products does your division sell?
+00:32:52 STUDENT(clip #4 misfit, 24.2 s) My main responsibility in sales area to the contact for the clients and supporting for the each division member about this and of course I have a suggesting for the uh the new uh products about to the clients.  — Learner describes responsibilities instead of products, but it's the next unused line that attempts to answer about thei
+00:33:20 HEARD  My main responsibility in sales area to the contact for the clients and supporting for the each division member about this. And of course, I have a suggesting for the uh the new uh products about to the clients.
+00:33:20 TUTOR  Thank you for explaining your role. Have you ever worked with an international customer? If so, can you tell me about the experience?
+00:33:32 STUDENT(clip #13 ok, 8.1 s) I have worked with international customer sometimes.  — Directly answers the tutor's yes/no question about working with international customers
+00:33:44 HEARD  I have worked with international customer sometimes.
+00:33:44 TUTOR  Good, thank you. Which countries were those customers from?
+00:33:51 STUDENT(clip #29 misfit, 2.0 s) I'm not sure about it.  — Learner hasn't answered which countries; #29 'I'm not sure about it' is closest available response to being asked for sp
+00:33:56 HEARD  I'm not sure about it.
+00:33:56 TUTOR  No problem. Let me ask it more simply: which country were your customers from? For example, the United States, China, or Thailand?
+00:34:09 STUDENT(clip #14 misfit, 1.2 s) Yes.  — Learner avoids direct answer with 'Yes' rather than naming a country, but no better option fits the direct question abou
+00:34:12 HEARD  Yes.
+00:34:12 TUTOR  Sorry, I'm not sure I understood. Which country were your customers from? 例えば、アメリカ、中国、タイなど、どの国ですか。
+00:34:22 STUDENT(clip #15 ok, 8.9 s) Yes, I have been working a project with uh uh us from another content, another uh countries.  — Learner answers about working with international customers from another country, addressing the tutor's repeated questio
+00:34:42 HEARD  Yes, I have been working a project with uh uh us from another content, another uh countries.
+00:34:42 TUTOR  Thank you, that's a good start. You are working on a project with customers from other countries, so we will use that. Today we'll focus on making your sentences about experience more accurate and natural.
+
+
+
+Shall we go on, or do you have a question first?   [tools: set_working_level]
+00:35:07 STUDENT(clip #2 ok, 2.0 s) I'm ready.  — Readiness question; learner gives short ack
+00:35:11 HEARD  and lady.
+00:35:11 TUTOR  Sorry, I didn't catch that. 
+00:35:15 STUDENT(clip #1 ok, 2.0 s) I'm ready.  — Short ack repeated; tutor asks to repeat/clarify
+00:35:23 HEARD  I'm ready.
+00:35:23 TUTOR  Good, let's start. We'll talk about your work and responsibilities.
+
+
+
+For experience that continues now, we say "I have worked with international customers for three years." For a finished event at a specific time, we say "I worked with an international customer yesterday."
+
+
+
+Now, what are your ma   [tools: new_page, annotate]
+00:35:50 STUDENT(clip #5 ok, 17.7 s) My main responsibility in sales area is uh contact for our clients and supporting for the each division member and suggesting for the new product clients.  — Tutor asks about main responsibilities; #5 is the first unused line that directly answers this question
+00:36:17 HEARD  My responsibility in sales area is uh contact for our clients and supporting for the EDF member and suggesting for the new product clients.
+00:36:17 TUTOR  You explained your role clearly. One point to fix: after "responsible for," we use the -ing form of the verb. You said "contact," so the sentence should be "I am responsible for contacting our clients." Can you say that sentence?
+
+   [tools: show_sentence, annotate]
+00:36:36 STUDENT(clip #6 misfit, 26.3 s) My main responsibility in the sales area is to be a contact for our clients, supporting for the each division member of of course the management for the each division member and of course uh suggesting for the new service and the project products to the clients.  — Tutor asks learner to repeat a corrected sentence about 'responsible for contacting,' but learner's next line #6 is a fu
+00:37:14 HEARD  My main responsibility in the sales area is to be a contact for our clients, supporting for the each division member of of course the management for the each division member and of course uh suggesting for the new service and the project products to the clients.
+00:37:14 TUTOR  Your answer shows your main responsibilities clearly. This time the key form, "responsible for" plus -ing, did not appear, so here is the correct version: "My main responsibility is contacting our clients and supporting my team."
+
+
+
+That completes our work on talking about your job. Next, we'll prac   [tools: show_sentence, new_page, annotate, show_problem]
+00:37:56 STUDENT(clip #7 ok, 5.8 s) Yes, working for our company above over the ten years.  — Answers the tutor's yes/no question about working at the company for a long time
+00:38:09 HEARD  Yes. for our company above over the 10 years.
+00:38:09 TUTOR  Not quite. You said "for our company over the 10 years," but the sentence needs the present perfect verb. Please say the full answer with "have worked" in it.
+
+   [tools: show_sentence, annotate]
+00:38:24 STUDENT(clip #8 ok, 6.0 s) I have worked here over the ten years.  — Learner provides the corrected sentence with 'have worked' as requested by tutor
+00:38:33 HEARD  I have here over the 10 years.
+00:38:33 TUTOR  Could you say the full answer once more? Start with "I have worked for our company..." and tell me how long.
+00:38:46 STUDENT(clip #9 ok, 8.8 s) I have working for our company for a long time. It takes about uh around the ten years.  — Learner's first unused attempt at answering 'how long have you worked' with present perfect form, though imperfect gramm
+00:39:03 HEARD  I have working for our company for a long time. It takes about uh around the 10 years.
+00:39:03 TUTOR  Your meaning is clear, and you have worked for the company for about 10 years. The one error is "have working"; after "have" we use the past participle, "worked." So the full sentence is:
+
+
+
+ I have worked for our company for about 10 years. That completes the present perfect. Next is the past simpl   [tools: show_sentence]
+00:39:36 STUDENT(clip #14 ok, 1.2 s) Yes.  — Readiness question; learner gives short ack
+00:39:45 HEARD  Yes.
+00:39:45 TUTOR  Let's go on. We use the past simple for things that finished at a specific time in the past.
+
+
+
+
+
+For example, "I attended an exhibition last year."
+
+
+
+Did you attend any business events or exhibitions last year? Answer in English, using the past simple.   [tools: new_page, annotate, show_problem]
+00:40:05 STUDENT(clip #16 ok, 8.5 s) Yes, I attended the uh some business event in the uh Japan last year.  — Directly answers the tutor's question about attending business events last year, using past simple 'attended'
+00:40:20 HEARD  Yes, I attended the uh some business event in the uh Japan. last year.
+00:40:20 TUTOR  You used "attended" correctly, because "last year" is a specific time in the past. One small thing: we say "some business events" without "the". The corrected sentence is:
+
+
+
+ I attended some business events in Japan last year. What was the event about, and what did you do there?   [tools: show_sentence]
+00:40:44 STUDENT(clip #18 ok, 13.7 s) Uh, it's kind of the networking events, uh, that's looking for the new uh business partner or the connecting for the the related our service.  — Tutor asks what the event was about; line 18 describes the networking event's purpose
+00:41:05 HEARD  Uh, it's kind of the networking events, uh, the looking for the new uh business partner or the connecting for the the related our service.
+00:41:05 TUTOR  Networking events are a good way to find new business partners. One small thing: we say "connect our services with related companies." Now let's have a more natural conversation about your work.
+
+
+
+What is one project you've worked on that you're particularly proud of? Try starting with "I worked on   [tools: new_page, show_problem]
+00:41:29 STUDENT(clip #25 ok, 5.8 s) I worked on a project to support SNS networking content.  — Tutor asks about a project; learner responds with the corrected version of line 24, starting with 'I worked on a project
+00:41:38 HEARD  I worked on a project to support SNS networking content.
+00:41:38 TUTOR  That's a clear sentence, and "worked on a project" is the right past simple form. What was your role in the project, and what did you do?
+00:41:52 STUDENT(clip #26 ok, 17.0 s) Uh, my role is to manage for the member who is making for the content. uh, the talking about for the content and making for the content.  — Answers what the learner's role was in the SNS project
+00:42:13 HEARD  Ah, my role is to manage for the member who is making for the content uh, the talking about for the content. and making for the content.
+00:42:13 TUTOR  Good, you explained your role clearly. One point: we say "manage the team members," with no "for." Can you say the full sentence once more?
+
+   [tools: show_sentence]
+00:42:15 HEARD  I need to manage
+00:42:15 TUTOR     [tools: keep_listening]
+00:42:23 STUDENT(clip #27 ok, 7.8 s) My rule is to manage for the SNS networking content member.  — Tutor asks learner to repeat the sentence about their role; #27 is the next unused attempt at describing their role in t
+00:42:42 HEARD  My role is to manage for the assessment and networking content member.
+00:42:42 TUTOR  Not quite. The verb "manage" goes straight to its object, so there is no "for" after it. Can you say the sentence again, starting with "My role is to manage..."?
+00:42:51 STUDENT(clip #28 misfit cut=fast, 0.7 s) I need to manage for the uh  — Incomplete sentence; learner struggles but this is next in order after correction request
+00:43:22   (not heard within 20 s of the clip's end)
+00:44:05 HEARD  (silence 75 s)
+00:44:05 TUTOR  Take your time. Try starting with "My role is to manage…", then say who you manage.
+00:44:16 STUDENT(clip #30 misfit, 14.3 s) Uh, I think in the future, I will supporting for the the global networking to the between the foreigner company and Japanese company with my uh our directors.  — No line directly answers the tutor's prompt to repeat 'My role is to manage...' All remaining lines are misaligned; #30 
+00:44:36 HEARD  Uh, I think in the future, I will supporting for the the global networking to the between the foreigner company and the Japanese company with my uh our directors.
+00:44:36 TUTOR  Not quite. After "will," we use the base verb, so "supporting" becomes "support." Can you say the sentence once more with that change?
+00:44:49 STUDENT(clip #32 misfit, 3.6 s) one more again.  — Learner says 'one more again' as a readiness signal, but tutor is asking for a specific sentence correction. No better f
+00:44:57 HEARD  one more again.
+00:44:57 TUTOR  Sure, let's try once more. Start with "In the future, I will..." and tell me what you will support.
+00:45:08 STUDENT(clip #33 misfit, 13.3 s) Uh, not project, but I have to find for the the new uh person to exchanging for the the uh the project members.  — Learner has exhausted attempts at the corrected sentence; #33 is next in order but doesn't match the tutor's current pro
+00:45:24 HEARD  Uh, not project, but I have to find for the the new uh person to exchanging for the the uh the project members.
+00:45:24 TUTOR  Thanks for trying. I'm not sure I understood the end of your sentence. Did you mean, "I have to find a new person to work with the project members"?
+00:45:40 STUDENT(clip #34 ok, 12.0 s) Uh, because of the one member is will leaving to our company and the project going on, so that's why I have to find the new people.  — Learner explains the reason for finding new people, continuing the thought about project members
+00:46:02 HEARD  Uh, because of is we're leaving to our company and the project going on, so that's why I have to find a new people.
+00:46:02 TUTOR  Thank you, that explains it clearly. You are leaving the company, the project is continuing, so you need to find a new person. A more natural way to say it is:
+
+
+
+ I have to find a new person because I am leaving the company, and the project is continuing. Could you say that sentence once?   [tools: show_sentence]
+00:46:26 STUDENT(clip #10 misfit, 18.7 s) Uh, what I have the long at the my company, it uh connecting to the foreigner person because of a company, a lot of the foreigner and uh I have to using for my English to communicate for the each other.  — Learner has no recorded line matching this request to repeat the tutor's corrected sentence. Line #10 is next unused but
+00:46:53 HEARD  Uh, what I have the long at the my company, it uh connecting to the foreigner person because of a company, a lot of the foreigner and uh I have to using for my English to communicate for the each other.
+00:46:53 TUTOR  Your meaning is clear: many foreign people work with you, so you need English. The one thing to fix is "have to," which is followed by the base verb, "use," not "using."
+
+
+
+Can you say that sentence once more?   [tools: show_sentence, annotate]
+00:47:12 STUDENT(clip #11 misfit, 7.0 s) Yes, I have working with the international customer for sometimes.  — Learner has no recorded line matching the tutor's request to repeat the corrected sentence about 'have to use.' Line #11
+00:47:29 HEARD  Yes, I have working with the international customer for sometimes.
+00:47:29 TUTOR  Your sentence shows that you have experience with international customers, and you explained your role clearly in this lesson. The one thing to fix is "have," which is followed by "worked," not "working." Please say this sentence once more.
+
+
+
+
+
+
+
+Today you described your job, a project and your exp   [tools: show_sentence, new_page, annotate, show_sentence, show_sentence, show_sentence, show_sentence]
+00:48:12 STUDENT(clip #12 ok, 5.1 s) I have worked with international customer  — Learner corrects the sentence as requested by tutor, using 'have worked' instead of 'have working'
+00:48:48   (not heard within 20 s of the clip's end)
+00:49:18 audio: {"sttSockets":1,"sttSocketSeconds":972,"clipSeconds":266,"silentTtsReplies":109,"mic":{"plays":28,"gum":1,"buffers":158},"otherSockets":["ws://localhost:3021/_next/hmr","wss://api.openai.com/v1/realtime"]}
+00:49:18 waiting 35 s for the autosave
