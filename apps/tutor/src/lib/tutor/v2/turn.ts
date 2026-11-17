@@ -605,7 +605,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   let releaseText = '';
   // Fix round 2 (N1): the next-time line is said once a lesson. What earlier replies said about next time (the runtime's own
   // line among them) counts as naming a part for it, so no later close names it again.
-  const nextTimeBefore = gated && session.plan ? state.history.filter((h) => h.role === 'assistant').map((h) => stripBoardBlocks(typeof h.content === 'string' ? h.content : h.content.map((c) => (c.type === 'text' ? c.text : '')).join(' ')))
+  const nextTimeBefore = gated && session.plan && TUTOR_V2_PASSED_PART_CLOSE ? state.history.filter((h) => h.role === 'assistant').map((h) => stripBoardBlocks(typeof h.content === 'string' ? h.content : h.content.map((c) => (c.type === 'text' ? c.text : '')).join(' ')))
     .flatMap((t) => t.split(/(?<=[.!?]["'”’)]*)\s+|(?<=[。！？][」』)）"”]*)\s*/)).filter((x) => /\bnext time\b|次回|次の機会/i.test(x)).join(' ') : '';
   // F5: cards said one after another under one lead-in ("Here are two sentences…" and two cards).
   let cardRun = false;
@@ -804,12 +804,17 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       // sentences only, as beganNow.
       const closes = (!!ended && !/^not /.test(ended.outcome))
         || (response.stop_reason !== 'tool_use' && !heldAt && ((TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid)) || closingOpened || V2_SUMMARY_BEGUN.test(lastSentences(stripBoardBlocks(saidNow), 2))));
-      const line = closes && !heldAt && !v2IsPracticeAsk(lastSaid) && !endsAsking(lastSaid) ? v2NextTimeLine(session.plan, state, `${saidNow} ${nextTimeBefore}`) : null;
+      // Fix round 3: an accepted end_lesson is a real close: a closing question at its end does not stop the line, which goes
+      // before that question in the stored reply (it was said already, so in speech the line follows it).
+      const endedNow = !!ended && !/^not /.test(ended.outcome);
+      const line = closes && !heldAt && (endedNow || (!v2IsPracticeAsk(lastSaid) && !endsAsking(lastSaid))) ? v2NextTimeLine(session.plan, state, `${saidNow} ${nextTimeBefore}`) : null;
       if (line) {
         nextTimeSaid = true;
         gate.push(` ${line}`); gate.flush();
         const last = [...response.content].reverse().find((b): b is Anthropic.TextBlock => b.type === 'text');
-        if (last) last.text = `${last.text.trimEnd()} ${line}`; else response.content.push({ type: 'text', text: line, citations: null } as Anthropic.TextBlock);
+        const q = endedNow && endsAsking(lastSaid) && last ? last.text.lastIndexOf(lastSaid.trim()) : -1;
+        if (last && q >= 0) last.text = `${last.text.slice(0, q)}${line} ${last.text.slice(q)}`;
+        else if (last) last.text = `${last.text.trimEnd()} ${line}`; else response.content.push({ type: 'text', text: line, citations: null } as Anthropic.TextBlock);
         spoken.splice(spokenBefore); rawSpoken.splice(rawBefore);
         for (const block of response.content) if (block.type === 'text') { const words = wordsOf(block.text); if (words) { spoken.push(words); rawSpoken.push(block.text.trim()); } }
       }

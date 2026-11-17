@@ -60,9 +60,12 @@ async function main() {
     check('the kill switch off: the English matcher only', !isPartFrame(T40, false) && isPartFrame('Shall we go on?', false));
     const ordinary = ['海外出張に行きますか？', '次の会議に行きますか？', 'プロジェクトはスケジュール通りに進みますか？', '来週は大阪へ行きますか？', '次はどの部署に移りますか？'];
     check('fix round 1 (I1): ordinary questions with a destination are not frames', ordinary.every((x) => !isPartFrame(x)), ordinary.filter((x) => isPartFrame(x)));
-    const compounds = ['取引先に行きますか？', '出張先へ行きますか？', '目次に移りますか？', '目次の部分に移りますか？'];
+    const compounds = ['取引先に行きますか？', '出張先へ行きますか？', '目次に移りますか？', '目次の部分に移りますか？', '行き先に行きますか？', '宛先に移りますか？'];
     check('fix round 2: 次/先 inside a word (取引先, 出張先, 目次) is no frame', compounds.every((x) => !isPartFrame(x)), compounds.filter((x) => isPartFrame(x)));
     check('…while 次に/先へ at the start, after 、, では or じゃあ still is', ['次に進みますか？', 'では次に進みますか？', 'じゃあ、先へ進みましょうか？', 'それでは、次の部分に進んでもいいですか。'].every((x) => isPartFrame(x)));
+    const adverbs = ['そろそろ次に進みましょうか？', 'さあ次に進みましょうか？', 'もう次に進んでもいいですか？', 'では、そろそろ次に進んでもいいですか？', 'じゃ次に行きましょうか？'];
+    check('fix round 3 (W1): a hiragana adverb before 次 (そろそろ, さあ, もう) is still a frame', adverbs.every((x) => isPartFrame(x)), adverbs.filter((x) => !isPartFrame(x)));
+    check('…and an offer that opens the page on はい (行き too, as isPartFrame)', adverbs.every((x) => mayOpenPart({ title: 'Past simple', studentSaid: 'はい', lastTutor: x, pagesOpen: 4 })), adverbs.filter((x) => !mayOpenPart({ title: 'Past simple', studentSaid: 'はい', lastTutor: x, pagesOpen: 4 })));
     check('…and they open no page', !mayOpenPart({ title: 'Past simple', studentSaid: 'はい', lastTutor: '出張先へ進んでもいいですか？', pagesOpen: 4 }) && !mayOpenPart({ title: 'Past simple', studentSaid: 'はい', lastTutor: '取引先に進みますか？', pagesOpen: 4 }) && mayOpenPart({ title: 'Past simple', studentSaid: 'はい', lastTutor: 'では次に進みますか？', pagesOpen: 4 }));
     check('…nor do they open a page as a frame would', !mayOpenPart({ title: 'Past simple', studentSaid: 'はい', lastTutor: 'プロジェクトはスケジュール通りに進みますか？', pagesOpen: 4 }));
     const og: string[] = []; const gg = new ReplyGate((t) => og.push(t), { dropFrame: true, holdGoodbye: false });
@@ -234,6 +237,10 @@ async function main() {
     check('a wrap-due reply that ends in a practice ask: no line', !/We didn't get to/.test(s3.join('')), s3.join(''));
     const s4: string[] = [];
     await runV2Turn({ session: wrap, state: pagesAt([...B], { goals: { ...goalsB, pronunciation: { status: 'skipped', at: 0 } }, ...level, history: hist }), studentSaid: 'I attended a fair.', callModel: streaming('Good. What else did you do last year?').call, onText: (d) => s4.push(d), boardPass: false, mathsCheck: false, nowMs: 18.2 * 60000 });
+    const s5: string[] = [];
+    const r5 = await runV2Turn({ session: wrap, state: pagesAt([...B], { goals: { ...goalsB, pronunciation: { status: 'skipped', at: 0 } }, ...level, history: hist }), studentSaid: 'I have to go now.', callModel: streaming('Thank you, Ken. You used the present perfect well. Will you practise this week?', [{ type: 'tool_use', id: 'e1', name: 'end_lesson', input: { because: 'student_asked', summary: 'x' } }]).call, onText: (d) => s5.push(d), boardPass: false, mathsCheck: false, nowMs: 12 * 60000 });
+    const stored5 = JSON.stringify(r5.state.history.slice(-2));
+    check('fix round 3: an accepted end_lesson ending in a question still names it; stored before the question', /We didn't get to the pronunciation part/.test(s5.join('')) && /We didn't get to the pronunciation part today, so that's for next time\. Will you practise this week\?/.test(stored5), [s5.join(''), stored5]);
     check('a wrap-due reply that does not close: no line', !/We didn't get to/.test(s4.join('')), s4.join(''));
   }
 

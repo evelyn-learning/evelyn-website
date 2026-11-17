@@ -34,7 +34,8 @@ const OFFERS = /\b(?:next is|next up|ready|shall we|any questions?|a question fi
 /** Task 6g (PART_OFFER_ONCE): the same, in Japanese (「次に進みますか、それとも先に質問がありますか？」). */
 // Fix round 1 (I1): the frame's own shape only, not any "…に進みますか" (「プロジェクトはスケジュール通りに進みますか？」).
 // Fix round 2: 次/先 starting a word (not 取引先, 出張先, 目次).
-const OFFERS_JA = new RegExp(`${JA_WORD_START}(?:次|先)(?:に|へ)進|${JA_WORD_START}次の(?:パート|部分|ところ|項目|テーマ|トピック|セクション|ステップ|練習|課題|内容)(?:に|へ)|(?:進む|移る)前に|質問(?:が|は)(?:あります|ありません)か`, 'u');
+// Fix round 3: 行き and 移り as in isPartFrame (「じゃ次に行きましょうか？」).
+const OFFERS_JA = new RegExp(`${JA_WORD_START}(?:次|先)(?:に|へ)(?:進|行き|移り)|${JA_WORD_START}次の(?:パート|部分|ところ|項目|テーマ|トピック|セクション|ステップ|練習|課題|内容)(?:に|へ)|(?:進む|移る)前に|質問(?:が|は)(?:あります|ありません)か`, 'u');
 const offers = (text: string, ja: boolean = TUTOR_V2_PART_OFFER_ONCE) => OFFERS.test(text) || (ja && OFFERS_JA.test(text));
 
 /** Whether a sentence ends as a question. With `secondLanguage`, a question in the support language counts too: a
