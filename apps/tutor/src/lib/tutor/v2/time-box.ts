@@ -16,9 +16,9 @@
  * last fifth (D).
  */
 import type { LessonPlan } from '../lesson-plan/types';
-import { TUTOR_V2_CLOCK_FROM_START, TUTOR_V2_CLOSE_BY_CONTENT, TUTOR_V2_MORE_PRACTICE, TUTOR_V2_OVERRUN_MIN, TUTOR_V2_PART_MIN_PRACTICE, TUTOR_V2_TIME_BOX, TUTOR_V2_TIME_NO_SQUEEZE, TUTOR_V2_TIME_OVERRUN } from '../orchestrator/flags';
+import { TUTOR_V2_CLOCK_FROM_START, TUTOR_V2_CLOSE_BY_CONTENT, TUTOR_V2_MORE_PRACTICE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_OVERRUN_MIN, TUTOR_V2_PART_ENTERED, TUTOR_V2_PART_MIN_PRACTICE, TUTOR_V2_TIME_BOX, TUTOR_V2_TIME_NO_SQUEEZE, TUTOR_V2_TIME_OVERRUN } from '../orchestrator/flags';
 import { discussionOf } from './discussion';
-import { v2IsPageOfPart, v2OfferedOut, v2PartIsOptional, v2PartOf } from './plan-map';
+import { v2IsPageOfPart, v2OfferedOut, v2PartEntered, v2PartIsOptional, v2PartOf } from './plan-map';
 import type { V2Session, V2State } from './types';
 
 /** Task 7g (CLOCK_FROM_START): the engine's clock starts with the session (the tap that opens it, or the first typed message:
@@ -84,7 +84,10 @@ export function v2CloseOpenByClock(session: Pick<V2Session, 'timeBoxMinutes'>, s
  *  with the level known, a part the lesson has gone past (a later part's goal marked shown or demonstrated or, in a plan with part names, its page
  *  open), or an optional part offered twice and not taken up (declined). No plan: never by content. `requiredOnly`: optional
  *  parts aside (facts.ts: the close is near, so an optional part not reached is offered). */
-export function v2PlanContentDone(plan: LessonPlan | undefined, state: Pick<V2State, 'goals' | 'board' | 'workingLevel' | 'history' | 'timeFit'>, requiredOnly = false): boolean {
+/** Task 7i (PART_ENTERED, `enteredOn`): a later part counts as reached only when the lesson entered it (plan-map.ts
+ *  v2PartEntered), never by a page alone nor when left out for time: the empty "Pronunciation" page of mic test 3
+ *  (embed-1794967959470) made every part before it "done" from minute 0.83, and the close was open all lesson. */
+export function v2PlanContentDone(plan: LessonPlan | undefined, state: Pick<V2State, 'goals' | 'board' | 'workingLevel' | 'history' | 'timeFit'> & Partial<Pick<V2State, 'practiceSaid'>>, requiredOnly = false, enteredOn: boolean = TUTOR_V2_PART_ENTERED): boolean {
   if (!plan || !plan.segments.length) return false;
   const segs = plan.segments;
   if (segs.length === 1) return !!state.goals[segs[0]!.id];
@@ -92,7 +95,9 @@ export function v2PlanContentDone(plan: LessonPlan | undefined, state: Pick<V2St
   const out = v2OfferedOut(plan, state);
   const labelled = segs.every((seg) => !!v2PartOf(seg).label);
   const paged = (i: number) => labelled && state.board.pages.some((pg) => v2IsPageOfPart(segs[i]!, pg.title));
-  const reachedAfter = (i: number) => segs.slice(i + 1, -1).some((seg, k) => ['shown', 'demonstrated'].includes(state.goals[seg.id]?.status ?? '') || paged(i + 1 + k));
+  const reachedAfter = (i: number) => segs.slice(i + 1, -1).some((seg, k) => (enteredOn
+    ? (['shown', 'demonstrated'].includes(state.goals[seg.id]?.status ?? '') && !dropped.has(seg.id)) || (labelled && v2PartEntered(seg, state))
+    : ['shown', 'demonstrated'].includes(state.goals[seg.id]?.status ?? '') || paged(i + 1 + k)));
   return segs.slice(0, -1).every((seg, i) => !!state.goals[seg.id] || dropped.has(seg.id) || (v2PartOf(seg).skipWhenLevelKnown && !!state.workingLevel)
     || (v2PartIsOptional(seg) && (requiredOnly || out.has(seg.id))) || reachedAfter(i));
 }
@@ -101,7 +106,7 @@ export function v2PlanContentDone(plan: LessonPlan | undefined, state: Pick<V2St
  *  plan's content done (v2PlanContentDone). Homework keeps the last fifth (its own time line). `on` off: the last fifth, as
  *  before (v2CloseOpenByClock). Read by turn.ts (applyControlTool's end_lesson rule, the summary detection, the held summary
  *  page), close-invite.ts and facts.ts. */
-export function v2CloseOpen(session: V2Session, state: Pick<V2State, 'startedAtMs' | 'goals' | 'board' | 'workingLevel' | 'history' | 'timeFit'>, nowMs: number, on: boolean = TUTOR_V2_CLOSE_BY_CONTENT): boolean {
+export function v2CloseOpen(session: V2Session, state: Pick<V2State, 'startedAtMs' | 'goals' | 'board' | 'workingLevel' | 'history' | 'timeFit'> & Partial<Pick<V2State, 'practiceSaid'>>, nowMs: number, on: boolean = TUTOR_V2_CLOSE_BY_CONTENT): boolean {
   if (!on || session.homework || session.homeworkSheet) return v2CloseOpenByClock(session, state, nowMs);
   if (!session.timeBoxMinutes) return true;
   if (v2WrapDue(session, (nowMs - state.startedAtMs) / 60000, true, true)) return true;
@@ -134,12 +139,14 @@ export interface V2PartDue {
  *  runs at half speed (unscaled, it read "every part's time has passed" at 15 minutes beside "about 15 left, which is
  *  time for more", review 5a I2). 'done': the box's time is past. null: no box (nothing to pace to), or a part that
  *  counts has no minutes. */
-export function v2PartDueNow(plan: LessonPlan, goals: V2State['goals'], usedMin: number, boxMin?: number, opts: { fit?: boolean; dropped?: readonly string[] } = {}): V2PartDue | 'done' | null {
+export function v2PartDueNow(plan: LessonPlan, goals: V2State['goals'], usedMin: number, boxMin?: number, opts: { fit?: boolean; dropped?: readonly string[]; levelKnown?: boolean } = {}): V2PartDue | 'done' | null {
   if (!boxMin || !(boxMin > 0)) return null;
   // Task 7f B (TIME_NO_SQUEEZE): the parts keep their own minutes, and a part left out for time takes none.
   const fit = opts.fit ?? !TUTOR_V2_TIME_NO_SQUEEZE;
   const dropped = new Set(opts.dropped ?? []);
-  const parts = plan.segments.filter((s) => goals[s.id]?.status !== 'skipped' && !dropped.has(s.id)).map((s) => ({ seg: s, part: v2PartOf(s) }));
+  // Task 7i (OPTIONAL_AT_ARRIVAL, `levelKnown`): a level check skipped for a level known from an earlier lesson takes no minutes,
+  // marked skipped or not (the time fit's accounting, time-fit.ts v2CountedMinutes).
+  const parts = plan.segments.filter((s) => goals[s.id]?.status !== 'skipped' && !dropped.has(s.id) && !(opts.levelKnown && v2PartOf(s).skipWhenLevelKnown)).map((s) => ({ seg: s, part: v2PartOf(s) }));
   if (!parts.length || parts.some(({ part }) => !part.minutes)) return null;
   const total = parts.reduce((t, { part }) => t + (part.minutes ?? 0), 0);
   const fitted = fit && total !== boxMin;
@@ -163,7 +170,7 @@ export function v2PartDueNow(plan: LessonPlan, goals: V2State['goals'], usedMin:
 export function v2PartDueFact(session: V2Session, state: V2State, nowMs: number, timeUp: boolean, on: boolean = TUTOR_V2_TIME_BOX, noSqueeze: boolean = TUTOR_V2_TIME_NO_SQUEEZE): string | null {
   if (!on || !session.plan || !session.timeBoxMinutes || session.homework || session.homeworkSheet || discussionOf(session.plan)) return null;
   const usedMin = Math.max(0, (nowMs - state.startedAtMs) / 60000);
-  const due = v2PartDueNow(session.plan, state.goals, usedMin, session.timeBoxMinutes, { fit: !noSqueeze, dropped: noSqueeze ? state.timeFit?.dropped : [] });
+  const due = v2PartDueNow(session.plan, state.goals, usedMin, session.timeBoxMinutes, { fit: !noSqueeze, dropped: noSqueeze ? state.timeFit?.dropped : [], levelKnown: TUTOR_V2_OPTIONAL_AT_ARRIVAL && state.workingLevel?.from === 'earlier_lesson' });
   if (!due) return null;
   // Task 7f B: unscaled, the line is a guide: it never cuts a part short (the practice a part needs comes first).
   const head = noSqueeze ? 'by the plan\'s minutes (a guide only: never a reason to cut a part short or skip its practice)' : 'by the plan\'s minutes';

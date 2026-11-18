@@ -19,7 +19,8 @@ import { v2SentenceCardsFacts } from './sentence-cards';
 import { v2CardsOwedFacts, v2LearnerSentenceFacts } from './learner-card';
 import { v2PracticeAskFacts, v2RetryFacts } from './languages';
 import { V2_TIME_UP_MIN, v2CloseOpen, v2PlanContentDone, v2LeftToStopMin, v2LessonTimeLine, v2PartDueFact, v2TimeFlags, v2WrapDue, type V2TimeFlags } from './time-box';
-import { v2MorePracticeFacts, v2PracticeFacts, v2TimeFitFacts } from './time-fit';
+import { v2MorePracticeFacts, v2PracticeFacts, v2StayInPartLine, v2TimeFitFacts } from './time-fit';
+import { TUTOR_V2_STAY_IN_PART } from '../orchestrator/flags';
 import { v2CloseInviteFacts } from './close-invite';
 
 /** After the tutor chose to keep listening: how long the student stays silent before it is told so (TutorVoiceV2).
@@ -61,6 +62,9 @@ export interface V2TurnFacts {
   practiceShort?: { index: number; n: number } | null;
   /** Task 7f E: they asked for more practice at the close: given (true) or no time left (false). */
   morePractice?: boolean;
+  /** Task 7i (OPTIONAL_AT_ARRIVAL): the learner asked for an optional part left out for time: its name, and whether it still
+   *  fits before the hard stop (then it is taken: no longer left out). */
+  droppedAsked?: { label: string; fits: boolean };
 }
 
 /** A quoted span at the very start of a reply, in any of the quote pairs a tutor uses: 「…」, 『…』, “…”, "…", ‘…’, '…'. */
@@ -152,6 +156,9 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // allow it, and carry no line that presses toward the close (the summary-begun line, the time line's close, "end the lesson
   // in this reply"). Nothing is enforced: the model decides from what the learner means.
   const morePracticeAllowed = !discussion && f.morePractice === true;
+  // Task 7i (STAY_IN_PART): ahead of the plan in a required practice part, the time line says to go on with it. Not once the
+  // close is open, the summary has begun, or more practice was asked for at the close.
+  const stay = !discussion && !session.homework && !session.homeworkSheet && !closeOpen && !summaryBegun && !morePracticeAllowed ? v2StayInPartLine(session, state, f.nowMs) : null;
   const lines = [
     // A discussion runs 8–12 minutes and may close early once the person has chosen where to go next: the teaching
     // line's "time for more, not at its close" would hold it open.
@@ -165,7 +172,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
       // on v1, it cut into the menu the tutor was reading (tester-2, time-box.ts).
       // Task 7f E (fix round 4): in a turn whose facts allow more practice, the time line carries no "then summary" or
       // "the close is near": only what is left before the session must end.
-      : `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${morePracticeAllowed ? `about ${Math.max(1, Math.floor(leftStop))} minutes before the session must end` : v2LessonTimeLine(session, state, f.nowMs, { summaryBegun, closeOpen, tf })}` : ''}`,
+      : `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${morePracticeAllowed ? `about ${Math.max(1, Math.floor(leftStop))} minutes before the session must end` : v2LessonTimeLine(session, state, f.nowMs, { summaryBegun, closeOpen, tf })}` : ''}${stay ? `; ${stay}` : ''}`,
     `board:\n  ${renderBoard(state.board)}`,
   ];
   if ((state.repliesSinceBoard ?? 0) >= 1) lines.push(`board last written on: ${state.repliesSinceBoard} ${state.repliesSinceBoard === 1 ? 'reply' : 'replies'} ago`);
@@ -193,7 +200,11 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     // Task 7d (CLOSE_INVITES_QUESTIONS): the summary reply ends by inviting their questions, and the lesson ends on their answer.
     if (!discussion && !(morePracticeAllowed && typeof state.closeInvitedAt === 'number')) lines.push(...v2CloseInviteFacts(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun }));
     // Task 7f B: the parts left out for time; C: the practice the part in hand still needs; E: more practice asked for at the close.
-    if (!discussion) lines.push(...v2TimeFitFacts(session, state, tf.noSqueeze));
+    if (!discussion) lines.push(...v2TimeFitFacts(session, state, tf.noSqueeze, f.nowMs));
+    // Task 7i (OPTIONAL_AT_ARRIVAL): they asked for an optional part left out for time.
+    if (!discussion && f.droppedAsked) lines.push(f.droppedAsked.fits
+      ? `they asked for the ${f.droppedAsked.label} part, left out earlier for time: it still fits before the session must end, so take it up now (its page opens as it begins), then go on to the summary`
+      : `they asked for the ${f.droppedAsked.label} part, left out for time: there is no time left for it before the session must end. Say so plainly in one short sentence and name it for next time`);
     if (!discussion && f.practiceShort && session.plan) lines.push(...v2PracticeFacts(session.plan, f.practiceShort));
     if (!discussion && f.morePractice !== undefined) lines.push(...v2MorePracticeFacts(f.morePractice, leftStop));
   }
@@ -234,6 +245,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     const label: Record<string, string> = { found: 'found, not yet worked on', explained: 'explained to them, not yet done by them', done_with_help: 'they did one with help, not yet alone', done_alone: 'they did one alone' };
     lines.push(`gaps you have recorded:\n${state.gaps.map((g) => `  - ${g.what}: ${label[g.status] ?? g.status}`).join('\n')}`);
   }
+  // Task 7i (STAY_IN_PART): sentences of the last reply they did not hear (a barge-in cut them, interrupted.ts trimToSpoken).
+  if (TUTOR_V2_STAY_IN_PART && !discussion && state.unheard?.length && !state.closed) lines.push(`not heard: they spoke over your last reply, and these sentences of it did not reach them: ${state.unheard.map((x) => `"${x}"`).join(' ')}. If it still fits after what they said, say again what they need of it (a question they did not hear is asked again)`);
   if (f.stopAsked) lines.push('the student\'s words just now asked to end the session');
   if (f.answerCheck) lines.push(`answer check: ${f.answerCheck}`);
   if (f.notSent) lines.push(`your first draft of this reply was not sent (the student never saw it: do not mention it): ${f.notSent}`);

@@ -115,7 +115,11 @@ async function main() {
     check('offered once: at most once more', /offered once and not taken up: offer it at most once more/.test(v2PartOfferFacts(GDI, pagesAt(B, { goals: goalsB, ...level, history: offers.slice(0, 5) }))[0] ?? ''));
     check('offered out: the held summary page\'s offer, and the near and passed facts, leave it out', v2OfferedOut(GDI, st).has('pronunciation') && v2UnreachedOffer(GDI, st) === null && v2UnreachedAtCloseFact(GDI, st, 'near').length === 0 && v2PassedPartFact(GDI, pagesAt([...B, 'Summary'], { goals: goalsB, ...level, history: offers }), false).length === 0);
     check('…but without the offers it is still offered, as before', v2UnreachedOffer(GDI, pagesAt(B, { goals: goalsB, ...level })) !== null);
-    check('taken up (its page is up): nothing', v2PartOfferFacts(GDI, pagesAt([...B, 'Pronunciation'], { goals: goalsB, ...level, history: offers })).length === 0);
+    // Task 7i (PART_ENTERED): taken up = entered: its page holds something (an empty page alone is not). Was: a page alone.
+    const taken = pagesAt([...B, 'Pronunciation'], { goals: goalsB, ...level, history: offers });
+    check('(7i) an empty Pronunciation page alone is not taken up: still counted as offered', v2PartOfferFacts(GDI, taken).length === 1);
+    taken.board.pages[taken.board.pages.length - 1]!.items.push({ id: 'w1', tool: 'show_sentence', summary: 'responsibilities' });
+    check('taken up (its page holds something): nothing', v2PartOfferFacts(GDI, taken).length === 0);
     check('in the facts', renderFacts({ ...lang, plan: GDI }, st, { nowMs: 14 * 60000 }).includes('do not offer it again'));
     check('the kill switch off: no line, nothing left out', v2PartOfferFacts(GDI, st, false).length === 0 && v2OfferedOut(GDI, st, false).size === 0);
   }

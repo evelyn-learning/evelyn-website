@@ -220,7 +220,9 @@ async function main() {
     ur = await turn({ ...u0, heldPage: { title: 'Your job', part: 'topic-intro', at: 2 } }, 'Yes.', 'Tell me about your job.', [], s);
     check('unlabelled: a yes opens no page by itself', !ur.calls.some((c) => c.name === 'new_page') && openTitle(ur.state) === 'Lesson overview');
     check('pending part: a held page lapses after more than three tutor replies (labelled plan)', v2PendingPart(GDI, { ...newV2State(0), heldPage: { title: 'Past simple', part: 'past-simple', at: 0 }, history: Array.from({ length: 10 }, () => ({ role: 'assistant' as const, content: 'x' })) }, '', 'yes') === null);
-    const doneNone = v2PartsDone(GDI, { board: { pages: [{ title: 'Lesson overview', items: [] }, { title: 'Past simple', items: [] }], current: 1 }, goals: { 'present-perfect': { status: 'skipped', at: 1 } }, workingLevel: undefined }, v2PartInHand(GDI, { board: { pages: [{ title: 'Lesson overview', items: [] }, { title: 'Past simple', items: [] }], current: 1 }, goals: {}, workingLevel: undefined }));
+    // Task 7i (PART_ENTERED): the overview's page holds its opening note (a page alone is no part taught). Was: empty.
+    const opening = { title: 'Lesson overview', items: [{ id: 'note1', tool: 'annotate', summary: 'Talking about your work' }] };
+    const doneNone = v2PartsDone(GDI, { board: { pages: [opening, { title: 'Past simple', items: [] }], current: 1 }, goals: { 'present-perfect': { status: 'skipped', at: 1 } }, workingLevel: undefined }, v2PartInHand(GDI, { board: { pages: [opening, { title: 'Past simple', items: [] }], current: 1 }, goals: {}, workingLevel: undefined }));
     check('A4: parts the lesson skipped without teaching are not green (job, present perfect marked skipped; level not set)', !doneNone[1] && !doneNone[2] && !doneNone[3] && doneNone[0], doneNone);
   }
 

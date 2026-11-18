@@ -67,7 +67,9 @@ async function turn(session: V2Session, state: V2State, said: string | null, rep
 const checkIns = (s: string) => V2_CHECK_INS.filter((x) => s.includes(x)).length;
 const chips = (st: V2State) => { const p = v2Progress(GDI, st.goals, st); return { lit: p.currentSegmentId, green: p.completedSegmentIds }; };
 const openTitle = (st: V2State) => st.board.pages[st.board.current]?.title ?? '';
-const pages = (titles: string[], current: number): V2State['board'] => ({ pages: titles.map((title) => ({ title, items: [] })), current });
+// Task 7i (PART_ENTERED): a page of the lesson replayed holds what was taught on it (a card each): an empty part page is no part
+// reached. Was: empty pages.
+const pages = (titles: string[], current: number): V2State['board'] => ({ pages: titles.map((title, i) => ({ title, items: [{ id: `seed_${i}`, tool: 'annotate', summary: `${title} card` }] })), current });
 const level = { level: 'intermediate' as const, from: 'this_lesson' as const };
 const shown = (at: number) => ({ status: 'shown' as const, at });
 

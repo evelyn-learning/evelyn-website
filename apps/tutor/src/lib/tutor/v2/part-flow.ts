@@ -15,14 +15,14 @@
 import type { LessonPlan } from '../lesson-plan/types';
 import { stripBoardBlocks } from './board-inline';
 import { PART_OFFERS, V2_CLOSING_PAGE, endsAsking } from './part-close';
-import { V2_OFFER_SHAPE, v2IsPageOfPart, v2PartNamedIn, v2PartOf } from './plan-map';
+import { V2_OFFER_SHAPE, v2IsPageOfPart, v2PartEntered, v2PartNamedIn, v2PartOf } from './plan-map';
 import { V2_PART_FRAME_JA, isPartFrame } from './reply-gate';
 import type { V2Board, V2State } from './types';
-import { TUTOR_V2_LEVEL_CHECK_CHIP, TUTOR_V2_PART_POSITION_KEPT } from '../orchestrator/flags';
+import { TUTOR_V2_LEVEL_CHECK_CHIP, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PART_ASK_NAMED, TUTOR_V2_PART_ENTERED, TUTOR_V2_PART_POSITION_KEPT } from '../orchestrator/flags';
 import { v2LevelCheckBegun } from './level-check-count';
 
 /** `history` (Task 7g, LEVEL_CHECK_CHIP): when present, a level check under way lights its chip before any goal is marked. */
-type View = Pick<V2State, 'board' | 'goals' | 'workingLevel'> & { closed?: boolean; history?: V2State['history'] };
+type View = Pick<V2State, 'board' | 'goals' | 'workingLevel'> & { closed?: boolean; history?: V2State['history'] } & Partial<Pick<V2State, 'practiceSaid' | 'timeFit'>>;
 
 /** A plan whose every part has an authored name (Tasks 6c/6e gate the same way). */
 export function v2PlanLabelled(plan: LessonPlan | null | undefined): plan is LessonPlan {
@@ -45,15 +45,27 @@ const partOfPageAt = (plan: LessonPlan, board: V2Board, at: number, chip: boolea
   return k < 0 && chip && at === 0 ? 0 : k;
 };
 const paged = (plan: LessonPlan, board: V2Board, i: number) => board.pages.some((_, at) => partOfPageAt(plan, board, at) === i);
+/** Task 7i (PART_ENTERED): the lesson entered part `i` (plan-map.ts v2PartEntered: a goal shown or demonstrated, its page holds
+ *  something, practice counted in it; never a part left out for time). An opening page with no part name counts as the first
+ *  part's (LEVEL_CHECK_CHIP) when it holds something. Off: a page of it was open, as before. */
+const entered = (plan: LessonPlan, state: View, i: number, on: boolean = TUTOR_V2_PART_ENTERED) => {
+  if (!on) return paged(plan, state.board, i);
+  if (v2PartEntered(plan.segments[i]!, state)) return true;
+  return !state.timeFit?.dropped.includes(plan.segments[i]!.id) && state.board.pages.some((pg, at) => pg.items.length > 0 && partOfPageAt(plan, state.board, at) === i);
+};
 
 /** The part of the page in view, or of the nearest page before it that is a part's; -1: none.
  *  Task 7e (PART_POSITION_KEPT, `kept`): the furthest part reached instead: the part of the newest part page, a page of a part
  *  already paged being a revisit. A page in view is only where the tutor is looking: `go_to_page` back to "Past simple" for
  *  more examples moved the part in hand back, and the runtime's ask named conversation again (v2audio-7 Tester A T77–T78). */
-export function v2OpenPagePart(plan: LessonPlan, board: V2Board, kept: boolean = TUTOR_V2_PART_POSITION_KEPT): number {
+/** Task 7i (PART_ENTERED, `view`): a part page counts for the position only when the lesson entered the part, or it is the
+ *  page in view (a page just opened on their yes) of a part not left out for time: an empty "Pronunciation" page, opened in
+ *  minute 1 and left behind, lit its chip (mic test 3, embed-1794967959470). */
+export function v2OpenPagePart(plan: LessonPlan, board: V2Board, kept: boolean = TUTOR_V2_PART_POSITION_KEPT, view?: View, enteredOn: boolean = TUTOR_V2_PART_ENTERED): number {
   if (kept) {
     const seen = new Set<number>(); let at = -1;
-    board.pages.forEach((_, i) => { const k = partOfPageAt(plan, board, i); if (k >= 0 && !seen.has(k)) { seen.add(k); at = k; } });
+    const counts = (k: number, i: number) => !view || !enteredOn || entered(plan, view, k) || (i === board.current && !view.timeFit?.dropped.includes(plan.segments[k]!.id));
+    board.pages.forEach((_, i) => { const k = partOfPageAt(plan, board, i); if (k >= 0 && !seen.has(k) && counts(k, i)) { seen.add(k); at = k; } });
     return at;
   }
   for (let i = Math.min(board.current, board.pages.length - 1); i >= 0; i--) {
@@ -70,7 +82,7 @@ export function v2OpenPagePart(plan: LessonPlan, board: V2Board, kept: boolean =
  *  1–2) had "Overview" lit through the whole check, as the model marked no goal for it. A level skipped (known from an earlier
  *  lesson) is never in hand. The level check is the only part a plan leaves without a page of its own (final-7 M5). */
 export function v2PartInHand(plan: LessonPlan, state: View, kept: boolean = TUTOR_V2_PART_POSITION_KEPT, chip: boolean = TUTOR_V2_LEVEL_CHECK_CHIP): number {
-  const open = v2OpenPagePart(plan, state.board, kept);
+  const open = v2OpenPagePart(plan, state.board, kept, state);
   if (open < 0) return 0;
   const l = open + 1;
   if (l < plan.segments.length && isLevelPart(plan, l) && !paged(plan, state.board, l)) {
@@ -87,22 +99,26 @@ export function v2PartInHand(plan: LessonPlan, state: View, kept: boolean = TUTO
 
 /** Which parts are done (green). The level check: the level is set. The part in hand: only once the lesson has closed.
  *  A part before it: taught (its page was open, or it was marked shown or demonstrated); one skipped untaught is not. A
- *  part after it (the tutor turned back): its page was open. A goal mark alone never makes a part green before its page. */
-export function v2PartsDone(plan: LessonPlan, state: View, cur: number = v2PartInHand(plan, state)): boolean[] {
+ *  part after it (the tutor turned back): its page was open. A goal mark alone never makes a part green before its page.
+ *  Task 7i (PART_ENTERED, `enteredOn`): taught and "its page was open" are "the lesson entered it" (a page holding something,
+ *  a goal shown or demonstrated, practice counted), and a part left out for time is never done. */
+export function v2PartsDone(plan: LessonPlan, state: View, cur: number = v2PartInHand(plan, state), enteredOn: boolean = TUTOR_V2_PART_ENTERED): boolean[] {
   return plan.segments.map((seg, i) => {
     if (isLevelPart(plan, i)) return !!state.workingLevel;
     const g = state.goals[seg.id]?.status;
-    const taught = paged(plan, state.board, i) || g === 'shown' || g === 'demonstrated';
+    const taught = enteredOn ? entered(plan, state, i) : paged(plan, state.board, i) || g === 'shown' || g === 'demonstrated';
     if (i === cur) return !!state.closed && taught;
     if (i < cur) return taught;
-    return paged(plan, state.board, i);
+    return enteredOn ? entered(plan, state, i) : paged(plan, state.board, i);
   });
 }
 
-/** The part after `from` in the plan, past a level check whose level is set; -1: none. */
-export function v2NextPart(plan: LessonPlan, state: View, from: number): number {
+/** The part after `from` in the plan, past a level check whose level is set; -1: none. Task 7i (OPTIONAL_AT_ARRIVAL,
+ *  `arrival`): past a part left out for time too (the next part is the one after it). */
+export function v2NextPart(plan: LessonPlan, state: View, from: number, arrival: boolean = TUTOR_V2_OPTIONAL_AT_ARRIVAL): number {
   for (let i = from + 1; i < plan.segments.length; i++) {
     if (isLevelPart(plan, i) && (state.workingLevel || state.goals[plan.segments[i]!.id]?.status === 'skipped')) continue;
+    if (arrival && state.timeFit?.dropped.includes(plan.segments[i]!.id)) continue;
     return i;
   }
   return -1;
@@ -211,12 +227,14 @@ const NOT_THE_LESSON = /\bnext (?:sentence|example|one|question|exercise|word|st
 // on, or are you ready?" is not in the frame's shape).
 const movesOn = (sentence: string) => V2_PART_ASKS.includes(sentence.trim()) || ((MOVE_FRAME.test(sentence) || V2_PART_FRAME_JA.test(sentence)) && !NOT_THE_LESSON.test(sentence));
 const asks = (x: string) => /(?:[?？]|か[。．]?)["'」』）)]*\s*$/.test(x);
+/** Task 7i: the lead of a part ask, said just before it ("Next is present perfect.", the runtime's NEXTS, "Next: …"). */
+const NEXT_LEAD = /^(?:(?:ok(?:ay)?|good|great|so|now|right)[,.!]?\s+)?next(?: (?:is|up is|up|comes|we have)\b|:)/i;
 
 /** The part whose page is waiting for the student's yes: the page held at the last part change (not lapsed), or a part the
  *  last reply offered by name ("Would you like to practise your pronunciation…?", "Shall we move on to the past simple?")
  *  that has no page yet and is not the part in hand nor the closing part (the close keeps its own rules). A part the
  *  student's words name comes first. Null: none. */
-export function v2PendingPart(plan: LessonPlan, state: View & Pick<V2State, 'history' | 'heldPage'>, lastTutor: string, said: string | null): { index: number; title: string } | null {
+export function v2PendingPart(plan: LessonPlan, state: View & Pick<V2State, 'history' | 'heldPage'>, lastTutor: string, said: string | null, askNamed: boolean = TUTOR_V2_PART_ASK_NAMED): { index: number; title: string } | null {
   const held = state.heldPage;
   // Task 7c fix round 1: a page held unasked (the reply asked something else) waits for its ask; a yes now answers that other
   // question, not a part change.
@@ -230,8 +248,14 @@ export function v2PendingPart(plan: LessonPlan, state: View & Pick<V2State, 'his
   // on?", the model's own or the runtime's after a dropped repeat), with no page held: the part its last two sentences name,
   // else the part after the one in hand. Never the part in hand, one already paged, or the closing part.
   const lastAsk = sentences[sentences.length - 1] ?? '';
-  if (lastAsk && v2IsPartAsk(lastAsk)) {
-    const two = sentences.slice(-2).join(' ');
+  // Task 7i (PART_ASK_NAMED, `askNamed`): the ask is its last sentence with its "Next is …" lead, if it has one; it must be a real
+  // part-change ask (v2AsksPartChange), and the part comes from it alone. The overview's "…At the end, you can practice
+  // pronunciation if you like. Are you ready?" pended Pronunciation, and "Yes." opened its page (mic test 3,
+  // embed-1794967959470, flag 1).
+  const lead = sentences.length >= 2 && NEXT_LEAD.test(sentences[sentences.length - 2]!) ? sentences[sentences.length - 2]! : '';
+  const askText = askNamed ? [lead, lastAsk].filter(Boolean).join(' ') : lastAsk;
+  if (lastAsk && v2IsPartAsk(lastAsk) && (!askNamed || v2AsksPartChange(plan, askText))) {
+    const two = askNamed ? askText : sentences.slice(-2).join(' ');
     const namedNow = plan.segments.map((seg, i) => ({ seg, i })).filter(({ seg }) => !!v2PartOf(seg).label && v2PartNamedIn(seg, two));
     const others = namedNow.filter(({ i }) => i !== cur);
     // Two parts named ("pronunciation, or shall we move on to the summary?"): only the one their words name.

@@ -62,7 +62,9 @@ export function leftOpen(lastTutor: string, studentSaid: string | null, strict =
 }
 
 /** `strict` (Task 7a): the last reply's ask must be about moving on (PART_OFFERS), not a check-in. */
-export interface PartTurn { title: string; studentSaid: string | null; lastTutor: string; pagesOpen: number; strict?: boolean }
+/** `go` (Task 7i, PAGE_NEEDS_GO; the caller passes it only with `strict`): whether their answer is a go (part-flow.ts
+ *  v2MoveAnswer). When given, an answer that is not a go leaves the page held, however it was answered. */
+export interface PartTurn { title: string; studentSaid: string | null; lastTutor: string; pagesOpen: number; strict?: boolean; go?: boolean }
 /** May this reply turn to a new page headed `title` now? */
 export function mayOpenPart(t: PartTurn): boolean {
   if (t.pagesOpen <= 1) return true; // the lesson is only beginning
@@ -70,7 +72,10 @@ export function mayOpenPart(t: PartTurn): boolean {
   if (student && (STEERS.test(student) || namesPart(t.title, student))) return true;
   const sentences = stripBoardBlocks(t.lastTutor).split(/(?<=[.?!])\s+/).map((s) => s.trim()).filter(Boolean);
   const last = sentences[sentences.length - 1] ?? '';
-  return endsAsking(last) && student !== '' && (offers(sentences.slice(-2).join(' '), TUTOR_V2_PART_OFFER_ONCE, !!t.strict) || namesPart(t.title, t.lastTutor));
+  // Task 7i (PAGE_NEEDS_GO): mic test 3 (embed-1794967959470, flag 2): the learner read a corrected sentence aloud after the part
+  // ask, and the model's "Present perfect" page opened on it.
+  const answered = t.strict && t.go !== undefined ? t.go : student !== '';
+  return endsAsking(last) && answered && (offers(sentences.slice(-2).join(' '), TUTOR_V2_PART_OFFER_ONCE, !!t.strict) || namesPart(t.title, t.lastTutor));
 }
 const QUESTION_CHECK = /\b(?:a question first|any questions?(?! about)|questions? (?:before|so far))\b/i;
 const replyText = (h: V2State['history'][number]) => (typeof h.content === 'string' ? h.content : h.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '));

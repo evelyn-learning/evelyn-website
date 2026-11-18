@@ -114,17 +114,22 @@ async function main() {
     const line = v2PartDueFact(lang, at(['Overview'], { timeFit: { dropped: ['pronunciation'] } }), 10 * MIN, false);
     check('the line is a guide only, and says it never cuts a part short', !!line && /a guide only: never a reason to cut a part short or skip its practice/.test(line) && !/fitted/.test(line), line);
 
-    // The first teaching part opens (the "Your job" page): the fit is decided and the learner told once.
-    const t1 = await run(lang, at(['Overview', 'Your job']), 'I work in sales at a big company.', [{ text: 'Good. We will not have time for pronunciation today, so we will do it next time. What do you sell?' }], 5);
-    check('the first teaching part open: pronunciation left out, decided once', t1.r.state.timeFit?.dropped.join() === 'pronunciation', t1.r.state.timeFit);
+    // Task 7i (OPTIONAL_AT_ARRIVAL): the plan's required parts (19 minutes, the level check's set aside once its level is set) fit 20 + 5, so
+    // nothing is left out up front; the optional part is decided on arrival (test-brain-v2-mic3-7i). Was: pronunciation dropped here.
+    const t0 = await run(lang, at(['Overview', 'Your job']), 'I work in sales at a big company.', [{ text: 'Good. What do you sell?' }], 5);
+    check('(7i) the first teaching part open: nothing left out up front, the optional part decided on arrival', t0.r.state.timeFit?.byArrival === true && t0.r.state.timeFit.dropped.length === 0 && !/left out for time/.test(t0.facts), t0.r.state.timeFit);
+    // The 7f decision stands where the REQUIRED parts alone exceed target + margin: a 12-minute box (19 > 12 + 5).
+    const lang12: V2Session = { ...lang, timeBoxMinutes: 12, wrapMinutes: 10 };
+    const t1 = await run(lang12, at(['Overview', 'Your job']), 'I work in sales at a big company.', [{ text: 'Good. We will not have time for pronunciation today, so we will do it next time. What do you sell?' }], 5);
+    check('the first teaching part open (12-minute box: the required parts alone, 19, exceed 12 + 5): pronunciation left out, decided once', t1.r.state.timeFit?.dropped.join() === 'pronunciation' && !t1.r.state.timeFit.byArrival, t1.r.state.timeFit);
     check('the facts ask the tutor to tell them once, as the part begins', /left out for time: .*the Pronunciation part is left for the next session\. Tell them once/.test(t1.facts), t1.facts);
     check('the reply named it: told, and the facts ask no more', t1.r.state.timeFit?.told === true);
-    const t2 = await run(lang, t1.r.state, 'Washing machines.', [{ text: 'Washing machines, good. Who are your customers?' }], 6);
+    const t2 = await run(lang12, t1.r.state, 'Washing machines.', [{ text: 'Washing machines, good. Who are your customers?' }], 6);
     check('next turn: a reminder only (already told; not offered)', /left out for time \(already told\): the Pronunciation part, for next time; do not offer it/.test(t2.facts) && !/Tell them once/.test(t2.facts), t2.facts);
     const early = await run(lang, { ...newV2State(0), board: { pages: [{ title: 'Overview', items: [] }], current: 0 }, history: [a('Hello.')] }, 'Hello.', [{ text: 'First, a few questions to see how you speak English. What do you do?' }], 2);
     check('not during the overview or the level check: nothing decided yet', !early.r.state.timeFit && !/left out for time/.test(early.facts));
-    const unnamed = await run(lang, at(['Overview', 'Your job']), 'I work in sales.', [{ text: 'Good. What do you sell?' }], 5);
-    const unnamed2 = await run(lang, unnamed.r.state, 'Machines.', [{ text: 'Good. Who buys them?' }], 6);
+    const unnamed = await run(lang12, at(['Overview', 'Your job']), 'I work in sales.', [{ text: 'Good. What do you sell?' }], 5);
+    const unnamed2 = await run(lang12, unnamed.r.state, 'Machines.', [{ text: 'Good. Who buys them?' }], 6);
     check('a reply that does not name it: asked again once, then the facts stop asking (twice at most)', unnamed.r.state.timeFit?.shown === 1 && unnamed2.r.state.timeFit?.told === true);
     const st = at(FIVE, { goals: allDone, timeFit: { dropped: ['pronunciation'], told: true } });
     check('not offered before the summary (the held summary page has no offer of it)', v2UnreachedOffer(GDI, st) === null);
@@ -332,18 +337,20 @@ async function main() {
       const line = (r.stdout ?? '').split('\n').find((l) => l.startsWith('OFF_JSON '));
       return line ? JSON.parse(line.slice('OFF_JSON '.length)) : { error: r.stderr };
     };
+    // Task 7i (OPTIONAL_AT_ARRIVAL): at the first teaching page nothing is left out up front (was: pronunciation).
+    const arrival = (x: { dropped?: { dropped?: string[]; byArrival?: boolean } | null }) => x.dropped?.byArrival === true && x.dropped.dropped?.length === 0;
     const on = child('NONE');
-    check('(all on in a child: the new behaviour)', on.tf?.noSqueeze && on.dropped?.dropped?.join() === 'pronunciation' && !on.pageOpened && on.moreLine && !on.closed16 && on.moreFacts && on.stop === 25 && on.leftStop === 5, on);
+    check('(all on in a child: the new behaviour)', on.tf?.noSqueeze && arrival(on) && !on.pageOpened && on.moreLine && !on.closed16 && on.moreFacts && on.stop === 25 && on.leftStop === 5, on);
     const b = child('TIME_NO_SQUEEZE');
     check('TIME_NO_SQUEEZE off: the minutes fitted to the box (19 min = the summary), nothing left out; the rest as on', b.tf?.noSqueeze === false && b.due19?.id === 'summary' && b.due19?.fitted === true && b.dropped === null && !b.pageOpened && !b.closed16 && b.stop === 25, b);
     const c = child('PART_MIN_PRACTICE');
-    check('PART_MIN_PRACTICE off: the next part\'s page held for the part ask, as in 7a (no ask for another sentence); the rest as on', c.tf?.minPractice === false && !c.moreLine && c.dropped?.dropped?.join() === 'pronunciation' && !c.closed16 && c.stop === 25, c);
+    check('PART_MIN_PRACTICE off: the next part\'s page held for the part ask, as in 7a (no ask for another sentence); the rest as on', c.tf?.minPractice === false && !c.moreLine && arrival(c) && !c.closed16 && c.stop === 25, c);
     const d = child('CLOSE_BY_CONTENT');
-    check('CLOSE_BY_CONTENT off: the last fifth: closed at minute 16 with parts not done, as before; the rest as on', d.tf?.closeByContent === false && d.closed16 === true && d.dropped?.dropped?.join() === 'pronunciation' && d.stop === 25, d);
+    check('CLOSE_BY_CONTENT off: the last fifth: closed at minute 16 with parts not done, as before; the rest as on', d.tf?.closeByContent === false && d.closed16 === true && arrival(d) && d.stop === 25, d);
     const e = child('MORE_PRACTICE');
     check('MORE_PRACTICE off: no more-practice line; the rest as on', e.tf?.morePractice === false && !e.moreFacts && !e.closed16 && e.stop === 25, e);
     const f = child('TIME_OVERRUN');
-    check('TIME_OVERRUN off: the hard stop and the time-up minute at the box (20); the rest as on', f.tf?.overrun === false && f.stop === 20 && f.leftStop === 0 && !f.closed16 && f.dropped?.dropped?.join() === 'pronunciation', f);
+    check('TIME_OVERRUN off: the hard stop and the time-up minute at the box (20); the rest as on', f.tf?.overrun === false && f.stop === 20 && f.leftStop === 0 && !f.closed16 && arrival(f), f);
   }
 
   console.log(`\n${passed} passed, ${failed} failed`);

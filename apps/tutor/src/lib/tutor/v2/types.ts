@@ -163,8 +163,14 @@ export interface V2State {
   closeInvitedAt?: number;
   /** Task 7f B (TIME_NO_SQUEEZE), timed plan-led lessons: the plan parts left out for time (optional parts, last first, until
    *  the rest fits the box), decided once when the first teaching part opens; `told` once a reply has named them to the
-   *  learner (or the facts have asked twice); `shown`: the turns the facts asked. Carried to the next session (memory.ts). */
-  timeFit?: { dropped: string[]; told?: true; shown?: number };
+   *  learner (or the facts have asked twice); `shown`: the turns the facts asked. Carried to the next session (memory.ts).
+   *  Task 7i (OPTIONAL_AT_ARRIVAL, `byArrival`): nothing was dropped up front; an optional part is added to `dropped` when the
+   *  lesson arrives at it and it no longer fits, and leaves it again when the learner asks for it while it still fits (`taken`:
+   *  such parts, never left out again). */
+  timeFit?: { dropped: string[]; told?: true; shown?: number; byArrival?: true; taken?: string[] };
+  /** Task 7i (STAY_IN_PART): the sentences of the last reply the learner did not hear (a barge-in cut them: interrupted.ts
+   *  trimToSpoken), named in the next turn's facts once, then cleared. */
+  unheard?: string[];
   /** Task 7f C (PART_MIN_PRACTICE), spoken labelled-plan lessons: practice sentences of their own the learner has said, per
    *  plan part id. */
   practiceSaid?: Record<string, number>;

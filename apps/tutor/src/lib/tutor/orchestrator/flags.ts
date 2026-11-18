@@ -1988,3 +1988,48 @@ export const TUTOR_V2_CLOSE_HEARS = process.env.NEXT_PUBLIC_TUTOR_V2_CLOSE_HEARS
  *  quoted words had no stress (the quotes are stripped before the voice). Default ON; NEXT_PUBLIC_TUTOR_V2_TARGET_PAUSE=off ⇒
  *  the quotes are stripped with no pause, as before. */
 export const TUTOR_V2_TARGET_PAUSE = process.env.NEXT_PUBLIC_TUTOR_V2_TARGET_PAUSE !== 'off';
+
+/** Tutor brain v2 (v2/part-flow.ts v2PendingPart; spoken lessons with labelled plans): a part waits for the learner's yes only
+ *  after a real part-change ask (v2AsksPartChange: a strict move-on frame, or a part named), and the part comes from the ask
+ *  itself (its "Next is …" lead included), never from a sentence before it. Mic test 3 (embed-1794967959470, flag 1): the
+ *  overview ended "…At the end, you can practice pronunciation if you like. Are you ready?", and "Yes." opened an empty
+ *  "Pronunciation" page (Task 7i, item 1). Default ON; NEXT_PUBLIC_TUTOR_V2_PART_ASK_NAMED=off ⇒ any ask (PART_OFFERS) and the
+ *  part named in its last two sentences, as before. */
+export const TUTOR_V2_PART_ASK_NAMED = process.env.NEXT_PUBLIC_TUTOR_V2_PART_ASK_NAMED !== 'off';
+
+/** Tutor brain v2 (v2/time-fit.ts, v2/part-flow.ts, v2/turn.ts, v2/facts.ts, v2/time-box.ts; with TIME_NO_SQUEEZE): an optional
+ *  part is decided when the lesson arrives at it, not up front: nothing is dropped or announced on the way; when it is the next
+ *  part and its minutes plus the summary's no longer fit before target + margin (measured from the real elapsed time), it is
+ *  left out, the learner told once in the reply that moves on, and it is carried to the next session; asked for by name later,
+ *  it is taken while it still fits before the hard stop. A plan whose required parts alone exceed target + margin keeps the
+ *  Task 7f up-front drop. Mic test 3 (embed-1794967959470, flag 1): pronunciation dropped and announced in minute 1 (Task 7i,
+ *  item 2). Default ON; NEXT_PUBLIC_TUTOR_V2_OPTIONAL_AT_ARRIVAL=off ⇒ the Task 7f decision at the first teaching page. */
+export const TUTOR_V2_OPTIONAL_AT_ARRIVAL = process.env.NEXT_PUBLIC_TUTOR_V2_OPTIONAL_AT_ARRIVAL !== 'off';
+
+/** Tutor brain v2 (v2/part-flow.ts, v2/time-box.ts, v2/plan-map.ts, v2/progress.ts; labelled plans): a page alone is not a part
+ *  reached. A part counts as reached, done (green) or completed only once the lesson entered it: a goal of it shown or
+ *  demonstrated, its page holding something, or practice counted in it; a part left out for time never. An empty part page
+ *  that is not the page in view does not move the lit chip. Mic test 3 (embed-1794967959470, flags 1 and 6): an empty
+ *  "Pronunciation" page was green all lesson, stored as completed, and held the close open from minute 0.83 (Task 7i, item 3).
+ *  Default ON; NEXT_PUBLIC_TUTOR_V2_PART_ENTERED=off ⇒ any page of a part counts, as before. */
+export const TUTOR_V2_PART_ENTERED = process.env.NEXT_PUBLIC_TUTOR_V2_PART_ENTERED !== 'off';
+
+/** Tutor brain v2 (v2/part-close.ts mayOpenPart, v2/turn.ts; with PART_ASK_EVERY): a page block the model writes for the next
+ *  part after a part ask opens only on a go (v2MoveAnswer 'go'), or the learner steering to it or naming it; any other answer
+ *  keeps the page held and the ask is said again. Mic test 3 (embed-1794967959470, flag 2): the learner read a corrected
+ *  sentence aloud and the "Present perfect" page opened (Task 7i, item 4). Default ON; NEXT_PUBLIC_TUTOR_V2_PAGE_NEEDS_GO=off ⇒
+ *  any answer to the ask lets the page through, as before. */
+export const TUTOR_V2_PAGE_NEEDS_GO = process.env.NEXT_PUBLIC_TUTOR_V2_PAGE_NEEDS_GO !== 'off';
+
+/** Tutor brain v2 (v2/time-box.ts, v2/facts.ts, v2/interrupted.ts; spoken lessons with labelled plans): stay in a part the plan
+ *  gives time to. Facts only: while the lesson is ahead of its plan in a required practice part, the time line says how many of
+ *  its minutes are left and to go on with it rather than offer the next part; and after a barge-in that cut sentences the
+ *  learner did not hear, the next turn's facts name them, so a question lost that way can be asked again. Mic test 3
+ *  (embed-1794967959470, flag 6: "it's still 13 minutes and it's rushing to the summary") (Task 7i, item 5). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_STAY_IN_PART=off ⇒ neither line, as before. */
+export const TUTOR_V2_STAY_IN_PART = process.env.NEXT_PUBLIC_TUTOR_V2_STAY_IN_PART !== 'off';
+
+/** Tutor brain v2 (v2/turn.ts): no runtime check-in ("Does that make sense so far?") after a spoken reply that says goodbye.
+ *  Mic test 3 (embed-1794967959470): "…Goodbye! Does that make sense so far?" (Task 7i, item 6). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE=off ⇒ as before. */
+export const TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE = process.env.NEXT_PUBLIC_TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE !== 'off';

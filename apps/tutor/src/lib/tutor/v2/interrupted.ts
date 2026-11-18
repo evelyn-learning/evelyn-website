@@ -11,6 +11,7 @@ import type Anthropic from '@anthropic-ai/sdk';
 import { applyToModelBoard } from './board';
 import { V2_CONTROL_TOOL_NAMES } from './tool-names';
 import type { V2State, V2ToolCall } from './types';
+import { TUTOR_V2_STAY_IN_PART } from '../orchestrator/flags';
 
 export const V2_CUT_MARK = '[cut off here: the student began to speak]';
 
@@ -43,7 +44,10 @@ export function foldInterruptedTurn(state: V2State, studentBlock: string, heard:
  *  believed it had told the case and asked about it; the teacher had heard none of it (ECS, embed-1794708025170).
  *  The last reply's words become the sentences that were spoken, marked as cut off; its tool calls stay, so their
  *  results still pair. Nothing unheard ⇒ the state is returned as it was. */
-export function trimToSpoken(state: V2State, sentences: string[], started: number): V2State {
+/** Task 7i (STAY_IN_PART, `keepUnheard`): the sentences not heard are kept in `state.unheard` for the next turn's facts: mic
+ *  test 3 (embed-1794967959470, 12.47–12.57) lost the follow-up "When did you start this project?" to a barge-in, and the
+ *  tutor, not knowing, went to the summary. */
+export function trimToSpoken(state: V2State, sentences: string[], started: number, keepUnheard: boolean = TUTOR_V2_STAY_IN_PART): V2State {
   if (!sentences.length || started >= sentences.length) return state;
   const i = state.history.map((m) => m.role).lastIndexOf('assistant');
   if (i < 0) return state;
@@ -53,5 +57,7 @@ export function trimToSpoken(state: V2State, sentences: string[], started: numbe
   const others = blocks.filter((b) => b.type !== 'text');
   const next: V2State = structuredClone(state);
   next.history[i] = { role: 'assistant', content: [{ type: 'text', text: said ? `${said} ${V2_CUT_MARK}` : V2_CUT_MARK }, ...others] };
+  const unheard = sentences.slice(Math.max(0, started)).map((x) => x.trim()).filter(Boolean).slice(0, 4);
+  if (keepUnheard && unheard.length) next.unheard = unheard;
   return next;
 }

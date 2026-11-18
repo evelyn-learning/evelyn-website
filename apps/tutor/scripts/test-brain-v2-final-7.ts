@@ -72,7 +72,9 @@ const min = (m: number) => m * 60000;
 // The close (the review's probes): every part before the summary reached, pronunciation skipped.
 const B = ['Lesson overview', 'Your job', 'Present perfect', 'Past simple', 'Your project'];
 const goalsB = { overview: { status: 'shown' as const, at: 0 }, 'topic-intro': { status: 'shown' as const, at: 0 }, 'present-perfect': { status: 'demonstrated' as const, at: 0 }, 'past-simple': { status: 'demonstrated' as const, at: 0 }, 'open-conversation': { status: 'shown' as const, at: 0 }, pronunciation: { status: 'skipped' as const, at: 0 } };
-const closeState = (extra: Partial<V2State> = {}): V2State => ({ ...newV2State(0), board: { pages: B.map((title) => ({ title, items: [] })), current: B.length - 1 }, goals: goalsB, workingLevel: { level: 'intermediate', from: 'this_lesson' }, history: [u('x'), a('Try the whole sentence again, and say "was" clearly.')], ...extra });
+// Task 7i (PART_ENTERED): a page of a lesson that reached its close holds what was taught on it (a card each). Was: empty pages.
+const seed = (title: string, i: number) => ({ title, items: [{ id: `seed_${i}`, tool: 'annotate', summary: `${title} card` }] });
+const closeState = (extra: Partial<V2State> = {}): V2State => ({ ...newV2State(0), board: { pages: B.map(seed), current: B.length - 1 }, goals: goalsB, workingLevel: { level: 'intermediate', from: 'this_lesson' }, history: [u('x'), a('Try the whole sentence again, and say "was" clearly.')], ...extra });
 // Mid-lesson: the level set, on the job's page.
 const midState = (extra: Partial<V2State> = {}): V2State => ({ ...newV2State(0), workingLevel: { level: 'intermediate', from: 'this_lesson' }, goals: { overview: { status: 'shown', at: 1 }, 'level-check': { status: 'demonstrated', at: 2 } }, board: { pages: [{ title: 'Overview', items: [] }, { title: 'Your job', items: [] }], current: 1 }, history: [u('hi'), a('Hello Ken.'), u('x'), a('Tell me about your work with customers from other countries.')], ...extra });
 const T1757 = 'That\'s right: "I was responsible for communicating with our customers." <board page>Summary</board> Before we finish, here is what you did well. You used the past simple correctly for your finished project. Keep working on "I have worked…" for things that started in the past and continue now. Thank you for today\'s lesson, Ken. See you next time!';
@@ -127,7 +129,7 @@ async function main() {
 
   console.log('3. I3: an invitation with no summary closes nothing');
   {
-    const pron: V2State = closeState({ goals: { ...goalsB, pronunciation: { status: 'shown', at: 0 } } as V2State['goals'], board: { pages: [...B, 'Pronunciation'].map((title) => ({ title, items: [] })), current: 5 } });
+    const pron: V2State = closeState({ goals: { ...goalsB, pronunciation: { status: 'shown', at: 0 } } as V2State['goals'], board: { pages: [...B, 'Pronunciation'].map(seed), current: 5 } });
     const p4 = await run(lang, pron, 'Was. Was. I was responsible.', [{ text: 'Good, the z sound at the end of "was" is clearer now. Do you have any questions?' }], 16.3);
     check('P4: a bare "Do you have any questions?" in pronunciation, no summary: not recorded', p4.r.state.closeInvitedAt === undefined && p4.r.state.summaryBegunAt === undefined, p4.r.state.closeInvitedAt);
     const p4b = await run(lang, p4.r.state, 'No.', [{ text: 'Okay. See you next time!', after: end() }, { text: '' }], 16.6);
@@ -137,7 +139,7 @@ async function main() {
     const nowMs = min(17.5);
     const noSum = v2CloseInviteFacts(lang, { ...pron, closeInvitedAt: 1 }, { nowMs, stopAsked: false }).join('\n');
     const withSum = v2CloseInviteFacts(lang, { ...pron, closeInvitedAt: 1, summaryBegunAt: 1 }, { nowMs, stopAsked: false }).join('\n');
-    const onPage = v2CloseInviteFacts(lang, closeState({ closeInvitedAt: 1, board: { pages: [...B, 'Summary'].map((title) => ({ title, items: [] })), current: 5 } }), { nowMs, stopAsked: false }).join('\n');
+    const onPage = v2CloseInviteFacts(lang, closeState({ closeInvitedAt: 1, board: { pages: [...B, 'Summary'].map(seed), current: 5 } }), { nowMs, stopAsked: false }).join('\n');
     check('the "invitation given" line says to give the summary first when none has begun, and not once it has', /give it in a few words first/.test(noSum) && !/give it in a few words first/.test(withSum) && !/give it in a few words first/.test(onPage) && /say goodbye and end the lesson in this reply/.test(withSum), { noSum, withSum });
   }
 
@@ -240,7 +242,7 @@ async function main() {
     s = wire(r.r.state, lang);
     check('t3 → wire: "No, I\'m ready." opened it; the held page is gone', s.board.pages.some((p) => p.title === 'Present perfect') && !s.heldPage, s.board.pages.map((p) => p.title));
     // To the close: the parts reached, then the summary reply with its invitation.
-    s = wire({ ...s, goals: goalsB, board: { pages: B.map((title) => ({ title, items: [] })), current: B.length - 1 } }, lang);
+    s = wire({ ...s, goals: goalsB, board: { pages: B.map(seed), current: B.length - 1 } }, lang);
     r = await run(lang, s, SAID, [{ text: `${SUM} ${INVITE}`, after: end() }], 17.0);
     s = wire(r.r.state, lang);
     check('summary + invitation (+ end_lesson, waited) → wire: closeInvitedAt and summaryBegunAt both carried, the lesson open', typeof s.closeInvitedAt === 'number' && typeof s.summaryBegunAt === 'number' && !s.closed && r.end[0] === V2_CLOSE_INVITE_WAIT, { end: r.end, invited: s.closeInvitedAt, begun: s.summaryBegunAt });

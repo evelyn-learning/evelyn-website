@@ -6,7 +6,7 @@
  * guidance on how to teach each part: a guide, never a cutoff, and never a say in when the session ends.
  */
 import type { LessonPlan, Segment } from '../lesson-plan/types';
-import { TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PASSED_PART_FACT, TUTOR_V2_PLAN_AS_WRITTEN } from '../orchestrator/flags';
+import { TUTOR_V2_PART_ENTERED, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PASSED_PART_FACT, TUTOR_V2_PLAN_AS_WRITTEN } from '../orchestrator/flags';
 import { V2_CLOSING_PAGE, headingWords } from './part-close';
 import { stripBoardBlocks } from './board-inline';
 import type { GoalStatus, V2State } from './types';
@@ -290,8 +290,24 @@ export function v2PartNamedIn(seg: Segment, text: string): boolean {
   return headingWords(label).every((w) => text.toLowerCase().includes(w.slice(0, 5))) || Object.values(p.labelLocalized ?? {}).some((n) => text.includes(n));
 }
 
-/** Task 6g: a part taken up: a status of shown or demonstrated, or a page of its own. */
-const takenUp = (seg: Segment, state: Pick<V2State, 'goals' | 'board'>) => {
+/** Task 7i (PART_ENTERED): a page of the part that holds something (a card, a note, a question). */
+export function v2PartPageHolds(seg: Segment, board: V2State['board']): boolean {
+  return board.pages.some((pg) => pg.items.length > 0 && pageOfPart(seg, pg.title));
+}
+
+/** Task 7i (PART_ENTERED): the lesson entered the part: a goal of it shown or demonstrated, its page holds something, or practice
+ *  was counted in it; never a part left out for time. A page alone is not entered: mic test 3 (embed-1794967959470) opened an
+ *  empty "Pronunciation" page in minute 1, and it counted as taught, green and completed for the whole lesson. */
+export function v2PartEntered(seg: Segment, state: Pick<V2State, 'goals' | 'board'> & Partial<Pick<V2State, 'practiceSaid' | 'timeFit'>>): boolean {
+  if (state.timeFit?.dropped.includes(seg.id)) return false;
+  const g = state.goals[seg.id]?.status;
+  return g === 'shown' || g === 'demonstrated' || (state.practiceSaid?.[seg.id] ?? 0) > 0 || v2PartPageHolds(seg, state.board);
+}
+
+/** Task 6g: a part taken up: a status of shown or demonstrated, or a page of its own. Task 7i (PART_ENTERED): entered
+ *  (v2PartEntered), not a page alone. */
+const takenUp = (seg: Segment, state: Pick<V2State, 'goals' | 'board'> & Partial<Pick<V2State, 'practiceSaid' | 'timeFit'>>, entered: boolean = TUTOR_V2_PART_ENTERED) => {
+  if (entered) return v2PartEntered(seg, state);
   const g = state.goals[seg.id]?.status;
   return g === 'shown' || g === 'demonstrated' || state.board.pages.some((pg) => pageOfPart(seg, pg.title));
 };
