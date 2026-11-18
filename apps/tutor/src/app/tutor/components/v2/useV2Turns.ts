@@ -27,7 +27,7 @@ import { V2_UNHEARD_SAID } from '@/lib/tutor/v2/heard';
 import { V2_CONTROL_TOOL_NAMES } from '@/lib/tutor/v2/tool-names';
 import { mentionsTool } from '@/lib/tutor/v2/tool-talk';
 import { newV2State, type V2State, type V2ToolCall } from '@/lib/tutor/v2/types';
-import { TUTOR_LESSON_CLOSE_AUTO_END, TUTOR_V2_TIME_BOX, TUTOR_WORKING_LEVEL, TUTOR_WORKING_LEVEL_ESTIMATE } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_LESSON_CLOSE_AUTO_END, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_TIME_BOX, TUTOR_WORKING_LEVEL, TUTOR_WORKING_LEVEL_ESTIMATE } from '@/lib/tutor/orchestrator/flags';
 import { v2HardStop, v2HardStopMinutes, v2StartClock } from '@/lib/tutor/v2/time-box';
 import { v2HardStopNextTime } from '@/lib/tutor/v2/close-invite';
 import { goodbyeLine } from '@/lib/tutor/voice/timebox-lines';
@@ -249,7 +249,8 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     const overClose = endingRef.current ? 'not-closing' : closingRef.current.heard(unheard ? null : studentSaid);
     if (overClose === 'let-end') return;
     if (overClose === 'reopen') {
-      stateRef.current = { ...stateRef.current, closed: false };
+      // Task 7k (CLOSE_REOPENED): the close is reopened: the turn route re-arms the invitation (asks "more, or finish?").
+      stateRef.current = { ...stateRef.current, closed: false, ...(TUTOR_V2_CLOSE_REOPENED ? { closeReopened: Date.now() } : {}) };
       saveV2State(p.current.sessionId, stateRef.current);
       p.current.onCut?.();
       p.current.onDebugEvent?.('v2_close_called_off', `the student spoke over the closing words: "${(studentSaid ?? '').slice(0, 80)}"`);

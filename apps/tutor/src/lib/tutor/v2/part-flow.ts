@@ -18,11 +18,11 @@ import { PART_OFFERS, V2_CLOSING_PAGE, endsAsking } from './part-close';
 import { V2_OFFER_SHAPE, v2IsPageOfPart, v2PartEntered, v2PartNamedIn, v2PartOf } from './plan-map';
 import { V2_PART_FRAME_JA, isPartFrame } from './reply-gate';
 import type { V2Board, V2State } from './types';
-import { TUTOR_V2_LEVEL_CHECK_CHIP, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PART_ASK_NAMED, TUTOR_V2_PART_ENTERED, TUTOR_V2_PART_POSITION_KEPT } from '../orchestrator/flags';
+import { TUTOR_V2_LEVEL_CHECK_CHIP, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PART_ASK_NAMED, TUTOR_V2_PART_ENTERED, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PRACTICE_ON_PART_PAGE } from '../orchestrator/flags';
 import { v2LevelCheckBegun } from './level-check-count';
 
 /** `history` (Task 7g, LEVEL_CHECK_CHIP): when present, a level check under way lights its chip before any goal is marked. */
-type View = Pick<V2State, 'board' | 'goals' | 'workingLevel'> & { closed?: boolean; history?: V2State['history'] } & Partial<Pick<V2State, 'practiceSaid' | 'timeFit'>>;
+type View = Pick<V2State, 'board' | 'goals' | 'workingLevel'> & { closed?: boolean; history?: V2State['history'] } & Partial<Pick<V2State, 'practiceSaid' | 'timeFit' | 'summaryBegunAt'>>;
 
 /** A plan whose every part has an authored name (Tasks 6c/6e gate the same way). */
 export function v2PlanLabelled(plan: LessonPlan | null | undefined): plan is LessonPlan {
@@ -61,11 +61,27 @@ const entered = (plan: LessonPlan, state: View, i: number, on: boolean = TUTOR_V
 /** Task 7i (PART_ENTERED, `view`): a part page counts for the position only when the lesson entered the part, or it is the
  *  page in view (a page just opened on their yes) of a part not left out for time: an empty "Pronunciation" page, opened in
  *  minute 1 and left behind, lit its chip (mic test 3, embed-1794967959470). */
-export function v2OpenPagePart(plan: LessonPlan, board: V2Board, kept: boolean = TUTOR_V2_PART_POSITION_KEPT, view?: View, enteredOn: boolean = TUTOR_V2_PART_ENTERED): number {
+/** Task 7k (PRACTICE_ON_PART_PAGE, `furthest`): the position is the furthest part reached (the highest part among the pages
+ *  that count), not the newest page's: a page opened at the close for practice of an earlier part ("more pronunciation" after
+ *  the summary, mic test 3, embed-1794967959470) must not move the position back to that part. A page known only by a closing
+ *  heading ("Today's review", no part name) stands for the last part when it is the newest part page, as before, or once the
+ *  summary has begun: an early "Quick recap" page is not the close. The newest page counts as the page in view does. With
+ *  PART_ENTERED (and a view) only. */
+export function v2OpenPagePart(plan: LessonPlan, board: V2Board, kept: boolean = TUTOR_V2_PART_POSITION_KEPT, view?: View, enteredOn: boolean = TUTOR_V2_PART_ENTERED, furthest: boolean = TUTOR_V2_PRACTICE_ON_PART_PAGE): number {
   if (kept) {
     const seen = new Set<number>(); let at = -1;
-    const counts = (k: number, i: number) => !view || !enteredOn || entered(plan, view, k) || (i === board.current && !view.timeFit?.dropped.includes(plan.segments[k]!.id));
+    // Task 7k (`furthest`): the newest page counts as the page in view does: turned away from for practice of an earlier part
+    // before its first card (the conversation's question card was lost at 9.82), it is still where the lesson is.
+    const counts = (k: number, i: number) => !view || !enteredOn || entered(plan, view, k) || ((i === board.current || (furthest && i === board.pages.length - 1)) && !view.timeFit?.dropped.includes(plan.segments[k]!.id));
     board.pages.forEach((_, i) => { const k = partOfPageAt(plan, board, i); if (k >= 0 && !seen.has(k) && counts(k, i)) { seen.add(k); at = k; } });
+    // Only where a page alone is no part reached (PART_ENTERED): otherwise an empty page opened early would be the furthest.
+    if (!furthest || !view || !enteredOn) return at;
+    const last = plan.segments.length - 1;
+    board.pages.forEach((pg, i) => {
+      const named = plan.segments.findIndex((seg) => v2IsPageOfPart(seg, pg.title));
+      if (named >= 0 && counts(named, i)) at = Math.max(at, named);
+      else if (named < 0 && typeof view?.summaryBegunAt === 'number' && V2_CLOSING_PAGE.test(pg.title) && counts(last, i)) at = last;
+    });
     return at;
   }
   for (let i = Math.min(board.current, board.pages.length - 1); i >= 0; i--) {
@@ -95,6 +111,43 @@ export function v2PartInHand(plan: LessonPlan, state: View, kept: boolean = TUTO
     if (chip && g !== 'skipped' && !state.workingLevel && !!state.history && v2LevelCheckBegun(plan, state.history)) return l;
   }
   return open;
+}
+
+/** Task 7k (PRACTICE_ON_PART_PAGE): the page of the lesson's position: the newest page of the part v2OpenPagePart (kept) names;
+ *  -1: none. Where the board returns after practice on another part's page. */
+export function v2PositionPage(plan: LessonPlan, state: View): number {
+  const k = v2OpenPagePart(plan, state.board, true, state);
+  if (k < 0) return -1;
+  for (let i = state.board.pages.length - 1; i >= 0; i--) if (partOfPageAt(plan, state.board, i) === k) return i;
+  return -1;
+}
+
+/** Task 7k (PRACTICE_ON_PART_PAGE): the part of the page in view when it is a part's page other than the position's (the
+ *  learner's practice of an earlier part, or of one left out for time, on its own page); -1 otherwise, and with the switch off.
+ *  The position (v2PartInHand), done / green and the part flow do not move with it: the chip strip shows it (progress.ts), the
+ *  practice is counted and carded for it, and the facts say to turn back when the practice is over. Never the level check
+ *  (no page) or a page the position's part also has. */
+export function v2PartViewed(plan: LessonPlan, state: View, enabled: boolean = TUTOR_V2_PRACTICE_ON_PART_PAGE, kept: boolean = TUTOR_V2_PART_POSITION_KEPT): number {
+  const b = state.board;
+  if (!enabled || !kept || b.current < 0 || b.current >= b.pages.length) return -1;
+  const k = partOfPageAt(plan, b, b.current);
+  if (k < 0 || isLevelPart(plan, k)) return -1;
+  const pos = v2OpenPagePart(plan, b, true, state);
+  return pos < 0 || k === pos ? -1 : k;
+}
+
+/** Task 7k (PRACTICE_ON_PART_PAGE): what a turn of the board to a page tells the tutor, read on the board after the turn: on
+ *  another part's page, that the practice of that part is written there and the board turns back to the position's page when
+ *  it is over; on the position's page, only where it is. Null otherwise (the board's own words stand). The board's "the work in
+ *  progress stays on page N" pushed the tutor back to the Summary page in the middle of a practice they asked for (mic test 3,
+ *  embed-1794967959470 at 14.49). */
+export function v2PageTurnNote(plan: LessonPlan, state: View, enabled: boolean = TUTOR_V2_PRACTICE_ON_PART_PAGE): string | null {
+  const b = state.board; const here = b.pages[b.current];
+  if (!enabled || !here) return null;
+  const viewed = v2PartViewed(plan, state, enabled);
+  const back = v2PositionPage(plan, state);
+  if (viewed >= 0) return `now on page ${b.current + 1} "${here.title}" (the ${v2PartOf(plan.segments[viewed]!).label} part): write the practice of this part here; when it is over, turn back to page ${back + 1} "${b.pages[back]?.title ?? ''}" (its page block)`;
+  return back === b.current ? `now on page ${b.current + 1} "${here.title}"` : null;
 }
 
 /** Which parts are done (green). The level check: the level is set. The part in hand: only once the lesson has closed.

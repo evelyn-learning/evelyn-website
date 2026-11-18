@@ -18,11 +18,11 @@ import { spawnSync } from 'node:child_process';
 import type Anthropic from '@anthropic-ai/sdk';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
-import { TUTOR_V2_CLOSE_BY_CONTENT, TUTOR_V2_MORE_PRACTICE, TUTOR_V2_OVERRUN_MIN, TUTOR_V2_PART_MIN_PRACTICE, TUTOR_V2_TIME_NO_SQUEEZE, TUTOR_V2_TIME_OVERRUN } from '../src/lib/tutor/orchestrator/flags';
+import { TUTOR_V2_CLOSE_BY_CONTENT, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_MORE_PRACTICE, TUTOR_V2_OVERRUN_MIN, TUTOR_V2_PART_MIN_PRACTICE, TUTOR_V2_TIME_NO_SQUEEZE, TUTOR_V2_TIME_OVERRUN } from '../src/lib/tutor/orchestrator/flags';
 import { renderFacts } from '../src/lib/tutor/v2/facts';
 import { v2CloseOpen, v2HardStopMinutes, v2LeftToStopMin, v2OverrunMin, v2PartDueFact, v2PartDueNow, v2PlanContentDone, v2TimeFlags } from '../src/lib/tutor/v2/time-box';
 import { V2_PRACTICE_MORE_LINES, v2AsksMorePractice, v2PartsToDrop, v2PracticePart } from '../src/lib/tutor/v2/time-fit';
-import { V2_CLOSE_INVITE_REFUSAL, V2_CLOSE_INVITE_WAIT } from '../src/lib/tutor/v2/close-invite';
+import { V2_CLOSE_INVITE_REFUSAL, V2_CLOSE_INVITE_WAIT, V2_CLOSE_MORE_LINE, V2_CLOSE_REOPEN_REFUSAL } from '../src/lib/tutor/v2/close-invite';
 import { v2NextTimeLine, v2UnreachedOffer } from '../src/lib/tutor/v2/plan-map';
 import { v2MemoryLines, v2ProfileCommit } from '../src/lib/tutor/v2/memory';
 import { v2ReadClientState } from '../src/lib/tutor/v2/client-state';
@@ -280,7 +280,13 @@ async function main() {
       const t = await run(lang, invited(), ask, [{ text: 'Of course! Tell me what you did last weekend, in the past simple.' }], 17);
       check(`"${ask}" to the invitation at 17: the facts allow it, no close pressure, the lesson stays open`, !t.r.state.closed && ALLOWED.test(t.facts) && !BEGUN.test(t.facts) && !PRESSURE.test(t.facts), t.facts.slice(-900));
       const after = await run(lang, { ...t.r.state }, 'I went to Kyoto with my family.', [{ text: 'Well said. Thank you for today, see you next time!', after: end() }, { text: 'Goodbye!' }], 18);
-      check('…and after the practice the lesson ends on the next close (the invitation is not asked again)', after.r.state.closed && after.calls.every((c) => !/^end_lesson: not ended/.test(c)), after.calls);
+      // Task 7k (CLOSE_REOPENED): the practice taken up reopened the close: after it, the end is deferred once and the reply asks
+      // "more, or finish?"; the lesson ends on the answer to that. Before 7k: the next close was accepted.
+      if (TUTOR_V2_CLOSE_REOPENED) {
+        check('…(7k) after the practice the next close is deferred once: the reply asks "more, or finish?", the lesson open', !after.r.state.closed && after.calls.some((c) => c === `end_lesson: ${V2_CLOSE_REOPEN_REFUSAL}`) && after.heard.trim().endsWith(V2_CLOSE_MORE_LINE), [after.calls, after.heard]);
+        const fin = await run(lang, { ...after.r.state }, 'No, thank you. That is all.', [{ text: 'Thank you for today, see you next time!', after: end() }], 18.4);
+        check('…and the lesson ends on their answer to it', fin.r.state.closed && fin.calls.every((c) => !/^end_lesson: not ended/.test(c)), fin.calls);
+      } else check('…and after the practice the lesson ends on the next close (the invitation is not asked again)', after.r.state.closed && after.calls.every((c) => !/^end_lesson: not ended/.test(c)), after.calls);
     }
   }
 

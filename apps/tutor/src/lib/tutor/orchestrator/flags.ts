@@ -2041,3 +2041,25 @@ export const TUTOR_V2_STAY_IN_PART = process.env.NEXT_PUBLIC_TUTOR_V2_STAY_IN_PA
  *  Mic test 3 (embed-1794967959470): "…Goodbye! Does that make sense so far?" (Task 7i, item 6). Default ON;
  *  NEXT_PUBLIC_TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE=off ⇒ as before. */
 export const TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE = process.env.NEXT_PUBLIC_TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE !== 'off';
+
+/** Tutor brain v2 (v2/part-flow.ts v2PartViewed / v2PartPracticeAsked, v2/progress.ts, v2/turn.ts, v2/facts.ts,
+ *  v2/time-fit.ts, v2/learner-card.ts; spoken lessons with labelled plans): practice of another part is done on that part's
+ *  page. When the learner asks for practice of a labelled part other than the one in view (earlier, left out for time, or the
+ *  optional one not taken), the runtime turns the board to its page (an existing page; else a new page under its name) before
+ *  the reply writes; the facts say to keep that practice's cards there and to turn back to the page of the lesson's position
+ *  when it is over; the lit chip follows the page in view while it is another part's page (the position, done / green and the
+ *  part flow unchanged: the position is the furthest part reached); the answers are counted and carded for the part in view.
+ *  Mic test 3 (embed-1794967959470, flags 5, 7, 8): "one more past simple" and three requests at the close were practised on
+ *  the page in view with the chip on Summary (Task 7k, item 1). Default ON; NEXT_PUBLIC_TUTOR_V2_PRACTICE_ON_PART_PAGE=off ⇒
+ *  as before. */
+export const TUTOR_V2_PRACTICE_ON_PART_PAGE = process.env.NEXT_PUBLIC_TUTOR_V2_PRACTICE_ON_PART_PAGE !== 'off';
+
+/** Tutor brain v2 (v2/close-invite.ts, v2/turn.ts, v2/facts.ts, v2/time-fit.ts, useV2Turns; the lessons of the 7d close): a
+ *  reopened close asks before it ends. The learner speaking over the closing words (7h, v2_close_called_off) or asking for
+ *  more practice / another part after the invitation reopens it (state.closeReopened): the goodbye line is lifted, and after
+ *  the practice the reply asks whether they want more or to finish; the lesson ends on their answer to that ask (the 7d
+ *  invitation run again, an end_lesson before it deferred once), as often as they ask, until the hard stop. The request test
+ *  (v2AsksMorePractice) also hears a request that names a plan part or asks "one more". Mic test 3 (embed-1794967959470,
+ *  flag 8: "it's always in a hurry to end") (Task 7k, item 2). Default ON; NEXT_PUBLIC_TUTOR_V2_CLOSE_REOPENED=off ⇒ as
+ *  before. */
+export const TUTOR_V2_CLOSE_REOPENED = process.env.NEXT_PUBLIC_TUTOR_V2_CLOSE_REOPENED !== 'off';

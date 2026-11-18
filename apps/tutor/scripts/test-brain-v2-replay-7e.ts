@@ -28,7 +28,7 @@ import { seedPractice7f } from './v2-seed-practice-7f';
 // Task 7f fix round 1: with SEED_7F_PRACTICE (the `-7f-on` script) every part starts with its practice sentences said.
 const runV2Turn = seedPractice7f(runV2TurnRaw);
 import { newV2State, type V2Session, type V2State, type V2ToolCall } from '../src/lib/tutor/v2/types';
-import { TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_PART_POSITION_KEPT } from '../src/lib/tutor/orchestrator/flags';
+import { TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PRACTICE_ON_PART_PAGE } from '../src/lib/tutor/orchestrator/flags';
 
 let passed = 0; let failed = 0;
 const check = (label: string, ok: boolean, detail?: unknown) => {
@@ -142,7 +142,9 @@ async function main() {
     check('after go_to_page back to "Past simple": the part in hand stays conversation (the furthest reached)', v2PartInHand(GDI, back) === GDI.segments.findIndex((s) => s.id === 'open-conversation') && openTitle(back) === 'Past simple', v2PartInHand(GDI, back));
     check('…as before 7e it followed the page in view (kept = false)', v2OpenPagePart(GDI, back.board, false) === GDI.segments.findIndex((s) => s.id === 'past-simple'));
     const c = chips(back);
-    check('the lit chip does not jump back: conversation lit, past simple green', c.lit === 'open-conversation' && c.green.includes('past-simple') && !c.green.includes('open-conversation'), c);
+    // Task 7k (PRACTICE_ON_PART_PAGE): the lit chip follows the page in view while it is another part's page (the product
+    // owner's rule, mic test 3); the part in hand (above) and green stay the lesson's. Before 7k: conversation lit.
+    check('the lit chip shows the page looked back at (7k), the part in hand and green do not move: past simple lit and green, conversation not green', c.lit === (TUTOR_V2_PRACTICE_ON_PART_PAGE ? 'past-simple' : 'open-conversation') && c.green.includes('past-simple') && !c.green.includes('open-conversation'), c);
     const revisit = { ...back, board: pages(['Overview', 'Your job', 'Present perfect', 'Past simple', 'Conversation', 'Past simple'], 5) };
     check('a new page headed by a part already paged is a revisit too', v2PartInHand(GDI, revisit) === GDI.segments.findIndex((s) => s.id === 'open-conversation'));
     const t78 = await turn(voice, back, null, A_T78);

@@ -9,7 +9,7 @@ import type { LessonPlan } from '../lesson-plan/types';
 import type { TutorMilestone } from '../orchestrator/types';
 import type { V2State } from './types';
 import { TUTOR_V2_PART_PAGE_CHIP } from '../orchestrator/flags';
-import { v2PartInHand, v2PartsDone, v2PlanLabelled } from './part-flow';
+import { v2PartInHand, v2PartViewed, v2PartsDone, v2PlanLabelled } from './part-flow';
 
 export interface V2Progress { currentSegmentId: string; completedSegmentIds: string[]; milestone: TutorMilestone | null }
 
@@ -23,12 +23,16 @@ const TOLD_ONLY = new Set(['hook', 'concept', 'worked_example', 'recap', 'extens
  *  (part-flow.ts): "the part after the last goal marked" lit "Present perfect" while the job was still being talked about
  *  (mic test 1, embed-1794882458629). Other plans, and no view, as before. `enabled` is the kill switch.
  *  Task 7g (LEVEL_CHECK_CHIP): the view's history lights the level check while it runs (part-flow.ts v2PartInHand). */
-export function v2Progress(plan: LessonPlan, goals: V2State['goals'], view?: Pick<V2State, 'board' | 'workingLevel' | 'closed'> & Partial<Pick<V2State, 'history'>>, enabled: boolean = TUTOR_V2_PART_PAGE_CHIP): V2Progress {
+export function v2Progress(plan: LessonPlan, goals: V2State['goals'], view?: Pick<V2State, 'board' | 'workingLevel' | 'closed'> & Partial<Pick<V2State, 'history' | 'practiceSaid' | 'timeFit' | 'summaryBegunAt'>>, enabled: boolean = TUTOR_V2_PART_PAGE_CHIP): V2Progress {
   if (view && enabled && v2PlanLabelled(plan) && view.board?.pages) {
     const state = { ...view, goals };
     const cur = v2PartInHand(plan, state);
     const doneNow = v2PartsDone(plan, state, cur);
-    return { currentSegmentId: plan.segments[cur]?.id ?? '', completedSegmentIds: plan.segments.filter((_, i) => doneNow[i]).map((s) => s.id), milestone: v2Milestone(plan, goals) };
+    // Task 7k (PRACTICE_ON_PART_PAGE): the lit chip follows the page in view while it is another part's page (practice they
+    // asked for of an earlier part); the position and green stay as the lesson's (mic test 3, embed-1794967959470: the
+    // practice ran on the Conversation page with the chip on Summary).
+    const viewing = v2PartViewed(plan, state);
+    return { currentSegmentId: plan.segments[viewing >= 0 ? viewing : cur]?.id ?? '', completedSegmentIds: plan.segments.filter((_, i) => doneNow[i]).map((s) => s.id), milestone: v2Milestone(plan, goals) };
   }
   const done = plan.segments.map((seg) => {
     const status = goals[seg.id]?.status;

@@ -27,7 +27,7 @@
  * The next-time line (Task 6g) waits for the reply that closes; the runtime's goodbye at the box carries it when no reply did
  * (v2HardStopNextTime). Pure.
  */
-import { TUTOR_V2_CLOSE_INVITES_QUESTIONS } from '../orchestrator/flags';
+import { TUTOR_V2_CLOSE_INVITES_QUESTIONS, TUTOR_V2_CLOSE_REOPENED } from '../orchestrator/flags';
 import type { LessonPlan } from '../lesson-plan/types';
 import { stripBoardBlocks } from './board-inline';
 import { discussionOf } from './discussion';
@@ -64,14 +64,44 @@ export const V2_CLOSE_INVITE_WAIT = 'not ended: wait for their answer to your qu
 
 /** The facts line: the invitation owed, or given (only while the clock lets the tutor close: never "end the lesson in this
  *  reply" where the close would be refused). */
-export function v2CloseInviteFacts(session: V2Session, state: V2State, ctx: { nowMs: number; stopAsked: boolean; enabled?: boolean; closeByContent?: boolean; overrun?: boolean }): string[] {
+export function v2CloseInviteFacts(session: V2Session, state: V2State, ctx: { nowMs: number; stopAsked: boolean; enabled?: boolean; closeByContent?: boolean; overrun?: boolean; reopenedOn?: boolean }): string[] {
   if (!v2CloseInviteOn(session, ctx.enabled) || state.closed) return [];
   // Final review I3: the summary is part of the close; when no summary has begun (no summary page, no summary reply), it comes
   // first, in a few words.
   const summaryGiven = typeof state.summaryBegunAt === 'number' || state.board.pages.some((pg) => V2_CLOSING_PAGE.test(pg.title));
+  // Task 7k (CLOSE_REOPENED): the close reopened and no ask given since: no goodbye pressed; after the practice, ask.
+  if (v2CloseReopened(state, ctx.reopenedOn)) {
+    return !ctx.stopAsked && !!session.timeBoxMinutes && v2LeftToStopMin(session, state, ctx.nowMs, ctx.overrun) > V2_TIME_UP_MIN ? [v2CloseReopenedLine(summaryGiven)] : [];
+  }
   if (typeof state.closeInvitedAt === 'number') return v2CloseOpen(session, state, ctx.nowMs, ctx.closeByContent) ? [`questions before the close: you have asked whether they have any questions before you finish. If they asked one, answer it briefly; ${summaryGiven ? '' : 'if you have not given the summary yet, give it in a few words first; '}then say goodbye and end the lesson in this reply`] : [];
   if (!v2CloseInviteOwed(session, state, ctx)) return [];
   return ['questions before the close: there is time for their questions, so the reply that gives the summary does not end the lesson: it ends with one question, in your own words, asking whether they have any questions before you finish (that is its one question; no goodbye in it). The lesson ends on their answer'];
+}
+
+/** Task 7k (CLOSE_REOPENED): the close was reopened (the learner spoke over the closing words, or asked for more practice or
+ *  another part after the invitation: turn.ts) and no ask has been given since. `enabled` is the kill switch. */
+export function v2CloseReopened(state: Pick<V2State, 'closeReopened' | 'closeInvitedAt' | 'closed'>, enabled: boolean = TUTOR_V2_CLOSE_REOPENED): boolean {
+  return enabled && !state.closed && typeof state.closeReopened === 'number' && typeof state.closeInvitedAt !== 'number';
+}
+
+/** Task 7k: the facts line while the close is reopened (mic test 3, embed-1794967959470, flag 8: "it's always in a hurry to end
+ *  … it should ask: are you done, do you want more, or shall we end it here?"). */
+export function v2CloseReopenedLine(summaryGiven: boolean): string {
+  return `the close is reopened: they asked for more (or spoke over your goodbye), so no goodbye and no end of the lesson in this reply. Do what they asked: a practice they asked for, give it and end on its question. Once they have answered a practice and you have given your feedback, end that reply with one short question, in your own words, asking whether they would like more practice or to finish (no goodbye in it${summaryGiven ? '; the summary was given already: never offer it again' : ''}). The lesson ends on their answer to that question`;
+}
+
+/** Task 7k: the result of an end_lesson deferred because the close was reopened (once per ask, as the 7d invitation's). */
+export const V2_CLOSE_REOPEN_REFUSAL = 'not ended: they asked for more. Say nothing of this message and say no goodbye now. If they have just asked for a practice, give it and end on its question; if they have answered one, give your feedback and end this reply with one short question, in your own words and in the lesson\'s language, asking whether they would like more practice or to finish. Close after their answer.';
+/** Task 7k: the runtime's ask, said when a deferred close leaves the reply ending on no question. */
+export const V2_CLOSE_MORE_LINE = 'Would you like some more practice, or shall we finish here?';
+
+/** Task 7k: the reply's last sentence asks whether they want more or to finish ("Would you like more practice, or shall we
+ *  finish here?", "Do you want to try another one, or are you done?", 「もう少し練習しますか、それとも終わりにしますか？」). */
+export function v2ReplyAsksMoreOrFinish(lastSentence: string): boolean {
+  const s = lastSentence.trim().replace(/[‘’]/g, "'");
+  if (!endsAsking(s, true)) return false;
+  return (/\b(?:more|another|again|keep going|continue|carry on)\b/i.test(s) && /\b(?:finish|end|stop|done|wrap (?:it )?up|leave it|call it a day)\b/i.test(s))
+    || (/もっと|もう少し|もう一|続け/.test(s) && /終わ|終了|おしまい/.test(s));
 }
 
 /** The invitation's shape (fix round 1, M3): "Any questions before we finish?", "Do you have any (other) questions?", "Is there

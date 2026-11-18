@@ -40,7 +40,7 @@ import { TUTOR_V2_BOARD_LEARNER_SENTENCE, TUTOR_V2_CARD_EVERY_SENTENCE } from '.
 import { languageNameOf } from '../voice/language-request';
 import { stripBoardBlocks, type InlineBlock, type InlinePart } from './board-inline';
 import { v2IsPracticeAsk } from './languages';
-import { v2IsPartAsk, v2PartInHand, v2PlanLabelled } from './part-flow';
+import { v2IsPartAsk, v2PartInHand, v2PartViewed, v2PlanLabelled } from './part-flow';
 import { v2PartOf } from './plan-map';
 import { v2ReplyInvites } from './close-invite';
 import { v2IsCorrectionOf, v2SentenceCardsOn, v2SentenceTokens as tokens } from './sentence-cards';
@@ -365,11 +365,14 @@ export function v2LearnerSentences(said: string | null | undefined): string[] {
  *  two languages, not closed, not during the level check), an answer to an ask for a sentence, not during the overview (the
  *  plan's first part, an opening hook) or the level check, not once their questions before the close were invited, and not a
  *  sentence already up. Empty when the switch is off. */
+/** Task 7k (PRACTICE_ON_PART_PAGE): on another part's page (v2PartViewed: practice they asked for), the part is that page's,
+ *  and an invitation given before does not stop the cards: the practice is carded on its page. */
 export function v2PracticeAnswerSentences(session: V2Session, state: V2State, heard: string | null | undefined, enabled: boolean = TUTOR_V2_CARD_EVERY_SENTENCE): string[] {
-  if (!enabled || !v2LearnerCardsOn(session, state, heard) || typeof state.closeInvitedAt === 'number' || !askedForSentence(state.history)) return [];
   const plan = session.plan;
+  const viewed = v2PlanLabelled(plan) ? v2PartViewed(plan, state) : -1;
+  if (!enabled || !v2LearnerCardsOn(session, state, heard) || (typeof state.closeInvitedAt === 'number' && viewed < 0) || !askedForSentence(state.history)) return [];
   if (v2PlanLabelled(plan)) {
-    const seg = plan.segments[v2PartInHand(plan, state)];
+    const seg = plan.segments[viewed >= 0 ? viewed : v2PartInHand(plan, state)];
     if (!seg || seg.kind === 'hook' || v2PartOf(seg).skipWhenLevelKnown) return [];
   }
   return v2LearnerSentences(heard).filter((x) => !v2SentenceCarded(state.board, x, state.correctedSentences ?? []));
@@ -419,7 +422,8 @@ export function v2CardsOwedFacts(state: V2State, enabled: boolean = TUTOR_V2_CAR
 /** The facts line: their words just now answered an ask for a sentence (the rule's sessions only, not after the summary began). */
 export function v2LearnerSentenceFacts(session: V2Session, state: V2State, heard: string | null | undefined, enabled: boolean = TUTOR_V2_BOARD_LEARNER_SENTENCE): string[] {
   // Final review M1: not once their questions before the close were invited: the next reply answers and closes.
-  if (!v2LearnerCardsOn(session, state, heard, enabled) || typeof state.closeInvitedAt === 'number') return [];
+  // Task 7k (PRACTICE_ON_PART_PAGE): not while practice they asked for runs on another part's page.
+  if (!v2LearnerCardsOn(session, state, heard, enabled) || (typeof state.closeInvitedAt === 'number' && !(v2PlanLabelled(session.plan) && v2PartViewed(session.plan, state) >= 0))) return [];
   const support = languageNameOf(session.languages![1]!.toLowerCase().split(/[-_]/)[0]!);
   // Task 7g (CARD_EVERY_SENTENCE, mic test 2 flag 3): every sentence of the answer, one card each, none left off.
   if (TUTOR_V2_CARD_EVERY_SENTENCE && enabled) {

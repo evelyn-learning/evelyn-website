@@ -19,10 +19,10 @@
 import type { LessonPlan, Segment } from '../lesson-plan/types';
 import { stripBoardBlocks } from './board-inline';
 import { v2LearnerSentence } from './learner-card';
-import { v2AsksPartChange, v2MoveAnswer, v2NextPart, v2PartInHand, v2PlanLabelled } from './part-flow';
+import { v2AsksPartChange, v2MoveAnswer, v2NextPart, v2OpenPagePart, v2PartInHand, v2PartViewed, v2PlanLabelled } from './part-flow';
 import { v2IsPageOfPart, v2PartEntered, v2PartIsOptional, v2PartNamedIn, v2PartOf } from './plan-map';
 import { v2OverrunMin, v2Taught } from './time-box';
-import { TUTOR_V2_STAY_IN_PART } from '../orchestrator/flags';
+import { TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART } from '../orchestrator/flags';
 import type { V2Session, V2State } from './types';
 
 /** The practice sentences of their own a practice part needs before it closes (Task 7f C). */
@@ -226,13 +226,18 @@ const MOVE_ON_ASKED = /\b(?:let'?s|let us|can we|could we|shall we|i(?:'d| would
 /** Count the learner's words for the part in hand (mutates `state`): a sentence of their own (v2LearnerSentence: four words or
  *  more, not a question) in a practice part adds one; asking to move on, or a yes to a part ask, records the part as theirs to
  *  close. Not while the lesson is closed. */
-export function v2CountPractice(plan: LessonPlan, state: V2State, said: string | null, lastTutor: string): void {
+/** Task 7k (PRACTICE_ON_PART_PAGE, `viewOn`): on another part's page (v2PartViewed: practice they asked for of an earlier
+ *  part), their sentences count for that part, never towards the position's minimum, and a move-on there is no move-on of the
+ *  position's part. */
+export function v2CountPractice(plan: LessonPlan, state: V2State, said: string | null, lastTutor: string, viewOn: boolean = TUTOR_V2_PRACTICE_ON_PART_PAGE): void {
   if (!said || state.closed) return;
-  const i = v2PartInHand(plan, state);
+  const viewed = v2PartViewed(plan, state, viewOn);
+  const i = viewed >= 0 ? viewed : v2PartInHand(plan, state);
   if (!v2PracticePart(plan, i)) return;
   const id = plan.segments[i]!.id;
   const lastAsk = stripBoardBlocks(lastTutor).split(/(?<=[.!?。！？])\s*/).map((x) => x.trim()).filter(Boolean).pop() ?? '';
   const moveOn = MOVE_ON_ASKED.test(said) || (v2AsksPartChange(plan, lastAsk) && v2MoveAnswer(said, lastTutor) === 'go');
+  if (moveOn && viewed >= 0) return;
   if (moveOn) { if (!(state.moveOnAsked ?? []).includes(id)) state.moveOnAsked = [...(state.moveOnAsked ?? []), id].slice(-20); return; }
   if (v2MoveAnswer(said, lastTutor) === 'question' || !v2LearnerSentence(said)) return;
   state.practiceSaid = { ...(state.practiceSaid ?? {}), [id]: Math.min(99, (state.practiceSaid?.[id] ?? 0) + 1) };
@@ -240,7 +245,10 @@ export function v2CountPractice(plan: LessonPlan, state: V2State, said: string |
 
 /** The practice part in hand is short of its sentences: its index and how many were said, or null (not a practice part,
  *  enough said, the learner asked to move on, or its goal already marked done). */
-export function v2PracticeShort(plan: LessonPlan, state: V2State): { index: number; id: string; n: number } | null {
+/** Task 7k (PRACTICE_ON_PART_PAGE, `viewOn`): null while another part's page is in view for practice they asked for (the
+ *  position's minimum waits until the board is back). */
+export function v2PracticeShort(plan: LessonPlan, state: V2State, viewOn: boolean = TUTOR_V2_PRACTICE_ON_PART_PAGE): { index: number; id: string; n: number } | null {
+  if (v2PartViewed(plan, state, viewOn) >= 0) return null;
   const i = v2PartInHand(plan, state);
   if (!v2PracticePart(plan, i)) return null;
   const id = plan.segments[i]!.id;
@@ -283,23 +291,75 @@ const ASK_JA = /(?:もっと|もう少し|もう(?:一|1|１)回|もう一度|�
 // Fix round 3: a wish about a later session (次回 / 今度 / 次は / 来週 / 次のレッスン) is no request for practice now.
 const OWN_INTENT_JA = /練習します|頑張ります|家で|自分で|あとで|後で|次回|今度|次は|来週|次のレッスン|次の授業|また次/;
 const DECLINES_JA = /(?:練習|もう)(?:は)?(?:もう)?(?:いい|大丈夫|結構)|いりません|要りません|ありません/;
-export const v2AsksMorePractice = (said: string | null | undefined): boolean => {
+/** Task 7k (CLOSE_REOPENED, `opts.widened`): also a request that names a plan part (not the closing one) with a practice cue
+ *  ("can we also do some more pronunciation, please?", "can we go back to conversation and do one more example?", "Oh, one
+ *  more, one more past simple, please."), and a "one more" asked of the tutor ("Can we do one more example?"; never one more
+ *  question, thing or minute). The old goodbyes stay no request ("No more questions, thank you", "I will practice more at
+ *  home", 「次回もっと練習したいです」, "Let's do this again sometime."). `opts` is an object: callers pass this function to
+ *  `Array.every`, whose index lands in the second argument. */
+export const v2AsksMorePractice = (said: string | null | undefined, opts?: { plan?: LessonPlan | null; widened?: boolean } | number): boolean => {
   if (!said) return false;
+  const o = typeof opts === 'object' && opts ? opts : {};
+  const widened = o.widened ?? TUTOR_V2_CLOSE_REOPENED;
+  const parts = widened && o.plan ? o.plan.segments.slice(0, -1).filter((seg) => !!v2PartOf(seg).label) : [];
   return said.split(/(?<=[.!?。！？])\s*/).some((raw) => {
     const s = raw.replace(DECLINE_LEAD, '').trim();
     if (!s) return false;
+    if (widened && parts.some((seg) => v2PartNamedIn(seg, s)) && v2AsksPracticeOfPart(s)) return true;
     if (/[぀-ヿ一-鿿]/.test(s)) return ASK_JA.test(s) && !OWN_INTENT_JA.test(s) && !DECLINES_JA.test(s);
     if (BARE_ONE_MORE.test(s)) return true;
+    if (widened && SOME_OTHER_TIME.test(s)) return false;
+    if (widened && ONE_MORE_ASK.test(s) && REQUEST_FRAME.test(s) && !OWN_INTENT.test(s) && !NEGATED.test(s)) return true;
     return PRACTICE_WORDS.test(s) && REQUEST_FRAME.test(s) && !OWN_INTENT.test(s) && !NEGATED.test(s);
   });
 };
 
+/** Task 7k: a wish for another day ("Let's do this again sometime."): a goodbye, no request now. */
+const SOME_OTHER_TIME = /\b(?:sometime|some ?time soon|some other (?:time|day)|someday|one day)\b/i;
+/** Task 7k: "one more" asked of the tutor, never one more question, thing, minute or moment. */
+const ONE_MORE_ASK = /\bone more\b(?!\s+(?:questions?|things?|minutes?|seconds?|moments?)\b)/i;
+/** Task 7k: a practice cue in a sentence that names a part: more, another, again, going back, practice, an example. */
+const PART_PRACTICE_CUE = /\b(?:more|another|one more|again|go back|back to|practi[cs]e|practi[cs]ing|exercises?|examples?|try)\b/i;
+/** …asked of the tutor: a request frame, or a bare "more X" / "one more X" / "another X". */
+const BARE_MORE_LEAD = /^(?:(?:uh|um|er|oh|ok(?:ay)?|yes|yeah|so|well)[,.]?\s+)*(?:just\s+)?(?:some\s+)?(?:more|one more|another)\b/i;
+const BACK_JA = /戻(?:り|って|れ|ろ)[^。！？]{0,8}?(?:たい|ください|お願い|ますか|ませんか)/;
+/** Task 7k: a sentence (one that names a plan part) asks for practice of it now: a practice cue asked of the tutor, not the
+ *  learner's own intent, not negated. Japanese: the 7f ask, or asking to go back (「会話に戻りたいです」). */
+export function v2AsksPracticeOfPart(sentence: string): boolean {
+  const s = sentence.replace(DECLINE_LEAD, '').trim();
+  if (!s) return false;
+  if (/[぀-ヿ一-鿿]/.test(s)) return (ASK_JA.test(s) || BACK_JA.test(s)) && !OWN_INTENT_JA.test(s) && !DECLINES_JA.test(s);
+  return PART_PRACTICE_CUE.test(s) && (REQUEST_FRAME.test(s) || BARE_MORE_LEAD.test(s)) && !OWN_INTENT.test(s) && !NEGATED.test(s) && !SOME_OTHER_TIME.test(s);
+}
+
+/** Task 7k (PRACTICE_ON_PART_PAGE): the plan part their words ask to practise, when it is not the part of the page in view:
+ *  a part the lesson has reached (up to the position), one left out for time, or an optional one not yet entered; never the
+ *  level check (no page) or the closing part. The sentence that names it must be a request (v2AsksPracticeOfPart). -1: none.
+ *  Recognising only: the caller turns the board's page (and only that); nothing of the lesson's state moves on it. */
+export function v2PartPracticeAsked(plan: LessonPlan, state: V2State, said: string | null | undefined, enabled: boolean = TUTOR_V2_PRACTICE_ON_PART_PAGE): number {
+  if (!enabled || !said || !v2PlanLabelled(plan)) return -1;
+  const pos = v2OpenPagePart(plan, state.board, true, state);
+  const viewed = v2PartViewed(plan, state, true);
+  const inView = viewed >= 0 ? viewed : pos;
+  const sentences = said.split(/(?<=[.!?。！？])\s*/).map((x) => x.trim()).filter(Boolean);
+  const last = plan.segments.length - 1;
+  for (const s of sentences) {
+    if (!v2AsksPracticeOfPart(s)) continue;
+    const i = plan.segments.findIndex((seg, k) => k !== last && k !== inView && !v2PartOf(seg).skipWhenLevelKnown && !!v2PartOf(seg).label && v2PartNamedIn(seg, s)
+      && (k <= pos || !!state.timeFit?.dropped.includes(seg.id) || (v2PartIsOptional(seg) && !v2PartEntered(seg, state))));
+    if (i >= 0) return i;
+  }
+  return -1;
+}
+
 /** Task 7f E: the facts line when the learner's words look like a request for more practice at the close: allowed while more
  *  than V2_MORE_PRACTICE_MIN_LEFT minutes remain to the hard stop, else no time today and named for next time. Permissive
  *  (fix round 4): the matcher can misread a closing remark, so the line leaves the reading of their meaning to the model. */
-export function v2MorePracticeFacts(granted: boolean | null, leftToStop: number): string[] {
+/** Task 7k (CLOSE_REOPENED, `reopened`): the close was reopened: after the practice, the reply asks whether they want more or to
+ *  finish, rather than returning to the close at once. */
+export function v2MorePracticeFacts(granted: boolean | null, leftToStop: number, reopened = false): string[] {
   if (granted === null) return [];
   return [granted
-    ? `more practice: their words may be a request for more practice now. If that is what they mean, it is allowed: there are about ${Math.max(1, Math.floor(leftToStop))} minutes before the session must end, so give one or two practice sentences on what they choose or on today's points, then return to the close. If they mean something else (thanks, a wish for another day, a question, a goodbye), answer that and close as you would have`
+    ? `more practice: their words may be a request for more practice now. If that is what they mean, it is allowed: there are about ${Math.max(1, Math.floor(leftToStop))} minutes before the session must end, so give one or two practice sentences on what they choose or on today's points, then ${reopened ? 'once they have answered and you have given feedback, ask whether they would like more or to finish' : 'return to the close'}. If they mean something else (thanks, a wish for another day, a question, a goodbye), answer that and close as you would have`
     : 'more practice: their words may be a request for more practice now. If that is what they mean, there is no time left today: say so plainly in one short sentence, name more practice as something for next time, and go on with the close. If they mean something else, answer that and close as you would have'];
 }

@@ -161,6 +161,11 @@ export interface V2State {
   /** Task 7d (CLOSE_INVITES_QUESTIONS), spoken plan-led second-language lessons: when the learner was invited to ask
    *  questions before the close (close-invite.ts). From then on the close is never refused for the invitation. */
   closeInvitedAt?: number;
+  /** Task 7k (CLOSE_REOPENED): when the close was reopened (the learner spoke over the closing words, or asked for more
+   *  practice or another part after the invitation) and no ask has been given since: the invitation is re-armed
+   *  (closeInvitedAt cleared), no goodbye is pressed, and after the practice the reply asks whether they want more or to
+   *  finish; that ask recorded, this clears and closeInvitedAt is set again. */
+  closeReopened?: number;
   /** Task 7f B (TIME_NO_SQUEEZE), timed plan-led lessons: the plan parts left out for time (optional parts, last first, until
    *  the rest fits the box), decided once when the first teaching part opens; `told` once a reply has named them to the
    *  learner (or the facts have asked twice); `shown`: the turns the facts asked. Carried to the next session (memory.ts).
