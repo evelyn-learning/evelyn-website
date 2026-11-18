@@ -96,6 +96,11 @@ for (const b of ['<span class="fill-in-the-blank"> </span>', '<span class="x fil
   assert.ok(/A\. x\^2/.test(t), t);
 }
 
+// sup/sub outside MathML keep their meaning
+assert.equal(questionAsText(item({ questionHtml: "<p>x<sup>2</sup> + H<sub>2</sub>O and 10<sup>-3</sup></p>" })), "x^2 + H_2O and 10^(-3)");
+assert.doesNotThrow(() => questionAsText(item({ questionHtml: "<p>&#x110000; &#0; ok</p>" })));
+assert.deepEqual(codes(item({ questionHtml: "<div class='a cr-passage'><div>P</div></div><p></p>", interactions: [choice], keys: { R1: ["B"] } })), ["empty_stem"], "single-quoted passage class");
+
 // no key
 assert.deepEqual(codes(item({ interactions: [choice], keys: {} })), ["no_key"]);
 assert.deepEqual(codes(item({ interactions: [choice], keys: { R1: [] } })), ["no_key"]);

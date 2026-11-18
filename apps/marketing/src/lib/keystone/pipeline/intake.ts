@@ -21,7 +21,7 @@ const decodeText = (s: string) =>
   s.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (all, e: string) => {
     if (e[0] === "#") {
       const n = e[1].toLowerCase() === "x" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-      return Number.isFinite(n) ? String.fromCodePoint(n) : all;
+      return Number.isFinite(n) && n > 0 && n <= 0x10ffff ? String.fromCodePoint(n) : all;
     }
     return ENTITIES[e.toLowerCase()] ?? all;
   });
@@ -30,7 +30,7 @@ const decodeText = (s: string) =>
 function withoutPassage(html: string): string {
   let out = "";
   let i = 0;
-  const start = /<div\b[^>]*class\s*=\s*"[^"]*\bcr-passage\b[^"]*"[^>]*>/g;
+  const start = /<div\b[^>]*class\s*=\s*(?:"[^"]*\bcr-passage\b[^"]*"|'[^']*\bcr-passage\b[^']*')[^>]*>/g;
   for (let m = start.exec(html); m; m = start.exec(html)) {
     out += html.slice(i, m.index);
     let depth = 1;
@@ -58,10 +58,20 @@ const withMathAsText = (html: string) =>
   html.replace(/<math\b[^>]*\/>|<math\b[^>]*>[\s\S]*?<\/math>/gi, (m) =>
     mathmlToText(m).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 
+const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/** <sup>/<sub> outside MathML become ^ / _ so "x2" cannot be mistaken for x squared. */
+const withScripts = (html: string) =>
+  html.replace(/<(sup|sub)\b[^>]*>([\s\S]*?)<\/\1>/gi, (_m, tag: string, inner: string) => {
+    const t = decodeText(inner.replace(/<[^>]*>/g, "")).trim();
+    const mark = tag.toLowerCase() === "sup" ? "^" : "_";
+    return esc(/^(?:\d+\.?\d*|\.\d+|\p{L}+)$/u.test(t) ? `${mark}${t}` : `${mark}(${t})`);
+  });
+
 /** Plain text of some HTML: tags stripped, blanks as "____", images as "[image: file]". */
 function plain(html: string): string {
   return decodeText(
-    withMathAsText(html)
+    withScripts(withMathAsText(html))
       .replace(BLANK, "____")
       .replace(/<img\b[^>]*?\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)')[^>]*>/gi, (_m, a, b) => ` [image: ${lastSegment(a ?? b ?? "")}] `)
       .replace(/<\/(p|div|li|tr|h\d|table)>|<br\s*\/?>/gi, "\n")
