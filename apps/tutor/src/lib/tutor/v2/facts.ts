@@ -21,7 +21,7 @@ import { v2PracticeAskFacts, v2RetryFacts } from './languages';
 import { V2_TIME_UP_MIN, v2CloseOpen, v2PlanContentDone, v2LeftToStopMin, v2LessonTimeLine, v2PartDueFact, v2TimeFlags, v2WrapDue, type V2TimeFlags } from './time-box';
 import { v2MorePracticeFacts, v2PracticeFacts, v2StayInPartLine, v2TimeFitFacts } from './time-fit';
 import { TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART } from '../orchestrator/flags';
-import { v2CloseInviteFacts, v2CloseReopened } from './close-invite';
+import { v2CloseInviteFacts, v2CloseReopened, v2MoreAskAnswered } from './close-invite';
 
 /** After the tutor chose to keep listening: how long the student stays silent before it is told so (TutorVoiceV2).
  *  At that point silence is no longer open to it: it kept listening twice and the student sat with a blank
@@ -72,6 +72,9 @@ export interface V2TurnFacts {
   /** Task 7k (CLOSE_REOPENED): after the invitation, their words look like a request for more practice or another part; the
    *  close is reopened after the reply if it does not end the lesson (turn.ts). */
   reopenAsked?: boolean;
+  /** Task 7k fix round 1 (I1, ruling b): before the close, their words asked for practice of a part that comes later: its name.
+   *  Facts only: nothing opens for it. */
+  partAhead?: string;
 }
 
 /** A quoted span at the very start of a reply, in any of the quote pairs a tutor uses: 「…」, 『…』, “…”, "…", ‘…’, '…'. */
@@ -165,6 +168,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   const morePracticeAllowed = !discussion && f.morePractice === true;
   // Task 7k (CLOSE_REOPENED): the close was reopened and no ask given since: nothing presses toward the close.
   const reopened = !discussion && v2CloseReopened(state);
+  // Fix round 1 (I2): this turn answers the ask "more, or finish?" (close-invite.ts): no goodbye pressed either.
+  const moreAsked = !discussion && v2MoreAskAnswered(state);
   // Task 7i (STAY_IN_PART): ahead of the plan in a required practice part, the time line says to go on with it. Not once the
   // close is open, the summary has begun, or more practice was asked for at the close.
   const stay = !discussion && !session.homework && !session.homeworkSheet && !closeOpen && !summaryBegun && !morePracticeAllowed ? v2StayInPartLine(session, state, f.nowMs) : null;
@@ -203,7 +208,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     if (!discussion && !passed.length) lines.push(...v2UnreachedAtCloseFact(session.plan, state, closing || summaryBegun ? 'closing' : near ? 'near' : null));
     // Task 6g: an optional part offered and not taken up is offered at most once more (tester A: four offers in nine turns).
     if (!discussion) lines.push(...v2PartOfferFacts(session.plan, state));
-    if (!discussion && summaryBegun && !morePracticeAllowed && !reopened && !f.partVisit) lines.push('the summary has begun: from here, no new practice, exercise or offer of more practice unless they ask for it. Answer what they say and bring the lesson to its close');
+    if (!discussion && summaryBegun && !morePracticeAllowed && !reopened && !moreAsked && !f.partVisit) lines.push('the summary has begun: from here, no new practice, exercise or offer of more practice unless they ask for it. Answer what they say and bring the lesson to its close');
     // Task 6e fix round 1 (F4): tester B was asked about a question or the summary in two turns running.
     if (!discussion && TUTOR_V2_CLOSE_ONE_QUESTION && (closing || near) && !state.closed) lines.push('at the close: at most one question in a reply, never one you asked in your last reply, and nothing after a goodbye');
     // Task 7d (CLOSE_INVITES_QUESTIONS): the summary reply ends by inviting their questions, and the lesson ends on their answer.
@@ -218,6 +223,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     if (!discussion && f.morePractice !== undefined) lines.push(...v2MorePracticeFacts(f.morePractice, leftStop, reopened || !!f.reopenAsked));
     // Task 7k (PRACTICE_ON_PART_PAGE): practice of another part runs on that part's page, and the board returns after it.
     if (!discussion && f.partVisit) { const v = f.partVisit; lines.push(`practice on another part's page: ${v.opened ? `they asked for practice of the ${v.label} part, and the board has turned to its page "${v.title}" as this reply begins` : `the board shows the "${v.title}" page (the ${v.label} part) for practice they asked for`}. This practice's cards go on this page. When that practice is over, turn back to the "${v.back}" page with its page block before you go on; until then stay on this page`); }
+    else if (!discussion && f.partAhead) lines.push(`they asked to practise the ${f.partAhead} part, which comes later in the lesson: say so briefly, or help with it in place on this page, and go on with the part in hand (no page for it now)`);
     else if (!discussion && TUTOR_V2_PRACTICE_ON_PART_PAGE && f.morePractice === true && v2PlanLabelled(session.plan)) lines.push('if the practice they ask for is of one of the lesson\'s parts other than the page in view, write that part\'s page block first (a page it already has turns back to it), so its cards go on its page; when it is over, turn back to the page in view now');
   }
   // Where the parts' minutes put the lesson now, so it paces itself to the box (time-box.ts).

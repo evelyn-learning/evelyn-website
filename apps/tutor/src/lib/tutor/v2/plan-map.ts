@@ -291,17 +291,19 @@ export function v2PartNamedIn(seg: Segment, text: string): boolean {
 }
 
 /** Task 7i (PART_ENTERED): a page of the part that holds something (a card, a note, a question). */
-export function v2PartPageHolds(seg: Segment, board: V2State['board']): boolean {
-  return board.pages.some((pg) => pg.items.length > 0 && pageOfPart(seg, pg.title));
+/** Task 7k fix round 1 (I1, `skip`): pages opened by a practice visit (state.visitPages) are not the lesson entering the part. */
+export function v2PartPageHolds(seg: Segment, board: V2State['board'], skip: readonly number[] = []): boolean {
+  return board.pages.some((pg, i) => pg.items.length > 0 && !skip.includes(i) && pageOfPart(seg, pg.title));
 }
 
 /** Task 7i (PART_ENTERED): the lesson entered the part: a goal of it shown or demonstrated, its page holds something, or practice
  *  was counted in it; never a part left out for time. A page alone is not entered: mic test 3 (embed-1794967959470) opened an
  *  empty "Pronunciation" page in minute 1, and it counted as taught, green and completed for the whole lesson. */
-export function v2PartEntered(seg: Segment, state: Pick<V2State, 'goals' | 'board'> & Partial<Pick<V2State, 'practiceSaid' | 'timeFit'>>): boolean {
+/** Task 7k fix round 1 (I1): a page a practice visit opened (state.visitPages) never counts: a visit never moves the lesson. */
+export function v2PartEntered(seg: Segment, state: Pick<V2State, 'goals' | 'board'> & Partial<Pick<V2State, 'practiceSaid' | 'timeFit' | 'visitPages'>>): boolean {
   if (state.timeFit?.dropped.includes(seg.id)) return false;
   const g = state.goals[seg.id]?.status;
-  return g === 'shown' || g === 'demonstrated' || (state.practiceSaid?.[seg.id] ?? 0) > 0 || v2PartPageHolds(seg, state.board);
+  return g === 'shown' || g === 'demonstrated' || (state.practiceSaid?.[seg.id] ?? 0) > 0 || v2PartPageHolds(seg, state.board, state.visitPages);
 }
 
 /** Task 6g: a part taken up: a status of shown or demonstrated, or a page of its own. Task 7i (PART_ENTERED): entered

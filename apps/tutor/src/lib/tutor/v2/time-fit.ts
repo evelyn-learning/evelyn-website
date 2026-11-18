@@ -114,7 +114,8 @@ export function v2DroppedMentioned(plan: LessonPlan, state: V2State, said: strin
 export function v2TakeEnteredDropped(plan: LessonPlan, state: V2State): string[] {
   const fit = state.timeFit;
   if (!fit?.byArrival || !fit.dropped.length) return [];
-  const bare = { ...state, timeFit: undefined };
+  // Task 7k fix round 1 (I1, ruling c): a visit's page is the lesson entering a part left out for time (7i decides taken).
+  const bare = { ...state, timeFit: undefined, visitPages: undefined };
   const ids = fit.dropped.filter((id) => { const seg = plan.segments.find((x) => x.id === id); return !!seg && v2PartEntered(seg, bare); });
   if (ids.length) state.timeFit = { ...fit, dropped: fit.dropped.filter((id) => !ids.includes(id)), taken: [...(fit.taken ?? []), ...ids] };
   return ids;
@@ -227,17 +228,16 @@ const MOVE_ON_ASKED = /\b(?:let'?s|let us|can we|could we|shall we|i(?:'d| would
  *  more, not a question) in a practice part adds one; asking to move on, or a yes to a part ask, records the part as theirs to
  *  close. Not while the lesson is closed. */
 /** Task 7k (PRACTICE_ON_PART_PAGE, `viewOn`): on another part's page (v2PartViewed: practice they asked for of an earlier
- *  part), their sentences count for that part, never towards the position's minimum, and a move-on there is no move-on of the
- *  position's part. */
+ *  part), nothing is counted (fix round 1, I1: a visit never counts for a part's practice, the position's or the visited
+ *  one's), and a move-on there is no move-on of the position's part. */
 export function v2CountPractice(plan: LessonPlan, state: V2State, said: string | null, lastTutor: string, viewOn: boolean = TUTOR_V2_PRACTICE_ON_PART_PAGE): void {
   if (!said || state.closed) return;
-  const viewed = v2PartViewed(plan, state, viewOn);
-  const i = viewed >= 0 ? viewed : v2PartInHand(plan, state);
+  if (v2PartViewed(plan, state, viewOn) >= 0) return;
+  const i = v2PartInHand(plan, state);
   if (!v2PracticePart(plan, i)) return;
   const id = plan.segments[i]!.id;
   const lastAsk = stripBoardBlocks(lastTutor).split(/(?<=[.!?。！？])\s*/).map((x) => x.trim()).filter(Boolean).pop() ?? '';
   const moveOn = MOVE_ON_ASKED.test(said) || (v2AsksPartChange(plan, lastAsk) && v2MoveAnswer(said, lastTutor) === 'go');
-  if (moveOn && viewed >= 0) return;
   if (moveOn) { if (!(state.moveOnAsked ?? []).includes(id)) state.moveOnAsked = [...(state.moveOnAsked ?? []), id].slice(-20); return; }
   if (v2MoveAnswer(said, lastTutor) === 'question' || !v2LearnerSentence(said)) return;
   state.practiceSaid = { ...(state.practiceSaid ?? {}), [id]: Math.min(99, (state.practiceSaid?.[id] ?? 0) + 1) };
@@ -315,7 +315,8 @@ export const v2AsksMorePractice = (said: string | null | undefined, opts?: { pla
 };
 
 /** Task 7k: a wish for another day ("Let's do this again sometime."): a goodbye, no request now. */
-const SOME_OTHER_TIME = /\b(?:sometime|some ?time soon|some other (?:time|day)|someday|one day)\b/i;
+// Fix round 1 (M5): a named day or "next …" is a later session too ("Can we practise the past simple again next Tuesday?").
+const SOME_OTHER_TIME = /\b(?:sometime|some ?time soon|some other (?:time|day)|someday|one day|next (?:time|lesson|session|class|week|month|monday|tuesday|wednesday|thursday|friday|saturday|sunday)|(?:on )?(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)s?|tomorrow)\b/i;
 /** Task 7k: "one more" asked of the tutor, never one more question, thing, minute or moment. */
 const ONE_MORE_ASK = /\bone more\b(?!\s+(?:questions?|things?|minutes?|seconds?|moments?)\b)/i;
 /** Task 7k: a practice cue in a sentence that names a part: more, another, again, going back, practice, an example. */
@@ -334,10 +335,12 @@ export function v2AsksPracticeOfPart(sentence: string): boolean {
 
 /** Task 7k (PRACTICE_ON_PART_PAGE): the plan part their words ask to practise, when it is not the part of the page in view:
  *  a part the lesson has reached (up to the position), one left out for time, or an optional one not yet entered; never the
- *  level check (no page) or the closing part. The sentence that names it must be a request (v2AsksPracticeOfPart). -1: none.
- *  Recognising only: the caller turns the board's page (and only that); nothing of the lesson's state moves on it. */
-export function v2PartPracticeAsked(plan: LessonPlan, state: V2State, said: string | null | undefined, enabled: boolean = TUTOR_V2_PRACTICE_ON_PART_PAGE): number {
-  if (!enabled || !said || !v2PlanLabelled(plan)) return -1;
+ *  level check (no page) or the closing part. The sentence that names it must be a request (v2AsksPracticeOfPart). Null: none.
+ *  Recognising only: the caller turns the board's page (and only that); nothing of the lesson's state moves on it.
+ *  Fix round 1 (I1, ruling b): `ahead`: before the close (the summary not begun) a part after the position: words alone never
+ *  move the lesson forward, so the caller opens nothing for it (facts only). At the close every part is behind the Summary. */
+export function v2PartPracticeAsked(plan: LessonPlan, state: V2State, said: string | null | undefined, enabled: boolean = TUTOR_V2_PRACTICE_ON_PART_PAGE): { index: number; ahead: boolean } | null {
+  if (!enabled || !said || !v2PlanLabelled(plan)) return null;
   const pos = v2OpenPagePart(plan, state.board, true, state);
   const viewed = v2PartViewed(plan, state, true);
   const inView = viewed >= 0 ? viewed : pos;
@@ -345,11 +348,10 @@ export function v2PartPracticeAsked(plan: LessonPlan, state: V2State, said: stri
   const last = plan.segments.length - 1;
   for (const s of sentences) {
     if (!v2AsksPracticeOfPart(s)) continue;
-    const i = plan.segments.findIndex((seg, k) => k !== last && k !== inView && !v2PartOf(seg).skipWhenLevelKnown && !!v2PartOf(seg).label && v2PartNamedIn(seg, s)
-      && (k <= pos || !!state.timeFit?.dropped.includes(seg.id) || (v2PartIsOptional(seg) && !v2PartEntered(seg, state))));
-    if (i >= 0) return i;
+    const i = plan.segments.findIndex((seg, k) => k !== last && k !== inView && !v2PartOf(seg).skipWhenLevelKnown && !!v2PartOf(seg).label && v2PartNamedIn(seg, s));
+    if (i >= 0) return { index: i, ahead: typeof state.summaryBegunAt !== 'number' && i > pos };
   }
-  return -1;
+  return null;
 }
 
 /** Task 7f E: the facts line when the learner's words look like a request for more practice at the close: allowed while more

@@ -73,6 +73,8 @@ export function v2CloseInviteFacts(session: V2Session, state: V2State, ctx: { no
   if (v2CloseReopened(state, ctx.reopenedOn)) {
     return !ctx.stopAsked && !!session.timeBoxMinutes && v2LeftToStopMin(session, state, ctx.nowMs, ctx.overrun) > V2_TIME_UP_MIN ? [v2CloseReopenedLine(summaryGiven)] : [];
   }
+  // Fix round 1 (I2): the ask was "more, or finish?": their answer is read by the model, and no goodbye is pressed.
+  if (v2MoreAskAnswered(state, ctx.reopenedOn)) return [V2_MORE_ASK_ANSWER_LINE];
   if (typeof state.closeInvitedAt === 'number') return v2CloseOpen(session, state, ctx.nowMs, ctx.closeByContent) ? [`questions before the close: you have asked whether they have any questions before you finish. If they asked one, answer it briefly; ${summaryGiven ? '' : 'if you have not given the summary yet, give it in a few words first; '}then say goodbye and end the lesson in this reply`] : [];
   if (!v2CloseInviteOwed(session, state, ctx)) return [];
   return ['questions before the close: there is time for their questions, so the reply that gives the summary does not end the lesson: it ends with one question, in your own words, asking whether they have any questions before you finish (that is its one question; no goodbye in it). The lesson ends on their answer'];
@@ -83,6 +85,13 @@ export function v2CloseInviteFacts(session: V2Session, state: V2State, ctx: { no
 export function v2CloseReopened(state: Pick<V2State, 'closeReopened' | 'closeInvitedAt' | 'closed'>, enabled: boolean = TUTOR_V2_CLOSE_REOPENED): boolean {
   return enabled && !state.closed && typeof state.closeReopened === 'number' && typeof state.closeInvitedAt !== 'number';
 }
+
+/** Task 7k fix round 1 (I2): the recorded ask was "more, or finish?" (state.closeAsk) and the lesson is open: this turn answers
+ *  it. "Yes, please.", "Keep going." or 「はい、お願いします。」 brought back the goodbye line (review I2); no phrase list decides. */
+export function v2MoreAskAnswered(state: Pick<V2State, 'closeAsk' | 'closeInvitedAt' | 'closed'>, enabled: boolean = TUTOR_V2_CLOSE_REOPENED): boolean {
+  return enabled && !state.closed && typeof state.closeInvitedAt === 'number' && state.closeAsk === 'more';
+}
+export const V2_MORE_ASK_ANSWER_LINE = 'questions before the close: you asked whether they would like more practice or to finish. If they want more, give one more practice (on the page of the part it is about: its page block first) and do not end the lesson; otherwise say goodbye and end the lesson in this reply';
 
 /** Task 7k: the facts line while the close is reopened (mic test 3, embed-1794967959470, flag 8: "it's always in a hurry to end
  *  … it should ask: are you done, do you want more, or shall we end it here?"). */

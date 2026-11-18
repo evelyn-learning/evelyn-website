@@ -166,6 +166,12 @@ export interface V2State {
    *  (closeInvitedAt cleared), no goodbye is pressed, and after the practice the reply asks whether they want more or to
    *  finish; that ask recorded, this clears and closeInvitedAt is set again. */
   closeReopened?: number;
+  /** Task 7k fix round 1 (I2, CLOSE_REOPENED): the recorded ask (closeInvitedAt) was "more, or finish?": the turn that answers
+   *  it presses no goodbye, and a reply that gives more practice (not ending the lesson) reopens the close. */
+  closeAsk?: 'more';
+  /** Task 7k fix round 1 (I1, PRACTICE_ON_PART_PAGE): indices of the board pages a practice visit opened. They never count for
+   *  the position, done / green, a part reached or entered. */
+  visitPages?: number[];
   /** Task 7f B (TIME_NO_SQUEEZE), timed plan-led lessons: the plan parts left out for time (optional parts, last first, until
    *  the rest fits the box), decided once when the first teaching part opens; `told` once a reply has named them to the
    *  learner (or the facts have asked twice); `shown`: the turns the facts asked. Carried to the next session (memory.ts).

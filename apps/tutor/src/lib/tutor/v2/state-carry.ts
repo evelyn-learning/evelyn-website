@@ -20,7 +20,7 @@ export const V2_MAX_UNHEARD = 4;
  *  the close; final review I6: read whatever STATE_CARRY says, as the held page is (its own switch, CLOSE_INVITES_QUESTIONS,
  *  and its scope are applied in v2ScopeCarried): with STATE_CARRY off it was dropped every turn, and every close after the
  *  invitation was refused and the invitation asked again. */
-type Carried = Pick<V2State, 'heldPage' | 'summaryBegunAt' | 'repliesSinceBoard' | 'boardProblems' | 'closeInvitedAt' | 'closeReopened' | 'timeFit' | 'practiceSaid' | 'moveOnAsked' | 'cardsOwed' | 'unheard'>;
+type Carried = Pick<V2State, 'heldPage' | 'summaryBegunAt' | 'repliesSinceBoard' | 'boardProblems' | 'closeInvitedAt' | 'closeReopened' | 'closeAsk' | 'visitPages' | 'timeFit' | 'practiceSaid' | 'moveOnAsked' | 'cardsOwed' | 'unheard'>;
 const ID = /^[\w.:-]{1,80}$/;
 export function v2ReadCarried(raw: unknown, enabled: boolean = TUTOR_V2_STATE_CARRY): Carried {
   const s = (raw && typeof raw === 'object' ? raw : {}) as Partial<Record<keyof V2State, unknown>>;
@@ -44,6 +44,9 @@ export function v2ReadCarried(raw: unknown, enabled: boolean = TUTOR_V2_STATE_CA
   if (typeof s.closeInvitedAt === 'number' && Number.isFinite(s.closeInvitedAt) && s.closeInvitedAt > 0) out.closeInvitedAt = s.closeInvitedAt;
   // Task 7k (CLOSE_REOPENED): the close reopened, read as closeInvitedAt is (its switch and scope in v2ScopeCarried).
   if (typeof s.closeReopened === 'number' && Number.isFinite(s.closeReopened) && s.closeReopened > 0) out.closeReopened = s.closeReopened;
+  // Task 7k fix round 1: the recorded ask was "more, or finish?" (I2); the pages a practice visit opened (I1).
+  if (s.closeAsk === 'more') out.closeAsk = 'more';
+  if (Array.isArray(s.visitPages)) { const list = s.visitPages.filter((x): x is number => typeof x === 'number' && Number.isInteger(x) && x >= 0 && x < 200).slice(-20); if (list.length) out.visitPages = list; }
   if (!enabled) return out;
   if (typeof s.summaryBegunAt === 'number' && Number.isFinite(s.summaryBegunAt) && s.summaryBegunAt > 0) out.summaryBegunAt = s.summaryBegunAt;
   if (typeof s.repliesSinceBoard === 'number' && Number.isFinite(s.repliesSinceBoard) && s.repliesSinceBoard >= 0) out.repliesSinceBoard = Math.min(1000, Math.floor(s.repliesSinceBoard));
@@ -66,10 +69,10 @@ export function v2CarryApplies(session: Pick<V2Session, 'mode' | 'plan' | 'homew
  *  `closeInvitedAt` is kept only for the lessons Task 7d applies to (close-invite.ts v2CloseInviteOn, its switch included);
  *  Task 7k's `closeReopened` likewise. */
 export function v2ScopeCarried(state: V2State, session: Pick<V2Session, 'mode' | 'plan' | 'homework' | 'homeworkSheet'> & Partial<Pick<V2Session, 'languages' | 'pronunciation'>>, closeInviteOn: boolean = v2CloseInviteOn(session)): V2State {
-  if (!v2CarryApplies(session)) { delete state.summaryBegunAt; delete state.repliesSinceBoard; delete state.boardProblems; delete state.closeInvitedAt; delete state.closeReopened; }
-  if (!closeInviteOn) { delete state.closeInvitedAt; delete state.closeReopened; }
+  if (!v2CarryApplies(session)) { delete state.summaryBegunAt; delete state.repliesSinceBoard; delete state.boardProblems; delete state.closeInvitedAt; delete state.closeReopened; delete state.closeAsk; }
+  if (!closeInviteOn) { delete state.closeInvitedAt; delete state.closeReopened; delete state.closeAsk; }
   // Task 7f: the practice count is the part flow's (spoken plan-led lessons); the time fit any timed taught lesson's with a plan.
-  if (!v2CarryApplies(session)) { delete state.practiceSaid; delete state.moveOnAsked; delete state.cardsOwed; delete state.unheard; }
+  if (!v2CarryApplies(session)) { delete state.practiceSaid; delete state.moveOnAsked; delete state.cardsOwed; delete state.unheard; delete state.visitPages; }
   if (!session.plan || session.homework || session.homeworkSheet || discussionOf(session.plan)) delete state.timeFit;
   return state;
 }

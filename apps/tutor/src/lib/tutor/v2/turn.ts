@@ -388,7 +388,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const stopAsked = TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid);
   // Task 7k (PRACTICE_ON_PART_PAGE): their words ask for practice of another part (time-fit.ts v2PartPracticeAsked: recognising
   // only). The board turns to its page below, before the reply writes; nothing of the lesson's state moves on it.
-  const visitAsk = partFlow && session.plan && !state.closed && !stopAsked && leftMin > V2_MORE_PRACTICE_MIN_LEFT ? v2PartPracticeAsked(session.plan, state, input.studentSaid) : -1;
+  // Fix round 1 (I1, ruling b): `ahead` (a later part before the close) opens nothing: facts only.
+  const partAsk = partFlow && session.plan && !state.closed && !stopAsked && leftMin > V2_MORE_PRACTICE_MIN_LEFT ? v2PartPracticeAsked(session.plan, state, input.studentSaid) : null;
+  const visitAsk = partAsk && !partAsk.ahead ? partAsk.index : -1;
   // Task 7k (CLOSE_REOPENED): a close the client marked reopened (spoken over: useV2Turns) is re-armed: closeInvitedAt clears,
   // so the next end_lesson waits for the ask "more, or finish?" once (the 7d deferral), and the facts press no goodbye.
   if (TUTOR_V2_CLOSE_REOPENED && !state.closed && typeof state.closeReopened === 'number') delete state.closeInvitedAt;
@@ -398,6 +400,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // not end the lesson: the lesson took the request up.
   const reopenAsked = TUTOR_V2_CLOSE_REOPENED && v2CloseInviteOn(session) && !state.closed && typeof state.closeInvitedAt === 'number' && !!input.studentSaid && !stopAsked && leftMin > V2_MORE_PRACTICE_MIN_LEFT
     && (visitAsk >= 0 || v2AsksMorePractice(input.studentSaid, { plan: session.plan }));
+  // Fix round 1 (I2): this turn answers the recorded ask "more, or finish?" (state, not their words): the facts press no goodbye,
+  // its end_lesson is never refused, and a reply that gives more practice without ending the lesson reopens the close.
+  const answersMoreAsk = TUTOR_V2_CLOSE_REOPENED && v2CloseInviteOn(session) && !state.closed && typeof state.closeInvitedAt === 'number' && state.closeAsk === 'more' && input.studentSaid !== null && !stopAsked;
   // Task 7d (CLOSE_INVITES_QUESTIONS): their questions are still to be invited before the close (close-invite.ts: only where
   // the clock lets the tutor close). As the turn began: an invitation given in this turn does not lift the refusal for the
   // rest of it. A second end_lesson in the reply ends the turn there, open (fix round 1, I2). Task 7k: also the ask after a
@@ -405,7 +410,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const inviteOwed = v2CloseInviteOwed(session, state, { nowMs, stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun });
   // Task 7f C (PART_MIN_PRACTICE): the learner's words count for the part in hand, before any page opens on their yes. Task 7k:
   // not their request for practice of another part.
-  if (tf.minPractice && partFlow && session.plan && visitAsk < 0) v2CountPractice(session.plan, state, input.studentSaid, lastTutorText);
+  if (tf.minPractice && partFlow && session.plan && !partAsk) v2CountPractice(session.plan, state, input.studentSaid, lastTutorText);
   // Task 7i (OPTIONAL_AT_ARRIVAL): an optional part is decided as the lesson arrives at it (time-fit.ts v2ArrivalDrops), measured
   // against the box plus the margin from the real elapsed time. Before any page opens on their yes: a yes to a part left out
   // opens nothing. Labelled plans only (fix round 1, I2): a plan without part names keeps the 7f up-front drop.
@@ -452,6 +457,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const name = at >= 0 ? 'go_to_page' : 'new_page';
     const args = at >= 0 ? { pageIndex: at, page: at + 1, title: state.board.pages[at]!.title } : { title: label };
     const o = applyBoard(state.board, id, name, args);
+    // Fix round 1 (I1, ruling a): a page the visit opens is marked, and never counts for the position, green or a part reached.
+    if (o.painted && name === 'new_page') state.visitPages = [...(state.visitPages ?? []), state.board.current].slice(-20);
     if (o.painted) visit = { id, name, args, outcome: v2PageTurnNote(plan, state) ?? o.detail, inline: true, ...(name === 'new_page' ? { agreed: true } : {}) };
   }
   // Task 7f B (TIME_NO_SQUEEZE): the parts left out for time, decided once, when the first teaching part has opened.
@@ -471,9 +478,12 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // the state the facts read.
   // Task 7k (PRACTICE_ON_PART_PAGE): practice on another part's page (v2PartViewed) is carded there, at the close too.
   const viewed = partFlow && session.plan ? v2PartViewed(session.plan, state) : -1;
-  const partVisit = viewed >= 0 && session.plan ? { label: v2PartOf(session.plan.segments[viewed]!).label!, title: state.board.pages[state.board.current]!.title, back: state.board.pages[v2PositionPage(session.plan, state)]?.title ?? '', opened: !!visit } : undefined;
+  const backAt = viewed >= 0 && session.plan ? v2PositionPage(session.plan, state) : -1;
+  // Fix round 1 (M7): never a turn-back line with no page to turn back to.
+  const partVisit = viewed >= 0 && backAt >= 0 && session.plan ? { label: v2PartOf(session.plan.segments[viewed]!).label!, title: state.board.pages[state.board.current]!.title, back: state.board.pages[backAt]!.title, opened: !!visit } : undefined;
+  const partAhead = partAsk?.ahead && session.plan ? v2PartOf(session.plan.segments[partAsk.index]!).label! : undefined;
   const answerSentences = session.mode === 'voice' && !discussion && !session.homework && !session.homeworkSheet && (!v2SummaryBegun(state) || viewed >= 0) ? v2PracticeAnswerSentences(session, state, input.studentSaid) : [];
-  const facts = renderFacts(session, state, { ...input.facts, nowMs, heard: input.studentSaid, time: tf, ...(practiceShort ? { practiceShort } : {}), ...(morePractice !== undefined ? { morePractice } : {}), ...(stopAsked ? { stopAsked: true } : {}), ...(levelReopened ? { levelReopened: true } : {}), ...(released ? { partOpened: String(released.args.title) } : {}), ...(input.partFlags?.askEvery !== undefined ? { partAskEvery: input.partFlags.askEvery } : {}), ...(droppedAsked ? { droppedAsked } : {}), ...(partVisit ? { partVisit } : {}), ...(reopenAsked ? { reopenAsked: true } : {}) });
+  const facts = renderFacts(session, state, { ...input.facts, nowMs, heard: input.studentSaid, time: tf, ...(practiceShort ? { practiceShort } : {}), ...(morePractice !== undefined ? { morePractice } : {}), ...(stopAsked ? { stopAsked: true } : {}), ...(levelReopened ? { levelReopened: true } : {}), ...(released ? { partOpened: String(released.args.title) } : {}), ...(input.partFlags?.askEvery !== undefined ? { partAskEvery: input.partFlags.askEvery } : {}), ...(droppedAsked ? { droppedAsked } : {}), ...(partVisit ? { partVisit } : {}), ...(partAhead ? { partAhead } : {}), ...(reopenAsked ? { reopenAsked: true } : {}) });
   // Task 7i (STAY_IN_PART): the unheard sentences are named in these facts once.
   delete state.unheard;
   // A reply that closes the session: the student's words ask to stop, or the time is up (V2_TIME_UP_MIN, as the facts
@@ -1510,11 +1520,15 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Task 7k (CLOSE_REOPENED): reopened, the ask "more, or finish?" (or an invitation) is the ask the lesson may end on; recorded,
   // the reopening is over until they ask for more again.
   const lastSaid = lastSentences(stripBoardBlocks(spoken.join(' ')), 1);
-  if (inviteOwed && !state.closed && (reopened ? v2ReplyInvites(lastSaid) || v2ReplyAsksMoreOrFinish(lastSaid) : summaryGiven && v2ReplyInvites(lastSaid))) { state.closeInvitedAt = nowMs; delete state.closeReopened; }
+  // Fix round 1 (I2): an ask "more, or finish?" is marked (closeAsk), so the turn that answers it is read by state.
+  const asksMore = v2ReplyAsksMoreOrFinish(lastSaid) || lastSaid.trim() === V2_CLOSE_MORE_LINE;
+  if (inviteOwed && !state.closed && (reopened ? v2ReplyInvites(lastSaid) || asksMore : summaryGiven && v2ReplyInvites(lastSaid))) { state.closeInvitedAt = nowMs; delete state.closeReopened; if (reopened && asksMore) state.closeAsk = 'more'; else delete state.closeAsk; }
   // A reply that took their request up already ending on that ask (or an invitation) is the ask: not reopened, so their answer
   // is not met by a second ask.
-  else if (reopenAsked && !state.closed && !input.signal?.aborted) {
-    if (v2ReplyInvites(lastSaid) || v2ReplyAsksMoreOrFinish(lastSaid)) state.closeInvitedAt = nowMs; else { state.closeReopened = nowMs; delete state.closeInvitedAt; }
+  // Fix round 1 (I2): …and so does a reply to the ask "more, or finish?" that goes on (more practice, not a goodbye).
+  else if ((reopenAsked || answersMoreAsk) && !state.closed && !input.signal?.aborted) {
+    if (v2ReplyInvites(lastSaid) || asksMore) { state.closeInvitedAt = nowMs; if (asksMore) state.closeAsk = 'more'; else delete state.closeAsk; }
+    else if (!v2ReplySentences(stripBoardBlocks(spoken.join(' '))).slice(-2).some((x) => isGoodbye(x))) { state.closeReopened = nowMs; delete state.closeInvitedAt; delete state.closeAsk; }
   }
   state.history = [...state.history, ...stored];
   // Task 7f B: the parts left out for time are told once (a reply names them, or the facts have asked twice).

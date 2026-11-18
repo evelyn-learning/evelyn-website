@@ -120,7 +120,7 @@ async function main() {
     const before = base([TODAY, JOB, PP, PS, CONV_EMPTY], { history: [u('x'), a(CONV_Q)] });
     const progBefore = prog(before);
     check('before: the chip on Conversation (the page just opened), past simple green', progBefore.currentSegmentId === 'open-conversation' && progBefore.completedSegmentIds.includes('past-simple'), progBefore);
-    check('their words ask for practice of the Past simple part', v2PartPracticeAsked(GDI, before, SAID_982) === 4);
+    check('their words ask for practice of the Past simple part', v2PartPracticeAsked(GDI, before, SAID_982)?.index === 4 && v2PartPracticeAsked(GDI, before, SAID_982)?.ahead === false);
     const r = await run(before, SAID_982, [{ text: R_982 }], 9.82);
     const first = r.r.toolCalls[0];
     check('the board turns back to the Past simple page (go_to_page, page 4) before the reply writes', first?.name === 'go_to_page' && first.args.pageIndex === 3 && r.r.state.board.current === 3, r.r.toolCalls.map((c) => `${c.name} ${JSON.stringify(c.args)}`));
@@ -136,7 +136,7 @@ async function main() {
     check('the visit survives the route\'s round trip (the board is the record)', v2PartViewed(GDI, st) === 4);
     const ans = await run(st, 'I went to Osaka for a meeting last year.', [{ text: 'Good, that is correct. <board sentence>I went to Osaka for a meeting last year.</board> Now, back to our conversation. <board page>Conversation</board> What is one project at work that you are proud of?' }], 10.4);
     check('the answer: the facts ask for its card (7g), and the card lands on the Past simple page', /their answer just now had 1 sentence of their own/.test(ans.facts) && pageOf(ans.r.state, 'Past simple').items.some((it) => /Osaka/.test(it.summary)), ans.facts.split('\n').filter((l) => /answer just now/.test(l)));
-    check('…counted for the past simple, not towards the conversation\'s minimum', (ans.r.state.practiceSaid?.['past-simple'] ?? 0) === 4 && (ans.r.state.practiceSaid?.['open-conversation'] ?? 0) === 0, ans.r.state.practiceSaid);
+    check('…counted for no part (fix round 1: a visit counts for nothing): not the conversation\'s minimum, not the past simple', (ans.r.state.practiceSaid?.['past-simple'] ?? 0) === 3 && (ans.r.state.practiceSaid?.['open-conversation'] ?? 0) === 0, ans.r.state.practiceSaid);
     check('…no "practice in this part (Conversation)" minimum line while the Past simple page is in view', !/practice in this part \(Conversation\)/.test(ans.facts));
     check('the return: the page block turns back to Conversation; the chip and the position are Conversation again', titles(ans.r.state).filter((t) => t === 'Conversation').length === 1 && ans.r.state.board.current === 4 && prog(ans.r.state).currentSegmentId === 'open-conversation' && v2PartInHand(GDI, ans.r.state) === 5, [ans.r.state.board.current, prog(ans.r.state)]);
     check('…and the next facts carry no turn-back line', !/practice on another part's page/.test((await run(ans.r.state, 'I am proud of the donation project.', [{ text: 'Great.' }], 10.9)).facts));
@@ -165,13 +165,16 @@ async function main() {
     check('a "Pronunciation" page opens before the reply writes (agreed: turned as the reply begins)', r.r.toolCalls[0]?.name === 'new_page' && r.r.toolCalls[0].args.title === 'Pronunciation' && (r.r.toolCalls[0] as { agreed?: boolean }).agreed === true && titles(r.r.state).join() === 'Today\'s lesson,Your job,Present perfect,Past simple,Conversation,Summary,Pronunciation', titles(r.r.state));
     check('…the card lands on it, none on the Summary page', pageOf(r.r.state, 'Pronunciation').items.length === 1 && pageOf(r.r.state, 'Summary').items.length === 1);
     check('the chip shows Pronunciation; the position stays Summary (the furthest part, though the new page is the newest)', prog(r.r.state).currentSegmentId === 'pronunciation' && v2PartInHand(GDI, r.r.state) === 7, [prog(r.r.state), v2PartInHand(GDI, r.r.state)]);
-    check('…the other parts\' green unchanged (the part practised is now entered)', prog(before).completedSegmentIds.every((id) => prog(r.r.state).completedSegmentIds.includes(id)), [prog(before).completedSegmentIds, prog(r.r.state).completedSegmentIds]);
+    check('…green unchanged: the visit\'s page (marked in visitPages) is no part reached, so Pronunciation is not green', JSON.stringify(prog(r.r.state).completedSegmentIds) === JSON.stringify(prog(before).completedSegmentIds) && JSON.stringify(r.r.state.visitPages) === '[6]', [prog(before).completedSegmentIds, prog(r.r.state).completedSegmentIds, r.r.state.visitPages]);
+    check('…the marks survive the route\'s round trip, and the position stays Summary after it', JSON.stringify(wire(r.r.state).visitPages) === '[6]' && v2PartInHand(GDI, wire(r.r.state)) === 7);
     const back = await run(r.r.state, 'I have worked on this project for two years.', [{ text: 'Very clear. <board page>Summary</board> Would you like some more practice, or shall we finish here?' }], 16.5);
     check('the return to the Summary page: chip Summary, position Summary', back.r.state.board.current === 5 && prog(back.r.state).currentSegmentId === 'summary' && v2PartInHand(GDI, back.r.state) === 7, [back.r.state.board.current, prog(back.r.state)]);
     // A part left out for time is turned to only while it still fits (7i).
     const dropped = closing({ timeFit: { dropped: ['pronunciation'], byArrival: true } });
-    check('left out for time and fitting (15.15: about 9 min to the stop, it takes 3): the page opens', (await run(dropped, SAID_1515, [{ text: R_1515 }], 15.15)).r.state.board.pages.some((p) => p.title === 'Pronunciation'));
-    check('…not fitting (21.5: about 3 min, it takes 3: no; the 7f E window is past too): no page', !(await run(dropped, SAID_1515, [{ text: 'There is no time for that today.' }], 22.5)).r.state.board.pages.some((p) => p.title === 'Pronunciation'));
+    const dr = await run(dropped, SAID_1515, [{ text: 'Of course. <board sentence>I have worked on this project for two years.</board> Please say this sentence.' }], 15.15);
+    check('left out for time and fitting (15.15: about 9 min to the stop, it takes 3): the page opens', dr.r.state.board.pages.some((p) => p.title === 'Pronunciation'));
+    check('…the lesson entered it (a card on its page): 7i takes it (taken), and the position stays Summary', !!dr.r.state.timeFit?.taken?.includes('pronunciation') && !dr.r.state.timeFit.dropped.includes('pronunciation') && v2PartInHand(GDI, dr.r.state) === 7, [dr.r.state.timeFit, v2PartInHand(GDI, dr.r.state)]);
+    check('…under 3 minutes to the stop (22.5): no page', !(await run(dropped, SAID_1515, [{ text: 'There is no time for that today.' }], 22.5)).r.state.board.pages.some((p) => p.title === 'Pronunciation'));
   }
 
   console.log('1d. flag 8 (17.03): "more practice on present perfect" at the close');
@@ -181,8 +184,9 @@ async function main() {
     check('the board turns back to the Present perfect page (page 3)', r.r.toolCalls[0]?.name === 'go_to_page' && r.r.state.board.current === 2);
     check('…the question card lands there; none on Summary or Conversation', pageOf(r.r.state, 'Present perfect').items.length === 3 && pageOf(r.r.state, 'Summary').items.length === 1 && pageOf(r.r.state, 'Conversation').items.length === 1);
     check('the chip shows Present perfect; the position and green unchanged', prog(r.r.state).currentSegmentId === 'present-perfect' && v2PartInHand(GDI, r.r.state) === 7 && JSON.stringify(prog(r.r.state).completedSegmentIds) === JSON.stringify(prog(before).completedSegmentIds));
-    check('not for words that name a part with no request ("My present perfect is bad.")', v2PartPracticeAsked(GDI, before, 'My present perfect is bad.') === -1 && v2PartPracticeAsked(GDI, before, 'I will practice the present perfect at home.') === -1);
-    check('not for the part in view ("more summary" names the closing part: never)', v2PartPracticeAsked(GDI, before, 'Can we do more summary?') === -1);
+    check('not for words that name a part with no request ("My present perfect is bad.")', v2PartPracticeAsked(GDI, before, 'My present perfect is bad.') === null && v2PartPracticeAsked(GDI, before, 'I will practice the present perfect at home.') === null);
+    check('M5: not for a request about a later day ("…again next Tuesday?", "…next time", "…next lesson")', ['Can we practise the past simple again next Tuesday?', 'Could we do conversation again next Friday?', 'Maybe more pronunciation next lesson.', 'More present perfect next time, please.'].every((x) => v2PartPracticeAsked(GDI, before, x) === null));
+    check('not for the part in view ("more summary" names the closing part: never)', v2PartPracticeAsked(GDI, before, 'Can we do more summary?') === null);
   }
 
   console.log('2a. the close reopened by request after the invitation (17.03 → 17.89 → answer)');
@@ -225,7 +229,7 @@ async function main() {
     check('reopened: the invitation re-armed, the reopened line in the facts, no goodbye pressed', r.r.state.closeInvitedAt === undefined && /the close is reopened/.test(r.facts) && !/say goodbye and end the lesson/.test(r.facts));
     check('…an end_lesson in this reply (the practice question asked) is deferred, and the reply keeps its question', !(await run(off, 'Oh, wait.', [{ text: 'Of course. What would you like to do?', after: end() }, { text: '' }], 17.03)).r.state.closed);
     const said = await run(off, 'Oh, wait, one more thing.', [{ text: 'Sure, Ken. What is it?' }], 17.03);
-    check('called off with a question: its answer turn asks "more, or finish?" before an end', said.r.state.closeInvitedAt === undefined && typeof said.r.state.closeReopened === 'number');
+    check('called off with a question: the turn stays reopened (the invitation re-armed)', said.r.state.closeInvitedAt === undefined && typeof said.r.state.closeReopened === 'number');
   }
 
   console.log('2c. the hard stop still ends');
@@ -249,10 +253,50 @@ async function main() {
     check('the "more, or finish?" ask is recognised; a practice question is not', ok.every(v2ReplyAsksMoreOrFinish) && !not.some(v2ReplyAsksMoreOrFinish), { missed: ok.filter((x) => !v2ReplyAsksMoreOrFinish(x)), caught: not.filter(v2ReplyAsksMoreOrFinish) });
   }
 
+  console.log('fix round 1, I1: a part request mid-lesson never moves the lesson (the review\'s probes)');
+  {
+    // Minute 6 in Present perfect, one of its two practice sentences said.
+    const pp = base([TODAY, JOB, { title: 'Present perfect', items: [card('p2', 'I have worked at my company for five years.')] }], { goals: { overview: { status: 'shown', at: 0 }, 'level-check': { status: 'skipped', at: 0 }, 'topic-intro': { status: 'shown', at: 0 } }, practiceSaid: { 'topic-intro': 3, 'present-perfect': 1 }, history: [u('x'), a('Tell me one sentence with the present perfect.')] });
+    const progBefore = prog(pp);
+    const said = 'Can we practise the pronunciation of this sentence, please?';
+    check('recognised as a part ahead of the position (before the close)', v2PartPracticeAsked(GDI, pp, said)?.ahead === true);
+    const r = await run(pp, said, [{ text: 'Sure. <board sentence>I have worked here for five years.</board> Please say it.' }], 6);
+    check('no page opened or turned: the card stays on the Present perfect page', titles(r.r.state).join() === 'Today\'s lesson,Your job,Present perfect' && r.r.state.board.current === 2 && !r.r.toolCalls.some((c) => c.name === 'new_page' || c.name === 'go_to_page'), [titles(r.r.state), r.r.toolCalls.map((c) => c.name)]);
+    check('position, chip and green unchanged; Present perfect not green, its minimum still owed (1 of 2), parts behind not skipped', v2PartInHand(GDI, r.r.state) === 3 && JSON.stringify(prog(r.r.state)) === JSON.stringify(progBefore) && !prog(r.r.state).completedSegmentIds.includes('present-perfect') && (r.r.state.practiceSaid?.['present-perfect'] ?? 0) === 1, [v2PartInHand(GDI, r.r.state), prog(r.r.state), r.r.state.practiceSaid]);
+    check('the facts: they asked for it, it comes later; say so or help in place, go on with the part in hand', /they asked to practise the Pronunciation part, which comes later in the lesson/.test(r.facts), r.facts.split('\n').filter((l) => /comes later/.test(l)));
+    // During Conversation (9.9): "more pronunciation".
+    const conv = base([TODAY, JOB, PP, PS, CONV], { history: [u('x'), a(CONV_Q)], practiceSaid: { 'topic-intro': 3, 'present-perfect': 3, 'past-simple': 3, 'open-conversation': 1 } });
+    const c = await run(conv, 'Can we do some more pronunciation, please?', [{ text: 'Pronunciation comes a little later. First, what is one project you are proud of?' }], 9.9);
+    check('during Conversation: no Pronunciation page; position Conversation; green and the conversation\'s count unchanged', !titles(c.r.state).includes('Pronunciation') && v2PartInHand(GDI, c.r.state) === 5 && JSON.stringify(prog(c.r.state)) === JSON.stringify(prog(conv)) && c.r.state.practiceSaid?.['open-conversation'] === 1, [titles(c.r.state), prog(c.r.state), c.r.state.practiceSaid]);
+    // A visit to an earlier part and back, mid-lesson: the position never moves.
+    const v = await run(conv, 'Can we do one more present perfect, please?', [{ text: 'Sure. <board problem>Tell me one sentence with "I have worked on".</board>' }], 10);
+    check('an earlier part (Present perfect) from Conversation: turned to, position Conversation, no page marked (an existing page)', v.r.state.board.current === 2 && v2PartInHand(GDI, v.r.state) === 5 && !v.r.state.visitPages, [v.r.state.board.current, v.r.state.visitPages]);
+    const b = await run(v.r.state, 'I have worked on the donation project for a year.', [{ text: 'Good. <board page>Conversation</board> Now, what is one project you are proud of?' }], 10.5);
+    check('…and back: Conversation in view, position and green as before the visit', b.r.state.board.current === 4 && v2PartInHand(GDI, b.r.state) === 5 && JSON.stringify(prog(b.r.state).completedSegmentIds) === JSON.stringify(prog(conv).completedSegmentIds));
+  }
+
+  console.log('fix round 1, I2: a plain yes to "more, or finish?" is read by state');
+  {
+    const r = await run(closing(), SAID_1703, [{ text: R_1703 }], 17.03);
+    const ans = await run(r.r.state, 'I have worked on the washing machine project for two years.', [{ text: 'Great sentence. Thank you, Ken, see you next time!', after: end() }, { text: '' }], 17.89);
+    check('the ask recorded as "more, or finish?" (closeAsk), and carried', ans.r.state.closeAsk === 'more' && wire(ans.r.state).closeAsk === 'more' && ans.heard.trim().endsWith(V2_CLOSE_MORE_LINE));
+    for (const yes of ['Yes, please.', 'はい、お願いします。']) {
+      const y = await run(wire(ans.r.state), yes, [{ text: 'Sure. <board problem>Tell me one more sentence with "I have worked on".</board>' }], 18.2);
+      check(`"${yes}": the facts press no goodbye (they say: you asked "more, or finish?")`, /you asked whether they would like more practice or to finish/.test(y.facts) && !/then say goodbye and end the lesson in this reply/.test(y.facts) && !/bring the lesson to its close/.test(y.facts), y.facts.split('\n').filter((l) => /before the close|close/.test(l)));
+      check('…the reply gave practice and did not end: the close reopened again (the ask comes after it)', typeof y.r.state.closeReopened === 'number' && y.r.state.closeInvitedAt === undefined && y.r.state.closeAsk === undefined);
+      const y2 = await run(y.r.state, 'I have worked on the donation project for a year.', [{ text: 'Very good. Goodbye!', after: end() }, { text: '' }], 18.6);
+      check('…after that practice: the end deferred once, the ask again', !y2.r.state.closed && y2.end[0] === V2_CLOSE_REOPEN_REFUSAL && y2.heard.trim().endsWith(V2_CLOSE_MORE_LINE) && y2.r.state.closeAsk === 'more', [y2.end, y2.heard]);
+      const no = await run(y2.r.state, 'No, thank you.', [{ text: 'Thank you, Ken. Goodbye!', after: end() }], 19);
+      check('…"No, thank you.": the lesson ends (end_lesson on the answer turn never refused)', no.r.state.closed && no.end[0] === 'the session is ending', no.end);
+    }
+    const bye = await run(wire(ans.r.state), 'Keep going.', [{ text: 'Thank you, Ken. Goodbye!', after: end() }], 18.2);
+    check('an end on the answer turn is accepted, whatever the words ("Keep going." read as done by the model)', bye.r.state.closed);
+  }
+
   console.log('lessons without labelled plans: nothing turns');
   {
     const plain: LessonPlan = { ...GDI, segments: GDI.segments.map((s) => ({ ...s, metadata: { ...(s.metadata ?? {}), label: undefined } })) as LessonPlan['segments'] };
-    check('an unlabelled plan: no part practice asked', v2PartPracticeAsked(plain, closing(), SAID_1703) === -1);
+    check('an unlabelled plan: the recogniser finds no part (recogniser only)', v2PartPracticeAsked(plain, closing(), SAID_1703) === null);
   }
 
   console.log('each switch off alone (a child run per switch): that item as before');

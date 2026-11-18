@@ -22,7 +22,7 @@ import { TUTOR_V2_LEVEL_CHECK_CHIP, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PART_
 import { v2LevelCheckBegun } from './level-check-count';
 
 /** `history` (Task 7g, LEVEL_CHECK_CHIP): when present, a level check under way lights its chip before any goal is marked. */
-type View = Pick<V2State, 'board' | 'goals' | 'workingLevel'> & { closed?: boolean; history?: V2State['history'] } & Partial<Pick<V2State, 'practiceSaid' | 'timeFit' | 'summaryBegunAt'>>;
+type View = Pick<V2State, 'board' | 'goals' | 'workingLevel'> & { closed?: boolean; history?: V2State['history'] } & Partial<Pick<V2State, 'practiceSaid' | 'timeFit' | 'summaryBegunAt' | 'visitPages'>>;
 
 /** A plan whose every part has an authored name (Tasks 6c/6e gate the same way). */
 export function v2PlanLabelled(plan: LessonPlan | null | undefined): plan is LessonPlan {
@@ -51,7 +51,7 @@ const paged = (plan: LessonPlan, board: V2Board, i: number) => board.pages.some(
 const entered = (plan: LessonPlan, state: View, i: number, on: boolean = TUTOR_V2_PART_ENTERED) => {
   if (!on) return paged(plan, state.board, i);
   if (v2PartEntered(plan.segments[i]!, state)) return true;
-  return !state.timeFit?.dropped.includes(plan.segments[i]!.id) && state.board.pages.some((pg, at) => pg.items.length > 0 && partOfPageAt(plan, state.board, at) === i);
+  return !state.timeFit?.dropped.includes(plan.segments[i]!.id) && state.board.pages.some((pg, at) => pg.items.length > 0 && !(state.visitPages ?? []).includes(at) && partOfPageAt(plan, state.board, at) === i);
 };
 
 /** The part of the page in view, or of the nearest page before it that is a part's; -1: none.
@@ -72,7 +72,12 @@ export function v2OpenPagePart(plan: LessonPlan, board: V2Board, kept: boolean =
     const seen = new Set<number>(); let at = -1;
     // Task 7k (`furthest`): the newest page counts as the page in view does: turned away from for practice of an earlier part
     // before its first card (the conversation's question card was lost at 9.82), it is still where the lesson is.
-    const counts = (k: number, i: number) => !view || !enteredOn || entered(plan, view, k) || ((i === board.current || (furthest && i === board.pages.length - 1)) && !view.timeFit?.dropped.includes(plan.segments[k]!.id));
+    // Fix round 1 (I1): a page a practice visit opened (view.visitPages) never counts for the position, and "newest" is the
+    // newest page the lesson itself opened: "Can we practise the pronunciation of this sentence?" in Present perfect moved the
+    // position to Pronunciation, Present perfect turned green under its minimum, two parts were skipped.
+    const visits = furthest ? view?.visitPages ?? [] : [];
+    let newest = board.pages.length - 1; while (newest >= 0 && visits.includes(newest)) newest -= 1;
+    const counts = (k: number, i: number) => !visits.includes(i) && (!view || !enteredOn || entered(plan, view, k) || ((i === board.current || (furthest && i === newest)) && !view.timeFit?.dropped.includes(plan.segments[k]!.id)));
     board.pages.forEach((_, i) => { const k = partOfPageAt(plan, board, i); if (k >= 0 && !seen.has(k) && counts(k, i)) { seen.add(k); at = k; } });
     // Only where a page alone is no part reached (PART_ENTERED): otherwise an empty page opened early would be the furthest.
     if (!furthest || !view || !enteredOn) return at;
@@ -118,7 +123,7 @@ export function v2PartInHand(plan: LessonPlan, state: View, kept: boolean = TUTO
 export function v2PositionPage(plan: LessonPlan, state: View): number {
   const k = v2OpenPagePart(plan, state.board, true, state);
   if (k < 0) return -1;
-  for (let i = state.board.pages.length - 1; i >= 0; i--) if (partOfPageAt(plan, state.board, i) === k) return i;
+  for (let i = state.board.pages.length - 1; i >= 0; i--) if (!(state.visitPages ?? []).includes(i) && partOfPageAt(plan, state.board, i) === k) return i;
   return -1;
 }
 
@@ -146,6 +151,7 @@ export function v2PageTurnNote(plan: LessonPlan, state: View, enabled: boolean =
   if (!enabled || !here) return null;
   const viewed = v2PartViewed(plan, state, enabled);
   const back = v2PositionPage(plan, state);
+  if (viewed >= 0 && back < 0) return null;
   if (viewed >= 0) return `now on page ${b.current + 1} "${here.title}" (the ${v2PartOf(plan.segments[viewed]!).label} part): write the practice of this part here; when it is over, turn back to page ${back + 1} "${b.pages[back]?.title ?? ''}" (its page block)`;
   return back === b.current ? `now on page ${b.current + 1} "${here.title}"` : null;
 }
