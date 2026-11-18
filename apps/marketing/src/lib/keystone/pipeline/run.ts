@@ -38,6 +38,7 @@ import { BANNED_WORDS, proseOf, renderCheck, rulesAudit, workingCheck, type Chec
 import { intakeCode, intakeModel, intakeNote, type IntakeFinding } from "./intake";
 import { callModel, redact } from "./models";
 import { suggestFor } from "./outbox";
+import { releaseAt, sampleAfterRun } from "./release";
 import { agreeOnAnswer, type Solves } from "./solve";
 import type { ModelDeps, ModelImage, ModelReply } from "./types";
 import type { ImageType } from "./vendors/common";
@@ -74,6 +75,8 @@ export interface Writer {
   ): Promise<number>;
   setPipeline(itemId: string, pipeline: PipelineDoc, expect: Expect): Promise<void>;
   suggest(kind: SuggestKind, itemIds: string[], batchId?: string): Promise<void>;
+  /** After a writing run: take the sample of each batch touched (once each batch is finished) and hold items without a batch. */
+  sample?(batchIds: string[], unbatchedItemIds: string[]): Promise<void>;
 }
 
 /** The model-backed and code steps, injected so tests call no model. */
@@ -418,8 +421,11 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
   let fixNote: string | undefined;
   let previous: Draft | undefined;
   let answer: Answer | undefined;
+  /** When the solution came back to us with "Fix solution" (a correction waits 1 day from then). */
+  let sentBackAt: Date | undefined;
   if (run.mode === "changes") {
     const v = await deps.reader.lastVerdict(itemId);
+    if (v?.verdict === "changes") sentBackAt = new Date(v.createdAt);
     const note = v?.verdict === "changes" ? (v.body ?? "").trim() : "";
     type CauseOut = { cause: Cause; why: string; note: string } | { failed: string; note: string };
     const c = await step<CauseOut>("cause", async () => {
@@ -538,8 +544,15 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
 
   async function saveDraft(draft: Draft, a: Answer, passed: boolean): Promise<never> {
     run.flags = [...flags];
+    const passedAt = now();
+    // A clean pass (no flag, so no hold) gets its release time in the same write; a held one never does.
+    // Arrival: when the item (or its sheet row) came in; for a correction, when it was sent back to us, if later.
+    const corrected = run.mode === "changes";
+    const arrived = new Date(item.receivedAt ?? item.createdAt ?? passedAt);
+    const from = corrected && sentBackAt && sentBackAt.getTime() > arrived.getTime() ? sentBackAt : arrived;
     const pipeline: PipelineDoc = {
-      flags: [...flags], runId: run.runId, ...(flags.size ? { heldFor: "praveen" as const } : {}), ...(passed ? { passedAt: now() } : {}), ...(answerToConfirm ? { answerToConfirm: true } : {}),
+      flags: [...flags], runId: run.runId, ...(flags.size ? { heldFor: "praveen" as const } : {}), ...(passed ? { passedAt } : {}), ...(answerToConfirm ? { answerToConfirm: true } : {}),
+      ...(passed && !flags.size ? { releaseAt: releaseAt(from, passedAt, corrected, itemId) } : {}),
     };
     await guard();
     await intend(flags.size ? "held" : "ready", "ready", expect.version + 1);
@@ -656,6 +669,7 @@ export function mongoWriter(actor: Actor): Writer {
       }),
     setPipeline: (itemId, pipeline, expect) => setPipelineIfUnchanged(itemId, pipeline, expect),
     suggest: (kind, itemIds, batchId) => suggestFor(kind, { itemIds }, batchId),
+    sample: async (batchIds, unbatched) => { await sampleAfterRun(batchIds, unbatched); },
   };
 }
 
@@ -857,5 +871,15 @@ export async function runPipeline(
     }
   };
   await Promise.all(Array.from({ length: Math.max(1, env.concurrency ?? 4) }, worker));
+  // The sample is taken after the whole run, never by the order items finish inside it.
+  if (!opts.dryRun && writer.sample && sel.take.length) {
+    const batchIds = [...new Set(sel.take.map((i) => i.batchId).filter((b): b is string => !!b))];
+    const unbatched = sel.take.filter((i) => !i.batchId).map((i) => i.itemId);
+    try {
+      await writer.sample(batchIds, unbatched);
+    } catch (e) {
+      log(`!! sample step failed (nothing is released before a batch is sampled; the release job retries): ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
   return { runs, refused: sel.refused, skipped: sel.skipped, dry };
 }

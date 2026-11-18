@@ -12,6 +12,7 @@ import type { CalcFinding } from "./calc";
 import type { ModelReply } from "./types";
 import { visibleStage } from "../config";
 import type { ModelImage } from "./types";
+import { releaseAt } from "./release";
 import { sniffImage, parseArgs, processItem, runPipeline, selectItems, type Deps, type Reader, type Steps, type Writer } from "./run";
 
 /** assert.ok with a message always: without one, Node re-parses the transformed source to build it, which stalls under tsx. */
@@ -92,6 +93,8 @@ class FakeStore implements Reader, Writer {
     i.pipeline = pipeline;
   }
   async suggest(kind: "items_need_data" | "keys_queried" | "course_missing", itemIds: string[], batchId?: string) { this.suggestions.push({ kind, itemIds, batchId }); }
+  sampled: { batchIds: string[]; unbatched: string[] }[] = [];
+  async sample(batchIds: string[], unbatched: string[]) { this.sampled.push({ batchIds, unbatched }); }
 }
 
 const B: Answer = { kind: "choice", letters: ["B"] };
@@ -158,7 +161,8 @@ const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", co
     equal(it.evelynAnswer, "B", "answer set");
     ok(it.pipeline?.passedAt instanceof Date, "passedAt set");
     equal(it.pipeline?.heldFor, undefined, "not held");
-    equal(it.pipeline?.releaseAt, undefined, "releaseAt left to the release task");
+    ok(it.pipeline?.releaseAt instanceof Date, "a clean pass gets its release time");
+    equal(it.pipeline!.releaseAt!.getTime(), releaseAt(T0, it.pipeline!.passedAt!, false, "100").getTime(), "releaseAt from receivedAt (createdAt when unset) and passedAt, not corrected");
     ok(store.runs.get("100|r1")?.result === "ready", "run record saved with its result");
     ok(Math.abs(run.cost - (0.2 + 0.1 + 0.05 + 0.05)) < 1e-9, `cost summed: ${run.cost}`);
     equal(store.suggestions.length, 0, "no suggestion");
@@ -596,6 +600,59 @@ const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", co
     deepEqual(run.flags, ["step_failed"], "cause model failure → step_failed");
   }
 
+  // --- release time: a clean pass gets releaseAt in the same write; a flagged one does not ---
+  {
+    const RECEIVED = new Date("2026-11-16T17:00:00Z"); // Mon 10:00 MT
+    const PASSED = new Date("2026-11-16T19:00:00Z"); // Mon 12:00 MT
+    const store = new FakeStore([item({ receivedAt: RECEIVED })]);
+    const { steps: s } = steps();
+    const run = await processItem("100", "r1", deps(store, s, { now: () => PASSED }));
+    equal(run.result, "ready", "clean pass");
+    const it = store.items.get("100")!;
+    equal(it.pipeline?.passedAt?.getTime(), PASSED.getTime(), "passedAt is the run's clock");
+    equal(it.pipeline?.releaseAt?.getTime(), releaseAt(RECEIVED, PASSED, false, "100").getTime(), "releaseAt = releaseAt(receivedAt, passedAt, false, id)");
+    ok(it.pipeline!.releaseAt!.getTime() >= new Date("2026-11-18T17:00:00Z").getTime(), "not before Wed 10:00 MT");
+  }
+  {
+    const store = new FakeStore([item({ receivedAt: T0 })]);
+    const { steps: s } = steps({ agreeOnAnswer: async () => ({ decision: { outcome: "pass", answer: B, confirm: false, flag: "solvers_split" }, solves: solves(B), cost: 0.2 }) });
+    const run = await processItem("100", "r1", deps(store, s));
+    equal(run.result, "held", "a flagged pass is held");
+    const it = store.items.get("100")!;
+    equal(it.pipeline?.heldFor, "praveen", "held");
+    ok(it.pipeline?.passedAt instanceof Date, "it passed the checks");
+    equal(it.pipeline?.releaseAt, undefined, "a held item gets no releaseAt");
+  }
+  {
+    // a correction after "Fix solution": 1 day, counted from when it came back (the later of receivedAt and the verdict)
+    const RECEIVED = new Date("2026-11-02T17:00:00Z");
+    const BACK = new Date("2026-11-16T17:00:00Z"); // Mon 10:00 MT
+    const PASSED = new Date("2026-11-16T17:30:00Z");
+    const store = new FakeStore([changes()]);
+    store.items.get("100")!.receivedAt = RECEIVED;
+    store.verdicts.set("100", { verdict: "changes", body: "Use Canadian spelling.", createdAt: BACK });
+    store.sections.set("100", draft("old").sections);
+    const { steps: s } = steps();
+    const run = await processItem("100", "r1", deps(store, s, { now: () => PASSED }));
+    equal(run.result, "ready", "corrected → ready");
+    const at = store.items.get("100")!.pipeline?.releaseAt;
+    equal(at?.getTime(), releaseAt(BACK, PASSED, true, "100").getTime(), "corrected: 1 day from the send-back");
+    ok(at!.getTime() < releaseAt(BACK, PASSED, false, "100").getTime(), "sooner than the 2-day wait");
+  }
+
+  // --- the run hands the batches it touched to the sample step (never in a dry run) ---
+  {
+    const store = new FakeStore([item({ batchId: "bA" }), item({ itemId: "101", batchId: "bB" }), item({ itemId: "102", batchId: "bA" }), item({ itemId: "103", batchId: undefined })]);
+    const { steps: s } = steps();
+    await runPipeline({ dryRun: false }, { reader: store, makeRealWriter: () => store, deps: deps(store, s), log: () => {} });
+    equal(store.sampled.length, 1, "sample called once after the run");
+    deepEqual(store.sampled[0].batchIds.sort(), ["bA", "bB"], "every batch touched, once each");
+    deepEqual(store.sampled[0].unbatched, ["103"], "items without a batch passed on");
+    const dryStore = new FakeStore([item({ batchId: "bA" })]);
+    await runPipeline({ dryRun: true }, { reader: dryStore, makeRealWriter: () => dryStore, deps: deps(dryStore, s), log: () => {} });
+    equal(dryStore.sampled.length, 0, "a dry run samples nothing");
+  }
+
   // --- no local asset folder: image check skipped loudly; an item with an image is not solved blind ---
   {
     const store = new FakeStore([item(), item({ itemId: "101", questionHtml: '<p>See</p><img src="/api/keystone/asset/101/fig.png" alt="f"/>' })]);
@@ -696,6 +753,7 @@ const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", co
     const it = store.items.get("100")!;
     equal(it.pipeline?.answerToConfirm, true, "answerToConfirm on the item");
     equal(it.pipeline?.heldFor, "praveen", "heldFor");
+    equal(it.pipeline?.releaseAt, undefined, "answer_to_confirm is a flag: no release time");
     ok(it.pipeline?.passedAt, "it passed the checks");
   }
 

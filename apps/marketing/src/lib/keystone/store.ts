@@ -182,8 +182,41 @@ export async function releaseSolution(itemId: string, actor: Actor, opts: { log?
   await Solution.updateOne({ itemId, version: item.version, releasedAt: { $exists: false } }, { $set: { releasedAt: now } });
   await Item.updateOne({ itemId }, { $set: { releasedVersion: item.version, releasedAnswer: item.evelynAnswer || "", stage: "in_review", updatedAt: now } });
   if (opts.log ?? true) {
-    await log({ itemId, version: item.version, type: "revision", body: "Sent for review.", username: actor.username, name: actor.name, role: actor.role });
+    await log({ itemId, version: item.version, type: "revision", body: SENT_FOR_REVIEW, username: actor.username, name: actor.name, role: actor.role });
   }
+}
+
+/** The revision row a release logs (releaseSolution and the timed release write the same one). */
+export const SENT_FOR_REVIEW = "Sent for review.";
+
+/**
+ * The timed release's guarded form of releaseSolution (pipeline/release.ts): the same writes and the same
+ * "Sent for review." row, safe for two callers and for a crash at any point.
+ *   1. One conditional update moves the item to review, only while it is still `ready` at `version`, clean,
+ *      and claimed by `owner`; it also stamps the claim with releasedAt (the one point that decides).
+ *   2. finishRelease: the solution row gets releasedAt, the row is logged unless one with this exact time
+ *      exists, the claim is cleared. It can be run again after a crash and writes each thing once.
+ * Returns false when the claim was lost or the item changed (nothing written).
+ */
+export async function releaseClaimed(itemId: string, version: number, owner: string, actor: Actor, at: Date): Promise<boolean> {
+  const { Item } = await ks();
+  const r = await Item.updateOne(
+    { itemId, version, stage: "ready", "pipeline.releaseClaim.owner": owner, "pipeline.heldFor": { $exists: false }, "pipeline.flags": { $size: 0 } },
+    [{ $set: { stage: "in_review", releasedVersion: version, releasedAnswer: { $ifNull: ["$evelynAnswer", ""] }, updatedAt: at, "pipeline.releaseClaim.releasedAt": at } }],
+  );
+  if (r.modifiedCount !== 1) return false;
+  await finishRelease(itemId, version, owner, actor, at);
+  return true;
+}
+
+/** Step 2 of releaseClaimed; also what a later call runs for a claim whose item moved to review before a crash. */
+export async function finishRelease(itemId: string, version: number, owner: string, actor: Actor, at: Date) {
+  const { Item, Solution, Activity } = await ks();
+  await Solution.updateOne({ itemId, version, releasedAt: { $exists: false } }, { $set: { releasedAt: at } });
+  if (!(await Activity.exists({ itemId, version, type: "revision", body: SENT_FOR_REVIEW, createdAt: at }))) {
+    await log({ itemId, version, type: "revision", body: SENT_FOR_REVIEW, username: actor.username, name: actor.name, role: actor.role, createdAt: at });
+  }
+  await Item.updateOne({ itemId, "pipeline.releaseClaim.owner": owner }, { $unset: { "pipeline.releaseClaim": "" } });
 }
 
 /**

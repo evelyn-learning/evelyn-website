@@ -55,6 +55,11 @@ export type PipelineDoc = {
   runId?: string;
   /** item_data / key_query when that write was the pipeline's own stage change; absent otherwise. */
   wroteStage?: Stage;
+  /**
+   * The timed release's claim (pipeline/release.ts): set before the release, cleared after it.
+   * releasedAt: the item has been moved to review under this claim; what is left is bookkeeping.
+   */
+  releaseClaim?: { owner: string; at: Date; releasedAt?: Date };
 };
 
 export type Step = "intake" | "course" | "cause" | "solve" | "write" | "calc" | "working" | "audit" | "render";
@@ -201,7 +206,18 @@ export type BatchDoc = {
   rows: BatchRow[];
   receivedAt: Date;
   uploadedBy: string;
+  /** The sample for Praveen was taken (pipeline/release.ts applySample); the timer releases nothing of the batch before. */
+  sampledAt?: Date;
+  /** The items picked as the sample. */
+  sampledIds?: string[];
+  /** A sample in progress: who took it, when, and the pick (reused if the caller died before finishing). */
+  sampling?: { owner: string; at: Date; ids?: string[] };
+  /** "batch_in_review" was suggested for the batch (once). */
+  inReviewSuggestedAt?: Date;
 };
+
+/** A named lock with an expiry (the hourly release job). */
+export type LockDoc = { _id: string; owner: string; expiresAt: Date };
 
 export type OutboxDoc = {
   kind: "batch_received" | "items_need_data" | "keys_queried" | "course_missing" | "batch_in_review" | "sample_requested";
@@ -215,6 +231,7 @@ export type OutboxDoc = {
 };
 
 type Models = {
+  Lock: Model<LockDoc>;
   Run: Model<RunDoc>;
   Outbox: Model<OutboxDoc & { openKey?: string }>;
   Batch: Model<BatchDoc>;
@@ -330,7 +347,13 @@ function defineModels(conn: Connection): Models {
     batchId: String,
     receivedAt: Date,
     pipeline: {
-      type: new Schema({ flags: [String], passedAt: Date, releaseAt: Date, heldFor: String, answerToConfirm: Boolean, runId: String, wroteStage: String }, { _id: false }),
+      type: new Schema(
+        {
+          flags: [String], passedAt: Date, releaseAt: Date, heldFor: String, answerToConfirm: Boolean, runId: String, wroteStage: String,
+          releaseClaim: { type: new Schema({ owner: String, at: Date, releasedAt: Date }, { _id: false }), required: false },
+        },
+        { _id: false },
+      ),
       required: false,
     },
     showcase: { type: Boolean, default: false },
@@ -384,7 +407,12 @@ function defineModels(conn: Connection): Models {
     rows: [new Schema({ itemId: String, subject: String, course: String, showcase: Boolean }, { _id: false })],
     receivedAt: { type: Date, default: () => new Date() },
     uploadedBy: String,
+    sampledAt: Date,
+    sampledIds: { type: [String], default: undefined },
+    sampling: { type: new Schema({ owner: String, at: Date, ids: { type: [String], default: undefined } }, { _id: false }), required: false },
+    inReviewSuggestedAt: Date,
   });
+  const Lock = new Schema<LockDoc>({ _id: { type: String, required: true }, owner: String, expiresAt: Date });
   // openKey = "<kind>|<batchId>" while a suggestion is open, removed when drafted; the unique index
   // is what stops two concurrent suggest() calls from creating two open suggestions.
   const Outbox = new Schema<OutboxDoc & { openKey?: string }>({
@@ -423,8 +451,9 @@ function defineModels(conn: Connection): Models {
   });
   Run.index({ itemId: 1, runId: 1 }, { unique: true });
   Run.index({ itemId: 1, startedAt: -1 });
-  if (isReadOnly()) for (const schema of [Run, Outbox, Batch, User, Session, Item, Solution, Activity, Upload]) blockWrites(schema as Schema);
+  if (isReadOnly()) for (const schema of [Lock, Run, Outbox, Batch, User, Session, Item, Solution, Activity, Upload]) blockWrites(schema as Schema);
   return {
+    Lock: conn.model<LockDoc>("Lock", Lock, "locks"),
     Run: conn.model<RunDoc>("Run", Run, "runs"),
     Outbox: conn.model<OutboxDoc & { openKey?: string }>("Outbox", Outbox, "outbox"),
     Batch: conn.model<BatchDoc>("Batch", Batch, "batches"),
