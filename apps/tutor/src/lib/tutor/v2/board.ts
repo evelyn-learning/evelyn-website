@@ -147,18 +147,19 @@ export function applyToModelBoard(board: V2Board, id: string, name: string, args
     const here = board.pages[board.current];
     if (here && norm(here.title) === norm(text(args.title)) && here.items.length < 3) return { painted: false, detail: `already on the page "${here.title}"` };
     board.pages.push({ title: text(args.title) || `Page ${board.pages.length + 1}`, items: [] });
-    board.current = board.pages.length - 1;
+    board.current = board.pages.length - 1; delete board.look;
     return { painted: true, detail: `new page ${board.current + 1} "${board.pages[board.current].title}"` };
   }
   if (name === 'go_to_page') {
     const want = typeof args.pageIndex === 'number' ? args.pageIndex : board.pages.findIndex((p) => norm(p.title) === norm(text(args.title) || text(args.pageTitle)));
     if (want < 0 || want >= board.pages.length) return { painted: false, detail: 'no such page' };
     board.current = want;
+    if (want < board.pages.length - 1) board.look = true; else delete board.look;
     // Turned back for a look, the work in progress is still on the last page. The tutor is told so: asked one
     // question about an earlier problem, it then wrote the rest of the current problem's working on that
     // earlier page (Crimsora, portal-21fa1dea, and an AP Lang session before it).
     const last = board.pages.length - 1;
-    return { painted: true, detail: `now on page ${want + 1} "${board.pages[want].title}"${want < last ? `. The work in progress stays on page ${last + 1} "${board.pages[last].title}": when you carry on with it, turn to that page first (its page block)` : ''}` };
+    return { painted: true, detail: `now on page ${want + 1} "${board.pages[want].title}"${want < last ? `. The work in progress stays on page ${last + 1} "${board.pages[last].title}": what you write in this reply goes on the page in view; from your next reply on, what you write goes back on page ${last + 1}, and the board turns to it` : ''}` };
   }
   if (board.current < 0) { board.pages.push({ title: 'Page 1', items: [] }); board.current = 0; }
   if (name === 'highlight') return { painted: true, detail: 'highlighted' };
@@ -211,8 +212,8 @@ export function renderBoard(board: V2Board): string {
   if (!board.pages.length) return 'empty';
   return board.pages.map((p, i) => {
     const last = board.pages.length - 1;
-    const turnedBack = board.current < last;
-    const head = `page ${i + 1} "${p.title}"${i === board.current ? (turnedBack ? ' (in view: turned back to for a look)' : ' (in view)') : turnedBack && i === last ? ' (the work in progress: turn to this page before writing more of it)' : ''}`;
+    const turnedBack = board.current < last && !!board.look;
+    const head = `page ${i + 1} "${p.title}"${i === board.current ? (turnedBack ? ' (in view: turned back to for a look)' : ' (in view)') : turnedBack && i === last ? ' (the work in progress: what you write next goes here, and the board turns back to it; to write on the page in view instead, begin with that page\'s page block)' : ''}`;
     if (i !== board.current && i !== board.current - 1 && !(turnedBack && i === last)) return `${head}: ${p.items.length} item(s)`;
     return `${head}: ${p.items.length ? p.items.map((it) => `${it.tool.replace(/^show_|^tutor_/, '')} "${it.summary}"`).join('; ') : 'blank'}`;
   }).join('\n  ');

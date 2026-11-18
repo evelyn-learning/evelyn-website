@@ -84,7 +84,7 @@ export interface V2HomeworkState {
 
 export interface V2BoardItem { id: string; tool: string; summary: string; /** The content alone, normalised, for spotting repeats (board.ts). */ core?: string; /** A graph keeps what it plots, so a later graph on the same page can be drawn as one picture with it (turn.ts). */ args?: Record<string, unknown> }
 export interface V2BoardPage { title: string; items: V2BoardItem[] }
-export interface V2Board { pages: V2BoardPage[]; current: number }
+export interface V2Board { pages: V2BoardPage[]; current: number; /** The tutor turned back to the page in view for a look; the work in progress is on the last page (board.ts, turn.ts). */ look?: boolean }
 
 /** What a board tool call did. Goes back to the model as the tool result and stays in the history. */
 export interface V2BoardOutcome { painted: boolean; detail: string; /** The item already on the page in view that this call repeats. */ pointAt?: string }

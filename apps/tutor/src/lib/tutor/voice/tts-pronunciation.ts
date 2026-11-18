@@ -2467,6 +2467,13 @@ export function speakGroups(text: string): string {
   });
 }
 
+/** Words spelt with a final -re are said as written by the voice: "a thick band of fibres" came out
+ *  "fibrase" (AP Psychology, portal-e8640e11). For speech only they take the -er spelling; the board and
+ *  the transcript keep the tutor's own. */
+export function speakReEndings(text: string): string {
+  return text.replace(/\b((?:kilo|centi|milli|micro|nano)?(?:met|lit)|fib|cent|theat|calib|somb|lust|spect|sab|meag|goit|tit)re(s|d)?\b/gi, (_m, stem: string, end: string | undefined) => `${stem}${stem === stem.toUpperCase() && stem.length > 1 ? 'ER' : 'er'}${end ? (end.toLowerCase() === 'd' ? `e${end}` : end) : ''}`);
+}
+
 export function speakNumberPlurals(text: string): string {
   return text.replace(/\b(the|these|those|both|all|of|and|or|no|many|few|several|two|three|four|five|six|seven|eight|nine|ten|\d+)(\s+)(\d{1,3})s\b(?!')/gi, (_m, cue: string, gap: string, n: string) => `${cue}${gap}${NUMBER_PLURAL[Number(n)] ?? `${n}'s`}`);
 }

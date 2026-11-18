@@ -3,7 +3,7 @@
 // em-dash normalization, math-variable letter respelling.
 import assert from 'node:assert';
 import { speechRateForLevel } from '../src/lib/tutor/voice/speech-rate';
-import { outsideMathSpans, rewriteForTTS, speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakNumberPlurals, speakPhonemeSlashes, speakSlashes, speakLessonNotation, speakLetterUnits } from '../src/lib/tutor/voice/tts-pronunciation';
+import { outsideMathSpans, rewriteForTTS, speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakNumberPlurals, speakPhonemeSlashes, speakReEndings, speakSlashes, speakLessonNotation, speakLetterUnits } from '../src/lib/tutor/voice/tts-pronunciation';
 
 // --- Slash-pair whitelist -----------------------------------------
 assert.strictEqual(
@@ -1569,6 +1569,9 @@ console.log('OK — tts-pronunciation rewrites validated');
   assert.equal(speakDataRuns('for these heights, 165, 170, 168, 172, 175, 180, 178, 169, 173, 171, 177, 182, 179, 174, 176, suggest a bin width'), 'for these heights, the 15 values on the board, suggest a bin width');
   assert.equal(speakNumberPlurals('the two 4s and the 5, three 10s, the 1s cancel, two 25s'), "the two fours and the 5, three tens, the ones cancel, two 25's");
   assert.equal(speakNumberPlurals('it took 4s to fall'), 'it took 4s to fall');
+  // portal-e8640e11: "a thick band of fibres" was said "fibrase".
+  assert.equal(speakReEndings('a thick band of fibres, 3 metres from the Centre; a centred lens, 2 litres, a fibre'), 'a thick band of fibers, 3 meters from the Center; a centered lens, 2 liters, a fiber');
+  for (const keep of ['the genre and the acre', 'they are more sure here', 'a fiber and a meter', 'mitre']) assert.equal(speakReEndings(keep), keep);
   // A unit over seconds is "per second" and one letter over another is "over" (AP Physics 1, embed-1794441323503).
   assert.match(rewriteForTTS(speakSlashes('Yes, ω is 8 rad/s, and L is 8 kg·m²/s.')), /8 radians per second, .*squared per second/);
   assert.equal(speakSlashes('the same rate ω = v/r, so use F/m'), 'the same rate ω = v over r, so use F over m');

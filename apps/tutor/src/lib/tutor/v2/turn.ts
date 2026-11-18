@@ -46,6 +46,8 @@ export const V2_UNWRITTEN_WORDS = 30;
 export const V2_CHECK_INS = ['Does that make sense so far?', 'Are you with me so far?', 'Is that clear, or shall I go over it again?', 'Does that make sense?'];
 const V2_FIGURE_TOOL_NAMES = new Set(['show_free_body_diagram', 'show_number_line', 'show_function_graph', 'show_table', 'show_timeline', 'show_graphic_organizer', 'show_geometry', 'show_venn_diagram', 'show_tree', 'show_stats', 'show_lewis_constructed', 'show_cycle_diagram', 'show_concept_map', 'show_map', 'show_diagram', 'show_sketch', 'show_circuit', 'show_ray_diagram', 'show_drawn_figure']);
 export const V2_MAX_MODEL_CALLS = 5;
+/** After a look back at an earlier page, what a later reply writes goes on the page of the work in progress. Kill switch: TUTOR_V2_LOOK_RETURNS=off. */
+const V2_LOOK_RETURNS = process.env.TUTOR_V2_LOOK_RETURNS !== 'off';
 /** The longest answer key kept for a problem of the tutor's own. */
 export const V2_OWN_KEY_CHARS = 700;
 /** Asked on a clean page, with the problem alone: the same model that agreed with a wrong root mid-lesson solves it right. */
@@ -348,6 +350,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const spoken: string[] = [];
   let pageUnplaced = '';
   const toolCalls: V2ToolCall[] = [];
+  // This reply has turned the board to a page itself (see the look-back return in settle).
+  let turnedNow = false;
   const usage: V2TurnResult['usage'] = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0 };
   const t0 = Date.now();
   let firstTextMs: number | null = null;
@@ -454,6 +458,17 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       else if (!valid.ok) outcome = `not painted: ${valid.reason}`;
       else if (misfit) outcome = `not painted: ${misfit}`;
       else {
+        // Turned back for a look in an earlier reply, the tutor carries on with the work in progress: the board
+        // returns to its page first. Told to turn the page itself, it did not: after one look at the hemispheres
+        // page, the verdict on the split-brain problem, its second part and the next problem were all written
+        // there, with the problem itself a page away (AP Psychology, portal-e8640e11). A page block in this
+        // reply means the tutor chose the page.
+        if (block.name === 'new_page' || block.name === 'go_to_page') turnedNow = true;
+        else if (state.board.look && !turnedNow && !markBeforeTurn && block.name !== 'highlight' && V2_LOOK_RETURNS && state.board.current < state.board.pages.length - 1) {
+          turnedNow = true;
+          const last = state.board.pages.length - 1;
+          settle({ type: 'tool_use', id: `ret_${nowMs.toString(36)}_${toolCalls.length}`, name: 'go_to_page', input: { pageIndex: last, page: last + 1, title: state.board.pages[last].title } } as Anthropic.ToolUseBlock, false, true);
+        }
         // The earlier graph leaves the tutor's record first, so the fuller one is not refused as a repeat.
         const page = replaces ? state.board.pages[state.board.current] : undefined;
         const was = page?.items.find((it) => it.id === replaces);
@@ -473,7 +488,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           // view together and what is written next goes there ("show me that question again" put part (c)
           // alone on the recap page, AP US Government, portal-ddf273bf).
           const away = cardPage !== state.board.current;
-          if (away) state.board.current = cardPage;
+          if (away) { state.board.current = cardPage; delete state.board.look; turnedNow = true; }
           o = { painted: false, detail: away ? `already on page ${cardPage + 1} "${state.board.pages[cardPage].title}"` : `already on the board (page ${cardPage + 1})`, pointAt: cardId, ...(away ? { turnTo: cardPage } : {}) };
         } else {
           // The first part of a problem in parts goes up as the whole problem. One later part asked by itself
@@ -525,6 +540,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       const title = state.board.pages[state.board.current]?.title ?? '';
       if (lines.length > 1 && title && plain(lines[0]) === plain(title)) args = { ...args, text: lines.slice(1).join('\n') };
     }
+    // The page block of the page in view, while turned back to it: the tutor means to write here.
+    if (name === 'new_page' && state.board.look && (state.board.pages[state.board.current]?.title ?? '').replace(/\s+/g, '').toLowerCase() === String(args.title ?? '').replace(/\s+/g, '').toLowerCase()) { turnedNow = true; return true; }
     // A page block naming a page that exists turns back to it.
     if (name === 'new_page') { const at = state.board.pages.findIndex((pg, i) => i !== state.board.current && pg.title.replace(/\s+/g, '').toLowerCase() === String(args.title ?? '').replace(/\s+/g, '').toLowerCase()); if (at >= 0) { name = 'go_to_page'; args = { pageIndex: at, page: at + 1, title: state.board.pages[at].title }; } }
     inlineN += 1;
