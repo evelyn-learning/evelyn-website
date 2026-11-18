@@ -213,7 +213,7 @@ export function goingOutToday(rows: Pick<PlanRow, "releaseAt" | "state">[], now:
 
 /** The Resend key values in `env` (the ones this job holds). */
 export function secretsOf(env: Record<string, string | undefined>): string[] {
-  return [env.KEYSTONE_RESEND_API_KEY, env.RESEND_API_KEY].map((k) => (k ?? "").trim()).filter(Boolean);
+  return [env.KEYSTONE_RESEND_API_KEY, env.RESEND_API_KEY, env.SMTP_PASS, env.KEYSTONE_CRON_SECRET].map((k) => (k ?? "").trim()).filter(Boolean);
 }
 
 /** `text` with every given key replaced by "[key]", then the model-key scrub (models.ts redact: model keys, Bearer, sk-…). */
@@ -644,7 +644,8 @@ export function renderStatusEmail(s: Status, now: Date): { subject: string; html
 
 // --- sending (Resend REST) ---
 
-export type SendConfig = { from: string; to: string[]; key: string };
+/** `key` set: Resend. `key` empty with `smtp` set: the app's own SMTP account (the one its other mail uses). */
+export type SendConfig = { from: string; to: string[]; key: string; smtp?: { host: string; port: number; user: string; pass: string } };
 type Env = Record<string, string | undefined>;
 
 /** The send configuration from the environment; refuses a missing value or a sender outside @evelynlearning.com. Never echoes the key. */
@@ -652,17 +653,35 @@ export function statusSendConfig(env: Env): SendConfig {
   const to = (env.KEYSTONE_STATUS_TO ?? "").split(",").map((x) => x.trim()).filter(Boolean);
   const from = (env.KEYSTONE_STATUS_FROM ?? "").trim();
   const key = (env.KEYSTONE_RESEND_API_KEY || env.RESEND_API_KEY || "").trim();
-  const missing = [!to.length && "KEYSTONE_STATUS_TO", !from && "KEYSTONE_STATUS_FROM", !key && "KEYSTONE_RESEND_API_KEY (or RESEND_API_KEY)"].filter(Boolean);
+  // No Resend key: fall back to the app's SMTP account when it is fully configured.
+  const smtp = !key && env.SMTP_USER?.trim() && env.SMTP_PASS?.trim()
+    ? { host: (env.SMTP_HOST || "smtp.gmail.com").trim(), port: parseInt(env.SMTP_PORT || "587", 10) || 587, user: env.SMTP_USER.trim(), pass: env.SMTP_PASS.trim() }
+    : undefined;
+  const missing = [!to.length && "KEYSTONE_STATUS_TO", !from && "KEYSTONE_STATUS_FROM", !key && !smtp && "KEYSTONE_RESEND_API_KEY (or RESEND_API_KEY), or SMTP_USER and SMTP_PASS"].filter(Boolean);
   if (missing.length) throw new Error(`Refusing to send: not set: ${missing.join(", ")}.`);
   const addr = /^[^<>]*<([^<>]+)>$/.exec(from)?.[1]?.trim() ?? from;
   if (!/^[^@\s<>]+@evelynlearning\.com$/i.test(addr)) {
     throw new Error(`Refusing to send: KEYSTONE_STATUS_FROM must be an @evelynlearning.com address (got "${from}"); the two Resend accounts must not be mixed.`);
   }
-  return { from, to, key };
+  return { from, to, key, ...(smtp ? { smtp } : {}) };
+}
+
+/** Sends through the app's SMTP account. Throws with the server's message (never the password). */
+async function sendBySmtp(msg: { subject: string; html: string; text: string }, cfg: SendConfig): Promise<{ id?: string }> {
+  const smtp = cfg.smtp!;
+  try {
+    const nodemailer = (await import("nodemailer")).default;
+    const transporter = nodemailer.createTransport({ host: smtp.host, port: smtp.port, secure: smtp.port === 465, auth: { user: smtp.user, pass: smtp.pass } });
+    const info = await transporter.sendMail({ from: cfg.from, to: cfg.to, subject: msg.subject, html: msg.html, text: msg.text });
+    return { id: info.messageId };
+  } catch (e) {
+    throw new Error(`The mail server refused the email: ${scrubSecrets(e instanceof Error ? e.message : String(e), [smtp.pass]).slice(0, 300)}`);
+  }
 }
 
 /** POSTs the email to Resend. Throws on a refusal with the HTTP status and Resend's message (never the key). */
 export async function sendStatusEmail(msg: { subject: string; html: string; text: string }, cfg: SendConfig, fetchFn: typeof fetch = fetch): Promise<{ id?: string }> {
+  if (!cfg.key && cfg.smtp) return sendBySmtp(msg, cfg);
   let res: Response;
   try {
     res = await fetchFn("https://api.resend.com/emails", {
