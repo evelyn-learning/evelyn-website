@@ -248,6 +248,15 @@ async function earlyRounding(entries: Entry[], results: PyResult[], item: ItemDo
   return out;
 }
 
+/**
+ * A number written with an exponent letter (2.18e-25, 6.02E+23) as the evaluator takes it: (2.18*10^(-25)).
+ * Only a literal with a digit right before the letter and a sign or digit right after; the constant E
+ * (E, 2*E, E^2) is left alone. The evaluator itself still refuses exponent letters.
+ */
+export function plainExponents(expr: string): string {
+  return expr.replace(/(?<![A-Za-z_.\d])(\d+\.?\d*|\.\d+)[eE]([+-]?\d+)(?![A-Za-z_.\d])/g, (_m, mant: string, exp: string) => `(${mant}*10^(${exp.replace(/^\+/, "")}))`);
+}
+
 // --- the check ------------------------------------------------------------------------------------
 
 export async function calcCheck(draft: Draft, answer: Answer, item: ItemDoc, opts?: { python?: string }): Promise<CalcFinding[]> {
@@ -255,7 +264,7 @@ export async function calcCheck(draft: Draft, answer: Answer, item: ItemDoc, opt
   const calc = draft.calc ?? [];
 
   if (calc.length) {
-    const entries = calc.map((c) => ({ expr: String(c.expr ?? ""), expect: String(c.expect ?? ""), rounding: c.rounding ?? "" }));
+    const entries = calc.map((c) => ({ expr: plainExponents(String(c.expr ?? "")), expect: String(c.expect ?? ""), rounding: c.rounding ?? "" }));
     let results: PyResult[] | null = null;
     try {
       results = await runPython(entries, opts?.python ?? "python3");

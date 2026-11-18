@@ -342,15 +342,15 @@ async function main() {
     const r2 = await callModel(call("solver1"), deps(g.fn));
     assert.equal(r2.ok && r2.fellBack, false);
     // a dated alias of the requested model is not a fallback
-    const h = fakeFetch([anthropicMsg([{ type: "text", text: '{"ok":true}' }], "end_turn", undefined, { model: "claude-fable-5-2-20261101" })]);
+    const h = fakeFetch([anthropicMsg([{ type: "text", text: '{"ok":true}' }], "end_turn", undefined, { model: `${MODEL_FOR.solver1.model}-20261101` })]);
     const r3 = await callModel(call("solver1"), deps(h.fn));
     assert.equal(r3.ok && r3.fellBack, false, "dated alias");
     if (r3.ok) assert.equal(r3.cost, costOf(MODEL_FOR.solver1, 1000, 500));
     // a fallback block sets it even when the served id is a dated alias
     const k = fakeFetch([anthropicMsg([
-      { type: "fallback", from: { model: "claude-fable-5-2" }, to: { model: "claude-fable-5-2" } },
+      { type: "fallback", from: { model: MODEL_FOR.solver1.model }, to: { model: MODEL_FOR.solver1.model } },
       { type: "text", text: '{"ok":true}' },
-    ], "end_turn", undefined, { model: "claude-fable-5-2-20261101" })]);
+    ], "end_turn", undefined, { model: `${MODEL_FOR.solver1.model}-20261101` })]);
     const r4 = await callModel(call("solver1"), deps(k.fn));
     assert.equal(r4.ok && r4.fellBack, true, "fallback block");
     // a shorter id with trailing digits is a different model, not an alias

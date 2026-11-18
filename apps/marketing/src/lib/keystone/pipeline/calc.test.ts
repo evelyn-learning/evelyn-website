@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { calcCheck, statedNumbers, toPlainDecimal } from "./calc";
+import { calcCheck, statedNumbers, toPlainDecimal, plainExponents } from "./calc";
 import type { CalcFinding } from "./calc";
 import type { Answer } from "./answers";
 import type { ItemDoc } from "../db";
@@ -39,6 +39,10 @@ assert.deepEqual(statedNumbers("x^{2} + 3"), ["2", "3"]);
 // toPlainDecimal
 assert.equal(toPlainDecimal("2.50e3"), "2500");
 assert.equal(toPlainDecimal("2.50E+3"), "2500");
+assert.equal(plainExponents("2.18e-25 * 3"), "(2.18*10^(-25)) * 3");
+assert.equal(plainExponents("6.02E+23/2"), "(6.02*10^(23))/2");
+assert.equal(plainExponents("2*E + E^2 + exp(1)"), "2*E + E^2 + exp(1)", "the constant E is left alone");
+assert.equal(plainExponents("1e5e2"), "1e5e2", "not a plain literal: left for the evaluator to refuse");
 assert.equal(toPlainDecimal("2.50 × 10^3"), "2500");
 assert.equal(toPlainDecimal("2.50 \\times 10^{3}"), "2500");
 assert.equal(toPlainDecimal("2.50*10^3"), "2500");
@@ -244,12 +248,17 @@ async function main() {
     draft({ calc: [{ expr: "0.5*0.5", expect: "0.25" }, { expr: "1 - 0.25", expect: "0.75" }] }), { kind: "number", value: "0.998" }, item(),
   )), []);
 
-  // E-notation can hang inside C code: never let it through
-  for (const bad of ["1E+5", "1e5", "1E-5", "1.5E+3", "2 E 3", "E5", "E.5", "1E+10000000"]) {
+  // E-notation can hang inside C code: the evaluator never sees it. A plain literal is rewritten to a*10^n
+  // first (plainExponents); anything else with an exponent letter is refused, and a huge power is refused fast.
+  await ok("1E+5", "100000");
+  await ok("1e5", "100000");
+  await ok("1.5E+3", "1500");
+  await ok("2.18e-25 * 1e25", "2.18");
+  for (const [bad, why] of [["2 E 3", /exponent notation is not allowed/], ["E5", /exponent notation is not allowed/], ["E.5", /exponent notation is not allowed/], ["1E+10000000", /exponent too large/]] as const) {
     const t0 = Date.now();
     const f = await run(bad, "1");
     assert.deepEqual(codes(f), ["calc_unparseable"], bad);
-    assert.match(f[0].detail, /exponent notation is not allowed/, bad);
+    assert.match(f[0].detail, why, bad);
     assert.ok(Date.now() - t0 < 1500, `${bad} took ${Date.now() - t0} ms`);
   }
   await ok("E^2", "7.389", "3dp");

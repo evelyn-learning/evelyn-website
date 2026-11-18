@@ -27,6 +27,19 @@ const OPENAI: ModelSpec = {
   // and https://developers.openai.com/api/docs/pricing
   vendor: "openai", model: "gpt-6.2-astra", pricePerMTokIn: 8, pricePerMTokOut: 40,
 };
+// Cost tier chosen 2026-11-17 after the first live dry runs (the writer was 51% of the cost, the audit 25%,
+// the two solvers 6%): one tier below each vendor's top model. Set KEYSTONE_MODEL_TIER=top to use the top models.
+const OPUS: ModelSpec = {
+  // Claude Opus 5.5: $4 in / $20 out. Checked 2026-11-17: https://platform.claude.com/docs/en/about-claude/pricing
+  vendor: "anthropic", model: "claude-opus-5-5", pricePerMTokIn: 4, pricePerMTokOut: 20,
+};
+const SOL: ModelSpec = {
+  // GPT-6.2 Sol: $2 in / $10 out. Checked 2026-11-17: https://developers.openai.com/api/docs/pricing
+  vendor: "openai", model: "gpt-6.2-sol", pricePerMTokIn: 2, pricePerMTokOut: 10,
+};
+const TOP = process.env.KEYSTONE_MODEL_TIER === "top";
+const CLAUDE = TOP ? ANTHROPIC : OPUS;
+const GPT = TOP ? OPENAI : SOL;
 const DEEPSEEK: ModelSpec = {
   // DeepSeek V4 Pro — thinking on by default, text only (no vision), JSON output
   // via response_format json_object. PEAK rates (cache miss) $1.32 in / $3.96 out;
@@ -63,11 +76,11 @@ const CLAUDE_FALLBACK_PRICES: Record<string, { pricePerMTokIn: number; pricePerM
 };
 
 export const MODEL_FOR: Record<Role, ModelSpec> = {
-  solver1: ANTHROPIC,
-  author: ANTHROPIC,
-  solver2: OPENAI,
-  working: OPENAI,
-  audit: OPENAI,
+  solver1: CLAUDE,
+  author: CLAUDE,
+  solver2: GPT,
+  working: GPT,
+  audit: GPT,
   solver3Text: DEEPSEEK,
   solver3Image: GEMINI,
   compare: GEMINI,
@@ -130,7 +143,7 @@ export function runKeyCheck(env: Record<string, string | undefined> = process.en
 /** The vendor a recorded model id belongs to (the five specs' models and the Claude fallback models), else undefined. */
 export function vendorOfModel(model: string): Vendor | undefined {
   const id = model.trim();
-  for (const spec of Object.values(MODEL_FOR)) if (spec.model === id) return spec.vendor;
+  for (const spec of [...Object.values(MODEL_FOR), ANTHROPIC, OPENAI, OPUS, SOL]) if (spec.model === id) return spec.vendor;
   if (id in CLAUDE_FALLBACK_PRICES) return "anthropic";
   return undefined;
 }

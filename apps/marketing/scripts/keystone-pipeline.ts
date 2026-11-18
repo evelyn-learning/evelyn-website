@@ -142,6 +142,20 @@ async function main() {
       }
     }
   }
+  // Where the money went: cost per step kind and per model, over every run of this invocation.
+  const byStep = new Map<string, { n: number; cost: number }>();
+  const byModel = new Map<string, number>();
+  for (const r of out.runs) for (const st of r.steps) {
+    const e = byStep.get(st.step) ?? { n: 0, cost: 0 };
+    e.n += 1; e.cost += st.cost ?? 0; byStep.set(st.step, e);
+    const solves = st.output && typeof st.output === "object" ? (st.output as { solves?: { model?: string; cost?: number }[] }).solves : undefined;
+    if (Array.isArray(solves) && solves.length) for (const sv of solves) byModel.set(sv.model ?? "?", (byModel.get(sv.model ?? "?") ?? 0) + (sv.cost ?? 0));
+    else byModel.set(st.model ?? "(none)", (byModel.get(st.model ?? "(none)") ?? 0) + (st.cost ?? 0));
+  }
+  console.log("\n=== Cost by step ===");
+  for (const [k, e] of [...byStep].sort((x, y) => y[1].cost - x[1].cost)) console.log(`${k.padEnd(10)} calls ${String(e.n).padStart(3)}  $${e.cost.toFixed(4)}  (${total ? Math.round((100 * e.cost) / total) : 0}%)`);
+  console.log("=== Cost by model ===");
+  for (const [k, c] of [...byModel].sort((x, y) => y[1] - x[1])) console.log(`${k.padEnd(22)} $${c.toFixed(4)}  (${total ? Math.round((100 * c) / total) : 0}%)`);
   console.log(`\nresults: ${[...byResult].map(([k, v]) => `${k} ${v}`).join(", ") || "none"}`);
   console.log(`flags:   ${[...byFlag].map(([k, v]) => `${k} ${v}`).join(", ") || "none"}`);
   console.log(`refused: ${out.refused.length}, skipped: ${out.skipped.length}`);
