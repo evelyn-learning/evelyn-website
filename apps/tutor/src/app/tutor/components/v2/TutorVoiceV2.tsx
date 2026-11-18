@@ -36,7 +36,7 @@ import { inkTurnEndTimeoutMs } from '@/lib/tutor/voice/ink-turn-end';
 import type { RealtimeHandle } from '@/lib/tutor/orchestrator/types';
 import type { WhiteboardCommand } from '@core/knowledge/types';
 import { type V2ComposerStatus, V2Composer, V2_HANDLE_STUBS } from './TutorClientV2';
-import { V2FlagBar, V2_FLAGS_ON, type V2FlagState } from './V2FlagBar';
+import { V2FlagBar, V2_FLAGS_ON, reviewNotesClaim, type V2FlagState } from './V2FlagBar';
 import { useV2Turns, type V2TurnsConfig } from './useV2Turns';
 import { isOwnVoice } from '@/lib/tutor/v2/own-voice';
 import { trimToSpoken } from '@/lib/tutor/v2/interrupted';
@@ -581,6 +581,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       board: state?.board,
     };
   }, []);
+  const reviewNotes = useMemo(() => reviewNotesClaim(props.embedToken), [props.embedToken]);
+  const reviewNote = useCallback((lines: string[]) => { for (const line of lines) p.current.onDebugEvent?.('v2_review_note', line); }, []);
   const flagStart = useCallback(() => { clearSilence(); if (pauseTimerRef.current) { clearTimeout(pauseTimerRef.current); pauseTimerRef.current = null; } soundPauseRef.current = false; realtimeRef.current?.pauseSpeech(); p.current.onDebugEvent?.('v2_flag', 'opened'); }, []);
   const flagStop = useCallback(() => {
     p.current.onDebugEvent?.('v2_flag', 'closed');
@@ -591,7 +593,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   }, [armSilence]);
 
   return (<>
-    {V2_FLAGS_ON && started && <V2FlagBar session={flagSession} flagRef={flagRef} snapshot={flagSnapshot} onStart={flagStart} onStop={flagStop} />}
+    {(V2_FLAGS_ON || reviewNotes) && started && <V2FlagBar session={flagSession} flagRef={flagRef} snapshot={flagSnapshot} onStart={flagStart} onStop={flagStop} onReviewNote={reviewNotes ? reviewNote : undefined} />}
     <V2Composer
       composerSlot={props.composerSlot}
       closed={turns.closed}
