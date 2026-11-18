@@ -149,6 +149,15 @@ async function main() {
     assert.deepEqual(f.map((x) => x.detail), ["the Diploma answer's last sentence does not state the answer"]);
   }
 
+  // R-diploma-shortcut: the Diploma's last sentence is read before one trailing "Thought shortcut:" line (write.ts withoutShortcut)
+  {
+    const sc = "\n\nThought shortcut: one minus the chance that none work.";
+    assert.deepEqual(codes(await calcCheck(draft({ diploma: `We compute it. So the probability is 0.998.${sc}` }), NUM, item())), [], "correct value before the shortcut");
+    assert.deepEqual(codes(await calcCheck(draft({ diploma: "We compute it. So the probability is 0.998.\n**Thought shortcut:** none fail." }), NUM, item())), [], "bold label");
+    const f = await calcCheck(draft({ diploma: `We compute it. So the probability is 0.997.${sc}` }), NUM, item());
+    assert.deepEqual(codes(f), ["answer_inconsistent"], "wrong value before the shortcut is still flagged");
+    assert.match(f[0].detail, /0\.997/, "the flagged sentence is the one before the shortcut");
+  }
   // python missing -> one finding, never a throw
   {
     const f = await calcCheck(draft({ calc: [{ expr: "1+1", expect: "2" }] }), NUM, item(), { python: "/nonexistent/python3" });

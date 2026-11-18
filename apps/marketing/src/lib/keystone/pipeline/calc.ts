@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import type { ItemDoc } from "../db";
 import { readNumber, sameAnswer } from "./answers";
 import type { Answer } from "./answers";
-import { closingCheck, type Draft } from "./write";
+import { closingCheck, withoutShortcut, type Draft } from "./write";
 
 export type CalcFinding = {
   code: "calc_mismatch" | "early_rounding" | "answer_inconsistent" | "letter_mismatch" | "unit_missing" | "calc_unparseable";
@@ -107,7 +107,8 @@ function answerInconsistent(draft: Draft, answer: Extract<Answer, { kind: "numbe
   const out: CalcFinding[] = [];
   const short = draft.sections.find((s) => s.kind === "short")?.md ?? "";
   const diploma = draft.sections.find((s) => s.kind === "diploma")?.md ?? "";
-  const lastSentence = sentences(diploma).slice(-1)[0] ?? "";
+  // R-diploma-shortcut: one trailing "Thought shortcut:" line is not the answer (write.ts's withoutShortcut, the same rule)
+  const lastSentence = sentences(withoutShortcut(diploma)).slice(-1)[0] ?? "";
   const nums = statedNumbers(short);
   if (!nums.some((n) => sameAnswer(num(n), answer))) {
     out.push({ code: "answer_inconsistent", detail: `the short section states ${nums.length ? nums.join(", ") : "no number"} but the agreed answer is ${answer.value}` });
