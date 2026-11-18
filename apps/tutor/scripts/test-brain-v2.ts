@@ -732,7 +732,14 @@ async function main() {
     check('a teaching session keeps its tools', !v2Tools('math').some((t) => t.name === 'record_thinking') && v2Tools('math').some((t) => t.name === 'track_gap'));
 
     const open = stub([msg([{ type: 'text', text: 'Hi Jo. Today is about AI and student writing, and there are no right answers. What is your first reaction when a student uses AI on a draft?' }], 'end_turn')]);
-    const r0 = await runV2Turn({ session: dSession, state: newV2State(1_000_000), studentSaid: null, nowMs: 1_000_000, callModel: open.call });
+    // A plan with no scripted welcome leaves the opening to the tutor.
+    const { welcome: _w, welcomeBoard: _wb, ...unscripted } = dPlan.metadata as Record<string, unknown>;
+    const r0 = await runV2Turn({ session: { ...dSession, plan: { ...dPlan, metadata: unscripted } }, state: newV2State(1_000_000), studentSaid: null, nowMs: 1_000_000, callModel: open.call });
+    const none = stub([]);
+    const rw = await runV2Turn({ session: { ...dSession, studentName: 'Jo Smith', teacher: { name: 'Sofia' } } as V2Session, state: newV2State(1_000_000), studentSaid: null, nowMs: 1_000_000, callModel: none.call });
+    check('a scripted welcome is spoken word for word with no model call, with its board up (ECS review 11-17)', rw.spoken.startsWith('Welcome to the ECS Voice Tutors, powered by Evelyn Learning. I\'m Sofia.') && /To begin, Jo: when you hear/.test(rw.spoken) && !/[{}]|board/.test(rw.spoken) && none.seen.length === 0 && rw.toolCalls.some((c) => c.name === 'annotate' && !/^not /.test(c.outcome)) && rw.state.history.length === 2, `${rw.spoken} | ${JSON.stringify(rw.toolCalls.map((c) => [c.name, c.outcome]))}`);
+    const rwNoName = await runV2Turn({ session: { ...dSession, studentName: '' }, state: newV2State(1_000_000), studentSaid: null, nowMs: 1_000_000, callModel: stub([]).call });
+    check('the welcome reads cleanly without a name', /To begin: when you hear/.test(rwNoName.spoken) && /I'm your thinking partner\./.test(rwNoName.spoken), rwNoName.spoken);
     const sys0 = (open.seen[0].system as Anthropic.TextBlockParam[]).map((b) => b.text).join('\n');
     const user0 = JSON.stringify(open.seen[0].messages);
     check('the opening uses the discussion prompt and the discussion opener', sys0.startsWith(V2_DISCUSSION_CONSTITUTION.slice(0, 60)) && user0.includes(DISCUSSION_OPENING.slice(1, 40)) && !sys0.includes(V2_CONSTITUTION.slice(0, 60)));
@@ -764,6 +771,21 @@ async function main() {
     const done = stub([msg([{ type: 'text', text: 'You are leaving with a question for your team. Thanks, Jo.' }, { type: 'tool_use', id: 'e2', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's', next_direction: 'a conversation with my grade team' } }], 'tool_use')]);
     const rd = await runV2Turn({ session: dSession, state: asked, studentSaid: 'Talk to my grade team.', nowMs: 1_000_000 + 9 * 60000, callModel: done.call });
     check('with a direction chosen it ends before the clock and keeps the direction', rd.state.closed && rd.state.nextDirection === 'a conversation with my grade team');
+    const closingWords = discussionOf(dPlan)!.closing!;
+    check('the plan\'s closing words end the session, once, and are kept in the history (ECS review 11-17)', rd.spoken.endsWith(closingWords) && rd.spoken.split(closingWords).length === 2 && JSON.stringify(rd.state.history.at(-2)).includes(closingWords.slice(0, 40)), rd.spoken);
+    const late = stub([msg([{ type: 'text', text: 'Thanks, Jo. The time is up.' }, { type: 'tool_use', id: 'e9', name: 'end_lesson', input: { because: 'time_nearly_used', summary: 's', next_direction: 'comparing Kelly with Diego' } }], 'tool_use')]);
+    const rl = await runV2Turn({ session: dSession, state: r1.state, studentSaid: 'hello', nowMs: 1_000_000 + 13 * 60000, callModel: late.call });
+    check('when the time runs out before the question was asked, no direction is kept (embed-1794953503551)', rl.state.closed && !rl.state.nextDirection && /the close names none/.test(renderFacts(dSession, { ...r1.state, thinking: { ...r1.state.thinking!, direction: undefined } }, { nowMs: 1_000_000 + 13 * 60000 })), String(rl.state.nextDirection));
+    const steer = stub([msg([{ type: 'text', text: 'You are right to say so. What do you actually think?' }, { type: 'tool_use', id: 's1', name: 'record_thinking', input: { shift_withdrawn: true } }], 'tool_use'), msg([{ type: 'text', text: '' }], 'end_turn')]);
+    const rs = await runV2Turn({ session: dSession, state: r1.state, studentSaid: 'It\'s a shift because that was sort of the only answer you were going to accept from me.', nowMs: 1_000_000 + 5 * 60000, callModel: steer.call });
+    const fs0 = JSON.stringify(steer.seen[0].messages.at(-1));
+    const fs1 = renderFacts(dSession, rs.state, { nowMs: 1_000_000 + 6 * 60000 });
+    check('a person who says they were steered is heard: the shift is withdrawn and the facts hold it (embed-1794951911157)', /they feel steered toward an answer/.test(fs0) && rs.state.thinking?.steered === true && rs.state.thinking.shifts.length === 0 && /they said they felt steered/.test(fs1) && !/shifts:/.test(fs1), fs1);
+    const hypo = { ...r1.state, history: [...r1.state.history, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'Think of a student who used AI only to tidy one paragraph. What would the chatbot have to do, in a case like that one, for the ideas in the paragraph to stop being the ideas of the student who wrote it?' }] }] };
+    check('a hypothetical student and an over-long question are pointed out', /it put a hypothetical student to them/.test(renderFacts(dSession, hypo, { nowMs: 1_000_000 + 5 * 60000 })) && /its question ran to \d+ words/.test(renderFacts(dSession, hypo, { nowMs: 1_000_000 + 5 * 60000 })), renderFacts(dSession, hypo, { nowMs: 1_000_000 + 5 * 60000 }));
+    const dMap = renderDiscussionMap(dPlan, discussionOf(dPlan)!);
+    check('the map sends board points to the board, keeps the scenario for the tutor, and carries the lead-in and closing', /board points[^\n]*\n\s+- Kelly wrote her story herself/.test(dMap) && /not for the board\): Kelly finishes writing/.test(dMap) && !/as written \(for the board\)/.test(dMap) && /Before the first case, lead in with this/.test(dMap) && /Closing words the session says/.test(dMap));
+    check('the prompt takes no side and offers ideas as possibilities', /You have no position to bring them to/.test(V2_DISCUSSION_CONSTITUTION) && /Offer ideas as possibilities/.test(V2_DISCUSSION_CONSTITUTION) && /Never put the full scenario on the board when the plan gives points/.test(V2_DISCUSSION_CONSTITUTION));
 
     const mute = stub([
       msg([{ type: 'tool_use', id: 'm1', name: 'record_thinking', input: { position: 'Worried about a slippery slope' } }], 'tool_use'),
@@ -800,7 +822,7 @@ async function main() {
     check('the map gives the spoken version of a case and the author\'s reflection questions', /to tell aloud: Kelly finishes a story/.test(renderDiscussionMap(dPlan, discussionOf(dPlan)!)) && /Does this still sound like me\?/.test(renderDiscussionMap(dPlan, discussionOf(dPlan)!)));
     const selfOrder = stub([msg([{ type: 'text', text: 'Record the direction, then close.' }, { type: 'tool_use', id: 'e4', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's', next_direction: 'a talk with my department.' } }], 'tool_use')]);
     const rso = await runV2Turn({ session: dSession, state: asked, studentSaid: 'My department, I think.', nowMs: 1_000_000 + 9 * 60000, callModel: selfOrder.call });
-    check('an order to itself is never said, and a close with nothing left to say still closes in words', rso.state.closed && !/Record the direction/.test(rso.spoken) && rso.spoken === 'Thank you for thinking this through with me. The direction you chose: a talk with my department.', rso.spoken);
+    check('an order to itself is never said, and a close with nothing left to say still closes in words', rso.state.closed && !/Record the direction/.test(rso.spoken) && rso.spoken === `Thank you for thinking this through with me. The direction you chose: a talk with my department.\n\n${closingWords}`, rso.spoken);
     check('the verdict-word scan catches praise and passes a plain acknowledgement', DISCUSSION_VERDICT_WORDS.test('Excellent point.') && DISCUSSION_VERDICT_WORDS.test("That's right, Jo.") && !DISCUSSION_VERDICT_WORDS.test('Tying it to what the student decides is a useful test.'));
   }
   console.log(`\n${passed} passed, ${failed} failed`);

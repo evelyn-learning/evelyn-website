@@ -33,7 +33,7 @@ import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
 import { leftOpen, mayOpenPart, namesPart, partOffer } from './part-close';
 import { heardAsWords } from './heard';
-import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, V2_DISCUSSION_CONSTITUTION, directionAsked, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap } from './discussion';
+import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, DISCUSSION_STEERED, V2_DISCUSSION_CONSTITUTION, directionAsked, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap, scriptedWelcome } from './discussion';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, V2_NOTE_OWN_ANSWER_TOOL, V2_SET_CURRENT_PROBLEM_TOOL, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
 
@@ -190,7 +190,9 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     // flow is 8–12 minutes in a box of up to 15. Until then, the clock-or-request rule below holds.
     const box = effectiveMinutes(session.timeBoxMinutes, state.thinking);
     const left = box ? box - (nowMs - state.startedAtMs) / 60000 : 0;
-    const direction = (typeof args.next_direction === 'string' ? args.next_direction.trim().slice(0, 300) : '') || state.thinking?.direction || '';
+    // A direction is one they named after being asked. When the time ran out in a long silence the close gave
+    // "the direction you chose" for a question that had never been put (embed-1794953503551).
+    const direction = !directionAsked(state.history) ? '' : (typeof args.next_direction === 'string' ? args.next_direction.trim().slice(0, 300) : '') || state.thinking?.direction || '';
     // The direction is theirs to name: a direction the tutor wrote itself closed the live test without the
     // question ever being asked (embed-1794694217385). Until it has been asked, only their request or the clock ends it.
     if (args.because !== 'student_asked' && box && left > 1.5 && !directionAsked(state.history)) {
@@ -280,7 +282,12 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const input: V2TurnInput = given.session.mode === 'voice' && given.studentSaid ? { ...given, studentSaid: heardAsWords(given.studentSaid) } : given;
   const { session } = input;
   const nowMs = input.nowMs ?? Date.now();
-  const callModel = input.callModel ?? defaultModelCall;
+  // A discussion whose plan scripts the welcome opens on those words exactly, the same in every session: no model
+  // call (the partner asked for one consistent introduction, 2026-11-17).
+  const welcome = !given.state.history.length && given.studentSaid === null && !given.facts?.resumed ? (() => { const d = discussionOf(session.plan); return d ? scriptedWelcome(d, { person: session.studentName, tutor: session.teacher?.name }) : null; })() : null;
+  const callModel: V2ModelCall = welcome
+    ? async (_params, onText) => { onText?.(welcome); return { id: 'scripted_welcome', type: 'message', role: 'assistant', model: '', content: [{ type: 'text', text: welcome, citations: null }], stop_reason: 'end_turn', stop_sequence: null, usage: { input_tokens: 0, output_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } } as unknown as Anthropic.Message; }
+    : input.callModel ?? defaultModelCall;
   const applyBoard = input.applyBoard ?? applyToModelBoard;
   // The turn works on a copy: a failed model call leaves the caller's state as it was.
   const state: V2State = structuredClone(input.state);
@@ -292,6 +299,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const facts = renderFacts(session, state, { ...input.facts, nowMs, heard: input.studentSaid });
   // "Your last reply brought in a complication" is said once, in this turn's facts; a new one sets it again.
   if (state.thinking?.justComplicated) state.thinking = { ...state.thinking, justComplicated: false };
+  // Said once by them, it holds for the rest of the conversation (shown in the facts from the next turn on; this
+  // turn's facts carry it as a note on the last reply).
+  if (discussion && input.studentSaid && DISCUSSION_STEERED.test(input.studentSaid)) state.thinking = { ...(state.thinking ?? { position: '', weighed: [], shifts: [] }), steered: true };
   // The student's words come first and carry the cache mark; the facts follow and are
   // never stored, so next turn's request shares this one's prefix up to the words.
   const userNow: Anthropic.MessageParam = {
@@ -853,6 +863,16 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   if (discussion && state.closed && !finalWords.trim()) {
     finalWords = state.nextDirection && !/^not (?:asked|sure)/i.test(state.nextDirection) ? `Thank you for thinking this through with me. The direction you chose: ${state.nextDirection.replace(/[.\s]+$/, '')}.` : 'Thank you for thinking this through with me.';
     input.onText?.(finalWords);
+  }
+  // The plan's own last words: that the session is over and what comes next. One session closed on a summary
+  // and stopped, and the person did not know it had finished (partner review, 2026-11-17).
+  const closing = discussion && state.closed && !input.signal?.aborted ? discussionOf(session.plan)?.closing?.trim() : '';
+  if (closing && !finalWords.includes(closing)) {
+    input.onText?.(`\n\n${closing}`);
+    finalWords = `${finalWords}\n\n${closing}`;
+    const holder = [...state.history].reverse().find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));
+    const textBlock = [...((holder?.content as Anthropic.ContentBlockParam[] | undefined) ?? [])].reverse().find((c): c is Anthropic.TextBlockParam => c.type === 'text');
+    if (textBlock) textBlock.text = `${textBlock.text}\n\n${closing}`;
   }
   return { spoken: finalWords, toolCalls, ...(withdrawnLabels.length ? { withdrawn: withdrawnLabels } : {}), state, usage, firstTextMs, totalMs: Date.now() - t0, modelCalls };
 }

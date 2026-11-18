@@ -11,6 +11,7 @@ Discussion sessions (ECS AI-literacy, chapter 2). The participant is an educator
 (i) Source fidelity: the cases described as written; anything attributed to the author that the source does not say.
 (j) Close: reflect step happened; participant chose a direction (or "not sure yet") and it was accepted without pushing for a classroom rule.
 (k) Length: within 8–12 min (≤15)? A rushed participant got a short version?
+(o) Neutrality (ECS review 2026-11-17): did the tutor try to bring the participant to a view of AI, for or against? Count replies that met an objection with an exception, a hypothetical student or a benefit; any shift it claimed that the participant had not made or had rejected; any practice offered as what they should do rather than as a possibility. Did a participant who ended where they began leave heard?
 (l) Other problems, one line each. (m) What was done well. (n) Rating 1–10 against a skilled human facilitator in a one-to-one conversation with this educator.
 
 End with a summary table and the line SCORES: A=… B=… …

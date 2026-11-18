@@ -43,7 +43,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   const lines = [
     // A discussion runs 8–12 minutes and may close early once the person has chosen where to go next: the teaching
     // line's "time for more, not at its close" would hold it open.
-    discussion ? `time: ${usedMin} min used${box ? ` of about ${box}${box !== session.timeBoxMinutes ? ' (the time they said they have)' : ''}; ${left > box * 0.4 ? `about ${Math.round(left)} left: plenty of time, not yet time to reflect or close unless they ask` : left > 4 ? `about ${Math.round(left)} left` : left > 1.5 ? `about ${Math.round(left)} left: time to reflect and choose a direction` : 'the time is up'}` : ''}` :
+    discussion ? `time: ${usedMin} min used${box ? ` of about ${box}${box !== session.timeBoxMinutes ? ' (the time they said they have)' : ''}; ${left > box * 0.4 ? `about ${Math.round(left)} left: plenty of time, not yet time to reflect or close unless they ask` : left > 4 ? `about ${Math.round(left)} left` : left > 1.5 ? `about ${Math.round(left)} left: time to reflect and choose a direction` : `the time is up${state.thinking?.direction ? '' : ': they have not named a direction, so the close names none'}`}` : ''}` :
     // What is left, said outright: with only "22 used of 30" the tutor said goodbye, was refused the close, and
     // took the goodbye back in the same breath (embed-1794593747478, embed-1794595194384).
     // Homework: a solved problem does not go on spending the student's minutes.

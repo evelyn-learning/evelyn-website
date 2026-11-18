@@ -115,6 +115,8 @@ export interface V2State {
     justComplicated?: boolean;
     /** The direction they named, once they have. */
     direction?: string;
+    /** They said they felt led to an answer: no more cases or consequences that point away from their view. */
+    steered?: boolean;
   };
   /** Discussion sessions: the direction the person chose to explore next, given with end_lesson. */
   nextDirection?: string;
