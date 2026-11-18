@@ -84,6 +84,9 @@ function plain(html: string): string {
     .trim();
 }
 
+/** Plain text of some HTML exactly as the question is shown to models (MathML, sup/sub, blanks, images). */
+export const htmlToPlainText = (html: string): string => plain(html);
+
 type Opt = { label: string; html: string };
 const optLines = (xs: Opt[]) => xs.map((o) => `  ${o.label}. ${plain(o.html)}`).join("\n");
 
