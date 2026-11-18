@@ -56,7 +56,7 @@
 - [R-short-no-plan] (short, 2026-11-11) The Short answer contains no plan.
 - [R-short-no-method] (short, 2026-11-11) The Short answer contains no method or working.
 - [R-short-option-letter] (short, 2026-11-11) For a multiple-choice question the Short answer names the option letter of the answer.
-- [R-short-closing] (short, 2026-11-17, house) A multiple-choice Short answer ends with the sentence 'So the answer is X.' (or 'So the answers are X and Y.').
+- [R-short-closing] (short, 2026-11-17, house) A multiple-choice Short answer ends either with the sentence 'So the answer is X.' (or 'So the answers are X and Y.') or with the final clause ', so the answer is X.' (or ', so the answers are X and Y.'), using the option's own label; nothing follows it.
 
 ## Second section (Diploma-style answer)
 
@@ -69,7 +69,7 @@
 - [R-diploma-round-last] (diploma, 2026-11-11) Rounding happens only at the final step.
 - [R-diploma-intermediate-digits] (diploma, 2026-11-11, house) Intermediate values that are shown carry at least one more digit than the final answer.
 - [R-diploma-summary] (diploma, 2026-11-11) A long derivation ends with a brief summary of its logic before the final-answer sentence.
-- [R-diploma-closing] (diploma, 2026-11-17, house) A multiple-choice Diploma answer ends with the sentence 'So the answer is X.' (or 'So the answers are X and Y.').
+- [R-diploma-closing] (diploma, 2026-11-17, house) A multiple-choice Diploma answer ends either with the sentence 'So the answer is X.' (or 'So the answers are X and Y.') or with the final clause ', so the answer is X.' (or ', so the answers are X and Y.'), using the option's own label; nothing follows it.
 - [R-diploma-final-sentence] (diploma, 2026-11-11) The second section ends with one clear final-answer sentence.
 - [R-diploma-shortcut] (diploma, 2026-11-11) A Biology or Chemistry Diploma answer may add a one-line thought shortcut; it is at most one line.
 

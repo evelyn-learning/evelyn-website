@@ -98,16 +98,23 @@ function itemOptions(item: ItemDoc): Opt[] {
   const fromInteractions = (item.interactions ?? []).flatMap((i) => (i.kind === "choice" ? i.options : []));
   return [...fromInteractions, ...(item.options ?? [])];
 }
-const optionHtml = (item: ItemDoc, letter: string) => itemOptions(item).find((o) => o.label.trim().toUpperCase() === letter)?.html;
+const optionHtml = (item: ItemDoc, label: string) => itemOptions(item).find((o) => o.label.trim().toUpperCase() === label.toUpperCase())?.html;
+const itemLabels = (item: ItemDoc) => [...new Set(itemOptions(item).map((o) => o.label.trim()).filter(Boolean))];
 
 const andList = (xs: string[]) => (xs.length <= 1 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`);
-const sortedLetters = (a: Extract<Answer, { kind: "choice" }>) => [...new Set(a.letters.map((l) => l.trim().toUpperCase()))].sort();
+/** The agreed labels in the item's own spelling (matched case-insensitively), in the item's option order. */
+function agreedLabels(a: Extract<Answer, { kind: "choice" }>, item: ItemDoc): string[] {
+  const labels = itemLabels(item);
+  const own = [...new Set(a.letters.map((l) => l.trim()).filter(Boolean).map((l) => labels.find((x) => x.toUpperCase() === l.toUpperCase()) ?? l))];
+  const at = (l: string) => { const i = labels.indexOf(l); return i < 0 ? labels.length : i; };
+  return own.sort((x, y) => at(x) - at(y) || x.localeCompare(y, "en", { numeric: true }));
+}
 
 /** The agreed answer as words for the author's prompt; client text (option wording, as cleaned markup) stays inside <option_text>. */
 export function answerInWords(answer: Answer, item: ItemDoc): string {
   switch (answer.kind) {
     case "choice": {
-      const letters = sortedLetters(answer);
+      const letters = agreedLabels(answer, item);
       const named: string[] = [];
       const reads: string[] = [];
       for (const l of letters) {
@@ -131,9 +138,9 @@ export function answerInWords(answer: Answer, item: ItemDoc): string {
 }
 
 /** The fixed sentence a choice item's Short and Diploma answers end with; null for other kinds. */
-export function closingSentence(answer: Answer, _item: ItemDoc): string | null {
+export function closingSentence(answer: Answer, item: ItemDoc): string | null {
   if (answer.kind !== "choice") return null;
-  const letters = sortedLetters(answer);
+  const letters = agreedLabels(answer, item);
   if (!letters.length) return null;
   return letters.length === 1 ? `So the answer is ${letters[0]}.` : `So the answers are ${andList(letters)}.`;
 }
@@ -182,29 +189,42 @@ export function lastSentence(md: string): string {
 
 // --- numeric literals --------------------------------------------------------------------------
 
-const SIGN_GAP = /\\[,; ]|~/g;
+const SIGN_GAP = /\\[,;:! ]|~/g;
+
+/** NFKC (full-width letters and digits become ASCII), keeping a thin or no-break space between digit groups as a
+ * thousands separator (NFKC would turn it into a plain space), and the fraction slash as "/". */
+export function nfkc(s: string): string {
+  return s.replace(/(\d)[\u2009\u202f\u00a0](?=\d{3}(?!\d))/g, "$1,").normalize("NFKC").replace(/\u2044/g, "/");
+}
+
+const SPACED: [RegExp, string][] = [
+  [/\\pm(?![A-Za-z])/g, " ± "], [/\\approx(?![A-Za-z])/g, " ≈ "], [/\\neq?(?![A-Za-z])/g, " ≠ "],
+  [/\\leq?(?![A-Za-z])/g, " ≤ "], [/\\geq?(?![A-Za-z])/g, " ≥ "], [/\\(?:to|rightarrow)(?![A-Za-z])/g, " → "],
+];
 
 /** LaTeX and Unicode normalised for reading numbers: $ removed, \text{…} → content, \frac{p}{q} → p/q,
  * thin-space commands removed between a sign and a digit (a thin space between digit groups kept as U+2009),
  * otherwise a space; \times → ×, \cdot → ·, U+2212 and "\-" → "-", ^{…} → ^…. */
 function normaliseLatex(s: string): string {
-  let t = s
+  let t = nfkc(s)
     .replace(/\$/g, " ")
-    .replace(/\\(?:text|mathrm|mathit|operatorname|mathbf|textrm)\s*\{([^{}]*)\}/g, "$1")
-    .replace(/\\[dt]?frac\s*\{\s*([+-]?\d+)\s*\}\s*\{\s*(\d+)\s*\}/g, "$1/$2")
-    .replace(/\\left|\\right/g, "")
     .replace(/\u2212|\\-/g, "-")
-    .replace(/\\times/g, "×")
-    .replace(/\\cdot/g, "·")
-    .replace(/\^\s*\{\s*([^{}]*?)\s*\}/g, "^$1");
+    .replace(/\\times(?![A-Za-z])/g, "×")
+    .replace(/\\cdot(?![A-Za-z])/g, "·")
+    .replace(/\\[dt]?frac\s*\{\s*([+-]?\d+)\s*\}\s*\{\s*(\d+)\s*\}/g, "$1/$2");
   t = t.replace(SIGN_GAP, (m, offset: number, whole: string) => {
     const before = whole.slice(0, offset);
     const after = whole.slice(offset + m.length);
     if (/[+-]\s*$/.test(before) && /^\s*\d/.test(after)) return "";
-    if (m === "\\," && /\d$/.test(before) && /^\d{3}(?!\d)/.test(after)) return "\u2009";
+    if (m === "\\," && /\d$/.test(before) && /^\d{3}(?!\d)/.test(after)) return ",";
     return " ";
   });
-  return t;
+  t = t.replace(/\\(?:text|textrm|mathrm|mathit|mathbf|operatorname)\s*\{([^{}]*)\}/g, " $1 ");
+  for (const [re, to] of SPACED) t = t.replace(re, to);
+  return t
+    .replace(/\^\s*\{\s*([^{}]*?)\s*\}/g, "^$1")
+    .replace(/\\[A-Za-z]+/g, " ")
+    .replace(/[{}]/g, " ");
 }
 
 /** Moves the decimal point of a plain decimal string by `exp` places, exactly (no floats). */
@@ -240,13 +260,16 @@ export function numericLiterals(text: string): string[] {
     let end = i + m[0].length;
     const before = s.slice(0, i);
     // ignored positions
-    if (/[A-Za-z]\^$/.test(before) || /_$/.test(before) || /[A-Za-z]$/.test(before)) { i = end; continue; }
+    if (/[A-Za-z]\s*\^\s*$/.test(before) || /_\s*$/.test(before) || /[A-Za-z]$/.test(before)) { i = end; continue; }
     let lit = m[0].replace(new RegExp(GROUP_SEP, "g"), "");
-    // unary sign: only spaces between the sign and the digits, and the sign not after a digit, ")" "]" "}" or a letter
+    // A sign with only spaces before the digits is BINARY only after a digit, ")", "]", "}" or a single-letter
+    // variable standing as its own token ("x - 3", "2a - 3"); anywhere else (after a word, "=", "(", ",", at the
+    // start) it is UNARY and belongs to the number.
     const sign = /([+-])[ \t\u2009\u202f\u00a0]*$/.exec(before);
     if (sign) {
       const pre = before.slice(0, before.length - sign[0].length).replace(/[ \t\u2009\u202f\u00a0]+$/, "");
-      if (!/[0-9)\]}A-Za-z]$/.test(pre)) lit = sign[1] === "-" ? `-${lit}` : lit;
+      const binary = /[0-9)\]}]$/.test(pre) || /(?:^|[^A-Za-z])[A-Za-z]$/.test(pre);
+      if (!binary && sign[1] === "-") lit = `-${lit}`;
     }
     const rest = s.slice(end);
     const sci = /^\s*[×·*]\s*10\s*\^\s*([+-]?\d+)/.exec(rest) ?? /^[eE]([+-]?\d+)(?![A-Za-z0-9])/.exec(rest);
@@ -280,29 +303,63 @@ function numberSentenceProblem(sentence: string, value: string, stemNumbers: str
   return other === undefined ? null : `the last sentence of the ${where} answer gives another value: ${other}`;
 }
 
-/** Option labels other than the agreed ones that a Short answer names as standalone capitals. */
-function otherLabelsNamed(md: string, agreed: string[], labels: string[]): string[] {
-  const text = md.replace(/\$\$[\s\S]*?\$\$/g, " ").replace(/\$[^$]*\$/g, " ");
-  const named: string[] = [];
-  for (const m of text.matchAll(/(?<![A-Za-z0-9])[A-Z](?![A-Za-z0-9])/g)) {
-    const l = m[0];
-    if (agreed.includes(l) || !labels.includes(l)) continue;
-    const at = m.index ?? 0;
-    const after = text.slice(at + 1);
-    const before = text.slice(0, at);
-    const lead = /\b(?:options?|choices?|answers?)\s*\(?\s*$/i.test(before);
-    const word = (l === "A" && /^ [a-z]/.test(after)) || (l === "I" && /^ /.test(after));
-    if (word && !lead) continue;
-    named.push(l);
-  }
-  return [...new Set(named)];
+const isLetterLabel = (l: string) => /^[A-Za-z]$/.test(l);
+
+/** Text with LaTeX math removed, for scanning prose. "$60$" is a number in math; a "$" right before a digit and
+ * after a space or the start is currency, never a delimiter. null when the remaining delimiters are unbalanced. */
+function proseOnly(md: string): string | null {
+  let t = md.replace(/\$\$[\s\S]*?\$\$/g, " ").replace(/\$(\d[\d.,]*)\$/g, " $1 ").replace(/(^|\s)\$(?=\d)/g, "$1\u00a4");
+  if (((t.match(/\$/g) ?? []).length) % 2) return null;
+  t = t.replace(/\$[^$]*\$/g, " ");
+  return t;
 }
 
-/** Ends with `closing` as its own final sentence (the whole text, or after a space or newline). */
-const endsWithSentence = (md: string, closing: string) => {
+const LEAD = /\b(?:options?|choices?|answers?)\s*\(?\s*([A-Za-z0-9_]+)/gi;
+
+/** Other option labels of the item a Short answer names (closing removed, math removed). */
+function otherLabelsNamed(prose: string, agreed: string[], labels: string[]): string[] {
+  const isAgreed = (l: string) => agreed.some((a) => a.toUpperCase() === l.toUpperCase());
+  const others = labels.filter((l) => !isAgreed(l));
+  const named = new Set<string>();
+  for (const l of others) {
+    if (isLetterLabel(l)) {
+      // a standalone capital; the words "A" / "I" are exempt unless they follow option/choice/answer
+      const L = l.toUpperCase();
+      for (const m of prose.matchAll(new RegExp(`(?<![A-Za-z0-9_])${L}(?![A-Za-z0-9_])`, "g"))) {
+        const at = m.index ?? 0;
+        const after = prose.slice(at + 1);
+        const lead = /\b(?:options?|choices?|answers?)\s*\(?\s*$/i.test(prose.slice(0, at));
+        const word = (L === "A" && /^ [a-z]/.test(after)) || (L === "I" && /^ /.test(after));
+        if (word && !lead) continue;
+        named.add(l);
+      }
+    } else if (/^\d+$/.test(l)) {
+      // a digit token equal to another label (not part of a decimal); fail-closed
+      const re = new RegExp(`(?<![A-Za-z0-9_]|\\d\\.)${l}(?![A-Za-z0-9_]|\\.\\d)`, "g");
+      if (re.test(prose)) named.add(l);
+    } else {
+      const esc = l.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      if (new RegExp(`(?<![A-Za-z0-9_])${esc}(?![A-Za-z0-9_])`, "i").test(prose)) named.add(l);
+    }
+  }
+  // any case, after option/choice/answer: "option b", "Choice (b)"
+  for (const m of prose.matchAll(LEAD)) {
+    const hit = others.find((l) => l.toUpperCase() === m[1].toUpperCase());
+    if (hit) named.add(hit);
+  }
+  return labels.filter((l) => named.has(l));
+}
+
+/** The closing, as its own last sentence ("… So the answer is A.") or as the last clause (", so the answer is A.");
+ * the text before it, or null when neither form ends the text. */
+function beforeClosing(md: string, closing: string): string | null {
   const t = md.trim();
-  return t === closing || t.endsWith(` ${closing}`) || t.endsWith(`\n${closing}`);
-};
+  if (t === closing) return "";
+  if (t.endsWith(` ${closing}`) || t.endsWith(`\n${closing}`)) return t.slice(0, t.length - closing.length);
+  const clause = `, s${closing.slice(1)}`;
+  if (t.endsWith(clause)) return t.slice(0, t.length - clause.length);
+  return null;
+}
 
 /** Shape and answer checks on the reply; a message naming the first problem, or null. */
 function draftProblem(d: Reply, answer: Answer, item: ItemDoc): string | null {
@@ -315,17 +372,21 @@ function draftProblem(d: Reply, answer: Answer, item: ItemDoc): string | null {
   if (empty) return `the ${empty.kind} section is empty`;
   if (!statedAnswerMatches(d.statedAnswer, answer)) return `the stated answer ${JSON.stringify(d.statedAnswer)} is not the agreed answer`;
 
-  const short = d.sections.find((s) => s.kind === "short")!.md.trim();
-  const diploma = d.sections.find((s) => s.kind === "diploma")!.md.trim();
+  // every scan reads NFKC text, so full-width letters and digits are caught
+  const short = nfkc(d.sections.find((s) => s.kind === "short")!.md).trim();
+  const diploma = nfkc(d.sections.find((s) => s.kind === "diploma")!.md).trim();
 
   if (answer.kind === "choice") {
     const closing = closingSentence(answer, item)!;
-    if (!endsWithSentence(short, closing)) return `the Short answer does not end with "${closing}"`;
-    if (!endsWithSentence(diploma, closing)) return `the Diploma answer does not end with "${closing}"`;
-    const agreed = sortedLetters(answer);
-    const optionLabels = itemOptions(item).map((o) => o.label.trim().toUpperCase()).filter((l) => /^[A-Z]$/.test(l));
-    const labels = optionLabels.length ? optionLabels : [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"];
-    const other = otherLabelsNamed(short.slice(0, short.length - closing.length), agreed, labels);
+    const shortBody = beforeClosing(short, closing);
+    if (shortBody === null) return `the Short answer does not end with "${closing}" or ", s${closing.slice(1)}"`;
+    if (beforeClosing(diploma, closing) === null) return `the Diploma answer does not end with "${closing}" or ", s${closing.slice(1)}"`;
+    const agreed = agreedLabels(answer, item);
+    const own = itemLabels(item);
+    const labels = own.length ? own : [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"];
+    const prose = proseOnly(shortBody);
+    if (prose === null) return "unbalanced math delimiters in the Short answer";
+    const other = otherLabelsNamed(prose, agreed, labels);
     if (other.length) return `the Short answer names option ${other.join(", ")} besides the agreed ${agreed.join(", ")}`;
     return null;
   }
@@ -429,9 +490,12 @@ function howToState(answer: Answer, item: ItemDoc): string {
     const closing = closingSentence(answer, item)!;
     return [
       `End the Short answer with exactly this sentence, as its own final sentence: ${closing}`,
+      `Or end it with the same words as the final clause of its last sentence, after a comma: "…, s${closing.slice(1)}"`,
       `End the Diploma answer with exactly this sentence as its own final sentence too.`,
-      `Write it as plain text: no bold, italics, quotation marks or other formatting on it.`,
+      `The Diploma answer may also use the final-clause form instead.`,
+      `Nothing may follow it. Write it as plain text: no bold, italics, quotation marks or other formatting on it.`,
       `Name no other option letter as an answer anywhere in the Short answer. Do not mention any other option letter there at all.`,
+      ...(itemLabels(item).some((l) => /^\d+$/.test(l)) ? [`The options are numbered: do not write any other option number in the Short answer.`] : []),
     ].join("\n");
   }
   if (answer.kind === "number") {
