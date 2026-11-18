@@ -607,12 +607,19 @@ export async function renderCheck(item: ItemDoc, draft: Draft, opts: RenderCheck
   }
 
   // 5. Making-of words
+  // One finding per matched span: where patterns overlap ("As an AI" and "AI"), the longest match wins.
   for (const s of present) {
     const prose = proseOf(s.md);
+    const hits: { at: number; end: number; text: string; name: string }[] = [];
     for (const b of BANNED_WORDS) {
-      for (const m of prose.matchAll(b.re)) {
-        add({ code: "banned_word", section: s.kind, quote: m[0], detail: `the ${s.kind} section says "${m[0]}" (${b.name})` });
-      }
+      for (const m of prose.matchAll(b.re)) hits.push({ at: m.index ?? 0, end: (m.index ?? 0) + m[0].length, text: m[0], name: b.name });
+    }
+    const kept: typeof hits = [];
+    for (const h of [...hits].sort((x, y) => y.end - y.at - (x.end - x.at) || x.at - y.at)) {
+      if (!kept.some((k) => h.at < k.end && k.at < h.end)) kept.push(h);
+    }
+    for (const h of kept.sort((x, y) => x.at - y.at)) {
+      add({ code: "banned_word", section: s.kind, quote: h.text, detail: `the ${s.kind} section says "${h.text}" (${h.name})` });
     }
   }
 
