@@ -33,7 +33,7 @@ import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
 import { leftOpen, mayOpenPart, namesPart, partOffer } from './part-close';
 import { heardAsWords } from './heard';
-import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, DISCUSSION_STEERED, V2_DISCUSSION_CONSTITUTION, directionAnswered, directionAsked, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap, scriptedWelcome } from './discussion';
+import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, DISCUSSION_STEERED, V2_DISCUSSION_CONSTITUTION, directionAnswered, directionAsked, discussionOf, reflectAsked, effectiveMinutes, recordThinking, renderDiscussionMap, scriptedWelcome } from './discussion';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, V2_NOTE_OWN_ANSWER_TOOL, V2_SET_CURRENT_PROBLEM_TOOL, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
 
@@ -195,6 +195,10 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     const direction = !directionAnswered(state.history, studentSaid) ? '' : (typeof args.next_direction === 'string' ? args.next_direction.trim().slice(0, 300) : '') || state.thinking?.direction || '';
     // The direction is theirs to name: a direction the tutor wrote itself closed the live test without the
     // question ever being asked (embed-1794694217385). Until it has been asked, only their request or the clock ends it.
+    // The close comes after they have said where they stand now: a session went from the middle straight to its end.
+    if (args.because !== 'student_asked' && box && left > 1.5 && !reflectAsked(state.history, discussion)) {
+      return 'not ended: you have not yet asked what they are thinking now and whether anything has shifted. Say nothing of this message. Ask that now as one short question. What they would like to explore next comes after their answer, and the close after that.';
+    }
     if (args.because !== 'student_asked' && box && left > 1.5 && !directionAsked(state.history)) {
       return 'not ended: you have not asked them yet what they would like to explore next. Say nothing of this message. Ask them that now as one short question, and close after they answer.';
     }

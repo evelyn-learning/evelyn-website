@@ -17,7 +17,7 @@ import { renderFacts, V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S } from '../src/li
 import type Anthropic from '@anthropic-ai/sdk';
 import { SEED_AP_CALCBC_U4_LHOPITAL } from '../src/lib/tutor/lesson-plan/seeds/ap-calcbc-u4-lhopital';
 import { V2_CONSTITUTION } from '../src/lib/tutor/v2/constitution';
-import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, DISCUSSION_VERDICT_WORDS, V2_DISCUSSION_CONSTITUTION, directionAnswered, discussionOf, renderDiscussionMap, untoldCases } from '../src/lib/tutor/v2/discussion';
+import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, DISCUSSION_VERDICT_WORDS, V2_DISCUSSION_CONSTITUTION, directionAnswered, discussionOf, reflectAsked, reflectAtMinutes, renderDiscussionMap, untoldCases } from '../src/lib/tutor/v2/discussion';
 import { PRIVATE_ECS_AI_LITERACY_CH2 } from '../src/lib/tutor/lesson-plan/private/ecs-ai-literacy-ch2';
 import { SEED_PLANS, getLessonPlan, isPrivatePlan } from '../src/lib/tutor/lesson-plan/store';
 import { renderPlanMap } from '../src/lib/tutor/v2/plan-map';
@@ -765,9 +765,18 @@ async function main() {
       msg([{ type: 'text', text: 'Thanks, Jo.' }, { type: 'tool_use', id: 'e5', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's', next_direction: 'showing steps' } }], 'tool_use'),
       msg([{ type: 'text', text: 'What would you most like to explore next?' }], 'end_turn'),
     ]);
-    const ru = await runV2Turn({ session: dSession, state: r1.state, studentSaid: 'Worth trying, I guess.', nowMs: 1_000_000 + 7 * 60000, callModel: unasked.call });
+    const reflected = { ...r1.state, history: [...r1.state.history, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'What are you thinking now, and has anything shifted?' }] }] };
+    const ruf = await runV2Turn({ session: dSession, state: r1.state, studentSaid: 'Worth trying, I guess.', nowMs: 1_000_000 + 7 * 60000, callModel: stub([msg([{ type: 'text', text: 'Thanks, Jo.' }, { type: 'tool_use', id: 'e6', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's' } }], 'tool_use'), msg([{ type: 'text', text: 'What are you thinking now?' }], 'end_turn')]).call });
+    check('a discussion cannot close before asking what they are thinking now (embed-1794971130343)', (!ruf.state.closed && /not yet asked what they are thinking now/.test(ruf.toolCalls[0].outcome)) || reflectAsked(r1.state.history, discussionOf(dPlan)), ruf.toolCalls[0]?.outcome);
+    const paceState = { ...r1.state, goals: { orient: { status: 'shown' as const }, explore: { status: 'shown' as const } } };
+    const fp7 = renderFacts(dSession, paceState, { nowMs: r1.state.startedAtMs + 7 * 60000 });
+    const fp9 = renderFacts(dSession, paceState, { nowMs: r1.state.startedAtMs + 9.2 * 60000 });
+    check('the facts say when the last two stages are due by the plan\'s times, and when a stage has overrun', reflectAtMinutes(dPlan, 15) === 8 && /time to ask what they are thinking now/.test(fp9) && !/time to ask what they are thinking now/.test(fp7) && /stage \[explore\] has had its time/.test(renderFacts(dSession, { ...r1.state, goals: { orient: { status: 'shown' as const } } }, { nowMs: r1.state.startedAtMs + 6 * 60000 })), `${fp7}\n${fp9}`);
+    const sameQ = { ...r1.state, history: [...r1.state.history, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'Would you want that for every student, or only the ones whose work worries you?' }] }, { role: 'user' as const, content: 'Ah, a reference.' }, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'A baseline. Would you want that baseline for every student, or only the ones whose work worries you?' }] }] };
+    check('the same question asked twice is pointed out', /asked the same question as the reply before it/.test(renderFacts(dSession, sameQ, { nowMs: r1.state.startedAtMs + 5 * 60000 })));
+    const ru = await runV2Turn({ session: dSession, state: reflected, studentSaid: 'Worth trying, I guess.', nowMs: 1_000_000 + 7 * 60000, callModel: unasked.call });
     check('a discussion cannot close on a direction it wrote itself, before asking them', !ru.state.closed && /not asked them yet/.test(ru.toolCalls[0].outcome), ru.toolCalls[0]?.outcome);
-    const asked = { ...r1.state, history: [...r1.state.history, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'What would be most valuable for you to explore next?' }] }] };
+    const asked = { ...reflected, history: [...reflected.history, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'What would be most valuable for you to explore next?' }] }] };
     const done = stub([msg([{ type: 'text', text: 'You are leaving with a question for your team. Thanks, Jo.' }, { type: 'tool_use', id: 'e2', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's', next_direction: 'a conversation with my grade team' } }], 'tool_use')]);
     const rd = await runV2Turn({ session: dSession, state: asked, studentSaid: 'Talk to my grade team.', nowMs: 1_000_000 + 9 * 60000, callModel: done.call });
     check('with a direction chosen it ends before the clock and keeps the direction', rd.state.closed && rd.state.nextDirection === 'a conversation with my grade team');
@@ -804,7 +813,7 @@ async function main() {
     const rb = await runV2Turn({ session: dSession, state: { ...r1.state, thinking: { ...r1.state.thinking!, direction: undefined } }, studentSaid: 'I have about eight minutes.', nowMs: 1_000_000 + 60000, callModel: box.call });
     const fb = renderFacts(dSession, rb.state, { nowMs: 1_000_000 + 5 * 60000 });
     check('a stated time becomes the clock, and their example and the complication count reach the facts', /of about 8 \(the time they said they have\); about 3 left: time to reflect/.test(fb) && /their own student or experience: a grade 7 boy/.test(fb) && /complications you have brought in: 1/.test(fb), fb);
-    const named = { ...rb.state, history: [...rb.state.history, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'Where would you like to take this next?' }] }], thinking: { ...rb.state.thinking!, direction: 'parents', complications: 3 } };
+    const named = { ...rb.state, history: [...rb.state.history, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'What are you thinking now?' }] }, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'Where would you like to take this next?' }] }], thinking: { ...rb.state.thinking!, direction: 'parents', complications: 3 } };
     const fn = renderFacts(dSession, named, { nowMs: 1_000_000 + 5 * 60000 });
     check('a named direction is shown as not to be asked again; three complications are enough', /direction they chose: parents \(named; don't ask for it again\)/.test(fn) && /that is enough/.test(fn), fn);
     const endNamed = stub([msg([{ type: 'text', text: 'Bye, Jo.' }, { type: 'tool_use', id: 'e3', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's' } }], 'tool_use')]);

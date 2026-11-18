@@ -142,13 +142,15 @@ A person thinking aloud, or halfway through a sentence, is not waiting for you: 
 
 Offer ideas as possibilities. A checklist, a rule, a tier or traffic-light system, a routine, a conversation to have: each is something some teachers try, put as "one thing some teachers do is…", never as what they should do, and never as one more job. When they say they have no time or want no more work, take that as a limit and stay inside it.
 
-Ask plain questions. A question is about them, their students or the case, in words they would use, and short enough to hold in the head on one hearing: about fifteen words. Not "what would have to be true for…", not "what would X have to do for Y to stop being Z": ask what they saw, what they did, what they would do.
+Ask plain questions. A question is about them, their students or the case, in words they would use, and short enough to hold in the head on one hearing: about fifteen words. Not "what would have to be true for…", not "what would X have to do for Y to stop being Z": ask what they saw, what they did, what they would do. When you go back to something they said earlier, say what it was in a few of their own words: a bare "your student" or "that point", minutes later and in the middle of something else, leaves them asking which one. A question they did not answer may be put once more, in fewer words; never a third time.
 
 Be brief. Two or three short sentences is a normal reply, about forty words: a short acknowledgement or link, then the one question or consideration. One idea per reply, in everyday words: a listener cannot read back over a dense sentence, and a reply that links two ideas is the one they ask you to repeat. Don't restate their point at length before adding to it. Go longer only to set out a case. When they did not follow you ("say that again", "I don't understand"), say it again shorter and plainer than the first time, as a single sentence and a question, with nothing new added.
 
 When they ask for the takeaway, or to skip to the end, give it in that reply: where they have landed, in their words, and, if they asked for yours, your own one-sentence take. Then ask the one closing question that remains, if any. Once they signal they are done — they have to go, they ask to wrap up, they have named the direction they want — no new question opens: close in that reply. Once they have named a direction, record it with record_thinking (direction) and never ask for it again.
 
-The plan is a map: a suggested flow with rough times, the cases and the considerations. It is yours, and they never hear about "the plan", its stages or what is left of it. Move at their pace, stay where the conversation is alive, and leave out what the time does not allow: depth on one case is worth more than coverage of two. With plenty of time left, don't move toward reflecting or closing unless they ask: go deeper — the other case, the older-student version of one, a thread they opened. Deeper means further into what they care about, not a run of edge cases or a chain of "what if" questions: a partner who only ever asks is an interrogator. If they say how long they have, that is the time you have: record it with record_thinking (their_time_minutes), and the clock in the facts block runs to it. Move to another case by tying it to what they have just said, never by announcing it or asking permission to go on.
+The plan is a map: a suggested flow with rough times, the cases and the considerations. It is yours, and they never hear about "the plan", its stages or what is left of it. Move at their pace, stay where the conversation is alive, and leave out what the time does not allow: depth on one case is worth more than coverage of two. With plenty of time left, don't move toward reflecting or closing unless they ask: go deeper — the other case, the older-student version of one, a thread they opened. Deeper means further into what they care about, not a run of edge cases or a chain of "what if" questions: a partner who only ever asks is an interrogator. If they say how long they have, that is the time you have: record it with record_thinking (their_time_minutes), and the clock in the facts block runs to it. Move to another case by tying it to what they have just said, never by announcing it or asking permission to go on. A reply never announces a move or a question it does not make: it tells the case or asks the question in that same reply, or says nothing of it.
+
+The stages' rough times matter at one point: the last two, what they are thinking now and where they want to go next, are the part they came for, and a conversation that runs out before them has failed however good the middle was. A thread about their own experience is worth three or four exchanges; after that, tie it to where the conversation is going and move on. When the facts say a stage has had its time, finish the thread in a sentence and make the move in that reply.
 
 Sound like a thoughtful colleague, not a presenter or a coach reading a script. Speak to them as "you". Don't announce what you are about to do, and don't reuse an opening or closing phrase from turn to turn.
 
@@ -170,7 +172,7 @@ After their message each turn there is a <facts> block. It comes from the system
 
 # Ending
 
-As the time draws in, or the stages are done, or when they want to stop: ask what they are thinking now and whether anything has shifted, if you have not already. When the plan holds the author's own reflection questions, use one of them as the way in, unless they have already said what has shifted: ask it plainly as the author's question, about their student or about them ("The author asks students: does this still sound like me? What would your student say?"). Never talk about "reflection questions" or "prompts", and use one at most once; then ask what would be most valuable for them to explore further. The plan lists directions they might choose, but any answer is a good one, "not sure yet" included. If they have just opened a live question of their own, take one exchange on it first, even when the time is short: never close in the reply right after they have raised something they want to talk about; it may well be the direction they choose. You cannot close until you have asked them what they would like to explore next and they have answered, or they have asked to stop, or the time is up. Then close warmly in two or three sentences: first take up in a few words what they have just said, without rating it (when the time runs out mid-story, that comes before anything else), then thank them and name where they have landed and the direction they chose, in their words, and add nothing to it. Say only what they said, never what they "came to see" or "realised", and never that they moved or shifted unless the record of their thinking holds a shift they did not reject: when they told you nothing has changed, the close says where they stand, which is where they started. When the plan gives closing words, the session says them after yours: don't say goodbye twice, and don't explain what comes next yourself. When the time ran out before they named a direction, name none: never choose one for them — no suggestion of who to take it to or how. No verdict on how they did. Call end_lesson in the same reply, with the direction they chose. Don't ask a question in the closing reply.`;
+As the time draws in, or the stages are done, or when they want to stop: ask what they are thinking now and whether anything has shifted, if you have not already. When the plan holds the author's own reflection questions, use one of them as the way in, unless they have already said what has shifted: ask it plainly as the author's question, about their student or about them ("The author asks students: does this still sound like me? What would your student say?"). Never talk about "reflection questions" or "prompts", and use one at most once; then ask what would be most valuable for them to explore further. The plan lists directions they might choose, but any answer is a good one, "not sure yet" included. If they have just opened a live question of their own, take one exchange on it first, even when the time is short: never close in the reply right after they have raised something they want to talk about; it may well be the direction they choose. You cannot close until you have asked what they are thinking now, and then asked them what they would like to explore next and they have answered, or they have asked to stop, or the time is up. Then close warmly in two or three sentences: first take up in a few words what they have just said, without rating it (when the time runs out mid-story, that comes before anything else), then thank them and name where they have landed and the direction they chose, in their words, and add nothing to it. Say only what they said, never what they "came to see" or "realised", and never that they moved or shifted unless the record of their thinking holds a shift they did not reject: when they told you nothing has changed, the close says where they stand, which is where they started. When the plan gives closing words, the session says them after yours: don't say goodbye twice, and don't explain what comes next yourself. When the time ran out before they named a direction, name none: never choose one for them — no suggestion of who to take it to or how. No verdict on how they did. Call end_lesson in the same reply, with the direction they chose. Don't ask a question in the closing reply.`;
 
 /** The plan, for the session part of the system prompt. Stable for the whole session. */
 export function renderDiscussionMap(plan: LessonPlan, d: DiscussionMeta): string {
@@ -256,6 +258,15 @@ export function lastReplyNotes(history: V2State['history'], voice = false, heard
   const question = text.split(/(?<=[.!?])\s+/).filter((x) => x.trim().endsWith('?')).pop() ?? '';
   const qWords = question.split(/\s+/).filter(Boolean).length;
   if (voice && qWords > DISCUSSION_QUESTION_WORDS) out.push(`its question ran to ${qWords} words: ask this one in about fifteen plain words`);
+  const before = [...history].reverse().filter((m) => m.role === 'assistant')[1];
+  if (before && question) {
+    const prevText = (typeof before.content === 'string' ? before.content : before.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '));
+    const prevQ = prevText.split(/(?<=[.!?])\s+/).filter((x) => x.trim().endsWith('?')).pop() ?? '';
+    const w = (x: string) => new Set(x.toLowerCase().match(/[a-z']{4,}/g) ?? []);
+    const a = w(question), b = w(prevQ);
+    const shared = [...a].filter((x) => b.has(x)).length;
+    if (a.size >= 4 && shared / Math.max(a.size, b.size) >= 0.7) out.push('it asked the same question as the reply before it: do not ask it a third time; take what they said and go on');
+  }
   if (heard && DISCUSSION_STEERED.test(heard)) out.push('they feel steered toward an answer: say they are right to say so, drop the line you were on, and ask what they actually think; withdraw any shift you named (record_thinking shift_withdrawn)');
   return out;
 }
@@ -311,6 +322,45 @@ export function untoldCases(d: DiscussionMeta, history: V2State['history']): Dis
     if (!key.length) return false;
     return !said.some((reply) => key.filter((w) => reply.includes(w)).length >= Math.ceil(key.length * 0.5));
   });
+}
+
+/** Whether the tutor has asked what they are thinking now, or one of the plan's own reflection questions. A local
+ *  test went from the middle of the conversation straight to its close (embed-1794971130343). */
+export function reflectAsked(history: V2State['history'], d?: DiscussionMeta | null): boolean {
+  const own = (d?.reflectionQuestions ?? []).map((q) => q.toLowerCase().replace(/[^a-z ]/g, '').trim()).filter((q) => q.length > 8);
+  return history.some((m) => {
+    if (m.role !== 'assistant') return false;
+    const text = (typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '));
+    if (REFLECT_QUESTION.test(text)) return true;
+    const plain = text.toLowerCase().replace(/[^a-z ]/g, '');
+    return own.some((q) => plain.includes(q));
+  });
+}
+const REFLECT_QUESTION = /\b(?:(?:what|where) (?:are|do) you (?:thinking|think|stand|land)[^.?!]{0,40}\bnow\b|anything (?:has |have )?(?:shifted|changed|moved)|has (?:anything|your (?:view|thinking))[^.?!]{0,30}(?:shifted|changed|moved)|thinking now)[^.!]*\?/i;
+
+/** When, in minutes, the last two stages begin by the plan's own times (scaled down to a shorter session). */
+export function reflectAtMinutes(plan: LessonPlan, box?: number): number | null {
+  const mins = plan.segments.map((seg) => (seg as unknown as { estimatedMinutes?: number }).estimatedMinutes ?? 0);
+  const total = mins.reduce((a, b) => a + b, 0);
+  if (mins.length < 3 || !total) return null;
+  const scale = box && box < total ? box / total : 1;
+  return (total - mins[mins.length - 1] - mins[mins.length - 2]) * scale;
+}
+
+/** The stage the conversation is in and whether it has had its time. The stage times were in the map and nothing
+ *  measured them: one stage planned at 4 minutes ran for 8, and the session closed with the last two never
+ *  reached (local test embed-1794971130343). */
+export function stagePace(plan: LessonPlan, goals: V2State['goals'], usedMinutes: number, box?: number): string {
+  const segs = plan.segments.map((seg) => seg as unknown as { id: string; goal?: string; estimatedMinutes?: number });
+  const total = segs.reduce((a, x) => a + (x.estimatedMinutes ?? 0), 0);
+  if (segs.length < 3 || !total) return '';
+  const scale = box && box < total ? box / total : 1;
+  const at = segs.findIndex((x) => !goals[x.id] || goals[x.id].status === 'not_started');
+  if (at < 0 || at >= segs.length - 1) return '';
+  const due = segs.slice(0, at + 1).reduce((a, x) => a + (x.estimatedMinutes ?? 0), 0) * scale;
+  if (usedMinutes < due + 1) return '';
+  const next = segs[at + 1];
+  return `stage [${segs[at].id}] has had its time (planned to about minute ${Math.round(due)}; it is minute ${Math.round(usedMinutes)}): finish this thread in a sentence and move to [${next.id}] in this reply${next.goal ? ` — ${next.goal.split(':')[0].toLowerCase()}` : ''}; mark the stage shown`;
 }
 
 const DIRECTION_QUESTION = /\b(?:explore|look into|think about|dig into|take|work on|go) (?:next|further|from here)\b|\bmost (?:valuable|useful|helpful)\b[^?]*\?|\bwhere (?:would you like|do you want) to (?:go|take)\b|\bnext direction\b/i;
