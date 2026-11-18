@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { calcCheck, statedNumbers, toPlainDecimal } from "./calc";
+import { calcCheck, closingSentence, statedNumbers, toPlainDecimal } from "./calc";
 import type { CalcFinding } from "./calc";
 import type { Answer } from "./answers";
 import type { ItemDoc } from "../db";
@@ -31,6 +31,11 @@ assert.deepEqual(statedNumbers("$x_1 = 5$"), ["5"]);
 assert.deepEqual(statedNumbers("$v_{1} = 4.0$"), ["4.0"]);
 assert.deepEqual(statedNumbers("half is $\\frac{1}{2}$ of 8"), ["1/2", "8"]);
 assert.deepEqual(statedNumbers("6.02 x 10^23 and 1.5e-3"), ["602000000000000000000000", "0.0015"]);
+assert.deepEqual(statedNumbers("$9.81\\ \\text{m/s}^2$"), ["9.81"]);
+assert.deepEqual(statedNumbers("9.81 m/s^2 and 3 cm^{3}"), ["9.81", "3"]);
+assert.deepEqual(statedNumbers("$10^{-3}$"), ["0.001"]);
+assert.deepEqual(statedNumbers("a 10^-3 g"), ["0.001"]);
+assert.deepEqual(statedNumbers("x^{2} + 3"), ["2", "3"]);
 // toPlainDecimal
 assert.equal(toPlainDecimal("2.50e3"), "2500");
 assert.equal(toPlainDecimal("2.50E+3"), "2500");
@@ -64,12 +69,22 @@ async function main() {
   // letters
   const A: Answer = { kind: "choice", letters: ["A"] };
   const letterDraft = (short: string) => draft({ short, diploma: "Reasoning." });
-  assert.deepEqual(codes(await calcCheck(letterDraft("The correct choice is option B."), A, item())), ["letter_mismatch"]);
-  assert.deepEqual(codes(await calcCheck(letterDraft("A ball rolls down a slope, so the answer is B."), A, item())), ["letter_mismatch"]);
-  assert.deepEqual(codes(await calcCheck(letterDraft("A ball rolls down a slope, which is option A."), A, item())), []);
-  assert.deepEqual(codes(await calcCheck(letterDraft("The ball speeds up, so the answer is a result of gravity."), A, item())), ["letter_mismatch"]); // names no letter
-  assert.deepEqual(codes(await calcCheck(letterDraft("A is correct because of energy."), A, item())), []);
-  assert.deepEqual(codes(await calcCheck(letterDraft("Energy is conserved. (A)"), A, item())), []);
+  assert.deepEqual(codes(await calcCheck(letterDraft("A ball rolls down a slope. So the answer is A."), A, item())), []);
+  assert.deepEqual(codes(await calcCheck(letterDraft("A ball rolls down a slope. So the answer is B."), A, item())), ["letter_mismatch"]);
+  assert.deepEqual(codes(await calcCheck(letterDraft("A ball rolls down a slope, which is option A."), A, item())), ["letter_mismatch"]); // no closing sentence
+  {
+    const f = await calcCheck(letterDraft("It speeds up."), A, item());
+    assert.equal(f[0].detail, "the Short answer does not end with: So the answer is A.");
+  }
+  const Bk: Answer = { kind: "choice", letters: ["B"] };
+  assert.deepEqual(codes(await calcCheck(letterDraft("The answer is not A but B. So the answer is B."), Bk, item())), []);
+  assert.deepEqual(codes(await calcCheck(letterDraft("Options A and B are wrong. So the answer is C."), { kind: "choice", letters: ["C"] }, item())), []);
+  assert.deepEqual(codes(await calcCheck(letterDraft("Work.\n\nSo the answers are A and C.\n"), { kind: "choice", letters: ["C", "A"] }, item())), []);
+  assert.deepEqual(codes(await calcCheck(letterDraft("So the answers are A, C and D."), { kind: "choice", letters: ["D", "A", "C"] }, item())), []);
+  assert.deepEqual(codes(await calcCheck(letterDraft("So the answers are A, C, and D."), { kind: "choice", letters: ["A", "C", "D"] }, item())), ["letter_mismatch"]); // no Oxford comma
+  assert.deepEqual(codes(await calcCheck(letterDraft("So the answer is A."), { kind: "choice", letters: ["A", "C"] }, item())), ["letter_mismatch"]);
+  assert.equal(closingSentence(["c", "a"]), "So the answers are A and C.");
+  assert.equal(closingSentence(["B"]), "So the answer is B.");
 
   // units
   const stem = "<p>Calculate the speed. Give your answer in <b>m/s</b>.</p>";
@@ -89,6 +104,24 @@ async function main() {
   assert.deepEqual(codes(await calcCheck(dt("It is 25 °C."), t25, item("<p>Give the temperature in °C.</p>"))), []);
   assert.deepEqual(codes(await calcCheck(dt("It is 25."), t25, item(deg))), ["unit_missing"]);
   assert.deepEqual(codes(await calcCheck(dt("It is 25."), t25, item("<p>Which value in A is largest?</p>"))), []);
+  // lead-ins are case-insensitive, units are not
+  {
+    const x: Answer = { kind: "number", value: "25.3" };
+    const du = (short: string) => draft({ short, diploma: "Work. So it is 25.3 units." });
+    const cases: [string, string, string][] = [
+      ["<p>Express the result in kJ.</p>", "It is 25.3.", "It is 25.3 kJ."],
+      ["<p>Give the speed in m/s.</p>", "It is 25.3.", "It is $25.3\\ \\text{m/s}$."],
+      ["<p>To the nearest tenth, give the temperature in °C.</p>", "It is 25.3.", "It is 25.3 °C."],
+      ["<p>Record the time to the nearest 0.1 s.</p>", "It is 25.3.", "It is 25.3 s."],
+    ];
+    for (const [st, bad, good] of cases) {
+      assert.deepEqual(codes(await calcCheck(du(bad), x, item(st))), ["unit_missing"], st);
+      assert.deepEqual(codes(await calcCheck(du(good), x, item(st))), [], st);
+    }
+    assert.deepEqual(codes(await calcCheck(du("It is 25.3."), x, item("<p>Which value in A is largest?</p>"))), []);
+    assert.deepEqual(codes(await calcCheck(du("It is 25.3."), x, item("<p>Calculate the speed in m/s.</p>"))), []);
+    assert.deepEqual(codes(await calcCheck(du("It is 25.3."), x, item("<p>Give the amount in M.</p>"))), []); // "M" is not a unit here
+  }
   // scientific notation in both sections
   {
     const sci: Answer = { kind: "number", value: "2500" };
@@ -100,11 +133,6 @@ async function main() {
     const f = await calcCheck(draft({ diploma: "We compute it. Therefore the sample is large enough." }), NUM, item());
     assert.deepEqual(f.map((x) => x.detail), ["the Diploma answer's last sentence does not state the answer"]);
   }
-  // lists of letters, ruled-out options
-  assert.deepEqual(codes(await calcCheck(letterDraft("The answer is A and C."), A, item())), ["letter_mismatch"]);
-  assert.deepEqual(codes(await calcCheck(letterDraft("The answers are A, C and D."), A, item())), ["letter_mismatch"]);
-  assert.deepEqual(codes(await calcCheck(letterDraft("The answer is A, not option B."), A, item())), []);
-  assert.deepEqual(codes(await calcCheck(letterDraft("It is option A rather than C."), A, item())), []);
 
   // python missing -> one finding, never a throw
   {
@@ -170,6 +198,15 @@ async function main() {
   await ok("E^2", "7.389", "3dp");
   await ok("2*E", "5.437", "3dp");
   await ok("E", "2.718", "3dp");
+  // a rounded request never returns invented digits
+  await ok("2^100", "1267650600228229401496703205376", "0dp");
+  await ok("10^40+1", "1" + "0".repeat(39) + "1", "0dp");
+  await ok("100/3", "33." + "3".repeat(30), "30dp");
+  await ok("2^100", "1267650600228229401496703205376");
+  await ok("Rational(-1, 2)", "-0.5");
+  assert.deepEqual(codes(await run("Rational(1, 0)", "1")), ["calc_unparseable"]);
+  assert.deepEqual(codes(await run("1/3", "0.3", "61sf")), ["calc_unparseable"]);
+  assert.deepEqual(codes(await run("1/3", "0.3", "61dp")), ["calc_unparseable"]);
   // plain decimals for any magnitude, never exponent form
   await ok("1.5*10^20", "150000000000000000000");
   await ok("1.5*10^-20", "0.000000000000000000015");
@@ -192,6 +229,7 @@ async function main() {
     assert.deepEqual(await quiet([{ expr: "1.6", expect: "2", rounding: "0dp" }, { expr: "0.5*3^2", expect: "4.5" }]), []);
     assert.deepEqual(await quiet([{ expr: "1.6", expect: "2", rounding: "0dp" }, { expr: "Rational(1, 2)", expect: "0.5" }]), []);
     assert.deepEqual(await quiet([{ expr: "1.234", expect: "1.23", rounding: "2dp" }, { expr: "1.23*2", expect: "2.46", rounding: "2dp" }], "<p>A rod is 1.23 m long.</p>"), []);
+    assert.deepEqual(await quiet([{ expr: "9.812", expect: "9.81", rounding: "2dp" }, { expr: "9.81*2", expect: "19.62", rounding: "2dp" }]), []); // a common constant
     assert.deepEqual(await quiet([{ expr: "1.234", expect: "1.23", rounding: "2dp" }, { expr: "10^1.23", expect: "16.98", rounding: "2dp" }]), []);
   }
 

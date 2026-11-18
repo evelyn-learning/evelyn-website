@@ -87,14 +87,19 @@ const SCI_IN_TEXT = /(?<![\w.])([+\-\u2212]?(?:\d+\.?\d*|\.\d+))\s*(?:\\times|\\
 const E_IN_TEXT = /(?<![\w.])([+\-\u2212]?\d+\.?\d*)[eE]([+\-\u2212]?\d+)(?![\w.])/g;
 
 /** Strip the LaTeX wrapping so the bare numbers are left. A × 10^n group becomes one plain number, a \frac of two integers one "a/b". */
+const UNIT_BASE = "m\\/s|km\\/h|mol\\/L|kg|g|m|cm|mm|km|s|min|h|kJ|J|N|Pa|kPa|V|A|W|Hz|K|L|mL";
+const UNIT_EXP = new RegExp(`((?:\\\\(?:text|mathrm)\\{[^{}]*\\})|(?<![A-Za-z\\\\])(?:${UNIT_BASE}))\\s*\\^\\s*\\{?\\s*[+\\-\\u2212]?\\d+\\s*\\}?`, "g");
+
 function plainText(md: string, keepText = false): string {
-  let t = md.replace(/\^\s*\{?\s*(?:\\circ|°)\s*\}?|\\degree|\\textdegree/g, "°");
+  let t = md.replace(UNIT_EXP, "$1"); // m/s^2, \text{m}^{2}: the 2 is a unit exponent, not a number (a lone variable such as x^2 is not a unit)
+  t = t.replace(/\^\s*\{?\s*(?:\\circ|°)\s*\}?|\\degree|\\textdegree/g, "°");
   t = t.replace(/\\(?:text|mathrm|textbf|mathbf)\{([^{}]*)\}/g, keepText ? " $1 " : " ");
   t = t.replace(/\\[,;:!]|\\ |~/g, "").replace(/\\circ/g, "°");
   t = t.replace(/_\{[^{}]*\}|_[A-Za-z0-9]/g, ""); // subscripts: v_{1}, x_1
   t = t.replace(/\\d?frac\s*\{\s*(\d+)\s*\}\s*\{\s*(\d+)\s*\}/g, " $1/$2 ");
   const sci = (_: string, a: string, n: string) => ` ${toPlainDecimal(`${a}e${n}`) ?? `${a}e${n}`} `;
   t = t.replace(SCI_IN_TEXT, sci).replace(E_IN_TEXT, sci);
+  t = t.replace(/(?<![\w.^])10\s*\^\s*\{?\s*([+\-\u2212]?\d+)\s*\}?/g, (_: string, n: string) => ` ${toPlainDecimal(`1e${n}`) ?? "10"} `);
   t = t.replace(/\\(?:left|right|times|approx|cdot)\b/g, " ");
   t = t.replace(/\\[a-zA-Z]+/g, " ").replace(/\$+/g, " ").replace(/[{}]/g, " ").replace(/\*\*|__/g, "");
   return t;
@@ -133,35 +138,29 @@ function answerInconsistent(draft: Draft, answer: Extract<Answer, { kind: "numbe
   return out;
 }
 
-const LIST = String.raw`[A-Z](?:\s*(?:,|and|&)\s*[A-Z])*`;
+/** The house closing sentence of a choice answer's Short section (the author step writes exactly this). */
+export function closingSentence(letters: string[]): string {
+  const l = [...new Set(letters.map((x) => x.trim().toUpperCase()).filter(Boolean))].sort();
+  if (l.length <= 1) return `So the answer is ${l[0] ?? ""}.`;
+  return `So the answers are ${l.slice(0, -1).join(", ")} and ${l[l.length - 1]}.`;
+}
 
 function letterMismatch(draft: Draft, answer: Extract<Answer, { kind: "choice" }>): CalcFinding[] {
-  let short = plainText(draft.sections.find((s) => s.kind === "short")?.md ?? "", true);
-  short = short.replace(/\b(?:not|rather\s+than)\s+(?:option\s+)?\(?[A-Z]\b\)?/gi, " "); // a ruled-out option is not named
-  const patterns = [
-    /\boption\s+([A-Z])\b/gi, /\banswer\s+is\s+([A-Z])\b/gi, /\(([A-Z])\)\s*\.?\s*$/gim, /\b([A-Z])\s+is\s+correct\b/gi,
-    new RegExp(String.raw`\banswers?\s+(?:is|are)\s+(${LIST})\b`, "gi"), new RegExp(String.raw`\boptions\s+(${LIST})\b`, "gi"),
-  ];
-  const found = new Set<string>();
-  // Lower case is the article "a" (or "and"): only upper-case letters count.
-  for (const p of patterns) for (const m of short.matchAll(p)) for (const l of m[1].match(/[A-Z]/g) ?? []) found.add(l);
-  const agreed = answer.letters.map((l) => l.trim().toUpperCase());
-  const wrong = [...found].filter((l) => !agreed.includes(l));
-  if (wrong.length || !agreed.some((l) => found.has(l))) {
-    return [{
-      code: "letter_mismatch",
-      detail: `the short section names ${found.size ? [...found].join(", ") : "no option letter"} but the agreed answer is ${agreed.join(", ")}`,
-    }];
-  }
-  return [];
+  const short = (draft.sections.find((s) => s.kind === "short")?.md ?? "").trim();
+  const closing = closingSentence(answer.letters);
+  return short.endsWith(closing) ? [] : [{ code: "letter_mismatch", detail: `the Short answer does not end with: ${closing}` }];
 }
 
 const UNITS = "m\\/s\\^?2?|m\\/s|km\\/h|kg|g|mol\\/L|mol|J|kJ|N|Pa|kPa|V|A|Ω|W|Hz|m|cm|mm|km|s|min|h|°C|K|L|mL";
 const IN = String.raw`\s+(${UNITS})(?![A-Za-z0-9])`;
+/** Case-insensitive word: "give" -> [gG][iI][vV][eE]. The unit group stays case-sensitive ("m" is not "M"). */
+const ci = (w: string) => w.replace(/[a-z]/gi, (c) => `[${c.toLowerCase()}${c.toUpperCase()}]`);
+// A gap may contain a decimal point only between two digits ("to the nearest 0.1 s").
+const GAP = String.raw`(?:[^.?!]|(?<=\d)\.(?=\d))*?`;
 // The stem must ask for the answer in a unit: "answer in", "give … in", "express … in", "in units of", "measured in", "to the nearest …".
 const STEM_UNIT = new RegExp(
-  String.raw`(?:\banswer\s+in|\bgive\b[^.?!]*?\bin|\bexpress\b[^.?!]*?\bin|\bin\s+units\s+of|\bmeasured\s+in)` + IN + "|" +
-  String.raw`\bto\s+the\s+nearest\b[^.?!]*?` + IN,
+  `(?:\\b${ci("answer")}\\s+${ci("in")}|\\b${ci("give")}\\b${GAP}\\b${ci("in")}|\\b${ci("express")}\\b${GAP}\\b${ci("in")}|\\b${ci("in")}\\s+${ci("units")}\\s+${ci("of")}|\\b${ci("measured")}\\s+${ci("in")})` + IN + "|" +
+  `\\b${ci("to")}\\s+${ci("the")}\\s+${ci("nearest")}\\b${GAP}` + IN,
 );
 const AFTER_NUMBER = new RegExp(
   `^\\s*(?:\\^\\s*\\d+\\s*)?(?:(?:${UNITS.replace("°C", "°\\s*C")})(?![A-Za-z0-9])|(?:metres?|meters?|seconds?|minutes?|hours?|grams?|kilograms?|moles?|joules?|newtons?|pascals?|volts?|amps?|amperes?|watts?|litres?|liters?|degrees?|kelvin)\\b)`,
@@ -186,6 +185,7 @@ function unitMissing(draft: Draft, answer: Extract<Answer, { kind: "number" }>, 
 
 // --- early rounding -------------------------------------------------------------------------------------
 
+const CONSTANTS = ["9.81", "9.8", "3.14", "6.02", "8.31", "1.00", "100", "1000"];
 const LITERAL = /(?<![\w.])(?:\d+\.\d*|\.\d+|\d+)/g;
 const decimalPlaces = (n: string) => (n.split(".")[1] ?? "").length;
 const sigDigits = (n: string) => n.replace(/\./, "").replace(/^[-+]?0+/, "").length;
@@ -218,7 +218,11 @@ function earlyRounding(entries: { expr: string; expect: string; rounding: string
     const rj = results[j];
     const expect = entries[j].expect.trim();
     if (!entries[j].rounding.trim() || !rj?.ok || rj.raw === undefined || sameAnswer(num(rj.raw), num(expect))) continue;
-    if (!PLAIN.test(expect) || (decimalPlaces(expect) < 2 && sigDigits(expect) < 2)) continue; // too generic to recognise
+    // One-digit integers (and 1dp values with one significant digit) are skipped on purpose: a rounded "2" matches
+    // exponents, counts and constants far more often than it marks early rounding.
+    if (!PLAIN.test(expect) || (decimalPlaces(expect) < 2 && sigDigits(expect) < 2)) continue;
+    if (CONSTANTS.some((c) => sameAnswer(num(c), num(expect)))) continue; // common given constants
+
     if (given.some((g) => sameAnswer(num(g), num(expect)))) continue; // a quantity the question gives
     for (let i = j + 1; i < entries.length; i++) {
       const expr = entries[i].expr;

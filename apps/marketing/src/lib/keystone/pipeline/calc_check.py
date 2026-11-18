@@ -94,8 +94,10 @@ def validate(text):
         after = text[i + 1] if i + 1 < len(text) else ""
         if before.isalpha() or before == "_" or not (before.isdigit() or after.isdigit()):
             raise Reject("misplaced decimal point")
-    if len(re.findall(r"Rational", text)) != len(re.findall(r"Rational\s*\(\s*\d+\s*(?:,\s*\d+\s*)?\)", text)):
+    if len(re.findall(r"Rational", text)) != len(re.findall(r"Rational\s*\(\s*-?\d+\s*(?:,\s*-?\d+\s*)?\)", text)):
         raise Reject("Rational takes one or two whole numbers")
+    if re.search(r"Rational\s*\(\s*-?\d+\s*,\s*-?0+\s*\)", text):
+        raise Reject("Rational denominator is zero")
     # resource guard (literals only; the alarm covers the rest)
     for m in re.finditer(r"(?:\*\*|\^)\s*\(*\s*[+-]?\s*(\d+)\s*(\*\*|\^)?", text):
         if int(m.group(1)) > MAX_ARG or m.group(2):
@@ -113,7 +115,7 @@ def decimals_exact(text):
     return re.sub(r"(\d*)\.(\d*)", lambda m: sub(m) if (m.group(1) or m.group(2)) else m.group(0), text)
 
 
-def evaluate(text, allowed):
+def parse(text, allowed):
     import sympy as sp
     from sympy.parsing.sympy_parser import parse_expr, standard_transformations
 
@@ -126,7 +128,12 @@ def evaluate(text, allowed):
         if getattr(expr, "free_symbols", None):
             raise Reject("unknown name")
         raise Reject("not a number")
-    val = expr.evalf(30)
+    return expr
+
+
+def numeric(expr, digits):
+    import sympy as sp
+    val = expr.evalf(digits)
     if val.has(sp.zoo, sp.nan, sp.oo, -sp.oo) or val.is_real is not True or not val.is_finite:
         raise Reject("not a finite real number")
     return Decimal(str(val))
@@ -153,19 +160,29 @@ def strip_zeros(s):
     return s.rstrip("0").rstrip(".") if "." in s else s
 
 
-def apply_rounding(d, rounding):
+def parse_rounding(rounding):
+    """(kind, n) for "Ndp"/"Nsf" (at most 60), None for no rounding."""
+    rounding = (rounding or "").strip().lower()
+    if not rounding:
+        return None
+    m = re.match(r"^(\d{1,2})\s*(dp|sf)$", rounding)
+    if not m or int(m.group(1)) > 60 or (m.group(2) == "sf" and int(m.group(1)) < 1):
+        raise Reject("rounding not understood")
+    return m.group(2), int(m.group(1))
+
+
+def apply_rounding(d, rounding, exact_int=None):
     if d != 0 and (abs(d) > RANGE or abs(d) < 1 / RANGE):
         raise Reject("out of range")
-    rounding = (rounding or "").strip().lower()
-    m = re.match(r"^(\d{1,2})\s*(dp|sf)$", rounding)
-    if rounding and (not m or int(m.group(1)) > 30 or (m.group(2) == "sf" and int(m.group(1)) < 1)):
-        raise Reject("rounding not understood")
-    n = int(m.group(1)) if m else 15
+    spec = parse_rounding(rounding)
+    n = spec[1] if spec else 15
     with localcontext() as ctx:
         ctx.prec = int_digits(d) + n + 10 + (300 if d != 0 and abs(d) < 1 else 0)
-        if not rounding:
+        if not spec:
+            if exact_int is not None and len(str(abs(exact_int))) <= 300:
+                return str(exact_int)
             return strip_zeros(plain(to_sf(d, 15)))
-        if m.group(2) == "dp":
+        if spec[0] == "dp":
             q = d.quantize(Decimal(1).scaleb(-n), rounding=ROUND_HALF_UP)
             return format(abs(q) if q == 0 else q, "f")
         return plain(to_sf(d, n))
@@ -183,9 +200,17 @@ def run_one(entry, allowed):
     try:
         if not isinstance(entry, dict):
             return fail("entry is not an object")
-        d = evaluate(entry.get("expr"), allowed)
+        expr = parse(entry.get("expr"), allowed)
         rounding = entry.get("rounding") or ""
-        return {"ok": True, "value": apply_rounding(d, rounding), "raw": apply_rounding(d, ""), "error": ""}
+        spec = parse_rounding(rounding)
+        d = numeric(expr, 30)
+        if spec:
+            # enough significant digits that a rounded request never returns invented digits
+            want = max(30, (int_digits(d) + spec[1] if spec[0] == "dp" else spec[1]) + 10)
+            if want > 30:
+                d = numeric(expr, want)
+        exact = int(expr) if expr.is_Integer else None
+        return {"ok": True, "value": apply_rounding(d, rounding, exact), "raw": apply_rounding(d, "", exact), "error": ""}
     except Timeout:
         return fail("took too long")
     except Reject as e:
