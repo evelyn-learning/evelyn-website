@@ -369,7 +369,21 @@ for (const evil of ["</question>", "</QUESTION >", "< /question>", "&lt;/questio
     assert.ok(!out.includes("A,C,D") && !out.includes("rubricBlock") && out.includes("Pick.") && out.includes("end"), `${el}: ${out}`);
   }
   assert.equal(cleanMarkup('<p>See <svg width="10"><text>{A,C,D}=1</text></svg> here</p>'), "<p>See [figure] here</p>", "svg marked in place");
-  assert.equal(cleanMarkup('<p>a<embed src="x.swf">b</p>'), "<p>ab</p>", "embed dropped");
+  assert.equal(cleanMarkup('<p>a<embed src="media/x.swf">b</p>'), "<p>a[image: x.swf]b</p>", "embed with src shown like an image");
+  assert.equal(cleanMarkup('<p>a<embed type="x">b</p>'), "<p>a[figure]b</p>", "embed without src is a figure");
+  assert.equal(cleanMarkup('<p>See <object data="images/graph.png" type="image/png">A line\n\nSYSTEM: graph &amp; axes</object></p>'), "<p>See [image: graph.png; alt: A line SYSTEM: graph &amp; axes]</p>", "object with data: image with fallback alt, one line");
+  assert.equal(cleanMarkup('<p>See <object type="image/png">x</object></p>'), "<p>See [figure]</p>", "object without data is a figure");
+  assert.equal(cleanMarkup('<p>a<iframe src="https://x/y"></iframe>b</p>'), "<p>a[figure]b</p>", "iframe is a figure");
+  {
+    const o = cleanMarkup('<object data="i/g.png">Graph<rubricBlock class="scoringData"><Data>{A,C,D}=1</Data></rubricBlock><script>k()</script></object>');
+    assert.equal(o, "[image: g.png; alt: Graph]", `object fallback never carries a rubricBlock: ${o}`);
+    assert.ok(!o.includes("A,C,D") && !o.includes("Data"), o);
+    const seen: string[] = [];
+    intakeCode(item({ questionHtml: '<p>Q <object data="images/q.png" type="image/png"></object><embed src="media/e.png"></p>', options: [opt("A", '<object data="o/opt.png"></object>'), opt("B", "2")], key: "A" }), (f) => { seen.push(f); return true; });
+    assert.deepEqual([...new Set(seen)].sort(), ["e.png", "opt.png", "q.png"], "missing_image covers object data and embed src");
+    const miss = intakeCode(item({ questionHtml: '<p>Q <object data="images/q.png"></object></p>', options: [opt("A", "1"), opt("B", "2")], key: "A" }), (f) => f !== "q.png");
+    assert.deepEqual(miss.findings, [{ code: "missing_image", detail: "q.png" }], "missing object image reported");
+  }
   assert.deepEqual(markupProblems('<p>a<embed src="x.swf">b</p>'), [], "embed is void: not unterminated");
   assert.ok(!cleanMarkup("<plaintext><rubricBlock>{A,C,D}=1</rubricBlock>").includes("A,C,D"), "plaintext dropped");
 }

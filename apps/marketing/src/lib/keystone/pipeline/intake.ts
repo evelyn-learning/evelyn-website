@@ -116,7 +116,9 @@ const DROPPED: Record<string, string> = {
   template: "template", plaintext: "plaintext", svg: "svg", object: "object", embed: "embed",
 };
 // Shown in place of a dropped element so that its presence is not lost.
-const DROPPED_MARK: Record<string, string> = { svg: "[figure]" };
+const DROPPED_MARK: Record<string, string> = { svg: "[figure]", iframe: "[figure]", object: "[figure]", embed: "[figure]" };
+// object (data) and embed (src) carry figures in QTI: shown like img, with object's fallback text as the alt.
+const MEDIA_SRC: Record<string, string> = { object: "data", embed: "src" };
 const DROPPED_VOID = new Set(["embed"]); // never has a closing tag
 // Element names that are not reported as stray "<" text outside math (with the keep/inline lists, MathML names and DROPPED).
 const KNOWN_HTML = new Set([
@@ -172,6 +174,18 @@ const BLANK_CONTENT = /^(?:\s|&nbsp;|&#0*160;|&#x0*a0;)*$/i;
 const isBlank = (n: PNode) =>
   ` ${(n.attribs?.class ?? "").toLowerCase().trim().split(/\s+/).join(" ")} `.includes(" fill-in-the-blank ") &&
   (n.children ?? []).every((c) => c.type === "text" && BLANK_CONTENT.test(c.data ?? ""));
+
+/** The visible text inside an element (object fallback), skipping every dropped subtree; iterative, capped. */
+function fallbackText(kids: PNode[]): string {
+  let t = "";
+  const todo = [...kids].reverse();
+  while (todo.length && t.length < 2000) {
+    const c = todo.pop()!;
+    if (c.type === "text") t += ` ${c.data ?? ""}`;
+    else if ((c.type === "tag" || c.type === "cdata") && !(c.name && c.name.replace(/^.*:/, "") in DROPPED)) for (const k of [...(c.children ?? [])].reverse()) todo.push(k);
+  }
+  return t;
+}
 
 function imageText(attrs: Record<string, string>): string {
   const file = cleanChars(lastSegment(attrs.src ?? "")).replace(/\s+/g, " ").trim();
@@ -288,7 +302,12 @@ function walk(src: string, root: PNode): Cleaned {
           const r = raw(n, true);
           const closed = DROPPED_VOID.has(bare) || new RegExp(`</\\s*(?:[^\\s<>/]*:)?${bare.replace(/-/g, "\\-")}\\s*>$`, "i").test(r) || (!kids.length && /\/\s*>$/.test(r));
           if (!closed) problem(`unterminated ${DROPPED[bare]} element`);
-          out(DROPPED_MARK[bare] ?? "");
+          const srcAttr = MEDIA_SRC[bare] ? (n.attribs?.[MEDIA_SRC[bare]] ?? "") : "";
+          const file = srcAttr ? lastSegment(srcAttr) : "";
+          if (file) {
+            images.push(file);
+            out(imageText({ src: srcAttr, alt: fallbackText(kids) }));
+          } else out(DROPPED_MARK[bare] ?? "");
           break;
         }
         // Text such as "0<x and x>5" or "x <y and z>w" parses as an element: an unknown name outside math or a valueless attribute
