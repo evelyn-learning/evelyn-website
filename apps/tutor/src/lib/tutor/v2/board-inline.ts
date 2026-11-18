@@ -56,8 +56,33 @@ function blockEnd(text: string, start: number): number {
     if (depth <= 0) return i;
   }
 }
+/** Task 7p fix round 1 (I1, CARD_GLOSS_SHOW): an opening tag that does not parse because a value holds a straight double quote
+ *  (<board note gloss="期間は "for" を使います">: the whole note was lost) is read tolerantly: a value runs to the quote that is
+ *  followed by the next attribute or the tag's end. A gloss keeps its inner quotes as 「」; any other value holding a quote, and a
+ *  gloss that still cannot be read, is left out, so the card is shown without it. A tag that parses is returned unchanged. */
+const HEAD_OK = /^<board\s+[a-z]+(?:\s+[a-z_]+="[^"]*")*\s*>/;
+export function v2RepairBlockHead(raw: string): string {
+  if (HEAD_OK.test(raw)) return raw;
+  const kind = raw.match(/^<board\s+([a-z]+)/);
+  const close = kind ? raw.indexOf('>', kind[0].length) : -1;
+  if (!kind || close < 0) return raw;
+  const text = raw.slice(kind[0].length, close);
+  const ATTR = /\s+([a-z_]+)="([^]*?)"(?=\s+[a-z_]+="|\s*$)/y;
+  const kept: string[] = [];
+  let at = 0;
+  for (let m: RegExpExecArray | null; at < text.length && (ATTR.lastIndex = at, m = ATTR.exec(text)); at = ATTR.lastIndex) {
+    const [, name, value] = m;
+    if (!value.includes('"')) { kept.push(` ${name}="${value}"`); continue; }
+    if (name !== 'gloss' || /[a-z_]+="/.test(value)) continue;
+    let open = true;
+    kept.push(` gloss="${value.replace(/"/g, () => { const q = open ? '「' : '」'; open = !open; return q; })}"`);
+  }
+  return `<board ${kind[1]}${kept.join('')}>${raw.slice(close + 1)}`;
+}
+
 /** A block, and the blocks written inside it lifted out to follow it. */
-function flatten(raw: string): InlineBlock[] {
+function flatten(rawIn: string): InlineBlock[] {
+  const raw = TUTOR_V2_CARD_GLOSS_SHOW ? v2RepairBlockHead(rawIn) : rawIn;
   const head = raw.match(/^<board\s+[a-z]+(?:\s+[a-z_]+="[^"]*")*\s*>/);
   if (!head || !raw.endsWith(CLOSE)) return [parseBlock(raw)].filter((b): b is InlineBlock => !!b);
   let inner = raw.slice(head[0].length, raw.length - CLOSE.length);

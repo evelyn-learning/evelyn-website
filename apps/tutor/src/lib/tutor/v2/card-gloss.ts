@@ -50,11 +50,17 @@ export function v2CleanGloss(raw: unknown): string | null {
 
 const textOf = (m: Anthropic.MessageParam) => (typeof m.content === 'string' ? m.content : m.content.map((b) => (b.type === 'text' ? b.text : '')).join(' '));
 
-/** The last reply put up a question card (a problem block) without a gloss. */
-export function v2LastQuestionUnglossed(history: V2State['history']): boolean {
-  const last = [...history].reverse().find((m) => m.role === 'assistant');
-  if (!last) return false;
-  return boardBlocksIn(textOf(last)).some((b) => b.kind === 'problem' && !b.attrs.gloss?.trim());
+const flat = (t: string) => t.replace(/\s+/g, ' ').trim();
+
+/** The last reply put up a question card (a problem block) without a gloss. Fix round 1 (m5): a card the board refused is not
+ *  counted (`refused`: the turn's "not painted" list, state.boardProblems, as `problem "<its first 60 characters>": why`), nor one
+ *  the board pointed back at because an earlier reply's card with a gloss already holds it. */
+export function v2LastQuestionUnglossed(history: V2State['history'], refused: readonly string[] = []): boolean {
+  const at = history.map((m) => m.role).lastIndexOf('assistant');
+  if (at < 0) return false;
+  const earlierGlossed = new Set(history.slice(0, at).filter((m) => m.role === 'assistant').flatMap((m) => boardBlocksIn(textOf(m))).filter((b) => b.kind === 'problem' && b.attrs.gloss?.trim()).map((b) => flat(b.body)));
+  return boardBlocksIn(textOf(history[at]!)).some((b) => b.kind === 'problem' && !b.attrs.gloss?.trim()
+    && !refused.some((r) => r.startsWith(`problem "${flat(b.body).slice(0, 60)}"`)) && !earlierGlossed.has(flat(b.body)));
 }
 
 /** The facts lines (such lessons at the beginner level only). */
@@ -62,7 +68,7 @@ export function v2CardGlossFacts(session: V2Session, state: V2State, heard: stri
   if (!opts.ask || !v2CardGlossOn(session) || !v2GlossLevelOn(session, state, heard)) return [];
   const S = languageNameOf(base(session.languages![1]!));
   return [
-    `cards in ${S} (the learner is at the beginner level${state.workingLevel ? '' : ', or it is not known yet'}): a question card carries gloss="…", the question in ${S}, one line of at most about 40 characters or 12 words: <board problem gloss="the question in ${S}">the question</board>. A note that states a rule carries one too, one short line in ${S} on what the rule means, not a translation of every line: <board note gloss="what the rule means">…</board>. No double quote inside a gloss, and no other card gets one. A gloss is only read on the board: it is never said aloud`,
-    ...(opts.remind && v2LastQuestionUnglossed(state.history) ? [`your last question card had no gloss: at this level each question card carries one`] : []),
+    `cards in ${S} (the learner is at the beginner level${state.workingLevel ? '' : ', or it is not known yet'}): a question card carries gloss="…", the question in ${S}, one line of at most about 40 characters or 12 words: <board problem gloss="the question in ${S}">the question</board>. A note that states a rule carries one too, one short line in ${S} on what the rule means, not a translation of every line: <board note gloss="what the rule means">…</board>. Inside a gloss, quote with 「」, never with a double quote; no other card gets one. A gloss is only read on the board: it is never said aloud`,
+    ...(opts.remind && v2LastQuestionUnglossed(state.history, state.boardProblems ?? []) ? [`your last question card had no gloss: at this level each question card carries one`] : []),
   ];
 }

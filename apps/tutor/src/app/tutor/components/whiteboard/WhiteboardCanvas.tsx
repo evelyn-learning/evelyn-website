@@ -3099,7 +3099,6 @@ function CommandRendererInner({ command }: CommandRendererProps) {
       // stress words it carries, as a sentence card draws a stress word (NoteTargetText). Every other note renders as before.
       const noteMarks = { quoted: (command as { targets?: boolean }).targets === true || undefined, stress: (command as { stress?: string[] }).stress };
       const marked = !!noteMarks.quoted || !!noteMarks.stress?.length;
-      const noteGloss = String((command as { gloss?: unknown }).gloss ?? '').trim();
       return (
         <div
           className={`p-4 rounded-lg ${
@@ -3125,7 +3124,7 @@ function CommandRendererInner({ command }: CommandRendererProps) {
             <HScrollFade key={i} as="p" className={`text-lg overflow-x-auto${i ? ' mt-1.5' : ''}`}>{marked ? <NoteTargetText text={line} quoted={noteMarks.quoted} stress={noteMarks.stress} /> : <InlineMathText text={line} />}</HScrollFade>
           ))}
           {/* Task 7p: a beginner's line in their language under a rule note (CardGloss); a note without one renders as before. */}
-          {noteGloss ? <CardGloss text={noteGloss} /> : null}
+          <CardGloss of={command} />
         </div>
       );
     }
@@ -3203,7 +3202,7 @@ function CommandRendererInner({ command }: CommandRendererProps) {
           </HScrollFade>
           )}
           {/* Task 7p: a beginner's question in their language, under the statement (CardGloss); without one, as before. */}
-          {String((problem as { gloss?: unknown }).gloss ?? '').trim() ? <CardGloss text={String((problem as { gloss?: unknown }).gloss).trim()} /> : null}
+          <CardGloss of={command} />
           {validGivenValues.length > 0 && (
             <div className="mt-3" data-feature="given">
               <p className="text-sm font-medium text-gray-600">Given:</p>

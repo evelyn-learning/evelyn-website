@@ -24,11 +24,14 @@ import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import { TUTOR_V2_CARD_GLOSS_ASK, TUTOR_V2_CARD_GLOSS_SHOW, TUTOR_V2_CARD_GLOSS_REMIND } from '../src/lib/tutor/orchestrator/flags';
 import { v2CardGlossOn, v2CleanGloss, v2GlossLevelOn, v2LastQuestionUnglossed } from '../src/lib/tutor/v2/card-gloss';
-import { boardBlocksIn, inlineToolCall } from '../src/lib/tutor/v2/board-inline';
+import { boardBlocksIn, inlineToolCall, v2RepairBlockHead } from '../src/lib/tutor/v2/board-inline';
+import { toStoredWhiteboardCommands } from '../src/app/tutor-portal/embed/stored-whiteboard';
+import { buildResumeState } from '../src/lib/tutor/portal/resume';
 import { runV2Turn, type V2ModelCall } from '../src/lib/tutor/v2/turn';
 import { newV2State, type V2BoardPage, type V2Session, type V2State } from '../src/lib/tutor/v2/types';
 import { mapFunctionCallToCommand } from '../src/app/tutor/hooks/toolDefinitions';
 import { CardGloss } from '../src/app/tutor/components/whiteboard/CardGloss';
+import type { WhiteboardCommand } from '@core/knowledge/types';
 
 let passed = 0; let failed = 0;
 const CHILD = process.env.GLOSS_7P_CHILD;
@@ -98,6 +101,13 @@ async function probe() {
   const noteInter = await run(lang, at('intermediate'), 'I have worked Nagoya Corporation 6 years.', [{ text: noteReply(B_GLOSS) }], 5.45);
   // The level set in this very reply (set_working_level, then the card): the card follows the level at that turn.
   const setNow = await run(lang, at(null, { history: Array.from({ length: 3 }, (_, i) => [u(`I work in sales number ${i}.`), a('Okay.')]).flat(), goals: {} }), 'I sell washing machines to customers.', [{ text: '', after: [{ type: 'tool_use', id: 'lv', name: 'set_working_level', input: { level: 'intermediate', evidence: 'full sentences' } }] }, { text: E_REPLY_GLOSSED }], 3.0);
+  // The order the prompt recommends (LEVEL_WITH_WORDS: the tool after the words, in the same response): the card, written before
+  // the tool, keeps its gloss; the level is intermediate from then on.
+  const setAfter = await run(lang, at(null, { history: Array.from({ length: 3 }, (_, i) => [u(`I work in sales number ${i}.`), a('Okay.')]).flat(), goals: {} }), 'I sell washing machines to customers.', [{ text: E_REPLY_GLOSSED, after: [{ type: 'tool_use', id: 'lv', name: 'set_working_level', input: { level: 'intermediate', evidence: 'full sentences' } }] }, { text: '' }], 3.0);
+  // Fix round 1 (I1): a straight double quote inside the gloss (note and card), and a gloss that cannot be read.
+  const quotedNote = await run(lang, at('beginner'), 'I have worked Nagoya Corporation 6 years.', [{ text: 'ここがポイントです。 <board note style="highlight" gloss="期間は "for" を使います">For a period of time, use "for" + the number of years.</board> では、言ってみてください。' }], 5.45);
+  const quotedCard = await run(lang, at('beginner'), E_SAID, [{ text: 'わかりました。 <board problem gloss="先週、"work" で何をしましたか？">What did you do last week at work?</board> まず、答えてみてください。' }], 14.93);
+  const brokenCard = await run(lang, at('beginner'), E_SAID, [{ text: 'わかりました。 <board problem gloss="先週>What did you do last week at work?</board> まず、答えてみてください。' }], 14.93);
   // 3: the 14.93 reply as it was (no gloss) beside the glossed one: heard the same.
   const ePlain = await run(lang, at('beginner'), E_SAID, [{ text: E_REPLY }], 14.93);
   // 4: the turn after the 14.93 reply (its card had no gloss), and after a glossed one.
@@ -110,7 +120,8 @@ async function probe() {
   return {
     begLine: glossLine(beg), unknownLine: glossLine(unknown), overLine: glossLine(over), interLine: glossLine(inter), advLine: glossLine(adv), typedLine: glossLine(typedRun), mathsLine: glossLine(mathsRun),
     begSystem: beg.system, interSystem: inter.system, begTools: beg.tools, mathsFacts: mathsRun.facts,
-    begProblem: prob(beg), unknownProblem: prob(unknown), interProblem: prob(inter), typedProblem: prob(typedRun), mathsProblem: prob(mathsRun), setNowProblem: prob(setNow), setNowLevel: setNow.r.state.workingLevel?.level ?? null,
+    begProblem: prob(beg), unknownProblem: prob(unknown), interProblem: prob(inter), typedProblem: prob(typedRun), mathsProblem: prob(mathsRun), setNowProblem: prob(setNow), setNowLevel: setNow.r.state.workingLevel?.level ?? null, setAfterProblem: prob(setAfter), setAfterLevel: setAfter.r.state.workingLevel?.level ?? null,
+    quotedNoteArgs: ann(quotedNote), quotedCardArgs: prob(quotedCard), brokenCardArgs: prob(brokenCard), quotedNoteHeard: quotedNote.heard, brokenHeard: brokenCard.heard,
     noteArgs: ann(note), noteInterArgs: ann(noteInter),
     eHeard: beg.heard, ePlainHeard: ePlain.heard, noteHeard: note.heard, notePlainHeard: notePlain.heard,
     boardSummaries: summaries(beg) + ' | ' + summaries(note), spoken: beg.r.spoken,
@@ -143,7 +154,8 @@ async function main() {
   check('the 14.93 card, glossed: show_problem carries the gloss; title "Question", statement without it', on.begProblem?.gloss === E_GLOSS && on.begProblem?.title === 'Question' && String(on.begProblem?.statement).startsWith('What did you do last week at work?') && !String(on.begProblem?.statement).includes(E_GLOSS), on.begProblem);
   check('the rule note, glossed: annotate carries the gloss beside its 7o marker; text unchanged', on.noteArgs?.gloss === B_GLOSS && on.noteArgs?.targets === true && on.noteArgs?.text === B_NOTE, on.noteArgs);
   check('intermediate: a gloss the model wrote anyway is dropped (card and note)', on.interProblem !== null && on.interProblem.gloss === undefined && on.noteInterArgs !== null && on.noteInterArgs.gloss === undefined, [on.interProblem, on.noteInterArgs]);
-  check('the level set to intermediate in this very reply: the card after it carries no gloss', on.setNowLevel === 'intermediate' && on.setNowProblem !== null && on.setNowProblem.gloss === undefined, [on.setNowLevel, on.setNowProblem]);
+  check('the level set to intermediate after the words, in the same response (the order the prompt asks for): the card written before it keeps its gloss', on.setAfterLevel === 'intermediate' && on.setAfterProblem?.gloss === E_GLOSS, [on.setAfterLevel, on.setAfterProblem]);
+  check('the level set to intermediate before the card in this reply: the card after it carries no gloss', on.setNowLevel === 'intermediate' && on.setNowProblem !== null && on.setNowProblem.gloss === undefined, [on.setNowLevel, on.setNowProblem]);
   check('a typed language lesson and a maths lesson: dropped', on.typedProblem !== null && on.typedProblem.gloss === undefined && on.mathsProblem !== null && on.mathsProblem.gloss === undefined, [on.typedProblem, on.mathsProblem]);
   check('v2CleanGloss: one line, spaces closed; empty or over 100 characters dropped', v2CleanGloss(`  ${E_GLOSS}\nmore `) === E_GLOSS && v2CleanGloss('  ') === null && v2CleanGloss('x'.repeat(101)) === null && v2CleanGloss(7) === null);
   {
@@ -151,17 +163,20 @@ async function main() {
     check('inlineToolCall: a problem block\'s gloss attribute becomes the call\'s gloss', inlineToolCall(p!).args.gloss === E_GLOSS);
     const cmd = mapFunctionCallToCommand('show_problem', { title: 'Question', statement: 'What did you do?', rich: true, gloss: E_GLOSS }) as unknown as { problem: Record<string, unknown> };
     const plainCmd = mapFunctionCallToCommand('show_problem', { title: 'Question', statement: 'What did you do?', rich: true }) as unknown as { problem: Record<string, unknown> };
-    check('the problem command carries the gloss; without one its keys are as before', cmd.problem.gloss === E_GLOSS && !('gloss' in plainCmd.problem) && JSON.stringify(Object.keys(plainCmd.problem)) === '["title","statement","format","answerChoices","sourceTag","difficultyLabel","givenValues","rich"]', [cmd, plainCmd]);
+    const { gloss: _g, ...cmdRest } = cmd.problem;
+    check('the problem command carries the gloss; without one it is the same command, with no gloss key', cmd.problem.gloss === E_GLOSS && !('gloss' in plainCmd.problem) && JSON.stringify(cmdRest) === JSON.stringify(plainCmd.problem), [cmd, plainCmd]);
     const nCmd = mapFunctionCallToCommand('annotate', { text: B_NOTE, style: 'highlight', rich: true, targets: true, gloss: B_GLOSS }) as unknown as Record<string, unknown>;
     const nPlain = mapFunctionCallToCommand('annotate', { text: 'x', style: 'highlight', rich: true }) as unknown as Record<string, unknown>;
-    check('the note command carries the gloss; without one its keys are as before', nCmd.gloss === B_GLOSS && nCmd.targets === true && JSON.stringify(Object.keys(nPlain)) === '["action","text","style","rich"]', [nCmd, nPlain]);
-    const g = html(<CardGloss text={E_GLOSS} />);
-    check('CardGloss draws the line in the sentence card\'s gloss style (small, grey, under the text)', g === `<p class="text-sm text-gray-500 mt-1 break-words" data-feature="gloss">${E_GLOSS}</p>`, g);
-    const canvas = readFileSync(join(__dirname, '..', 'src', 'app', 'tutor', 'components', 'whiteboard', 'WhiteboardCanvas.tsx'), 'utf8');
-    const noteAt = canvas.indexOf("case 'annotate': {"); const probAt = canvas.indexOf("case 'showProblem': {");
-    check('WhiteboardCanvas draws the gloss under a note and under a problem\'s statement (title untouched)', /<CardGloss /.test(canvas.slice(noteAt, noteAt + 3600)) && /data-feature="statement"[\s\S]{0,900}<CardGloss /.test(canvas.slice(probAt, probAt + 5000)));
-    const sentenceCard = canvas.slice(canvas.indexOf('function SentenceCard'), canvas.indexOf('function SentenceCard') + 1600);
-    check('… the same classes as the sentence card\'s gloss', sentenceCard.includes('<p className="text-sm text-gray-500 mt-1 break-words">{gloss}</p>'));
+    const nOff = mapFunctionCallToCommand('annotate', { text: B_NOTE, style: 'highlight', rich: true, targets: true }) as unknown as Record<string, unknown>;
+    const { gloss: _n, ...nRest } = nCmd;
+    check('the note command carries the gloss; without one it is the same command, with no gloss key', nCmd.gloss === B_GLOSS && nCmd.targets === true && !('gloss' in nPlain) && JSON.stringify(nRest) === JSON.stringify(nOff), [nCmd, nPlain]);
+    const want = (t: string) => `<p class="text-sm text-gray-500 mt-1 break-words" data-feature="gloss">${t}</p>`;
+    check('CardGloss draws the problem command\'s gloss and the note command\'s gloss as one small grey line (the sentence card\'s gloss classes)', html(<CardGloss of={cmd} />) === want(E_GLOSS) && html(<CardGloss of={nCmd} />) === want(B_GLOSS), [html(<CardGloss of={cmd} />), html(<CardGloss of={nCmd} />)]);
+    check('… and nothing for a card without one (every other card as before)', html(<CardGloss of={plainCmd} />) === '' && html(<CardGloss of={nPlain} />) === '' && html(<CardGloss of={{ action: 'showSentence', sentence: 'x' }} />) === '');
+    // Reload: the board comes back from the stored record (embed save → session row → buildResumeState): the gloss survives.
+    const stored = toStoredWhiteboardCommands([cmd, nCmd].map((c) => ({ cmd: c as unknown as WhiteboardCommand, capturedAt: '2026-11-18T19:23:00.000Z' })));
+    const back = buildResumeState(JSON.parse(JSON.stringify({ lessonProgress: { lessonPlanId: 'p', updatedAt: new Date().toISOString() }, transcript: [], whiteboardCommands: stored })));
+    check('a board rebuilt after a reload (stored record → resume) keeps both glosses and draws them', !!back && html(<CardGloss of={back.whiteboardCommands[0]} />) === want(E_GLOSS) && html(<CardGloss of={back.whiteboardCommands[1]} />) === want(B_GLOSS), back?.whiteboardCommands);
   }
 
   console.log('3  the gloss is never heard, never the ask, never in the board record');
@@ -170,10 +185,26 @@ async function main() {
   check('the turn\'s spoken text (the transcript) has no gloss', !on.spoken.includes(E_GLOSS));
   check('the board record the model and the duplicate checks read holds no gloss', !on.boardSummaries.includes(E_GLOSS) && !on.boardSummaries.includes(B_GLOSS), on.boardSummaries);
 
+  console.log('fix round 1 (I1): a straight double quote in a gloss never loses the card');
+  check('a note whose gloss holds "for": painted, its gloss shown with 「」', on.quotedNoteArgs?.text === 'For a period of time, use "for" + the number of years.' && on.quotedNoteArgs?.gloss === '期間は 「for」 を使います', on.quotedNoteArgs);
+  check('a question card whose gloss holds "work": painted, its gloss shown', String(on.quotedCardArgs?.statement ?? '').startsWith('What did you do last week at work?') && on.quotedCardArgs?.gloss === '先週、「work」 で何をしましたか？', on.quotedCardArgs);
+  check('a gloss that cannot be read (no closing quote): the card is painted without it', String(on.brokenCardArgs?.statement ?? '').startsWith('What did you do last week at work?') && on.brokenCardArgs?.gloss === undefined, on.brokenCardArgs);
+  check('… none of it is heard', !on.quotedNoteHeard.includes('期間') && !on.brokenHeard.includes('先週>') && on.brokenHeard.includes('まず、答えてみてください。'), [on.quotedNoteHeard, on.brokenHeard]);
+  {
+    const sentence = '<board sentence stress="for" gloss="期間を言うときは for を入れます。">I have worked at Nagoya Corporation for six years.</board>';
+    const [b] = boardBlocksIn(sentence);
+    check('the sentence card\'s gloss parsing is unchanged (a well-formed tag is left as it is)', v2RepairBlockHead(sentence) === sentence && inlineToolCall(b!).args.gloss === '期間を言うときは for を入れます。' && JSON.stringify(inlineToolCall(b!).args.emphasis) === '["for"]');
+    const other = v2RepairBlockHead('<board note style="high"light" gloss="x">Body.</board>');
+    check('another attribute holding a quote is left out; the gloss after it kept', other === '<board note gloss="x">Body.</board>', other);
+  }
+  check('the facts ask for 「」 inside a gloss, never a double quote', !!on.begLine && /quote with 「」, never with a double quote/.test(on.begLine), on.begLine);
+
   console.log('4  a question card left without a gloss: the next facts say so, once');
   check('after the 14.93 reply (no gloss), at the beginner level: reminded', !!on.remind && /question card/.test(on.remind), on.remind);
   check('after a glossed card: no reminder; at intermediate: none', on.remindGlossed === null && on.remindInter === null, [on.remindGlossed, on.remindInter]);
   check('v2LastQuestionUnglossed reads the last reply only', v2LastQuestionUnglossed([u(E_SAID), a(E_REPLY)]) && !v2LastQuestionUnglossed([u(E_SAID), a(E_REPLY), u('x'), a('Good.')]) && !v2LastQuestionUnglossed([a(E_REPLY_GLOSSED)]));
+  check('fix round 1 (m5): a card the board refused is not counted', !v2LastQuestionUnglossed([u(E_SAID), a(E_REPLY)], [`problem "${'Question: What did you do last week at work? Answer with one sentence, using the past simple, with a time word such as last week or yesterday.'.slice(0, 60)}": a problem is already up`]));
+  check('… nor one pointed back at a card an earlier reply put up with a gloss; one pointed at an unglossed card is', !v2LastQuestionUnglossed([a(E_REPLY_GLOSSED), u(E_SAID), a(E_REPLY)]) && v2LastQuestionUnglossed([a(E_REPLY), u(E_SAID), a(E_REPLY)]));
 
   console.log('5  each flag off alone (a child process per switch): as at the base commit for that item, the others on');
   const child = (flag: string) => {
@@ -190,6 +221,7 @@ async function main() {
     const off = child('CARD_GLOSS_SHOW');
     check('CARD_GLOSS_SHOW off: no gloss on the card or the note (as before)', off.begProblem !== null && off.begProblem.gloss === undefined && off.noteArgs !== null && off.noteArgs.gloss === undefined, [off.begProblem, off.noteArgs]);
     check('… heard the same; the facts as on', off.eHeard === on.eHeard && off.begLine === on.begLine);
+    check('… and a gloss with a straight quote is not repaired (the note is lost, as at base)', off.quotedNoteArgs === null, off.quotedNoteArgs);
   }
   {
     const off = child('CARD_GLOSS_REMIND');
