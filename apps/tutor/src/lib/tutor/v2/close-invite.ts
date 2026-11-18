@@ -64,7 +64,7 @@ export const V2_CLOSE_INVITE_WAIT = 'not ended: wait for their answer to your qu
 
 /** The facts line: the invitation owed, or given (only while the clock lets the tutor close: never "end the lesson in this
  *  reply" where the close would be refused). */
-export function v2CloseInviteFacts(session: V2Session, state: V2State, ctx: { nowMs: number; stopAsked: boolean; enabled?: boolean; closeByContent?: boolean; overrun?: boolean; reopenedOn?: boolean }): string[] {
+export function v2CloseInviteFacts(session: V2Session, state: V2State, ctx: { nowMs: number; stopAsked: boolean; enabled?: boolean; closeByContent?: boolean; overrun?: boolean; reopenedOn?: boolean; moreTime?: boolean }): string[] {
   if (!v2CloseInviteOn(session, ctx.enabled) || state.closed) return [];
   // Final review I3: the summary is part of the close; when no summary has begun (no summary page, no summary reply), it comes
   // first, in a few words.
@@ -74,7 +74,9 @@ export function v2CloseInviteFacts(session: V2Session, state: V2State, ctx: { no
     return !ctx.stopAsked && !!session.timeBoxMinutes && v2LeftToStopMin(session, state, ctx.nowMs, ctx.overrun) > V2_TIME_UP_MIN ? [v2CloseReopenedLine(summaryGiven)] : [];
   }
   // Fix round 1 (I2): the ask was "more, or finish?": their answer is read by the model, and no goodbye is pressed.
-  if (v2MoreAskAnswered(state, ctx.reopenedOn)) return [V2_MORE_ASK_ANSWER_LINE];
+  // Fix round 2 (N2): only while there is time for more (`moreTime`: more than V2_MORE_PRACTICE_MIN_LEFT to the hard stop);
+  // otherwise the normal close.
+  if (v2MoreAskAnswered(state, ctx.reopenedOn)) return [ctx.moreTime !== false && !ctx.stopAsked ? V2_MORE_ASK_ANSWER_LINE : V2_MORE_ASK_NO_TIME_LINE];
   if (typeof state.closeInvitedAt === 'number') return v2CloseOpen(session, state, ctx.nowMs, ctx.closeByContent) ? [`questions before the close: you have asked whether they have any questions before you finish. If they asked one, answer it briefly; ${summaryGiven ? '' : 'if you have not given the summary yet, give it in a few words first; '}then say goodbye and end the lesson in this reply`] : [];
   if (!v2CloseInviteOwed(session, state, ctx)) return [];
   return ['questions before the close: there is time for their questions, so the reply that gives the summary does not end the lesson: it ends with one question, in your own words, asking whether they have any questions before you finish (that is its one question; no goodbye in it). The lesson ends on their answer'];
@@ -91,6 +93,7 @@ export function v2CloseReopened(state: Pick<V2State, 'closeReopened' | 'closeInv
 export function v2MoreAskAnswered(state: Pick<V2State, 'closeAsk' | 'closeInvitedAt' | 'closed'>, enabled: boolean = TUTOR_V2_CLOSE_REOPENED): boolean {
   return enabled && !state.closed && typeof state.closeInvitedAt === 'number' && state.closeAsk === 'more';
 }
+export const V2_MORE_ASK_NO_TIME_LINE = 'questions before the close: you asked whether they would like more practice or to finish, and there is no time left for more today: thank them, say so in one short sentence if they want more, then say goodbye and end the lesson in this reply';
 export const V2_MORE_ASK_ANSWER_LINE = 'questions before the close: you asked whether they would like more practice or to finish. If they want more, give one more practice (on the page of the part it is about: its page block first) and do not end the lesson; otherwise say goodbye and end the lesson in this reply';
 
 /** Task 7k: the facts line while the close is reopened (mic test 3, embed-1794967959470, flag 8: "it's always in a hurry to end

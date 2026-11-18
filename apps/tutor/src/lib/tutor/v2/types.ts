@@ -214,6 +214,8 @@ export interface V2ToolCall {
   carries?: string[];
   /** Not painted: it repeats this item on the page in view, and the board scrolls back to it. */
   pointsAt?: string;
+  /** Task 7k fix round 2 (m1): a page a practice visit opened (state.visitPages): kept marked when the reply is cut. */
+  visit?: true;
 }
 
 export interface V2TurnResult {

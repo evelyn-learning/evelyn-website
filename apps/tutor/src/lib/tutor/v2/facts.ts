@@ -19,7 +19,7 @@ import { v2SentenceCardsFacts } from './sentence-cards';
 import { v2CardsOwedFacts, v2LearnerSentenceFacts } from './learner-card';
 import { v2PracticeAskFacts, v2RetryFacts } from './languages';
 import { V2_TIME_UP_MIN, v2CloseOpen, v2PlanContentDone, v2LeftToStopMin, v2LessonTimeLine, v2PartDueFact, v2TimeFlags, v2WrapDue, type V2TimeFlags } from './time-box';
-import { v2MorePracticeFacts, v2PracticeFacts, v2StayInPartLine, v2TimeFitFacts } from './time-fit';
+import { V2_MORE_PRACTICE_MIN_LEFT, v2MorePracticeFacts, v2PracticeFacts, v2StayInPartLine, v2TimeFitFacts } from './time-fit';
 import { TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART } from '../orchestrator/flags';
 import { v2CloseInviteFacts, v2CloseReopened, v2MoreAskAnswered } from './close-invite';
 
@@ -169,7 +169,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // Task 7k (CLOSE_REOPENED): the close was reopened and no ask given since: nothing presses toward the close.
   const reopened = !discussion && v2CloseReopened(state);
   // Fix round 1 (I2): this turn answers the ask "more, or finish?" (close-invite.ts): no goodbye pressed either.
-  const moreAsked = !discussion && v2MoreAskAnswered(state);
+  const moreAsked = !discussion && v2MoreAskAnswered(state) && leftStop > V2_MORE_PRACTICE_MIN_LEFT && !f.stopAsked;
   // Task 7i (STAY_IN_PART): ahead of the plan in a required practice part, the time line says to go on with it. Not once the
   // close is open, the summary has begun, or more practice was asked for at the close.
   const stay = !discussion && !session.homework && !session.homeworkSheet && !closeOpen && !summaryBegun && !morePracticeAllowed ? v2StayInPartLine(session, state, f.nowMs) : null;
@@ -212,7 +212,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     // Task 6e fix round 1 (F4): tester B was asked about a question or the summary in two turns running.
     if (!discussion && TUTOR_V2_CLOSE_ONE_QUESTION && (closing || near) && !state.closed) lines.push('at the close: at most one question in a reply, never one you asked in your last reply, and nothing after a goodbye');
     // Task 7d (CLOSE_INVITES_QUESTIONS): the summary reply ends by inviting their questions, and the lesson ends on their answer.
-    if (!discussion && !(morePracticeAllowed && typeof state.closeInvitedAt === 'number')) lines.push(...v2CloseInviteFacts(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun }));
+    if (!discussion && !(morePracticeAllowed && typeof state.closeInvitedAt === 'number')) lines.push(...v2CloseInviteFacts(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun, moreTime: leftStop > V2_MORE_PRACTICE_MIN_LEFT }));
     // Task 7f B: the parts left out for time; C: the practice the part in hand still needs; E: more practice asked for at the close.
     if (!discussion) lines.push(...v2TimeFitFacts(session, state, tf.noSqueeze, f.nowMs));
     // Task 7i (OPTIONAL_AT_ARRIVAL), fix round 1: their words name a part left out for time. Permissive: the model reads their meaning.

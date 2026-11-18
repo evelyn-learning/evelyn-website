@@ -28,7 +28,12 @@ export function foldInterruptedTurn(state: V2State, studentBlock: string, heard:
     // are not replayed: the model will set them again if they still hold.
     // Final review M6: no call whose outcome begins "not " (a page held for their yes is "not opened yet: …"): applied, the
     // held page stood open in the record, its chip lit, and the held page was lost.
-    if (!V2_CONTROL_TOOL_NAMES.has(call.name) && !/^not /.test(call.outcome)) applyToModelBoard(next.board, call.id, call.name, call.args);
+    if (!V2_CONTROL_TOOL_NAMES.has(call.name) && !/^not /.test(call.outcome)) {
+      const o = applyToModelBoard(next.board, call.id, call.name, call.args);
+      // Task 7k fix round 2 (m1): a page a practice visit opened stays marked (state.visitPages) in a cut reply's record: the
+      // server's marks were lost with the reply, and the page later counted as the lesson's own.
+      if (call.visit && call.name === 'new_page' && o.painted) next.visitPages = [...(next.visitPages ?? []), next.board.current].slice(-20);
+    }
   }
   next.history = [
     ...next.history,

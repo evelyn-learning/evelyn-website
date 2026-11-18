@@ -30,6 +30,7 @@ import { V2_CLOSE_MORE_LINE, V2_CLOSE_REOPEN_REFUSAL, v2ReplyAsksMoreOrFinish } 
 import { v2ReadClientState } from '../src/lib/tutor/v2/client-state';
 import { v2ScopeCarried } from '../src/lib/tutor/v2/state-carry';
 import { runV2Turn, type V2ModelCall } from '../src/lib/tutor/v2/turn';
+import { foldInterruptedTurn } from '../src/lib/tutor/v2/interrupted';
 import { newV2State, type V2BoardPage, type V2Session, type V2State } from '../src/lib/tutor/v2/types';
 
 let passed = 0; let failed = 0;
@@ -109,8 +110,24 @@ async function probe() {
   };
 }
 
+/** Fix round 2 (N1): the review's three answers to the lesson's own part ask, summed up (board, position, tools, the "comes later"
+ *  line); run here and in a child with both 7k switches off (the 7a flow before this task). */
+async function partFlowCases() {
+  const convAsked = base([TODAY, JOB, PP, PS, CONV], { history: [u('x'), a('Good. Next is pronunciation. Shall we go on to pronunciation?')], practiceSaid: { 'topic-intro': 3, 'present-perfect': 3, 'past-simple': 3, 'open-conversation': 3 }, goals: { ...goalsAt, 'open-conversation': { status: 'shown', at: 0 } } });
+  const psAsked = base([TODAY, JOB, PP, PS], { history: [u('x'), a('Good. Next is the conversation. Shall we go on?')] });
+  const cases: Array<[string, V2State, string, number]> = [
+    ['A2', convAsked, 'Yes, let\'s try some pronunciation.', 13], ['A1', convAsked, 'Yes, can we practise pronunciation, please?', 13], ['B', psAsked, 'Yes, can we practise the conversation now?', 9.7]];
+  const out: Record<string, unknown> = {};
+  for (const [k, st, said, t] of cases) {
+    const r = await run(st, said, [{ text: 'Great. Let\'s begin.' }], t);
+    out[k] = { titles: titles(r.r.state), cur: r.r.state.board.current, pos: v2PartInHand(GDI, r.r.state), tools: r.r.toolCalls.map((c) => c.name), later: /comes later in the lesson/.test(r.facts), visit: r.r.state.visitPages ?? null, practice: r.r.state.practiceSaid };
+  }
+  return out;
+}
+
 async function main() {
   if (process.env.MIC3_7K_CHILD) { console.log(`OFF_JSON ${JSON.stringify(await probe())}`); return; }
+  if (process.env.MIC3_7K_FLOW) { console.log(`OFF_JSON ${JSON.stringify(await partFlowCases())}`); return; }
 
   console.log('the switches: each on by default');
   check('PRACTICE_ON_PART_PAGE, CLOSE_REOPENED default on', TUTOR_V2_PRACTICE_ON_PART_PAGE && TUTOR_V2_CLOSE_REOPENED);
@@ -273,6 +290,48 @@ async function main() {
     check('an earlier part (Present perfect) from Conversation: turned to, position Conversation, no page marked (an existing page)', v.r.state.board.current === 2 && v2PartInHand(GDI, v.r.state) === 5 && !v.r.state.visitPages, [v.r.state.board.current, v.r.state.visitPages]);
     const b = await run(v.r.state, 'I have worked on the donation project for a year.', [{ text: 'Good. <board page>Conversation</board> Now, what is one project you are proud of?' }], 10.5);
     check('…and back: Conversation in view, position and green as before the visit', b.r.state.board.current === 4 && v2PartInHand(GDI, b.r.state) === 5 && JSON.stringify(prog(b.r.state).completedSegmentIds) === JSON.stringify(prog(conv).completedSegmentIds));
+  }
+
+  console.log('fix round 2, N1: an answer to the lesson\'s own part ask is the 7a flow\'s alone');
+  {
+    const now = await partFlowCases() as Record<string, { later: boolean; visit: unknown }>;
+    check('A2, A1, B: no "comes later" line, no visit page', Object.values(now).every((c) => !c.later && c.visit === null), now);
+    const r = spawnSync(process.execPath, [...process.execArgv, __filename], { env: { ...process.env, NEXT_PUBLIC_TUTOR_V2_PRACTICE_ON_PART_PAGE: 'off', NEXT_PUBLIC_TUTOR_V2_CLOSE_REOPENED: 'off', MIC3_7K_FLOW: '1' }, encoding: 'utf8' });
+    const line = (r.stdout ?? '').split('\n').find((l) => l.startsWith('OFF_JSON '));
+    const before = line ? JSON.parse(line.slice('OFF_JSON '.length)) : { error: r.stderr };
+    check('…the board, position, tools and practice count exactly as with both 7k switches off (the 7a flow before this task)', JSON.stringify(before) === JSON.stringify(now), { before, now });
+    check('…A2 is 7a\'s release: the Pronunciation page opens on the yes', (now.A2 as unknown as { titles: string[] }).titles.includes('Pronunciation'));
+    // A learner bringing up a part beyond the next step on their own still gets the line (minute 6 above), and the next part
+    // named without an ask (Past simple in hand, "Can we practise the conversation now?") is the flow's too.
+    const ps = base([TODAY, JOB, PP, PS], { history: [u('x'), a('Tell me one more sentence in the past simple.')] });
+    const nx = await run(ps, 'Can we practise the conversation now?', [{ text: 'Sure.' }], 9.7);
+    check('the next part named with no ask: no "comes later" line (the 7a flow decides)', !/comes later in the lesson/.test(nx.facts));
+  }
+
+  console.log('fix round 2, N2: the answer to "more, or finish?" with no time left');
+  {
+    const r = await run(closing(), SAID_1703, [{ text: R_1703 }], 17.03);
+    const asked = await run(r.r.state, 'I have worked on the washing machine project for two years.', [{ text: 'Great sentence. Goodbye!', after: end() }, { text: '' }], 21.4);
+    check('(the ask recorded at 21.4)', asked.r.state.closeAsk === 'more' && typeof asked.r.state.closeInvitedAt === 'number', asked.r.state);
+    for (const t of [22.5, 24.5]) {
+      const y = await run(wire(asked.r.state), 'Yes, please.', [{ text: 'Sure. <board problem>Tell me one more sentence.</board>' }], t);
+      check(`${t} (under 3 minutes to the stop): the facts are the normal close (no time for more today, goodbye), never "give one more practice"`, /no time left for more today: thank them/.test(y.facts) && !/give one more practice/.test(y.facts), y.facts.split('\n').filter((l) => /before the close/.test(l)));
+      check('…and the reply does not reopen the close', y.r.state.closeReopened === undefined && typeof y.r.state.closeInvitedAt === 'number', [y.r.state.closeReopened, y.r.state.closeInvitedAt]);
+    }
+    const ok = await run(wire(asked.r.state), 'Yes, please.', [{ text: 'Sure. <board problem>Tell me one more sentence.</board>' }], 21.8);
+    check('with time left (21.8): "give one more practice", and the reply reopens the close', /give one more practice/.test(ok.facts) && typeof ok.r.state.closeReopened === 'number');
+  }
+
+  console.log('fix round 2, m1: a visit reply cut by a barge-in keeps its page marked');
+  {
+    const r = await run(closing(), SAID_1515, [{ text: 'Of course. <board sentence>I have worked on this project for two years.</board> Please say this sentence.' }], 15.15);
+    const call = r.r.toolCalls.find((c) => c.name === 'new_page')!;
+    check('the visit\'s new_page call carries the mark', call.visit === true);
+    // The client folds the settled calls of a cut reply onto the state it had before the turn (useV2Turns → foldInterruptedTurn).
+    const folded = foldInterruptedTurn(closing(), 'Can we also do some more pronunciation?', 'Of course.', r.r.toolCalls);
+    check('foldInterruptedTurn: the Pronunciation page is on the board and marked (visitPages [6])', titles(folded).includes('Pronunciation') && JSON.stringify(folded.visitPages) === '[6]', [titles(folded), folded.visitPages]);
+    const later = { ...folded, board: { ...folded.board, pages: folded.board.pages.map((p) => (p.title === 'Pronunciation' ? { ...p, items: [card('x1', 'I have worked on this project for two years.')] } : p)) } };
+    check('…so with a card on it later, Pronunciation is still not green, and the position stays Summary', !prog(later).completedSegmentIds.includes('pronunciation') && v2PartInHand(GDI, later) === 7);
   }
 
   console.log('fix round 1, I2: a plain yes to "more, or finish?" is read by state');
