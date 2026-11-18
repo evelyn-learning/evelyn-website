@@ -10,9 +10,10 @@ import { REQUEST_TIMEOUT_MS, TransportError, retryableStatus, toBase64, type Ima
 // fallback ran, the content carries `fallback` blocks; the answer is the text
 // after the last one, and res.model names the model that served it.
 // Note: Anthropic's structured outputs need additionalProperties:false on every object.
-/** Same model, allowing a dated alias: one id is the other plus "-" and digits. */
+/** Same model: identical ids, or one is the other plus "-" and an 8-digit date
+ * (a dated snapshot). "claude-fable-5" vs "claude-fable-5-2" are different models. */
 export function sameModel(a: string, b: string): boolean {
-  const alias = (long: string, short: string) => long.startsWith(`${short}-`) && /^\d+$/.test(long.slice(short.length + 1));
+  const alias = (long: string, short: string) => long.startsWith(`${short}-`) && /^\d{8}$/.test(long.slice(short.length + 1));
   return a === b || alias(a, b) || alias(b, a);
 }
 

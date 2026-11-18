@@ -59,6 +59,7 @@ const CLAUDE_FALLBACK_PRICES: Record<string, { pricePerMTokIn: number; pricePerM
   "claude-sonnet-5-5": { pricePerMTokIn: 2, pricePerMTokOut: 10 },
   "claude-sonnet-5": { pricePerMTokIn: 2, pricePerMTokOut: 10 },
   "claude-fable-5-1": { pricePerMTokIn: 10, pricePerMTokOut: 50 },
+  "claude-fable-5": { pricePerMTokIn: 10, pricePerMTokOut: 50 }, // shared/models.md line 81: same per-token pricing as Fable 5.1
 };
 
 export const MODEL_FOR: Record<Role, ModelSpec> = {

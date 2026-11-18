@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { MODEL_FOR, assertKeys, callModel, costOf, redact } from "./models";
 import { assertSchemaSupported, isStrictSchema, parseJsonReply, validate } from "./schema";
 import type { ModelCall, Role } from "./types";
+import { sameModel } from "./vendors/anthropic";
 
 // Fake keys for this process only: every request goes to a fake fetch.
 for (const k of ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "DEEPSEEK_API_KEY", "GEMINI_API_KEY"]) process.env[k] = "test-key";
@@ -346,6 +347,19 @@ async function main() {
     ], "end_turn", undefined, { model: "claude-fable-5-2-20261101" })]);
     const r4 = await callModel(call("solver1"), deps(k.fn));
     assert.equal(r4.ok && r4.fellBack, true, "fallback block");
+    // a shorter id with trailing digits is a different model, not an alias
+    assert.equal(sameModel("claude-fable-5-2", "claude-fable-5-2-20261101"), true);
+    assert.equal(sameModel("claude-fable-5-2", "claude-fable-5"), false);
+    assert.equal(sameModel("claude-fable-5-2", "claude-fable-5-1"), false);
+    assert.equal(sameModel("claude-opus-5-5", "claude-opus-5"), false);
+    assert.equal(sameModel("claude-sonnet-5", "claude-sonnet-5-5"), false);
+    const p = fakeFetch([anthropicMsg([{ type: "text", text: '{"ok":true}' }], "end_turn", undefined, { model: "claude-fable-5" })]);
+    const r6 = await callModel(call("solver1"), deps(p.fn));
+    assert.equal(r6.ok && r6.fellBack, true, "served claude-fable-5");
+    if (r6.ok) assert.equal(r6.cost, 1000 / 1e6 * 10 + 500 / 1e6 * 50, "priced at Fable 5 rates");
+    const q = fakeFetch([anthropicMsg([{ type: "text", text: '{"ok":true}' }], "end_turn", undefined, { model: "claude-fable-5-1" })]);
+    const r7 = await callModel(call("solver1"), deps(q.fn));
+    assert.equal(r7.ok && r7.fellBack, true, "served claude-fable-5-1");
     // a different served model without a block is a fallback too
     const m = fakeFetch([anthropicMsg([{ type: "text", text: '{"ok":true}' }], "end_turn", undefined, { model: "claude-sonnet-5-5" })]);
     const r5 = await callModel(call("solver1"), deps(m.fn));
