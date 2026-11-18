@@ -33,7 +33,7 @@ import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
 import { leftOpen, mayOpenPart, namesPart, partOffer } from './part-close';
 import { heardAsWords } from './heard';
-import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, DISCUSSION_STEERED, V2_DISCUSSION_CONSTITUTION, directionAnswered, directionAsked, discussionOf, reflectAsked, effectiveMinutes, recordThinking, renderDiscussionMap, scriptedWelcome } from './discussion';
+import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, DISCUSSION_STEERED, V2_DISCUSSION_CONSTITUTION, caseToldIn, directionAnswered, directionAsked, discussionOf, reflectAsked, syncDiscussionStages, untoldCases, effectiveMinutes, recordThinking, renderDiscussionMap, scriptedWelcome } from './discussion';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, V2_NOTE_OWN_ANSWER_TOOL, V2_SET_CURRENT_PROBLEM_TOOL, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
 
@@ -220,6 +220,7 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     state.note = note.slice(0, V2_NOTE_MAX_CHARS);
     return note.length > V2_NOTE_MAX_CHARS ? `saved, cut to ${V2_NOTE_MAX_CHARS} characters` : 'saved';
   }
+  if (name === 'set_goal_status' && discussion?.stageStarts) return 'recorded';
   if (name === 'set_goal_status') {
     const goal = typeof args.goal === 'string' ? args.goal.replace(/^\[|\]$/g, '').trim() : '';
     const status = args.status as GoalStatus;
@@ -304,6 +305,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const opening = !state.history.length && input.studentSaid === null;
   const discussion = !!discussionOf(session.plan);
   const studentText = v2StudentBlock(input.studentSaid, state, input.facts?.silenceSeconds, input.facts?.resumed, session);
+  const dMeta = discussionOf(session.plan);
+  if (dMeta && session.plan) syncDiscussionStages(state, session.plan, dMeta, nowMs);
+  const untoldBefore = dMeta ? untoldCases(dMeta, state.history) : [];
   const facts = renderFacts(session, state, { ...input.facts, nowMs, heard: input.studentSaid });
   // "Your last reply brought in a complication" is said once, in this turn's facts; a new one sets it again.
   if (state.thinking?.justComplicated) state.thinking = { ...state.thinking, justComplicated: false };
@@ -455,6 +459,13 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const boardProblems: string[] = [];
   const settleInline = (b: InlineBlock, boardOnly = false): boolean => {
     let { name, args } = inlineToolCall(b);
+    // A note whose first line is the title of the page it stands on says the title twice (flagged in a local
+    // test, embed-1795030468491: "page 2's title is The Revision Assistant, and the title on the card is too").
+    if (name === 'annotate' && typeof args.text === 'string') {
+      const lines = args.text.split('\n'); const plain = (x: string) => x.replace(/[^a-z0-9]+/gi, '').toLowerCase();
+      const title = state.board.pages[state.board.current]?.title ?? '';
+      if (lines.length > 1 && title && plain(lines[0]) === plain(title)) args = { ...args, text: lines.slice(1).join('\n') };
+    }
     // A page block naming a page that exists turns back to it.
     if (name === 'new_page') { const at = state.board.pages.findIndex((pg, i) => i !== state.board.current && pg.title.replace(/\s+/g, '').toLowerCase() === String(args.title ?? '').replace(/\s+/g, '').toLowerCase()); if (at >= 0) { name = 'go_to_page'; args = { pageIndex: at, page: at + 1, title: state.board.pages[at].title }; } }
     inlineN += 1;
@@ -820,6 +831,26 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     } catch { /* the reply stands without it */ }
   }
 
+  // A case told aloud has its points on the board. Told in answer to "Who's Diego?", the second case went up
+  // nowhere, and the rest of the conversation ran under the first case's page (local test embed-1795030468491).
+  if (dMeta && !input.signal?.aborted) {
+    const saidAll = rawSpoken.join('\n\n') || '';
+    for (const c of untoldBefore) {
+      if (!c.glance?.length || !caseToldIn(c, saidAll)) continue;
+      const plain = (x: string) => x.replace(/[^a-z0-9]+/gi, '').toLowerCase();
+      const up = state.board.pages.some((pg) => pg.items.some((it) => plain(it.summary).includes(plain(c.glance![0]))));
+      if (up) continue;
+      const now = state.board.pages[state.board.current]?.title ?? '';
+      const raw = `${plain(now) === plain(c.title) ? '' : `<board page>${c.title}</board>\n`}<board note style="highlight">${c.glance.join('\n')}</board>`;
+      try {
+        for (const b of boardBlocksIn(raw)) settleInline(b, true);
+        const holder = [...stored].reverse().find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((x) => x.type === 'text'));
+        const textBlock = (holder?.content as Anthropic.ContentBlockParam[] | undefined)?.find((x): x is Anthropic.TextBlockParam => x.type === 'text');
+        if (textBlock) textBlock.text = `${raw}\n${textBlock.text}`;
+      } catch { /* the reply stands without it */ }
+    }
+  }
+
   const fix = await mathsCheck;
   if (fix && !state.closed && !input.signal?.aborted) {
     const words = `One correction: ${fix}`;
@@ -861,6 +892,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   }
 
   state.history = [...state.history, ...stored];
+  if (dMeta && session.plan) syncDiscussionStages(state, session.plan, dMeta, nowMs);
   // Fed back as a fact next turn: how long the tutor has been talking without writing.
   const painted = toolCalls.some((c) => !V2_CONTROL_TOOL_NAMES.has(c.name) && !/^not /.test(c.outcome));
   state.repliesSinceBoard = painted ? 0 : (state.repliesSinceBoard ?? 0) + 1;

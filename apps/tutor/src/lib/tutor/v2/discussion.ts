@@ -62,7 +62,15 @@ export interface DiscussionMeta {
   casesLeadIn?: string;
   /** The last words of the session, word for word: that it is finished and what comes next. */
   closing?: string;
+  /** What in the conversation begins each stage after the first, by stage id. With these the stage in hand is
+   *  read from what has been said, not from the tutor's own marks: the marks ran a stage ahead, and the last
+   *  stage was never marked at all (local test embed-1795030468491). */
+  stageStarts?: Record<string, DiscussionStageStart>;
 }
+
+/** case_told: the first case has been told. cases_told: two cases (or the only one) have been told and the
+ *  person has answered on the last. reflect_asked / direction_asked: that question has been put. */
+export type DiscussionStageStart = 'case_told' | 'cases_told' | 'reflect_asked' | 'direction_asked';
 
 /** The scripted opening reply of a discussion, or null when the plan leaves the opening to the tutor. */
 export function scriptedWelcome(d: DiscussionMeta, names: { person?: string; tutor?: string }): string | null {
@@ -93,6 +101,7 @@ export function discussionOf(plan: Pick<LessonPlan, 'metadata'> | null | undefin
     ...(Array.isArray(m.welcomeBoard) ? { welcomeBoard: m.welcomeBoard.filter((x) => typeof x === 'string') } : {}),
     ...(typeof m.casesLeadIn === 'string' && m.casesLeadIn.trim() ? { casesLeadIn: m.casesLeadIn } : {}),
     ...(typeof m.closing === 'string' && m.closing.trim() ? { closing: m.closing } : {}),
+    ...(m.stageStarts && typeof m.stageStarts === 'object' ? { stageStarts: m.stageStarts } : {}),
   };
 }
 
@@ -120,7 +129,7 @@ Tell a case before you ask about it. They hear you; they may not be reading the 
 
 They lead. If they ask for something — another case, more depth, to skip ahead, your own view, to stop — do it in this reply, and never make them ask twice. Asked what you think, give a short, honest view as one perspective among several, and hand the question back; asked a second time, never decline again.
 
-Respond to what they actually said. Reflect it back only when hearing it helps them, briefly and in their words, and then add something: a question that asks them why, a case that would test their reasoning, a consequence, another person's view. Agreeing with everything is not support, and neither is correcting them. Recognition is welcome when it is specific and true: name a step they actually took, a question they asked or something they were willing to look at, in their own words, and never credit them with more than they said.
+Respond to what they actually said. "You said…" and a board note of where they stand carry their words, not a conclusion you drew from them: a question they asked ("why does she need a tool for that?") is not a statement that she should not have used one, and it is never quoted back to them as their view. Reflect it back only when hearing it helps them, briefly and in their words, and then add something: a question that asks them why, a case that would test their reasoning, a consequence, another person's view. Agreeing with everything is not support, and neither is correcting them. Recognition is welcome when it is specific and true: name a step they actually took, a question they asked or something they were willing to look at, in their own words, and never credit them with more than they said.
 
 Acknowledge by naming what a point does ("that keeps the decision with the student"), not by grading it. Begin each reply with substance: never with "That's", "That is", "You're right" or "Good question", and never with a word about the quality of what they said. Never correct them either: no "actually, no", no "that's not it", and never telling them they are not quite right. When they misread what you meant, say again what you meant, plainly, without marking their reading as wrong. Don't tell them what they feel or what lies behind what they said ("that frustration is about…"): if you want to know, ask. Don't grade their thinking at all, favourably or not: no "good test", "sharp", "fair", "the right question", "that settles it", and never right, correct, wrong, great, excellent or perfect. There is no verdict to give, and praise on every turn tells a person you are not really listening.
 
@@ -172,7 +181,7 @@ After their message each turn there is a <facts> block. It comes from the system
 
 # Ending
 
-As the time draws in, or the stages are done, or when they want to stop: ask what they are thinking now and whether anything has shifted, if you have not already. When the plan holds the author's own reflection questions, use one of them as the way in, unless they have already said what has shifted: ask it plainly as the author's question, about their student or about them ("The author asks students: does this still sound like me? What would your student say?"). Never talk about "reflection questions" or "prompts", and use one at most once; then ask what would be most valuable for them to explore further. The plan lists directions they might choose, but any answer is a good one, "not sure yet" included. If they have just opened a live question of their own, take one exchange on it first, even when the time is short: never close in the reply right after they have raised something they want to talk about; it may well be the direction they choose. You cannot close until you have asked what they are thinking now, and then asked them what they would like to explore next and they have answered, or they have asked to stop, or the time is up. Then close warmly in two or three sentences: first take up in a few words what they have just said, without rating it (when the time runs out mid-story, that comes before anything else), then thank them and name where they have landed and the direction they chose, in their words, and add nothing to it. Say only what they said, never what they "came to see" or "realised", and never that they moved or shifted unless the record of their thinking holds a shift they did not reject: when they told you nothing has changed, the close says where they stand, which is where they started. When the plan gives closing words, the session says them after yours: don't say goodbye twice, and don't explain what comes next yourself. When the time ran out before they named a direction, name none: never choose one for them — no suggestion of who to take it to or how. No verdict on how they did. Call end_lesson in the same reply, with the direction they chose. Don't ask a question in the closing reply.`;
+As the time draws in, or the stages are done, or when they want to stop: ask what they are thinking now and whether anything has shifted, if you have not already. When the plan holds the author's own reflection questions, use one of them as the way in, unless they have already said what has shifted: ask it plainly as the author's question, about their student or about them ("The author asks students: does this still sound like me? What would your student say?"). Never talk about "reflection questions" or "prompts", and use one at most once; then ask what would be most valuable for them to explore further. Ask it as an open question; the plan lists directions they might choose, and you offer two or three of those only when they have no answer of their own. Any answer is a good one, "not sure yet" included. If they have just opened a live question of their own, take one exchange on it first, even when the time is short: never close in the reply right after they have raised something they want to talk about; it may well be the direction they choose. You cannot close until you have asked what they are thinking now, and then asked them what they would like to explore next and they have answered, or they have asked to stop, or the time is up. Then close warmly in two or three sentences: first take up in a few words what they have just said, without rating it (when the time runs out mid-story, that comes before anything else), then thank them and name where they have landed and the direction they chose, in their words, and add nothing to it. Say only what they said, never what they "came to see" or "realised", and never that they moved or shifted unless the record of their thinking holds a shift they did not reject: when they told you nothing has changed, the close says where they stand, which is where they started. When the plan gives closing words, the session says them after yours: don't say goodbye twice, and don't explain what comes next yourself. When the time ran out before they named a direction, name none: never choose one for them — no suggestion of who to take it to or how. No verdict on how they did. Call end_lesson in the same reply, with the direction they chose. Don't ask a question in the closing reply.`;
 
 /** The plan, for the session part of the system prompt. Stable for the whole session. */
 export function renderDiscussionMap(plan: LessonPlan, d: DiscussionMeta): string {
@@ -183,7 +192,7 @@ export function renderDiscussionMap(plan: LessonPlan, d: DiscussionMeta): string
   const cases = d.cases.map((c) => [
     `[${c.id}] ${c.title}${c.focus ? ` — ${c.focus}` : ''}`,
     c.spoken ? `  to tell aloud: ${c.spoken}` : '',
-    c.glance?.length ? `  board points (these go on the board, one a line, under the case's title):\n${c.glance.map((g) => `    - ${g}`).join('\n')}` : '',
+    c.glance?.length ? `  board points (when you tell this case: a new page with the case's title, then one note holding just these lines; the title is not written again in the note):\n${c.glance.map((g) => `    - ${g}`).join('\n')}` : '',
     c.glance?.length ? `  as written (the facts of the case, for you; not for the board): ${c.scenario}` : `  as written (for the board): ${c.scenario}`,
     c.questions?.length ? `  the author's discussion questions:\n${c.questions.map((q) => `    - ${q}`).join('\n')}` : '',
     c.talkingPoints?.length ? `  the author's talking points:\n${c.talkingPoints.map((q) => `    - ${q}`).join('\n')}` : '',
@@ -258,6 +267,7 @@ export function lastReplyNotes(history: V2State['history'], voice = false, heard
   const question = text.split(/(?<=[.!?])\s+/).filter((x) => x.trim().endsWith('?')).pop() ?? '';
   const qWords = question.split(/\s+/).filter(Boolean).length;
   if (voice && qWords > DISCUSSION_QUESTION_WORDS) out.push(`its question ran to ${qWords} words: ask this one in about fifteen plain words`);
+  if (DISCUSSION_PERMISSION.test(text)) out.push('it asked leave to move on, or spoke of a case to come without telling it: tell that case now, in full, with its page and points on the board');
   const before = [...history].reverse().filter((m) => m.role === 'assistant')[1];
   if (before && question) {
     const prevText = (typeof before.content === 'string' ? before.content : before.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '));
@@ -276,6 +286,9 @@ export const DISCUSSION_CORRECTION = /\b(?:not quite|actually,? no|that'?s not (
 
 /** The person did not follow the tutor's last reply (live test 2, 2026-11-15: "Sorry, say that again?", "I don't understand it"). */
 export const DISCUSSION_NOT_FOLLOWED = /\b(?:say (?:that|it) again|(?:don'?t|didn'?t|do not|did not) (?:understand|follow|get|catch)|what do you mean|can you repeat|come again|lost me)\b/i;
+
+/** Asking leave to go on to the next case ("Shall we go on to Diego?" drew "Who's Diego?", local test embed-1795030468491). */
+export const DISCUSSION_PERMISSION = /\b(?:shall we (?:go on|move on|look at|turn to|take)|ready (?:to|for) (?:move on|go on|the (?:next|second))|(?:want|like) to (?:go on|move on) to|next is\b|the (?:first|next) part is done)\b/i;
 
 /** A hypothetical student supplied by the tutor to test an objection. */
 export const DISCUSSION_HYPOTHETICAL = /\b(?:picture|imagine|think of|suppose|consider|what about|take) (?:a|one|another) (?:student|child|pupil|kid|learner) (?:who|that|whose)\b/i;
@@ -315,13 +328,43 @@ export function directionAnswered(history: V2State['history'], saidNow: string |
  *  version; its name alone does not count ("Would you say the same about Diego's case?" was asked of a person
  *  who had never heard of Diego, local test embed-1794971130343). */
 export function untoldCases(d: DiscussionMeta, history: V2State['history']): DiscussionCase[] {
-  const said = history.filter((m) => m.role === 'assistant').map((m) => (typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' ')).toLowerCase());
-  const words = (x: string) => [...new Set((x.toLowerCase().match(/[a-z']{5,}/g) ?? []))];
-  return d.cases.filter((c) => {
-    const key = words(c.spoken ?? c.scenario);
-    if (!key.length) return false;
-    return !said.some((reply) => key.filter((w) => reply.includes(w)).length >= Math.ceil(key.length * 0.5));
+  const said = history.filter((m) => m.role === 'assistant').map(textOf);
+  return d.cases.filter((c) => !said.some((reply) => caseToldIn(c, reply)));
+}
+const textOf = (m: V2State['history'][number]) => (typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '));
+
+/** Whether this reply told the case: it carries half or more of the distinct words of its spoken version. */
+export function caseToldIn(c: DiscussionCase, reply: string): boolean {
+  const key = [...new Set(((c.spoken ?? c.scenario).toLowerCase().match(/[a-z']{5,}/g) ?? []))];
+  const text = reply.replace(/<board\b[^>]*>[\s\S]*?<\/board>/g, ' ').toLowerCase();
+  return key.length > 0 && key.filter((w) => text.includes(w)).length >= Math.ceil(key.length * 0.5);
+}
+
+/** The index of the stage the conversation is in, read from what has been said (plans with stageStarts). */
+export function discussionStageIndex(plan: LessonPlan, d: DiscussionMeta, history: V2State['history'], closed = false): number | null {
+  if (!d.stageStarts) return null;
+  if (closed) return plan.segments.length;
+  const replies = history.map((m, i) => ({ m, i })).filter((x) => x.m.role === 'assistant');
+  const toldAt = d.cases.map((c) => replies.find((x) => caseToldIn(c, textOf(x.m)))?.i ?? -1).filter((i) => i >= 0).sort((a, b) => a - b);
+  const need = Math.min(2, d.cases.length);
+  const begun = (how: DiscussionStageStart): boolean => how === 'case_told' ? toldAt.length >= 1
+    : how === 'cases_told' ? toldAt.length >= need && history.slice(toldAt[need - 1] + 1).some((m) => m.role === 'assistant')
+    : how === 'reflect_asked' ? reflectAsked(history, d)
+    : directionAsked(history);
+  let at = 0;
+  plan.segments.forEach((seg, i) => { const how = d.stageStarts?.[seg.id]; if (how && begun(how)) at = Math.max(at, i); });
+  return at;
+}
+
+/** Set the stages' status from the conversation itself. Returns whether the plan is read this way. */
+export function syncDiscussionStages(state: V2State, plan: LessonPlan, d: DiscussionMeta, nowMs: number): boolean {
+  const at = discussionStageIndex(plan, d, state.history, state.closed);
+  if (at === null) return false;
+  plan.segments.forEach((seg, i) => {
+    if (i < at) { if (!state.goals[seg.id] || state.goals[seg.id].status === 'not_started') state.goals[seg.id] = { status: 'shown', at: nowMs }; }
+    else delete state.goals[seg.id];
   });
+  return true;
 }
 
 /** Whether the tutor has asked what they are thinking now, or one of the plan's own reflection questions. A local

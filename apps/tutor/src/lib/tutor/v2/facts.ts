@@ -69,7 +69,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   if (pace) lines.push(pace);
   const meta = state.history.length ? discussionOf(session.plan) : null;
   const untold = meta ? untoldCases(meta, state.history) : [];
-  if (untold.length) lines.push(`not yet told to them: ${untold.map((c) => c.title).join('; ')}. They know nothing of ${untold.length === 1 ? 'it' : 'these'}: no name or detail from ${untold.length === 1 ? 'it' : 'them'} until the reply that tells it in full`);
+  if (untold.length) lines.push(`not yet told to them: ${untold.map((c) => c.title).join('; ')}. They know nothing of ${untold.length === 1 ? 'it' : 'these'}: no name or detail from ${untold.length === 1 ? 'it' : 'them'} until the reply that tells it in full. That reply tells it at once: it does not ask whether to go on, and it does not say a case is coming`);
   const lastNotes = discussion ? lastReplyNotes(state.history, session.mode === 'voice', f.heard) : [];
   if (lastNotes.length) lines.push(`your last reply: ${lastNotes.join('; ')}`);
   // Said once in the prompt, the length and the opener drift back within a few turns (live test 2, 2026-11-15: replies of

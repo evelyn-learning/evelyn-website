@@ -17,7 +17,7 @@ import { renderFacts, V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S } from '../src/li
 import type Anthropic from '@anthropic-ai/sdk';
 import { SEED_AP_CALCBC_U4_LHOPITAL } from '../src/lib/tutor/lesson-plan/seeds/ap-calcbc-u4-lhopital';
 import { V2_CONSTITUTION } from '../src/lib/tutor/v2/constitution';
-import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, DISCUSSION_VERDICT_WORDS, V2_DISCUSSION_CONSTITUTION, directionAnswered, discussionOf, reflectAsked, reflectAtMinutes, renderDiscussionMap, untoldCases } from '../src/lib/tutor/v2/discussion';
+import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, DISCUSSION_VERDICT_WORDS, V2_DISCUSSION_CONSTITUTION, directionAnswered, discussionOf, discussionStageIndex, reflectAsked, reflectAtMinutes, renderDiscussionMap, untoldCases } from '../src/lib/tutor/v2/discussion';
 import { PRIVATE_ECS_AI_LITERACY_CH2 } from '../src/lib/tutor/lesson-plan/private/ecs-ai-literacy-ch2';
 import { SEED_PLANS, getLessonPlan, isPrivatePlan } from '../src/lib/tutor/lesson-plan/store';
 import { renderPlanMap } from '../src/lib/tutor/v2/plan-map';
@@ -843,6 +843,28 @@ async function main() {
     check('a case is untold until its spoken version has been said; its name alone does not tell it', untoldAll.length === dMeta.cases.length && namedOnly.length === dMeta.cases.length - 1 && !namedOnly.includes(dMeta.cases[0]), `${untoldAll.length} ${namedOnly.length}`);
     const fu = renderFacts({ ...dSession, plan: PRIVATE_ECS_AI_LITERACY_CH2 }, { ...r1.state, history: hist([`${dMeta.cases[0].spoken}`]) }, { nowMs: 1_000_000 + 3 * 60000 });
     check('the facts list the cases not yet told', /not yet told to them: /.test(fu) && !fu.includes(`not yet told to them: ${dMeta.cases[0].title}`), fu);
+    // Second local test (embed-1795030468491): the second case told with nothing on the board; the title twice; chips a stage ahead.
+    const c0 = dMeta.cases[0], c1 = dMeta.cases[1];
+    const tellNoBoard = stub([msg([{ type: 'text', text: `${c1.spoken} How does that sit with you?` }], 'end_turn')]);
+    const toldFirst = { ...r1.state, goals: {}, history: [...r1.state.history, { role: 'assistant' as const, content: [{ type: 'text' as const, text: `${c0.spoken} What do you make of it?` }] }] };
+    const rtb = await runV2Turn({ session: dSession, state: structuredClone(toldFirst), studentSaid: "Who's Diego?", nowMs: 1_000_000 + 5 * 60000, callModel: tellNoBoard.call });
+    const pagesNow = rtb.state.board.pages;
+    check('a case told without its board gets its page and points from the session itself', pagesNow.some((pg) => pg.title === c1.title && pg.items.some((it) => it.summary.includes(c1.glance![0]))), JSON.stringify(pagesNow.map((pg) => [pg.title, pg.items.map((it) => it.summary)])));
+    const dupTitle = stub([msg([{ type: 'text', text: `<board page>${c1.title}</board>\n${c1.spoken}\n<board note style="highlight">${c1.title}\n${c1.glance!.join('\n')}</board>\nHow does that sit with you?` }], 'end_turn')]);
+    const rdt = await runV2Turn({ session: dSession, state: structuredClone(toldFirst), studentSaid: 'Go on.', nowMs: 1_000_000 + 5 * 60000, callModel: dupTitle.call });
+    const diegoPage = rdt.state.board.pages.find((pg) => pg.title === c1.title);
+    check('a note does not repeat the title of its page', !!diegoPage && diegoPage.items.length === 1 && !diegoPage.items[0].summary.startsWith(c1.title) && diegoPage.items[0].summary.includes(c1.glance![0]), JSON.stringify(diegoPage));
+    const A = (t: string) => ({ role: 'assistant' as const, content: [{ type: 'text' as const, text: t }] }); const U = (t: string) => ({ role: 'user' as const, content: t });
+    const h1 = [A('Welcome. What is your first reaction?'), U('Cheating.')];
+    const h2 = [...h1, A(`${c0.spoken} What do you make of it?`), U('Fine.')];
+    const h3 = [...h2, A(`${c1.spoken} And this one?`), U('Worse.')];
+    const h4 = [...h3, A('What bothers you most in it?'), U('Not knowing.')];
+    const h5 = [...h4, A('What are you thinking now, and has anything shifted?'), U('No.')];
+    const h6 = [...h5, A('What would you like to explore next?'), U('Rules.')];
+    const stageAt = (h: typeof h1, closed = false) => discussionStageIndex(dPlan, dMeta, h, closed);
+    check('the stage in hand is read from the conversation: opening, cases, probing, reflecting, direction, done', [stageAt(h1), stageAt(h2), stageAt(h3), stageAt(h4), stageAt(h5), stageAt(h6), stageAt(h6, true)].join(',') === '0,1,1,2,3,4,5', [stageAt(h1), stageAt(h2), stageAt(h3), stageAt(h4), stageAt(h5), stageAt(h6), stageAt(h6, true)].join(','));
+    check('stages follow the conversation after a turn, whatever the tutor marked', Object.keys(rtb.state.goals).join(',') === 'orient' && rtb.state.goals.orient.status === 'shown', JSON.stringify(rtb.state.goals));
+    check('asking leave to go on to a case is pointed out', /asked leave to move on/.test(renderFacts(dSession, { ...r1.state, history: [...r1.state.history, A('The first part is done. Shall we go on to Diego, who used AI in a different way?')] }, { nowMs: r1.state.startedAtMs + 5 * 60000 })));
     check('the verdict-word scan catches praise and passes a plain acknowledgement', DISCUSSION_VERDICT_WORDS.test('Excellent point.') && DISCUSSION_VERDICT_WORDS.test("That's right, Jo.") && !DISCUSSION_VERDICT_WORDS.test('Tying it to what the student decides is a useful test.'));
   }
   console.log(`\n${passed} passed, ${failed} failed`);
