@@ -348,6 +348,115 @@ export async function latestRun(itemId: string): Promise<RunDoc | null> {
   return Run.findOne({ itemId }).sort({ startedAt: -1 }).select("-_id -__v").lean<RunDoc>();
 }
 
+// --- Praveen's final look (the queue page). Evelyn only: the actions check the role; these do not. ---
+//
+// Fields these write that the pipeline schema (db.ts) does not declare yet: pipeline.fixNote,
+// fixRequestedAt, sentBackBy, seenAt. They are written through the native collection (mongoose's strict
+// mode would drop them) and read back by .lean(), which returns the stored document as it is.
+
+/** The owner's send-back flag: the next run rewrites the solution with pipeline.fixNote as an instruction. */
+export const OWNER_SENT_BACK = "owner_sent_back";
+/** heldWhy when the owner holds a clean item himself. */
+export const HELD_BY_YOU = "Held by you";
+export const FIX_NOTE_MAX = 2000;
+
+export type OwnerPipeline = PipelineDoc & { fixNote?: string; fixRequestedAt?: Date; sentBackBy?: string; seenAt?: Date };
+export type OwnerOutcome = { done: true } | { already: true } | { error: string };
+
+async function readHeld(itemId: string) {
+  const { Item, Solution } = await ks();
+  const item = await Item.findOne({ itemId }).select("itemId stage version releasedVersion evelynAnswer pipeline").lean<ItemDoc>();
+  if (!item) return { error: "There is no such item." } as const;
+  const unreleased = !!item.version && releasedVersionOf(item) < item.version;
+  const row = item.version ? await Solution.findOne({ itemId, version: item.version }).select("releasedAt").lean() : null;
+  return { item, unreleased: unreleased && !!row && !row.releasedAt } as const;
+}
+
+const NOT_WAITING = "This item is no longer waiting for you.";
+
+/**
+ * Sends a held solution to Castle Rock's review. One conditional update moves the item from `ready`
+ * (at the version read) to `in_review` with the released version and answer; only the caller that wins it
+ * writes the rest, so a double click or the timer releasing at the same moment gives `already`. Then the
+ * same writes as releaseSolution: the solution row's releasedAt and the ordinary "Sent for review." row.
+ * The hold and the owner's note are cleared; `pipeline.flags` is kept (history; the batch's sample count
+ * reads the `sample` flag).
+ */
+export async function sendToReviewByOwner(itemId: string, actor: Actor, now = new Date()): Promise<OwnerOutcome> {
+  const r = await readHeld(itemId);
+  if ("error" in r) return { error: r.error! };
+  const { item } = r;
+  if (item.stage !== "ready") return item.stage === "in_review" && canJudgeSolution(item) ? { already: true } : { error: NOT_WAITING };
+  if (!r.unreleased) return { error: "There is no unreleased solution to send." };
+  const { Item, Solution } = await ks();
+  const moved = await Item.collection.updateOne(
+    { itemId, stage: "ready", version: item.version },
+    {
+      $set: { stage: "in_review", releasedVersion: item.version, releasedAnswer: item.evelynAnswer || "", updatedAt: now },
+      $unset: { "pipeline.heldFor": "", "pipeline.heldWhy": "", "pipeline.releaseClaim": "", "pipeline.fixNote": "", "pipeline.fixRequestedAt": "", "pipeline.sentBackBy": "", "pipeline.seenAt": "" },
+    },
+  );
+  if (moved.modifiedCount !== 1) {
+    const again = await Item.findOne({ itemId }).select("stage version releasedVersion").lean();
+    return again?.stage === "in_review" && canJudgeSolution(again) ? { already: true } : { error: NOT_WAITING };
+  }
+  await Solution.updateOne({ itemId, version: item.version, releasedAt: { $exists: false } }, { $set: { releasedAt: now } });
+  await log({ itemId, version: item.version, type: "revision", body: SENT_FOR_REVIEW, username: actor.username, name: actor.name, role: actor.role, createdAt: now });
+  return { done: true };
+}
+
+/**
+ * The owner sends a held solution back to the pipeline with a note the author must address. The stage
+ * stays `ready` (Castle Rock keeps seeing Drafting); the item stays held, gains the flag OWNER_SENT_BACK
+ * and pipeline.fixNote / fixRequestedAt / sentBackBy. No activity row: a row cannot be hidden from
+ * Castle Rock by its type. updatedAt moves, so a run in flight on the item loses its conditional write.
+ */
+export async function sendBackByOwner(itemId: string, note: string, actor: Actor, now = new Date()): Promise<OwnerOutcome> {
+  const text = note.trim();
+  if (!text) return { error: "Write what the author must change first." };
+  if (text.length > FIX_NOTE_MAX) return { error: `Keep the note under ${FIX_NOTE_MAX} characters.` };
+  const r = await readHeld(itemId);
+  if ("error" in r) return { error: r.error! };
+  if (r.item.stage !== "ready" || !r.unreleased) return { error: NOT_WAITING };
+  const { Item } = await ks();
+  const u = await Item.collection.updateOne(
+    { itemId, stage: "ready", version: r.item.version },
+    {
+      $set: { "pipeline.heldFor": "praveen", "pipeline.fixNote": text, "pipeline.fixRequestedAt": now, "pipeline.sentBackBy": actor.username, updatedAt: now },
+      $addToSet: { "pipeline.flags": OWNER_SENT_BACK },
+      $unset: { "pipeline.seenAt": "", "pipeline.releaseClaim": "" },
+    },
+  );
+  return u.matchedCount === 1 ? { done: true } : { error: NOT_WAITING };
+}
+
+/** Keep holding: records that the owner has seen it (pipeline.seenAt) and nothing else. */
+export async function keepHoldingByOwner(itemId: string, now = new Date()): Promise<OwnerOutcome> {
+  const { Item } = await ks();
+  const u = await Item.collection.updateOne({ itemId, stage: "ready", "pipeline.heldFor": "praveen" }, { $set: { "pipeline.seenAt": now } });
+  return u.matchedCount === 1 ? { done: true } : { error: NOT_WAITING };
+}
+
+/**
+ * The owner holds a clean ready item that would go out by itself. Same writes as release.ts's hold paths
+ * (heldFor, heldWhy, release claim removed). Safe against the timer: its deciding update requires no hold
+ * and its own claim, so either it moved the item first (then this finds no `ready` item) or it cannot.
+ */
+export async function holdByOwner(itemId: string): Promise<OwnerOutcome> {
+  const r = await readHeld(itemId);
+  if ("error" in r) return { error: r.error! };
+  if (r.item.stage !== "ready" || !r.unreleased) return { error: "This item is not waiting to go out." };
+  if (r.item.pipeline?.heldFor) return { already: true };
+  const { Item } = await ks();
+  const u = await Item.collection.updateOne(
+    { itemId, stage: "ready", version: r.item.version, "pipeline.heldFor": { $exists: false } },
+    { $set: { "pipeline.heldFor": "praveen", "pipeline.heldWhy": HELD_BY_YOU }, $unset: { "pipeline.releaseClaim": "" } },
+  );
+  if (u.modifiedCount === 1) return { done: true };
+  const again = await Item.findOne({ itemId }).select("stage pipeline").lean();
+  return again?.stage === "ready" && again.pipeline?.heldFor ? { already: true } : { error: "This item is not waiting to go out." };
+}
+
 export async function addComment(itemId: string, body: string, actor: Actor) {
   const { Item } = await ks();
   const item = await Item.findOne({ itemId }).lean();

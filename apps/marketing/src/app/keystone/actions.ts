@@ -5,7 +5,18 @@ import { can, SECTIONS, STAGES, STAGE_LABEL, VERDICTS, type SectionKind, type St
 import { changePassword, requireUser, signIn } from "@/lib/keystone/auth";
 import { ksHref } from "@/lib/keystone/paths";
 import { ks } from "@/lib/keystone/db";
-import { addComment, releaseIfHeld, saveSolution, setStage, setVerdict } from "@/lib/keystone/store";
+import {
+  addComment,
+  holdByOwner,
+  keepHoldingByOwner,
+  releaseIfHeld,
+  saveSolution,
+  sendBackByOwner,
+  sendToReviewByOwner,
+  setStage,
+  setVerdict,
+  type OwnerOutcome,
+} from "@/lib/keystone/store";
 import { nextInQueue } from "@/lib/keystone/queries";
 import { ctxQuery, parseCtx } from "@/lib/keystone/listctx";
 
@@ -107,4 +118,50 @@ export async function changePasswordAction(_prev: PasswordResult, form: FormData
   if (next !== String(form.get("confirm") || "")) return { error: "The two new passwords do not match." };
   const err = await changePassword(user.username, current, next);
   return err ? { error: err } : { done: true };
+}
+
+// --- Praveen's queue (the owner's final look). Evelyn only, checked here on the server for every call. ---
+
+const OWNER_ONLY = "Only Evelyn can do that.";
+
+/** Where an owner action returns to: the queue (default) or the item it was made on. */
+async function ownerBack(form: FormData, itemId: string, note?: string): Promise<string> {
+  const q = note ? `?done=${note}` : "";
+  return ksHref(String(form.get("back")) === "item" ? `/item/${encodeURIComponent(itemId)}${q}` : `/queue${q}`);
+}
+
+async function ownerAction(form: FormData, run: (itemId: string, user: Awaited<ReturnType<typeof requireUser>>) => Promise<OwnerOutcome>, done: string): Promise<ReviewResult> {
+  const user = await requireUser();
+  if (user.role !== "evelyn") return { error: OWNER_ONLY };
+  const itemId = String(form.get("itemId") || "");
+  if (!itemId) return { error: "No item given." };
+  let out: OwnerOutcome;
+  try {
+    out = await run(itemId, user);
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+  if ("error" in out) return { error: out.error };
+  revalidatePath("/keystone", "layout");
+  return { go: await ownerBack(form, itemId, "already" in out ? "already" : done) };
+}
+
+/** Send to review: the held solution goes to Castle Rock as an ordinary "Sent for review". A second call is harmless. */
+export async function sendToReviewAction(_prev: ReviewResult, form: FormData): Promise<ReviewResult> {
+  return ownerAction(form, (itemId, user) => sendToReviewByOwner(itemId, user), "sent");
+}
+
+/** Send back to the pipeline with a note the author must address (stays hidden from Castle Rock). */
+export async function sendBackAction(_prev: ReviewResult, form: FormData): Promise<ReviewResult> {
+  return ownerAction(form, (itemId, user) => sendBackByOwner(itemId, String(form.get("note") || ""), user), "sentback");
+}
+
+/** Keep holding: records only that it was seen. */
+export async function keepHoldingAction(_prev: ReviewResult, form: FormData): Promise<ReviewResult> {
+  return ownerAction(form, (itemId) => keepHoldingByOwner(itemId), "seen");
+}
+
+/** Hold this one: a clean item that would go out by itself waits for the owner instead. */
+export async function holdAction(_prev: ReviewResult, form: FormData): Promise<ReviewResult> {
+  return ownerAction(form, (itemId) => holdByOwner(itemId), "held");
 }

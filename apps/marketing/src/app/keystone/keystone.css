@@ -195,3 +195,54 @@
 .ks-bank li b { margin-right: 8px; }
 .ks-gap-id { font-size: 10px; font-weight: 700; color: var(--muted); margin: 0 3px; }
 .ks-ix-key { margin-top: 6px; font-size: 13px; font-weight: 600; color: var(--ok); }
+
+/* Praveen's queue (Evelyn only) and the Checks panel on the item page */
+.ks-queue h1 { margin-bottom: 2px; }
+.ks-q-sec { margin-bottom: 16px; }
+.ks-q-blocked { border-color: #f3b4b4; }
+.ks-q-list { list-style: none; margin: 0; padding: 0; }
+.ks-q-row { border-top: 1px solid var(--line); padding: 10px 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.ks-q-row:first-child { border-top: 0; padding-top: 0; }
+.ks-q-row.seen { opacity: .8; }
+.ks-q-head { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.ks-q-meta { color: var(--muted); font-size: 13px; }
+.ks-q-seen { font-size: 12px; color: var(--muted); background: var(--soft); border-radius: 999px; padding: 0 8px; }
+.ks-q-why { margin: 0; padding-left: 18px; font-size: 14px; }
+.ks-q-when { font-size: 14px; }
+.ks-q-facts { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--muted); }
+.ks-q-facts b { color: var(--ink); }
+.ks-q-facts .bad, .ks-q-facts .bad b { color: var(--bad); }
+.ks-q-ctl { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; margin-top: 2px; }
+.ks-q-form { display: contents; }
+.ks-q-back { flex-basis: 100%; }
+.ks-q-back > summary { list-style: none; display: inline-flex; }
+.ks-q-back > summary::-webkit-details-marker { display: none; }
+.ks-q-back[open] > summary { margin-bottom: 6px; }
+.ks-q-backform textarea { width: 100%; box-sizing: border-box; min-height: 70px; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font: inherit; margin-bottom: 6px; }
+.ks-q-line a { color: inherit; }
+.ks-owner { color: var(--ink); }
+.ks-owner .ks-q-why { margin: 6px 0; }
+.ks-owner .ks-q-ctl { margin-top: 8px; }
+.ks-checks-sum b { color: var(--ink); }
+.ks-checks-int { color: var(--muted); font-size: 11px; font-weight: 400; }
+.ks-checks-steps { list-style: none; margin: 0; padding: 0; }
+.ks-checks-steps > li { border-top: 1px solid var(--line); padding: 8px 0; font-size: 14px; overflow-wrap: anywhere; }
+.ks-checks-head { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.ks-checks-head .mark { font-weight: 700; width: 1em; }
+.ks-checks-steps li.pass .mark { color: var(--ok); }
+.ks-checks-steps li.fail .mark { color: var(--bad); }
+.ks-checks-n { color: var(--muted); font-size: 13px; }
+.ks-checks-failed { color: var(--bad); margin-top: 4px; }
+.ks-checks-solve { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 4px; font-size: 13px; }
+.ks-checks-find { margin: 4px 0 0; padding-left: 18px; font-size: 13px; }
+.ks-checks-find code { font-size: 12px; background: var(--soft); padding: 0 4px; border-radius: 3px; }
+.ks-checks-find q { display: block; color: var(--muted); font-style: italic; }
+.ks-checks-raw summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+.ks-checks-raw pre { max-height: 300px; overflow: auto; font-size: 12px; background: var(--soft); padding: 8px; white-space: pre-wrap; }
+
+/* Narrow screens: the top bar wraps instead of pushing the page sideways */
+@media (max-width: 720px) {
+  .ks-top-in { flex-wrap: wrap; gap: 8px 14px; }
+  .ks-nav { flex-wrap: wrap; gap: 6px 12px; flex-basis: 100%; order: 2; }
+  .ks-who { flex-wrap: wrap; }
+}
