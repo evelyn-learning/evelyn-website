@@ -16,14 +16,14 @@ export type IntakeFinding = {
   detail: string;
 };
 
-const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", newline: "\n", tab: "\t" };
+const ENTITIES = new Map<string, string>(Object.entries({ amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", newline: "\n", tab: "\t" }));
 const decodeText = (s: string) =>
   s.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (all, e: string) => {
     if (e[0] === "#") {
       const n = e[1].toLowerCase() === "x" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
       return Number.isFinite(n) && n > 0 && n <= 0x10ffff ? String.fromCodePoint(n) : all;
     }
-    return ENTITIES[e.toLowerCase()] ?? all;
+    return ENTITIES.get(e.toLowerCase()) ?? all;
   });
 
 /** Splits out every `<div class="cr-passage">…</div>` block (counting nested divs): its inner html, and the rest. */
@@ -114,15 +114,30 @@ const MATH_ATTRS = new Set([
 ]);
 // Dropped with everything inside. rubricBlock can carry scoring data (the key). Value: the name used in problem reports.
 // Raw-text and embedding elements are dropped too: their content is not question text and can carry a rubricBlock as text.
-const DROPPED: Record<string, string> = {
+// Feedback and scoring elements (QTI 2 names, any namespace prefix, any case; and their QTI 3 forms) are answer feedback or the
+// key itself: never question text for the models. Dropping them is not "content lost" and raises no finding.
+// Maps and Sets (never plain objects): a name like "constructor" or "toString" must not find a prototype member.
+const DROPPED = new Map<string, string>(Object.entries({
   script: "script", style: "style", annotation: "annotation", "annotation-xml": "annotation-xml", rubricblock: "rubricBlock",
   textarea: "textarea", title: "title", xmp: "xmp", noembed: "noembed", noframes: "noframes", iframe: "iframe",
   plaintext: "plaintext", svg: "svg", object: "object", embed: "embed",
-};
+  feedbackinline: "feedbackInline", feedbackblock: "feedbackBlock", modalfeedback: "modalFeedback", correctresponse: "correctResponse",
+  responsedeclaration: "responseDeclaration", responseprocessing: "responseProcessing", outcomedeclaration: "outcomeDeclaration",
+  templatedeclaration: "templateDeclaration", templateprocessing: "templateProcessing", mapping: "mapping", mapentry: "mapEntry",
+  areamapping: "areaMapping", defaultvalue: "defaultValue",
+  "qti-feedback-inline": "qti-feedback-inline", "qti-feedback-block": "qti-feedback-block", "qti-modal-feedback": "qti-modal-feedback",
+  "qti-correct-response": "qti-correct-response", "qti-response-declaration": "qti-response-declaration", "qti-response-processing": "qti-response-processing",
+  "qti-outcome-declaration": "qti-outcome-declaration", "qti-template-declaration": "qti-template-declaration", "qti-template-processing": "qti-template-processing",
+  "qti-mapping": "qti-mapping", "qti-map-entry": "qti-map-entry", "qti-area-mapping": "qti-area-mapping", "qti-default-value": "qti-default-value",
+  "qti-rubric-block": "qti-rubric-block",
+}));
 // Shown in place of a dropped element so that its presence is not lost.
-const DROPPED_MARK: Record<string, string> = { svg: "[figure]", iframe: "[figure]", object: "[figure]", embed: "[figure]" };
+const DROPPED_MARK = new Map<string, string>([["svg", "[figure]"], ["iframe", "[figure]"], ["object", "[figure]"], ["embed", "[figure]"]]);
 // object (data) and embed (src) carry figures in QTI: shown like img, with object's fallback text as the alt.
-const MEDIA_SRC: Record<string, string> = { object: "data", embed: "src" };
+const MEDIA_SRC = new Map<string, string>([["object", "data"], ["embed", "src"]]);
+// Namespace prefixes whose elements are read by their bare name (MathML, QTI, XHTML). An element with any other prefix
+// (Word's st1:place, o:p, w:…) is unwrapped inline, its content kept, with no finding.
+const KNOWN_PREFIXES = new Set(["m", "mml", "math", "mathml", "qti", "qti2", "qti3", "apip", "html", "xhtml", "h"]);
 const DROPPED_VOID = new Set(["embed"]); // never has a closing tag
 // Element names that are not reported as stray "<" text outside math (with the keep/inline lists, MathML names and DROPPED).
 const KNOWN_HTML = new Set([
@@ -191,13 +206,14 @@ function fallbackMedia(kids: PNode[]): { out: string[]; files: string[] } {
     const c = todo.pop()!;
     if (c.type !== "tag" || !c.name) continue;
     const bare = c.name.replace(/^.*:/, "");
-    const src = bare === "img" ? c.attribs?.src : MEDIA_SRC[bare] ? c.attribs?.[MEDIA_SRC[bare]] : undefined;
+    const media = MEDIA_SRC.get(bare);
+    const src = bare === "img" ? attr(c, "src") : media ? attr(c, media) : undefined;
     const file = src ? lastSegment(src) : "";
     if (file) {
       files.push(file);
       out.push(imageText(bare === "img" ? c.attribs ?? {} : { src: src!, alt: fallbackText(c.children ?? []) }));
     }
-    if (bare in DROPPED && !MEDIA_SRC[bare]) continue; // rubricBlock, script…: nothing from inside
+    if (DROPPED.has(bare) && !MEDIA_SRC.has(bare)) continue; // rubricBlock, script, feedback…: nothing from inside
     for (const k of [...(c.children ?? [])].reverse()) todo.push(k);
   }
   return { out, files };
@@ -210,14 +226,18 @@ function fallbackText(kids: PNode[]): string {
   while (todo.length && t.length < 2000) {
     const c = todo.pop()!;
     if (c.type === "text") t += ` ${c.data ?? ""}`;
-    else if ((c.type === "tag" || c.type === "cdata") && !(c.name && c.name.replace(/^.*:/, "") in DROPPED)) for (const k of [...(c.children ?? [])].reverse()) todo.push(k);
+    else if ((c.type === "tag" || c.type === "cdata") && !(c.name && DROPPED.has(c.name.replace(/^.*:/, "")))) for (const k of [...(c.children ?? [])].reverse()) todo.push(k);
   }
   return t;
 }
 
+/** An attribute's own value (never a prototype member of the attributes object). */
+const own = (attrs: Record<string, string> | undefined, k: string): string | undefined => (attrs && Object.hasOwn(attrs, k) && typeof attrs[k] === "string" ? attrs[k] : undefined);
+const attr = (n: PNode, k: string) => own(n.attribs, k);
+
 function imageText(attrs: Record<string, string>): string {
-  const file = cleanChars(lastSegment(attrs.src ?? "")).replace(/\s+/g, " ").trim();
-  const alt = cleanChars(decodeText(attrs.alt ?? "")).replace(/\s+/g, " ").trim();
+  const file = cleanChars(lastSegment(own(attrs, "src") ?? "")).replace(/\s+/g, " ").trim();
+  const alt = cleanChars(decodeText(own(attrs, "alt") ?? "")).replace(/\s+/g, " ").trim();
   const bare = file.replace(/\.[^.]*$/, "").toLowerCase();
   const useAlt = alt && alt.toLowerCase() !== file.toLowerCase() && alt.toLowerCase() !== bare;
   return `[image: ${flat(file, 200)}${useAlt ? `; alt: ${flat(alt, MAX_ALT)}` : ""}]`;
@@ -326,29 +346,35 @@ function walk(src: string, root: PNode): Cleaned {
           break;
         }
         const bare = name.replace(/^.*:/, "");
-        if (bare in DROPPED) {
+        const prefix = name.includes(":") ? name.slice(0, name.indexOf(":")) : "";
+        if (DROPPED.has(bare)) {
           const r = raw(n, true);
           const closed = DROPPED_VOID.has(bare) || new RegExp(`</\\s*(?:[^\\s<>/]*:)?${bare.replace(/-/g, "\\-")}\\s*>$`, "i").test(r) || (!kids.length && /\/\s*>$/.test(r));
-          if (!closed) problem(`unterminated ${DROPPED[bare]} element`);
-          const srcAttr = MEDIA_SRC[bare] ? (n.attribs?.[MEDIA_SRC[bare]] ?? "") : "";
+          if (!closed) problem(`unterminated ${DROPPED.get(bare)} element`);
+          const media = MEDIA_SRC.get(bare);
+          const srcAttr = media ? (attr(n, media) ?? "") : "";
           const file = srcAttr ? lastSegment(srcAttr) : "";
           if (file) {
             images.push(file);
             out(imageText({ src: srcAttr, alt: fallbackText(kids) }));
-          } else out(DROPPED_MARK[bare] ?? "");
+          } else out(DROPPED_MARK.get(bare) ?? "");
           if (bare === "object") {
             const inner = fallbackMedia(kids);
             images.push(...inner.files);
             for (const m of inner.out) out(m);
+            // No data and no image inside: the fallback text is all there is of it, kept after the marker.
+            if (!file && !inner.files.length) enter(kids, { math: ctx.math, pre: ctx.pre, layout: false }, "", "");
           }
           break;
         }
+        // An element in an unknown namespace outside math (Word smart tags: st1:place, o:p): unwrapped inline, no finding.
+        if (prefix && !KNOWN_PREFIXES.has(prefix) && !ctx.math) { enter(kids, { math: false, pre: ctx.pre, layout: false }, "", ""); break; }
         // Text such as "0<x and x>5" or "x <y and z>w" parses as an element: an unknown name outside math or a valueless attribute
         // that is not a boolean attribute. Its words are lost to the parser, so it is reported (never silently).
         if (!ctx.math && !MATH_NAMES.has(bare) && !bare.includes("-") && !HTML_KEEP.has(bare) && !INLINE.has(bare) && !KNOWN_HTML.has(bare) && !KNOWN_QTI.has(bare)) problem("stray < in text");
         else if (hasStrayAttr(src, n)) problem("stray < in text");
         if (bare === "img") {
-          const file = lastSegment(n.attribs?.src ?? "");
+          const file = lastSegment(attr(n, "src") ?? "");
           if (file) images.push(file);
           out(imageText(n.attribs ?? {}));
           enter(kids, ctx, "", "");
