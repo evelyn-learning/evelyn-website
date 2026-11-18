@@ -258,6 +258,71 @@ const MIN = 60_000;
     await onePerItem(gIds);
     equal(await inReviewSuggestions(B("G")), 1, "parallel: batch_in_review suggested once");
 
+    // --- race: an item that becomes clean and due after the batch was read is not released in that pass ---
+    const xIds = range(330, 6);
+    await mkBatch(B("X"), xIds);
+    for (const i of xIds.slice(0, 3)) await mk(i, { batchId: B("X"), flags: ["sample"], heldFor: "praveen" });
+    for (const i of xIds.slice(3, 5)) await mk(i, { batchId: B("X") });
+    await mk(xIds[5], { batchId: B("X"), stage: "item_data" });
+    const t1 = new Date(NOW.getTime() + 30 * MIN);
+    const px = await rel.releaseDue(t1, { afterBatchRead: async (b) => { if (b === B("X")) await comesBackClean(xIds[5]); } });
+    deepEqual(px.filter((i) => xIds.includes(i)).sort(), xIds.slice(3, 5), "the two counted are released");
+    const late = await item(xIds[5]);
+    ok(late.stage === "ready" && late.pipeline?.flags.length === 0 && !late.pipeline?.timerReleasedAt, "the item that turned clean after the read is not released in that pass");
+    const px2 = await rel.releaseDue(new Date(t1.getTime() + 10 * MIN));
+    ok(px2.includes(xIds[5]), "the next pass counts it (n 6 → 3 required, h 3) and releases it");
+
+    // --- a sample miss because an item changed: the transient reason says so ---
+    const wIds = range(340, 4);
+    for (const i of wIds) await mk(i, { batchId: B("W") });
+    await mkBatch(B("W"), wIds);
+    const pw = await rel.releaseDueReport(t1, {
+      afterRead: async (b) => { if (b === B("W")) await Item.updateMany({ itemId: { $in: wIds.slice(0, 3) } }, { $set: { "pipeline.flags": ["no_agreement"], "pipeline.heldFor": "praveen" } }); },
+    });
+    const ww = pw.blocked.find((x) => x.batchId === B("W"))?.why ?? "";
+    equal(ww, "an item changed while the sample was being drawn; retrying next run", `changed, not claimed: ${ww}`);
+    equal((await Batch.findOne({ batchId: B("W") }).lean())!.blockedWhy, ww, "recorded");
+    ok(!pw.released.some((i) => wIds.includes(i)), "nothing of W released in that pass");
+    // the next pass: W's last clean item went to the sample; nothing clean left → the block is cleared
+    await rel.releaseDueReport(new Date(t1.getTime() + 10 * MIN));
+    const bw = (await Batch.findOne({ batchId: B("W") }).lean())!;
+    ok(!bw.blockedWhy && !bw.blockedAt, `block cleared once nothing is left to release (${bw.blockedWhy})`);
+    ok(!(await rel.blockedBatches()).some((x) => x.batchId === B("W")), "W not listed");
+
+    // --- a recorded block with nothing clean left: not listed, cleared by the next pass ---
+    await mk(id(350), { batchId: B("Q"), stage: "received" });
+    await mk(id(351), { batchId: B("Q") });
+    await mkBatch(B("Q"), [id(350), id(351)]);
+    await rel.releaseDueReport(t1);
+    ok((await rel.blockedBatches()).some((x) => x.batchId === B("Q")), "Q blocked while it has a clean item");
+    await Item.updateOne({ itemId: id(351) }, { $set: { "pipeline.flags": ["no_agreement"], "pipeline.heldFor": "praveen" } });
+    await rel.releaseDueReport(t1);
+    ok(!(await Batch.findOne({ batchId: B("Q") }).lean())!.blockedWhy, "nothing clean left: the next pass clears the record");
+    ok(!(await rel.blockedBatches()).some((x) => x.batchId === B("Q")), "and it is no longer listed");
+
+    // --- batch_in_review once per wave: suggested while others wait on the client, again for a later wave ---
+    const vIds = range(360, 8);
+    await mkBatch(B("V"), vIds);
+    for (const i of vIds.slice(0, 3)) await mk(i, { batchId: B("V"), flags: ["sample"], heldFor: "praveen" });
+    for (const i of vIds.slice(3, 5)) await mk(i, { batchId: B("V") });
+    for (const i of vIds.slice(5)) await mk(i, { batchId: B("V"), stage: "item_data" });
+    const v1 = new Date(NOW.getTime() + 60 * MIN);
+    await rel.releaseDue(v1);
+    equal(await inReviewSuggestions(B("V")), 1, "wave 1 suggested though 3 items still wait on the client");
+    const { markDrafted } = await import("./outbox");
+    const open1 = (await Outbox.findOne({ kind: "batch_in_review", batchId: B("V") }).lean())!;
+    await markDrafted(String(open1._id));
+    await rel.releaseDue(new Date(v1.getTime() + 10 * MIN));
+    equal(await inReviewSuggestions(B("V")), 1, "nothing more released: no new suggestion");
+    for (const i of vIds.slice(5)) await comesBackClean(i);
+    const v2 = new Date(v1.getTime() + 60 * MIN);
+    const rv2 = (await rel.releaseDue(v2)).filter((i) => vIds.includes(i));
+    equal(rv2.length, 3, "wave 2: the three returned are released (n 8 → 3 required, h 3)");
+    equal(await inReviewSuggestions(B("V")), 2, "wave 2 suggested again (the first was drafted)");
+    equal(await Outbox.countDocuments({ kind: "batch_in_review", batchId: B("V"), draftedAt: { $exists: false } }), 1, "one open suggestion for the new wave");
+    await rel.releaseDue(new Date(v2.getTime() + 10 * MIN));
+    equal(await inReviewSuggestions(B("V")), 2, "no third suggestion without a new release");
+
     // --- crash between claim and release: picked up after the stale period, released once ---
     await mkBatch(B("K"), range(400, 4));
     for (const i of range(400, 3)) await mk(i, { batchId: B("K"), flags: ["sample"], heldFor: "praveen" });
