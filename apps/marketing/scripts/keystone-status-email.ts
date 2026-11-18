@@ -54,16 +54,19 @@ async function main() {
   const { closeKs } = await import("../src/lib/keystone/db");
   try {
     const now = args.now ?? new Date();
-    const s = await status.buildStatus(now);
-    const email = status.renderStatusEmail(s, now);
+    // The same job the server's cron runs through POST /api/keystone/cron/status-email (pipeline/jobs.ts); by hand
+    // it sends whenever it is run (the cron route alone keeps to 7 am Los Angeles time).
+    const { statusEmailJob } = await import("../src/lib/keystone/pipeline/jobs");
     if (!cfg) {
-      console.log(`Subject: ${email.subject}\n\n${email.text}\n\n(not sent: --print)`);
+      const p = await statusEmailJob({ now, print: true });
+      if (p.status === "printed") console.log(`Subject: ${p.subject}\n\n${p.text}\n\n(not sent: --print)`);
       return;
     }
-    const res = await status.sendStatusEmail(email, cfg);
-    console.log(`status email: sent "${email.subject}" to ${cfg.to.join(", ")}${res.id ? ` (Resend id ${res.id})` : ""}`);
-    const { beat } = await import("../src/lib/keystone/pipeline/heartbeat");
-    await status.afterSent(() => beat(status.STATUS_HEARTBEAT, new Date()), (w) => console.warn(w), status.secretsOf(process.env));
+    const r = await statusEmailJob({ now, env: process.env });
+    if (r.status === "sent") {
+      console.log(`status email: sent "${r.subject}" to ${r.to.join(", ")}${r.id ? ` (Resend id ${r.id})` : ""}`);
+      if (r.warning) console.warn(r.warning);
+    }
   } finally {
     await closeKs().catch(() => {});
   }
