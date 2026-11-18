@@ -194,7 +194,20 @@ export interface V2State {
   /** Task 7g (CARD_EVERY_SENTENCE), spoken two-language lessons: the sentences of the learner's last practice answer that the
    *  last reply put on no sentence card. Shown once in the next turn's facts. */
   cardsOwed?: string[];
+  /** Task 7q (SUPPORT_STEPS), spoken language lessons with a labelled plan (adaptive.ts): the support step for the next question,
+   *  the runs of answers that needed a correction / were right, and the practice part they were counted in. */
+  support?: V2Support;
+  /** Task 7q (RETEST_MISTAKE): corrections recorded for a retest in a later part (at most 5), and how each went. */
+  retests?: V2Retest[];
 }
+
+/** Task 7q: the five support steps, least help first. */
+export type V2SupportStep = 'stretch' | 'normal' | 'starter' | 'gap' | 'repeat';
+export interface V2Support { step: V2SupportStep; wrong: number; clean: number; part?: string }
+/** Task 7q: one correction kept for a retest. `part`: the plan part it was made in; `said` / `right`: their sentence and the card's;
+ *  `target`: the card's stress words; `turn`: tutor replies so far when it was made; `offered`: turns the facts asked for it;
+ *  `in`: the part it was asked in; `outcome` once known; `praised`: the praise line was given. */
+export interface V2Retest { part: string; said: string; right: string; target: string[]; turn: number; offered?: number; in?: string; outcome?: 'passed' | 'missed' | 'not_asked'; praised?: true }
 
 /** A working level and where it came from: an earlier lesson (may be revised once, case 11) or this lesson (final). */
 export interface V2WorkingLevel { level: WorkingLevel; from: 'earlier_lesson' | 'this_lesson' }
@@ -234,7 +247,11 @@ export interface V2TurnResult {
   firstTextMs: number | null;
   totalMs: number;
   modelCalls: number;
+  /** Task 7q: session debug events the turn asks the client to record (useV2Turns → onDebugEvent), in order. */
+  events?: V2TurnEvent[];
 }
+
+export interface V2TurnEvent { type: string; message: string }
 
 export function newV2State(nowMs: number = Date.now()): V2State {
   return { history: [], note: '', goals: {}, board: { pages: [], current: -1 }, startedAtMs: nowMs, closed: false };

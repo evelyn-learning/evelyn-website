@@ -404,6 +404,8 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       setTutor(done.spoken || text.trim(), false, settled.some((c) => c.name === 'show_problem' && /^painted/.test(c.outcome)));
       p.current.onBrainUsage?.(done.usage);
       p.current.onDebugEvent?.('brain_turn', `Brain ${done.totalMs}ms · first_sentence=${done.firstTextMs ?? done.totalMs}ms · in=${done.usage.inputTokens} out=${done.usage.outputTokens} cr=${done.usage.cacheReadTokens} cc=${done.usage.cacheCreationTokens} · v2`);
+      // Task 7q: the turn's own session events (adaptive.ts: v2_practice_signal, v2_support_step, v2_retest_*), recorded as any other.
+      for (const e of Array.isArray(done.events) ? done.events : []) if (e && typeof e.type === 'string') p.current.onDebugEvent?.(e.type, String(e.message ?? ''));
       if (done.state.closed) {
         const closing = settled.find((c) => c.name === 'end_lesson' && !/^not /.test(c.outcome));
         needsPracticeRef.current = (Array.isArray(closing?.args.needs_practice) ? (closing?.args.needs_practice as unknown[]) : []).map((n) => planRef.current?.los[Number(n) - 1]?.id).filter((x): x is string => !!x);

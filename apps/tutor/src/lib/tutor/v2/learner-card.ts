@@ -390,7 +390,7 @@ export function v2SentenceCarded(board: V2Board, sentence: string, corrected: re
 
 /** Whether a card's sentence is this sentence of theirs, as said or corrected: most of the card's words are in it and most of
  *  its words are on the card (numbers in words and digits alike). */
-function cardIsOf(card: string, sentence: string): boolean {
+export function v2CardIsOf(card: string, sentence: string): boolean {
   const c = v2SentenceWords(card); const t = v2SentenceWords(sentence);
   if (!c.length || !t.length) return false;
   const inT = new Set(t); const inC = new Set(c);
@@ -420,7 +420,7 @@ export function v2BoardCardHolds(board: V2Board, sentence: string): boolean {
 export function v2SentencesNotCarded(sentences: readonly string[], cards: readonly string[], board: V2Board, corrected: readonly string[] = [], held: boolean = TUTOR_V2_CORRECTION_CARD_NOW): string[] {
   const left = [...cards];
   return sentences.filter((s) => {
-    const at = left.findIndex((c) => cardIsOf(c, s));
+    const at = left.findIndex((c) => v2CardIsOf(c, s));
     if (at >= 0) { left.splice(at, 1); return false; }
     return !v2SentenceCarded(board, s, corrected) && !(held && v2BoardCardHolds(board, s));
   });

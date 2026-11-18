@@ -6,7 +6,7 @@
  * back in the `done` event. Events, in order:
  *   { type: 'text', delta }                       the tutor's words as they are written
  *   { type: 'tool-call', id, name, args, outcome } each tool call once settled
- *   { type: 'done', spoken, state, usage, firstTextMs, totalMs }
+ *   { type: 'done', spoken, state, usage, firstTextMs, totalMs, events? }   events: Task 7q's session debug events
  *   { type: 'error', message }
  */
 import { NextRequest } from 'next/server';
@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
           ? await runV2SheetTurn({ ...turnInput, resolvedSheet: homeworkSheet, onHomeworkFrame: (f) => { send(f); logFrame(f); } })
           : await runV2Turn(turnInput);
         console.log(`[brain-v2] student="${(studentSaid ?? '(none)').slice(0, 80)}" → tools=[${r.toolCalls.map((t) => t.name).join(', ') || '(none)'}] · calls=${r.modelCalls} · first=${r.firstTextMs}ms total=${r.totalMs}ms · in=${r.usage.inputTokens} out=${r.usage.outputTokens} cr=${r.usage.cacheReadTokens} cc=${r.usage.cacheCreationTokens}`);
-        send({ type: 'done', spoken: r.spoken, state: r.state, usage: r.usage, firstTextMs: r.firstTextMs, totalMs: r.totalMs });
+        send({ type: 'done', spoken: r.spoken, state: r.state, usage: r.usage, firstTextMs: r.firstTextMs, totalMs: r.totalMs, ...(r.events?.length ? { events: r.events } : {}) });
       } catch (err) {
         if (req.signal.aborted) { console.log('[brain-v2] turn cancelled by the client'); return; }
         console.error('[brain-v2] error:', err);

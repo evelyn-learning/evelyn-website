@@ -15,6 +15,7 @@ import type { V2State } from './types';
 import { v2WorkingLevelField } from './working-level';
 import { v2MissedAtClose, v2PartOf } from './plan-map';
 import { v2PlanLabelled } from './part-flow';
+import { v2RetestGaps } from './adaptive';
 
 /** Task 7f B (TIME_NO_SQUEEZE): the line that carries the plan parts left out for time, and (in a plan with part names) the
  *  parts the lesson did not reach, to the next session: it heads the profile's plan for next time, which the next lesson's
@@ -106,7 +107,8 @@ export function v2ProfileCommit(input: { needsPracticeLoIds?: string[]; sessionI
     losTouched: plan && touched.length > 1 ? plan.los.map((lo) => lo.id) : [],
     ...v2Mastery(plan, state.goals, input.needsPracticeLoIds),
     // A gap the student closed alone in the session is not carried forward.
-    gaps: (state.gaps ?? []).filter((g) => g.status !== 'done_alone').map((g) => ({ kind: 'prerequisite' as const, conceptLabel: g.what.slice(0, 120), observation: GAP_NOTE[g.status] ?? g.status })),
+    // Task 7q (RETEST_MISTAKE): a correction asked again later in the lesson and still not right joins them (adaptive.ts).
+    gaps: [...(state.gaps ?? []).filter((g) => g.status !== 'done_alone').map((g) => ({ kind: 'prerequisite' as const, conceptLabel: g.what.slice(0, 120), observation: GAP_NOTE[g.status] ?? g.status })), ...v2RetestGaps(state)],
     transcript: input.transcript.filter((t) => (t.text ?? '').trim()).map((t) => ({ role: t.role === 'user' || t.role === 'student' ? 'student' as const : 'tutor' as const, text: String(t.text).slice(0, 4000) })),
     // Task 7f B: the parts left for next time head the plan for next time (v2LeftForNextTime).
     ...((): Record<string, string> => { const text = [v2LeftForNextTime(input.plan, state), state.closeSummary?.trim()].filter(Boolean).join(' ').slice(0, 200); return text ? { nextSessionIntent: text } : {}; })(),

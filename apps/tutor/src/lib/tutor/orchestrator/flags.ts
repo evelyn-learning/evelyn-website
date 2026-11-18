@@ -2161,3 +2161,19 @@ export const TUTOR_V2_CARD_GLOSS_SHOW = process.env.NEXT_PUBLIC_TUTOR_V2_CARD_GL
  *  for, the next turn's facts say so once (no runtime translation) (Task 7p, item 4). Default ON;
  *  NEXT_PUBLIC_TUTOR_V2_CARD_GLOSS_REMIND=off ⇒ as before. */
 export const TUTOR_V2_CARD_GLOSS_REMIND = process.env.NEXT_PUBLIC_TUTOR_V2_CARD_GLOSS_REMIND !== 'off';
+
+/** Tutor brain v2 (v2/adaptive.ts, v2/turn.ts, v2/facts.ts): in a spoken lesson that teaches a language with a labelled plan, the
+ *  support for the next question steps up after two answers in a row that needed a correction (their sentence carded corrected)
+ *  and down after two answered right (carded as said), over five steps (stretch, normal, starter, gap, repeat), kept per lesson
+ *  and moved one step towards normal at a part change. Facts only: one line while the step is not normal, in practice parts
+ *  only (not the level check, the overview, pronunciation or the summary). Mic test 4 (embed-1795028886172) (Task 7q, item 1).
+ *  Default ON; NEXT_PUBLIC_TUTOR_V2_SUPPORT_STEPS=off ⇒ as before. */
+export const TUTOR_V2_SUPPORT_STEPS = process.env.NEXT_PUBLIC_TUTOR_V2_SUPPORT_STEPS !== 'off';
+
+/** Tutor brain v2 (v2/adaptive.ts, v2/turn.ts, v2/facts.ts, v2/memory.ts): in such a lesson a correction (their sentence carded
+ *  corrected, its stress words the target) is recorded, at most 5; in a later practice part not behind its plan minutes, one at
+ *  a time and at most 3 a lesson, the facts ask for one question whose natural answer needs the target (for at most 2 turns);
+ *  their next carded sentences in that part give the outcome (passed / missed / not asked), a pass allows one word of praise, a
+ *  miss goes to the profile's gaps. Facts only. Mic test 4 (embed-1795028886172) (Task 7q, item 2). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_RETEST_MISTAKE=off ⇒ as before. */
+export const TUTOR_V2_RETEST_MISTAKE = process.env.NEXT_PUBLIC_TUTOR_V2_RETEST_MISTAKE !== 'off';

@@ -80,6 +80,8 @@ export interface V2TurnFacts {
   /** Task 7k fix round 1 (I1, ruling b): before the close, their words asked for practice of a part that comes later: its name.
    *  Facts only: nothing opens for it. */
   partAhead?: string;
+  /** Task 7q (SUPPORT_STEPS, RETEST_MISTAKE): the lines for this turn (adaptive.ts v2AdaptBefore, turn.ts). */
+  adaptive?: string[];
 }
 
 /** A quoted span at the very start of a reply, in any of the quote pairs a tutor uses: 「…」, 『…』, “…”, "…", ‘…’, '…'. */
@@ -266,6 +268,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // 2 s recheck, a card already on page 3, with an invented reason for it).
   const silenceTurn = TUTOR_V2_NO_FALSE_SILENCE && !!f.silenceSeconds && !f.heard;
   if ((!summaryBegun || f.partVisit) && !state.closed && !silenceTurn) lines.push(...v2CardsOwedFacts(state));
+  // Task 7q (SUPPORT_STEPS, RETEST_MISTAKE): the shape of the next question, and a retest of an earlier mistake (adaptive.ts).
+  if (f.adaptive?.length) lines.push(...f.adaptive);
   // How the last reply opened, so the next does not open the same way (D10).
   lines.push(...v2OpenerFact(session, state));
   // The question check at a part change, once in a while (Task 6e); at every part change in a spoken lesson whose plan parts

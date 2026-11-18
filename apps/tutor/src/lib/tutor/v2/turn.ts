@@ -42,10 +42,11 @@ import { v2HandsOver, v2ReplyAsks, v2ReplyHandsOver, v2ReplySentences } from './
 import { V2_LEVEL_WAIT, V2_LEVEL_WAIT_OVER, V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2MarkLevelKnownParts, v2ReopenLevelCheck, v2WorkingLevelSection } from './working-level';
 import { V2_PRACTISE_PRONUNCIATION_TOOL, v2ApplyPractisePronunciation, v2ConsumePronunciation, v2PronunciationOn, v2PronunciationSection } from './pronunciation';
 import { v2NoteCorrectedSentence, v2SentenceCardsOn, v2SentenceCardsSection } from './sentence-cards';
+import { v2AdaptAfter, v2AdaptBefore, v2AdaptPart, v2PracticePairs } from './adaptive';
 import { LearnerCardWatch, V2_REPLY_MISHEARD, v2LearnerCardsOn, v2OwedCardCheckLine, v2PracticeAnswerSentences, v2SentenceOnBoard, v2SentencesNotCarded } from './learner-card';
 import { v2StopAsked } from './stop-signal';
 import { V2_CLOSE_INVITE_LINE, V2_CLOSE_INVITE_REFUSAL, V2_CLOSE_INVITE_WAIT, V2_CLOSE_MORE_LINE, V2_CLOSE_REOPEN_REFUSAL, v2CloseInviteOn, v2CloseInviteOwed, v2CloseReopened, v2ReplyAsksMoreOrFinish, v2ReplyInvites } from './close-invite';
-import { TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_NOTE_TARGET_QUOTES, TUTOR_V2_NOTE_TARGET_MARK, TUTOR_V2_NOTE_STRESS_MARK, TUTOR_V2_NO_MARKDOWN_STARS, TUTOR_V2_CARD_GLOSS_SHOW } from '../orchestrator/flags';
+import { TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_NOTE_TARGET_QUOTES, TUTOR_V2_NOTE_TARGET_MARK, TUTOR_V2_NOTE_STRESS_MARK, TUTOR_V2_NO_MARKDOWN_STARS, TUTOR_V2_CARD_GLOSS_SHOW, TUTOR_V2_SUPPORT_STEPS, TUTOR_V2_RETEST_MISTAKE } from '../orchestrator/flags';
 import { v2CardGlossOn, v2CleanGloss, v2GlossLevelOn } from './card-gloss';
 import { v2NoteTargetsOn, v2NoteTargetsSection, v2NoteHasTarget, v2NoteStressWords } from './note-targets';
 import { V2StarStrip, v2StripStars } from './markdown-stars';
@@ -125,6 +126,8 @@ export interface V2TurnInput {
   boardGuard?: (name: string, args: Record<string, unknown>) => string | null;
   /** Task 7a fix round 1 (review M5), tests only: the PART_PAGE_CHIP / PART_ASK_EVERY switches for this turn (default: the flags). */
   partFlags?: { pageChip?: boolean; askEvery?: boolean };
+  /** Task 7q, tests only: SUPPORT_STEPS / RETEST_MISTAKE for this turn (default: the flags). */
+  adaptFlags?: { support?: boolean; retest?: boolean };
   /** Task 7f, tests only: the time switches B–F for this turn (default: the flags; time-box.ts v2TimeFlags). */
   timeFlags?: Partial<V2TimeFlags>;
 }
@@ -503,7 +506,11 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const partVisit = viewed >= 0 && backAt >= 0 && session.plan ? { label: v2PartOf(session.plan.segments[viewed]!).label!, title: state.board.pages[state.board.current]!.title, back: state.board.pages[backAt]!.title, opened: !!visit } : undefined;
   const partAhead = partAsk?.ahead && !released && session.plan ? v2PartOf(session.plan.segments[partAsk.index]!).label! : undefined;
   const answerSentences = session.mode === 'voice' && !discussion && !session.homework && !session.homeworkSheet && (!v2SummaryBegun(state) || viewed >= 0) ? v2PracticeAnswerSentences(session, state, input.studentSaid) : [];
-  const facts = renderFacts(session, state, { ...input.facts, nowMs, heard: input.studentSaid, time: tf, ...(practiceShort ? { practiceShort } : {}), ...(morePractice !== undefined ? { morePractice } : {}), ...(stopAsked ? { stopAsked: true } : {}), ...(levelReopened ? { levelReopened: true } : {}), ...(released ? { partOpened: String(released.args.title) } : {}), ...(input.partFlags?.askEvery !== undefined ? { partAskEvery: input.partFlags.askEvery } : {}), ...(droppedAsked ? { droppedAsked } : {}), ...(partVisit ? { partVisit } : {}), ...(partAhead ? { partAhead } : {}), ...(reopenAsked ? { reopenAsked: true } : {}) });
+  // Task 7q (SUPPORT_STEPS, RETEST_MISTAKE): the practice part their answer belongs to, and this turn's lines (adaptive.ts). Facts only.
+  const adaptFlags = { support: input.adaptFlags?.support ?? TUTOR_V2_SUPPORT_STEPS, retest: input.adaptFlags?.retest ?? TUTOR_V2_RETEST_MISTAKE };
+  const adaptPart = v2AdaptPart(session, state);
+  const adaptBefore = v2AdaptBefore(session, state, input.studentSaid, nowMs, adaptFlags);
+  const facts = renderFacts(session, state, { ...input.facts, nowMs, ...(adaptBefore.lines.length ? { adaptive: adaptBefore.lines } : {}), heard: input.studentSaid, time: tf, ...(practiceShort ? { practiceShort } : {}), ...(morePractice !== undefined ? { morePractice } : {}), ...(stopAsked ? { stopAsked: true } : {}), ...(levelReopened ? { levelReopened: true } : {}), ...(released ? { partOpened: String(released.args.title) } : {}), ...(input.partFlags?.askEvery !== undefined ? { partAskEvery: input.partFlags.askEvery } : {}), ...(droppedAsked ? { droppedAsked } : {}), ...(partVisit ? { partVisit } : {}), ...(partAhead ? { partAhead } : {}), ...(reopenAsked ? { reopenAsked: true } : {}) });
   // Task 7i (STAY_IN_PART): the unheard sentences are named in these facts once.
   delete state.unheard;
   // A reply that closes the session: the student's words ask to stop, or the time is up (V2_TIME_UP_MIN, as the facts
@@ -1624,6 +1631,14 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   if (!(TUTOR_V2_NO_FALSE_SILENCE && input.studentSaid === null && !!input.facts?.silenceSeconds)) delete state.cardsOwed;
   const owedAfter = owedCards();
   if (owedAfter.length) state.cardsOwed = owedAfter;
+  // Task 7q: their answer counted from this reply's sentence cards (a card changing their words = one that needed a correction).
+  // Not for a reply that was cut, closed the lesson or did not catch their words (the owed cards' conditions).
+  const adaptEvents = [...adaptBefore.events];
+  if (adaptPart && answerSentences.length && !state.closed && !input.signal?.aborted && !V2_REPLY_MISHEARD.test(stripBoardBlocks(spoken.join(' ')))) {
+    const cards = toolCalls.filter((c) => c.name === 'show_sentence' && (!/^not /.test(c.outcome) || !!c.pointsAt) && typeof c.args.sentence === 'string')
+      .map((c) => ({ sentence: String(c.args.sentence), stress: Array.isArray(c.args.emphasis) ? (c.args.emphasis as unknown[]).filter((x): x is string => typeof x === 'string') : [] }));
+    adaptEvents.push(...v2AdaptAfter(session, state, adaptPart, answerSentences, v2PracticePairs(answerSentences, cards), adaptFlags));
+  }
   let finalWords = stripToolTalk(spoken.join('\n\n'));
   // Task 7o (NO_MARKDOWN_STARS): the transcript's final text, as streamed (the stored reply keeps the model's words).
   // Fix round 1 (minor 3): a lone star held back at the very end was never streamed, so it leaves the final text too.
@@ -1634,5 +1649,5 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     finalWords = state.nextDirection && !/^not (?:asked|sure)/i.test(state.nextDirection) ? `Thank you for thinking this through with me. The direction you chose: ${state.nextDirection.replace(/[.\s]+$/, '')}.` : 'Thank you for thinking this through with me.';
     input.onText?.(finalWords);
   }
-  return { spoken: finalWords, toolCalls, ...(withdrawnLabels.length ? { withdrawn: withdrawnLabels } : {}), state, usage, firstTextMs, totalMs: Date.now() - t0, modelCalls };
+  return { spoken: finalWords, toolCalls, ...(withdrawnLabels.length ? { withdrawn: withdrawnLabels } : {}), state, usage, firstTextMs, totalMs: Date.now() - t0, modelCalls, ...(adaptEvents.length ? { events: adaptEvents } : {}) };
 }

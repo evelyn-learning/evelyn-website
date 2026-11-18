@@ -33,6 +33,8 @@ export interface V2TurnDone {
   usage: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number; model?: string };
   firstTextMs: number | null;
   totalMs: number;
+  /** Task 7q: session debug events the turn asks the client to record (v2_support_step, v2_retest_*, v2_practice_signal). */
+  events?: Array<{ type: string; message: string }>;
 }
 
 export type V2HomeworkFrame =

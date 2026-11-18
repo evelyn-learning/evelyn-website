@@ -8,6 +8,7 @@ import type { V2Session, V2State } from './types';
 import { discussionOf } from './discussion';
 import { v2CloseInviteOn } from './close-invite';
 import { V2_CLOCK_PAUSE_HONOURED } from './time-box';
+import { v2AdaptOn } from './adaptive';
 
 export const V2_MAX_BOARD_PROBLEMS = 12;
 /** Task 7g: at most this many sentences owed a card are carried. */
@@ -78,5 +79,7 @@ export function v2ScopeCarried(state: V2State, session: Pick<V2Session, 'mode' |
   // Task 7f: the practice count is the part flow's (spoken plan-led lessons); the time fit any timed taught lesson's with a plan.
   if (!v2CarryApplies(session)) { delete state.practiceSaid; delete state.moveOnAsked; delete state.cardsOwed; delete state.unheard; delete state.visitPages; }
   if (!session.plan || session.homework || session.homeworkSheet || discussionOf(session.plan)) delete state.timeFit;
+  // Task 7q: the support step and the recorded corrections only for the lessons they run in (adaptive.ts v2AdaptOn).
+  if (!v2AdaptOn(session as V2Session)) { delete state.support; delete state.retests; }
   return state;
 }
