@@ -35,7 +35,7 @@ import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
 import { leftOpen, mayOpenPart, namesPart, partOffer } from './part-close';
 import { heardAsWords } from './heard';
-import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, V2_DISCUSSION_CONSTITUTION, directionAsked, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap } from './discussion';
+import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, DISCUSSION_STEERED, V2_DISCUSSION_CONSTITUTION, caseToldIn, directionAnswered, directionAsked, discussionOf, reflectAsked, syncDiscussionStages, untoldCases, effectiveMinutes, recordThinking, renderDiscussionMap, scriptedWelcome } from './discussion';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, V2_NOTE_OWN_ANSWER_TOOL, V2_SET_CURRENT_PROBLEM_TOOL, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
 
@@ -206,11 +206,21 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     // flow is 8–12 minutes in a box of up to 15. Until then, the clock-or-request rule below holds.
     const box = effectiveMinutes(session.timeBoxMinutes, state.thinking);
     const left = box ? box - (nowMs - state.startedAtMs) / 60000 : 0;
-    const direction = (typeof args.next_direction === 'string' ? args.next_direction.trim().slice(0, 300) : '') || state.thinking?.direction || '';
+    // A direction is one they named after being asked. When the time ran out in a long silence the close gave
+    // "the direction you chose" for a question that had never been put (embed-1794953503551).
+    const direction = !directionAnswered(state.history, studentSaid) ? '' : (typeof args.next_direction === 'string' ? args.next_direction.trim().slice(0, 300) : '') || state.thinking?.direction || '';
     // The direction is theirs to name: a direction the tutor wrote itself closed the live test without the
     // question ever being asked (embed-1794694217385). Until it has been asked, only their request or the clock ends it.
+    // The close comes after they have said where they stand now: a session went from the middle straight to its end.
+    if (args.because !== 'student_asked' && box && left > 1.5 && !reflectAsked(state.history, discussion)) {
+      return 'not ended: you have not yet asked what they are thinking now and whether anything has shifted. Say nothing of this message. Ask that now as one short question. What they would like to explore next comes after their answer, and the close after that.';
+    }
     if (args.because !== 'student_asked' && box && left > 1.5 && !directionAsked(state.history)) {
-      return 'not ended: you have not asked them yet what they would like to explore next. Say nothing of this message. Ask them that now, in a sentence of your own, and close after they answer.';
+      return 'not ended: you have not asked them yet what they would like to explore next. Say nothing of this message. Ask them that now as one short question, and close after they answer.';
+    }
+    // Asked, and no word from them since: the question was announced or went unheard.
+    if (args.because !== 'student_asked' && box && left > 1.5 && !directionAnswered(state.history, studentSaid)) {
+      return 'not ended: they have not answered yet. Say nothing of this message. Ask them once more, as one short plain question, what they would like to explore next, and wait for their answer.';
     }
     if (args.because !== 'student_asked' && !direction && box && left > 1.5) {
       return 'not ended: they have not chosen a direction yet. Say nothing of this message. Ask them, in a sentence of your own, what would be most valuable for them to explore further.';
@@ -226,6 +236,7 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     state.note = note.slice(0, V2_NOTE_MAX_CHARS);
     return note.length > V2_NOTE_MAX_CHARS ? `saved, cut to ${V2_NOTE_MAX_CHARS} characters` : 'saved';
   }
+  if (name === 'set_goal_status' && discussion?.stageStarts) return 'recorded';
   if (name === 'set_goal_status') {
     const goal = typeof args.goal === 'string' ? args.goal.replace(/^\[|\]$/g, '').trim() : '';
     const status = args.status as GoalStatus;
@@ -296,7 +307,12 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const input: V2TurnInput = given.session.mode === 'voice' && given.studentSaid ? { ...given, studentSaid: heardAsWords(given.studentSaid) } : given;
   const { session } = input;
   const nowMs = input.nowMs ?? Date.now();
-  const callModel = input.callModel ?? defaultModelCall;
+  // A discussion whose plan scripts the welcome opens on those words exactly, the same in every session: no model
+  // call (the partner asked for one consistent introduction, 2026-11-17).
+  const welcome = !given.state.history.length && given.studentSaid === null && !given.facts?.resumed ? (() => { const d = discussionOf(session.plan); return d ? scriptedWelcome(d, { person: session.studentName, tutor: session.teacher?.name }) : null; })() : null;
+  const callModel: V2ModelCall = welcome
+    ? async (_params, onText) => { onText?.(welcome); return { id: 'scripted_welcome', type: 'message', role: 'assistant', model: '', content: [{ type: 'text', text: welcome, citations: null }], stop_reason: 'end_turn', stop_sequence: null, usage: { input_tokens: 0, output_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } } as unknown as Anthropic.Message; }
+    : input.callModel ?? defaultModelCall;
   const applyBoard = input.applyBoard ?? applyToModelBoard;
   // The turn works on a copy: a failed model call leaves the caller's state as it was.
   const state: V2State = structuredClone(input.state);
@@ -305,9 +321,15 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const opening = !state.history.length && input.studentSaid === null;
   const discussion = !!discussionOf(session.plan);
   const studentText = v2StudentBlock(input.studentSaid, state, input.facts?.silenceSeconds, input.facts?.resumed, session, input.facts?.timeCheck);
+  const dMeta = discussionOf(session.plan);
+  if (dMeta && session.plan) syncDiscussionStages(state, session.plan, dMeta, nowMs);
+  const untoldBefore = dMeta ? untoldCases(dMeta, state.history) : [];
   const facts = renderFacts(session, state, { ...input.facts, nowMs, heard: input.studentSaid });
   // "Your last reply brought in a complication" is said once, in this turn's facts; a new one sets it again.
   if (state.thinking?.justComplicated) state.thinking = { ...state.thinking, justComplicated: false };
+  // Said once by them, it holds for the rest of the conversation (shown in the facts from the next turn on; this
+  // turn's facts carry it as a note on the last reply).
+  if (discussion && input.studentSaid && DISCUSSION_STEERED.test(input.studentSaid)) state.thinking = { ...(state.thinking ?? { position: '', weighed: [], shifts: [] }), steered: true };
   // The student's words come first and carry the cache mark; the facts follow and are
   // never stored, so next turn's request shares this one's prefix up to the words.
   const userNow: Anthropic.MessageParam = {
@@ -496,6 +518,13 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const boardProblems: string[] = [];
   const settleInline = (b: InlineBlock, boardOnly = false): boolean => {
     let { name, args } = inlineToolCall(b);
+    // A note whose first line is the title of the page it stands on says the title twice (flagged in a local
+    // test, embed-1795030468491: "page 2's title is The Revision Assistant, and the title on the card is too").
+    if (name === 'annotate' && typeof args.text === 'string') {
+      const lines = args.text.split('\n'); const plain = (x: string) => x.replace(/[^a-z0-9]+/gi, '').toLowerCase();
+      const title = state.board.pages[state.board.current]?.title ?? '';
+      if (lines.length > 1 && title && plain(lines[0]) === plain(title)) args = { ...args, text: lines.slice(1).join('\n') };
+    }
     // A page block naming a page that exists turns back to it.
     if (name === 'new_page') { const at = state.board.pages.findIndex((pg, i) => i !== state.board.current && pg.title.replace(/\s+/g, '').toLowerCase() === String(args.title ?? '').replace(/\s+/g, '').toLowerCase()); if (at >= 0) { name = 'go_to_page'; args = { pageIndex: at, page: at + 1, title: state.board.pages[at].title }; } }
     inlineN += 1;
@@ -867,6 +896,26 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     } catch { /* the reply stands without it */ }
   }
 
+  // A case told aloud has its points on the board. Told in answer to "Who's Diego?", the second case went up
+  // nowhere, and the rest of the conversation ran under the first case's page (local test embed-1795030468491).
+  if (dMeta && !input.signal?.aborted) {
+    const saidAll = rawSpoken.join('\n\n') || '';
+    for (const c of untoldBefore) {
+      if (!c.glance?.length || !caseToldIn(c, saidAll)) continue;
+      const plain = (x: string) => x.replace(/[^a-z0-9]+/gi, '').toLowerCase();
+      const up = state.board.pages.some((pg) => pg.items.some((it) => plain(it.summary).includes(plain(c.glance![0]))));
+      if (up) continue;
+      const now = state.board.pages[state.board.current]?.title ?? '';
+      const raw = `${plain(now) === plain(c.title) ? '' : `<board page>${c.title}</board>\n`}<board note style="highlight">${c.glance.join('\n')}</board>`;
+      try {
+        for (const b of boardBlocksIn(raw)) settleInline(b, true);
+        const holder = [...stored].reverse().find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((x) => x.type === 'text'));
+        const textBlock = (holder?.content as Anthropic.ContentBlockParam[] | undefined)?.find((x): x is Anthropic.TextBlockParam => x.type === 'text');
+        if (textBlock) textBlock.text = `${raw}\n${textBlock.text}`;
+      } catch { /* the reply stands without it */ }
+    }
+  }
+
   // The answer key for a problem the tutor made up. The plan's problems come with their answers and were judged
   // right all lesson; on its own problem the tutor had nothing to judge by, and told a student who solved
   // 3x² − 3 = 0 as x = ±√3 that the roots were right, twice, until the student corrected it (AP Calculus BC,
@@ -984,6 +1033,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   }
 
   state.history = [...state.history, ...stored];
+  if (dMeta && session.plan) syncDiscussionStages(state, session.plan, dMeta, nowMs);
   // Fed back as a fact next turn: how long the tutor has been talking without writing.
   const painted = toolCalls.some((c) => !V2_CONTROL_TOOL_NAMES.has(c.name) && !/^not /.test(c.outcome));
   state.repliesSinceBoard = painted ? 0 : (state.repliesSinceBoard ?? 0) + 1;
@@ -994,6 +1044,16 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   if (discussion && state.closed && !finalWords.trim()) {
     finalWords = state.nextDirection && !/^not (?:asked|sure)/i.test(state.nextDirection) ? `Thank you for thinking this through with me. The direction you chose: ${state.nextDirection.replace(/[.\s]+$/, '')}.` : 'Thank you for thinking this through with me.';
     input.onText?.(finalWords);
+  }
+  // The plan's own last words: that the session is over and what comes next. One session closed on a summary
+  // and stopped, and the person did not know it had finished (partner review, 2026-11-17).
+  const closing = discussion && state.closed && !input.signal?.aborted ? discussionOf(session.plan)?.closing?.trim() : '';
+  if (closing && !finalWords.includes(closing)) {
+    input.onText?.(`\n\n${closing}`);
+    finalWords = `${finalWords}\n\n${closing}`;
+    const holder = [...state.history].reverse().find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));
+    const textBlock = [...((holder?.content as Anthropic.ContentBlockParam[] | undefined) ?? [])].reverse().find((c): c is Anthropic.TextBlockParam => c.type === 'text');
+    if (textBlock) textBlock.text = `${textBlock.text}\n\n${closing}`;
   }
   return { spoken: finalWords, toolCalls, ...(withdrawnLabels.length ? { withdrawn: withdrawnLabels } : {}), state, usage, firstTextMs, totalMs: Date.now() - t0, modelCalls };
 }

@@ -9,7 +9,7 @@ import { renderBoard } from './board';
 import { v2HomeworkFacts, v2HomeworkGuardFacts, v2SheetFacts } from './homework-facts';
 import { renderGoalStatus } from './plan-map';
 import type { V2Session, V2State } from './types';
-import { discussionOf, effectiveMinutes, lastReplyNotes, renderThinking } from './discussion';
+import { discussionOf, effectiveMinutes, lastReplyNotes, reflectAsked, reflectAtMinutes, renderThinking, stagePace, untoldCases } from './discussion';
 
 /** After the tutor chose to keep listening: how long the student stays silent before it is told so (TutorVoiceV2).
  *  At that point silence is no longer open to it: it kept listening twice and the student sat with a blank
@@ -43,10 +43,14 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // minutes" ran to 10.4).
   const box = discussion ? effectiveMinutes(session.timeBoxMinutes, state.thinking) : session.timeBoxMinutes;
   const left = box ? box - (f.nowMs - state.startedAtMs) / 60000 : 0;
+  const usedExact = (f.nowMs - state.startedAtMs) / 60000;
+  const reflectAt = discussion && session.plan ? reflectAtMinutes(session.plan, box) : null;
+  const reflected = discussion ? reflectAsked(state.history, discussionOf(session.plan)) : false;
+  const reflectDue = reflectAt !== null && usedExact >= reflectAt;
   const lines = [
     // A discussion runs 8–12 minutes and may close early once the person has chosen where to go next: the teaching
     // line's "time for more, not at its close" would hold it open.
-    discussion ? `time: ${usedMin} min used${box ? ` of about ${box}${box !== session.timeBoxMinutes ? ' (the time they said they have)' : ''}; ${left > box * 0.4 ? `about ${Math.round(left)} left: plenty of time, not yet time to reflect or close unless they ask` : left > 4 ? `about ${Math.round(left)} left` : left > 1.5 ? `about ${Math.round(left)} left: time to reflect and choose a direction` : 'the time is up'}` : ''}` :
+    discussion ? `time: ${usedMin} min used${box ? ` of about ${box}${box !== session.timeBoxMinutes ? ' (the time they said they have)' : ''}; ${left > 1.5 && reflectDue ? `about ${Math.round(left)} left: time to ask what they are thinking now${reflected ? ' (asked)' : ''} and then what they would like to explore next` : left > box * 0.4 ? `about ${Math.round(left)} left: plenty of time, not yet time to reflect or close unless they ask` : left > 4 ? `about ${Math.round(left)} left` : left > 1.5 ? `about ${Math.round(left)} left: time to reflect and choose a direction` : `the time is up${state.thinking?.direction ? '' : ': they have not named a direction, so the close names none'}`}` : ''}` :
     // What is left, said outright: with only "22 used of 30" the tutor said goodbye, was refused the close, and
     // took the goodbye back in the same breath (embed-1794593747478, embed-1794595194384).
     // Homework: a solved problem does not go on spending the student's minutes.
@@ -69,6 +73,11 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   lines.push(`your note: ${state.note.trim() || '(empty — nothing written yet)'}`);
   const thinking = discussion ? renderThinking(state.thinking) : '';
   if (thinking) lines.push(thinking);
+  const pace = discussion && session.plan && !reflectDue ? stagePace(session.plan, state.goals, usedExact, box) : '';
+  if (pace) lines.push(pace);
+  const meta = state.history.length ? discussionOf(session.plan) : null;
+  const untold = meta ? untoldCases(meta, state.history) : [];
+  if (untold.length) lines.push(`not yet told to them: ${untold.map((c) => c.title).join('; ')}. They know nothing of ${untold.length === 1 ? 'it' : 'these'}: no name or detail from ${untold.length === 1 ? 'it' : 'them'} until the reply that tells it in full. That reply tells it at once: it does not ask whether to go on, and it does not say a case is coming`);
   const lastNotes = discussion ? lastReplyNotes(state.history, session.mode === 'voice', f.heard) : [];
   if (lastNotes.length) lines.push(`your last reply: ${lastNotes.join('; ')}`);
   // Said once in the prompt, the length and the opener drift back within a few turns (live test 2, 2026-11-15: replies of

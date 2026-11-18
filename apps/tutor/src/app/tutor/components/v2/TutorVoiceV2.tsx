@@ -48,6 +48,7 @@ import { asksToWait } from '@/lib/tutor/v2/close-heard';
 import { useMicReacquire } from '../../hooks/useMicReacquire';
 import { outsideMathSpans, speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakLessonNotation, speakLetterUnits, speakGroups, speakNumberPlurals, speakSlashes } from '@/lib/tutor/voice/tts-pronunciation';
 import { cueStop, cueTick, cueTurnAccepted, initialThinkingCue } from '@/lib/tutor/voice/thinking-cue';
+import { useScreenAwake } from './useScreenAwake';
 import { playThinkingPulse, playTurnChime, primeThinkingCueAudio } from '@/lib/tutor/voice/thinking-cue-audio';
 
 export interface TutorVoiceV2Props extends Omit<V2TurnsConfig, 'mode' | 'onSentence' | 'onCut' | 'closeDelayMs'> {
@@ -482,6 +483,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
 
   // The student's voice. Exactly one recogniser owns the microphone, chosen as v1 chooses it.
   const listening = started && realtime.isConnected && !props.standby && !turns.closed;
+  // The screen stays on while the conversation runs (useScreenAwake.ts).
+  useScreenAwake(started && !turns.closed, props.onDebugEvent);
   const onTranscript = useCallback((t: PerceptionTranscript) => heard(t.text), [heard]);
   const onPartial = useCallback((x: { text: string }) => { setComposerStatus((was) => ({ ...was, heard: x.text })); hearingPartial(x.text); }, [hearingPartial]);
   const onSpeechStart = useCallback(() => {

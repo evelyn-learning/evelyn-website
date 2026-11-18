@@ -31,7 +31,7 @@ export default async function EditPage({
   const base = await ksBase();
   const { itemId } = await params;
   const q = ctxQuery(parseCtx(await searchParams));
-  const data = await getItem(itemId);
+  const data = await getItem(itemId, undefined, user.role);
   if (!data) notFound();
   const { item, solution, activity } = data;
   const md = (k: string) => solution?.sections.find((s) => s.kind === k)?.md ?? "";
@@ -47,7 +47,7 @@ export default async function EditPage({
         <h1>{item.version ? `Revise solution (now v${item.version})` : "Write solution"}</h1>
         <p className="ks-sub">
           Markdown with LaTeX: <code>$…$</code> inline, <code>$$…$$</code> display. Figures: <code>```figure alt=&quot;…&quot;</code> with inline SVG ≤ 240 px.
-          Saving creates a new version; Castle Rock always sees the latest.
+          Saving creates a new version; Castle Rock sees it once it is sent for review.
         </p>
         <div className="ks-split">
           <section className="ks-card ks-question">

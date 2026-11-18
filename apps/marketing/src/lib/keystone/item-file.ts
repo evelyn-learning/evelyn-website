@@ -39,7 +39,11 @@ const HEADING_TO_KIND: Record<string, SectionKind | "question" | "options"> = {
   "common errors": "errors",
 };
 
-export function parseItemFile(source: string): ParsedItem {
+/**
+ * `questionOptional`: a solution-only file for an item whose question is already
+ * in the database (it arrived as QTI) — front matter + the solution sections.
+ */
+export function parseItemFile(source: string, opts: { questionOptional?: boolean } = {}): ParsedItem {
   const { data, content } = matter(source);
   const itemId = String(data.itemId ?? "").trim();
   if (!itemId) throw new Error("itemId missing in front matter");
@@ -65,7 +69,7 @@ export function parseItemFile(source: string): ParsedItem {
     else if (kind === "options") options = parseOptions(body);
     else if (body) found.set(kind, body);
   }
-  if (!questionMd) throw new Error(`${itemId}: no Question section`);
+  if (!questionMd && !opts.questionOptional) throw new Error(`${itemId}: no Question section`);
 
   return {
     meta: {

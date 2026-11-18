@@ -10,7 +10,10 @@ import fs from 'node:fs';
 
 // Keep in step with DISCUSSION_VERDICT_WORDS in src/lib/tutor/v2/discussion.ts.
 const VERDICT = /\b(?:that's (?:right|correct|wrong|exactly right)|you're (?:right|correct|wrong)|exactly right|correct!|great (?:answer|point|question|thinking)|excellent|perfect(?:ly put)?|well said|spot on|love that|brilliant)\b/gi;
-const COMPLAINTS = ['complaint_reask', 'complaint_ignored', 'complaint_lost', 'move_on', 'verdict_only', 'complaint_unheard'];
+const COMPLAINTS = ['complaint_reask', 'complaint_ignored', 'complaint_lost', 'move_on', 'verdict_only', 'complaint_unheard', 'complaint_steered', 'complaint_prescribed'];
+// Keep in step with DISCUSSION_HYPOTHETICAL in src/lib/tutor/v2/discussion.ts.
+const HYPOTHETICAL = /\b(?:picture|imagine|think of|suppose|consider|what about|take) (?:a|one|another) (?:student|child|pupil|kid|learner) (?:who|that|whose)\b/i;
+const lastQuestionWords = (t) => ((t.split(/(?<=[.!?])\s+/).filter((x) => x.trim().endsWith('?')).pop() ?? '').split(/\s+/).filter(Boolean).length);
 // Keep in step with DISCUSSION_JUDGING_OPENER in src/lib/tutor/v2/discussion.ts.
 const JUDGING_OPENER = /^\s*(?:that'?s|that is|this is|you'?re right|good|great|fair|nice|interesting|what a)\b/i;
 
@@ -34,6 +37,10 @@ for (const f of process.argv.slice(2).filter((x) => x.endsWith('.json') && !x.en
     permissionAsks: tutor.filter((t) => /would you like to (?:look|go|move|turn)|shall we (?:look|move|go)|want to (?:look|move) (?:at|on)/i.test(t)).length,
     directionAsks: tutor.filter((t) => /explore (?:next|further)|most (?:valuable|useful) (?:for you )?to explore|take (?:this|one thread) (?:next|further)/i.test(t)).length,
     complications: b.thinking?.complications ?? 0,
+    hypotheticals: tutor.filter((t) => HYPOTHETICAL.test(t)).length,
+    longQuestions: tutor.filter((t) => lastQuestionWords(t) > 22).length,
+    saidShift: tutor.filter((t) => /\b(?:shift(?:ed)?|changed? your mind|you(?:'ve| have) moved)\b/i.test(t)).length,
+    steered: b.thinking?.steered ? 'y' : '',
     ownExample: b.thinking?.example ? 'y' : '',
     stockStruggling: tutor.filter((t) => /finds writing hard|struggl\w* (?:writer|student)|keeps? them going/i.test(t)).length,
     stockTimed: tutor.filter((t) => /timed|in-class essay|without the tool in class/i.test(t)).length,

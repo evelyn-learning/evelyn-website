@@ -17,12 +17,13 @@ export default async function ExportPage({ searchParams }: { searchParams: Promi
   const user = await requireUser(can.export);
   const base = await ksBase();
   const sp = await searchParams;
+  // Rows read as Castle Rock technical sees them (released version and answer), matching what the download carries.
   const [approvedTotal, doneTotal] = await Promise.all([countItems({ stage: "approved" }), countItems({ stage: "delivered" })]);
   const ap = pageOf(sp.ap, approvedTotal);
   const dp = pageOf(sp.dp, doneTotal);
   const [approved, done] = await Promise.all([
-    listItems({ stage: "approved" }, { skip: ap.skip, limit: PAGE_SIZE }),
-    listItems({ stage: "delivered" }, { skip: dp.skip, limit: PAGE_SIZE }),
+    listItems({ stage: "approved", role: "tech" }, { skip: ap.skip, limit: PAGE_SIZE }),
+    listItems({ stage: "delivered", role: "tech" }, { skip: dp.skip, limit: PAGE_SIZE }),
   ]);
   const { Activity } = await ks();
   const lastOf = async (ids: string[], match: Record<string, unknown>) =>

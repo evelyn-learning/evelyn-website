@@ -1,5 +1,5 @@
 import JSZip from "jszip";
-import { ITEM_TYPE_LABEL, SECTION_TITLE } from "./config";
+import { ITEM_TYPE_LABEL, SECTION_TITLE, sectionTitle, answerSeenBy, releasedVersionOf } from "./config";
 import { ks, type ItemDoc, type SolutionDoc } from "./db";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
@@ -34,7 +34,7 @@ async function build(item: ItemDoc, sol: SolutionDoc): Promise<{ sections: { tit
   for (const s of sol.sections) {
     const r: Omit<Built, "images"> = await renderForSolaro(s.md, `${item.itemId}-${s.kind}`, resolveImage);
     files.push(...r.files);
-    sections.push({ title: SECTION_TITLE[s.kind], html: toXhtml(r.html) });
+    sections.push({ title: sectionTitle(s.kind, item.course) ?? SECTION_TITLE[s.kind], html: toXhtml(r.html) });
   }
   return { sections, files, images: [...images] };
 }
@@ -65,19 +65,19 @@ ${steps}
 }
 
 /** Their QTI item with our solution in modalFeedback "solution" (theirs replaced). */
-function qtiItem(apip: string, sections: { title: string; html: string }[]): string {
+export function qtiItem(apip: string, sections: { title: string; html: string }[]): string {
   // QTI body elements take no style attribute; vertical-align lives in solution.html only.
   const body = sections
     .map((s) => `<div class="step"><div class="text">${esc(s.title)}</div>${s.html.replace(/\sstyle="[^"]*"/g, "").trim()}</div>`)
     .join("");
   const feedback = `<modalFeedback outcomeIdentifier="FEEDBACK" showHide="show" identifier="solution">${body}</modalFeedback>`;
   if (/<modalFeedback\b[^>]*identifier="solution"[\s\S]*?<\/modalFeedback>/.test(apip)) {
-    return apip.replace(/<modalFeedback\b[^>]*identifier="solution"[^>]*>[\s\S]*?<\/modalFeedback>/, feedback);
+    return apip.replace(/<modalFeedback\b[^>]*identifier="solution"[^>]*>[\s\S]*?<\/modalFeedback>/, () => feedback);
   }
-  return apip.replace(/<\/assessmentItem>\s*$/, `${feedback}</assessmentItem>`);
+  return apip.replace(/<\/assessmentItem>\s*$/, () => `${feedback}</assessmentItem>`);
 }
 
-function qtiManifest(itemId: string, files: string[]): string {
+export function qtiManifest(itemId: string, files: string[]): string {
   const deps = files.map((f) => `<file href="${esc(f)}" />`).join("");
   return `<?xml version="1.0" encoding="UTF-8"?><manifest xmlns="http://www.imsglobal.org/xsd/imscp_v1p1" identifier="Manifest_${itemId}"><metadata><schema>QTIv2.1 Package</schema><schemaversion>1.0.0</schemaversion></metadata><organizations /><resources><resource identifier="item_${itemId}" type="imsqti_item_xmlv2p1" href="item_${itemId}_apip.xml"><file href="item_${itemId}_apip.xml" /><file href="item_${itemId}_metadata.xml" />${deps}</resource></resources></manifest>`;
 }
@@ -93,8 +93,12 @@ export async function buildExport(itemIds: string[]): Promise<Uint8Array> {
   const zip = new JSZip();
   const manifest = [["item_id", "subject", "course", "item_type", "key", "evelyn_answer", "version", "approved_at", "sections", "qti_package", "animated"]];
 
-  for (const item of items) {
-    const sol = await Solution.findOne({ itemId: item.itemId, version: item.version }).lean<SolutionDoc>();
+  for (const raw of items) {
+    // Only what Castle Rock has seen goes out: the released version and the answer released with it.
+    const released = releasedVersionOf(raw);
+    if (!released) continue;
+    const item: ItemDoc = { ...raw, version: released, evelynAnswer: answerSeenBy(raw, "tech") };
+    const sol = await Solution.findOne({ itemId: item.itemId, version: released }).lean<SolutionDoc>();
     if (!sol) continue;
     const approval = await Activity.findOne({ itemId: item.itemId, type: "verdict", verdict: "approved" }).sort({ createdAt: -1 }).lean();
     const approvedAt = approval?.createdAt ? new Date(approval.createdAt).toISOString() : "";
@@ -126,7 +130,7 @@ export async function buildExport(itemIds: string[]): Promise<Uint8Array> {
         animated = "";
       }
     }
-    dir.file("solution.md", sol.sections.map((s) => `## ${SECTION_TITLE[s.kind]}\n\n${s.md}\n`).join("\n"));
+    dir.file("solution.md", sol.sections.map((s) => `## ${sectionTitle(s.kind, item.course) ?? SECTION_TITLE[s.kind]}\n\n${s.md}\n`).join("\n"));
 
     let qtiName = "";
     if (item.qti?.apip) {
@@ -134,6 +138,10 @@ export async function buildExport(itemIds: string[]): Promise<Uint8Array> {
       q.file(`item_${item.itemId}_apip.xml`, qtiItem(item.qti.apip, sections));
       q.file(`item_${item.itemId}_metadata.xml`, item.qti.metadata || "<metadata />");
       const resources: string[] = [];
+      for (const p of item.qti.passages ?? []) {
+        q.file(p.file, p.xml);
+        resources.push(p.file);
+      }
       for (const ref of item.qti.resources ?? []) {
         const data = await readAsset(item.itemId, ref.split("/").pop()!);
         if (data) {

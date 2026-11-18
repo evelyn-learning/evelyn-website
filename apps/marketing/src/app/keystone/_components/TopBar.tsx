@@ -2,11 +2,15 @@ import Link from "next/link";
 import { ROLE_LABEL, can } from "@/lib/keystone/config";
 import type { KsUser } from "@/lib/keystone/auth";
 import { ksBase } from "@/lib/keystone/paths";
+import { waitingForOwnerCount } from "@/lib/keystone/queries";
 
-export async function TopBar({ user, on }: { user: KsUser; on?: "home" | "items" | "upload" | "export" | "account" }) {
+export async function TopBar({ user, on }: { user: KsUser; on?: "home" | "queue" | "animated" | "items" | "upload" | "export" | "account" }) {
   const b = await ksBase();
   const links: { key: typeof on; href: string; label: string }[] = [
     { key: "home", href: b || "/", label: "Overview" },
+    // Evelyn only (decided here on the server; the count query also returns 0 for any other role).
+    ...(user.role === "evelyn" ? [{ key: "queue" as const, href: `${b}/queue`, label: `Queue · ${await waitingForOwnerCount(user.role)}` }] : []),
+    ...(user.role === "evelyn" ? [{ key: "animated" as const, href: `${b}/animated`, label: "Animated" }] : []),
     { key: "items", href: `${b}/items`, label: "All items" },
     { key: "upload", href: `${b}/upload`, label: "Upload items" },
   ];
