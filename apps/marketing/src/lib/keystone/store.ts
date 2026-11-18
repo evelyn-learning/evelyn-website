@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
 import { SECTIONS, VERDICTS, canJudgeSolution, releasedVersionOf, type SectionKind, type Stage, type Verdict } from "./config";
-import { ks, type ActivityDoc, type BatchRow, type ItemDoc, type SectionDoc } from "./db";
+import { ks, type ActivityDoc, type BatchRow, type ItemDoc, type PipelineDoc, type RunDoc, type SectionDoc } from "./db";
 import { renderInline, renderMarkdown } from "./render";
 import { assetUrl, saveAsset } from "./assets";
 import type { QtiItem } from "./qti";
@@ -29,21 +29,49 @@ export async function log(entry: Omit<ActivityDoc, "createdAt"> & { createdAt?: 
   await Item.updateOne({ itemId: entry.itemId }, { $set: { lastActivityAt: createdAt } });
 }
 
+/** The item as a pipeline run found it; a write made "if unchanged" matches these three fields. */
+export type Expect = { stage: Stage; version: number; updatedAt: Date };
+
+/** Thrown by a conditional ("if unchanged") write when the item changed since `Expect` was read. Nothing was written. */
+export class SupersededError extends Error {
+  constructor(itemId: string) {
+    super(`item ${itemId} changed during the run`);
+    this.name = "SupersededError";
+  }
+}
+
+/** Mongo filter for "the item is still as `expect` found it, and not approved or delivered". */
+export function unchangedFilter(itemId: string, expect: Expect) {
+  return {
+    itemId,
+    stage: { $eq: expect.stage, $nin: ["approved", "delivered"] },
+    // version 0 also matches a legacy row without the field
+    version: expect.version ? expect.version : { $in: [0, null] },
+    updatedAt: expect.updatedAt,
+  };
+}
+
 /**
  * Saves a new solution version. `submit` sends it for review at once
  * (releases it); otherwise it stays a draft that Castle Rock cannot see.
  * `stage: "ready"` holds it after our checks: saved, not released, until
  * releaseSolution is called.
+ *
+ * `expect` (the pipeline): the item update is made only if the item is still as
+ * `expect` found it, in one conditional update that also sets `set` (answer,
+ * pipeline record) and the stage; on a mismatch the new solution row is removed
+ * again and SupersededError is thrown. Never combined with `submit`.
  */
 export async function saveSolution(
   itemId: string,
   sections: { kind: SectionKind; md: string }[],
   actor: Actor,
-  opts: { note?: string; submit: boolean; stage?: Stage },
+  opts: { note?: string; submit: boolean; stage?: Stage; expect?: Expect; set?: Partial<Pick<ItemDoc, "evelynAnswer" | "pipeline" | "topic">> },
 ) {
   const { Item, Solution } = await ks();
   const item = await Item.findOne({ itemId }).lean();
   if (!item) throw new Error(`item ${itemId} not found`);
+  if (opts.expect) return saveSolutionIfUnchanged(item, sections, actor, { ...opts, expect: opts.expect });
   const version = (item.version || 0) + 1;
   await Solution.create({
     itemId,
@@ -71,6 +99,42 @@ export async function saveSolution(
   return version;
 }
 
+async function saveSolutionIfUnchanged(
+  item: ItemDoc,
+  sections: { kind: SectionKind; md: string }[],
+  actor: Actor,
+  opts: { note?: string; submit: boolean; stage?: Stage; expect: Expect; set?: Partial<ItemDoc> },
+): Promise<number> {
+  if (opts.submit) throw new Error("a conditional save never releases");
+  const { Item, Solution } = await ks();
+  const itemId = item.itemId;
+  const expect = opts.expect;
+  const same = item.stage === expect.stage && (item.version || 0) === expect.version && item.updatedAt?.getTime() === new Date(expect.updatedAt).getTime();
+  if (!same || item.stage === "approved" || item.stage === "delivered") throw new SupersededError(itemId);
+  const version = (item.version || 0) + 1;
+  // The (itemId, version) unique index also stops a concurrent save of the same version.
+  const created = await Solution.create({ itemId, version, sections: renderSections(itemId, sections), author: actor.name, note: opts.note });
+  const legacy = item.releasedVersion === undefined ? { releasedVersion: item.version || 0, releasedAnswer: item.version ? item.evelynAnswer || "" : "" } : {};
+  const stage: Stage = opts.stage ?? "drafting";
+  const now = new Date();
+  const r = await Item.updateOne(unchangedFilter(itemId, expect), { $set: { ...opts.set, version, ...legacy, stage, updatedAt: now } });
+  if (r.matchedCount !== 1) {
+    await Solution.deleteOne({ _id: created._id });
+    throw new SupersededError(itemId);
+  }
+  await log({
+    itemId,
+    version,
+    type: "revision",
+    body: opts.note || (version === 1 ? "Solution written." : `Revised to version ${version}.`),
+    username: actor.username,
+    name: actor.name,
+    role: actor.role,
+    createdAt: now,
+  });
+  return version;
+}
+
 /**
  * Releases the item's latest solution version to review: Castle Rock can see
  * it from now on. Logs a "Sent for review." revision unless `log: false`
@@ -94,13 +158,15 @@ export async function releaseSolution(itemId: string, actor: Actor, opts: { log?
  * as a key query instead of writing a solution. The working is stored as HTML.
  * Nothing here releases a solution.
  */
-export async function raiseKeyQuery(itemId: string, ourAnswer: string, workingMd: string, actor: Actor) {
+export async function raiseKeyQuery(itemId: string, ourAnswer: string, workingMd: string, actor: Actor, opts: { expect?: Expect } = {}) {
   const { Item } = await ks();
   const item = await Item.findOne({ itemId }).select("itemId").lean();
   if (!item) throw new Error(`item ${itemId} not found`);
   const now = new Date();
   const keyQuery = { ourAnswer: ourAnswer.trim(), workingHtml: renderMarkdown(workingMd, { resolveImage: imageResolver(itemId) }), raisedAt: now };
-  await Item.updateOne({ itemId }, { $set: { stage: "key_query", keyQuery, updatedAt: now } });
+  // With `expect` (the pipeline): only if the item is still as the run found it.
+  const r = await Item.updateOne(opts.expect ? unchangedFilter(itemId, opts.expect) : { itemId }, { $set: { stage: "key_query", keyQuery, updatedAt: now } });
+  if (opts.expect && r.matchedCount !== 1) throw new SupersededError(itemId);
   await log({ itemId, type: "stage", stage: "key_query", body: "Queried the key.", username: actor.username, name: actor.name, role: actor.role, createdAt: now });
 }
 
@@ -136,6 +202,64 @@ export async function setVerdict(itemId: string, verdict: Verdict, comment: stri
     role: actor.role,
   });
   return stage;
+}
+
+/**
+ * The pipeline's intake check found the question incomplete: Item data needed,
+ * with a verdict row by Evelyn carrying the note for Castle Rock's technical
+ * person. Only if the item is still as `expect` found it (else SupersededError).
+ */
+export async function flagItemDataIfUnchanged(itemId: string, note: string, actor: Actor, expect: Expect) {
+  const { Item } = await ks();
+  const now = new Date();
+  const r = await Item.updateOne(unchangedFilter(itemId, expect), { $set: { stage: "item_data", updatedAt: now } });
+  if (r.matchedCount !== 1) throw new SupersededError(itemId);
+  await log({ itemId, version: expect.version || undefined, type: "verdict", verdict: "item_data", body: note, username: actor.username, name: actor.name, role: actor.role, createdAt: now });
+}
+
+/** Records the pipeline's flags / hold on an item and nothing else (stage and updatedAt unchanged). Only if unchanged (else SupersededError). */
+export async function setPipelineIfUnchanged(itemId: string, pipeline: PipelineDoc, expect: Expect) {
+  const { Item } = await ks();
+  const r = await Item.updateOne(unchangedFilter(itemId, expect), { $set: { pipeline } });
+  if (r.matchedCount !== 1) throw new SupersededError(itemId);
+}
+
+/** The latest reviewer verdict on an item (pipeline: key confirmed, changes asked). */
+export async function lastVerdict(itemId: string): Promise<Pick<ActivityDoc, "verdict" | "body" | "createdAt"> | null> {
+  const { Activity } = await ks();
+  return Activity.findOne({ itemId, type: "verdict" }).sort({ createdAt: -1, _id: -1 }).select("verdict body createdAt").lean();
+}
+
+/** The sections of the item's latest solution version, or null. */
+export async function latestSections(itemId: string): Promise<{ kind: SectionKind; md: string }[] | null> {
+  const { Solution } = await ks();
+  const s = await Solution.findOne({ itemId }).sort({ version: -1 }).lean();
+  return s ? s.sections.map((x) => ({ kind: x.kind, md: x.md })) : null;
+}
+
+// --- pipeline runs ---
+
+/** Inserts or replaces the run record (itemId, runId). */
+export async function saveRun(run: RunDoc) {
+  const { Run } = await ks();
+  await Run.replaceOne({ itemId: run.itemId, runId: run.runId }, run, { upsert: true });
+}
+
+export async function getRun(itemId: string, runId: string): Promise<RunDoc | null> {
+  const { Run } = await ks();
+  return Run.findOne({ itemId, runId }).select("-_id -__v").lean<RunDoc>();
+}
+
+/** The latest run of the item that can be resumed: not finished, or ended in an error of ours ("failed"). */
+export async function resumableRun(itemId: string): Promise<RunDoc | null> {
+  const last = await latestRun(itemId);
+  return last && (!last.result || last.result === "failed") ? last : null;
+}
+
+/** The item's latest run (any result), or null. */
+export async function latestRun(itemId: string): Promise<RunDoc | null> {
+  const { Run } = await ks();
+  return Run.findOne({ itemId }).sort({ startedAt: -1 }).select("-_id -__v").lean<RunDoc>();
 }
 
 export async function addComment(itemId: string, body: string, actor: Actor) {

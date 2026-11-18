@@ -27,6 +27,59 @@ export type KeyQueryDoc = { ourAnswer: string; workingHtml: string; raisedAt: Da
 
 export type OptionDoc = { label: string; html: string; md?: string };
 
+/** Why the pipeline holds an item for Praveen (see pipeline/run.ts). Internal: never shown to the client. */
+export type Flag =
+  | "solvers_split"
+  | "second_failure"
+  | "written_response"
+  | "type_not_supported"
+  | "no_agreement"
+  | "key_confirmed_by_reviewer"
+  | "section_title_unset"
+  | "step_failed"
+  | "sample"
+  /** match, gapMatch, order or inlineChoice: no real sample of these kinds verified end to end yet. */
+  | "unverified_type";
+
+/** What the solutions pipeline last decided about an item. heldFor is set whenever flags is not empty. */
+export type PipelineDoc = { flags: Flag[]; passedAt?: Date; releaseAt?: Date; heldFor?: "praveen" };
+
+export type Step = "intake" | "course" | "cause" | "solve" | "write" | "calc" | "working" | "audit" | "render";
+export type RunResult = "ready" | "held" | "item_data" | "key_query" | "course_missing" | "superseded" | "failed";
+export type RunStep = {
+  step: Step;
+  /** "<step>#<n>": the n-th time this step ran in the run; resume reuses the output under the same key. */
+  key: string;
+  at: Date;
+  ok: boolean;
+  output: unknown;
+  cost: number;
+  model?: string;
+};
+
+/** One pipeline run of one item. Internal record (may carry model ids); never shown to the client. */
+export type RunDoc = {
+  itemId: string;
+  runId: string;
+  startedAt: Date;
+  finishedAt?: Date;
+  mode: "fresh" | "key_right" | "changes";
+  startedFrom: { stage: Stage; version: number; updatedAt: Date };
+  steps: RunStep[];
+  corrections: number;
+  /** changes_requested: the cause proposed from the reviewer's note. */
+  cause?: "answer" | "working" | "format" | "style" | "other";
+  result?: RunResult;
+  /** What the item would have become when a flag held it instead (e.g. a key query on an unverified type). */
+  wouldBe?: string;
+  flags: Flag[];
+  cost: number;
+  /** false: no local asset folder, the intake image check was skipped. */
+  assetsChecked: boolean;
+  dryRun?: boolean;
+  error?: string;
+};
+
 export type ItemDoc = {
   itemId: string;
   subject: string;
@@ -64,6 +117,8 @@ export type ItemDoc = {
   batchId?: string;
   /** When the item (or its spreadsheet row) last arrived, whichever is later. */
   receivedAt?: Date;
+  /** Set by the solutions pipeline. Undefined on items it never ran on. */
+  pipeline?: PipelineDoc;
   showcase: boolean;
   priorStatus?: string;
   reviewNote?: string;
@@ -137,6 +192,7 @@ export type OutboxDoc = {
 };
 
 type Models = {
+  Run: Model<RunDoc>;
   Outbox: Model<OutboxDoc & { openKey?: string }>;
   Batch: Model<BatchDoc>;
   User: Model<UserDoc>;
@@ -218,6 +274,10 @@ function defineModels(conn: Connection): Models {
     courseSource: String,
     batchId: String,
     receivedAt: Date,
+    pipeline: {
+      type: new Schema({ flags: [String], passedAt: Date, releaseAt: Date, heldFor: String }, { _id: false }),
+      required: false,
+    },
     showcase: { type: Boolean, default: false },
     priorStatus: String,
     reviewNote: String,
@@ -284,7 +344,28 @@ function defineModels(conn: Connection): Models {
   });
   Outbox.index({ kind: 1, batchId: 1, draftedAt: 1 });
   Outbox.index({ openKey: 1 }, { unique: true, sparse: true });
+  const Run = new Schema<RunDoc>({
+    itemId: { type: String, required: true },
+    runId: { type: String, required: true },
+    startedAt: Date,
+    finishedAt: Date,
+    mode: String,
+    startedFrom: { type: Schema.Types.Mixed },
+    steps: { type: Schema.Types.Mixed, default: [] },
+    corrections: { type: Number, default: 0 },
+    cause: String,
+    result: String,
+    wouldBe: String,
+    flags: [String],
+    cost: { type: Number, default: 0 },
+    assetsChecked: Boolean,
+    dryRun: Boolean,
+    error: String,
+  });
+  Run.index({ itemId: 1, runId: 1 }, { unique: true });
+  Run.index({ itemId: 1, startedAt: -1 });
   return {
+    Run: conn.model<RunDoc>("Run", Run, "runs"),
     Outbox: conn.model<OutboxDoc & { openKey?: string }>("Outbox", Outbox, "outbox"),
     Batch: conn.model<BatchDoc>("Batch", Batch, "batches"),
     User: conn.model<UserDoc>("User", User, "users"),
