@@ -690,10 +690,17 @@ function gemini(reply: unknown, seen: { body: any }[] = []) {
 }
 async function main() {
   const it = item({ interactions: [choice], keys: { R1: ["B"] } });
-  assert.deepEqual(await intakeModel(it, [], gemini({ complete: true, missing: [] })), { complete: true, missing: [] }, "complete reply");
-  assert.deepEqual(await intakeModel(it, [], gemini({ complete: false, missing: ["the table"] })), { complete: false, missing: ["the table"] }, "missing reply");
-  assert.deepEqual(await intakeModel(it, [], gemini({ complete: true, missing: ["the table"] })), { failed: "inconsistent reply" }, "inconsistent: complete with missing");
-  assert.deepEqual(await intakeModel(it, [], gemini({ complete: false, missing: [] })), { failed: "inconsistent reply" }, "inconsistent: incomplete without missing");
+  // cost and model are reported on every outcome; the rest of the reply is compared without them
+  const bare = async (p: ReturnType<typeof intakeModel>) => {
+    const { cost, model, ...rest } = await p;
+    assert.ok(typeof cost === "number" && cost > 0, `cost reported (${cost})`);
+    assert.ok(typeof model === "string" && model.length > 0, `model reported (${model})`);
+    return rest;
+  };
+  assert.deepEqual(await bare(intakeModel(it, [], gemini({ complete: true, missing: [] }))), { complete: true, missing: [] }, "complete reply");
+  assert.deepEqual(await bare(intakeModel(it, [], gemini({ complete: false, missing: ["the table"] }))), { complete: false, missing: ["the table"] }, "missing reply");
+  assert.deepEqual(await bare(intakeModel(it, [], gemini({ complete: true, missing: ["the table"] }))), { failed: "inconsistent reply" }, "inconsistent: complete with missing");
+  assert.deepEqual(await bare(intakeModel(it, [], gemini({ complete: false, missing: [] }))), { failed: "inconsistent reply" }, "inconsistent: incomplete without missing");
   const bad = (await intakeModel(it, [], gemini("not json"))) as { failed: string };
   assert.match(bad.failed, /^shape: /, "not json is a shape failure");
   const down = { fetch: (async () => { throw new TypeError("offline"); }) as unknown as typeof fetch, backoffMs: 0 };

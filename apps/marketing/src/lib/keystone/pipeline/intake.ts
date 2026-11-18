@@ -620,17 +620,19 @@ export async function intakeModel(
   item: ItemDoc,
   images: ModelImage[],
   deps?: ModelDeps,
-): Promise<{ complete: boolean; missing: string[] } | { failed: string }> {
+): Promise<({ complete: boolean; missing: string[] } | { failed: string }) & { cost: number; model: string }> {
   // A stray closing tag in the question must not end the data block early.
   const text = questionAsText(item).replace(/<\s*\/\s*question/gi, "&lt;/question");
   const r = await callModel<{ complete: boolean; missing: string[] }>(
     { role: "intake", system: SYSTEM, user: `<question>\n${text}\n</question>`, images, schema: SCHEMA },
     deps,
   );
-  if (!r.ok) return { failed: `${r.reason}: ${r.detail}` };
+  // cost and model ride along on every outcome (failed calls cost money too).
+  const run = { cost: r.cost, model: r.model };
+  if (!r.ok) return { failed: `${r.reason}: ${r.detail}`, ...run };
   const { complete, missing } = r.value;
-  if (complete === (missing.length > 0)) return { failed: "inconsistent reply" };
-  return { complete, missing };
+  if (complete === (missing.length > 0)) return { failed: "inconsistent reply", ...run };
+  return { complete, missing, ...run };
 }
 
 const SENTENCE: Record<Exclude<IntakeFinding["code"], "missing_image" | "model_missing" | "no_choices">, string> = {
