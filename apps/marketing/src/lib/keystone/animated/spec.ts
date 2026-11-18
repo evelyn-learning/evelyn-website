@@ -121,6 +121,8 @@ export interface Spec {
   practice: Practice;
   /** Numbers the spoken-numbers check lets through, each with the reason it is not in the written solution. */
   allowNumbers?: { n: string; reason: string }[];
+  /** Letter spellings ("dee", "en") the ear check lets through in the voice text: only for a variable that has no name. */
+  allowLetters?: string[];
 }
 
 export interface Timing {
@@ -341,6 +343,15 @@ export function validateSpec(spec: unknown, svgText: string, boardJs?: string): 
     else
       s.allowNumbers.forEach((a, i) => {
         if (!isObj(a) || !filled(a.n) || !filled(a.reason)) errs.push(`allowNumbers ${i + 1}: needs "n" (the number, as a string) and a "reason"`);
+      });
+  }
+
+  // allowLetters
+  if (s.allowLetters !== undefined) {
+    if (!Array.isArray(s.allowLetters)) errs.push(`"allowLetters" must be a list`);
+    else
+      s.allowLetters.forEach((a, i) => {
+        if (!filled(a) || !/^[A-Za-z]+$/.test(a.trim())) errs.push(`allowLetters ${i + 1}: needs a letter spelling as one word ("dee", "en")`);
       });
   }
   return errs;

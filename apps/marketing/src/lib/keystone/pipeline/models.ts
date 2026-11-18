@@ -3,7 +3,7 @@
 // failure. Later pipeline steps never talk to a vendor SDK directly.
 // No `next/*` imports: this runs from tsx scripts on a laptop too.
 
-import type { ModelCall, ModelDeps, ModelFailureReason, ModelReply, ModelSpec, Role, Vendor } from "./types";
+import type { ModelCall, ModelDeps, ModelFailureReason, ModelReply, ModelSpec, Role, TokenUse, Vendor } from "./types";
 import { assertSchemaSupported, parseJsonReply, validate } from "./schema";
 import { IMAGE_TYPES, TransportError, UnreadableReply, retryableStatus, type VendorReply } from "./vendors/common";
 import { callAnthropic } from "./vendors/anthropic";
@@ -85,6 +85,8 @@ export const MODEL_FOR: Record<Role, ModelSpec> = {
   solver3Image: GEMINI,
   compare: GEMINI,
   intake: GEMINI,
+  // Animated solutions: writes one item's spec.json + figure.svg (+ board.js) (animated/author.ts).
+  animator: CLAUDE,
 };
 
 const ALL_ROLES = Object.keys(MODEL_FOR) as Role[];
@@ -159,9 +161,18 @@ export function pricesAt(spec: ModelSpec, now: Date = new Date()): { pricePerMTo
   return p;
 }
 
-export function costOf(spec: ModelSpec, tokensIn: number, tokensOut: number, now?: Date): number {
+/** Prompt-cache multipliers on the input rate (Claude, 5-minute cache): a write costs 1.25×, a read 0.1×.
+ * Checked 2026-11-18: https://platform.claude.com/docs/en/build-with-claude/prompt-caching */
+export const CACHE_WRITE_RATE = 1.25;
+export const CACHE_READ_RATE = 0.1;
+
+/** `tokensIn` is every input token; `cache` says how many of them were cache writes / reads (none by default). */
+export function costOf(spec: ModelSpec, tokensIn: number, tokensOut: number, now?: Date, cache: { write?: number; read?: number } = {}): number {
   const p = pricesAt(spec, now);
-  return (tokensIn / 1e6) * p.pricePerMTokIn + (tokensOut / 1e6) * p.pricePerMTokOut;
+  const write = cache.write ?? 0;
+  const read = cache.read ?? 0;
+  const billedIn = tokensIn - write - read + write * CACHE_WRITE_RATE + read * CACHE_READ_RATE;
+  return (billedIn / 1e6) * p.pricePerMTokIn + (tokensOut / 1e6) * p.pricePerMTokOut;
 }
 
 /** Remove configured key values, and key-shaped tokens (sk-…, AIza…, Bearer …),
@@ -218,8 +229,9 @@ export async function callModel<T>(call: ModelCall, deps: ModelDeps = {}): Promi
   assertKeys([call.role]);
   const key = keyFor(spec.vendor)!;
 
+  let tokens: TokenUse | undefined;
   const failed = (reason: ModelFailureReason, detail: string, cost = 0, model = spec.model): ModelReply<T> =>
-    ({ ok: false, reason, detail: redact(detail), cost, model });
+    ({ ok: false, reason, detail: redact(detail), cost, model, ...(tokens ? { tokens } : {}) });
 
   if (call.images?.length) {
     if (spec.vendor === "deepseek") return failed("shape", "this model cannot read images");
@@ -254,7 +266,9 @@ export async function callModel<T>(call: ModelCall, deps: ModelDeps = {}): Promi
   const model = reply.model || spec.model;
   const fellBack = reply.fellBack ?? false;
   const served = fellBack ? CLAUDE_FALLBACK_PRICES[model] : undefined;
-  const cost = costOf(served ? { ...spec, ...served, priceChanges: undefined } : spec, reply.tokensIn, reply.tokensOut, deps.now);
+  const cache = { write: reply.cacheWriteTokens ?? 0, read: reply.cacheReadTokens ?? 0 };
+  const cost = costOf(served ? { ...spec, ...served, priceChanges: undefined } : spec, reply.tokensIn, reply.tokensOut, deps.now, cache);
+  tokens = { in: reply.tokensIn, out: reply.tokensOut, cacheWrite: cache.write, cacheRead: cache.read };
 
   if (reply.refusal !== undefined) return failed("refusal", reply.refusal || "refused", cost, model);
   if (!reply.text.trim()) return failed("empty", reply.truncated ? "no text before the output token limit" : "no text in reply", cost, model);
@@ -262,5 +276,5 @@ export async function callModel<T>(call: ModelCall, deps: ModelDeps = {}): Promi
   if (!parsed.ok) return failed("shape", reply.truncated ? `${parsed.detail} (hit the output token limit)` : parsed.detail, cost, model);
   const err = validate(parsed.value, call.schema);
   if (err) return failed("shape", err, cost, model);
-  return { ok: true, value: parsed.value as T, cost, model, ms: Date.now() - started, fellBack };
+  return { ok: true, value: parsed.value as T, cost, model, ms: Date.now() - started, fellBack, tokens };
 }

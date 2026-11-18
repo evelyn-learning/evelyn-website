@@ -79,7 +79,7 @@ const geminiText = (text: string, finishReason = "STOP") => geminiMsg({ candidat
 
 // MODEL_FOR: vendor by role (spec §5, §12)
 {
-  const want: Record<Role, string> = { solver1: "anthropic", author: "anthropic", solver2: "openai", working: "openai", audit: "openai", solver3Text: "deepseek", solver3Image: "gemini", compare: "gemini", intake: "gemini" };
+  const want: Record<Role, string> = { solver1: "anthropic", author: "anthropic", solver2: "openai", working: "openai", audit: "openai", solver3Text: "deepseek", solver3Image: "gemini", compare: "gemini", intake: "gemini", animator: "anthropic" };
   for (const [r, v] of Object.entries(want)) assert.equal(MODEL_FOR[r as Role].vendor, v, r);
   for (const spec of Object.values(MODEL_FOR)) assert.ok(spec.model && spec.pricePerMTokIn > 0 && spec.pricePerMTokOut > 0);
 }
@@ -122,6 +122,33 @@ async function main() {
     assert.equal(b.system, "sys");
     assert.deepEqual(b.output_config.format, { type: "json_schema", schema });
     assert.equal(f.seen[0].headers.get("x-api-key"), "test-key");
+  }
+
+  // animator role: Claude, the tier's model; cached system parts, a larger output limit, token use reported and
+  // cache writes / reads priced at 1.25× / 0.1× the input rate
+  {
+    const spec = MODEL_FOR.animator;
+    assert.equal(spec.model, MODEL_FOR.author.model, "animator follows the Claude tier");
+    const usage = { input_tokens: 200, output_tokens: 500, cache_creation_input_tokens: 3000, cache_read_input_tokens: 5000 };
+    const f = fakeFetch([anthropicMsg([{ type: "text", text: '{"ok":true}' }], "end_turn", usage)]);
+    const r = await callModel<{ ok: boolean }>(call("animator", { system: "a\n\nb", systemParts: ["a", "b"], maxTokens: 32000 }), deps(f.fn));
+    assert.equal(r.ok, true);
+    if (r.ok) {
+      assert.deepEqual(r.tokens, { in: 8200, out: 500, cacheWrite: 3000, cacheRead: 5000 });
+      const want = ((200 + 3000 * 1.25 + 5000 * 0.1) / 1e6) * spec.pricePerMTokIn + (500 / 1e6) * spec.pricePerMTokOut;
+      assert.ok(Math.abs(r.cost - want) < 1e-12, `cache-aware cost (${r.cost} vs ${want})`);
+    }
+    const b = f.seen[0].body;
+    assert.equal(b.max_tokens, 32000);
+    assert.deepEqual(b.system, [
+      { type: "text", text: "a", cache_control: { type: "ephemeral" } },
+      { type: "text", text: "b", cache_control: { type: "ephemeral" } },
+    ]);
+    // without the options the request is as before
+    const g = fakeFetch([anthropicMsg([{ type: "text", text: '{"ok":true}' }])]);
+    const r2 = await callModel<{ ok: boolean }>(call("solver1"), deps(g.fn));
+    assert.equal(g.seen[0].body.max_tokens, 16000);
+    if (r2.ok) assert.deepEqual(r2.tokens, { in: 1000, out: 500, cacheWrite: 0, cacheRead: 0 });
   }
 
   // anthropic: reply that is not JSON → shape (cost still counted)

@@ -181,6 +181,10 @@ const SYMBOLS = /[=+×÷/°²³√^_%·→≈<>−π∆Δθλμ]/g;
 const UNIT = /\d\s*(?:kg|mg|g|km|cm|mm|nm|m|ms|s|min|h|N|J|kJ|W|kW|V|A|Hz|mol|mL|L|kPa|Pa|K|eV|MeV|C|T|M)(?![A-Za-z\d])/g;
 const TRIG = /(?<![A-Za-z])(?:sin|cos|tan|sec|csc|cot)(?![A-Za-z])/g;
 const THREE_NUMBERS = /\d[\d.]*(?:(?:\s*,\s*|\s+)(?:and\s+|then\s+)?\d[\d.]*){2,}/g;
+/** A letter symbol spelled by its sound. A recorded voice read "dee" as "day": the quantity is named instead.
+ * "ex" and "why" (the variables x and y) are heard correctly and stay allowed. */
+export const LETTER_SPELLINGS = ["ay", "cee", "dee", "eff", "aitch", "kay", "el", "em", "en", "ess", "vee", "zee", "zed"] as const;
+const LETTER_SPELLING = new RegExp(`(?<![A-Za-z'’-])(?:${LETTER_SPELLINGS.join("|")})(?![A-Za-z'’-])`, "gi");
 
 /** How many sentences a line holds (a line with no closing mark is one sentence). */
 export function sentenceCount(text: string): number {
@@ -191,10 +195,12 @@ export function sentenceCount(text: string): number {
 
 /**
  * The voice text (speak, or say when a line has no speak) must be written for the ear: no symbols, no bare unit
- * abbreviations, no "sin/cos/tan", no three numbers in a row, and as many sentences as the caption it goes with.
+ * abbreviations, no "sin/cos/tan", no three numbers in a row, no letter symbol spelled by its sound ("dee"; the
+ * spellings in `spec.allowLetters` excepted), and as many sentences as the caption it goes with.
  */
 export function earCheck(spec: Spec): Finding[] {
   const out: Finding[] = [];
+  const allowed = new Set((spec.allowLetters ?? []).map((l) => l.trim().toLowerCase()));
   spec.steps.forEach((st, k) =>
     st.lines.forEach((ln, i) => {
       const where = `step ${k + 1} line ${i + 1}`;
@@ -208,6 +214,9 @@ export function earCheck(spec: Spec): Finding[] {
       if (trig.length) out.push({ where, detail: `${from} abbreviates a trig function; write "sine", "cosine", "tangent": ${trig.join(", ")}` });
       const runs = voice.match(THREE_NUMBERS) ?? [];
       if (runs.length) out.push({ where, detail: `${from} reads three or more numbers in a row: ${runs.map((r) => JSON.stringify(r)).join(", ")}` });
+      const letters = [...new Set((voice.match(LETTER_SPELLING) ?? []).map((l) => l.toLowerCase()))].filter((l) => !allowed.has(l));
+      if (letters.length)
+        out.push({ where, detail: `${from} spells a letter symbol by its sound, which the voice can misread; name the quantity instead ("the slit separation", not "dee"), or list the spelling in allowLetters when the variable has no name: ${letters.join(", ")}` });
       if (ln.speak && sentenceCount(ln.say) !== sentenceCount(ln.speak))
         out.push({ where, detail: `say has ${sentenceCount(ln.say)} sentence(s), speak has ${sentenceCount(ln.speak)}; they must match` });
     }),

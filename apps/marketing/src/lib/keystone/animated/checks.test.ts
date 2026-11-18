@@ -83,6 +83,19 @@ ok(/three or more numbers/.test(ear("The labels are 4, 1, 3, 2.")), "four number
 ok(/three or more numbers/.test(ear("That is 56 360 000.")), "a spaced number is read as three");
 assert.equal(ear("400 plus 500 is 900."), "", "numbers with words between are fine");
 ok(/say has 1 sentence\(s\), speak has 2/.test(ear("One. Two.", "Just one.")), "sentence counts must match");
+// letter symbols spelled by sound (a recorded voice read "dee" as "day")
+for (const w of ["ay", "cee", "dee", "eff", "aitch", "kay", "el", "em", "en", "ess", "vee", "zee", "zed"])
+  ok(new RegExp(`spells a letter symbol by its sound.*name the quantity instead.*: ${w}$`).test(ear(`Then ${w} is small.`)), `"${w}" as a word is flagged`);
+ok(/: dee, en$/.test(ear("Dee over EN, and dee again.")), "any case, each spelling once");
+assert.equal(ear("The slit separation is small."), "", "naming the quantity passes");
+assert.equal(ear("Solve for ex, then why."), "", '"ex" and "why" stay allowed');
+assert.equal(ear("Indeed the seven men deem the day okay, and they've been seen."), "", "only whole words (not indeed, seven, men, deem, okay, they've)");
+assert.equal(ear("The well-en route is e-m shaped, and el-shaped."), "", "a hyphenated part is not a whole word");
+ok(/: dee$/.test(ear("Multiply dee, by two.")), "punctuation around the word still counts");
+ok(/say \(no speak given\) spells a letter symbol/.test(earCheck(edit((s) => (s.steps[1].lines[0] = { say: "Now dee is known." }))).map((f) => f.detail).join(" ")), "checked on say when there is no speak");
+assert.deepEqual(earCheck(edit((s) => { s.steps[1].lines[0] = { say: "Line.", speak: "Then Dee is small." }; s.allowLetters = ["dee"]; })), [], "allowLetters exempts a listed spelling");
+ok(/: en$/.test(earCheck(edit((s) => { s.steps[1].lines[0] = { say: "Line.", speak: "Then dee over en." }; s.allowLetters = ["DEE"]; })).map((f) => f.detail).join(" ")), "allowLetters exempts only what it lists (any case)");
+
 ok(/say \(no speak given\) has symbols/.test(earCheck(edit((s) => (s.steps[1].lines[0] = { say: "F = 12 N." }))).map((f) => f.detail).join(" ")), "say is the voice text when there is no speak");
 
 console.log("animated/checks.test.ts: ok");
