@@ -509,6 +509,21 @@ async function main() {
   const c = stub([msg([{ type: 'text', text: 'Good work today.' }, { type: 'tool_use', id: 't7', name: 'end_lesson', input: { because: 'student_asked', summary: 'Did 0/0 limits.' } }], 'tool_use')]);
   const r3 = await runV2Turn({ session, state: r2.state, studentSaid: 'Can we stop?', callModel: c.call });
   check('end_lesson closes the session without another model call', r3.state.closed && r3.state.closeSummary === 'Did 0/0 limits.' && r3.modelCalls === 1);
+  {
+    // A lesson stopped before its recap ends on a recap page made from the plan's own points.
+    const planR = SEED_AP_CALCBC_U5_FIRST_DERIVATIVE_ANALYSIS;
+    const bye = () => stub([msg([{ type: 'text', text: 'Good work today.' }, { type: 'tool_use', id: 'e9', name: 'end_lesson', input: { because: 'student_asked', summary: 's' } }], 'tool_use')]);
+    const stR = newV2State(1_000_000); applyToModelBoard(stR.board, 'pg', 'new_page', { title: 'Try it' }); stR.goals = { 'concept-first-deriv': { status: 'shown', at: 1 } } as never;
+    const rr = await runV2Turn({ session: { ...session, plan: planR }, state: stR, studentSaid: "I'll just stop here", callModel: bye().call });
+    const note = rr.toolCalls.find((c) => c.name === 'annotate');
+    check('a lesson stopped early ends on a recap page of the plan\'s points, with no further model call', rr.state.closed && rr.modelCalls === 1 && rr.toolCalls.some((c) => c.name === 'new_page' && c.args.title === 'Recap') && /Critical points/.test(String(note?.args.text)) && rr.state.board.pages[rr.state.board.current].title === 'Recap' && !!rr.state.partsSeen?.recap, rr.toolCalls.map((c) => [c.name, c.outcome]));
+    const stN = newV2State(1_000_000); applyToModelBoard(stN.board, 'pg', 'new_page', { title: 'Opening' });
+    const rn = await runV2Turn({ session: { ...session, plan: planR }, state: stN, studentSaid: "I'll just stop here", callModel: bye().call });
+    check('no recap page when the idea was never taught', rn.state.closed && !rn.toolCalls.some((c) => c.name === 'new_page'), rn.toolCalls.map((c) => c.name));
+    const stH = newV2State(1_000_000); applyToModelBoard(stH.board, 'pg', 'new_page', { title: 'Recap' }); stH.goals = { 'concept-first-deriv': { status: 'shown', at: 1 } } as never;
+    const rh = await runV2Turn({ session: { ...session, plan: planR }, state: stH, studentSaid: 'bye', callModel: bye().call });
+    check('no second recap page when one is already up', rh.state.closed && !rh.toolCalls.some((c) => c.name === 'new_page'), rh.toolCalls.map((c) => c.name));
+  }
   const roles = r3.state.history.map((m) => m.role).join(',');
   check('stored history never has two assistant messages in a row', !/assistant,assistant/.test(roles), roles);
 

@@ -892,6 +892,23 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
 
   for (const [id, key] of await ownKeys) if (key && state.ownKeys) state.ownKeys = { ...state.ownKeys, [id]: key };
 
+  // A lesson that ends before its recap ends on a recap all the same. A student who said "I'll just stop here"
+  // got a spoken summary and was left looking at the problem page (AP Calculus BC, portal-8e2d86f3; Praveen
+  // 11-17: open a short recap page). The page is the plan's own points to remember, put up by the engine as
+  // the closing words are said: no further reply, nothing more spoken. Only when the idea itself was taught.
+  if (state.closed && session.plan && !discussion && !session.homework && !session.homeworkSheet && !input.signal?.aborted && process.env.TUTOR_V2_CLOSE_RECAP !== 'off') {
+    const recapPart = session.plan.segments.find((seg) => seg.kind === 'recap');
+    const points = ((recapPart as { mustRemember?: unknown } | undefined)?.mustRemember as unknown[] | undefined ?? []).filter((x): x is string => typeof x === 'string' && !!x.trim());
+    const reached = (id: string) => !!state.goals[id] || !!state.partsSeen?.[id];
+    const taught = session.plan.segments.some((seg) => seg.kind === 'concept' && reached(seg.id));
+    const hasRecapPage = state.board.pages.some((pg) => goalForTitle(session.plan!, pg.title) === recapPart?.id);
+    if (recapPart && points.length && taught && !reached(recapPart.id) && !hasRecapPage && state.board.pages.length) {
+      const stamp = nowMs.toString(36);
+      settle({ type: 'tool_use', id: `recap_page_${stamp}`, name: 'new_page', input: { title: 'Recap' } } as Anthropic.ToolUseBlock, true);
+      settle({ type: 'tool_use', id: `recap_note_${stamp}`, name: 'annotate', input: { text: points.slice(0, 6).map((x) => `- ${x.trim()}`).join('\n') } } as Anthropic.ToolUseBlock, true);
+    }
+  }
+
   // A spoken reply that asks the student nothing leaves them not knowing whose move it is. Going on unasked a
   // moment later turned a page the student was still reading and talked over their answer (AP Lit and AP Calc BC,
   // 2026-11-11: "give the student the chance to say yes, I get this"). The reply ends by handing over instead.
