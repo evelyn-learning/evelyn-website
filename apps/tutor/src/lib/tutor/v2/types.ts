@@ -103,6 +103,9 @@ export interface V2State {
    *  for the tutor to check answers by ('' until it has been worked). The plan's problems carry their answers;
    *  these had none, and the tutor agreed with a wrong answer (AP Calculus BC, portal-8e2d86f3). */
   ownKeys?: Record<string, string>;
+  /** The question the tutor last asked aloud, when it has an answer that can be worked out: that answer, worked apart
+   *  from the lesson while the student thinks, for the tutor to check their reply by. Replaced or dropped by the next reply. */
+  askedKey?: { q: string; key: string };
   /** Gaps the tutor has found in what the student knows, with how far each has been worked on. Optional: older states have none. */
   gaps?: V2Gap[];
   board: V2Board;

@@ -944,7 +944,21 @@ async function main() {
     check('a problem left unworked by an interrupted turn is worked at the end of the next', /max 18/.test(ra.state.ownKeys?.[keys[0]?.[0] ?? 'x'] ?? ''), ra.state.ownKeys);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const fs = require('fs') as typeof import('fs'); const path = require('path') as typeof import('path');
-    check('the endpoint keeps the worked answers between turns', /ownKeys \? \{ ownKeys \}/.test(fs.readFileSync(path.join(__dirname, '../src/app/api/tutor/brain-v2/turn/route.ts'), 'utf8')));
+    {
+      // A question asked aloud with no card: its answer is worked after the reply and is a fact on the next turn only.
+      const ask = stub([msg([{ type: 'text', text: 'Good. Now set 3x^2 - 3 = 0. What values of x do you get?' }], 'end_turn'), msg([{ type: 'text', text: 'x^2 = 1, so x = 1 and x = -1. Check: 3(1) - 3 = 0.' }], 'end_turn')]);
+      const rq1 = await runV2Turn({ session: ownVoice, state: newV2State(1_000_000), studentSaid: 'the derivative is 3x squared minus 3', callModel: ask.call, boardPass: false, askedKey: true });
+      check('a question asked aloud is worked out after the reply', rq1.modelCalls >= 1 && /x = 1 and x = -1/.test(rq1.state.askedKey?.key ?? '') && /What values of x/.test(rq1.state.askedKey?.q ?? '') && /worked out apart/.test(JSON.stringify(ask.seen[1]?.messages ?? '') ) === false && /Find what the tutor is leaving/.test(JSON.stringify(ask.seen[1]?.messages ?? '')), [rq1.state.askedKey, ask.seen.length]);
+      check('and the tutor is given it when the student answers', /the question you asked last \("What values of x do you get\?"\).*x = 1 and x = -1/.test(renderFacts(ownVoice, rq1.state, { nowMs: 1_060_000 })));
+      check('the worked answer is not spoken', !/Check: 3\(1\)/.test(rq1.spoken));
+      const open = stub([msg([{ type: 'text', text: 'We have f(x) = x^3 - 3x here. What do you notice about its shape?' }], 'end_turn'), msg([{ type: 'text', text: 'open' }], 'end_turn')]);
+      const ro2 = await runV2Turn({ session: ownVoice, state: structuredClone(rq1.state), studentSaid: 'plus and minus one', callModel: open.call, boardPass: false, askedKey: true });
+      check('a question with nothing to work out leaves no answer, and the old one is dropped', ro2.state.askedKey === undefined, ro2.state.askedKey);
+      const plain = stub([msg([{ type: 'text', text: 'Shall we go on to the next part?' }], 'end_turn')]);
+      const rp2 = await runV2Turn({ session: ownVoice, state: newV2State(1_000_000), studentSaid: 'ok', callModel: plain.call, boardPass: false, askedKey: true });
+      check('a question with no mathematics about it costs no call', rp2.modelCalls === 1 && plain.seen.length === 1, plain.seen.length);
+    }
+    check('the endpoint keeps the worked answers between turns', /ownKeys \? \{ ownKeys \}/.test(fs.readFileSync(path.join(__dirname, '../src/app/api/tutor/brain-v2/turn/route.ts'), 'utf8')) && /askedKey \? \{ askedKey \}/.test(fs.readFileSync(path.join(__dirname, '../src/app/api/tutor/brain-v2/turn/route.ts'), 'utf8')));
   }
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);

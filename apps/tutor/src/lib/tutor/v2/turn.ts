@@ -49,6 +49,8 @@ export const V2_MAX_MODEL_CALLS = 5;
 /** The longest answer key kept for a problem of the tutor's own. */
 export const V2_OWN_KEY_CHARS = 700;
 /** Asked on a clean page, with the problem alone: the same model that agreed with a wrong root mid-lesson solves it right. */
+/** The answer to a question asked aloud. Asked to solve from the problem as stated: the board may hold the student's own slip. */
+export const V2_ASKED_KEY = 'A tutor has just said the words below to a student, with the board as shown. Find what the tutor is leaving the student to answer or to do: the last question asked or task set ("solve it and tell me what you get" is one). If it has a definite answer that can be worked out from what is given (a value, an expression, a set of values, an interval, which of two things is larger, whether a statement of fact is true), work it out yourself, carefully and completely, from the problem as it was set. Do not rely on working shown on the board or quoted by the tutor: it may be the student\'s and may be wrong. Check every value by substituting it back. Then write the answer with the working that leads to it, in plain text, under 90 words. If there is no such question or task, or it has no such answer (it asks what the student thinks or notices, whether they follow, what they would like to do, or to explain something in their own words), write only the word: open';
 export const V2_OWN_KEY = 'A tutor has just set a student the problem below. Work it out yourself, carefully and completely, so the tutor can check the student\'s work against yours. Then write the answer key as plain text in under 110 words: each step that produces a value the student will have to find (with the value), then the final answer. Check every value by substituting it back before you write it. If the problem cannot be answered as it is written, say so in one sentence instead. Write the key only: no greeting, no advice on teaching.';
 export const V2_MAX_TOKENS = 8000;
 export const V2_NOTE_MAX_CHARS = 1500;
@@ -87,6 +89,8 @@ export interface V2TurnInput {
   mathsCheck?: boolean;
   /** Work out, after the reply, a problem the tutor set that is not the plan's. Default: on for real model calls, off for a stubbed one. */
   ownKey?: boolean;
+  /** Work out the answer to a question asked aloud (default: on for real model calls, off for stubs). */
+  askedKey?: boolean;
   callModel?: V2ModelCall;
   applyBoard?: V2BoardPort;
   onText?: (delta: string) => void;
@@ -880,6 +884,30 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     }))
     : Promise.resolve([]);
 
+  // The same for a question asked aloud with no card. Most of what a tutor asks is asked this way ("what do you
+  // get when you set that to zero?"), and the reply to it is judged with nothing to judge by. The answer is worked
+  // while the tutor is still saying the question, and is a fact on the next turn only: the next reply that speaks
+  // replaces it or drops it. Not when this reply put up a problem card (the card has its own answer), and not for
+  // a question with no answer to work out.
+  const saidAloud = spoken.join(' ');
+  // Asked as a question or as a thing to do: "Solve 3x² − 12 = 0 and tell me what you get." has no question mark,
+  // and in the first replay such a reply got no answer worked and the tutor agreed with a wrong one.
+  const sentencesAloud = saidAloud.split(/(?<=[.?!])\s+/).map((x) => x.trim()).filter(Boolean);
+  const lastAsk = [...sentencesAloud].reverse().find((x) => /\?["')\]]*$/.test(x) && !/^(is that clear|does that make sense|are you with me|shall i go over)/i.test(x)) ?? sentencesAloud[sentencesAloud.length - 1];
+  const cardNow = toolCalls.some((c) => c.name === 'show_problem' && !/^not /.test(c.outcome));
+  const mathsInView = () => (state.board.pages[state.board.current]?.items ?? []).some((it) => (it.tool === 'show_equation' || it.tool === 'show_problem' || it.tool === 'show_function_graph') && /\d/.test(it.summary));
+  const askedKey: Promise<string | null> = (input.askedKey ?? (!input.callModel && process.env.TUTOR_V2_ASKED_KEY !== 'off')) && !!lastAsk && !cardNow && !discussion && !session.homework && !session.homeworkSheet && !state.closed && !input.signal?.aborted && (speaksMaths(saidAloud, 3) || mathsInView())
+    ? callModel({
+      model: '', max_tokens: 2500, thinking: { type: 'adaptive' }, output_config: { effort: 'medium' },
+      messages: [{ role: 'user', content: `${V2_ASKED_KEY}\n\nThe board shows:\n${renderBoard(state.board)}\n\nThe tutor said:\n${saidAloud.slice(-900)}` }],
+    } as unknown as Anthropic.MessageCreateParamsNonStreaming, undefined, input.signal).then((response) => {
+      usage.inputTokens += response.usage.input_tokens; usage.outputTokens += response.usage.output_tokens;
+      usage.cacheReadTokens += response.usage.cache_read_input_tokens ?? 0; usage.cacheCreationTokens += response.usage.cache_creation_input_tokens ?? 0;
+      const text = response.content.filter((b): b is Anthropic.TextBlock => b.type === 'text').map((b) => b.text).join(' ').replace(/\s+/g, ' ').trim();
+      return text && !/^\W*open\b/i.test(text) && text.length > 8 ? text.slice(0, V2_OWN_KEY_CHARS) : null;
+    }).catch(() => null)
+    : Promise.resolve(null);
+
   const fix = await mathsCheck;
   if (fix && !state.closed && !input.signal?.aborted) {
     const words = `One correction: ${fix}`;
@@ -891,6 +919,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   }
 
   for (const [id, key] of await ownKeys) if (key && state.ownKeys) state.ownKeys = { ...state.ownKeys, [id]: key };
+  // A reply that spoke has answered the last question or moved on from it; one with no words leaves it standing.
+  const asked = await askedKey;
+  if (spoken.length) { if (asked && lastAsk) state.askedKey = { q: lastAsk.trim().slice(0, 200), key: asked }; else delete state.askedKey; }
 
   // A lesson that ends before its recap ends on a recap all the same. A student who said "I'll just stop here"
   // got a spoken summary and was left looking at the problem page (AP Calculus BC, portal-8e2d86f3; Praveen

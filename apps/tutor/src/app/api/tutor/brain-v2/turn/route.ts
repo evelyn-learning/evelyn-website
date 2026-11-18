@@ -59,7 +59,9 @@ function readState(raw: unknown): V2State | null {
   const problemCards = map(s.problemCards, (v): v is string => typeof v === 'string' && v.length < 80);
   const partsSeen = map(s.partsSeen, (v): v is number => typeof v === 'number' && Number.isFinite(v));
   const ownKeys = map(s.ownKeys, (v): v is string => typeof v === 'string' && v.length <= 800);
-  return { ...(problemCards ? { problemCards } : {}), ...(partsSeen ? { partsSeen } : {}), ...(ownKeys ? { ownKeys } : {}), history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), ...(thinking ? { thinking } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}), ...(homework ? { homework } : {}) };
+  const ak = s.askedKey as { q?: unknown; key?: unknown } | undefined;
+  const askedKey = ak && typeof ak === 'object' && typeof ak.q === 'string' && typeof ak.key === 'string' && ak.key ? { q: ak.q.slice(0, 200), key: ak.key.slice(0, 800) } : undefined;
+  return { ...(problemCards ? { problemCards } : {}), ...(partsSeen ? { partsSeen } : {}), ...(ownKeys ? { ownKeys } : {}), ...(askedKey ? { askedKey } : {}), history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), ...(thinking ? { thinking } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}), ...(homework ? { homework } : {}) };
 }
 
 export async function POST(req: NextRequest) {

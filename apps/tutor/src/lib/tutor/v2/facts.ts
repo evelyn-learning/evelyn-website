@@ -58,6 +58,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // The answer to a problem of the tutor's own that is on the page in view (turn.ts, ownKeys): the latest one.
   const keyed = [...(state.board.pages[state.board.current]?.items ?? [])].reverse().find((it) => state.ownKeys?.[it.id]);
   if (keyed) lines.push(`the problem on the board that you set yourself ("${keyed.summary.replace(/\s+/g, ' ').slice(0, 70)}…"), worked out apart from the lesson for your checking (the student has not seen this; check each thing they say about it against this before you agree or disagree): ${state.ownKeys![keyed.id]}`);
+  // The answer to the question the tutor last asked aloud (turn.ts, askedKey).
+  if (state.askedKey?.key) lines.push(`the question you asked last ("${state.askedKey.q.replace(/\s+/g, ' ').slice(0, 120)}"), worked out apart from the lesson for your checking (the student has not seen this; check what they answer against this before you agree or disagree): ${state.askedKey.key}`);
   if ((state.repliesSinceBoard ?? 0) >= 1) lines.push(`board last written on: ${state.repliesSinceBoard} ${state.repliesSinceBoard === 1 ? 'reply' : 'replies'} ago`);
   if (state.boardProblems?.length) lines.push(`not painted in your last reply:\n${state.boardProblems.map((x) => `  - ${x}`).join('\n')}`);
   if (session.homework) lines.push(...v2HomeworkFacts(session.homework, state.homework));
