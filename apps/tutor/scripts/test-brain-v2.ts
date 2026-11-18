@@ -21,6 +21,7 @@ import { V2_CONSTITUTION } from '../src/lib/tutor/v2/constitution';
 import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, DISCUSSION_VERDICT_WORDS, V2_DISCUSSION_CONSTITUTION, discussionOf, renderDiscussionMap } from '../src/lib/tutor/v2/discussion';
 import { PRIVATE_ECS_AI_LITERACY_CH2 } from '../src/lib/tutor/lesson-plan/private/ecs-ai-literacy-ch2';
 import { SEED_PLANS, getLessonPlan, isPrivatePlan } from '../src/lib/tutor/lesson-plan/store';
+import type { LessonPlan as PlanT } from '../src/lib/tutor/lesson-plan/types';
 import { renderPlanMap } from '../src/lib/tutor/v2/plan-map';
 import { v2Tools } from '../src/lib/tutor/v2/tools';
 import { runV2Turn, v2SessionPart, v2StudentBlock, type V2ModelCall, V2_CHECK_INS } from '../src/lib/tutor/v2/turn';
@@ -28,7 +29,8 @@ import { newV2State, type V2Session } from '../src/lib/tutor/v2/types';
 import { answeredAsItEnded } from '../src/lib/tutor/v2/interrupted';
 import { paintsOnBoard, streamV2Turn } from '../src/lib/tutor/v2/client';
 import { gradeOfLevel, isMathsSubject, isScienceSubject } from '../src/lib/tutor/v2/session-kind';
-import { v2Progress, goalForProblem, goalForTitle, wholeProblem } from '../src/lib/tutor/v2/progress';
+import { v2Progress, goalForProblem, goalForTitle, goalForTalk, laterPartAlone, wholeProblem } from '../src/lib/tutor/v2/progress';
+import * as envsciSeed from '../src/lib/tutor/lesson-plan/seeds/ap-envsci-u1-carbon-water-cycles';
 import { SEED_AP_STATS_U2_SCATTERPLOTS } from '../src/lib/tutor/lesson-plan/seeds/ap-stats-u2-scatterplots';
 import { SEED_AP_APGOV_U2_PRESIDENCY } from '../src/lib/tutor/lesson-plan/seeds/ap-apgov-u2-presidency';
 import { SEED_AP_CALCBC_U5_FIRST_DERIVATIVE_ANALYSIS } from '../src/lib/tutor/lesson-plan/seeds/ap-calcbc-u5-first-derivative-analysis';
@@ -905,6 +907,19 @@ async function main() {
   {
     // AP US Government, portal-84f8660d: the lesson went concept → common-mistake check → concept → worked example.
     const pp = SEED_AP_APGOV_U2_PRESIDENCY; const C = 'concept-presidency-formal-informal-powers'; const M = 'misconception-executive-orders-are-laws'; const W = 'worked-federalist-70-energy';
+    {
+      // AP Environmental Science, portal-03406355.
+      const ep = Object.values(envsciSeed)[0] as unknown as PlanT;
+      const opened = "Deforestation hits two cycles Good. Here's a case that hits both cycles: the Amazon rainforest being cut and burned. For water, the trees stop transpiring, so less rain falls. Carbon: the trees' stored carbon goes straight into the air as CO₂. This affects both.";
+      check('a page whose heading names no part is placed by what is said on opening it', goalForTitle(ep, 'Deforestation hits two cycles') === null && goalForTalk(ep, opened) === 'worked-disruption'
+        && goalForTalk(ep, "Water's cycle Let's follow water now. Picture a rainy soccer afternoon: some soaks in, some runs off, some evaporates. That whole loop is the water cycle.") === null
+        && goalForTalk(ep, 'Recap Carbon moves through photosynthesis, respiration, decomposition and combustion. Burning fossil fuels, deforestation, paving and dams are the main human changes to the carbon and water cycle.') === null);
+      const seg = (id: string) => (ep.segments.find((x) => x.id === id) as unknown as { problem: string }).problem;
+      check('one later part of a problem in parts, asked by itself, is told from its first part', laterPartAlone(seg('try-process-id'), 'For a forest scenario, fallen leaves rot on the forest floor. Which carbon-cycle process is responsible: photosynthesis, respiration, decomposition, or combustion?')
+        && !laterPartAlone(seg('try-process-id'), 'A growing forest absorbs CO₂ from the atmosphere. Which process is that?')
+        && !laterPartAlone(seg('try-synthesis'), 'Atmospheric CO₂ has risen from about 280 ppm in 1850 to about 420 ppm today. Name the two largest human sources of this CO₂.')
+        && !laterPartAlone(seg('try-synthesis'), seg('try-synthesis')));
+    }
     check('a page is known for the part of the plan its heading belongs to', ['Formal powers', 'War Powers Resolution', 'Executive agreements', 'Bargaining and the bully pulpit', 'The 22nd Amendment'].every((t) => goalForTitle(pp, t) === C) && goalForTitle(pp, 'Federalist No. 70') === W && goalForTitle(pp, 'Practice') === null && goalForTitle(pp, 'Page 1') === null && goalForTitle(pp, 'Recap') === 'recap');
     check('a passage on the board is the worked example that reads it', goalForProblem(pp, 'Energy in the Executive is a leading character in the definition of good Government. ... Decision, activity, secrecy, and despatch, will generally characterize the proceedings of one man, in a much more eminent degree than the proceedings of any greater number.') === W);
     const done = { [M]: { status: 'demonstrated' as const, at: 3 } };

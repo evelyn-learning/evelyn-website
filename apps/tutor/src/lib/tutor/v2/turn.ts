@@ -18,7 +18,7 @@
 import { drawFigure } from './drawn-figures';
 import { typesetMaths } from './rich-text';
 import { closeDueMinutes } from './close-heard';
-import { goalForProblem, goalForTitle, wholeProblem } from './progress';
+import { goalForProblem, goalForTalk, goalForTitle, laterPartAlone, wholeProblem } from './progress';
 import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient } from '../ai/model-registry';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
@@ -324,6 +324,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
 
   const stored: Anthropic.MessageParam[] = [{ role: 'user', content: [{ type: 'text', text: studentText }] }];
   const spoken: string[] = [];
+  let pageUnplaced = '';
   const toolCalls: V2ToolCall[] = [];
   const usage: V2TurnResult['usage'] = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0 };
   const t0 = Date.now();
@@ -443,6 +444,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         const cardId = planGoal ? state.problemCards?.[planGoal] : undefined;
         const cardPage = cardId ? state.board.pages.findIndex((pg) => pg.items.some((it) => it.id === cardId)) : -1;
         let o: V2BoardOutcome & { turnTo?: number };
+        let partAlone = false;
         if (cardId && cardPage >= 0 && (whole || cardPage !== state.board.current)) {
           // Asked for again, or its next part asked: the problem is one card, and the board goes to it. From
           // another page the board turns back to its page, so the parts and the working done on it are in
@@ -452,15 +454,17 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           if (away) state.board.current = cardPage;
           o = { painted: false, detail: away ? `already on page ${cardPage + 1} "${state.board.pages[cardPage].title}"` : `already on the board (page ${cardPage + 1})`, pointAt: cardId, ...(away ? { turnTo: cardPage } : {}) };
         } else {
-          // The first part of a problem in parts goes up as the whole problem.
-          if (whole && typeof args.statement === 'string') args.statement = whole.statement;
+          // The first part of a problem in parts goes up as the whole problem. One later part asked by itself
+          // goes up as asked: the whole card would open with a part the tutor is not asking.
+          partAlone = !!whole && laterPartAlone(whole.statement, put);
+          if (whole && !partAlone && typeof args.statement === 'string') args.statement = whole.statement;
           o = applyBoard(state.board, block.id, block.name, args);
         }
         outcome = o.painted ? o.detail : `not painted: ${o.detail}`;
         // A problem of the tutor's own making has no answer in the plan: it is worked out apart, after this reply.
         if (put && !planGoal && o.painted) state.ownKeys = { ...(state.ownKeys ?? {}), [block.id]: '' };
         if (planGoal) {
-          if (o.painted) state.problemCards = { ...(state.problemCards ?? {}), [planGoal]: block.id };
+          if (o.painted && !partAlone) state.problemCards = { ...(state.problemCards ?? {}), [planGoal]: block.id };
           // A problem of the plan on the board is that part of the plan begun, whether or not the tutor records
           // it: a whole lesson ran with the phases showing Hook, because no progress was recorded until the
           // close (Algebra 1, portal-50a1e584). Gone back to while still open, it is the part in hand again.
@@ -472,6 +476,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         if (session.plan && !discussion && o.painted && (block.name === 'new_page' || block.name === 'show_passage')) {
           const part = block.name === 'new_page' ? goalForTitle(session.plan, String(args.title ?? '')) : goalForProblem(session.plan, String(args.text ?? ''));
           if (part) state.partsSeen = { ...(state.partsSeen ?? {}), [part]: nowMs };
+          else if (block.name === 'new_page') pageUnplaced = String(args.title ?? '');
         }
         if (o.turnTo !== undefined) turnsTo = o.turnTo;
         if (!o.painted) { if (page && was) page.items.push(was); replaces = undefined; }
@@ -890,6 +895,12 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // replaces it or drops it. Not when this reply put up a problem card (the card has its own answer), and not for
   // a question with no answer to work out.
   const saidAloud = spoken.join(' ');
+  // A page whose heading named no part of the plan: what was said and written on opening it may.
+  if (pageUnplaced && session.plan) {
+    const wrote = toolCalls.filter((c) => c.name === 'annotate' && !/^not /.test(c.outcome)).map((c) => String((c.args as { text?: unknown }).text ?? '')).join(' ');
+    const part = goalForTalk(session.plan, `${pageUnplaced} ${saidAloud} ${wrote}`);
+    if (part) state.partsSeen = { ...(state.partsSeen ?? {}), [part]: nowMs };
+  }
   // Asked as a question or as a thing to do: "Solve 3x² − 12 = 0 and tell me what you get." has no question mark,
   // and in the first replay such a reply got no answer worked and the tutor agreed with a wrong one.
   const sentencesAloud = saidAloud.split(/(?<=[.?!])\s+/).map((x) => x.trim()).filter(Boolean);

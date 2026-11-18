@@ -78,6 +78,21 @@ export function wholeProblem(plan: LessonPlan, statement: string): { goal: strin
   return /\(a\)[\s\S]*\(b\)/.test(authored) ? { goal, statement: authored } : null;
 }
 
+/** One later part of a problem in parts, asked by itself: "fallen leaves rot on the forest floor, which process?"
+ *  for part (c) of four separate scenarios. Put up as the whole problem, the card opened with part (a), the
+ *  student began answering (a), and was told "not quite" (AP Environmental Science, portal-03406355). True when
+ *  what the tutor is putting up is in the words of one part after the first and hardly in the first part's. */
+export function laterPartAlone(authored: string, statement: string): boolean {
+  const parts = authored.split(/\(\s*[a-h]\s*\)/).slice(1);
+  if (parts.length < 2) return false;
+  const carry = (text: string) => new Set(problemTokens(text).filter((w) => /\d/.test(w) || (w.length >= 3 && !PROBLEM_FILLER.has(w))));
+  const words = carry(statement);
+  // How much of each part's own wording is in what is being put up.
+  const share = parts.map((part) => { const own = [...carry(part)]; return own.length < 3 ? 0 : own.filter((w) => words.has(w)).length / own.length; });
+  const best = share.indexOf(Math.max(...share));
+  return best > 0 && share[best] >= 0.6 && share[0] <= 0.34;
+}
+
 const TITLE_FILLER = new Set(['the', 'a', 'an', 'and', 'or', 'of', 'in', 'on', 'to', 'for', 'with', 'vs', 'versus', 'no', 'page', 'part', 'about', 'more', 'what', 'how', 'why', 'is', 'are']);
 const RECAP_TITLE = /\b(?:recap|summary|review|takeaways?|wrap(?:ping)?[- ]up|key points|what to remember)\b/i;
 function titleWords(text: string): string[] {
@@ -101,6 +116,23 @@ export function goalForTitle(plan: LessonPlan, title: string): string | null {
     if (want.every((w) => has.has(w))) return seg.id;
   }
   return null;
+}
+
+/** The worked example (or common-mistake question) a new page begins, by what the tutor says and writes as it
+ *  opens the page, when the heading alone names no part: "Deforestation hits two cycles" opened the plan's example
+ *  "Explain how deforestation in the Amazon affects both the carbon cycle and the water cycle", and the phases
+ *  stayed on the practice problem before it (AP Environmental Science, portal-03406355). The reply must use nearly
+ *  every carrying word of that part's own problem, and of no other part's. The concept shares its words with the
+ *  whole lesson and practice problems are known by their cards, so neither is judged this way. */
+export function goalForTalk(plan: LessonPlan, text: string): string | null {
+  const said = new Set(titleWords(text));
+  const scored = plan.segments.flatMap((seg) => {
+    if (seg.kind === 'hook' || seg.kind === 'recap' || seg.kind === 'concept' || seg.kind === 'try_yourself') return [];
+    const s = seg as unknown as { problem?: unknown; question?: unknown };
+    const words = [...new Set(titleWords(typeof s.problem === 'string' ? s.problem : typeof s.question === 'string' ? s.question : '').filter((w) => w.length >= 4 && !PROBLEM_FILLER.has(w)))];
+    return words.length < 5 ? [] : [{ id: seg.id, share: words.filter((w) => said.has(w)).length / words.length }];
+  }).sort((a, b) => b.share - a.share);
+  return scored[0] && scored[0].share >= 0.8 && scored[0].share - (scored[1]?.share ?? 0) >= 0.2 ? scored[0].id : null;
 }
 
 /** `seen` is when the board last showed each part to be the one in hand (a page headed for it, its passage):
