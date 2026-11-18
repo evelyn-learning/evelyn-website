@@ -102,7 +102,7 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
                   <Head r={r} base={base} />
                   <Why reasons={r.reasons} />
                   <Facts r={r} />
-                  <HeldControls itemId={r.itemId} back="queue" openHref={open(r.itemId)} />
+                  <HeldControls itemId={r.itemId} back="queue" openHref={open(r.itemId, r.stage === "ready")} canSend={r.canSend} canSendBack={r.canSendBack} canClear={r.canClear} />
                 </li>
               ))}
             </ul>

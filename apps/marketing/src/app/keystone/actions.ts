@@ -7,6 +7,7 @@ import { ksHref } from "@/lib/keystone/paths";
 import { ks } from "@/lib/keystone/db";
 import {
   addComment,
+  clearHoldByOwner,
   holdByOwner,
   keepHoldingByOwner,
   releaseIfHeld,
@@ -171,4 +172,9 @@ export async function keepHoldingAction(_prev: ReviewResult, form: FormData): Pr
 /** Hold this one: a clean item that would go out by itself waits for the owner instead. */
 export async function holdAction(_prev: ReviewResult, form: FormData): Promise<ReviewResult> {
   return ownerAction(form, (itemId) => holdByOwner(itemId), "held");
+}
+
+/** Seen: clear an information-only hold (a question re-sent mid-review or after approval). Flags stay as history. */
+export async function clearHoldAction(_prev: ReviewResult, form: FormData): Promise<ReviewResult> {
+  return ownerAction(form, (itemId) => clearHoldByOwner(itemId), "cleared");
 }

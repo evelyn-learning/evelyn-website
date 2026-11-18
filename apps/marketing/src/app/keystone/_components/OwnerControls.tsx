@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { holdAction, keepHoldingAction, sendBackAction, sendToReviewAction } from "../actions";
+import { clearHoldAction, holdAction, keepHoldingAction, sendBackAction, sendToReviewAction } from "../actions";
 import { OwnerForm as ActionForm } from "./OwnerForm";
 
 // Evelyn only: rendered by pages that have already checked the role on the server; each action checks it again.
@@ -13,8 +13,14 @@ const Hidden = ({ itemId, back }: { itemId: string; back: Where }) => (
   </>
 );
 
-/** Send to review / Keep holding / Send back (with the note the author must address). `ids` marks the controls the S / B keys use. */
-export function HeldControls({ itemId, back, openHref, ids = false }: { itemId: string; back: Where; openHref?: string; ids?: boolean }) {
+/**
+ * Send to review / Keep holding / Send back (with the note the author must address) / Seen: clear the hold.
+ * `ids` marks the controls the S / B keys use. `canSend`, `canSendBack`, `canClear` come from the queue row
+ * (queries.ts ownerQueue); the item page shows a held ready version (send and send back).
+ */
+export function HeldControls({
+  itemId, back, openHref, ids = false, canSend = true, canSendBack = true, canClear = false,
+}: { itemId: string; back: Where; openHref?: string; ids?: boolean; canSend?: boolean; canSendBack?: boolean; canClear?: boolean }) {
   return (
     <div className="ks-q-ctl">
       {openHref && (
@@ -22,17 +28,25 @@ export function HeldControls({ itemId, back, openHref, ids = false }: { itemId: 
           Open
         </Link>
       )}
-      <ActionForm action={sendToReviewAction} className="ks-q-form">
-        <Hidden itemId={itemId} back={back} />
-        <button className="ks-btn ok" id={ids ? "ks-owner-send" : undefined}>
-          Send to review{ids && <kbd>S</kbd>}
-        </button>
-      </ActionForm>
+      {canSend && (
+        <ActionForm action={sendToReviewAction} className="ks-q-form">
+          <Hidden itemId={itemId} back={back} />
+          <button className="ks-btn ok" id={ids ? "ks-owner-send" : undefined}>
+            Send to review{ids && <kbd>S</kbd>}
+          </button>
+        </ActionForm>
+      )}
       <ActionForm action={keepHoldingAction} className="ks-q-form">
         <Hidden itemId={itemId} back={back} />
         <button className="ks-btn">Keep holding</button>
       </ActionForm>
-      <details className="ks-q-back" id={ids ? "ks-owner-back" : undefined}>
+      {canClear && (
+        <ActionForm action={clearHoldAction} className="ks-q-form">
+          <Hidden itemId={itemId} back={back} />
+          <button className="ks-btn">Seen: clear the hold</button>
+        </ActionForm>
+      )}
+      {canSendBack && <details className="ks-q-back" id={ids ? "ks-owner-back" : undefined}>
         <summary className="ks-btn warn">Send back{ids && <kbd>B</kbd>}</summary>
         <ActionForm action={sendBackAction} className="ks-q-backform">
           <Hidden itemId={itemId} back={back} />
@@ -46,7 +60,7 @@ export function HeldControls({ itemId, back, openHref, ids = false }: { itemId: 
           />
           <button className="ks-btn warn">Send back to the pipeline</button>
         </ActionForm>
-      </details>
+      </details>}
     </div>
   );
 }
@@ -73,6 +87,7 @@ const DONE: Record<string, string> = {
   sentback: "Sent back to the pipeline with your note. It stays hidden from Castle Rock until it is rewritten and you send it.",
   seen: "Marked as seen; still held.",
   held: "Held for you. It will not go out by itself.",
+  cleared: "Hold cleared; the flag stays in the item's history.",
 };
 
 export function DoneNote({ done }: { done?: string }) {

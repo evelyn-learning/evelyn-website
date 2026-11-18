@@ -8,6 +8,7 @@ import { OWNER_LABEL, STAGE_LABEL, STAGE_OWNER, STAGES, VERDICTS, type Role, typ
 import { ks, type BatchDoc, type Flag, type LessonDoc } from "../db";
 import { splitNote } from "../note";
 import { lastBeat } from "./heartbeat";
+import { needsOwner } from "./holds";
 import { redact } from "./models";
 import { openSuggestions } from "./outbox";
 import { addLocalDays, blockedBatches, inWindow, planRelease, type PlanRow } from "./release";
@@ -231,7 +232,7 @@ export async function buildStatus(now: Date): Promise<Status> {
 
   const byOrder = (a: ItemRow, b: ItemRow) => (a.order ?? 0) - (b.order ?? 0) || a.itemId.localeCompare(b.itemId);
   const waitingOnPraveen = items
-    .filter((i) => i.pipeline?.heldFor === "praveen")
+    .filter(needsOwner) // pipeline/holds.ts: the queue's two held sections and the top bar count the same items
     .sort(byOrder)
     .map((i) => ({ itemId: i.itemId, why: heldReason(i.pipeline?.flags, i.pipeline?.heldWhy) }));
 

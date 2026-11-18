@@ -1,6 +1,7 @@
 import { STAGES, answerSeenBy, releasedVersionOf, visibleStage, type Role, type Stage } from "./config";
 import { ks, type ActivityDoc, type Flag, type ItemDoc, type PipelineDoc, type RunDoc, type RunStep, type SolutionDoc } from "./db";
-import { FLAG_WORDS } from "./pipeline/status";
+import { FLAG_WORDS, noteText } from "./pipeline/status";
+import { HELD_BEFORE_SOLUTION_FILTER, NEEDS_OWNER_FILTER, WAITING_ON_OWNER_FILTER } from "./pipeline/holds";
 import { blockedBatches, type BlockedBatch } from "./pipeline/release";
 
 export type ItemRow = Pick<
@@ -383,11 +384,18 @@ export function runView(run: RunDoc): RunView {
   };
 }
 
-/** The latest real (not dry) run of each item. */
-async function latestRealRuns(itemIds: string[]): Promise<Map<string, RunDoc>> {
+/** What a queue row reads of a run (runView's solvers, findings count, checks that could not run): never the whole record. */
+const QUEUE_RUN_FIELDS = [
+  "itemId", "runId", "startedAt", "finishedAt", "mode", "result", "error", "flags", "corrections", "cost",
+  "steps.step", "steps.key", "steps.ok", "steps.at", "steps.model", "steps.output.failed", "steps.output.findings",
+  ...["solver1", "solver2", "solver3"].flatMap((k) => ["ok", "reason", "model", "value.answer"].map((f) => `steps.output.solves.${k}.${f}`)),
+].join(" ");
+
+/** The latest real (not dry) run of each item; `fields` narrows what is read (default: the whole record, minus ids). */
+async function latestRealRuns(itemIds: string[], fields = "-_id -__v"): Promise<Map<string, RunDoc>> {
   if (!itemIds.length) return new Map();
   const { Run } = await ks();
-  const rows = await Run.find({ itemId: { $in: itemIds }, dryRun: { $ne: true } }).sort({ startedAt: -1 }).select("-_id -__v").lean<RunDoc[]>();
+  const rows = await Run.find({ itemId: { $in: itemIds }, dryRun: { $ne: true } }).sort({ startedAt: -1 }).select(fields).lean<RunDoc[]>();
   const out = new Map<string, RunDoc>();
   for (const r of rows) if (!out.has(r.itemId)) out.set(r.itemId, r);
   return out;
@@ -432,6 +440,14 @@ export type QueueRow = {
   releaseAt?: Date;
   /** flagged: anything other than a sample-only hold */
   flagged: boolean;
+  /** held for the owner (pipeline.heldFor) */
+  held: boolean;
+  /** "Send to review": a ready item whose current version has an unreleased, sendable row */
+  canSend: boolean;
+  /** "Send back with a note": a held ready version, or a held send-back of Castle Rock's (changes_requested) */
+  canSendBack: boolean;
+  /** "Seen: clear the hold": a hold that is information only (a re-sent question mid-review or after approval) */
+  canClear: boolean;
 };
 export type OwnerQueue = { waiting: QueueRow[]; beforeSolution: QueueRow[]; going: QueueRow[]; blocked: BlockedBatch[] };
 
@@ -475,6 +491,10 @@ function queueRow(i: OwnerItem, run: RunDoc | undefined, reasons: string[]): Que
     ...(i.pipeline?.seenAt ? { seenAt: i.pipeline.seenAt } : {}),
     ...(i.pipeline?.releaseAt ? { releaseAt: i.pipeline.releaseAt } : {}),
     flagged: !(flags.length > 0 && flags.every((f) => f === "sample")),
+    held: i.pipeline?.heldFor === "praveen",
+    canSend: false,
+    canSendBack: false,
+    canClear: false,
   };
 }
 
@@ -482,13 +502,16 @@ function queueRow(i: OwnerItem, run: RunDoc | undefined, reasons: string[]): Que
 export async function waitingForOwnerCount(role?: Role): Promise<number> {
   if (!isOwner(role)) return 0;
   const { Item } = await ks();
-  return Item.countDocuments({ stage: "ready", "pipeline.heldFor": "praveen" });
+  // pipeline/holds.ts: the same definition as the queue's two held sections and the email's "waiting on you".
+  return Item.countDocuments(NEEDS_OWNER_FILTER);
 }
 
 /**
- * The owner's queue. Null for any role but Evelyn.
- *   waiting: ready and held for Praveen (incl. his own send-backs until the run rewrites them);
- *   beforeSolution: held while still received / drafting, or whose latest real run failed;
+ * The owner's queue. Null for any role but Evelyn. The two held sections are pipeline/holds.ts's predicates.
+ *   waiting: held for Praveen with a solution stage: ready (incl. his own send-backs until the run rewrites
+ *     them), a send-back of Castle Rock's the pipeline held (changes_requested, with the reviewer's note), and
+ *     a question re-sent mid-review or after approval (information);
+ *   beforeSolution: held while still received / drafting; ready with no sendable row; or whose latest real run failed;
  *   going: ready, not held, no flags: the timer sends them (release time in Pacific on the page);
  *   blocked: batches nothing of which can be released.
  */
@@ -496,8 +519,8 @@ export async function ownerQueue(role?: Role): Promise<OwnerQueue | null> {
   if (!isOwner(role)) return null;
   const { Item, Run } = await ks();
   const [held, early, going, failedIds, blocked] = await Promise.all([
-    Item.find({ stage: "ready", "pipeline.heldFor": "praveen" }).select(OWNER_FIELDS).lean<OwnerItem[]>(),
-    Item.find({ stage: { $in: ["received", "drafting"] }, "pipeline.heldFor": "praveen" }).select(OWNER_FIELDS).lean<OwnerItem[]>(),
+    Item.find(WAITING_ON_OWNER_FILTER).select(OWNER_FIELDS).lean<OwnerItem[]>(),
+    Item.find(HELD_BEFORE_SOLUTION_FILTER).select(OWNER_FIELDS).lean<OwnerItem[]>(),
     Item.find({ stage: "ready", "pipeline.heldFor": { $exists: false } }).select(OWNER_FIELDS).sort({ "pipeline.releaseAt": 1, itemId: 1 }).lean<OwnerItem[]>(),
     Run.aggregate<{ _id: string; result?: string; error?: string }>([
       { $match: { dryRun: { $ne: true } } },
@@ -524,7 +547,14 @@ export async function ownerQueue(role?: Role): Promise<OwnerQueue | null> {
         .select(OWNER_FIELDS)
         .lean<OwnerItem[]>()
     : [];
-  const runs = await latestRealRuns([...held, ...early, ...failedItems, ...going].map((i) => i.itemId));
+  const runs = await latestRealRuns([...held, ...early, ...failedItems, ...going].map((i) => i.itemId), QUEUE_RUN_FIELDS);
+  // A send-back the pipeline held: the reviewer's note is shown with the hold.
+  const sentBack = held.filter((i) => i.stage === "changes_requested").map((i) => i.itemId);
+  const notes = sentBack.length ? await latestVerdicts(sentBack) : new Map<string, { verdict: string; body?: string }>();
+  const reviewerNote = (i: OwnerItem) => {
+    const v = notes.get(i.itemId);
+    return i.stage === "changes_requested" && v?.verdict === "changes" && v.body ? [`Castle Rock's note: ${noteText(v.body)}`] : [];
+  };
 
   // The timer releases only ready items with an empty flags list (release.ts CLEAN); anything else here waits forever.
   const goingWhy = (i: OwnerItem): string[] => {
@@ -537,9 +567,23 @@ export async function ownerQueue(role?: Role): Promise<OwnerQueue | null> {
   const byArrival = (a: QueueRow, b: QueueRow) =>
     (a.receivedAt ? new Date(a.receivedAt).getTime() : 0) - (b.receivedAt ? new Date(b.receivedAt).getTime() : 0) || a.itemId.localeCompare(b.itemId);
 
-  const waiting = held.filter(sendable).map((i) => queueRow(i, runs.get(i.itemId), [...holdReasons(i.pipeline), ...failNote(i.itemId)])).sort(queueOrder);
+  // A held ready item with nothing to send is listed before a solution (nothing in "Waiting for you" is unsendable at ready).
+  const waitingNow = (i: OwnerItem) => i.stage !== "ready" || sendable(i);
+  const waiting = held
+    .filter(waitingNow)
+    .map((i) => {
+      const canSend = i.stage === "ready" && sendable(i);
+      const reasons = [...holdReasons(i.pipeline), ...reviewerNote(i), ...failNote(i.itemId)];
+      return {
+        ...queueRow(i, runs.get(i.itemId), reasons),
+        canSend,
+        canSendBack: canSend || i.stage === "changes_requested",
+        canClear: i.stage !== "ready" && i.stage !== "changes_requested",
+      };
+    })
+    .sort(queueOrder);
   const before = [
-    ...held.filter((i) => !sendable(i)).map((i) => queueRow(i, runs.get(i.itemId), [...holdReasons(i.pipeline), NO_SOLUTION, ...failNote(i.itemId)])),
+    ...held.filter((i) => !waitingNow(i)).map((i) => queueRow(i, runs.get(i.itemId), [...holdReasons(i.pipeline), NO_SOLUTION, ...failNote(i.itemId)])),
     ...going.filter((i) => !sendable(i)).map((i) => queueRow(i, runs.get(i.itemId), [NO_SOLUTION, ...failNote(i.itemId)])),
     ...early.map((i) => queueRow(i, runs.get(i.itemId), [...holdReasons(i.pipeline), ...failNote(i.itemId)])),
     ...failedItems.map((i) => queueRow(i, runs.get(i.itemId), [failReason(i.itemId)])),

@@ -352,6 +352,8 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
   delete run.filesNotSent;
   delete run.warnings;
   const owner = run.mode === "owner";
+  /** changes mode: Praveen's own note on a held send-back (flag owner_sent_back), if any. */
+  let ownerOnChanges = "";
   let answerToConfirm = false;
   const counters = new Map<Step, number>();
 
@@ -520,11 +522,16 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
   if (run.mode === "changes" || owner) {
     // changes: the reviewer's note (the client's send-back); owner: Praveen's note on the held version.
     let note = "";
+    let reviewerNote = "";
     if (owner) note = (item.pipeline?.fixNote ?? "").trim();
     else {
       const v = await deps.reader.lastVerdict(itemId);
       if (v?.verdict === "changes") sentBackAt = new Date(v.createdAt);
-      note = v?.verdict === "changes" ? (v.body ?? "").trim() : "";
+      reviewerNote = v?.verdict === "changes" ? (v.body ?? "").trim() : "";
+      // A send-back the pipeline held, then sent back by Praveen with his own note: both notes are addressed,
+      // and the result waits for his look.
+      ownerOnChanges = (item.pipeline?.flags ?? []).includes(OWNER_SENT_BACK) ? (item.pipeline?.fixNote ?? "").trim() : "";
+      note = ownerOnChanges ? [reviewerNote, `Evelyn's note: ${ownerOnChanges}`].filter(Boolean).join("\n\n") : reviewerNote;
     }
     type CauseOut = { cause: Cause; why: string; note: string } | { failed: string; note: string };
     const c = await step<CauseOut>("cause", async () => {
@@ -541,7 +548,7 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
       const proposed: Cause = c.ok ? (c.output as { cause: Cause }).cause : "other";
       try {
         await writer.saveLesson({
-          itemId, version: expect.version, note: splitNote(c.output.note).plain, cause: proposed, proposedBy: "model", confirmed: false, createdAt: now(),
+          itemId, version: expect.version, note: splitNote(reviewerNote).plain, cause: proposed, proposedBy: "model", confirmed: false, createdAt: now(),
         });
       } catch (e) {
         warn(`lesson not recorded: ${e instanceof Error ? e.message : String(e)}`);
@@ -669,6 +676,7 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
     }
     const carry = carriedOver(item, run.mode);
     for (const f of carry.flags) flags.add(f);
+    if (ownerOnChanges) flags.add(OWNER_REWRITE);
     run.flags = [...flags];
     const passedAt = now();
     // A clean pass (no flag, so no hold) gets its release time in the same write; a held one never does.

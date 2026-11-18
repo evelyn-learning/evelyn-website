@@ -433,10 +433,13 @@ export async function sendBackByOwner(itemId: string, note: string, actor: Actor
   if (text.length > FIX_NOTE_MAX) return { error: `Keep the note under ${FIX_NOTE_MAX} characters.` };
   const r = await readHeld(itemId);
   if ("error" in r) return { error: r.error! };
-  if (r.item.stage !== "ready" || !r.unreleased) return { error: NOT_WAITING };
+  // A held ready version, or a send-back of Castle Rock's the pipeline held (changes_requested): the run rewrites it
+  // with this note (for a send-back, together with the reviewer's note).
+  const heldSendBack = r.item.stage === "changes_requested" && r.item.pipeline?.heldFor === "praveen";
+  if (!heldSendBack && (r.item.stage !== "ready" || !r.unreleased)) return { error: NOT_WAITING };
   const { Item } = await ks();
   const u = await Item.collection.updateOne(
-    { itemId, stage: "ready", version: r.item.version },
+    heldSendBack ? { itemId, stage: "changes_requested", version: r.item.version, "pipeline.heldFor": "praveen" } : { itemId, stage: "ready", version: r.item.version },
     {
       $set: { "pipeline.heldFor": "praveen", "pipeline.fixNote": text, "pipeline.fixRequestedAt": now, "pipeline.sentBackBy": actor.username, updatedAt: now },
       $addToSet: { "pipeline.flags": OWNER_SENT_BACK },
@@ -446,10 +449,26 @@ export async function sendBackByOwner(itemId: string, note: string, actor: Actor
   return u.matchedCount === 1 ? { done: true } : { error: NOT_WAITING };
 }
 
-/** Keep holding: records that the owner has seen it (pipeline.seenAt) and nothing else. */
+/** Keep holding: records that the owner has seen it (pipeline.seenAt) and nothing else. Any held item (pipeline/holds.ts). */
 export async function keepHoldingByOwner(itemId: string, now = new Date()): Promise<OwnerOutcome> {
   const { Item } = await ks();
-  const u = await Item.collection.updateOne({ itemId, stage: "ready", "pipeline.heldFor": "praveen" }, { $set: { "pipeline.seenAt": now } });
+  const u = await Item.collection.updateOne({ itemId, "pipeline.heldFor": "praveen" }, { $set: { "pipeline.seenAt": now } });
+  return u.matchedCount === 1 ? { done: true } : { error: NOT_WAITING };
+}
+
+/** Stages whose hold is information only (a question re-sent mid-review or after approval): the owner clears it once seen. */
+const CLEARABLE: Stage[] = ["in_review", "approved", "delivered", "rejected"];
+
+/**
+ * "Seen: clear the hold" for an information-only hold (CLEARABLE stages). The flags stay as history; the hold, its
+ * reason and any note go. A later correction is then treated as any other (carriedOver no longer carries the flag).
+ */
+export async function clearHoldByOwner(itemId: string, now = new Date()): Promise<OwnerOutcome> {
+  const { Item } = await ks();
+  const u = await Item.collection.updateOne(
+    { itemId, stage: { $in: CLEARABLE }, "pipeline.heldFor": "praveen" },
+    { $set: { "pipeline.seenAt": now }, $unset: { "pipeline.heldFor": "", "pipeline.heldWhy": "" } },
+  );
   return u.matchedCount === 1 ? { done: true } : { error: NOT_WAITING };
 }
 

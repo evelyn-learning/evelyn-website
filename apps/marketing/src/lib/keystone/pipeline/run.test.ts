@@ -1301,6 +1301,22 @@ const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", co
     }
   }
 
+  // --- I3: a held send-back Praveen sent back with his note: both notes reach the author, the result waits for him ---
+  {
+    const store = new FakeStore([item({ stage: "changes_requested", version: 1, releasedVersion: 1, evelynAnswer: "B", pipeline: { flags: ["step_failed", "owner_sent_back"], heldFor: "praveen", fixNote: "Round to 2 decimals." } as PipelineDoc })]);
+    store.verdicts.set("100", { verdict: "changes", body: "Show the unit conversion.", createdAt: T0 });
+    store.sections.set("100", draft().sections);
+    const { steps: s, calls } = steps();
+    const run = await processItem("100", "r1", deps(store, s));
+    equal(run.mode, "changes", "I3 note: changes mode");
+    const opts = calls.writeOpts[0] as { fixNote?: string };
+    ok(/Show the unit conversion/.test(opts.fixNote ?? "") && /Round to 2 decimals/.test(opts.fixNote ?? ""), `I3 note: both notes to the author (${opts.fixNote})`);
+    equal(run.result, "held", "I3 note: the rewrite waits for his look");
+    ok(store.items.get("100")!.pipeline!.flags.includes("owner_rewrite"), "I3 note: owner_rewrite");
+    ok(!store.items.get("100")!.pipeline!.flags.includes("owner_sent_back"), "I3 note: his send-back flag is consumed");
+    equal(store.lessons[0]?.note, "Show the unit conversion.", "I3 note: the lesson is the reviewer's note only");
+  }
+
   // --- M4 / C2(b): a changes-mode rewrite keeps sample, timerReleasedAt and an uncleared question_resent hold ---
   {
     const released = new Date(T0.getTime() - 1000);
