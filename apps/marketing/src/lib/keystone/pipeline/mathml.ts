@@ -155,7 +155,7 @@ function tokens(children: (Node | string)[]): Tok[] {
     const lead = /^\s/.test(p.s), trail = /\s$/.test(p.s);
     if (!p.s.trim()) { if (p.s) sp = true; continue; }
     if (lead) sp = true;
-    addPiece({ ...p, s: p.kind === "compound" || p.kind === "frac" || p.kind === "fenced" || p.kind === "fn" ? p.s.trim() : p.s.trim() });
+    addPiece({ ...p, s: p.s.trim() });
     if (trail) sp = true;
   }
   return out;
@@ -186,7 +186,7 @@ function joinSep(a: Piece, b: Piece, sp: boolean, noSep: boolean): string {
   if (noSep) return "";
   if (b.kind === "post") return sp ? " " : "";
   if (sp || a.kind === "bigop" || a.kind === "post") return " ";
-  if (a.kind === "word" || b.kind === "word" || a.kind === "bigop" || b.kind === "bigop") return a.kind === "word" || a.kind === "fn" ? (b.kind === "fenced" ? "" : " ") : " ";
+  if (a.kind === "word" || b.kind === "word") return a.kind === "word" && b.kind === "fenced" ? "" : " "; // sin (x) reads as the call sin(x)
   if (a.kind === "fn" && b.kind === "fenced") return "";
   const simpleA = a.kind === "num" || a.kind === "id";
   if (simpleA && b.kind === "num") return a.kind === "num" ? " " : " * ";
