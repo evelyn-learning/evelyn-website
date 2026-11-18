@@ -48,7 +48,10 @@ const GEMINI: ModelSpec = {
 // Rates for the Claude models Anthropic's refusal fallback may serve a reply
 // with, so a fallen-back reply is priced at the serving model's rates. An
 // unknown serving model is priced at the requested model's rates.
-// Source: claude-api skill model table (cached 2026-11-03), checked 2026-11-17.
+// Source: claude-api skill (bundled 2.1.326) model table in SKILL.md and
+// shared/models.md, checked 2026-11-17: Opus 5.5 $4/$20, Opus 5 and Opus 4.8
+// $5/$25, Sonnet 5.5 and Sonnet 5 $2/$10, Fable 5.1 $10/$50 ("the same per-token
+// price" as Fable 5; Fable 5.2 is "at a lower price ($8 / $40)").
 const CLAUDE_FALLBACK_PRICES: Record<string, { pricePerMTokIn: number; pricePerMTokOut: number }> = {
   "claude-opus-5-5": { pricePerMTokIn: 4, pricePerMTokOut: 20 },
   "claude-opus-5": { pricePerMTokIn: 5, pricePerMTokOut: 25 },
@@ -112,8 +115,9 @@ export function costOf(spec: ModelSpec, tokensIn: number, tokensOut: number, now
   return (tokensIn / 1e6) * p.pricePerMTokIn + (tokensOut / 1e6) * p.pricePerMTokOut;
 }
 
-/** Remove configured key values and anything key-shaped from text that leaves this module. */
-function redact(text: string): string {
+/** Remove configured key values, and key-shaped tokens (sk-…, AIza…, Bearer …),
+ * from text that leaves this module. Ordinary words and field names are kept. */
+export function redact(text: string): string {
   let out = text;
   for (const names of Object.values(KEY_ENV)) {
     for (const name of names) {
@@ -121,7 +125,7 @@ function redact(text: string): string {
       if (v && v.length >= 8) out = out.split(v).join("[redacted]");
     }
   }
-  return out.replace(/\b(sk|key|AIza)[-_A-Za-z0-9*.]{6,}/g, "[redacted]");
+  return out.replace(/\b(?:sk-|AIza)[A-Za-z0-9_*.-]{8,}/g, "[redacted]").replace(/\bBearer\s+\S+/gi, "[redacted]");
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));

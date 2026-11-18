@@ -41,6 +41,9 @@ export function assertSchemaSupported(schema: object, path = "$"): void {
   }
   const s = schema as Schema;
   const types = s.type === undefined ? [] : Array.isArray(s.type) ? s.type : [s.type];
+  if (!types.length && ["properties", "required", "items", "enum"].some((k) => own(schema, k))) {
+    throw new Error(`schema node needs an explicit type at ${path}`);
+  }
   for (const t of types) if (!TYPES.has(t)) throw new Error(`schema ${path}: unsupported type "${t}"`);
   if (s.enum !== undefined && !Array.isArray(s.enum)) throw new Error(`schema ${path}: enum must be an array`);
   const isObject = types.includes("object") || own(schema, "properties");

@@ -10,6 +10,12 @@ import { REQUEST_TIMEOUT_MS, TransportError, retryableStatus, toBase64, type Ima
 // fallback ran, the content carries `fallback` blocks; the answer is the text
 // after the last one, and res.model names the model that served it.
 // Note: Anthropic's structured outputs need additionalProperties:false on every object.
+/** Same model, allowing a dated alias: one id is the other plus "-" and digits. */
+export function sameModel(a: string, b: string): boolean {
+  const alias = (long: string, short: string) => long.startsWith(`${short}-`) && /^\d+$/.test(long.slice(short.length + 1));
+  return a === b || alias(a, b) || alias(b, a);
+}
+
 export async function callAnthropic(spec: ModelSpec, call: ModelCall, apiKey: string, f?: typeof fetch): Promise<VendorReply> {
   const client = new Anthropic({ apiKey, fetch: f, maxRetries: 0, timeout: REQUEST_TIMEOUT_MS });
   const content: Anthropic.Beta.BetaContentBlockParam[] = (call.images ?? []).map((img) => ({
@@ -46,7 +52,7 @@ export async function callAnthropic(spec: ModelSpec, call: ModelCall, apiKey: st
   const blocks = res.content as { type: string; text?: string }[];
   let lastFallback = -1;
   blocks.forEach((b, i) => { if (b.type === "fallback") lastFallback = i; });
-  const fellBack = lastFallback >= 0 || (!!res.model && res.model !== spec.model);
+  const fellBack = lastFallback >= 0 || (!!res.model && !sameModel(res.model, spec.model));
   const base = { tokensIn, tokensOut: u.output_tokens, model: res.model, fellBack };
   if (res.stop_reason === "refusal") {
     const d = (res as { stop_details?: { category?: string | null; explanation?: string | null } | null }).stop_details;

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { MODEL_FOR, assertKeys, callModel, costOf } from "./models";
+import { MODEL_FOR, assertKeys, callModel, costOf, redact } from "./models";
 import { assertSchemaSupported, isStrictSchema, parseJsonReply, validate } from "./schema";
 import type { ModelCall, Role } from "./types";
 
@@ -51,12 +51,16 @@ const geminiText = (text: string, finishReason = "STOP") => geminiMsg({ candidat
   assert.match(validate(new Date(), { type: "object" })!, /expected object/, "non-plain object rejected");
   // the supported subset, additionalProperties:false on every object
   assert.doesNotThrow(() => assertSchemaSupported(schema));
-  assert.doesNotThrow(() => assertSchemaSupported({ type: "array", items: { type: "object", properties: { k: { enum: ["a"] }, v: { type: ["string", "null"], description: "d" } }, required: ["k"], additionalProperties: false } }));
+  assert.doesNotThrow(() => assertSchemaSupported({ type: "array", items: { type: "object", properties: { k: { type: "string", enum: ["a"] }, v: { type: ["string", "null"], description: "d" } }, required: ["k"], additionalProperties: false } }));
   assert.throws(() => assertSchemaSupported({ type: "object", properties: { a: { anyOf: [{ type: "string" }] } }, additionalProperties: false }), /anyOf.*\$\.properties\.a/);
   assert.throws(() => assertSchemaSupported({ type: "array", items: { type: "string" }, minItems: 1 }), /minItems/);
   assert.throws(() => assertSchemaSupported({ type: "object", properties: {} }), /additionalProperties: false/);
   assert.throws(() => assertSchemaSupported({ type: "array", items: { type: "object", properties: {}, additionalProperties: true } }), /additionalProperties: false/);
   assert.throws(() => assertSchemaSupported({ type: "date" }), /type "date"/);
+  // every node with properties/required/items/enum names its type
+  assert.throws(() => assertSchemaSupported({ properties: { a: { type: "string" } }, additionalProperties: false }), /needs an explicit type/);
+  assert.throws(() => assertSchemaSupported({ type: "object", properties: { a: { enum: ["x"] } }, additionalProperties: false }), /needs an explicit type.*\$\.properties\.a/);
+  assert.throws(() => assertSchemaSupported({ items: { type: "string" } }), /needs an explicit type/);
   assert.equal(isStrictSchema({ type: "object", properties: { ok: { type: "boolean" } }, required: ["ok"], additionalProperties: false }), true);
   assert.equal(isStrictSchema(schema), false, "optional n → not strict");
   assert.equal(isStrictSchema({ type: "array", items: { type: "object", properties: {}, required: [] } }), false, "no additionalProperties:false");
@@ -298,6 +302,11 @@ async function main() {
       assert.equal(!r.ok && r.reason, "transport", `${role} html body`);
       assert.equal(n, 1, `${role} html body not retried`);
     }
+    // gemini: an unreadable 200 is a retryable transport failure in this adapter (one retry → 2 requests)
+    n = 0;
+    const rg = await callModel(call("intake"), deps(counted));
+    assert.equal(!rg.ok && rg.reason, "transport", "gemini html body");
+    assert.equal(n, 2, "gemini html body retried once");
     const f = fakeFetch([{ status: 200, body: { id: "c1", object: "chat.completion", created: 1, model: "m", choices: [], usage: { prompt_tokens: 1, completion_tokens: 1 } } }]);
     const r = await callModel(call("solver2"), deps(f.fn));
     assert.equal(r.ok, false, "choices: [] is a failure");
@@ -325,6 +334,34 @@ async function main() {
     const g = fakeFetch([anthropicMsg([{ type: "text", text: '{"ok":true}' }])]);
     const r2 = await callModel(call("solver1"), deps(g.fn));
     assert.equal(r2.ok && r2.fellBack, false);
+    // a dated alias of the requested model is not a fallback
+    const h = fakeFetch([anthropicMsg([{ type: "text", text: '{"ok":true}' }], "end_turn", undefined, { model: "claude-fable-5-2-20261101" })]);
+    const r3 = await callModel(call("solver1"), deps(h.fn));
+    assert.equal(r3.ok && r3.fellBack, false, "dated alias");
+    if (r3.ok) assert.equal(r3.cost, costOf(MODEL_FOR.solver1, 1000, 500));
+    // a fallback block sets it even when the served id is a dated alias
+    const k = fakeFetch([anthropicMsg([
+      { type: "fallback", from: { model: "claude-fable-5-2" }, to: { model: "claude-fable-5-2" } },
+      { type: "text", text: '{"ok":true}' },
+    ], "end_turn", undefined, { model: "claude-fable-5-2-20261101" })]);
+    const r4 = await callModel(call("solver1"), deps(k.fn));
+    assert.equal(r4.ok && r4.fellBack, true, "fallback block");
+    // a different served model without a block is a fallback too
+    const m = fakeFetch([anthropicMsg([{ type: "text", text: '{"ok":true}' }], "end_turn", undefined, { model: "claude-sonnet-5-5" })]);
+    const r5 = await callModel(call("solver1"), deps(m.fn));
+    assert.equal(r5.ok && r5.fellBack, true, "different model");
+  }
+
+  // redaction keeps ordinary words and field names, blanks key-shaped tokens
+  {
+    const d = 'unexpected field "key_steps" in keystone_item; skeleton keyboard';
+    assert.equal(redact(d), d);
+    assert.equal(redact("got sk-proj-****3456 here"), "got [redacted] here");
+    assert.equal(redact("Authorization: Bearer abc.def"), "Authorization: [redacted]");
+    assert.equal(redact("AIzaSyAbcdefgh12345"), "[redacted]");
+    const f = fakeFetch([openaiMsg({ content: '{"ok":true,"key_steps":1}' })]);
+    const r = await callModel(call("solver2"), deps(f.fn));
+    assert.ok(!r.ok && r.detail.includes('"key_steps"'), "shape detail keeps the field name");
   }
 
   // a key echoed in an error message never reaches detail
