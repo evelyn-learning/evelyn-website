@@ -2121,7 +2121,7 @@ export const TUTOR_V2_FLAG_CLOCK_PAUSE = process.env.NEXT_PUBLIC_TUTOR_V2_FLAG_C
 
 /** Tutor brain v2 (v2/note-targets.ts, v2/turn.ts): in a spoken lesson that teaches a language, the session part asks for the
  *  target word or short phrase of a rule / correction note in double quotes (a <board note> block or annotate), every time it
- *  stands as the target; the quotes are taken off a note's spoken copy, so it is said as before. Mic test 4
+ *  stands as the target; a spoken note keeps the quotes, so its target gets the 7l marks in speech too (fix round 1, I2). Mic test 4
  *  (embed-1795028886172, flag 2: "use for + the number of years: for six years" with no emphasis on "for") (Task 7o, item 1).
  *  Default ON; NEXT_PUBLIC_TUTOR_V2_NOTE_TARGET_QUOTES=off ⇒ as before. */
 export const TUTOR_V2_NOTE_TARGET_QUOTES = process.env.NEXT_PUBLIC_TUTOR_V2_NOTE_TARGET_QUOTES !== 'off';

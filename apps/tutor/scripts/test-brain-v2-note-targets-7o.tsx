@@ -7,7 +7,7 @@
  *   npm run test:brain-v2-note-targets-7o
  *
  *  1 NOTE_TARGET_QUOTES   the session part asks for the target in double quotes (language lessons only); a note's spoken copy
- *                          loses those quotes (said as before)
+ *                          keeps those quotes, so the voice sets the target apart (fix round 1, I2)
  *  2 NOTE_TARGET_MARK     a language lesson's note carries `targets: true`; the board draws a short quoted span as a stress word
  *                          (amber, semibold, underlined) without its quotes; a long quote, and every other lesson's note, as before
  *  3 NOTE_STRESS_MARK     a note quoting no target, in a reply whose card stresses "for": "for" marked where it stands
@@ -23,8 +23,12 @@ import type Anthropic from '@anthropic-ai/sdk';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import { TUTOR_V2_NOTE_TARGET_QUOTES, TUTOR_V2_NOTE_TARGET_MARK, TUTOR_V2_NOTE_STRESS_MARK, TUTOR_V2_NO_MARKDOWN_STARS } from '../src/lib/tutor/orchestrator/flags';
-import { v2NoteSegments, v2NoteHasTarget, v2UnquoteNoteTargets, v2NoteStressWords } from '../src/lib/tutor/v2/note-targets';
+import { v2NoteSegments, v2NoteHasTarget, v2NoteStressWords } from '../src/lib/tutor/v2/note-targets';
 import { V2StarStrip } from '../src/lib/tutor/v2/markdown-stars';
+import { withTargetPauses } from '../src/lib/tutor/v2/target-pauses';
+import { v2SpeechParts } from '../src/lib/tutor/v2/languages';
+import { v2SpeakSounds } from '../src/lib/tutor/v2/spoken-sounds';
+import { rewriteForTTS, speakDataRuns, speakLessonNotation, speakNumberPlurals, speakSlashes } from '../src/lib/tutor/voice/tts-pronunciation';
 import { runV2Turn, type V2ModelCall } from '../src/lib/tutor/v2/turn';
 import { newV2State, type V2BoardPage, type V2Session, type V2State } from '../src/lib/tutor/v2/types';
 import { mapFunctionCallToCommand } from '../src/app/tutor/hooks/toolDefinitions';
@@ -81,6 +85,8 @@ async function probe() {
   const mathsSys = (await run(maths, newV2State(0), 'ok', [{ text: 'Good.' }], 3)).system;
   // 1: a spoken note: announced by a colon, its example sentence is spoken where it stands.
   const noteSaid = await run(lang, langState(), B_SAID, [{ text: `Here is the rule: <board note>${'Use "for" + the number of years.\nI have worked here "for" six years.'}</board> Now you try.` }], 5.35);
+  // Fix round 1 (I2): the session's note, quoted as asked, spoken where it stands.
+  const sessionNote = await run(lang, langState(), B_SAID, [{ text: `Here is the rule: <board note>${B_NOTE_QUOTED}</board> Now you try.` }], 5.35);
   const noteSaidPlain = await run(lang, langState(), B_SAID, [{ text: `Here is the rule: <board note>${'Use for + the number of years.\nI have worked here for six years.'}</board> Now you try.` }], 5.35);
   // 2, 3: the 5.35 reply, its note an annotate tool call (5.45), as written then (no quotes) and as now asked for (quotes).
   const b = await run(lang, langState(), B_SAID, [{ text: B_REPLY, after: [tool('a1', 'annotate', { text: B_NOTE, style: 'highlight' })] }, { text: '' }], 5.35);
@@ -90,16 +96,21 @@ async function probe() {
   const m = await run(maths, newV2State(0), 'ok', [{ text: 'Look. <board sentence stress="slope">The slope is the rise over the run.</board> <board note>The "slope" of the line is the rise over the run.</board>' }], 3);
   // 4: the 12.87 sentence, streamed in pieces of 7 characters (a pair split across two pieces).
   const stars = await run(lang, langState(), 'Who do I use with for?', [{ text: STARS }], 12.87);
+  const lone = await run(lang, langState(), 'ok', [{ text: 'Say it once more. ***Ready?*** *' }], 12.9);
   const mathsStars = await run(maths, newV2State(0), 'ok', [{ text: 'We write it **twice**.' }], 3);
   const ann = (r: Awaited<ReturnType<typeof run>>) => r.r.toolCalls.find((c) => c.name === 'annotate')?.args ?? null;
   return {
     langSys, mathsSys,
-    noteHeard: noteSaid.heard, noteHeardPlain: noteSaidPlain.heard,
+    noteHeard: noteSaid.heard, noteHeardPlain: noteSaidPlain.heard, sessionNoteHeard: sessionNote.heard,
+    sessionNoteVoice: sessionNote.heard.includes(B_NOTE_QUOTED) ? speakAsClient(B_NOTE_QUOTED) : null,
     bArgs: ann(b), bqArgs: ann(bq), bInlineArgs: ann(bInline), mArgs: ann(m),
-    starsHeard: stars.heard.split('\n')[0], mathsStarsHeard: mathsStars.heard.split('\n')[0], starsSpoken: stars.r.spoken,
+    starsHeard: stars.heard.split('\n')[0], mathsStarsHeard: mathsStars.heard.split('\n')[0], starsSpoken: stars.r.spoken, loneHeard: lone.heard, loneSpoken: lone.r.spoken,
   };
 }
 
+// The voice client's plain-speech path (TutorVoiceV2 plainSpeech, 7h / 7l / 7m), as the 7m suite runs it.
+const restOfPath = (s: string) => rewriteForTTS(speakSlashes(speakNumberPlurals(speakDataRuns(speakLessonNotation(v2SpeakSounds(s))))), { studentName: 'Ken' });
+const speakAsClient = (sentence: string) => v2SpeechParts(sentence, ['en', 'ja']).map((part) => withTargetPauses(part, restOfPath, true, true, []));
 const html = (el: React.ReactElement) => renderToStaticMarkup(el);
 
 async function main() {
@@ -109,11 +120,11 @@ async function main() {
   console.log('the switches: each on by default');
   check('NOTE_TARGET_QUOTES, NOTE_TARGET_MARK, NOTE_STRESS_MARK, NO_MARKDOWN_STARS default on', TUTOR_V2_NOTE_TARGET_QUOTES && TUTOR_V2_NOTE_TARGET_MARK && TUTOR_V2_NOTE_STRESS_MARK && TUTOR_V2_NO_MARKDOWN_STARS);
 
-  console.log('1  the prompt asks for the target in double quotes; the spoken copy is unchanged');
+  console.log('1  the prompt asks for the target in double quotes; a spoken note keeps them (fix round 1, I2)');
   check('a spoken language lesson\'s session part asks for the target word in double quotes, in <board note> and annotate', /TARGET WORDS IN NOTES/.test(on.langSys) && on.langSys.includes('use \\"for\\" + the number of years: \\"for\\" six years') && /board note/.test(on.langSys) && /annotate/.test(on.langSys), on.langSys.slice(-900));
   check('a maths voice lesson\'s session part has no such section', !/TARGET WORDS IN NOTES/.test(on.mathsSys));
-  check('a note\'s spoken copy with the quoted targets is the same as the unquoted note\'s (no quotes reach the voice)', on.noteHeard === on.noteHeardPlain && on.noteHeard.includes('I have worked here for six years.'), [on.noteHeard, on.noteHeardPlain]);
-  check('v2UnquoteNoteTargets: short targets lose their quotes; a quoted sentence keeps them', v2UnquoteNoteTargets(B_NOTE_QUOTED) === 'For a period of time, use for + the number of years: for six years.' && v2UnquoteNoteTargets('We say "I have worked here for six years."') === 'We say "I have worked here for six years."');
+  check('fix round 1 (I2): a spoken note keeps its quotes (as written; captions and transcript show the note as written)', on.noteHeard.includes('I have worked here "for" six years.') && on.noteHeardPlain.includes('I have worked here for six years.'), [on.noteHeard, on.noteHeardPlain]);
+  check('fix round 1 (I2): the session\'s quoted note is spoken where it stands, and the voice copy sets "for" apart (7l marks, cap 2): speech and board agree', JSON.stringify(on.sessionNoteVoice) === JSON.stringify(['For a period of time, use — for — + the number of years: for — six years.']), [on.sessionNoteHeard, on.sessionNoteVoice]);
 
   console.log('2  the board marks a short quoted span in a language lesson\'s note');
   check('the 5.45 note (annotate tool call) carries targets: true', on.bqArgs?.targets === true, on.bqArgs);
@@ -159,12 +170,22 @@ async function main() {
   check('a note that quotes its target carries no stress (the quotes decide)', on.bqArgs?.stress === undefined, on.bqArgs);
   {
     const segs = v2NoteSegments(B_NOTE, { quoted: true, stress: ['for'] });
-    check('the board marks every whole-word "for" (also "For" opening the rule), not "for" inside another word', segs.filter((s) => s.mark).length === 3 && JSON.stringify(v2NoteSegments('before forty', { stress: ['for'] })) === JSON.stringify([{ text: 'before forty' }]), segs);
+    check('fix round 1 (I1): the board marks exactly the two target "for"s; the opening "For" stays plain; not "for" inside another word', JSON.stringify(segs) === JSON.stringify([{ text: 'For a period of time, use ' }, { text: 'for', mark: true }, { text: ' + the number of years: ' }, { text: 'for', mark: true }, { text: ' six years.' }]) && JSON.stringify(v2NoteSegments('before forty', { stress: ['for'] })) === JSON.stringify([{ text: 'before forty' }]), segs);
+    const the = v2NoteSegments('The article: use the before a known thing.\nThe home appliance division.', { stress: ['the'] });
+    check('fix round 1 (I1): a card stressing "the" leaves every line- or sentence-opening "The" plain', the.filter((s) => s.mark).length === 1 && the.filter((s) => s.mark)[0]!.text === 'the', the);
+    const cap = v2NoteSegments('Monday: on Monday we meet; monday is wrong.', { stress: ['Monday'] });
+    check('fix round 1 (I1): a capitalised stress word matches in either case (it may open the sentence)', cap.filter((s) => s.mark).length === 3, cap);
+    check('fix round 1 (I1): a lower-case stress word standing only at a sentence start is not carried', v2NoteStressWords('For six years.', [{ name: 'show_sentence', args: { sentence: 'x', emphasis: ['for'] }, outcome: 'painted on page 2' }]).length === 0);
+    const math = v2NoteSegments('Use "for" with $\\text{for } n$ years.', { quoted: true, stress: ['for'] });
+    check('fix round 1 (minor 5): a $…$ span is never cut by a mark', math.some((s) => s.text.includes('$\\text{for } n$')) && math.filter((s) => s.mark).length === 1, math);
     check('no card, no stress words (never guessed)', v2NoteStressWords(B_NOTE, []).length === 0 && v2NoteStressWords(B_NOTE, [{ name: 'show_sentence', args: { sentence: 'x', emphasis: ['for'] }, outcome: 'not painted: x' }]).length === 0);
     check('a stress word not in the note is not carried', JSON.stringify(v2NoteStressWords(B_NOTE, [{ name: 'show_sentence', args: { sentence: 'x', emphasis: ['at', 'for'] }, outcome: 'painted on page 2' }])) === '["for"]');
     check('v2NoteHasTarget: quoted target yes; quoted sentence no', v2NoteHasTarget(B_NOTE_QUOTED) && !v2NoteHasTarget('We say "I have worked here for six years."') && !v2NoteHasTarget(B_NOTE));
     const marked = html(<NoteTargetText text={B_NOTE} stress={['for']} />);
-    check('NoteTargetText draws the stress words', (marked.match(/<span[^>]*font-semibold[^>]*>(?:for|For)<\/span>/g) ?? []).length === 3, marked);
+    check('NoteTargetText draws the stress words (two, the opening "For" plain)', (marked.match(/<span[^>]*font-semibold[^>]*>for<\/span>/g) ?? []).length === 2 && !/>For<\/span>/.test(marked), marked);
+    const src = readFileSync(join(__dirname, '..', 'src', 'lib', 'tutor', 'v2', 'note-marks.ts'), 'utf8');
+    const comp = readFileSync(join(__dirname, '..', 'src', 'app', 'tutor', 'components', 'whiteboard', 'NoteTargetText.tsx'), 'utf8');
+    check('fix round 1 (minor 1): the whiteboard imports note-marks.ts, which imports only the 7h target test (no discussion.ts / constitution)', /from '@\/lib\/tutor\/v2\/note-marks'/.test(comp) && (src.match(/^import /gm) ?? []).length === 1 && /from '\.\/target-pauses'/.test(src));
   }
 
   console.log('4  Other 6 (12.87 min): no literal ** in captions or transcript');
@@ -174,6 +195,16 @@ async function main() {
     const s = new V2StarStrip();
     const out = ['a *', '*b*', '* c', ' 2 * 3'].map((p) => s.push(p)).join('');
     check('V2StarStrip: a pair split across pieces is a pair; a single * is kept', out === 'a b c 2 * 3', out);
+    const t = new V2StarStrip();
+    const bi = ['***x', '***', ' and **', '*y***'].map((p) => t.push(p)).join('');
+    check('fix round 1 (minor 3): ***x*** (bold italic) leaves no star, also split across pieces', bi === 'x and y' && t.end() === '', bi);
+    const e = new V2StarStrip(); const held = e.push('ends *');
+    check('fix round 1 (minor 3): a lone star at the very end is held and handed back by end()', held === 'ends ' && e.end() === '*');
+  }
+  check('fix round 1 (minor 3): a lone trailing star and ***…*** leave neither the stream nor the final text (the two the same)', !on.loneHeard.includes('*') && !on.loneSpoken.includes('*') && on.loneSpoken.startsWith('Say it once more. Ready?'), [on.loneHeard, on.loneSpoken]);
+  {
+    const turn = readFileSync(join(__dirname, '..', 'src', 'lib', 'tutor', 'v2', 'turn.ts'), 'utf8');
+    check('fix round 1 (minor 2): the runtime\'s lines that may carry the model\'s words go through the stripper too (two offers, the card ask, the correction)', (turn.match(/input\.onText\?\.\(`\\n\\n\$\{unstar\(/g) ?? []).length === 4);
   }
   check('a maths voice lesson streams as before (stars untouched)', on.mathsStarsHeard === 'We write it **twice**.', on.mathsStarsHeard);
 
@@ -185,7 +216,7 @@ async function main() {
   };
   {
     const off = child('NOTE_TARGET_QUOTES');
-    check('NOTE_TARGET_QUOTES off: no section in the prompt, and the quoted note is spoken with its quotes (as before)', !/TARGET WORDS IN NOTES/.test(off.langSys) && off.noteHeard.includes('I have worked here "for" six years.'), off.noteHeard);
+    check('NOTE_TARGET_QUOTES off: no section in the prompt; a note the model quoted is spoken with its quotes and the 7l marks (as before)', !/TARGET WORDS IN NOTES/.test(off.langSys) && off.noteHeard.includes('I have worked here "for" six years.') && JSON.stringify(off.sessionNoteVoice) === JSON.stringify(on.sessionNoteVoice), off.noteHeard);
     check('… the other items as on', off.bqArgs?.targets === true && JSON.stringify(off.bArgs?.stress) === '["for"]' && off.starsHeard === on.starsHeard);
   }
   {

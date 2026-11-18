@@ -47,8 +47,8 @@ import { v2StopAsked } from './stop-signal';
 import { V2_CLOSE_INVITE_LINE, V2_CLOSE_INVITE_REFUSAL, V2_CLOSE_INVITE_WAIT, V2_CLOSE_MORE_LINE, V2_CLOSE_REOPEN_REFUSAL, v2CloseInviteOn, v2CloseInviteOwed, v2CloseReopened, v2ReplyAsksMoreOrFinish, v2ReplyInvites } from './close-invite';
 import { TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_NOTE_TARGET_QUOTES, TUTOR_V2_NOTE_TARGET_MARK, TUTOR_V2_NOTE_STRESS_MARK, TUTOR_V2_NO_MARKDOWN_STARS, TUTOR_V2_CARD_GLOSS_SHOW } from '../orchestrator/flags';
 import { v2CardGlossOn, v2CleanGloss, v2GlossLevelOn } from './card-gloss';
-import { v2NoteTargetsOn, v2NoteTargetsSection, v2NoteHasTarget, v2NoteStressWords, v2UnquoteNoteTargets } from './note-targets';
-import { V2StarStrip } from './markdown-stars';
+import { v2NoteTargetsOn, v2NoteTargetsSection, v2NoteHasTarget, v2NoteStressWords } from './note-targets';
+import { V2StarStrip, v2StripStars } from './markdown-stars';
 import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, V2_DISCUSSION_CONSTITUTION, directionAsked, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap } from './discussion';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, V2_NOTE_OWN_ANSWER_TOOL, V2_SET_CURRENT_PROBLEM_TOOL, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
@@ -853,6 +853,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   if (visit) { pageTurnAt = 0; pageBefore = visitFrom; toolCalls.push(visit); input.onToolCall?.(visit); }
   // Task 7o (NO_MARKDOWN_STARS): spoken lessons that teach a language (mic test 4, 12.87 min).
   const stars = TUTOR_V2_NO_MARKDOWN_STARS && noteTargets ? new V2StarStrip() : null;
+  // Fix round 1 (minor 2): the runtime's own lines that may carry the model's words (an offer, a card's ask, a correction) too.
+  const unstar = (t: string) => (stars ? v2StripStars(t) : t);
   for (; modelCalls < V2_MAX_MODEL_CALLS;) {
     const params = {
       model: '',
@@ -896,7 +898,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       const unasked = oneQuestion && (!!missed || !askedNow) && v2ReplyHandsOver(saidNow);
       const offer = unasked ? '' : missed ?? (askedNow ? '' : nextPart && plan ? v2PartAskLine({ next: nextPart.title, done: doneLabel, named: v2PartNamedLate(plan.segments[nextPart.index]!, saidNow), history: state.history }) : partOffer(named, namesPart(block.body, saidNow) || namesPart(named, saidNow)));
       heldAt = { raw: block.raw, offer, ...(plan && part && partFlow ? { part: { id: plan.segments[part.index]!.id, title: partLabel } } : {}), ...(unasked ? { unasked } : {}) };
-      if (offer) { input.onText?.(`\n\n${offer}`); saidChars += offer.length + 2; }
+      if (offer) { input.onText?.(`\n\n${unstar(offer)}`); saidChars += unstar(offer).length + 2; }
       input.onToolCall?.({ id: `held_${nowMs.toString(36)}`, name: 'new_page', args: { title: block.body.trim() }, outcome: unasked ? 'not opened yet: held until they are asked whether to go on' : 'not opened yet: the student is asked first' });
     };
     const take = (parts: InlinePart[]) => {
@@ -931,7 +933,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
             gate.flush(); gate.releaseAsk(); gate.dropTrailingCheckIn();
             const offer = v2ReplyHandsOver(saidNow) || endsAsking(lastSentences(stripBoardBlocks(saidNow), 1)) ? '' : v2PracticeMoreLine(state.history);
             heldAt = { raw: part.block.raw, offer, practice: true };
-            if (offer) { input.onText?.(`\n\n${offer}`); saidChars += offer.length + 2; }
+            if (offer) { input.onText?.(`\n\n${unstar(offer)}`); saidChars += unstar(offer).length + 2; }
             input.onToolCall?.({ id: `held_${nowMs.toString(36)}`, name: 'new_page', args: { title: part.block.body.trim() }, outcome: 'not opened: the learner has not yet said enough sentences of their own in this part' });
             continue;
           }
@@ -1005,8 +1007,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           // Task 6f: a note or a table of example sentences a lead-in points at is spoken there too (board-timing.ts
           // noteSentencesToSay): announced before it, at once; otherwise only if the next sentence points back at it.
           if ((part.block.kind === 'note' || part.block.kind === 'table') && gated && languageLesson && TUTOR_V2_SAY_NOTE_SENTENCES) {
-            // Task 7o (NOTE_TARGET_QUOTES): the quotes asked for around a note's targets are the board's: said as before, without them.
-            const note = noteSentencesToSay(part.block.kind, part.block.kind === 'note' && TUTOR_V2_NOTE_TARGET_QUOTES && noteTargets ? v2UnquoteNoteTargets(part.block.body) : part.block.body, `${saidNow}${gate.heldAsk}`);
+            const note = noteSentencesToSay(part.block.kind, part.block.body, `${saidNow}${gate.heldAsk}`);
             if (note) {
               saidCards.set(part.block.raw, note.say); sinceWords = [];
               if (note.announced) gate.speakCard(note.say, { perSentence: true }); else gate.speakCardIf(note.say, pointsBackAtBoard, { perSentence: true });
@@ -1209,7 +1210,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const more = card ? unsaidAsk(String(card.args.statement ?? ''), questionOnce ? sentencesSaid : spoken.join(' ').split(/(?<=[.!?？])\s+/).filter(Boolean), { questionOnce })
       : TUTOR_V2_SPEAK_BOARD_ITEM ? unsaidBoardItem(toolCalls, sentencesSaid, { sentences: !TUTOR_V2_SAY_SENTENCE_CARD }) : null;
     if (more) {
-      input.onText?.(`\n\n${more}`);
+      input.onText?.(`\n\n${unstar(more)}`);
       spoken.push(more);
       const holder = [...stored].reverse().find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));
       const textBlock = [...((holder?.content as Anthropic.ContentBlockParam[] | undefined) ?? [])].reverse().find((c): c is Anthropic.TextBlockParam => c.type === 'text');
@@ -1436,7 +1437,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const fix = await mathsCheck;
   if (fix && !state.closed && !input.signal?.aborted) {
     const words = `One correction: ${fix}`;
-    input.onText?.(`\n\n${words}`);
+    input.onText?.(`\n\n${unstar(words)}`);
     spoken.push(words);
     const holder = [...stored].reverse().find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));
     const textBlock = [...((holder?.content as Anthropic.ContentBlockParam[] | undefined) ?? [])].reverse().find((c): c is Anthropic.TextBlockParam => c.type === 'text');
@@ -1625,7 +1626,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   if (owedAfter.length) state.cardsOwed = owedAfter;
   let finalWords = stripToolTalk(spoken.join('\n\n'));
   // Task 7o (NO_MARKDOWN_STARS): the transcript's final text, as streamed (the stored reply keeps the model's words).
-  if (stars) finalWords = finalWords.replace(/\*\*/g, '');
+  // Fix round 1 (minor 3): a lone star held back at the very end was never streamed, so it leaves the final text too.
+  if (stars) { finalWords = v2StripStars(finalWords); if (stars.end()) { const at = finalWords.lastIndexOf('*'); if (at >= 0) finalWords = finalWords.slice(0, at) + finalWords.slice(at + 1); } }
   // A discussion that closes with nothing left to say would end in silence: its closing words were an order to
   // itself, which the net above removed (replay round 8). It closes on the direction they chose instead.
   if (discussion && state.closed && !finalWords.trim()) {
