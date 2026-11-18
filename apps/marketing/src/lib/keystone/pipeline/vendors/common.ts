@@ -12,6 +12,8 @@ export type VendorReply = {
   tokensOut: number;
   /** The model that actually served the reply, when the vendor says. */
   model?: string;
+  /** True when a vendor-side fallback model served the reply. */
+  fellBack?: boolean;
 };
 
 /** Network or HTTP failure. Retryable: network error, 408, 429, 5xx (incl. 529). */
@@ -21,12 +23,12 @@ export class TransportError extends Error {
   }
 }
 
-/** The call carries something this model cannot take (e.g. an image type); no HTTP was sent. */
-export class InputError extends Error {}
-
 export function retryableStatus(status: number | undefined): boolean {
   return status === undefined || status === 408 || status === 429 || status >= 500;
 }
+
+export const IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"] as const;
+export type ImageType = (typeof IMAGE_TYPES)[number];
 
 export function toBase64(data: Uint8Array): string {
   return Buffer.from(data).toString("base64");

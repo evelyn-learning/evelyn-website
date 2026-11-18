@@ -3,9 +3,9 @@
 // failure. Later pipeline steps never talk to a vendor SDK directly.
 // No `next/*` imports: this runs from tsx scripts on a laptop too.
 
-import type { ModelCall, ModelDeps, ModelReply, ModelSpec, Role, Vendor } from "./types";
-import { parseJsonReply, validate } from "./schema";
-import { InputError, TransportError, type VendorReply } from "./vendors/common";
+import type { ModelCall, ModelDeps, ModelFailureReason, ModelReply, ModelSpec, Role, Vendor } from "./types";
+import { assertSchemaSupported, parseJsonReply, validate } from "./schema";
+import { IMAGE_TYPES, TransportError, type VendorReply } from "./vendors/common";
 import { callAnthropic } from "./vendors/anthropic";
 import { callOpenAICompatible } from "./vendors/openai";
 import { callGemini } from "./vendors/gemini";
@@ -38,10 +38,24 @@ const DEEPSEEK: ModelSpec = {
 const GEMINI: ModelSpec = {
   // Gemini 4 Carbon — strongest model in the stable Gemini 4 family; text/image/PDF
   // in, structured outputs, thinking. $2 in / $10 out (<=200K prompt); the pricing
-  // page says this DOUBLES to $4 / $20 on 2026-12-01 — update then.
+  // page says this DOUBLES to $4 / $20 on 2026-12-01 (priceChanges below).
   // Checked 2026-11-17: https://aistudio.google.com/docs/models/gemini-4-carbon
   // and https://aistudio.google.com/docs/pricing
   vendor: "gemini", model: "gemini-4-carbon", pricePerMTokIn: 2, pricePerMTokOut: 10,
+  priceChanges: [{ from: "2026-12-01", pricePerMTokIn: 4, pricePerMTokOut: 20 }],
+};
+
+// Rates for the Claude models Anthropic's refusal fallback may serve a reply
+// with, so a fallen-back reply is priced at the serving model's rates. An
+// unknown serving model is priced at the requested model's rates.
+// Source: claude-api skill model table (cached 2026-11-03), checked 2026-11-17.
+const CLAUDE_FALLBACK_PRICES: Record<string, { pricePerMTokIn: number; pricePerMTokOut: number }> = {
+  "claude-opus-5-5": { pricePerMTokIn: 4, pricePerMTokOut: 20 },
+  "claude-opus-5": { pricePerMTokIn: 5, pricePerMTokOut: 25 },
+  "claude-opus-4-8": { pricePerMTokIn: 5, pricePerMTokOut: 25 },
+  "claude-sonnet-5-5": { pricePerMTokIn: 2, pricePerMTokOut: 10 },
+  "claude-sonnet-5": { pricePerMTokIn: 2, pricePerMTokOut: 10 },
+  "claude-fable-5-1": { pricePerMTokIn: 10, pricePerMTokOut: 50 },
 };
 
 export const MODEL_FOR: Record<Role, ModelSpec> = {
@@ -82,8 +96,32 @@ export function assertKeys(roles: Role[] = ALL_ROLES): void {
   if (missing.length) throw new Error(`missing API key env: ${missing.join(", ")}`);
 }
 
-export function costOf(spec: ModelSpec, tokensIn: number, tokensOut: number): number {
-  return (tokensIn / 1e6) * spec.pricePerMTokIn + (tokensOut / 1e6) * spec.pricePerMTokOut;
+/** The spec's prices in force at `now` (the latest priceChanges entry whose day has begun, UTC). */
+export function pricesAt(spec: ModelSpec, now: Date = new Date()): { pricePerMTokIn: number; pricePerMTokOut: number } {
+  let p = { pricePerMTokIn: spec.pricePerMTokIn, pricePerMTokOut: spec.pricePerMTokOut };
+  let from = "";
+  const today = now.toISOString().slice(0, 10);
+  for (const c of spec.priceChanges ?? []) {
+    if (c.from <= today && c.from >= from) { p = c; from = c.from; }
+  }
+  return p;
+}
+
+export function costOf(spec: ModelSpec, tokensIn: number, tokensOut: number, now?: Date): number {
+  const p = pricesAt(spec, now);
+  return (tokensIn / 1e6) * p.pricePerMTokIn + (tokensOut / 1e6) * p.pricePerMTokOut;
+}
+
+/** Remove configured key values and anything key-shaped from text that leaves this module. */
+function redact(text: string): string {
+  let out = text;
+  for (const names of Object.values(KEY_ENV)) {
+    for (const name of names) {
+      const v = process.env[name];
+      if (v && v.length >= 8) out = out.split(v).join("[redacted]");
+    }
+  }
+  return out.replace(/\b(sk|key|AIza)[-_A-Za-z0-9*.]{6,}/g, "[redacted]");
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -98,41 +136,52 @@ function send(spec: ModelSpec, call: ModelCall, key: string, f: typeof fetch | u
 }
 
 export async function callModel<T>(call: ModelCall, deps: ModelDeps = {}): Promise<ModelReply<T>> {
+  // Throws only for programmer/config errors: live switch, unknown role, bad schema, missing key.
   if (process.env.KEYSTONE_PIPELINE_LIVE !== "1" && !deps.fetch) throw new Error("live model calls are off");
   const spec = MODEL_FOR[call.role];
   if (!spec) throw new Error(`unknown role ${String(call.role)}`);
-  if (spec.vendor === "deepseek" && call.images?.length) {
-    return { ok: false, reason: "shape", detail: "this model cannot read images", cost: 0, model: spec.model };
-  }
+  assertSchemaSupported(call.schema);
   assertKeys([call.role]);
   const key = keyFor(spec.vendor)!;
-  const started = Date.now();
 
+  const failed = (reason: ModelFailureReason, detail: string, cost = 0, model = spec.model): ModelReply<T> =>
+    ({ ok: false, reason, detail: redact(detail), cost, model });
+
+  if (call.images?.length) {
+    if (spec.vendor === "deepseek") return failed("shape", "this model cannot read images");
+    const bad = call.images.find((img) => !(IMAGE_TYPES as readonly string[]).includes(img.mime));
+    if (bad) return failed("shape", `unsupported image type ${bad.mime}`);
+  }
+
+  const started = Date.now();
   let reply: VendorReply | undefined;
   for (let attempt = 0; ; attempt++) {
     try {
       reply = await send(spec, call, key, deps.fetch);
       break;
     } catch (e) {
-      if (e instanceof InputError) return { ok: false, reason: "shape", detail: e.message, cost: 0, model: spec.model };
-      if (!(e instanceof TransportError)) throw e;
-      if (e.retryable && attempt === 0) {
-        await sleep(deps.backoffMs ?? 2000);
-        continue;
+      if (e instanceof TransportError) {
+        if (e.retryable && attempt === 0) {
+          await sleep(deps.backoffMs ?? 2000);
+          continue;
+        }
+        return failed("transport", e.message);
       }
-      return { ok: false, reason: "transport", detail: e.message, cost: 0, model: spec.model };
+      // Anything else from an adapter (an unreadable 200, a missing field): no retry.
+      return failed("transport", `${spec.vendor}: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
 
-  const cost = costOf(spec, reply.tokensIn, reply.tokensOut);
   const model = reply.model || spec.model;
-  const fail = (reason: "shape" | "refusal" | "empty", detail: string): ModelReply<T> => ({ ok: false, reason, detail, cost, model });
+  const fellBack = reply.fellBack ?? false;
+  const served = fellBack ? CLAUDE_FALLBACK_PRICES[model] : undefined;
+  const cost = costOf(served ? { ...spec, ...served, priceChanges: undefined } : spec, reply.tokensIn, reply.tokensOut, deps.now);
 
-  if (reply.refusal !== undefined) return fail("refusal", reply.refusal || "refused");
-  if (!reply.text.trim()) return fail("empty", reply.truncated ? "no text before the output token limit" : "no text in reply");
+  if (reply.refusal !== undefined) return failed("refusal", reply.refusal || "refused", cost, model);
+  if (!reply.text.trim()) return failed("empty", reply.truncated ? "no text before the output token limit" : "no text in reply", cost, model);
   const parsed = parseJsonReply(reply.text);
-  if (!parsed.ok) return fail("shape", reply.truncated ? `${parsed.detail} (hit the output token limit)` : parsed.detail);
+  if (!parsed.ok) return failed("shape", reply.truncated ? `${parsed.detail} (hit the output token limit)` : parsed.detail, cost, model);
   const err = validate(parsed.value, call.schema);
-  if (err) return fail("shape", err);
-  return { ok: true, value: parsed.value as T, cost, model, ms: Date.now() - started };
+  if (err) return failed("shape", err, cost, model);
+  return { ok: true, value: parsed.value as T, cost, model, ms: Date.now() - started, fellBack };
 }

@@ -4,6 +4,9 @@ import { isStrictSchema } from "../schema";
 import { REQUEST_TIMEOUT_MS, TransportError, retryableStatus, toBase64, type VendorReply } from "./common";
 
 const DEEPSEEK_BASE_URL = "https://api.deepseek.com";
+// deepseek-v4-pro maximum output, "MAXIMUM: 384K" (read as 384,000 to stay under it).
+// Checked 2026-11-17: https://api-docs.deepseek.com/quick_start/pricing
+const DEEPSEEK_MAX_TOKENS = 384_000;
 
 // OpenAI (Chat Completions, json_schema structured output, reasoning effort high)
 // and DeepSeek (OpenAI-compatible API; text only; JSON via json_object, which
@@ -39,6 +42,7 @@ export async function callOpenAICompatible(
             { role: "user", content: userContent },
           ],
           response_format: { type: "json_object" },
+          max_tokens: DEEPSEEK_MAX_TOKENS,
         };
 
   let res: OpenAI.Chat.ChatCompletion;
@@ -52,9 +56,13 @@ export async function callOpenAICompatible(
     throw e;
   }
 
-  const base = { tokensIn: res.usage?.prompt_tokens ?? 0, tokensOut: res.usage?.completion_tokens ?? 0, model: res.model };
+  if (!res || typeof res !== "object" || !Array.isArray(res.choices) || !res.usage) {
+    throw new Error(`${flavour}: unreadable 200 response (no choices/usage)`);
+  }
+  // DeepSeek cache hits are priced at the cache-miss rate (an upper bound; see Minor 6 in the task-5 review).
+  const base = { tokensIn: res.usage.prompt_tokens, tokensOut: res.usage.completion_tokens, model: res.model };
   const choice = res.choices[0];
-  if (!choice) return { ...base, text: "" };
+  if (!choice?.message) throw new Error(`${flavour}: 200 response with no choices`);
   if (choice.message.refusal) return { ...base, text: "", refusal: choice.message.refusal };
   if (choice.finish_reason === "content_filter") return { ...base, text: "", refusal: "finish_reason content_filter" };
   return { ...base, text: choice.message.content ?? "", truncated: choice.finish_reason === "length" };

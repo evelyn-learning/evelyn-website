@@ -1,23 +1,21 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { ModelCall, ModelSpec } from "../types";
-import { InputError, REQUEST_TIMEOUT_MS, TransportError, retryableStatus, toBase64, type VendorReply } from "./common";
-
-const IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"] as const;
-type ImageType = (typeof IMAGE_TYPES)[number];
+import { REQUEST_TIMEOUT_MS, TransportError, retryableStatus, toBase64, type ImageType, type VendorReply } from "./common";
 
 // Claude via the Messages API with JSON-schema structured output
 // (output_config.format). Thinking is always on for this model; effort "high".
 // Server-side refusal fallback ("default") is on, per the claude-api skill: a
 // policy decline is retried on a fallback model inside the same call; only a
-// refusal of the whole chain comes back as stop_reason "refusal".
+// refusal of the whole chain comes back as stop_reason "refusal". When a
+// fallback ran, the content carries `fallback` blocks; the answer is the text
+// after the last one, and res.model names the model that served it.
 // Note: Anthropic's structured outputs need additionalProperties:false on every object.
 export async function callAnthropic(spec: ModelSpec, call: ModelCall, apiKey: string, f?: typeof fetch): Promise<VendorReply> {
   const client = new Anthropic({ apiKey, fetch: f, maxRetries: 0, timeout: REQUEST_TIMEOUT_MS });
-  const content: Anthropic.Beta.BetaContentBlockParam[] = [];
-  for (const img of call.images ?? []) {
-    if (!(IMAGE_TYPES as readonly string[]).includes(img.mime)) throw new InputError(`image type ${img.mime} is not accepted by this model`);
-    content.push({ type: "image", source: { type: "base64", media_type: img.mime as ImageType, data: toBase64(img.data) } });
-  }
+  const content: Anthropic.Beta.BetaContentBlockParam[] = (call.images ?? []).map((img) => ({
+    type: "image",
+    source: { type: "base64", media_type: img.mime as ImageType, data: toBase64(img.data) }, // mime checked in callModel
+  }));
   content.push({ type: "text", text: call.user });
 
   let res: Anthropic.Beta.BetaMessage;
@@ -38,14 +36,22 @@ export async function callAnthropic(spec: ModelSpec, call: ModelCall, apiKey: st
     }
     throw e;
   }
+  if (!res || typeof res !== "object" || !Array.isArray(res.content) || !res.usage) {
+    throw new Error("anthropic: unreadable 200 response (no content/usage)");
+  }
 
   const u = res.usage;
+  // Cache writes/reads are priced at the plain input rate (an upper bound; see Minor 6 in the task-5 review).
   const tokensIn = u.input_tokens + (u.cache_creation_input_tokens ?? 0) + (u.cache_read_input_tokens ?? 0);
-  const base = { tokensIn, tokensOut: u.output_tokens, model: res.model };
+  const blocks = res.content as { type: string; text?: string }[];
+  let lastFallback = -1;
+  blocks.forEach((b, i) => { if (b.type === "fallback") lastFallback = i; });
+  const fellBack = lastFallback >= 0 || (!!res.model && res.model !== spec.model);
+  const base = { tokensIn, tokensOut: u.output_tokens, model: res.model, fellBack };
   if (res.stop_reason === "refusal") {
     const d = (res as { stop_details?: { category?: string | null; explanation?: string | null } | null }).stop_details;
     return { ...base, text: "", refusal: [d?.category, d?.explanation].filter(Boolean).join(": ") || "stop_reason refusal" };
   }
-  const text = res.content.map((b) => (b.type === "text" ? b.text : "")).join("");
+  const text = blocks.slice(lastFallback + 1).map((b) => (b.type === "text" ? b.text ?? "" : "")).join("");
   return { ...base, text, truncated: res.stop_reason === "max_tokens" };
 }

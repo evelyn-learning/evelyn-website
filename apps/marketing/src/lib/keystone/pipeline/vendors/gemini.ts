@@ -43,6 +43,7 @@ export async function callGemini(spec: ModelSpec, call: ModelCall, apiKey: strin
   try {
     data = (await res.json()) as GeminiResponse;
   } catch (e) {
+    // An unreadable 200 costs nothing here and is retried once (Minor 6 in the task-5 review: left as is).
     throw new TransportError(`gemini unreadable response: ${(e as Error).message}`, true);
   }
 

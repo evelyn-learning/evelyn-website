@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { MODEL_FOR, assertKeys, callModel, costOf } from "./models";
-import { isStrictSchema, parseJsonReply, validate } from "./schema";
+import { assertSchemaSupported, isStrictSchema, parseJsonReply, validate } from "./schema";
 import type { ModelCall, Role } from "./types";
 
 // Fake keys for this process only: every request goes to a fake fetch.
@@ -44,6 +44,19 @@ const geminiText = (text: string, finishReason = "STOP") => geminiMsg({ candidat
   assert.match(validate([{ k: "c" }], s2)!, /\$\[0\]\.k: "c" is not one of/);
   assert.match(validate("x", { type: "number" })!, /expected number, got string/);
   assert.match(validate(1.5, { type: "integer" })!, /expected integer/);
+  // own properties only: nothing comes from the prototype chain
+  assert.match(validate(JSON.parse('{"ok":true,"constructor":1}'), schema)!, /unexpected field "constructor"/);
+  const ts = { type: "object", properties: { toString: { type: "string" } }, required: ["toString"], additionalProperties: false };
+  assert.match(validate({}, ts)!, /missing required field "toString"/);
+  assert.match(validate(new Date(), { type: "object" })!, /expected object/, "non-plain object rejected");
+  // the supported subset, additionalProperties:false on every object
+  assert.doesNotThrow(() => assertSchemaSupported(schema));
+  assert.doesNotThrow(() => assertSchemaSupported({ type: "array", items: { type: "object", properties: { k: { enum: ["a"] }, v: { type: ["string", "null"], description: "d" } }, required: ["k"], additionalProperties: false } }));
+  assert.throws(() => assertSchemaSupported({ type: "object", properties: { a: { anyOf: [{ type: "string" }] } }, additionalProperties: false }), /anyOf.*\$\.properties\.a/);
+  assert.throws(() => assertSchemaSupported({ type: "array", items: { type: "string" }, minItems: 1 }), /minItems/);
+  assert.throws(() => assertSchemaSupported({ type: "object", properties: {} }), /additionalProperties: false/);
+  assert.throws(() => assertSchemaSupported({ type: "array", items: { type: "object", properties: {}, additionalProperties: true } }), /additionalProperties: false/);
+  assert.throws(() => assertSchemaSupported({ type: "date" }), /type "date"/);
   assert.equal(isStrictSchema({ type: "object", properties: { ok: { type: "boolean" } }, required: ["ok"], additionalProperties: false }), true);
   assert.equal(isStrictSchema(schema), false, "optional n → not strict");
   assert.equal(isStrictSchema({ type: "array", items: { type: "object", properties: {}, required: [] } }), false, "no additionalProperties:false");
@@ -52,8 +65,11 @@ const geminiText = (text: string, finishReason = "STOP") => geminiMsg({ candidat
 // JSON reply parsing: one fence stripped, otherwise pure JSON only
 {
   assert.deepEqual(parseJsonReply('{"ok":true}'), { ok: true, value: { ok: true } });
-  assert.deepEqual(parseJsonReply('Here you go:\n```json\n{"ok":true}\n```\nDone.'), { ok: true, value: { ok: true } });
+  assert.deepEqual(parseJsonReply('```json\n{"ok":true}\n```'), { ok: true, value: { ok: true } });
+  assert.deepEqual(parseJsonReply('  ```\n{"ok":true}\n```  '), { ok: true, value: { ok: true } });
+  assert.equal(parseJsonReply('Here you go:\n```json\n{"ok":true}\n```\nDone.').ok, false, "prose around a fence is rejected");
   assert.equal(parseJsonReply('Sure! {"ok":true}').ok, false);
+  assert.deepEqual(parseJsonReply('{"md":"```js\\nx\\n```"}'), { ok: true, value: { md: "```js\nx\n```" } }, "``` inside a JSON string");
 }
 
 // MODEL_FOR: vendor by role (spec §5, §12)
@@ -153,6 +169,7 @@ async function main() {
     const g = fakeFetch([anthropicMsg([{ type: "text", text: '{"ok":true}' }])]);
     const r = await callModel(call("solver1", { images: [{ mime: "image/heic", data: new Uint8Array([1]) }] }), deps(g.fn));
     assert.equal(!r.ok && r.reason, "shape");
+    if (!r.ok) assert.equal(r.detail, "unsupported image type image/heic");
     assert.equal(g.seen.length, 0);
   }
 
@@ -246,6 +263,99 @@ async function main() {
     const g = fakeFetch([{ status: 429, body: { error: { message: "slow down" } } }, geminiText('{"ok":true}')]);
     assert.equal((await callModel(call("intake"), deps(g.fn))).ok, true);
     assert.equal(g.seen.length, 2);
+  }
+
+  // unsupported image type fails fast for every vendor, no HTTP
+  for (const role of ["solver2", "intake", "author"] as Role[]) {
+    const f = fakeFetch([openaiMsg({ content: '{"ok":true}' })]);
+    const r = await callModel(call(role, { images: [{ mime: "image/tiff", data: new Uint8Array([1]) }] }), deps(f.fn));
+    assert.equal(!r.ok && r.detail, "unsupported image type image/tiff", role);
+    assert.equal(f.seen.length, 0, role);
+  }
+
+  // schema outside the subset, or an object without additionalProperties:false → throws at call time
+  {
+    const f = fakeFetch([openaiMsg({ content: '{"ok":true}' })]);
+    await assert.rejects(callModel(call("solver2", { schema: { type: "object", properties: { ok: { anyOf: [{ type: "boolean" }] } }, additionalProperties: false } }), deps(f.fn)), /anyOf/);
+    await assert.rejects(callModel(call("intake", { schema: { type: "object", properties: { ok: { type: "boolean" } } } }), deps(f.fn)), /additionalProperties: false/);
+    assert.equal(f.seen.length, 0);
+  }
+
+  // shape: own properties only
+  {
+    const f = fakeFetch([openaiMsg({ content: '{"ok":true,"constructor":1}' })]);
+    assert.equal(((await callModel(call("solver2"), deps(f.fn))) as { reason?: string }).reason, "shape");
+  }
+
+  // a 200 with a body the adapter cannot read → transport, not a throw, no retry
+  {
+    const html = async () => new Response("<html>gateway</html>", { status: 200, headers: { "content-type": "text/html" } });
+    let n = 0;
+    const counted = (async () => { n++; return html(); }) as unknown as typeof fetch;
+    for (const role of ["solver1", "solver2"] as Role[]) {
+      n = 0;
+      const r = await callModel(call(role), deps(counted));
+      assert.equal(!r.ok && r.reason, "transport", `${role} html body`);
+      assert.equal(n, 1, `${role} html body not retried`);
+    }
+    const f = fakeFetch([{ status: 200, body: { id: "c1", object: "chat.completion", created: 1, model: "m", choices: [], usage: { prompt_tokens: 1, completion_tokens: 1 } } }]);
+    const r = await callModel(call("solver2"), deps(f.fn));
+    assert.equal(r.ok, false, "choices: [] is a failure");
+    const g = fakeFetch([{ status: 200, body: { id: "msg_1", type: "message", role: "assistant", model: MODEL_FOR.solver1.model, content: [{ type: "text", text: '{"ok":true}' }], stop_reason: "end_turn" } }]);
+    const r2 = await callModel(call("solver1"), deps(g.fn));
+    assert.equal(!r2.ok && r2.reason, "transport", "missing usage");
+    assert.equal(g.seen.length, 1);
+  }
+
+  // anthropic refusal fallback: text after the last fallback block, priced at the serving model, fellBack flagged
+  {
+    const f = fakeFetch([anthropicMsg([
+      { type: "text", text: "partial from the first model" },
+      { type: "fallback", from: { model: "claude-fable-5-2" }, to: { model: "claude-opus-5-5" } },
+      { type: "text", text: '{"ok":true}' },
+    ], "end_turn", { input_tokens: 1000, output_tokens: 500 }, { model: "claude-opus-5-5" })]);
+    const r = await callModel<{ ok: boolean }>(call("solver1"), deps(f.fn));
+    assert.equal(r.ok, true);
+    if (r.ok) {
+      assert.deepEqual(r.value, { ok: true });
+      assert.equal(r.model, "claude-opus-5-5");
+      assert.equal(r.fellBack, true);
+      assert.equal(r.cost, 1000 / 1e6 * 4 + 500 / 1e6 * 20, "priced at Opus 5.5 rates");
+    }
+    const g = fakeFetch([anthropicMsg([{ type: "text", text: '{"ok":true}' }])]);
+    const r2 = await callModel(call("solver1"), deps(g.fn));
+    assert.equal(r2.ok && r2.fellBack, false);
+  }
+
+  // a key echoed in an error message never reaches detail
+  {
+    const saved = process.env.OPENAI_API_KEY;
+    process.env.OPENAI_API_KEY = "sk-proj-SECRETabcdef123456";
+    const f = fakeFetch([{ status: 401, body: { error: { message: "Incorrect API key provided: sk-proj-SECRETabcdef123456. Also sk-proj-****3456", type: "invalid_request_error" } } }]);
+    const r = await callModel(call("solver2"), deps(f.fn));
+    process.env.OPENAI_API_KEY = saved;
+    assert.equal(!r.ok && r.reason, "transport");
+    if (!r.ok) {
+      assert.ok(r.detail.includes("[redacted]"), r.detail);
+      assert.ok(!r.detail.includes("SECRET") && !r.detail.includes("3456"), r.detail);
+    }
+  }
+
+  // date-aware prices: Gemini doubles on 2026-12-01
+  {
+    const before = fakeFetch([geminiText('{"ok":true}')]);
+    const r1 = await callModel(call("intake"), { ...deps(before.fn), now: new Date("2026-11-30T12:00:00Z") });
+    const after = fakeFetch([geminiText('{"ok":true}')]);
+    const r2 = await callModel(call("intake"), { ...deps(after.fn), now: new Date("2026-12-02T12:00:00Z") });
+    assert.equal(r1.cost, 100 / 1e6 * 2 + 50 / 1e6 * 10);
+    assert.equal(r2.cost, 100 / 1e6 * 4 + 50 / 1e6 * 20);
+  }
+
+  // deepseek gets an explicit max_tokens
+  {
+    const f = fakeFetch([openaiMsg({ content: '{"ok":true}' })]);
+    await callModel(call("solver3Text"), deps(f.fn));
+    assert.equal(typeof f.seen[0].body.max_tokens, "number");
   }
 
   console.log("models.test: ok");
