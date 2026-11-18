@@ -38,6 +38,8 @@ type Props = {
   fixedHere: FlagView[];
   stillOpen: FlagView[];
   canAccept: boolean;
+  /** Shown inside the item page: version links stay on that page and the heading is a section title. */
+  embedded?: boolean;
 };
 
 /** The player's API (Task 1 contract). Missing on the legacy prototypes: flags then save with step/line unknown. */
@@ -82,7 +84,7 @@ async function post(fields: Record<string, string>, shots: Blob[] = []): Promise
 export function AnimReview(p: Props) {
   const router = useRouter();
   const frame = useRef<HTMLIFrameElement>(null);
-  const [width, setWidth] = useState<(typeof WIDTHS)[number]["key"]>("desktop");
+  const [width, setWidth] = useState<(typeof WIDTHS)[number]["key"]>(p.embedded ? "tablet" : "desktop");
   const [draft, setDraft] = useState<Draft | null>(null);
   const draftRef = useRef(draft);
   draftRef.current = draft;
@@ -331,11 +333,17 @@ export function AnimReview(p: Props) {
     <div className="ks-ar">
       <div className="ks-ar-head">
         <div>
-          <h1>
-            Item {p.itemId} · v{p.version} <span className={`ks-chip a-${p.status}`}>{ANIMATION_STATUS_LABEL[p.status]}</span>
-          </h1>
+          {p.embedded ? (
+            <h2>
+              Animated solution · v{p.version} <span className={`ks-chip a-${p.status}`}>{ANIMATION_STATUS_LABEL[p.status]}</span>
+            </h2>
+          ) : (
+            <h1>
+              Item {p.itemId} · v{p.version} <span className={`ks-chip a-${p.status}`}>{ANIMATION_STATUS_LABEL[p.status]}</span>
+            </h1>
+          )}
           <p className="ks-sub">
-            <Link href={`${p.base}/animated`}>All animated solutions</Link>
+            {p.embedded ? "Flag anything wrong here. It goes to Castle Rock with the written solution." : <Link href={`${p.base}/animated`}>All animated solutions</Link>}
             {p.voice ? ` · voice: ${p.voice}` : ""}
             {p.notes ? ` · ${p.notes}` : ""}
           </p>
@@ -343,7 +351,7 @@ export function AnimReview(p: Props) {
         <div className="ks-ar-ctl">
           <nav className="ks-ar-seg" aria-label="Version">
             {p.versions.map((v) => (
-              <Link key={v.version} href={`${p.base}/animated/${p.itemId}?v=${v.version}`} className={v.version === p.version ? "on" : ""} title={ANIMATION_STATUS_LABEL[v.status]}>
+              <Link key={v.version} href={p.embedded ? `${p.base}/item/${p.itemId}?av=${v.version}#animated` : `${p.base}/animated/${p.itemId}?v=${v.version}`} className={v.version === p.version ? "on" : ""} title={ANIMATION_STATUS_LABEL[v.status]}>
                 v{v.version}
               </Link>
             ))}

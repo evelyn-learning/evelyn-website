@@ -156,7 +156,9 @@ export type ItemDoc = {
   /** Original QTI XML (items that arrived as QTI); resource paths as used in the XML. */
   qti?: { apip: string; metadata: string; resources: string[]; passages?: { file: string; xml: string }[] };
   /** Animated (voiced) player attached to the item: files under assets/<itemId>/player/. */
-  player?: { entry: string; voice?: string; height: number; note?: string; attachedAt: Date };
+  player?: { entry: string; voice?: string; height: number; note?: string; attachedAt: Date; version?: number };
+  /** How the owner asked for this item's animation to be built ("api": with API credits; absent: by hand in a session). */
+  animate?: { route: "api"; requestedAt: Date; requestedBy: string };
   stage: Stage;
   /** The latest key query (kept for the record once answered). Undefined on items never queried. */
   keyQuery?: KeyQueryDoc;
@@ -428,7 +430,11 @@ function defineModels(conn: Connection): Models {
       required: false,
     },
     player: {
-      type: new Schema({ entry: String, voice: String, height: Number, note: String, attachedAt: Date }, { _id: false }),
+      type: new Schema({ entry: String, voice: String, height: Number, note: String, attachedAt: Date, version: Number }, { _id: false }),
+      required: false,
+    },
+    animate: {
+      type: new Schema({ route: String, requestedAt: Date, requestedBy: String }, { _id: false }),
       required: false,
     },
     stage: { type: String, index: true },

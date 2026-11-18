@@ -6,6 +6,9 @@ import { ownerQueue, type QueueRow } from "@/lib/keystone/queries";
 import { pacificTime } from "@/lib/keystone/pipeline/status";
 import { TopBar } from "../_components/TopBar";
 import { DoneNote, HeldControls, HoldControl } from "../_components/OwnerControls";
+import { listAnimations, toAnimate } from "@/lib/keystone/animreview/store";
+import { ANIMATION_STATUS_LABEL } from "@/lib/keystone/animreview/pure";
+import { setAnimateRouteAction } from "../actions";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Your queue" };
@@ -34,7 +37,9 @@ function Facts({ r }: { r: QueueRow }) {
   );
 }
 
-function Head({ r, base }: { r: QueueRow; base: string }) {
+type AnimNote = Map<string, string>;
+
+function Head({ r, base, anim }: { r: QueueRow; base: string; anim?: AnimNote }) {
   return (
     <div className="ks-q-head">
       <Link href={`${base}/item/${encodeURIComponent(r.itemId)}${r.stage === "ready" ? "?stage=ready" : ""}`}>
@@ -44,6 +49,7 @@ function Head({ r, base }: { r: QueueRow; base: string }) {
         {r.course || "No course"} · {ITEM_TYPE_LABEL[r.itemType] ?? r.itemType}
         {r.stage !== "ready" ? ` · ${STAGE_LABEL[r.stage]}` : ""}
       </span>
+      {anim?.has(r.itemId) && <span className="ks-q-meta">· {anim.get(r.itemId)}</span>}
       {r.seenAt && <span className="ks-q-seen">Seen {pacificTime(new Date(r.seenAt))}</span>}
     </div>
   );
@@ -66,6 +72,10 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
   const { done } = await searchParams;
   const q = await ownerQueue(user.role);
   if (!q) return null; // unreachable: requireUser sent any other role to the overview
+  const [anims, todo] = await Promise.all([listAnimations(user.role), toAnimate(user.role)]);
+  const anim: AnimNote = new Map(
+    (anims ?? []).map((a) => [a.itemId, `Animation v${a.latest}: ${ANIMATION_STATUS_LABEL[a.status]}${a.openFlags ? `, ${a.openFlags} open flag${a.openFlags === 1 ? "" : "s"}` : ""}`]),
+  );
   const open = (id: string, ready = true) => `${base}/item/${encodeURIComponent(id)}${ready ? "?stage=ready" : ""}`;
 
   return (
@@ -99,7 +109,7 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
             <ul className="ks-q-list">
               {q.waiting.map((r) => (
                 <li key={r.itemId} className={`ks-q-row${r.seenAt ? " seen" : ""}`} data-item={r.itemId}>
-                  <Head r={r} base={base} />
+                  <Head r={r} base={base} anim={anim} />
                   <Why reasons={r.reasons} />
                   <Facts r={r} />
                   <HeldControls itemId={r.itemId} back="queue" openHref={open(r.itemId, r.stage === "ready")} canSend={r.canSend} canSendBack={r.canSendBack} canClear={r.canClear} />
@@ -117,7 +127,7 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
             <ul className="ks-q-list">
               {q.beforeSolution.map((r) => (
                 <li key={r.itemId} className="ks-q-row" data-item={r.itemId}>
-                  <Head r={r} base={base} />
+                  <Head r={r} base={base} anim={anim} />
                   <Why reasons={r.reasons} />
                   <Facts r={r} />
                   <div className="ks-q-ctl">
@@ -139,7 +149,7 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
             <ul className="ks-q-list">
               {q.going.map((r) => (
                 <li key={r.itemId} className="ks-q-row" data-item={r.itemId}>
-                  <Head r={r} base={base} />
+                  <Head r={r} base={base} anim={anim} />
                   <div className="ks-q-when">{r.releaseAt ? `Goes to review ${pacificTime(new Date(r.releaseAt))}` : "No release time yet"}</div>
                   <Why reasons={r.reasons} />
                   <Facts r={r} />
@@ -149,6 +159,39 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
             </ul>
           ) : (
             <div className="ks-empty">Nothing is due to go out by itself.</div>
+          )}
+        </section>
+
+        <section className="ks-card ks-q-sec" id="animate">
+          <h2>To animate · {todo?.length ?? 0}</h2>
+          <p className="ks-sub">Items with a written solution and no animation yet. Tick the ones to build with API credits; the rest are built by hand in a session.</p>
+          {todo?.length ? (
+            <form action={setAnimateRouteAction}>
+              <ul className="ks-q-list">
+                {todo.map((t) => (
+                  <li key={t.itemId} className="ks-q-row" data-item={t.itemId}>
+                    <label className="ks-q-head" style={{ cursor: "pointer" }}>
+                      <input type="checkbox" name="itemId" value={t.itemId} />
+                      <b>Item {t.itemId}</b>
+                      <span className="ks-q-meta">
+                        {t.course || "No course"} · {STAGE_LABEL[t.stage as keyof typeof STAGE_LABEL] ?? t.stage} ·{" "}
+                        {t.route === "api" ? `Queued for API credits${t.requestedAt ? ` ${pacificTime(new Date(t.requestedAt))}` : ""}` : "By hand"}
+                      </span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+              <div className="ks-q-ctl">
+                <button className="ks-btn ok" name="route" value="api">
+                  Build with API credits
+                </button>
+                <button className="ks-btn" name="route" value="hand">
+                  Back to by hand
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="ks-empty">Every item with a written solution has an animation.</div>
           )}
         </section>
       </main>

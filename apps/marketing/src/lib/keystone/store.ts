@@ -404,6 +404,10 @@ export async function sendToReviewByOwner(itemId: string, actor: Actor, now = ne
   const { item } = r;
   if (item.stage !== "ready") return item.stage === "in_review" && canJudgeSolution(item) ? { already: true } : { error: NOT_WAITING };
   if (!r.unreleased) return { error: "There is no unreleased solution to send." };
+  // The animation goes out with the written solution: one approval for both.
+  const { animationBlocksSend, releaseAnimation } = await import("./animreview/store");
+  const blocked = await animationBlocksSend(itemId);
+  if (blocked) return { error: blocked };
   const { Item, Solution } = await ks();
   const moved = await Item.collection.updateOne(
     { itemId, stage: "ready", version: item.version },
@@ -418,6 +422,8 @@ export async function sendToReviewByOwner(itemId: string, actor: Actor, now = ne
   }
   await Solution.updateOne({ itemId, version: item.version, releasedAt: { $exists: false }, staleAt: { $exists: false } }, { $set: { releasedAt: now } });
   await log({ itemId, version: item.version, type: "revision", body: SENT_FOR_REVIEW, username: actor.username, name: actor.name, role: actor.role, createdAt: now });
+  const anim = await releaseAnimation(itemId);
+  if ("error" in anim) return { error: `The solution was sent, but the animation was not attached: ${anim.error}` };
   return { done: true };
 }
 

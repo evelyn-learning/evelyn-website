@@ -21,6 +21,8 @@ delete process.env.KEYSTONE_READONLY;
 
 const A = "993101";
 const B = "993102";
+const C = "993103";
+const D = "993104";
 const OWNER = { username: "qa-owner", role: "evelyn" as const };
 const OTHER = { username: "qa-owner-2", role: "evelyn" as const };
 const REVIEWER = { username: "qa-rev", role: "reviewer" as const };
@@ -34,8 +36,9 @@ const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2
   assert.equal(Animation.db.name, DB, "must run against the test database");
   await Promise.all([Animation.init(), AnimFlag.init()]);
   const clean = async () => {
-    await Animation.deleteMany({ itemId: { $in: [A, B] } });
-    await AnimFlag.deleteMany({ itemId: { $in: [A, B] } });
+    await Animation.deleteMany({ itemId: { $in: [A, B, C, D] } });
+    await AnimFlag.deleteMany({ itemId: { $in: [A, B, C, D] } });
+    await (await ks()).Item.deleteMany({ itemId: { $in: [C, D] } });
     await rm(DATA, { recursive: true, force: true });
   };
   const ok = <T>(r: { ok: T } | { error: string }): T => {
@@ -149,6 +152,55 @@ const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2
     await assert.rejects(s.recordPublish({ itemId: A, height: 1, addresses: [], replies: {}, createdBy: "qa" }, 4), /read-only/);
     delete process.env.KEYSTONE_READONLY;
     assert.equal(await Animation.countDocuments({ itemId: A }), 3);
+
+    // --- release to Castle Rock: the files become the item's player; a ready item is held when published ---
+    const { Item } = await ks();
+    const { mkdir, writeFile, readFile } = await import("node:fs/promises");
+    const { animatedDir } = await import("./files");
+    await Item.deleteMany({ itemId: { $in: [C, D] } });
+    await Item.create({ itemId: C, stage: "ready", version: 1, course: "Physics 30", pipeline: { flags: [] } });
+    ok(await s.recordPublish({ itemId: C, height: 1000, voice: "V", addresses: [], replies: {}, createdBy: "qa-owner" }, 1));
+    let b = await Item.findOne({ itemId: C }).lean();
+    assert.equal(b?.pipeline?.heldFor, "praveen", "publishing holds a ready item for the owner");
+    assert.equal(b?.pipeline?.heldWhy, s.ANIMATION_TO_REVIEW);
+    await mkdir(path.join(animatedDir(C, 1), "audio"), { recursive: true });
+    await writeFile(path.join(animatedDir(C, 1), "solution.html"), "<p>v1</p>");
+    const fl = ok(await s.createFlag({ itemId: C, version: 1, comment: "wrong word" }, [], OWNER));
+    assert.match((await s.animationBlocksSend(C)) ?? "", /1 open flag/);
+    err(await s.releaseAnimation(C), /still open/);
+    ok(await s.deleteFlag(fl.id, OWNER));
+    assert.equal(await s.animationBlocksSend(C), null);
+    // accepted while the written solution is not out yet: not released by the accept
+    ok(await s.acceptVersion(C, 1, OWNER));
+    assert.equal((await Animation.findOne({ itemId: C, version: 1 }).lean())?.status, "accepted");
+    assert.deepEqual(ok(await s.releaseAnimation(C)), { version: 1 });
+    assert.equal(await readFile(path.join(DATA, "assets", C, "player", "solution.html"), "utf8"), "<p>v1</p>");
+    b = await Item.findOne({ itemId: C }).lean();
+    assert.equal(b?.player?.entry, "solution.html");
+    assert.equal(b?.player?.version, 1);
+    assert.equal((await Animation.findOne({ itemId: C, version: 1 }).lean())?.status, "released");
+    assert.equal(ok(await s.releaseAnimation(C)), null, "nothing new to release");
+    // v2 after the written solution is with Castle Rock: accepting it releases it and keeps the old player once
+    await Item.updateOne({ itemId: C }, { $set: { stage: "in_review", releasedVersion: 1 } });
+    ok(await s.recordPublish({ itemId: C, height: 1000, addresses: [], replies: {}, createdBy: "qa-owner" }, 2));
+    await mkdir(animatedDir(C, 2), { recursive: true });
+    await writeFile(path.join(animatedDir(C, 2), "solution.html"), "<p>v2</p>");
+    ok(await s.acceptVersion(C, 2, OWNER));
+    assert.equal(await readFile(path.join(DATA, "assets", C, "player", "solution.html"), "utf8"), "<p>v2</p>");
+    assert.equal(await readFile(path.join(DATA, "assets", C, "player.prev", "solution.html"), "utf8"), "<p>v1</p>");
+    assert.equal((await Item.findOne({ itemId: C }).lean())?.player?.version, 2);
+    // the To animate list and the route choice
+    await Item.create({ itemId: D, stage: "approved", version: 1, course: "Math 30-1" });
+    await Animation.deleteMany({ itemId: D });
+    assert.equal(await s.toAnimate("reviewer"), null);
+    assert.deepEqual((await s.toAnimate("evelyn"))!.filter((t) => t.itemId === D).map((t) => t.route), ["hand"]);
+    err(await s.setAnimateRoute([D], "api", REVIEWER), /Only Evelyn/);
+    ok(await s.setAnimateRoute([D], "api", OWNER));
+    assert.deepEqual((await s.toAnimate("evelyn"))!.filter((t) => t.itemId === D).map((t) => t.route), ["api"]);
+    assert.ok((await s.queuedForApi()).includes(D));
+    ok(await s.setAnimateRoute([D], "hand", OWNER));
+    assert.ok(!(await s.queuedForApi()).includes(D));
+    await Item.deleteMany({ itemId: { $in: [C, D] } });
 
     console.log("animreview.dbtest: ok");
   } finally {

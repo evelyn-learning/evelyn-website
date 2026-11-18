@@ -1,13 +1,14 @@
 // Owner review of animated solutions: reads and writes (no Next import, so the scripts and db tests use it
 // directly). Every function that takes a role refuses anyone but Evelyn: the review is hers until a version
 // is released. KEYSTONE_READONLY=1 refuses every write here before it reaches the models (which refuse too).
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { Types } from "mongoose";
 import { isReadOnly, ks, READ_ONLY_MESSAGE, type AnimationDoc, type AnimFlagDoc } from "../db";
 import type { Role } from "../config";
 import { cleanComment, cleanPosition, isFlagId, isItemId, MAX_REPLY, shotsProblem } from "./pure";
-import { shotDir } from "./files";
+import { animatedDir, shotDir } from "./files";
+import { DATA_DIR } from "../assets";
 
 export type Who = { username: string; role: Role };
 export type Flag = AnimFlagDoc & { id: string };
@@ -16,6 +17,8 @@ export type Outcome<T = true> = { ok: T } | { error: string };
 
 const OWNER_ONLY = "Only Evelyn can do that.";
 const OPEN = ["open"] as const;
+/** heldWhy of a ready item held because its animation was published. */
+export const ANIMATION_TO_REVIEW = "Animation to review";
 
 function writable() {
   if (isReadOnly()) throw new Error(READ_ONLY_MESSAGE);
@@ -252,7 +255,71 @@ export async function acceptVersion(itemId: string, version: number, who: Who): 
   const latest = await Animation.findOne({ itemId }, { version: 1 }).sort({ version: -1 }).lean();
   if (latest && latest.version !== version) return { error: `Only the latest version (v${latest.version}) can be accepted.` };
   const r = await Animation.updateOne({ itemId, version, status: { $in: ["review", "fixing"] } }, { $set: { status: "accepted" } });
-  return r.modifiedCount ? { ok: true } : { error: "This version cannot be accepted (already accepted, released or missing)." };
+  if (!r.modifiedCount) return { error: "This version cannot be accepted (already accepted, released or missing)." };
+  // The written solution is already with Castle Rock: the accepted animation joins it now. Otherwise it goes
+  // out with the written solution, when that is sent to review.
+  if (await writtenIsOut(itemId)) {
+    const out = await releaseAnimation(itemId);
+    if ("error" in out) return out;
+  }
+  return { ok: true };
+}
+
+// ---------- release to Castle Rock ----------
+
+/** Whether the item's current written solution has been released to Castle Rock's review. */
+async function writtenIsOut(itemId: string): Promise<boolean> {
+  const { Item } = await ks();
+  const i = await Item.findOne({ itemId }).select("version releasedVersion stage").lean();
+  if (!i || !i.version) return false;
+  return i.stage !== "ready" && (i.releasedVersion ?? i.version) >= i.version;
+}
+
+/** Why the item cannot be sent to review because of its animation (open flags on the latest version), or null. */
+export async function animationBlocksSend(itemId: string): Promise<string | null> {
+  const { Animation } = await ks();
+  const latest = await Animation.findOne({ itemId }, { version: 1 }).sort({ version: -1 }).lean();
+  if (!latest) return null;
+  const n = await openFlagCount(itemId, latest.version);
+  return n ? `The animation has ${n} open flag${n === 1 ? "" : "s"}. It goes out with the solution, so the flag${n === 1 ? "" : "s"} must be fixed first.` : null;
+}
+
+/** Copies one published version into the item's player folder (what Castle Rock's page and the SOLARO download read). */
+export type PlayerCopy = (itemId: string, version: number) => Promise<void>;
+
+/** On this machine: copy beside the player folder, then swap; the folder it replaces is kept once as player.prev. */
+export const copyToPlayerLocal: PlayerCopy = async (itemId, version) => {
+  const from = animatedDir(itemId, version);
+  if (!(await stat(from).catch(() => null))?.isDirectory()) throw new Error(`The files of v${version} are missing.`);
+  const root = path.join(DATA_DIR, "assets", itemId);
+  const live = path.join(root, "player");
+  const next = path.join(root, `player.next-${process.pid}-${Date.now()}`);
+  await cp(from, next, { recursive: true });
+  if (await stat(live).catch(() => null)) {
+    await rm(path.join(root, "player.prev"), { recursive: true, force: true });
+    await rename(live, path.join(root, "player.prev"));
+  }
+  await rename(next, live);
+};
+
+/**
+ * Releases the item's latest animated version to Castle Rock: its files become the item's player (the
+ * "Play animated solution" button on the item page, and the animated folder of the SOLARO download) and the
+ * version's status becomes "released". Refused while a flag is open. `ok: null` when the item has no
+ * animation or the latest version is already the released one.
+ */
+export async function releaseAnimation(itemId: string, copy: PlayerCopy = copyToPlayerLocal): Promise<Outcome<{ version: number } | null>> {
+  if (!isItemId(itemId)) return { error: "No such item." };
+  writable();
+  const { Animation, Item } = await ks();
+  const a = await Animation.findOne({ itemId }).sort({ version: -1 }).lean();
+  if (!a || a.status === "released") return { ok: null };
+  const n = await openFlagCount(itemId, a.version);
+  if (n) return { error: `${n} flag${n === 1 ? " is" : "s are"} still open on the animation.` };
+  await copy(itemId, a.version);
+  await Item.updateOne({ itemId }, { $set: { player: { entry: a.entry || "solution.html", voice: a.voice, height: a.height || 1100, attachedAt: new Date(), version: a.version } } });
+  await Animation.updateOne({ itemId, version: a.version }, { $set: { status: "released" } });
+  return { ok: { version: a.version } };
 }
 
 // ---------- publishing (scripts/keystone-animated-publish.ts) ----------
@@ -316,6 +383,12 @@ export async function recordPublish(input: PublishInput, expectVersion: number):
     createdAt: new Date(),
     createdBy: input.createdBy,
   });
+  // Every animation gets the owner's look: a ready item that would go out by itself now waits for him.
+  const { Item } = await ks();
+  await Item.collection.updateOne(
+    { itemId: input.itemId, stage: "ready", "pipeline.heldFor": { $exists: false } },
+    { $set: { "pipeline.heldFor": "praveen", "pipeline.heldWhy": ANIMATION_TO_REVIEW }, $unset: { "pipeline.releaseClaim": "" } },
+  );
   let fixed = 0;
   for (const f of plan.addresses) {
     const reply = input.replies[f.id] ? input.replies[f.id].slice(0, MAX_REPLY) : undefined;
@@ -326,4 +399,42 @@ export async function recordPublish(input: PublishInput, expectVersion: number):
     fixed += r.modifiedCount;
   }
   return { ok: { version: plan.version, fixed } };
+}
+
+
+// ---------- the "To animate" list (owner's queue) ----------
+
+export type ToAnimate = { itemId: string; course: string; stage: string; route: "api" | "hand"; requestedAt?: Date };
+
+/** Items whose written solution exists (ready, in review or approved) and that have no animation yet. Null for any role but Evelyn. */
+export async function toAnimate(role: Role | undefined): Promise<ToAnimate[] | null> {
+  if (role !== "evelyn") return null;
+  const { Animation, Item } = await ks();
+  const have = await Animation.distinct("itemId");
+  const items = await Item.find({ stage: { $in: ["ready", "in_review", "approved"] }, version: { $gt: 0 }, itemId: { $nin: have }, player: { $exists: false } })
+    .select("itemId course stage animate")
+    .sort({ itemId: 1 })
+    .lean();
+  return items.map((i) => ({ itemId: i.itemId, course: i.course || "", stage: i.stage, route: i.animate?.route === "api" ? "api" : "hand", requestedAt: i.animate?.requestedAt }));
+}
+
+/** The owner's choice of route for the ticked items: "api" queues them for the API build, "hand" takes them off it. */
+export async function setAnimateRoute(itemIds: string[], route: "api" | "hand", who: Who): Promise<Outcome<number>> {
+  if (who.role !== "evelyn") return { error: OWNER_ONLY };
+  writable();
+  const ids = itemIds.filter(isItemId);
+  if (!ids.length) return { error: "Tick at least one item." };
+  const { Item } = await ks();
+  const r =
+    route === "api"
+      ? await Item.updateMany({ itemId: { $in: ids } }, { $set: { animate: { route: "api", requestedAt: new Date(), requestedBy: who.username } } })
+      : await Item.updateMany({ itemId: { $in: ids } }, { $unset: { animate: "" } });
+  return { ok: r.modifiedCount };
+}
+
+/** For the API build script: item ids queued for the API route that still have no animation. */
+export async function queuedForApi(): Promise<string[]> {
+  const { Animation, Item } = await ks();
+  const have = await Animation.distinct("itemId");
+  return (await Item.find({ "animate.route": "api", itemId: { $nin: have } }).select("itemId").sort({ "animate.requestedAt": 1 }).lean()).map((i) => i.itemId);
 }

@@ -17,10 +17,30 @@ import { InteractionView } from "./InteractionView";
 import { ChecksPanel } from "../../_components/ChecksPanel";
 import { DoneNote, HeldControls, HoldControl } from "../../_components/OwnerControls";
 import { OwnerKeys } from "../../_components/OwnerKeys";
+import { getReview, type Flag } from "@/lib/keystone/animreview/store";
+import { animatedUrl, parseVersion } from "@/lib/keystone/animreview/pure";
+import { AnimReview, type FlagView } from "../../animated/[itemId]/AnimReview";
 
 export const dynamic = "force-dynamic";
 
 const viewingOldFor = (solution: { version: number } | null, item: { version: number }) => !!solution && solution.version !== item.version;
+
+const flagView = (f: Flag): FlagView => ({
+  id: f.id,
+  version: f.version,
+  step: f.step ?? null,
+  line: f.line ?? null,
+  timeMs: f.timeMs ?? null,
+  comment: f.comment,
+  spoken: !!f.spoken,
+  shots: f.shots ?? [],
+  status: f.status,
+  fixedInVersion: f.fixedInVersion ?? null,
+  reply: f.reply ?? null,
+  reopenOf: f.reopenOf ?? null,
+  createdBy: f.createdBy,
+  createdAt: new Date(f.createdAt).toISOString(),
+});
 
 export async function generateMetadata({ params }: { params: Promise<{ itemId: string }> }) {
   return { title: `Item ${(await params).itemId}` };
@@ -51,6 +71,9 @@ export default async function ItemPage({
   // Evelyn only, decided here on the server: the hold, its reasons and the Checks panel are never rendered for
   // Castle Rock (for them `item.stage` is never "ready" and itemChecks returns null).
   const forOwner = user.role === "evelyn";
+  // The owner's review of the animated version (flag, speak, snap), on the same page as the written solution.
+  // getReview returns null for any other role: Castle Rock gets the released version through the Play button.
+  const anim = forOwner ? await getReview(itemId, sp.av === undefined ? null : parseVersion(sp.av), user.role) : null;
   const pipe = forOwner ? (item.pipeline as OwnerPipeline | undefined) : undefined;
   // Something to send: the current version's solution row exists and is unreleased (the actions check this again).
   const sendable = !!solution && solution.version === item.version && !solution.releasedAt && releasedVersionOf(item) < item.version;
@@ -286,6 +309,29 @@ export default async function ItemPage({
             </section>
           )}
         </div>
+
+        {anim && (
+          <section className="ks-card ks-anim" id="animated" style={{ marginTop: 16 }}>
+            <AnimReview
+              key={`${anim.animation.itemId}-${anim.animation.version}`}
+              embedded
+              base={base}
+              me={user.username}
+              itemId={anim.animation.itemId}
+              version={anim.animation.version}
+              status={anim.animation.status}
+              voice={anim.animation.voice ?? null}
+              notes={anim.animation.notes ?? null}
+              src={animatedUrl(anim.animation.itemId, anim.animation.version, anim.animation.entry || "solution.html")}
+              height={anim.animation.height || 900}
+              versions={anim.versions.map((x) => ({ version: x.version, status: x.status }))}
+              flags={anim.flags.map(flagView)}
+              fixedHere={anim.fixedHere.map(flagView)}
+              stillOpen={anim.stillOpen.map(flagView)}
+              canAccept={anim.canAccept}
+            />
+          </section>
+        )}
 
         {forOwner && <ChecksPanel run={checks} itemKey={item.key || (item.keySource === "evelyn" ? "none supplied" : "–")} />}
 
