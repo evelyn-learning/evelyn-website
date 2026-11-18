@@ -65,4 +65,5 @@ for (const r of [
   composeSuggestion("batch_in_review", { batchName: "B", count: 3 }),
   composeSuggestion("sample_requested", { kinds: ["x"] }),
 ]) assert.doesNotMatch(r.bodyMd, forbidden);
+for (const k of ["items_need_data", "keys_queried", "course_missing"] as const) assert.throws(() => composeSuggestion(k, { itemIds: [] }), /no items to mention/);
 console.log("outbox.test ok");
