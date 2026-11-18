@@ -7,6 +7,7 @@
  *   KS_BASE=http://localhost:3047/keystone KS_SHOTS=<dir> npx tsx apps/marketing/scripts/keystone-pipeline-e2e.ts
  *
  * (a `next dev` of apps/marketing on that port, started with the same two KEYSTONE_ variables.)
+ * The server MUST run on this same local test database: the qa-* users and items exist only there.
  *
  * It creates throwaway items 990015 (held: failed a check twice), 990016 (clean, going out by itself) and
  * 990017 (held: sample), a run record for 990015, and two users (qa-owner: Evelyn, qa-reviewer: reviewer),

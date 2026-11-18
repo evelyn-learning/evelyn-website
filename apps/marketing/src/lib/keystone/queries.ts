@@ -1,5 +1,5 @@
 import { STAGES, answerSeenBy, releasedVersionOf, visibleStage, type Role, type Stage } from "./config";
-import { ks, type ActivityDoc, type Flag, type ItemDoc, type PipelineDoc, type RunDoc, type SolutionDoc } from "./db";
+import { ks, type ActivityDoc, type Flag, type ItemDoc, type PipelineDoc, type RunDoc, type RunStep, type SolutionDoc } from "./db";
 import { FLAG_WORDS } from "./pipeline/status";
 import { blockedBatches, type BlockedBatch } from "./pipeline/release";
 
@@ -21,10 +21,15 @@ export function releasedFor(item: Pick<ItemDoc, "version" | "releasedVersion">, 
   return seesUnreleased(role) ? item.version || 0 : releasedVersionOf(item);
 }
 
-/** The item as this role sees it: stage via visibleStage, version capped at the released one, the released answer. */
+/**
+ * The item as this role sees it: stage via visibleStage, version capped at the released one, the released
+ * answer. For Castle Rock the pipeline record (flags, hold, release time, the owner's note) is removed, so no
+ * page or client component built from it can pass it on.
+ */
 export function asSeenBy<T extends Pick<ItemDoc, "stage" | "version" | "releasedVersion" | "evelynAnswer" | "releasedAnswer">>(item: T, role?: Role): T {
   if (seesUnreleased(role)) return item;
-  return { ...item, stage: visibleStage(item.stage, role!), version: releasedFor(item, role), evelynAnswer: answerSeenBy(item, role!) };
+  const { pipeline: _internal, ...rest } = item as T & { pipeline?: unknown }; // eslint-disable-line @typescript-eslint/no-unused-vars
+  return { ...(rest as T), stage: visibleStage(item.stage, role!), version: releasedFor(item, role), evelynAnswer: answerSeenBy(item, role!) };
 }
 
 /** Stages a stage filter matches for this role: `drafting` includes `ready` for Castle Rock; `ready` is no filter for them. */
@@ -278,6 +283,8 @@ export type RunView = {
   findingsCount: number;
   /** checks whose last run could not run */
   checksFailed: number;
+  /** the record could not be read (safeRunView) */
+  unreadable?: boolean;
 };
 
 const SOLVER_NAMES: Record<string, string> = { solver1: "Solver 1", solver2: "Solver 2", solver3: "Solver 3" };
@@ -294,7 +301,7 @@ function solverLines(solves: unknown): SolverLine[] {
   const out: SolverLine[] = [];
   for (const k of ["solver1", "solver2", "solver3"]) {
     const r = (solves as Record<string, unknown>)[k] as { ok?: boolean; value?: { answer?: unknown }; reason?: string; model?: string } | undefined;
-    if (!r) continue;
+    if (!r || typeof r !== "object") continue;
     out.push({ who: SOLVER_NAMES[k], ok: !!r.ok, answer: r.ok ? answerShort(r.value?.answer) : `no answer (${r.reason ?? "failed"})`, ...(r.model ? { model: r.model } : {}) });
   }
   return out;
@@ -323,15 +330,23 @@ const clipRaw = (v: unknown) => {
 
 /** The run record as the queue and the Checks panel show it. Pure. */
 export function runView(run: RunDoc): RunView {
-  const steps: StepView[] = (Array.isArray(run.steps) ? run.steps : []).map((s) => {
-    const out = (s.output ?? {}) as Record<string, unknown>;
-    const base: StepView = { step: String(s.step), key: String(s.key ?? s.step), ok: !!s.ok, ...(s.model ? { model: s.model } : {}), ...(s.at ? { at: s.at } : {}) };
+  const steps: StepView[] = (Array.isArray(run.steps) ? run.steps : []).map((raw, n) => {
+    const s = (raw && typeof raw === "object" ? raw : { step: "unknown", key: `step#${n + 1}`, ok: false, output: raw }) as RunStep;
+    const isObj = !!s.output && typeof s.output === "object" && !Array.isArray(s.output);
+    const out = (isObj ? s.output : {}) as Record<string, unknown>;
+    const base: StepView = {
+      step: String(s.step), key: String(s.key ?? s.step), ok: !!s.ok,
+      ...(typeof s.model === "string" && s.model ? { model: s.model } : {}),
+      ...(s.at ? { at: s.at } : {}),
+    };
+    // Anything that is not an object (a string, number, null, an array) is shown raw.
+    if (!isObj) return { ...base, raw: clipRaw(s.output) };
     if (typeof out.failed === "string") return { ...base, failed: out.failed };
     if (s.step === "solve" && ("solves" in out || "decision" in out)) return { ...base, solvers: solverLines(out.solves), decision: decisionText(out.decision) };
     if (CHECK_STEPS.includes(s.step) && Array.isArray(out.findings)) {
       return {
         ...base,
-        findings: (out.findings as Record<string, unknown>[]).map((f) => ({
+        findings: (out.findings as unknown[]).map((x) => (x && typeof x === "object" ? (x as Record<string, unknown>) : { code: "?", detail: String(x) })).map((f) => ({
           code: String(f.code ?? ""),
           detail: String(f.detail ?? ""),
           ...(f.ruleId ? { ruleId: String(f.ruleId) } : {}),
@@ -379,13 +394,27 @@ async function latestRealRuns(itemIds: string[]): Promise<Map<string, RunDoc>> {
 }
 
 /** The Checks panel of the item page: the latest real run. Null for any role but Evelyn, or when no run exists. */
+/** runView that never throws: an unreadable record becomes a view that says so (one bad record must not take a page down). */
+export function safeRunView(run: RunDoc): RunView {
+  try {
+    return runView(run);
+  } catch (e) {
+    return {
+      runId: String(run?.runId ?? "?"), flags: [], corrections: 0, cost: 0, steps: [], solvers: [], findingsCount: 0, checksFailed: 0,
+      error: `${RUN_UNREADABLE} (${(e as Error).message})`,
+      unreadable: true,
+    };
+  }
+}
+export const RUN_UNREADABLE = "Run record unreadable";
+
 export async function itemChecks(itemId: string, role?: Role): Promise<RunView | null> {
   if (!isOwner(role)) return null;
   const run = (await latestRealRuns([itemId])).get(itemId);
-  return run ? runView(run) : null;
+  return run ? safeRunView(run) : null;
 }
 
-type OwnerItem = Pick<ItemDoc, "itemId" | "course" | "subject" | "itemType" | "stage" | "key" | "keySource" | "evelynAnswer" | "receivedAt" | "createdAt" | "version"> & {
+type OwnerItem = Pick<ItemDoc, "itemId" | "course" | "subject" | "itemType" | "stage" | "key" | "keySource" | "evelynAnswer" | "receivedAt" | "createdAt" | "version" | "releasedVersion"> & {
   pipeline?: PipelineDoc & { fixNote?: string; seenAt?: Date };
 };
 export type QueueRow = {
@@ -406,7 +435,7 @@ export type QueueRow = {
 };
 export type OwnerQueue = { waiting: QueueRow[]; beforeSolution: QueueRow[]; going: QueueRow[]; blocked: BlockedBatch[] };
 
-const OWNER_FIELDS = "itemId course subject itemType stage key keySource evelynAnswer receivedAt createdAt version pipeline";
+const OWNER_FIELDS = "itemId course subject itemType stage key keySource evelynAnswer receivedAt createdAt version releasedVersion pipeline";
 const clip120 = (s: string) => (s.length > 120 ? `${s.slice(0, 119).trimEnd()}…` : s);
 
 /** Why the item is held, in plain words: the owner's own send-back first, then each flag, else heldWhy. Pure. */
@@ -429,7 +458,8 @@ export function queueOrder(a: QueueRow, b: QueueRow): number {
 }
 
 function queueRow(i: OwnerItem, run: RunDoc | undefined, reasons: string[]): QueueRow {
-  const v = run ? runView(run) : null;
+  const v = run ? safeRunView(run) : null;
+  if (v?.unreadable) reasons = [...reasons, RUN_UNREADABLE];
   const flags = Array.isArray(i.pipeline?.flags) ? i.pipeline!.flags : [];
   return {
     itemId: i.itemId,
@@ -477,8 +507,26 @@ export async function ownerQueue(role?: Role): Promise<OwnerQueue | null> {
     ]),
     blockedBatches(),
   ]);
+  const { Solution } = await ks();
+  // An item can be sent only when the current version's solution row exists and is unreleased.
+  const pairs = [...held, ...going].filter((i) => i.version).map((i) => ({ itemId: i.itemId, version: i.version }));
+  const rows = pairs.length ? await Solution.find({ $or: pairs }).select("itemId version releasedAt").lean() : [];
+  const open = new Set(rows.filter((r) => !r.releasedAt).map((r) => r.itemId));
+  const sendable = (i: OwnerItem) => !!i.version && releasedVersionOf(i) < i.version && open.has(i.itemId);
+  const NO_SOLUTION = "No unreleased solution for the current version: nothing to send";
+
+  const failedErr = new Map(failedIds.map((f) => [f._id, f.error]));
+  const failReason = (id: string) => `The last run stopped: ${clip120(failedErr.get(id) || "no error recorded")}`;
+  const failNote = (id: string) => (failedErr.has(id) ? [failReason(id)] : []);
+  const known = new Set([...held, ...early, ...going].map((i) => i.itemId));
+  const failedItems = failedIds.length
+    ? await Item.find({ itemId: { $in: failedIds.map((f) => f._id).filter((id) => !known.has(id)) }, stage: { $nin: ["approved", "delivered", "rejected", "in_review"] } })
+        .select(OWNER_FIELDS)
+        .lean<OwnerItem[]>()
+    : [];
+  const runs = await latestRealRuns([...held, ...early, ...failedItems, ...going].map((i) => i.itemId));
+
   // The timer releases only ready items with an empty flags list (release.ts CLEAN); anything else here waits forever.
-  const goingClean = going;
   const goingWhy = (i: OwnerItem): string[] => {
     const flags = i.pipeline?.flags;
     if (!Array.isArray(flags)) return ["No pipeline record: it will not go out by itself. Hold it to send it yourself."];
@@ -486,24 +534,21 @@ export async function ownerQueue(role?: Role): Promise<OwnerQueue | null> {
     if (!i.pipeline?.releaseAt) return ["No release time yet: the timer will hold it for you."];
     return [];
   };
-  const known = new Set([...held, ...early].map((i) => i.itemId));
-  const failedErr = new Map(failedIds.map((f) => [f._id, f.error]));
-  const failedItems = failedIds.length
-    ? await Item.find({ itemId: { $in: failedIds.map((f) => f._id).filter((id) => !known.has(id)) }, stage: { $nin: ["approved", "delivered", "rejected", "in_review"] } })
-        .select(OWNER_FIELDS)
-        .lean<OwnerItem[]>()
-    : [];
-  const runs = await latestRealRuns([...held, ...early, ...failedItems, ...goingClean].map((i) => i.itemId));
-  const failReason = (id: string) => `The last run stopped: ${clip120(failedErr.get(id) || "no error recorded")}`;
-  const waiting = held.map((i) => queueRow(i, runs.get(i.itemId), holdReasons(i.pipeline))).sort(queueOrder);
+  const byArrival = (a: QueueRow, b: QueueRow) =>
+    (a.receivedAt ? new Date(a.receivedAt).getTime() : 0) - (b.receivedAt ? new Date(b.receivedAt).getTime() : 0) || a.itemId.localeCompare(b.itemId);
+
+  const waiting = held.filter(sendable).map((i) => queueRow(i, runs.get(i.itemId), [...holdReasons(i.pipeline), ...failNote(i.itemId)])).sort(queueOrder);
   const before = [
-    ...early.map((i) => queueRow(i, runs.get(i.itemId), [...holdReasons(i.pipeline), ...(failedErr.has(i.itemId) ? [failReason(i.itemId)] : [])])),
+    ...held.filter((i) => !sendable(i)).map((i) => queueRow(i, runs.get(i.itemId), [...holdReasons(i.pipeline), NO_SOLUTION, ...failNote(i.itemId)])),
+    ...going.filter((i) => !sendable(i)).map((i) => queueRow(i, runs.get(i.itemId), [NO_SOLUTION, ...failNote(i.itemId)])),
+    ...early.map((i) => queueRow(i, runs.get(i.itemId), [...holdReasons(i.pipeline), ...failNote(i.itemId)])),
     ...failedItems.map((i) => queueRow(i, runs.get(i.itemId), [failReason(i.itemId)])),
-  ].sort((a, b) => (a.receivedAt ? new Date(a.receivedAt).getTime() : 0) - (b.receivedAt ? new Date(b.receivedAt).getTime() : 0) || a.itemId.localeCompare(b.itemId));
+  ].sort(byArrival);
+  const goingRows = going.filter(sendable).map((i) => queueRow(i, runs.get(i.itemId), [...goingWhy(i), ...(failedErr.has(i.itemId) ? ["Last run failed; this version passed an earlier run"] : [])]));
   return {
     waiting,
     beforeSolution: before,
-    going: goingClean.map((i) => queueRow(i, runs.get(i.itemId), goingWhy(i))),
+    going: goingRows,
     blocked,
   };
 }

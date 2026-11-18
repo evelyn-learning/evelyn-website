@@ -37,7 +37,7 @@ function Facts({ r }: { r: QueueRow }) {
 function Head({ r, base }: { r: QueueRow; base: string }) {
   return (
     <div className="ks-q-head">
-      <Link href={`${base}/item/${r.itemId}${r.stage === "ready" ? "?stage=ready" : ""}`}>
+      <Link href={`${base}/item/${encodeURIComponent(r.itemId)}${r.stage === "ready" ? "?stage=ready" : ""}`}>
         <b>Item {r.itemId}</b>
       </Link>
       <span className="ks-q-meta">
@@ -66,7 +66,7 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
   const { done } = await searchParams;
   const q = await ownerQueue(user.role);
   if (!q) return null; // unreachable: requireUser sent any other role to the overview
-  const open = (id: string, ready = true) => `${base}/item/${id}${ready ? "?stage=ready" : ""}`;
+  const open = (id: string, ready = true) => `${base}/item/${encodeURIComponent(id)}${ready ? "?stage=ready" : ""}`;
 
   return (
     <>

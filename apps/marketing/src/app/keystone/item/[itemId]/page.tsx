@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/keystone/auth";
 import { ksBase } from "@/lib/keystone/paths";
-import { ITEM_TYPE_LABEL, OWNER_LABEL, SECTION_TITLE, STAGES, STAGE_HELP, STAGE_LABEL, STAGE_OWNER, can, sectionTitle } from "@/lib/keystone/config";
+import { ITEM_TYPE_LABEL, OWNER_LABEL, SECTION_TITLE, STAGES, STAGE_HELP, STAGE_LABEL, STAGE_OWNER, can, releasedVersionOf, sectionTitle } from "@/lib/keystone/config";
 import { getItem, holdReasons, itemChecks, neighbours, reviewQueue } from "@/lib/keystone/queries";
 import { pacificTime } from "@/lib/keystone/pipeline/status";
 import type { OwnerPipeline } from "@/lib/keystone/store";
@@ -52,8 +52,10 @@ export default async function ItemPage({
   // Castle Rock (for them `item.stage` is never "ready" and itemChecks returns null).
   const forOwner = user.role === "evelyn";
   const pipe = forOwner ? (item.pipeline as OwnerPipeline | undefined) : undefined;
-  const ownerHeld = forOwner && item.stage === "ready" && pipe?.heldFor === "praveen" && !viewingOldFor(solution, item);
-  const ownerGoing = forOwner && item.stage === "ready" && !pipe?.heldFor;
+  // Something to send: the current version's solution row exists and is unreleased (the actions check this again).
+  const sendable = !!solution && solution.version === item.version && !solution.releasedAt && releasedVersionOf(item) < item.version;
+  const ownerHeld = forOwner && item.stage === "ready" && pipe?.heldFor === "praveen" && sendable && !viewingOldFor(solution, item);
+  const ownerGoing = forOwner && item.stage === "ready" && !pipe?.heldFor && sendable;
   const useList = isFiltered(ctx) || !!ctx.from || user.role !== "reviewer";
   // A key query is not a solution: its panel takes the solution's place, for every role.
   const keyQuery = item.stage === "key_query";

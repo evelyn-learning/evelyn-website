@@ -230,6 +230,71 @@ const OWNER = { username: "qa-owner", name: "QA owner", role: "evelyn" as const 
     assert.ok(checks.steps[3].raw?.includes("draft"), "unrecognised output kept raw");
     assert.equal(await q.itemChecks(id(10), "evelyn"), null, "no run: null");
 
+    // --- section membership: only items with something to send are "Waiting for you" / "Going out by itself" ---
+    await mk(id(20), { releaseAt: new Date("2026-11-19T17:00:00Z") }); // clean, unreleased solution, latest run failed
+    await mk(id(21), { stage: "ready" }); // clean, latest run failed, no solution row
+    await Solution.deleteOne({ itemId: id(21) });
+    await mk(id(22), { flags: ["sample"], heldFor: true }); // held, no solution row
+    await Solution.deleteOne({ itemId: id(22) });
+    await mk(id(23), { flags: ["sample"], heldFor: true }); // held, solution row already released
+    await Solution.updateOne({ itemId: id(23), version: 1 }, { $set: { releasedAt: T0 } });
+    await run(id(20), "dbtest-q-20", { result: "failed", error: "QA failure 20" });
+    await run(id(21), "dbtest-q-21", { result: "failed", error: "QA failure 21" });
+    {
+      const S = (await q.ownerQueue("evelyn"))!;
+      const where = (x: string) => [["waiting", S.waiting], ["before", S.beforeSolution], ["going", S.going]].filter(([, rows]) => (rows as { itemId: string }[]).some((r) => r.itemId === x)).map(([n]) => n);
+      assert.deepEqual(where(id(20)), ["going"], "failed run, unreleased solution: listed once, going out");
+      assert.ok(row(S.going, id(20)).reasons.some((r) => /Last run failed/.test(r)), "with a 'last run failed' note");
+      assert.deepEqual(where(id(21)), ["before"], "failed run, no solution: listed once, before a solution");
+      assert.deepEqual(where(id(22)), ["before"], "held, no solution row: before a solution");
+      assert.deepEqual(where(id(23)), ["before"], "held, solution already released: before a solution");
+      assert.ok(row(S.beforeSolution, id(22)).reasons.some((r) => /nothing to send/.test(r)));
+      assert.ok(!S.waiting.some((r) => r.itemId === id(22) || r.itemId === id(23)), "nothing unsendable in Waiting for you");
+    }
+
+    // --- a bad run record never takes a page down ---
+    const KINDS = ["intake", "course", "cause", "solve", "write", "calc", "working", "audit", "render"];
+    const BAD: unknown[] = ["a string", 42, null, [1, "two"]];
+    for (const kind of KINDS) {
+      for (const output of BAD) {
+        const v = q.runView({ itemId: "x", runId: "r", steps: [{ step: kind, key: `${kind}#1`, at: T0, ok: true, output, cost: 0 }] } as never);
+        assert.equal(v.steps.length, 1, `${kind} / ${JSON.stringify(output)}: one step`);
+        assert.equal(typeof v.steps[0].raw, "string", `${kind} / ${JSON.stringify(output)}: shown raw`);
+        assert.equal(v.findingsCount, 0);
+      }
+    }
+    {
+      const v = q.runView({ itemId: "x", runId: "r", steps: [null, "junk", { step: "audit", key: "audit#1", ok: true, output: { findings: ["loose string", null] } }, { step: "solve", key: "solve#1", ok: true, output: { solves: { solver1: "x", solver2: null }, decision: 5 } }] } as never);
+      assert.equal(v.steps.length, 4, "null / string steps kept as raw rows");
+      assert.equal(v.steps[2].findings?.length, 2, "loose findings kept");
+      assert.deepEqual(v.steps[3].solvers, [], "unreadable solver entries skipped");
+      const bad = q.safeRunView({ runId: "r", get steps(): never { throw new Error("boom"); } } as never);
+      assert.ok(bad.unreadable && /Run record unreadable/.test(bad.error ?? ""), "safeRunView degrades instead of throwing");
+    }
+    await mk(id(24), { flags: ["no_agreement"], heldFor: true });
+    await Run.collection.insertOne({ itemId: id(24), runId: "dbtest-q-24", startedAt: new Date(), steps: [{ step: "solve", key: "solve#1", ok: true, output: "not an object" }, 7], result: "held", flags: [] });
+    {
+      const S = (await q.ownerQueue("evelyn"))!;
+      assert.ok(row(S.waiting, id(24)), "the item with a bad run record is still listed");
+      const c = (await q.itemChecks(id(24), "evelyn"))!;
+      assert.equal(c.steps.length, 2, "its Checks panel shows the steps raw");
+    }
+
+    // --- Castle Rock never gets the pipeline record ---
+    {
+      const r = await q.getItem(id(24), undefined, "reviewer");
+      assert.equal((r?.item as { pipeline?: unknown }).pipeline, undefined, "reviewer: item.pipeline removed");
+      const t = await q.getItem(id(24), undefined, "tech");
+      assert.equal((t?.item as { pipeline?: unknown }).pipeline, undefined, "tech: item.pipeline removed");
+      const e = await q.getItem(id(24), undefined, "evelyn");
+      assert.deepEqual(e?.item.pipeline?.flags, ["no_agreement"], "evelyn: intact");
+      const seen = q.asSeenBy({ stage: "ready", version: 1, releasedVersion: 0, evelynAnswer: "B", releasedAnswer: "", pipeline: { flags: ["sample"] } } as never, "reviewer") as { pipeline?: unknown; stage: string };
+      assert.equal(seen.pipeline, undefined);
+      assert.equal(seen.stage, "drafting");
+      const rows = await q.listItems({ search: id(24), role: "reviewer" });
+      assert.ok(rows.length === 1 && !("pipeline" in rows[0]), "list rows for the reviewer carry no pipeline");
+    }
+
     // --- pure helpers ---
     assert.equal(q.answerShort({ kind: "number", value: "3.5" }), "3.5");
     assert.equal(q.answerShort({ kind: "labels", values: ["a", "b"] }), "a; b");
