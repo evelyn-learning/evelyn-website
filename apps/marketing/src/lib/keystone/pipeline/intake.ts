@@ -93,7 +93,10 @@ type PNode = {
 const HTML_KEEP = new Set(["p", "br", "b", "strong", "i", "em", "u", "sup", "sub", "ul", "ol", "li", "table", "thead", "tbody", "tfoot", "tr", "th", "td", "caption"]);
 const HTML_KEEP_BLOCK = new Set(["p", "ul", "ol", "li", "table", "thead", "tbody", "tfoot", "tr", "caption"]);
 // Unwrapped with nothing between. Every other element we do not keep is unwrapped on its own lines.
-const INLINE = new Set(["span", "a", "font", "small", "big", "abbr", "cite", "code", "kbd", "samp", "var", "mark", "q", "s", "strike", "del", "ins", "label", "time", "tt", "bdi", "bdo", "wbr"]);
+const INLINE = new Set([
+  "span", "a", "font", "small", "big", "abbr", "cite", "code", "kbd", "samp", "var", "mark", "q", "s", "strike", "del", "ins", "label", "time", "tt", "bdi", "bdo", "wbr",
+  "acronym", "blink", "marquee", "basefont", "tspan",
+]);
 // Known presentation-MathML names. Inside <math> any other name is replaced by <mrow> (same arity, no live unknown element).
 const MATH_NAMES = new Set([
   "math", "mi", "mn", "mo", "mtext", "ms", "mspace", "mglyph", "mrow", "mfrac", "msqrt", "mroot", "mstyle", "merror", "mpadded", "mphantom", "mfenced",
@@ -112,8 +115,8 @@ const MATH_ATTRS = new Set([
 // Raw-text and embedding elements are dropped too: their content is not question text and can carry a rubricBlock as text.
 const DROPPED: Record<string, string> = {
   script: "script", style: "style", annotation: "annotation", "annotation-xml": "annotation-xml", rubricblock: "rubricBlock",
-  textarea: "textarea", title: "title", xmp: "xmp", noembed: "noembed", noframes: "noframes", iframe: "iframe", noscript: "noscript",
-  template: "template", plaintext: "plaintext", svg: "svg", object: "object", embed: "embed",
+  textarea: "textarea", title: "title", xmp: "xmp", noembed: "noembed", noframes: "noframes", iframe: "iframe",
+  plaintext: "plaintext", svg: "svg", object: "object", embed: "embed",
 };
 // Shown in place of a dropped element so that its presence is not lost.
 const DROPPED_MARK: Record<string, string> = { svg: "[figure]", iframe: "[figure]", object: "[figure]", embed: "[figure]" };
@@ -126,7 +129,7 @@ const KNOWN_HTML = new Set([
   "header", "footer", "address", "fieldset", "legend", "details", "summary", "center", "main", "nav", "h1", "h2", "h3", "h4", "h5", "h6", "form", "hr",
   "img", "colgroup", "col", "dfn", "nobr", "picture", "source", "track", "audio", "video", "canvas", "map", "area", "input", "button", "select",
   "option", "optgroup", "output", "progress", "meter", "datalist", "menu", "dialog", "ruby", "rt", "rp", "data", "hgroup", "search", "param", "slot",
-  "frameset", "frame",
+  "frameset", "frame", "dir", "noscript", "template", // noscript and template are unwrapped (block), their content kept
 ]);
 // QTI elements that appear in item bodies and choices.
 const KNOWN_QTI = new Set([
@@ -135,6 +138,9 @@ const KNOWN_QTI = new Set([
   "extendedtextinteraction", "matchinteraction", "simplematchset", "simpleassociablechoice", "associateinteraction", "gapmatchinteraction", "gaptext",
   "gapimg", "gap", "orderinteraction", "hottextinteraction", "hottext", "hotspotinteraction", "hotspotchoice", "sliderinteraction", "feedbackinline",
   "feedbackblock", "printedvariable", "templateblock", "templateinline", "include", "apipaccessibility", "companionmaterialsinfo", "data",
+  "custominteraction", "mediainteraction", "positionobjectinteraction", "selectpointinteraction", "drawinginteraction", "uploadinteraction",
+  "endattemptinteraction", "graphicorderinteraction", "graphicassociateinteraction", "graphicgapmatchinteraction", "associablehotspot",
+  "positionobjectstage", "infocontrol", "qtibody", "bodyelement", "stimulusbody", "rubricblock",
 ]);
 // HTML boolean attributes: written without a value on purpose. Any other valueless attribute is how text like "0<x and x>5" parses.
 const BOOLEAN_ATTRS = new Set([
@@ -175,7 +181,28 @@ const isBlank = (n: PNode) =>
   ` ${(n.attribs?.class ?? "").toLowerCase().trim().split(/\s+/).join(" ")} `.includes(" fill-in-the-blank ") &&
   (n.children ?? []).every((c) => c.type === "text" && BLANK_CONTENT.test(c.data ?? ""));
 
-/** The visible text inside an element (object fallback), skipping every dropped subtree; iterative, capped. */
+/** Images inside an object's fallback (img, nested object/embed with a source): shown after the outer marker. Iterative, capped. */
+function fallbackMedia(kids: PNode[]): { out: string[]; files: string[] } {
+  const out: string[] = [];
+  const files: string[] = [];
+  const todo = [...kids].reverse();
+  while (todo.length && out.length < 100) {
+    const c = todo.pop()!;
+    if (c.type !== "tag" || !c.name) continue;
+    const bare = c.name.replace(/^.*:/, "");
+    const src = bare === "img" ? c.attribs?.src : MEDIA_SRC[bare] ? c.attribs?.[MEDIA_SRC[bare]] : undefined;
+    const file = src ? lastSegment(src) : "";
+    if (file) {
+      files.push(file);
+      out.push(imageText(bare === "img" ? c.attribs ?? {} : { src: src!, alt: fallbackText(c.children ?? []) }));
+    }
+    if (bare in DROPPED && !MEDIA_SRC[bare]) continue; // rubricBlock, script…: nothing from inside
+    for (const k of [...(c.children ?? [])].reverse()) todo.push(k);
+  }
+  return { out, files };
+}
+
+/** The visible text inside an element (object fallback), skipping every dropped subtree (nested objects too); iterative, capped. */
 function fallbackText(kids: PNode[]): string {
   let t = "";
   const todo = [...kids].reverse();
@@ -308,6 +335,11 @@ function walk(src: string, root: PNode): Cleaned {
             images.push(file);
             out(imageText({ src: srcAttr, alt: fallbackText(kids) }));
           } else out(DROPPED_MARK[bare] ?? "");
+          if (bare === "object") {
+            const inner = fallbackMedia(kids);
+            images.push(...inner.files);
+            for (const m of inner.out) out(m);
+          }
           break;
         }
         // Text such as "0<x and x>5" or "x <y and z>w" parses as an element: an unknown name outside math or a valueless attribute

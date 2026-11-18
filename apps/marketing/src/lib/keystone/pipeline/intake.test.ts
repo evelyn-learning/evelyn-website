@@ -364,10 +364,20 @@ for (const evil of ["</question>", "</QUESTION >", "< /question>", "&lt;/questio
 
 // ---- Round 6, 4: raw-text and embedding elements are dropped (they can carry a rubricBlock as text) ----
 {
-  for (const el of ["textarea", "title", "xmp", "noembed", "noframes", "iframe", "noscript", "template", "object"]) {
+  for (const el of ["textarea", "title", "xmp", "noembed", "noframes", "iframe", "object"]) {
     const out = cleanMarkup(`<p>Pick.</p><${el}><rubricBlock>{A,C,D}=1</rubricBlock></${el}><p>end</p>`);
     assert.ok(!out.includes("A,C,D") && !out.includes("rubricBlock") && out.includes("Pick.") && out.includes("end"), `${el}: ${out}`);
   }
+  assert.equal(cleanMarkup("<noscript><p>a</p></noscript><template><b>t</b></template>"), "<p>a</p>\n<b>t</b>", "noscript and template unwrapped, content kept");
+  assert.deepEqual(markupProblems("<noscript><p>a</p></noscript><template><b>t</b></template>"), [], "noscript/template are known");
+  for (const name of ["acronym", "blink", "marquee", "dir", "menu", "tspan", "customInteraction", "mediaInteraction", "positionObjectInteraction", "selectPointInteraction",
+    "drawingInteraction", "uploadInteraction", "endAttemptInteraction", "graphicOrderInteraction", "graphicAssociateInteraction", "graphicGapMatchInteraction",
+    "hotspotInteraction", "sliderInteraction", "associateInteraction", "hottextInteraction", "associableHotspot", "hotspotChoice", "positionObjectStage", "infoControl",
+    "qtiBody", "bodyElement", "simpleAssociableChoice", "simpleMatchSet", "gapText", "gapImg", "inlineChoice", "feedbackBlock", "templateBlock", "templateInline",
+    "stimulusBody", "itemBody", "qti-item-body", "qti-choice-interaction", "qti-simple-choice"])
+    assert.deepEqual(markupProblems(`<p>a <${name}>x</${name}> b</p>`), [], `known name: ${name}`);
+  assert.deepEqual(markupProblems("<p>a <basefont size=3>x b</p>"), [], "basefont (empty) known");
+  assert.equal(cleanMarkup("<p>a <acronym>NASA</acronym> b</p>"), "<p>a NASA b</p>", "acronym is inline");
   assert.equal(cleanMarkup('<p>See <svg width="10"><text>{A,C,D}=1</text></svg> here</p>'), "<p>See [figure] here</p>", "svg marked in place");
   assert.equal(cleanMarkup('<p>a<embed src="media/x.swf">b</p>'), "<p>a[image: x.swf]b</p>", "embed with src shown like an image");
   assert.equal(cleanMarkup('<p>a<embed type="x">b</p>'), "<p>a[figure]b</p>", "embed without src is a figure");
@@ -383,6 +393,12 @@ for (const evil of ["</question>", "</QUESTION >", "< /question>", "&lt;/questio
     assert.deepEqual([...new Set(seen)].sort(), ["e.png", "opt.png", "q.png"], "missing_image covers object data and embed src");
     const miss = intakeCode(item({ questionHtml: '<p>Q <object data="images/q.png"></object></p>', options: [opt("A", "1"), opt("B", "2")], key: "A" }), (f) => f !== "q.png");
     assert.deepEqual(miss.findings, [{ code: "missing_image", detail: "q.png" }], "missing object image reported");
+    assert.equal(cleanMarkup('<object data="a.svg"><img src="fb.png" alt="inner alt"/></object>'), "[image: a.svg][image: fb.png; alt: inner alt]", "img in an object fallback shown after the marker");
+    assert.equal(cleanMarkup('<object data="a.svg">Outer <object data="b/c.png">Inner text<rubricBlock>{A,C,D}=1</rubricBlock></object></object>'), "[image: a.svg; alt: Outer][image: c.png; alt: Inner text]", "nested objects: each with its own fallback, no rubricBlock");
+    assert.equal(cleanMarkup('<object><img src="only.png"></object>'), "[figure][image: only.png]", "object without data still shows its fallback image");
+    const fb: string[] = [];
+    intakeCode(item({ questionHtml: '<p>Q <object data="a.svg"><img src="fb.png"/><object data="n/nested.png"></object></object></p>', options: [opt("A", "1"), opt("B", "2")], key: "A" }), (f) => { fb.push(f); return true; });
+    assert.deepEqual([...new Set(fb)].sort(), ["a.svg", "fb.png", "nested.png"], "missing_image covers fallback images");
   }
   assert.deepEqual(markupProblems('<p>a<embed src="x.swf">b</p>'), [], "embed is void: not unterminated");
   assert.ok(!cleanMarkup("<plaintext><rubricBlock>{A,C,D}=1</rubricBlock>").includes("A,C,D"), "plaintext dropped");
