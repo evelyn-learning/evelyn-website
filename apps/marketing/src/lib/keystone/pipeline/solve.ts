@@ -9,7 +9,7 @@
 // No `next/*` imports: this runs from tsx scripts on a laptop too.
 
 import type { ItemDoc } from "../db";
-import { acceptedAnswers, answerForm, canonicalResponse, decide, readKey, typedAnswer, type Answer, type AnswerForm, type Decision, type ResponseForm } from "./answers";
+import { acceptedAnswers, answerForm, canonicalResponse, decide, formUnknown, prefixed, readKey, typedAnswer, type Answer, type AnswerForm, type Decision, type ResponseForm } from "./answers";
 import { questionAsText } from "./intake";
 import { callModel } from "./models";
 import type { ModelDeps, ModelImage, ModelReply } from "./types";
@@ -27,12 +27,13 @@ export type Solves = {
 type Img = ModelImage;
 
 type RawSolve = {
-  answer: { kind: "choice" | "number" | "labels" | "text"; letters: string[]; value: string; values: string[] };
+  answer: { kind: "choice" | "number" | "labels" | "text"; letters: string[]; value: string; values: string[]; responses: { responseId: string; values: string[] }[] };
   working: string;
   confidence: "high" | "medium" | "low";
 };
 
-// `letters` holds the item's choice identifiers (usually single letters A, B, C…).
+// `letters` holds the item's choice identifiers (usually single letters A, B, C…). `responses` is used only
+// for items with more than one response: one entry per responseId, each with its own values.
 const SOLVE_SCHEMA = {
   type: "object",
   properties: {
@@ -43,8 +44,17 @@ const SOLVE_SCHEMA = {
         letters: { type: "array", items: { type: "string" } },
         value: { type: "string" },
         values: { type: "array", items: { type: "string" } },
+        responses: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: { responseId: { type: "string" }, values: { type: "array", items: { type: "string" } } },
+            required: ["responseId", "values"],
+            additionalProperties: false,
+          },
+        },
       },
-      required: ["kind", "letters", "value", "values"],
+      required: ["kind", "letters", "value", "values", "responses"],
       additionalProperties: false,
     },
     working: { type: "string" },
@@ -82,7 +92,7 @@ function responseLine(r: ResponseForm, several: boolean): string {
 }
 
 function formInstruction(f: AnswerForm): string {
-  const head = "Answer form (fill only the field for your kind; leave the others empty: [] or \"\"):";
+  const head = "Answer form (fill only the field for your kind; leave the others empty: [] or \"\"; leave \"responses\" as []):";
   const ids = f.responses[0]?.identifiers ?? [];
   switch (f.form) {
     case "choice-one":
@@ -96,9 +106,15 @@ function formInstruction(f: AnswerForm): string {
     case "text":
       return `${head} kind "text", with your full written answer in "value".`;
     case "labels": {
-      const several = f.responses.length > 1;
-      const order = several ? ` Give the values for each response in turn, in this order: ${f.responses.map((r) => r.responseId).join(", ")}.` : "";
-      return `${head} kind "labels", with values in "values". Answer with the identifiers listed, never with the choice text.${order}\n${f.responses.map((r) => "- " + responseLine(r, several)).join("\n")}`;
+      if (f.responses.length === 1) {
+        return `${head} kind "labels", with values in "values". Answer with the identifiers listed, never with the choice text.\n- ${responseLine(f.responses[0], false)}`;
+      }
+      const ids = f.responses.map((r) => r.responseId).join(", ");
+      return [
+        `Answer form: this question has ${f.responses.length} responses (${ids}). Use kind "labels" and leave "letters", "value" and "values" empty ([] or "").`,
+        `Give one entry in responses for each of these, with exactly these responseId values: ${ids}. Put that response's answer in its "values". Answer with the identifiers listed, never with the choice text.`,
+        ...f.responses.map((r) => "- " + responseLine(r, true)),
+      ].join("\n");
     }
   }
 }
@@ -116,11 +132,11 @@ const SYSTEM = (course: string) => [
 const neutralise = (s: string) => s.replace(/<\/(question|reviewer_argument)/gi, "< /$1");
 
 /** Built ONLY from questionAsText(item), course, itemType, interactions, option labels and the hint.
- *  Callers check answerForm(item) first; without a form the instruction says to answer as best it can. */
+ *  Callers check answerForm(item) first (blindSolve and agreeOnAnswer make no call without a form). */
 export function solverPrompt(item: ItemDoc, course: string, hint?: string): { system: string; user: string } {
   const form = answerForm(item);
   const parts = [`Course: ${course}`, `<question>\n${neutralise(questionAsText(item))}\n</question>`];
-  parts.push(form ? formInstruction(form) : "Answer form: give your answer in the field that fits it best.");
+  if (form) parts.push(formInstruction(form));
   if (hint?.trim()) {
     parts.push(`A reviewer has offered this argument to weigh. It may be right or wrong; decide on the mathematics/science alone:\n<reviewer_argument>\n${neutralise(hint.trim())}\n</reviewer_argument>`);
   }
@@ -128,26 +144,6 @@ export function solverPrompt(item: ItemDoc, course: string, hint?: string): { sy
 }
 
 // --- reply → Answer (canonical values from answers.ts) ---
-
-/** Splits a flat "labels" list into the item's responses, in sorted responseId order. */
-function splitByResponse(responses: ResponseForm[], values: string[]): string[][] | null {
-  const out: string[][] = [];
-  let i = 0;
-  for (const r of responses) {
-    const take: string[] = [];
-    const fits = (v: string) => canonicalResponse(r, [...take, v]) !== null;
-    if (r.kind === "textEntry" || r.kind === "inlineChoice") {
-      if (i < values.length) take.push(values[i++]);
-    } else if (r.kind === "order") {
-      while (i < values.length && take.length < r.identifiers.length && fits(values[i])) take.push(values[i++]);
-    } else {
-      while (i < values.length && fits(values[i])) take.push(values[i++]);
-    }
-    if (!take.length) return null;
-    out.push(take);
-  }
-  return i === values.length ? out : null;
-}
 
 function toAnswer(form: AnswerForm, raw: RawSolve["answer"]): Answer | string {
   const values = raw.values.map((v) => v.trim()).filter(Boolean);
@@ -171,14 +167,26 @@ function toAnswer(form: AnswerForm, raw: RawSolve["answer"]): Answer | string {
       return raw.value.trim() ? { kind: "text", value: raw.value.trim() } : "text answer with no value";
     case "labels": {
       if (raw.kind !== "labels") return misfit("labels");
-      if (!values.length) return "labels answer with no values";
-      const groups = form.responses.length === 1 ? [values] : splitByResponse(form.responses, values);
-      if (!groups) return `values do not fit the item's responses: ${JSON.stringify(raw.values)}`;
+      if (form.responses.length === 1) {
+        if (!values.length) return "labels answer with no values";
+        const c = canonicalResponse(form.responses[0], values);
+        return c ? { kind: "labels", values: c } : `values are not the item's identifiers: ${JSON.stringify(raw.values)}`;
+      }
+      // Several responses: one entry per responseId, each read with that response's own rule.
+      const byId = new Map<string, string[]>();
+      for (const e of raw.responses) {
+        const id = e.responseId.trim();
+        if (!form.responses.some((r) => r.responseId === id)) return `unknown responseId ${JSON.stringify(e.responseId)}`;
+        if (byId.has(id)) return `responseId ${id} given twice`;
+        byId.set(id, e.values);
+      }
       const out: string[] = [];
-      for (const [i, g] of groups.entries()) {
-        const c = canonicalResponse(form.responses[i], g);
-        if (!c) return `values for ${form.responses[i].responseId} are not the item's identifiers: ${JSON.stringify(g)}`;
-        out.push(...c);
+      for (const r of form.responses) {
+        const vs = byId.get(r.responseId);
+        if (!vs) return `no answer for responseId ${r.responseId}`;
+        const c = canonicalResponse(r, vs);
+        if (!c) return `values for ${r.responseId} do not fit it: ${JSON.stringify(vs)}`;
+        out.push(...prefixed(r.responseId, c));
       }
       return { kind: "labels", values: out };
     }
@@ -218,7 +226,8 @@ export async function agreeOnAnswer(
   // A form we cannot tell, or a key we cannot read in it, could only produce a false key query: no calls.
   const form = answerForm(item);
   const key = readKey(item);
-  if (!form || !key.exact) return done({ outcome: "hold", why: "unreadable_form" });
+  if (!form) return done({ outcome: "hold", why: "unreadable_form", detail: formUnknown(item.itemType) });
+  if (!key.exact) return done({ outcome: "hold", why: "unreadable_form", detail: key.detail });
 
   const [r1, r2] = await Promise.all([blindSolve("solver1", item, images, course, hint, deps), blindSolve("solver2", item, images, course, hint, deps)]);
   solves.solver1 = r1;

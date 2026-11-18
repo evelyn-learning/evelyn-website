@@ -15,7 +15,8 @@ export type Decision =
   | { outcome: "pass"; answer: Answer; confirm: boolean; flag?: "solvers_split" }
   | { outcome: "key_query"; answer: Answer }
   | { outcome: "need_third" }
-  | { outcome: "hold"; why: "no_agreement" | "written_response" | "unreadable_form" };
+  /** detail: for our own queue only (e.g. why the form is unreadable); never shown to a solver. */
+  | { outcome: "hold"; why: "no_agreement" | "written_response" | "unreadable_form"; detail?: string };
 
 const NUMBER = /^[+-]?(\d+\.?\d*|\.\d+)$/;
 const LETTERS = /^[A-Z](,[A-Z])*$/i;
@@ -57,20 +58,25 @@ type MatchLike = Extract<Interaction, { kind: "match" | "gapMatch" }>;
 
 /** One response of the item. `identifiers`: choice / inlineChoice / order identifiers; for match the premises,
  *  for gapMatch the draggable choices. `targets`: match responses or gapMatch gaps. Pairs read identifier→target. */
-export type ResponseForm = { responseId: string; kind: Resp["kind"]; identifiers: string[]; targets: string[]; interaction: Resp };
+export type ResponseForm = {
+  responseId: string; kind: Resp["kind"]; identifiers: string[]; targets: string[]; interaction: Resp;
+  /** choice only: most identifiers allowed; 0 = no limit (as QTI maxChoices 0). */
+  maxChoices: number;
+};
 
 export type AnswerForm = {
   form: "choice-one" | "choice-many" | "number" | "typed" | "labels" | "text";
-  /** Sorted by responseId: the order of the values in a "labels" answer. */
+  /** Sorted by responseId: the order of the values in a "labels" answer. With more than one response every
+   *  value is written "<responseId>=<value>" so positions cannot be confused. */
   responses: ResponseForm[];
 };
 
 type FormInput = { itemType: string; interactions?: Interaction[]; options?: { label: string }[] };
 
 function responseForm(r: Resp): ResponseForm {
-  const base = { responseId: r.responseId, kind: r.kind, interaction: r, targets: [] as string[] };
+  const base = { responseId: r.responseId, kind: r.kind, interaction: r, targets: [] as string[], maxChoices: 0 };
   switch (r.kind) {
-    case "choice": return { ...base, identifiers: r.options.map((o) => o.label) };
+    case "choice": return { ...base, identifiers: r.options.map((o) => o.label), maxChoices: Math.max(0, r.maxChoices || 0) };
     case "inlineChoice": case "order": return { ...base, identifiers: r.choices.map((o) => o.label) };
     case "match": return { ...base, identifiers: r.premises.map((o) => o.label), targets: r.responses.map((o) => o.label) };
     case "gapMatch": return { ...base, identifiers: r.choices.map((o) => o.label), targets: r.gaps };
@@ -89,7 +95,12 @@ export function answerForm(item: FormInput): AnswerForm | null {
   if (rs.length === 1) {
     const r = rs[0];
     const responses = [responseForm(r)];
-    if (r.kind === "choice") return { form: r.maxChoices > 1 || item.itemType === "MS" ? "choice-many" : "choice-one", responses };
+    if (r.kind === "choice") {
+      const many = r.maxChoices !== 1 || item.itemType === "MS";
+      // An MS item whose interaction says maxChoices 1 is read as unlimited (the item type wins).
+      if (many && r.maxChoices === 1) responses[0].maxChoices = 0;
+      return { form: many ? "choice-many" : "choice-one", responses };
+    }
     if (r.kind === "textEntry") return { form: item.itemType === "NR" ? "number" : "typed", responses };
     return { form: "labels", responses };
   }
@@ -158,7 +169,9 @@ export function canonicalResponse(f: ResponseForm, values: string[]): string[] |
   switch (f.kind) {
     case "choice": {
       const mapped = vs.map((v) => (f.identifiers.length ? ids.get(v.toLowerCase()) ?? null : /^[A-Z]$/i.test(v) ? v : null));
-      return mapped.every((m): m is string => m !== null) ? letters(mapped) : null;
+      if (!mapped.every((m): m is string => m !== null)) return null;
+      const out = letters(mapped);
+      return f.maxChoices > 0 && out.length > f.maxChoices ? null : out;
     }
     case "inlineChoice": {
       if (vs.length !== 1) return null;
@@ -181,10 +194,19 @@ export function canonicalResponse(f: ResponseForm, values: string[]): string[] |
   }
 }
 
+/** A multi-response answer's values: each response's canonical values prefixed "<responseId>=", in sorted responseId order. */
+export function prefixed(responseId: string, values: string[]): string[] {
+  return values.map((v) => `${responseId}=${v}`);
+}
+
+export const formUnknown = (itemType: string) => `form unknown: itemType ${itemType} has no readable interactions`;
+
+export type KeyReading = { answer: Answer | null; exact: boolean; detail?: string };
+
 /** The key as an Answer plus whether it was read exactly in the item's answer form. `exact: false` means
  *  the Answer is a best effort for display only (form unknown, or a value not among the item's identifiers):
- *  comparing a solver's answer with it could raise a false key query. */
-export function readKey(item: Pick<ItemDoc, "itemType" | "key" | "keys" | "interactions"> & { options?: { label: string }[] }): { answer: Answer | null; exact: boolean } {
+ *  comparing a solver's answer with it could raise a false key query. `detail` says why. */
+export function readKey(item: Pick<ItemDoc, "itemType" | "key" | "keys" | "interactions"> & { options?: { label: string }[] }): KeyReading {
   const key = (item.key ?? "").trim();
   const keys = item.keys ?? {};
   const keyIds = Object.keys(keys).filter((id) => (keys[id] ?? []).some((v) => String(v).trim()));
@@ -193,7 +215,8 @@ export function readKey(item: Pick<ItemDoc, "itemType" | "key" | "keys" | "inter
   if (form?.form === "text") return { answer: null, exact: true };
 
   const valuesFor = (id: string): string[] => (keys[id] ?? []).map((v) => String(v).trim()).filter(Boolean);
-  const loose = (answer: Answer | null) => ({ answer, exact: false });
+  const loose = (answer: Answer | null, detail: string): KeyReading => ({ answer, exact: false, detail });
+  const unreadable = (vals: string[]) => `key not readable: ${vals.join(", ") || "(empty)"}`;
   // Best effort without a known form (old behaviour).
   const legacy = (): Answer => {
     if (keyIds.length === 1 && !key) {
@@ -206,43 +229,47 @@ export function readKey(item: Pick<ItemDoc, "itemType" | "key" | "keys" | "inter
     if (LETTERS.test(key)) return { kind: "choice", letters: letters(key.split(",")) };
     return { kind: "labels", values: [key] };
   };
-  if (!form) return loose(legacy());
+  if (!form) return loose(legacy(), formUnknown(item.itemType));
 
   const one = form.responses.length === 1 ? form.responses[0] : null;
-  // The values for a single response: its own keys, else the only keyed response, else the legacy key.
+  // The values for a single response: its own keys; else, only when exactly ONE response is keyed, that one
+  // (legacy rows keyed under another responseId than the interaction's); never one of several keyed responses.
   const singleValues = (rid: string): string[] =>
     keys[rid] && valuesFor(rid).length ? valuesFor(rid) : keyIds.length === 1 ? valuesFor(keyIds[0]) : [];
 
   if (form.form === "choice-one" || form.form === "choice-many") {
     const given = singleValues(one!.responseId);
     const vals = given.length ? given : key.split(",");
+    const n = letters(vals).length;
+    if (form.form === "choice-one" && n > 1) return loose({ kind: "choice", letters: letters(vals) }, `key has ${n} letters for a single-choice item`);
     const c = canonicalResponse(one!, vals);
     if (c) return { answer: { kind: "choice", letters: c }, exact: true };
-    return letters(vals).length ? loose({ kind: "choice", letters: letters(vals) }) : loose(legacy());
+    return loose(n ? { kind: "choice", letters: letters(vals) } : legacy(), unreadable(vals));
   }
   if (form.form === "number" || form.form === "typed") {
     // Several values are alternative accepted answers; the first is the key (see acceptedAnswers).
     const given = singleValues(one!.responseId);
     const text = given.length ? given[0] : key;
-    return text ? { answer: typedAnswer(text), exact: true } : loose(legacy());
+    return text ? { answer: typedAnswer(text), exact: true } : loose(legacy(), unreadable([]));
   }
   // labels
   if (one) {
     const given = keys[one.responseId] ? valuesFor(one.responseId) : [];
-    if (!given.length) return loose(key ? { kind: "labels", values: [key] } : legacy());
+    if (!given.length) return loose(key ? { kind: "labels", values: [key] } : legacy(), unreadable(key ? [key] : []));
     const c = canonicalResponse(one, given);
-    return c ? { answer: { kind: "labels", values: c }, exact: true } : loose({ kind: "labels", values: canon(one.interaction, given) });
+    return c ? { answer: { kind: "labels", values: c }, exact: true } : loose({ kind: "labels", values: canon(one.interaction, given) }, unreadable(given));
   }
+  // Several responses: each read with its own rule, values prefixed with the responseId.
   const out: string[] = [];
-  let exact = true;
+  let bad: string[] | null = null;
   for (const r of form.responses) {
     const given = valuesFor(r.responseId);
     const c = canonicalResponse(r, r.kind === "textEntry" ? given.slice(0, 1) : given);
-    if (!c) exact = false;
-    out.push(...(c ?? canon(r.interaction, given)));
+    if (!c && !bad) bad = prefixed(r.responseId, given.length ? given : ["(empty)"]);
+    out.push(...prefixed(r.responseId, c ?? canon(r.interaction, given)));
   }
-  if (!out.length) return loose(legacy());
-  return { answer: { kind: "labels", values: out }, exact };
+  if (!out.length) return loose(legacy(), unreadable([key]));
+  return bad ? loose({ kind: "labels", values: out }, unreadable(bad)) : { answer: { kind: "labels", values: out }, exact: true };
 }
 
 export function parseKey(item: Pick<ItemDoc, "itemType" | "key" | "keys" | "interactions">): Answer | null {
@@ -348,8 +375,34 @@ export function sameAnswer(a: Answer, b: Answer, precision?: number): boolean {
     return x.length === y.length && x.every((l, i) => l === y[i]);
   }
   if (a.kind === "number" && b.kind === "number") return sameNumber(a.value, b.value, precision);
-  if (a.kind === "labels" && b.kind === "labels") return a.values.length === b.values.length && a.values.every((v, i) => normLabel(v) === normLabel(b.values[i]));
+  if (a.kind === "labels" && b.kind === "labels") return a.values.length === b.values.length && a.values.every((v, i) => sameLabel(v, b.values[i], precision));
   return false; // text is judged elsewhere
+}
+
+/** Typed text for comparison: lower case, whitespace collapsed, no spaces around = + - × / % ( ).
+ *  "x = 3" equals "x=3" and "50 %" equals "50%", but "a b" stays different from "ab". */
+const normTyped = (s: string) =>
+  s.trim().toLowerCase().replace(/\s+/g, " ").replace(/ ?([=+\-−×/%()]) ?/g, "$1");
+
+/** Two typed values: numbers by digits, a number and a fraction exactly, other text by normTyped. */
+function sameTyped(x: string, y: string, precision?: number): boolean {
+  const a = typedAnswer(x), b = typedAnswer(y);
+  if (a.kind === "number" && b.kind === "number") return sameNumber(a.value, b.value, precision);
+  if (a.kind === "number" && b.kind === "labels") return sameFraction(a.value, b.values[0], precision);
+  if (a.kind === "labels" && b.kind === "number") return sameFraction(b.value, a.values[0], precision);
+  return a.kind === "labels" && b.kind === "labels" && !!a.values[0] && normTyped(a.values[0]) === normTyped(b.values[0]);
+}
+
+/** One position of a labels answer. Equal as labels (identifiers, pairs: the exact rule); otherwise, when
+ *  neither is a pair, equal as typed values — whole, or as "<responseId>=<value>" with the same prefix. */
+function sameLabel(x: string, y: string, precision?: number): boolean {
+  if (normLabel(x) === normLabel(y)) return true;
+  if (x.includes("→") || y.includes("→")) return false;
+  if (sameTyped(x, y, precision)) return true;
+  const px = x.indexOf("="), py = y.indexOf("=");
+  if (px <= 0 || py <= 0) return false;
+  const prefix = (s: string, p: number) => s.slice(0, p).trim();
+  return prefix(x, px) === prefix(y, py) && sameTyped(x.slice(px + 1), y.slice(py + 1), precision);
 }
 
 function sameFraction(number: string, label: string, precision?: number): boolean {

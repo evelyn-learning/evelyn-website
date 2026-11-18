@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { acceptedAnswers, answerForm, canonicalPairs, canonicalResponse, decide, isNumber, parseKey, readKey, sameAnswer, typedAnswer } from "./answers";
+import { acceptedAnswers, answerForm, prefixed, canonicalPairs, canonicalResponse, decide, isNumber, parseKey, readKey, sameAnswer, typedAnswer } from "./answers";
 import type { Answer } from "./answers";
 import type { Interaction } from "../qti-interactions";
 
@@ -138,10 +138,10 @@ const lab = (...values: string[]): Answer => ({ kind: "labels", values });
   // order: sequence kept
   const order: Interaction = { kind: "order", responseId: "RESPONSE", choices: [] };
   assert.deepEqual(keyOf("TI", "", { RESPONSE: ["C", "A", "B"] }, [order]), { kind: "labels", values: ["C", "A", "B"] });
-  // several responses: sorted by responseId, key order within
+  // several responses: sorted by responseId, key order within, each value prefixed "<responseId>="
   const r = (id: string): Interaction => ({ kind: "textEntry", responseId: id });
-  assert.deepEqual(keyOf("TI", "", { R2: ["y"], R1: ["x"] }, [r("R1"), r("R2")]), { kind: "labels", values: ["x", "y"] });
-  assert.deepEqual(keyOf("TI", "", { R2: ["5"], R1: ["3"] }, [r("R1"), r("R2")]), { kind: "labels", values: ["3", "5"] });
+  assert.deepEqual(keyOf("TI", "", { R2: ["y"], R1: ["x"] }, [r("R1"), r("R2")]), { kind: "labels", values: ["R1=x", "R2=y"] });
+  assert.deepEqual(keyOf("TI", "", { R2: ["5"], R1: ["3"] }, [r("R1"), r("R2")]), { kind: "labels", values: ["R1=3", "R2=5"] });
   // typed response: several values are alternatives; first is the key
   const alt = { itemType: "NR", key: "0.5", keys: { RESPONSE: ["0.5", "1/2", "50%"] }, interactions: [te] };
   assert.deepEqual(parseKey(alt), { kind: "number", value: "0.5" });
@@ -208,7 +208,7 @@ const o = (label: string) => ({ label, html: label });
   }
   // a key that cannot be read exactly keeps the old raw labels and says so
   const r = readKey({ itemType: "DD", key: "", keys: { G: ["G1 W9"] }, interactions: [gap] });
-  assert.deepEqual(r, { answer: lab("G1→W9"), exact: false });
+  assert.deepEqual(r, { answer: lab("G1→W9"), exact: false, detail: "key not readable: G1 W9" });
 }
 
 // several responses: match + inlineChoice
@@ -217,11 +217,11 @@ const o = (label: string) => ({ label, html: label });
   const d: Interaction = { kind: "inlineChoice", responseId: "RESPONSE_2", choices: [o("a"), o("b")] };
   const item = { itemType: "DDL", key: "", keys: { RESPONSE_2: ["A"], RESPONSE_1: ["R2 P1", "P2 R1"] }, interactions: [d, m] };
   const k = readKey(item);
-  assert.deepEqual(k, { answer: lab("P1→R2", "P2→R1", "a"), exact: true });
+  assert.deepEqual(k, { answer: lab("RESPONSE_1=P1→R2", "RESPONSE_1=P2→R1", "RESPONSE_2=a"), exact: true });
   const f = answerForm(item)!;
   assert.deepEqual(f.responses.map((r) => r.responseId), ["RESPONSE_1", "RESPONSE_2"]);
   for (const pairs of [["P2→R1", "P1→R2"], ["R2→P1", "R1→P2"], ["P1 R2", "P2 R1"]]) {
-    const got = [...canonicalResponse(f.responses[0], pairs)!, ...canonicalResponse(f.responses[1], ["a"])!];
+    const got = [...prefixed("RESPONSE_1", canonicalResponse(f.responses[0], pairs)!), ...prefixed("RESPONSE_2", canonicalResponse(f.responses[1], ["a"])!)];
     assert.ok(sameAnswer(lab(...got), k.answer!), JSON.stringify(pairs));
   }
   // order / inlineChoice: identifiers in the item's spelling
@@ -230,7 +230,7 @@ const o = (label: string) => ({ label, html: label });
   assert.equal(canonicalResponse(answerForm({ itemType: "ORD", interactions: [ord] })!.responses[0], ["s1", "s9"]), null);
   // several typed responses: first value only, decimals canonical
   const t1: Interaction = { kind: "textEntry", responseId: "R1" }, t2: Interaction = { kind: "textEntry", responseId: "R2" };
-  assert.deepEqual(parseKey({ itemType: "TI", key: "", keys: { R1: ["3.0", "3"], R2: ["x"] }, interactions: [t2, t1] }), lab("3", "x"));
+  assert.deepEqual(parseKey({ itemType: "TI", key: "", keys: { R1: ["3.0", "3"], R2: ["x"] }, interactions: [t2, t1] }), lab("R1=3", "R2=x"));
 }
 
 // answerForm
@@ -256,8 +256,8 @@ const o = (label: string) => ({ label, html: label });
 
 // Important 2 cases: forms that cannot be told are not exact; legacy NR "1/2" is labels on both sides
 {
-  assert.deepEqual(readKey({ itemType: "DD", key: "12.5" }), { answer: lab("12.5"), exact: false });
-  assert.deepEqual(readKey({ itemType: "MS", key: "", keys: { RESPONSE: ["A", "C"] } }), { answer: { kind: "choice", letters: ["A", "C"] }, exact: false });
+  assert.deepEqual(readKey({ itemType: "DD", key: "12.5" }), { answer: lab("12.5"), exact: false, detail: "form unknown: itemType DD has no readable interactions" });
+  assert.deepEqual(readKey({ itemType: "MS", key: "", keys: { RESPONSE: ["A", "C"] } }), { answer: { kind: "choice", letters: ["A", "C"] }, exact: false, detail: "form unknown: itemType MS has no readable interactions" });
   assert.deepEqual(readKey({ itemType: "MS", key: "", keys: { RESPONSE: ["A", "C"] }, options: [o("A"), o("B"), o("C")] }), { answer: { kind: "choice", letters: ["A", "C"] }, exact: true });
   assert.deepEqual(readKey({ itemType: "NR", key: "1/2" }), { answer: lab("1/2"), exact: true });
   assert.ok(sameAnswer(parseKey({ itemType: "NR", key: "1/2" })!, typedAnswer("1/2")));
@@ -269,6 +269,64 @@ const o = (label: string) => ({ label, html: label });
   assert.deepEqual(readKey({ itemType: "MC", key: "", keys: { RESPONSE: ["choiceB"] }, interactions: [cx] }), { answer: { kind: "choice", letters: ["CHOICEB"] }, exact: true });
   assert.deepEqual(canonicalResponse(answerForm({ itemType: "MC", interactions: [cx] })!.responses[0], ["CHOICEB"]), ["CHOICEB"]);
   assert.equal(canonicalResponse(answerForm({ itemType: "MC", interactions: [cx] })!.responses[0], ["B"]), null);
+}
+
+// --- review round 2 ---
+// typed positions compare like single values; pairs and identifiers keep the exact rule
+{
+  const t1: Interaction = { kind: "textEntry", responseId: "R1" }, t2: Interaction = { kind: "textEntry", responseId: "R2" };
+  const k = parseKey({ itemType: "TI", key: "", keys: { R1: ["1/2"], R2: ["3"] }, interactions: [t1, t2] })!;
+  assert.deepEqual(k, lab("R1=1/2", "R2=3"));
+  assert.ok(sameAnswer(lab("R1=0.5", "R2=3"), k));
+  assert.ok(sameAnswer(lab("R1=0.50", "R2=3.0"), k));
+  assert.ok(!sameAnswer(lab("R1=0.5", "R2=4"), k));
+  assert.ok(!sameAnswer(lab("R2=0.5", "R1=3"), k), "prefixes must match");
+  assert.ok(!sameAnswer(lab("P1→0.5"), lab("P1→1/2")), "a pair never goes through the number rule");
+  assert.ok(!sameAnswer(lab("R1=P1→0.5"), lab("R1=P1→1/2")));
+  // typed non-numeric normalisation
+  assert.ok(sameAnswer(lab("x = 3"), lab("x=3")));
+  assert.ok(sameAnswer(lab("x=3"), lab("X = 3")));
+  assert.ok(sameAnswer(lab("50 %"), lab("50%")));
+  assert.ok(sameAnswer(lab("R1=x = 3"), lab("R1=x=3")));
+  assert.ok(sameAnswer(lab("( a + b ) / 2"), lab("(a+b)/2")));
+  assert.ok(!sameAnswer(lab("x=3"), lab("x=4")));
+  assert.ok(!sameAnswer(lab("a b"), lab("ab")), "only operator spacing is dropped");
+  assert.ok(!sameAnswer(lab("R1=a b"), lab("R1=ab")));
+  assert.ok(sameAnswer(lab("1/2"), lab("1 / 2")));
+}
+
+// maxChoices: count limit (0 = unlimited)
+{
+  const two: Interaction = { kind: "choice", responseId: "R", maxChoices: 2, options: [o("A"), o("B"), o("C")] };
+  const f2 = answerForm({ itemType: "MS", interactions: [two] })!.responses[0];
+  assert.deepEqual(canonicalResponse(f2, ["A", "C"]), ["A", "C"]);
+  assert.equal(canonicalResponse(f2, ["A", "B", "C"]), null);
+  const zero: Interaction = { ...two, maxChoices: 0 };
+  assert.equal(answerForm({ itemType: "MC", interactions: [zero] })!.form, "choice-many", "maxChoices 0 = unlimited");
+  assert.deepEqual(canonicalResponse(answerForm({ itemType: "MC", interactions: [zero] })!.responses[0], ["A", "B", "C"]), ["A", "B", "C"]);
+  const msOne: Interaction = { ...two, maxChoices: 1 };
+  assert.deepEqual(canonicalResponse(answerForm({ itemType: "MS", interactions: [msOne] })!.responses[0], ["A", "B"]), ["A", "B"]);
+}
+
+// details and single-choice keys with several letters
+{
+  const one: Interaction = { kind: "choice", responseId: "RESPONSE", maxChoices: 1, options: [o("A"), o("B"), o("C")] };
+  assert.deepEqual(readKey({ itemType: "MC", key: "A,C", interactions: [one] }), { answer: { kind: "choice", letters: ["A", "C"] }, exact: false, detail: "key has 2 letters for a single-choice item" });
+  assert.deepEqual(readKey({ itemType: "DD", key: "12.5" }).detail, "form unknown: itemType DD has no readable interactions");
+  assert.equal(readKey({ itemType: "MC", key: "E", options: [o("A")] }).detail, "key not readable: E");
+  const gap: Interaction = { kind: "gapMatch", responseId: "G", gaps: ["G1"], choices: [o("W1")] };
+  assert.equal(readKey({ itemType: "DD", key: "", keys: { G: ["G1 W9"] }, interactions: [gap] }).detail, "key not readable: G1 W9");
+}
+
+// whole-keys fallback: one keyed response and one interaction may use it (legacy rows); several keyed responses may not
+{
+  const one: Interaction = { kind: "choice", responseId: "RESPONSE", maxChoices: 1, options: [o("A"), o("B")] };
+  assert.deepEqual(readKey({ itemType: "MC", key: "", keys: { OTHER: ["B"] }, interactions: [one] }), { answer: { kind: "choice", letters: ["B"] }, exact: true });
+  const r = readKey({ itemType: "MC", key: "", keys: { X1: ["A"], X2: ["B"] }, interactions: [one] });
+  assert.equal(r.exact, false, "never one of several keyed responses");
+  const te: Interaction = { kind: "textEntry", responseId: "RESPONSE" };
+  assert.deepEqual(readKey({ itemType: "NR", key: "", keys: { OTHER: ["7"] }, interactions: [te] }), { answer: num("7"), exact: true });
+  assert.equal(readKey({ itemType: "NR", key: "", keys: { X1: ["7"], X2: ["8"] }, interactions: [te] }).exact, false);
 }
 
 console.log("answers tests passed");
