@@ -34,7 +34,7 @@ const BOX_ASSETS = "root@85.239.239.134:/root/keystone-data/assets";
 /** Shown first when the subject matches (the reviewer's reference items), then the rest by id. */
 const PREFERRED = ["234035", "286312", "193246", "93953", "135676", "98186"];
 const IMAGE_MIME: Record<string, string> = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp" };
-const AUTHORABLE_STAGES = ["approved", "in_review"];
+const AUTHORABLE_STAGES = ["ready", "approved", "in_review"];
 
 const argv = process.argv.slice(2);
 const VALUED = new Set(["src", "examples", "playbook", "assets-dir", "max-cost"]);
