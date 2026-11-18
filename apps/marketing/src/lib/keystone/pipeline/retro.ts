@@ -8,10 +8,10 @@
 // The report is internal: model ids appear in its cost line only.
 // No `next/*` imports: this runs from tsx scripts on a laptop.
 
-import { STAGES, type Stage } from "../config";
+import { STAGES, releasedVersionOf, type Stage } from "../config";
 import { ks, type ItemDoc, type SolutionDoc } from "../db";
 import { answerForm, parseKey, typedAnswer, type Answer } from "./answers";
-import type { CheckResult, Finding } from "./checks";
+import { ALL_NA_FAILURE, type CheckResult, type Finding } from "./checks";
 import { redact } from "./models";
 import type { Draft, Rule } from "./write";
 
@@ -75,15 +75,17 @@ export type RetroDeps = { reader: RetroReader; checks: RetroChecks; rules: Rule[
 const FINISHED: Stage[] = ["approved", "delivered"];
 const DEFAULT_STAGE: Stage = "in_review";
 
-export type RetroSelection = { take: ItemDoc[]; apart: string[]; skipped: { itemId: string; why: string }[] };
+/** `unreleased`: items selected by stage that have nothing released yet (counted, not listed one by one). */
+export type RetroSelection = { take: ItemDoc[]; apart: string[]; skipped: { itemId: string; why: string }[]; unreleased: number };
 
 /**
- * Which solutions are audited. Default: stage in_review (or --stage). With --rule: every stage (or --stage),
- * approved / delivered ones reported apart. --only narrows either; a named item outside the selection, or
- * not found, is listed with why. Items with no solution (version 0) are listed, not audited.
+ * Which solutions are audited: the version the client sees (config.ts releasedVersionOf). Default: stage
+ * in_review (or --stage). With --rule: every stage (or --stage), approved / delivered ones reported apart.
+ * --only narrows either; a named item outside the selection, or not found, is listed with why. An item with
+ * nothing released yet is not audited and only counted ("nothing released yet").
  */
 export function selectRetro(items: ItemDoc[], args: Pick<RetroArgs, "rule" | "stage" | "only" | "limit">): RetroSelection {
-  const out: RetroSelection = { take: [], apart: [], skipped: [] };
+  const out: RetroSelection = { take: [], apart: [], skipped: [], unreleased: 0 };
   const stages: Stage[] | null = args.stage ? [args.stage] : args.rule ? null : [DEFAULT_STAGE];
   const byId = new Map(items.map((i) => [i.itemId, i]));
   for (const id of args.only ?? []) if (!byId.has(id)) out.skipped.push({ itemId: id, why: "not found" });
@@ -94,8 +96,8 @@ export function selectRetro(items: ItemDoc[], args: Pick<RetroArgs, "rule" | "st
       if (named) out.skipped.push({ itemId: it.itemId, why: `stage ${it.stage}, not ${stages.join(" / ")}` });
       continue;
     }
-    if (!(it.version > 0)) {
-      out.skipped.push({ itemId: it.itemId, why: "no solution yet" });
+    if (!(releasedVersionOf(it) > 0)) {
+      out.unreleased++;
       continue;
     }
     out.take.push(it);
@@ -109,33 +111,38 @@ export function selectRetro(items: ItemDoc[], args: Pick<RetroArgs, "rule" | "st
 }
 
 /**
- * The answer the solution was written to, as an Answer: the agreed answer stored on the item (evelynAnswer,
- * else the released answer; both are stored as run.ts answerText writes them: letters "A,C", a number,
- * labels joined "; ", or text), read in the item's answer form; else the client's key; else null.
+ * A stored answer text (as run.ts answerText writes it: letters "A,C", a number, labels joined "; ", or
+ * text) read back as an Answer in the item's answer form. Null for an empty text.
  */
-export function storedAnswer(item: ItemDoc): { answer: Answer; from: "agreed answer" | "released answer" | "key" } | null {
-  const agreed = (item.evelynAnswer ?? "").trim();
-  const released = (item.releasedAnswer ?? "").trim();
-  const text = agreed || released;
-  if (text) {
-    const from = agreed ? ("agreed answer" as const) : ("released answer" as const);
-    const form = answerForm(item);
-    const letters = (t: string) => [...new Set(t.split(/[,\s]+/).map((x) => x.trim().toUpperCase()).filter(Boolean))].sort();
-    switch (form?.form) {
-      case "choice-one":
-      case "choice-many":
-        return { answer: { kind: "choice", letters: letters(text) }, from };
-      case "number":
-      case "typed":
-        return { answer: typedAnswer(text), from };
-      case "labels":
-        return { answer: { kind: "labels", values: text.split("; ").map((v) => v.trim()).filter(Boolean) }, from };
-      case "text":
-        return { answer: { kind: "text", value: text }, from };
-      default:
-        return { answer: /^[A-Z](,[A-Z])*$/i.test(text) ? { kind: "choice", letters: letters(text) } : typedAnswer(text), from };
-    }
+export function answerFromText(item: Pick<ItemDoc, "itemType" | "interactions" | "options">, raw: string | undefined | null): Answer | null {
+  const text = (raw ?? "").trim();
+  if (!text) return null;
+  const letters = (t: string) => [...new Set(t.split(/[,\s]+/).map((x) => x.trim().toUpperCase()).filter(Boolean))].sort();
+  switch (answerForm(item)?.form) {
+    case "choice-one":
+    case "choice-many":
+      return { kind: "choice", letters: letters(text) };
+    case "number":
+    case "typed":
+      return typedAnswer(text);
+    case "labels":
+      return { kind: "labels", values: text.split("; ").map((v) => v.trim()).filter(Boolean) };
+    case "text":
+      return { kind: "text", value: text };
+    default:
+      return /^[A-Z](,[A-Z])*$/i.test(text) ? { kind: "choice", letters: letters(text) } : typedAnswer(text);
   }
+}
+
+/**
+ * The answer the RELEASED solution was written to: releasedAnswer (what the client sees); on rows from
+ * before it was kept, evelynAnswer when the released version is the latest; else the client's key; else null.
+ */
+export function storedAnswer(item: ItemDoc): { answer: Answer; from: "released answer" | "agreed answer" | "key" } | null {
+  const released = answerFromText(item, item.releasedAnswer);
+  if (released) return { answer: released, from: "released answer" };
+  const agreed = releasedVersionOf(item) === (item.version || 0) ? answerFromText(item, item.evelynAnswer) : null;
+  if (agreed) return { answer: agreed, from: "agreed answer" };
   const key = parseKey(item);
   return key ? { answer: key, from: "key" } : null;
 }
@@ -163,12 +170,11 @@ export type RetroReport = {
   stage?: Stage;
   items: ItemResult[];
   skipped: { itemId: string; why: string }[];
+  /** Selected by stage but nothing released yet: not audited, counted. */
+  unreleased: number;
   cost: number;
   models: string[];
 };
-
-/** rulesAudit's failure when every verdict is "na": with one rule, that is "the rule does not apply". */
-const ALL_NA = /^audit marked every rule not applicable$/;
 
 /** Runs the selected audits, `concurrency` (default 4) items at a time. Reads only. */
 export async function runRetro(args: RetroArgs, deps: RetroDeps): Promise<RetroReport> {
@@ -188,14 +194,20 @@ export async function runRetro(args: RetroArgs, deps: RetroDeps): Promise<RetroR
 
   const auditOne = async (item: ItemDoc) => {
     const res: ItemResult = {
-      itemId: item.itemId, course: item.course ?? "", itemType: item.itemType ?? "", stage: item.stage, version: item.version,
+      itemId: item.itemId, course: item.course ?? "", itemType: item.itemType ?? "", stage: item.stage, version: releasedVersionOf(item),
       apart: sel.apart.includes(item.itemId), findings: [], couldNotRun: [], notes: [], noAnswer: false, notApplicable: false, cost: 0,
     };
-    const sol = await deps.reader.solution(item.itemId, item.version);
-    if (!sol || !sol.sections?.length) {
-      skipped.push({ itemId: item.itemId, why: `solution v${item.version} not found` });
+    // The version the client sees, never a newer one still held.
+    const sol = await deps.reader.solution(item.itemId, res.version);
+    if (!sol) {
+      skipped.push({ itemId: item.itemId, why: `solution v${res.version} not found` });
       return;
     }
+    if (!sol.sections?.length) {
+      skipped.push({ itemId: item.itemId, why: `solution v${res.version} has no sections` });
+      return;
+    }
+    if ((item.version || 0) > res.version) res.notes.push(`a newer version v${item.version} is waiting, not audited`);
     const draft: Draft = { topic: item.topic ?? "", sections: sol.sections.map((s) => ({ kind: s.kind, md: s.md })) };
     const run = async (check: CheckName, fn: () => Promise<CheckResult>) => {
       try {
@@ -203,7 +215,8 @@ export async function runRetro(args: RetroArgs, deps: RetroDeps): Promise<RetroR
         res.cost += r.cost || 0;
         if (r.model) models.add(r.model);
         if ("failed" in r) {
-          if (check === "audit" && args.rule && ALL_NA.test(r.failed)) {
+          // rulesAudit's failure when every verdict is "na": with one rule, that is "the rule does not apply".
+          if (check === "audit" && args.rule && r.failed === ALL_NA_FAILURE) {
             res.notApplicable = true;
             res.notes.push(`rule ${args.rule} does not apply to this solution`);
           } else res.couldNotRun.push({ check, why: r.failed });
@@ -243,7 +256,7 @@ export async function runRetro(args: RetroArgs, deps: RetroDeps): Promise<RetroR
   const items = sel.take.flatMap((i) => results.get(i.itemId) ?? []).map((r) => ({ ...r, couldNotRun: r.couldNotRun.map((c) => ({ ...c, why: scrub(c.why) })) }));
   return {
     at: now, ...(args.rule ? { rule: args.rule } : {}), ...(args.stage || !args.rule ? { stage: args.stage ?? DEFAULT_STAGE } : {}),
-    items, skipped, cost: items.reduce((s, r) => s + r.cost, 0), models: [...models].sort(),
+    items, skipped, unreleased: sel.unreleased, cost: items.reduce((s, r) => s + r.cost, 0), models: [...models].sort(),
   };
 }
 
@@ -297,7 +310,7 @@ export function renderRetro(rep: RetroReport): string {
     L.push(`| Rule did not apply | ${rep.items.filter((r) => r.notApplicable).length} |`);
     L.push(`| Approved or delivered that would fail | ${rep.items.filter((r) => r.apart && r.findings.length).length} |`);
   }
-  L.push(`| Not audited | ${rep.skipped.length} |`, "");
+  L.push(`| Not audited | ${rep.skipped.length} |`, `| Not audited: nothing released yet | ${rep.unreleased} |`, "");
   L.push("### Findings per rule", "");
   if (perRule.size) {
     L.push("| Rule | Findings |", "|---|---|");

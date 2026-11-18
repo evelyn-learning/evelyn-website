@@ -212,6 +212,9 @@ const AUDIT_SCHEMA = {
   additionalProperties: false,
 };
 
+/** rulesAudit's failure when every verdict is "na" (retro.ts reads it, with one rule, as "the rule does not apply"). */
+export const ALL_NA_FAILURE = "audit marked every rule not applicable";
+
 type AuditReply = { verdicts: { id: string; verdict: "pass" | "fail" | "na"; quote: string; why: string }[] };
 
 export async function rulesAudit(item: ItemDoc, course: string, draft: Draft, rules: Rule[], deps?: ModelDeps): Promise<CheckResult> {
@@ -245,7 +248,7 @@ export async function rulesAudit(item: ItemDoc, course: string, draft: Draft, ru
     const parts = [missing.length && `missing ${capped(missing)}`, unknown.size && `unknown ${capped([...unknown])}`, duplicate.size && `duplicate ${capped([...duplicate])}`];
     return fail(`audit reply does not cover the rule list: ${parts.filter(Boolean).join("; ")}`);
   }
-  if (r.value.verdicts.every((v) => v.verdict === "na")) return fail("audit marked every rule not applicable");
+  if (r.value.verdicts.every((v) => v.verdict === "na")) return fail(ALL_NA_FAILURE);
 
   for (const v of r.value.verdicts) {
     const id = v.id.trim();

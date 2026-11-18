@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import type { ItemDoc } from "../db";
 import type { Answer } from "./answers";
-import { BANNED_WORDS, markdownImages, proseOf, renderCheck, rulesAudit, strayDollar, workingCheck, xmlProblem, type CheckResult, type Finding } from "./checks";
+import { ALL_NA_FAILURE, BANNED_WORDS, markdownImages, proseOf, renderCheck, rulesAudit, strayDollar, workingCheck, xmlProblem, type CheckResult, type Finding } from "./checks";
 import { MODEL_FOR } from "./models";
 import { qtiItem } from "../export";
 import { loadRules, type Draft, type Rule } from "./write";
@@ -384,7 +384,7 @@ async function testRound2() {
   f = fakeOpenAI([reply({ "R-no-you": { verdict: "na" } })]);
   equal(findings(await rulesAudit(item(), "Math 30-1", base, auditRules, f.deps), "na on an all rule").length, 0, "an all rule may honestly be na");
   f = fakeOpenAI([audit(SMALL.filter((r) => r.appliesTo === "table").map((r) => ({ ...pass(r.id), verdict: "na" as const })))]);
-  failed(await rulesAudit(item(), "Math 30-1", base, SMALL.filter((r) => r.appliesTo === "table"), f.deps), "every rule na", "audit marked every rule not applicable");
+  failed(await rulesAudit(item(), "Math 30-1", base, SMALL.filter((r) => r.appliesTo === "table"), f.deps), "every rule na", ALL_NA_FAILURE);
   f = fakeOpenAI([reply({ "R-no-you": { verdict: "fail", quote: "Fi", why: "x" } })]);
   failed(await rulesAudit(item(), "Math 30-1", base, auditRules, f.deps), "audit short quote", "quote too short for R-no-you");
   f = fakeOpenAI([reply({ "R-no-you": { verdict: "fail", quote: "The student's count - $6! = 720$", why: "x" } })]);

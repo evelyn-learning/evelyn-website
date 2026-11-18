@@ -92,7 +92,7 @@ const T0 = new Date("2026-11-17T10:00:00Z");
     ok(md.includes(`- audit R-units: "Short rt-rev2 v1." — no units`), "the finding in the report");
     const ruled = await runRetro({ rule: "R-units" }, { reader: mongoRetroReader(), checks: checks as never, rules });
     equal(ruled.items.map((i) => `${i.itemId}${i.apart ? "*" : ""}`).join(), "rt-rev1,rt-rev2,rt-appr*", "--rule: every stage with a solution, approved apart");
-    ok(ruled.skipped.some((s) => s.itemId === "rt-rec" && /no solution/.test(s.why)), "the received item is listed as not audited");
+    equal(ruled.unreleased, 1, "the received item is counted as nothing released yet");
 
     // --- the script: refuses without the live switch, never writes ---
     const script = path.join(__dirname, "../../../../scripts/keystone-retro-audit.ts");

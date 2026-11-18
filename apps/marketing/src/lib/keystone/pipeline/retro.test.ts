@@ -4,8 +4,8 @@
 import assert from "node:assert/strict";
 import type { ItemDoc } from "../db";
 import type { Answer } from "./answers";
-import type { CheckResult, Finding } from "./checks";
-import { parseRetroArgs, renderRetro, runRetro, selectRetro, storedAnswer, type RetroDeps, type RetroReader } from "./retro";
+import { ALL_NA_FAILURE, type CheckResult, type Finding } from "./checks";
+import { answerFromText, parseRetroArgs, renderRetro, runRetro, selectRetro, storedAnswer, type RetroDeps, type RetroReader } from "./retro";
 import type { Draft, Rule } from "./write";
 
 const ok = (value: unknown, message: string) => assert.ok(value, message);
@@ -37,7 +37,7 @@ const sections = (tag: string) => [
 ];
 
 /** A reader over fixed rows that records every call; it has no other methods. */
-function reader(items: ItemDoc[], withSolution = true): { reader: RetroReader; calls: string[] } {
+function reader(items: ItemDoc[], withSolution: boolean | "empty" = true): { reader: RetroReader; calls: string[] } {
   const calls: string[] = [];
   const r: RetroReader = {
     items: async (q) => {
@@ -46,7 +46,7 @@ function reader(items: ItemDoc[], withSolution = true): { reader: RetroReader; c
     },
     solution: async (itemId, version) => {
       calls.push(`solution ${itemId} ${version}`);
-      return withSolution ? { itemId, version, sections: sections(itemId) } : null;
+      return withSolution === "empty" ? { itemId, version, sections: [] } : withSolution ? { itemId, version, sections: sections(`${itemId} v${version}`) } : null;
     },
   };
   return { reader: r, calls };
@@ -85,24 +85,18 @@ const broke = (ruleId: string, quote: string): Finding => ({ check: "audit", cod
   assert.throws(() => parseRetroArgs(["--write"]), /unknown option/, "unknown option refused");
   assert.throws(() => parseRetroArgs(["--rule", "units"]), /R-/, "a rule id must look like R-…");
 
-  // --- the answer on record ---
-  deepEqual(storedAnswer(item("x", { evelynAnswer: "B" })), { answer: { kind: "choice", letters: ["B"] }, from: "agreed answer" }, "choice from the agreed answer");
+  // --- the answer on record: the released one ---
+  deepEqual(storedAnswer(item("x", { releasedAnswer: "B", evelynAnswer: "C", version: 2, releasedVersion: 1 })), { answer: { kind: "choice", letters: ["B"] }, from: "released answer" }, "the released answer, not a newer agreed one");
+  deepEqual(storedAnswer(item("x", { releasedAnswer: undefined, evelynAnswer: "B" })), { answer: { kind: "choice", letters: ["B"] }, from: "agreed answer" }, "older row without releasedAnswer, released = latest: the agreed answer");
+  deepEqual(storedAnswer(item("x", { releasedAnswer: "", evelynAnswer: "C", version: 2, releasedVersion: 1, key: "B", keys: { RESPONSE: ["B"] } })), { answer: { kind: "choice", letters: ["B"] }, from: "key" }, "agreed answer of a newer version is not used: the key");
+  deepEqual(answerFromText(item("x", { itemType: "MS", interactions: [{ kind: "choice", responseId: "RESPONSE", maxChoices: 0, options: ["A", "B", "C"].map((label) => ({ label, html: label })) }] }), "A,C"), { kind: "choice", letters: ["A", "C"] }, "several letters");
+  deepEqual(answerFromText(item("x", { itemType: "NR", options: [], interactions: [{ kind: "textEntry", responseId: "RESPONSE" }] as ItemDoc["interactions"] }), "4.5"), { kind: "number", value: "4.5" }, "a number");
   deepEqual(
-    storedAnswer(item("x", { itemType: "MS", evelynAnswer: "A,C", interactions: [{ kind: "choice", responseId: "RESPONSE", maxChoices: 0, options: ["A", "B", "C"].map((label) => ({ label, html: label })) }] })),
-    { answer: { kind: "choice", letters: ["A", "C"] }, from: "agreed answer" },
-    "several letters",
+    answerFromText(item("x", { itemType: "TEI", options: [], interactions: [{ kind: "order", responseId: "RESPONSE", choices: [] }] as unknown as ItemDoc["interactions"] }), "A→1; B→2"),
+    { kind: "labels", values: ["A→1", "B→2"] },
+    "labels (answerText joins them with '; ')",
   );
-  deepEqual(
-    storedAnswer(item("x", { itemType: "NR", evelynAnswer: "4.5", options: [], interactions: [{ kind: "textEntry", responseId: "RESPONSE" }] as ItemDoc["interactions"] })),
-    { answer: { kind: "number", value: "4.5" }, from: "agreed answer" },
-    "a number",
-  );
-  deepEqual(
-    storedAnswer(item("x", { itemType: "TEI", evelynAnswer: "", releasedAnswer: "A→1; B→2", options: [], interactions: [{ kind: "order", responseId: "RESPONSE", choices: [] }] as unknown as ItemDoc["interactions"] })),
-    { answer: { kind: "labels", values: ["A→1", "B→2"] }, from: "released answer" },
-    "labels from the released answer when the agreed one is empty (answerText joins them with '; ')",
-  );
-  deepEqual(storedAnswer(item("x", { evelynAnswer: "", releasedAnswer: "", key: "C", keys: { RESPONSE: ["C"] } })), { answer: { kind: "choice", letters: ["C"] }, from: "key" }, "no stored answer: from the key");
+  equal(answerFromText(item("x"), "  "), null, "empty text: null");
   equal(storedAnswer(item("x", { evelynAnswer: "", releasedAnswer: "", key: "", keys: {} })), null, "neither: null");
 
   // --- selection ---
@@ -111,20 +105,23 @@ const broke = (ruleId: string, quote: string): Finding => ({ check: "audit", cod
     item("r5", { stage: "changes_requested" }), item("r6", { stage: "in_review", version: 0 }), item("r7", { stage: "received", version: 0 }),
   ];
   const d = selectRetro(all, {});
-  deepEqual(d.take.map((i) => i.itemId), ["r1"], "default: in review with a solution");
-  ok(d.skipped.some((x) => x.itemId === "r6" && /no solution/.test(x.why)), "in review without a solution is listed as not audited");
-  ok(!d.skipped.some((x) => x.itemId === "r3"), "other stages are not listed one by one");
-  deepEqual(selectRetro(all, { stage: "ready" }).take.map((i) => i.itemId), ["r2"], "--stage ready");
+  deepEqual(d.take.map((i) => i.itemId), ["r1"], "default: in review with a released solution");
+  equal(d.unreleased, 1, "in review with nothing released is counted, not audited");
+  ok(!d.skipped.some((x) => x.itemId === "r6" || x.itemId === "r3"), "neither unreleased nor other-stage items get a line each");
+  const rd = selectRetro(all, { stage: "ready" });
+  deepEqual([rd.take.length, rd.unreleased], [0, 1], "--stage ready: the held, never-released r2 is only counted");
   const named = selectRetro(all, { only: ["r1", "r3", "zz"] });
   deepEqual(named.take.map((i) => i.itemId), ["r1"], "--only within the stage");
   ok(named.skipped.some((x) => x.itemId === "r3" && /approved/.test(x.why)), "a named item in another stage says why");
   ok(named.skipped.some((x) => x.itemId === "zz" && /not found/.test(x.why)), "a named item that does not exist says so");
   const ruled = selectRetro(all, { rule: "R-units" });
-  deepEqual(ruled.take.map((i) => i.itemId), ["r1", "r2", "r3", "r4", "r5"], "--rule: every item with a solution, any stage");
+  deepEqual(ruled.take.map((i) => i.itemId), ["r1", "r3", "r4", "r5"], "--rule: every item with a released solution, any stage");
+  equal(ruled.unreleased, 3, "--rule over every stage: unsolved / unreleased items are a count (r2, r6, r7)");
+  equal(ruled.skipped.length, 0, "and not a line each");
   deepEqual(ruled.apart, ["r3", "r4"], "--rule: approved and delivered reported apart");
-  deepEqual(selectRetro(all, { rule: "R-units", stage: "ready" }).take.map((i) => i.itemId), ["r2"], "--rule with --stage narrows");
+  deepEqual(selectRetro(all, { rule: "R-units", stage: "changes_requested" }).take.map((i) => i.itemId), ["r5"], "--rule with --stage narrows");
   const lim = selectRetro(all, { rule: "R-units", limit: 2 });
-  deepEqual(lim.take.map((i) => i.itemId), ["r1", "r2"], "--limit");
+  deepEqual(lim.take.map((i) => i.itemId), ["r1", "r3"], "--limit");
   ok(lim.skipped.some((x) => /--limit/.test(x.why)), "over the limit is listed");
 
   // --- default run: working check + full rules audit on the items in review ---
@@ -143,7 +140,7 @@ const broke = (ruleId: string, quote: string): Finding => ({ check: "audit", cod
     deepEqual(seen.audit.map((a) => a.rules), [RULES.map((x) => x.id), RULES.map((x) => x.id), RULES.map((x) => x.id)], "full rule list for each");
     equal(seen.audit[0].course, "Math 30-1", "the item's course");
     deepEqual(seen.working.map((w) => w.itemId).sort(), ["a1", "a2"], "working check on items with an answer on record");
-    deepEqual(seen.working[0].answer, { kind: "choice", letters: ["B"] }, "the stored agreed answer");
+    deepEqual(seen.working[0].answer, { kind: "choice", letters: ["B"] }, "the released answer");
     deepEqual(seen.working[0].draft.sections.map((s) => s.kind), ["short", "diploma"], "the stored solution's sections");
     const a1 = rep.items.find((i) => i.itemId === "a1")!;
     equal(a1.findings.length, 1, "a1 has its finding");
@@ -162,6 +159,7 @@ const broke = (ruleId: string, quote: string): Finding => ({ check: "audit", cod
     ok(md.includes("| Items with findings | 1 |"), "items with findings");
     ok(md.includes("| Items where a check could not run | 1 |"), "could-not-run counted apart, never clean");
     ok(md.includes("| Items with no answer on record (working check skipped) | 1 |"), "no answer on record counted");
+    ok(md.includes("| Not audited: nothing released yet | 0 |"), "nothing-released count row");
     ok(md.includes("| R-units | 1 |"), "findings per rule");
     ok(/\nCost: \$0\.0800 \(models: m-audit-1, m-working-1\)\n/.test(md), `cost line with models (${md.match(/Cost:.*/)?.[0]})`);
     equal(md.split("m-working-1").length - 1, 1, "a model id appears only in the cost line");
@@ -179,7 +177,7 @@ const broke = (ruleId: string, quote: string): Finding => ({ check: "audit", cod
     const { checks: c, seen } = checks({
       audit: (i) =>
         i.itemId === "b1" || i.itemId === "b2" ? { findings: [broke("R-table", `Short ${i.itemId}.`)], cost: 0.02, model: "m-audit-1" }
-        : i.itemId === "b5" ? { failed: "audit marked every rule not applicable", cost: 0.02, model: "m-audit-1" }
+        : i.itemId === "b5" ? { failed: ALL_NA_FAILURE, cost: 0.02, model: "m-audit-1" }
         : { findings: [], cost: 0.02, model: "m-audit-1" },
     });
     const rep = await runRetro({ rule: "R-table" }, { reader: r, checks: c, rules: RULES });
@@ -208,6 +206,39 @@ const broke = (ruleId: string, quote: string): Finding => ({ check: "audit", cod
     equal(seen.audit.length + seen.working.length, 0, "nothing checked without the solution");
     ok(rep.skipped.some((x) => x.itemId === "c1" && /solution v1 not found/.test(x.why)), "listed as not audited");
     ok(renderRetro(rep).includes("## Not audited") && renderRetro(rep).includes("- c1: solution v1 not found"), "and in the report");
+  }
+
+  // --- a row with no sections: not audited, said so ---
+  {
+    const { reader: r } = reader([item("c2")], "empty");
+    const { checks: c, seen } = checks();
+    const rep = await runRetro({}, { reader: r, checks: c, rules: RULES });
+    equal(seen.audit.length, 0, "nothing checked on an empty solution");
+    ok(rep.skipped.some((x) => x.itemId === "c2" && x.why === "solution v1 has no sections"), `said so (${JSON.stringify(rep.skipped)})`);
+  }
+
+  // --- the three shapes: the released version with the released answer, never a newer held one ---
+  {
+    const items = [
+      item("v1", { stage: "in_review", version: 2, releasedVersion: 1, releasedAnswer: "B", evelynAnswer: "C" }),
+      item("v2", { stage: "ready", version: 2, releasedVersion: 1, releasedAnswer: "B", evelynAnswer: "C" }),
+      item("v3", { stage: "ready", version: 1, releasedVersion: 0, releasedAnswer: "", evelynAnswer: "B" }),
+    ];
+    const { reader: r, calls } = reader(items);
+    const { checks: c, seen } = checks();
+    const rep = await runRetro({ rule: "R-units" }, { reader: r, checks: c, rules: RULES });
+    deepEqual(rep.items.map((i) => [i.itemId, i.version]), [["v1", 1], ["v2", 1]], "v1 and v2 audited at their released version 1; v3 not at all");
+    ok(calls.includes("solution v1 1") && calls.includes("solution v2 1") && !calls.some((x) => / 2$/.test(x) || x.startsWith("solution v3")), `only released rows read (${calls})`);
+    equal(rep.unreleased, 1, "v3 (ready, nothing released) counted as nothing released yet");
+    for (const id of ["v1", "v2"]) ok(rep.items.find((i) => i.itemId === id)!.notes.includes("a newer version v2 is waiting, not audited"), `${id}: the newer version is named`);
+    const md = renderRetro(rep);
+    ok(md.includes("### v1 · Math 30-1 · MC · in_review · v1") && md.includes("- a newer version v2 is waiting, not audited"), "the report shows the audited version and the note");
+    ok(md.includes("| Not audited: nothing released yet | 1 |"), "and the count");
+    const { reader: r2 } = reader(items);
+    const { checks: c2, seen: seen2 } = checks();
+    await runRetro({ stage: "in_review" }, { reader: r2, checks: c2, rules: RULES });
+    deepEqual(seen2.working.map((w) => [w.itemId, w.answer, w.draft.sections[0].md]), [["v1", { kind: "choice", letters: ["B"] }, "Short v1 v1. So the answer is B."]], "the working check gets the released answer and the released sections");
+    void seen;
   }
 
   // --- a thrown check is a check that could not run, never a stop or a clean item ---
