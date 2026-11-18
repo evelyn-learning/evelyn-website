@@ -130,7 +130,8 @@ export function V2FlagBar(props: {
     }
     setPhase('saving');
     setTimeout(() => {
-      const open = openRef.current!; openRef.current = null;
+      if (!openRef.current) return;
+      const open = openRef.current; openRef.current = null;
       const note = p.current.flagRef.current.words.join(' ').trim();
       p.current.flagRef.current = { active: false, words: [] };
       countRef.current.flags += 1;
@@ -153,15 +154,20 @@ export function V2FlagBar(props: {
     }, TRAILING_WORDS_MS);
   }, [post, shot, takeHeard]);
 
-  /** Drop the note being made: nothing is saved and the session carries on. */
+  /** Drop the note being made: nothing is saved and the session carries on. The flag stays up for a moment
+   *  first: words still on their way from the recogniser were taken as the person's answer and cut the
+   *  tutor off ("And I'm able to edit as well, okay", embed-1795038051986). */
   const cancel = useCallback(() => {
     if (phaseRef.current !== 'open') return;
     openRef.current = null;
-    p.current.flagRef.current = { active: false, words: [] };
-    setTyped(''); typedRef.current = ''; takenRef.current = 0;
-    setStatus('Note dropped');
-    p.current.onStop();
-    setPhase('idle');
+    setPhase('saving');
+    setTimeout(() => {
+      p.current.flagRef.current = { active: false, words: [] };
+      setTyped(''); typedRef.current = ''; takenRef.current = 0;
+      setStatus('Note dropped');
+      p.current.onStop();
+      setPhase('idle');
+    }, TRAILING_WORDS_MS);
   }, []);
 
   useEffect(() => {
@@ -183,7 +189,7 @@ export function V2FlagBar(props: {
       <div data-v2-review-notes className="fixed bottom-20 left-3 z-[9999] flex flex-col items-start gap-2 w-[min(24rem,calc(100vw-1.5rem))]">
         {phase !== 'idle' && (
           <div className="w-full rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-950 shadow">
-            <div className="font-semibold">{phase === 'open' ? 'Paused. Say your note; you can edit it here before saving.' : 'Saving your note…'}</div>
+            <div className="font-semibold">{phase === 'open' ? 'Paused. Say your note; you can edit it here before saving.' : 'One moment…'}</div>
             <textarea value={typed} onChange={(e) => { typedRef.current = e.target.value; setTyped(e.target.value); }} readOnly={phase !== 'open'} rows={4} placeholder="Your words appear here as you speak. You can also type." className="mt-2 w-full rounded border border-amber-300 bg-white px-2 py-1 text-sm text-gray-900" />
           </div>
         )}
