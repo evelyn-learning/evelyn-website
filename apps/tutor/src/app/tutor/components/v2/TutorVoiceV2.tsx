@@ -593,7 +593,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   }, [armSilence]);
 
   return (<>
-    {(V2_FLAGS_ON || reviewNotes) && started && <V2FlagBar session={flagSession} flagRef={flagRef} snapshot={flagSnapshot} onStart={flagStart} onStop={flagStop} onReviewNote={reviewNotes ? reviewNote : undefined} />}
+    {(V2_FLAGS_ON || reviewNotes) && started && <V2FlagBar session={flagSession} flagRef={flagRef} snapshot={flagSnapshot} onStart={flagStart} onStop={flagStop} onReviewNote={reviewNotes ? reviewNote : undefined} ended={turns.closed} />}
     <V2Composer
       composerSlot={props.composerSlot}
       closed={turns.closed}
