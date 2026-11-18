@@ -428,6 +428,9 @@ async function main() {
     ok(!(await run(withShort("So the answer is A.", `${DIPLOMA_A}\n\nShortcut: fix R.`))).ok, "another label is not the shortcut line");
     ok(!(await run(withShort(`Sixty begin with R. So the answer is A.${sc}`))).ok, "no exemption in the Short answer");
     ok(closingCheck(`${DIPLOMA_A}${sc}`, item(), A, "diploma").ok && !closingCheck(`${DIPLOMA_A}${sc}`, item(), A, "short").ok, "closingCheck: Diploma only");
+    // a full-width label reads as the label (NFKC inside withoutShortcut, so every caller agrees)
+    ok((await run(withShort("So the answer is A.", "Sixty. So the answer is A.\n\uff34\uff48\uff4f\uff55\uff47\uff48\uff54 shortcut: fix R."))).ok, "full-width shortcut label (choice)");
+    ok(closingCheck("Sixty. So the answer is A.\n\uff34\uff48\uff4f\uff55\uff47\uff48\uff54 shortcut: fix R.", item(), A, "diploma").ok, "closingCheck: full-width shortcut label");
   }
 
   // items whose labels are numbers, or words
@@ -715,6 +718,8 @@ async function main() {
     const sc1 = await nd2(codeLine, `So the code is 4132.${shortcut}`);
     ok(sc1.ok, `numeric Diploma with a shortcut line passes: ${JSON.stringify(sc1)}`);
     ok((await nd2(codeLine, `${codeLine}\n**Thought shortcut:** lag, log, stationary, death.`)).ok, "bold shortcut label passes");
+    const fw = await nd2(codeLine, "So the code is 4132.\n\n\uff34\uff48\uff4f\uff55\uff47\uff48\uff54 shortcut: lag first.");
+    ok(fw.ok, `full-width shortcut label (number): ${JSON.stringify(fw)}`);
     const sc2 = await nd2(codeLine, `So the code is 4123.${shortcut}`);
     ok(!sc2.ok && sc2.detail === "the Diploma answer's last sentence does not state the agreed value", `wrong value before the shortcut fails: ${JSON.stringify(sc2)}`);
     const sc3 = await nd2(`${codeLine}${shortcut}`, codeLine);

@@ -29,8 +29,10 @@ const EXPONENT = /^[+-]?(\d+\.?\d*|\.\d+)e[+-]?\d+$/i;
 // readNumber; the comparison below (sameNumber, fractions, canonical response values) does too. Exact decimal
 // strings only: never binary floating point.
 
-/** Every hyphen, dash and minus sign that reads as "-" before a number. */
-const MINUS = "\u2010-\u2014\u2212\ufe63\uff0d-";
+/** Every hyphen, dash and minus sign that reads as "-" before a number, as the inside of a regex character class
+ * (calc.ts's tokeniser uses the same list). */
+export const MINUS_SIGNS = "\u2010-\u2014\u2212\ufe63\uff0d-";
+const MINUS = MINUS_SIGNS;
 const LEAD_SIGN = new RegExp(`^([+${MINUS}])[ \t\u00a0\u2009\u202f]*`);
 const UNSIGNED = /^(?:\d+\.?\d*|\.\d+)$/;
 /** Thousands separators between digit groups: comma, LaTeX "{,}", thin / narrow no-break / no-break space, space. */

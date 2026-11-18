@@ -4,7 +4,7 @@
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import type { ItemDoc } from "../db";
-import { readNumber, sameAnswer } from "./answers";
+import { MINUS_SIGNS, readNumber, sameAnswer } from "./answers";
 import type { Answer } from "./answers";
 import { closingCheck, withoutShortcut, type Draft } from "./write";
 
@@ -56,7 +56,7 @@ function runPython(entries: { expr: string; expect: string; rounding: string }[]
 // --- number extraction ----------------------------------------------------------------------------
 
 const THIN = "\u2009\u202f\u00a0";
-const NUMBER_TOKEN = new RegExp(`(?<![\\w.])[+\\-\\u2212]?(?:\\d+\\/\\d+(?![\\d.])|\\d{1,3}(?:[,${THIN}]\\d{3})+(?:\\.\\d+)?|\\d+(?:\\.\\d+)?|\\.\\d+)`, "g");
+const NUMBER_TOKEN = new RegExp(`(?<![\\w.])[+${MINUS_SIGNS}]?(?:\\d+\\/\\d+(?![\\d.])|\\d{1,3}(?:[,${THIN}]\\d{3})+(?:\\.\\d+)?|\\d+(?:\\.\\d+)?|\\.\\d+)`, "g");
 
 /** Exact plain decimal for "2.50e3", "2.50 × 10^3", "2.50 \\times 10^{3}", "2.50*10^3", "2.50 x 10^-3" (any minus sign),
  *  read by answers.ts's readNumber (exponent form); a number with no exponent comes back with its digits as written.
@@ -92,7 +92,7 @@ export function statedNumbers(md: string): string[] {
   const out: string[] = [];
   for (const m of plainText(md).matchAll(NUMBER_TOKEN)) {
     // a fraction token stays "p/q"; every other token is read by readNumber (sign, thousands groups)
-    out.push(m[0].includes("/") ? m[0].replace(/^\+/, "").replace(/^\u2212/, "-") : readNumber(m[0])?.plain ?? m[0]);
+    out.push(m[0].includes("/") ? m[0].replace(/^\+/, "").replace(new RegExp(`^[${MINUS_SIGNS}]`), "-") : readNumber(m[0])?.plain ?? m[0]);
   }
   return out;
 }

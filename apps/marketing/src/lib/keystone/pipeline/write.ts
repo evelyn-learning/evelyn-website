@@ -442,11 +442,13 @@ function beforeClosing(md: string, closing: string): string | null {
 const SHORTCUT_LINE = /^(?:\*\*|__)?\s*thought\s+shortcut\s*(?:\*\*|__)?\s*:/i;
 
 /** A Diploma answer without one trailing thought-shortcut line (R-diploma-shortcut): the answer rules apply to the text
- * before it, and the shortcut line itself is not checked. Only the last non-empty line, and only one. */
+ * before it, and the shortcut line itself is not checked. Only the last non-empty line, and only one. The label is
+ * read in NFKC here (full-width letters are the label), so every caller agrees whether or not it normalised first;
+ * the text returned is the caller's own text. */
 export function withoutShortcut(md: string): string {
   const t = md.trimEnd();
   const nl = t.lastIndexOf("\n");
-  const last = t.slice(nl + 1).trim();
+  const last = nfkc(t.slice(nl + 1)).trim();
   return nl >= 0 && SHORTCUT_LINE.test(last) ? t.slice(0, nl).trimEnd() : t;
 }
 

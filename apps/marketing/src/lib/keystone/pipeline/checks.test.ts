@@ -323,6 +323,8 @@ async function testRender() {
   equal(codes(fs).filter((x) => x === "closing_missing").length, 0, `Diploma shortcut line after the closing (got ${JSON.stringify(fs)})`);
   fs = await renderCheck(item(), draft([{ kind: "short", md: `${SHORT}\n\nThought shortcut: fix R first.` }, { kind: "diploma", md: DIPLOMA }]), { answer: A });
   ok(fs.some((x) => x.code === "closing_missing" && x.section === "short"), "no shortcut exemption in the Short answer");
+  fs = await renderCheck(item(), draft([{ kind: "short", md: SHORT }, { kind: "diploma", md: "Sixty. So the answer is A.\n\uff34\uff48\uff4f\uff55\uff47\uff48\uff54 shortcut: fix R." }]), { answer: A });
+  equal(codes(fs).filter((x) => x === "closing_missing").length, 0, `full-width shortcut label (got ${JSON.stringify(fs)})`);
   fs = await renderCheck(item(), draft([{ kind: "short", md: "Sixty." }, { kind: "diploma", md: DIPLOMA }]), { answer: A });
   equal(fs.find((x) => x.code === "closing_missing")?.detail, 'the short section does not end with "So the answer is A." or ", so the answer is A."', "closing_missing detail");
   fs = await renderCheck(item(), draft([{ kind: "short", md: "Sixty begin with R." }, { kind: "diploma", md: "Plain." }]), { answer: { kind: "number", value: "60" } });

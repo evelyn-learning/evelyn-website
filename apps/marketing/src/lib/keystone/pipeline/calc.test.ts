@@ -53,6 +53,10 @@ assert.equal(toPlainDecimal("\u22122.5e3"), "-2500");
 assert.equal(toPlainDecimal("5 \u00d7 10^{-1}"), "0.5");
 assert.equal(toPlainDecimal("1e1001"), null, "an exponent beyond 1000 is not read");
 assert.deepEqual(statedNumbers("It is \u22124 and +5 and 2{,}500"), ["-4", "5", "2500"]);
+// every minus/dash the reader knows starts a signed token (answers.ts MINUS_SIGNS)
+assert.deepEqual(statedNumbers("It is \u20130.5."), ["-0.5"], "en dash");
+for (const m of ["\u2010", "\u2011", "\u2012", "\u2014", "\ufe63", "\uff0d"]) assert.deepEqual(statedNumbers(`It is ${m}0.5.`), ["-0.5"], `minus variant ${JSON.stringify(m)}`);
+assert.deepEqual(statedNumbers("pages 3\u20135"), ["3", "5"], "a dash between numbers is not a sign");
 assert.deepEqual(statedNumbers("$\\frac{1}{2}$ and 0.50 and .5"), ["1/2", "0.50", ".5"], "written digits kept");
 
 const python = spawnSync("python3", ["-I", "-c", "import sys; sys.path.append(__import__('site').getusersitepackages()); import sympy"], { encoding: "utf8" });
@@ -157,6 +161,8 @@ async function main() {
     const f = await calcCheck(draft({ diploma: `We compute it. So the probability is 0.997.${sc}` }), NUM, item());
     assert.deepEqual(codes(f), ["answer_inconsistent"], "wrong value before the shortcut is still flagged");
     assert.match(f[0].detail, /0\.997/, "the flagged sentence is the one before the shortcut");
+    const code: Answer = { kind: "number", value: "4132" };
+    assert.deepEqual(codes(await calcCheck(draft({ short: "The code is 4132.", diploma: "So the code is 4132.\n\n\uff34\uff48\uff4f\uff55\uff47\uff48\uff54 shortcut: lag first." }), code, item())), [], "full-width shortcut label");
   }
   // python missing -> one finding, never a throw
   {
