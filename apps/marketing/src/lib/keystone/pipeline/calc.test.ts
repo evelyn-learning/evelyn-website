@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { calcCheck, closingSentence, statedNumbers, toPlainDecimal } from "./calc";
+import { calcCheck, statedNumbers, toPlainDecimal } from "./calc";
 import type { CalcFinding } from "./calc";
 import type { Answer } from "./answers";
 import type { ItemDoc } from "../db";
@@ -74,7 +74,7 @@ async function main() {
   assert.deepEqual(codes(await calcCheck(letterDraft("A ball rolls down a slope, which is option A."), A, item())), ["letter_mismatch"]); // no closing sentence
   {
     const f = await calcCheck(letterDraft("It speeds up."), A, item());
-    assert.equal(f[0].detail, "the Short answer does not end with: So the answer is A.");
+    assert.equal(f[0].detail, 'the Short answer does not end with "So the answer is A." or ", so the answer is A."');
   }
   const Bk: Answer = { kind: "choice", letters: ["B"] };
   assert.deepEqual(codes(await calcCheck(letterDraft("The answer is not A but B. So the answer is B."), Bk, item())), []);
@@ -83,8 +83,17 @@ async function main() {
   assert.deepEqual(codes(await calcCheck(letterDraft("So the answers are A, C and D."), { kind: "choice", letters: ["D", "A", "C"] }, item())), []);
   assert.deepEqual(codes(await calcCheck(letterDraft("So the answers are A, C, and D."), { kind: "choice", letters: ["A", "C", "D"] }, item())), ["letter_mismatch"]); // no Oxford comma
   assert.deepEqual(codes(await calcCheck(letterDraft("So the answer is A."), { kind: "choice", letters: ["A", "C"] }, item())), ["letter_mismatch"]);
-  assert.equal(closingSentence(["c", "a"]), "So the answers are A and C.");
-  assert.equal(closingSentence(["B"]), "So the answer is B.");
+  // the closing rule is write.ts's closingCheck: the clause form is accepted, the loose own-sentence form is not
+  assert.deepEqual(codes(await calcCheck(letterDraft("A ball rolls down a slope, so the answer is A."), A, item())), [], "clause form");
+  assert.deepEqual(codes(await calcCheck(letterDraft("All three, so the answers are A, C and D."), { kind: "choice", letters: ["A", "C", "D"] }, item())), [], "plural clause form");
+  assert.deepEqual(codes(await calcCheck(letterDraft("A ball rolls down a slope, So the answer is A."), A, item())), ["letter_mismatch"], "capital So after a comma");
+  assert.deepEqual(codes(await calcCheck(letterDraft("A ball rolls down a slope So the answer is A."), A, item())), ["letter_mismatch"], "no sentence end before the closing");
+  {
+    const lower = { itemType: "MC", questionHtml: "<p>Which?</p>", options: [{ label: "a", html: "1" }, { label: "b", html: "2" }] } as unknown as ItemDoc;
+    assert.deepEqual(codes(await calcCheck(letterDraft("It is the first, so the answer is a."), { kind: "choice", letters: ["A"] }, lower)), [], "the item's own label spelling");
+  }
+  // "A" the ampere is never read as option A: calc.ts has no letter logic of its own
+  assert.deepEqual(codes(await calcCheck(letterDraft("The current is 2.0 A in the coil, so the answer is B."), Bk, item())), [], "ampere in A");
 
   // units
   const stem = "<p>Calculate the speed. Give your answer in <b>m/s</b>.</p>";

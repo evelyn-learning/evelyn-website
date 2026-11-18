@@ -4,7 +4,7 @@ import { join } from "node:path";
 import type { ItemDoc } from "../db";
 import type { Answer } from "./answers";
 import {
-  answerInWords, closingSentence, nfkc, isDiplomaCourse, lastSentence, loadRules, numericLiterals, parseRules, statedAnswerMatches, writeSolution,
+  answerInWords, closingCheck, closingSentence, nfkc, withoutShortcut, isDiplomaCourse, lastSentence, loadRules, numericLiterals, parseRules, statedAnswerMatches, writeSolution,
   type Draft, type StatedAnswer,
 } from "./write";
 import { MODEL_FOR } from "./models";
@@ -369,6 +369,56 @@ async function main() {
     ok((await run(withShort("All three hold, so the answers are A, C and D.", "All three hold, so the answers are A, C and D.", choice("A", "C", "D")), ACD)).ok, "plural clause form passes");
   }
 
+  // ONE closing rule (closingCheck), shared with calc.ts and checks.ts. Strict: the own-sentence form follows a sentence
+  // end (. ! ? or a line break); the clause form is ", so the answer is X." in lower case.
+  {
+    const probes: [string, boolean][] = [
+      ["Sixty, So the answer is A.", false],
+      ["Sixty arrangements begin with R So the answer is A.", false],
+      ["Sixty arrangements begin with R: So the answer is A.", false],
+      ["Sixty arrangements begin with R; So the answer is A.", false],
+      ["Sixty arrangements begin with R. So the answer is A.", true],
+      ["Is it sixty? So the answer is A.", true],
+      ["Sixty (all of them.) So the answer is A.", true],
+      ["Sixty is \u201cright.\u201d So the answer is A.", true],
+      ["Sixty\nSo the answer is A.", true],
+      ["So the answer is A.", true],
+      ["Sixty, so the answer is A.", true],
+      ["Sixty, so the answer is a.", false],
+      ["Sixty, So the answer is a.", false],
+      ["Sixty. So the answer is A. ", true],
+    ];
+    for (const [md, pass] of probes) {
+      equal(closingCheck(md, item(), A, "short").ok, pass);
+      ok((await run(withShort(md))).ok === pass, `write: "${md}" should ${pass ? "pass" : "fail"}`);
+      ok((await run(withShort("So the answer is A.", md))).ok === pass, `write Diploma: "${md}" should ${pass ? "pass" : "fail"}`);
+    }
+    const r = closingCheck("Sixty.", item(), A, "short");
+    ok(!r.ok && r.why === 'does not end with "So the answer is A." or ", so the answer is A."', JSON.stringify(r));
+    const okr = closingCheck("Sixty. So the answer is A.", item(), A, "short");
+    ok(okr.ok && okr.before === "Sixty. ", JSON.stringify(okr));
+    ok(closingCheck("anything", item(), { kind: "number", value: "2" }, "short").ok, "no closing rule for a number");
+    const ACD: Answer = { kind: "choice", letters: ["D", "A", "C"] };
+    ok(closingCheck("All hold. So the answers are A, C and D.", item(), ACD, "short").ok, "plural own sentence");
+    ok(closingCheck("All hold, so the answers are A, C and D.", item(), ACD, "short").ok, "plural clause");
+    ok(!closingCheck("All hold, So the answers are A, C and D.", item(), ACD, "short").ok, "plural, capital So after a comma");
+    const worded = item({ options: [{ label: "ChoiceA", html: "60" }, { label: "ChoiceB", html: "30" }] });
+    ok(closingCheck("Sixty. So the answer is ChoiceA.", worded, { kind: "choice", letters: ["choicea"] }, "short").ok, "the item's own label spelling");
+  }
+
+  // R-diploma-shortcut: one trailing "Thought shortcut:" line after the Diploma answer's closing is not checked
+  {
+    const sc = "\n\nThought shortcut: fix the R first.";
+    ok((await run(withShort("So the answer is A.", `${DIPLOMA_A}${sc}`))).ok, "Diploma closing then a shortcut line passes");
+    ok((await run(withShort("So the answer is A.", `Sixty begin with R, so the answer is A.\n**Thought shortcut:** fix R.`))).ok, "bold label, clause form");
+    ok((await run(withShort("So the answer is A.", `${DIPLOMA_A}\n\nthought SHORTCUT: fix R.`))).ok, "label in any case");
+    ok(!(await run(withShort("So the answer is A.", `Sixty begin with R. So the answer is B.${sc}`))).ok, "a wrong closing before the shortcut fails");
+    ok(!(await run(withShort("So the answer is A.", `${DIPLOMA_A}${sc}${sc}`))).ok, "only one shortcut line is exempt");
+    ok(!(await run(withShort("So the answer is A.", `${DIPLOMA_A}\n\nShortcut: fix R.`))).ok, "another label is not the shortcut line");
+    ok(!(await run(withShort(`Sixty begin with R. So the answer is A.${sc}`))).ok, "no exemption in the Short answer");
+    ok(closingCheck(`${DIPLOMA_A}${sc}`, item(), A, "diploma").ok && !closingCheck(`${DIPLOMA_A}${sc}`, item(), A, "short").ok, "closingCheck: Diploma only");
+  }
+
   // items whose labels are numbers, or words
   {
     const numbered = item({ options: [{ label: "1", html: "60" }, { label: "2", html: "30" }, { label: "3", html: "120" }, { label: "4", html: "20" }] });
@@ -639,6 +689,18 @@ async function main() {
     const phases = "<p>Match the phases lag, log, stationary and death to the numbers 1, 2, 3 and 4.</p>";
     const code = await nd("4132", "The phases are lag (4), log (1), stationary (3) and death (2), so the code is 4132.", phases);
     ok(code.ok, `the English word "log (1)" is not a function call: ${JSON.stringify(code)}`);
+    // R-diploma-shortcut on a number item: the value rule applies to the text before one trailing shortcut line
+    const codeLine = "The phases are lag (4), log (1), stationary (3) and death (2), so the code is 4132.";
+    const shortcut = "\n\nThought shortcut: lag, log, stationary, death.";
+    const nd2 = (short: string, diploma: string) =>
+      run({ topic: "t", statedAnswer: num("4132"), calc: [], sections: [{ kind: "short", md: short }, { kind: "diploma", md: diploma }] }, { kind: "number", value: "4132" }, item({ itemType: "NR", options: [], questionHtml: phases }));
+    const sc1 = await nd2(codeLine, `So the code is 4132.${shortcut}`);
+    ok(sc1.ok, `numeric Diploma with a shortcut line passes: ${JSON.stringify(sc1)}`);
+    ok((await nd2(codeLine, `${codeLine}\n**Thought shortcut:** lag, log, stationary, death.`)).ok, "bold shortcut label passes");
+    const sc2 = await nd2(codeLine, `So the code is 4123.${shortcut}`);
+    ok(!sc2.ok && sc2.detail === "the Diploma answer's last sentence does not state the agreed value", `wrong value before the shortcut fails: ${JSON.stringify(sc2)}`);
+    const sc3 = await nd2(`${codeLine}${shortcut}`, codeLine);
+    ok(!sc3.ok && sc3.detail === "the Short answer's last sentence does not state the agreed value", `no exemption in the Short answer: ${JSON.stringify(sc3)}`);
     const f = fake({ topic: "t", statedAnswer: num("4132"), calc: [], sections: [{ kind: "short", md: "It is 4132." }, { kind: "diploma", md: "It is 4132." }] });
     await writeSolution(item({ itemType: "NR", options: [] }), "Math 30-1", { kind: "number", value: "4132" }, {}, f.deps);
     ok(f.seen[0].user.includes("For a coded numerical answer, explain what each digit stands for BEFORE the last sentence; the last sentence gives only the final value."), "coded-answer prompt line");
@@ -693,9 +755,14 @@ async function corpus(run: Run) {
       const trailing = /,\s*(?:which is options? |options? |so the answers? (?:is|are) )[A-Z](?:(?:\s*,\s*|\s*,?\s+and\s+)[A-Z])*\.?\s*$/i;
       return trailing.test(md) ? md.replace(trailing, clause) : `${md} ${closing}`;
     };
+    // R-diploma-shortcut: the closing goes before a Diploma answer's trailing "Thought shortcut:" line
+    const closeDiploma = (md: string) => {
+      const body = withoutShortcut(md);
+      return body === md.trimEnd() ? close(md) : `${close(body)}${md.trimEnd().slice(body.length)}`;
+    };
     const sections = parts.filter((p) => HEADING_KIND[p.head]).map((p) => {
       const kind = HEADING_KIND[p.head];
-      return { kind, md: kind === "short" || kind === "diploma" ? close(p.md) : p.md };
+      return { kind, md: kind === "short" ? close(p.md) : kind === "diploma" ? closeDiploma(p.md) : p.md };
     }).sort((a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind));
     const stated: StatedAnswer = letters ? choice(...letters) : num(ans);
     const r = await run({ topic: "t", statedAnswer: stated, calc: [], sections }, answer, it, "Math 30-1");

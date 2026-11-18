@@ -433,15 +433,48 @@ function otherLabelsNamed(prose: string, agreed: string[], labels: string[], eq:
   return labels.filter((l) => named.has(l));
 }
 
-/** The closing, as its own last sentence ("… So the answer is A.") or as the last clause (", so the answer is A.");
- * the text before it, or null when neither form ends the text. */
+/** A sentence end right before an own-sentence closing: ".", "!" or "?" (then closing quotes or brackets, or the "$"
+ * that ends a formula) and spaces, or a line break. Tested on a bounded tail only. */
+const SENTENCE_END = /(?:[.!?]["'’”)\]]*\$?[ \t ]+|\n\s*)$/;
+
+/** The closing, as its own last sentence after a sentence end ("… R. So the answer is A.") or as the last clause in
+ * lower case (", so the answer is A."); the text before it, or null when neither form ends the text. */
 function beforeClosing(md: string, closing: string): string | null {
   const t = md.trim();
   if (t === closing) return "";
-  if (t.endsWith(` ${closing}`) || t.endsWith(`\n${closing}`)) return t.slice(0, t.length - closing.length);
   const clause = `, s${closing.slice(1)}`;
   if (t.endsWith(clause)) return t.slice(0, t.length - clause.length);
-  return null;
+  if (!t.endsWith(closing)) return null;
+  const before = t.slice(0, t.length - closing.length);
+  return SENTENCE_END.test(tailOf(before, before.length)) ? before : null;
+}
+
+/** R-diploma-shortcut: a final line starting "Thought shortcut:" (any case, optional bold markers on the label). */
+const SHORTCUT_LINE = /^(?:\*\*|__)?\s*thought\s+shortcut\s*(?:\*\*|__)?\s*:/i;
+
+/** A Diploma answer without one trailing thought-shortcut line (R-diploma-shortcut): the answer rules apply to the text
+ * before it, and the shortcut line itself is not checked. Only the last non-empty line, and only one. */
+export function withoutShortcut(md: string): string {
+  const t = md.trimEnd();
+  const nl = t.lastIndexOf("\n");
+  const last = t.slice(nl + 1).trim();
+  return nl >= 0 && SHORTCUT_LINE.test(last) ? t.slice(0, nl).trimEnd() : t;
+}
+
+export type ClosingResult = { ok: true; before: string } | { ok: false; why: string };
+
+/** THE closing-sentence rule for a choice item's Short or Diploma answer (write.ts's post-validation, calc.ts and
+ * checks.ts all use this one). The section ends with closingSentence(answer, item) as its own sentence after a
+ * sentence end (". ", "! ", "? " or a line break), or with the lower-case clause ", so the answer is X."; nothing
+ * follows it, except one "Thought shortcut:" line after a Diploma answer. `before`: the text before the closing
+ * (NFKC). Any other answer kind has no closing rule: ok, with the whole text. `why` reads after a subject
+ * ("the Short answer …"). */
+export function closingCheck(sectionMd: string, item: ItemDoc, answer: Answer, section: "short" | "diploma"): ClosingResult {
+  const t = nfkc(section === "diploma" ? withoutShortcut(sectionMd) : sectionMd).trim();
+  const closing = closingSentence(answer, item);
+  if (closing === null) return { ok: true, before: t };
+  const before = beforeClosing(t, closing);
+  return before === null ? { ok: false, why: `does not end with "${closing}" or ", s${closing.slice(1)}"` } : { ok: true, before };
 }
 
 /** Shape and answer checks on the reply; a message naming the first problem, or null. */
@@ -460,10 +493,11 @@ function draftProblem(d: Reply, answer: Answer, item: ItemDoc): string | null {
   const diploma = nfkc(d.sections.find((s) => s.kind === "diploma")!.md).trim();
 
   if (answer.kind === "choice") {
-    const closing = closingSentence(answer, item)!;
-    const shortBody = beforeClosing(short, closing);
-    if (shortBody === null) return `the Short answer does not end with "${closing}" or ", s${closing.slice(1)}"`;
-    if (beforeClosing(diploma, closing) === null) return `the Diploma answer does not end with "${closing}" or ", s${closing.slice(1)}"`;
+    const shortClose = closingCheck(short, item, answer, "short");
+    if (!shortClose.ok) return `the Short answer ${shortClose.why}`;
+    const shortBody = shortClose.before;
+    const diplomaClose = closingCheck(diploma, item, answer, "diploma");
+    if (!diplomaClose.ok) return `the Diploma answer ${diplomaClose.why}`;
     const agreed = agreedLabels(answer, item);
     const own = itemLabels(item);
     // an item with no labels of its own: capitals A-Z, matched by case (lower-case letters are units and variables)
@@ -478,7 +512,7 @@ function draftProblem(d: Reply, answer: Answer, item: ItemDoc): string | null {
   if (answer.kind === "number") {
     const stemNumbers = numericLiterals(stemText(item));
     return numberSentenceProblem(lastSentence(short), answer.value, stemNumbers, "Short")
-      ?? numberSentenceProblem(lastSentence(diploma), answer.value, stemNumbers, "Diploma");
+      ?? numberSentenceProblem(lastSentence(withoutShortcut(diploma)), answer.value, stemNumbers, "Diploma");
   }
   return null; // labels: the structured answer is the check; text: non-empty sections only
 }

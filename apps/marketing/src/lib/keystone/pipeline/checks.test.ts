@@ -310,6 +310,21 @@ async function testRender() {
   equal(codes(fs).filter((x) => x === "closing_missing").length, 0, `clause form and own-sentence form both accepted (got ${JSON.stringify(fs)})`);
   fs = await renderCheck(item(), draft([{ kind: "short", md: "Sixty begin with R, So the answer is A." }, { kind: "diploma", md: "So the answer is A." }]), { answer: A });
   ok(fs.some((x) => x.code === "closing_missing"), "capital So after a comma is not the clause form");
+  // the closing rule is write.ts's closingCheck (strict own-sentence form, lower-case clause form, Diploma shortcut line)
+  for (const [md, pass] of [
+    ["Sixty, So the answer is A.", false], ["Sixty begin with R So the answer is A.", false], ["Sixty begin with R: So the answer is A.", false],
+    ["Sixty begin with R. So the answer is A.", true], ["Sixty begin with R, so the answer is A.", true], ["Sixty\nSo the answer is A.", true],
+    ["Sixty, so the answer is a.", false],
+  ] as [string, boolean][]) {
+    fs = await renderCheck(item(), draft([{ kind: "short", md }, { kind: "diploma", md: DIPLOMA }]), { answer: A });
+    equal(fs.some((x) => x.code === "closing_missing"), !pass, `Short "${md}" should ${pass ? "pass" : "fail"} (got ${JSON.stringify(fs)})`);
+  }
+  fs = await renderCheck(item(), draft([{ kind: "short", md: SHORT }, { kind: "diploma", md: `${DIPLOMA}\n\nThought shortcut: fix R first.` }]), { answer: A });
+  equal(codes(fs).filter((x) => x === "closing_missing").length, 0, `Diploma shortcut line after the closing (got ${JSON.stringify(fs)})`);
+  fs = await renderCheck(item(), draft([{ kind: "short", md: `${SHORT}\n\nThought shortcut: fix R first.` }, { kind: "diploma", md: DIPLOMA }]), { answer: A });
+  ok(fs.some((x) => x.code === "closing_missing" && x.section === "short"), "no shortcut exemption in the Short answer");
+  fs = await renderCheck(item(), draft([{ kind: "short", md: "Sixty." }, { kind: "diploma", md: DIPLOMA }]), { answer: A });
+  equal(fs.find((x) => x.code === "closing_missing")?.detail, 'the short section does not end with "So the answer is A." or ", so the answer is A."', "closing_missing detail");
   fs = await renderCheck(item(), draft([{ kind: "short", md: "Sixty begin with R." }, { kind: "diploma", md: "Plain." }]), { answer: { kind: "number", value: "60" } });
   equal(codes(fs).filter((x) => x === "closing_missing").length, 0, "no closing check for a numeric answer");
 

@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import type { ItemDoc } from "../db";
 import { sameAnswer } from "./answers";
 import type { Answer } from "./answers";
-import type { Draft } from "./write";
+import { closingCheck, type Draft } from "./write";
 
 export type CalcFinding = {
   code: "calc_mismatch" | "early_rounding" | "answer_inconsistent" | "letter_mismatch" | "unit_missing" | "calc_unparseable";
@@ -138,17 +138,10 @@ function answerInconsistent(draft: Draft, answer: Extract<Answer, { kind: "numbe
   return out;
 }
 
-/** The house closing sentence of a choice answer's Short section (the author step writes exactly this). */
-export function closingSentence(letters: string[]): string {
-  const l = [...new Set(letters.map((x) => x.trim().toUpperCase()).filter(Boolean))].sort();
-  if (l.length <= 1) return `So the answer is ${l[0] ?? ""}.`;
-  return `So the answers are ${l.slice(0, -1).join(", ")} and ${l[l.length - 1]}.`;
-}
-
-function letterMismatch(draft: Draft, answer: Extract<Answer, { kind: "choice" }>): CalcFinding[] {
-  const short = (draft.sections.find((s) => s.kind === "short")?.md ?? "").trim();
-  const closing = closingSentence(answer.letters);
-  return short.endsWith(closing) ? [] : [{ code: "letter_mismatch", detail: `the Short answer does not end with: ${closing}` }];
+/** The closing rule is write.ts's closingCheck (one definition for the author, this check and the render check). */
+function letterMismatch(draft: Draft, answer: Extract<Answer, { kind: "choice" }>, item: ItemDoc): CalcFinding[] {
+  const r = closingCheck(draft.sections.find((s) => s.kind === "short")?.md ?? "", item, answer, "short");
+  return r.ok ? [] : [{ code: "letter_mismatch", detail: `the Short answer ${r.why}` }];
 }
 
 const UNITS = "m\\/s\\^?2?|m\\/s|km\\/h|kg|g|mol\\/L|mol|J|kJ|N|Pa|kPa|V|A|Ω|W|Hz|m|cm|mm|km|s|min|h|°C|K|L|mL";
@@ -271,7 +264,7 @@ export async function calcCheck(draft: Draft, answer: Answer, item: ItemDoc, opt
   if (answer.kind === "number") {
     findings.push(...answerInconsistent(draft, answer), ...unitMissing(draft, answer, item));
   } else if (answer.kind === "choice") {
-    findings.push(...letterMismatch(draft, answer));
+    findings.push(...letterMismatch(draft, answer, item));
   }
   return findings;
 }

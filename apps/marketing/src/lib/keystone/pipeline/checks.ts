@@ -16,7 +16,7 @@ import type { Answer } from "./answers";
 import { questionAsText } from "./intake";
 import { callModel } from "./models";
 import type { ModelDeps } from "./types";
-import { answerInWords, closingSentence, isDiplomaCourse, nfkc, type Draft, type Rule } from "./write";
+import { answerInWords, closingCheck, isDiplomaCourse, nfkc, type Draft, type Rule } from "./write";
 
 export type Finding = {
   check: "calc" | "working" | "audit" | "render";
@@ -422,21 +422,6 @@ export function strayDollar(md: string): { text: string; at: number } | null {
   return null;
 }
 
-// --- the closing sentence ----------------------------------------------------------------------------
-
-/** The closing as its own final sentence or as the final clause ", so the answer is A.".
- * write.ts (beforeClosing / draftProblem) is the source of truth for the two forms; a later consolidation
- * task will make both use one helper. One deliberate difference until then: here "its own sentence" means
- * the text before it ends a sentence (., !, ? or a line break), so "…with R, So the answer is A." is not
- * accepted (write.ts accepts any space before it). */
-function endsWithClosing(md: string, closing: string): boolean {
-  const t = nfkc(md).trim();
-  if (t === closing || t.endsWith(`, s${closing.slice(1)}`)) return true;
-  if (!t.endsWith(closing)) return false;
-  const before = t.slice(0, t.length - closing.length);
-  return /\n\s*$/.test(before) || /[.!?]["'\u2019\u201d)]*\$?\s+$/.test(before);
-}
-
 // --- a small XML well-formedness checker ---------------------------------------------------------------
 
 const NAME = "[A-Za-z_:][A-Za-z0-9_:.-]*";
@@ -624,11 +609,11 @@ export async function renderCheck(item: ItemDoc, draft: Draft, opts: RenderCheck
   }
 
   // 6. The closing sentence of a choice item
-  const closing = opts.answer ? closingSentence(opts.answer, item) : null;
-  if (closing) {
+  // (write.ts's closingCheck is the one rule; it is ok for any answer that is not a choice)
+  if (opts.answer) {
     for (const kind of ["short", "diploma"] as const) {
-      const md = draft.sections.find((s) => s.kind === kind)?.md ?? "";
-      if (!endsWithClosing(md, closing)) add({ code: "closing_missing", section: kind, detail: `the ${kind} section does not end with "${closing}" or ", s${closing.slice(1)}"` });
+      const r = closingCheck(draft.sections.find((s) => s.kind === kind)?.md ?? "", item, opts.answer, kind);
+      if (!r.ok) add({ code: "closing_missing", section: kind, detail: `the ${kind} section ${r.why}` });
     }
   }
   return out;
