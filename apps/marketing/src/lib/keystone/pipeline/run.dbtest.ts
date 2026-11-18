@@ -17,7 +17,7 @@ delete process.env.KEYSTONE_PIPELINE_LIVE;
 
 const ok = (value: unknown, message: string) => assert.ok(value, message);
 const equal = (a: unknown, b: unknown, message: string) => assert.equal(a, b, message);
-const ids = ["991301", "991302", "991303", "991304", "991305"];
+const ids = ["991301", "991302", "991303", "991304", "991305", "991306", "991307", "991308", "991309"];
 const BATCH = "dbtest-run-1";
 
 (async () => {
@@ -117,7 +117,7 @@ const BATCH = "dbtest-run-1";
     const w = mongoWriter(actor);
     const stale = { stage: "received" as const, version: 0, updatedAt: new Date(T0.getTime() - 1) };
     const sections = [{ kind: "short" as const, md: "x" }];
-    await assert.rejects(() => w.saveSolution("991304", { sections, evelynAnswer: "B", pipeline: { flags: [] } }, stale), store.SupersededError, "stale save rejected");
+    await assert.rejects(() => w.saveSolution("991304", { sections, evelynAnswer: "B", pipeline: { flags: [] }, runId: "run-stale" }, stale), store.SupersededError, "stale save rejected");
     equal(await Solution.countDocuments({ itemId: "991304" }), 0, "no solution row left behind");
     await assert.rejects(() => w.raiseKeyQuery("991304", "C", "w", stale), store.SupersededError, "stale key query rejected");
     await assert.rejects(() => w.flagItemData("991304", "n", stale), store.SupersededError, "stale item_data rejected");
@@ -127,7 +127,7 @@ const BATCH = "dbtest-run-1";
     // approved with a matching expect is refused too
     await Item.updateOne({ itemId: "991304" }, { $set: { stage: "approved" } });
     const fresh = { stage: "approved" as const, version: 0, updatedAt: T0 };
-    await assert.rejects(() => w.saveSolution("991304", { sections, evelynAnswer: "B", pipeline: { flags: [] } }, fresh), store.SupersededError, "approved refused");
+    await assert.rejects(() => w.saveSolution("991304", { sections, evelynAnswer: "B", pipeline: { flags: [] }, runId: "run-stale" }, fresh), store.SupersededError, "approved refused");
     await assert.rejects(() => w.setPipeline("991304", { flags: [] }, fresh), store.SupersededError, "approved refused (pipeline)");
 
     // existing callers unchanged: saveSolution without expect still saves and releases on submit
@@ -137,6 +137,36 @@ const BATCH = "dbtest-run-1";
     const it5 = (await Item.findOne({ itemId: "991305" }).lean())!;
     equal(it5.stage, "in_review", "submitted");
     equal(it5.releasedVersion, 1, "released");
+
+    // item_data / key query clear a previous hold for Praveen but keep the flag history
+    const held = { flags: ["step_failed"], heldFor: "praveen" };
+    await mk("991306", { pipeline: held });
+    await w.flagItemData("991306", "note", { stage: "received", version: 0, updatedAt: T0 });
+    const it6 = (await Item.findOne({ itemId: "991306" }).lean())!;
+    ok(it6.stage === "item_data" && it6.pipeline?.heldFor === undefined && it6.pipeline?.flags.join() === "step_failed", "item_data clears heldFor, keeps flags");
+    await mk("991307", { pipeline: held });
+    await w.raiseKeyQuery("991307", "C", "working", { stage: "received", version: 0, updatedAt: T0 });
+    const it7 = (await Item.findOne({ itemId: "991307" }).lean())!;
+    ok(it7.stage === "key_query" && it7.pipeline?.heldFor === undefined && it7.pipeline?.flags.join() === "step_failed", "key query clears heldFor, keeps flags");
+
+    // orphans: a crash between the solution row and the item update
+    await mk("991308");
+    const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    await Solution.create({ itemId: "991308", version: 1, sections: [], author: "x", createdAt: hourAgo, runId: "run-dead" });
+    equal(await store.saveSolution("991308", sections, actor, { submit: false }), 1, "a person's save survives an old orphan");
+    equal(await Solution.countDocuments({ itemId: "991308" }), 1, "orphan replaced, one row");
+    await mk("991309");
+    const exp9 = { stage: "received" as const, version: 0, updatedAt: T0 };
+    await Solution.create({ itemId: "991309", version: 1, sections: [], author: "x", runId: "run-own" });
+    await assert.rejects(
+      () => w.saveSolution("991309", { sections, evelynAnswer: "B", pipeline: { flags: [] }, runId: "run-other" }, exp9),
+      /E11000|duplicate/,
+      "a young row of another run is not taken over (fails loudly, retried later)",
+    );
+    equal(await w.saveSolution("991309", { sections, evelynAnswer: "B", pipeline: { flags: [] }, runId: "run-own" }, exp9), 1, "the same run completes its own write");
+    const s9 = await Solution.find({ itemId: "991309" }).lean();
+    ok(s9.length === 1 && s9[0].runId === "run-own" && s9[0].sections.length === 1, "own row reused and filled");
+    equal((await Item.findOne({ itemId: "991309" }).lean())!.version, 1, "item moved to v1");
     console.log("run.dbtest ok");
   } finally {
     await clean();

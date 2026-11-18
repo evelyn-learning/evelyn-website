@@ -28,6 +28,7 @@ import {
   saveRun as storeSaveRun,
   saveSolution as storeSaveSolution,
   setPipelineIfUnchanged,
+  solutionRunId,
   type Actor,
   type Expect,
 } from "../store";
@@ -53,6 +54,8 @@ export interface Reader {
   latestRun(itemId: string): Promise<RunDoc | null>;
   lastVerdict(itemId: string): Promise<{ verdict?: string; body?: string; createdAt: Date } | null>;
   latestSections(itemId: string): Promise<{ kind: SectionKind; md: string }[] | null>;
+  /** Which run wrote solution `version` (runId undefined: a person); null when there is no such row. */
+  solutionRunId(itemId: string, version: number): Promise<{ runId?: string } | null>;
   /** Items named by `only`, else every item in a stage the run may take; `batch` narrows either. */
   candidates(q: { only?: string[]; batch?: string }): Promise<ItemDoc[]>;
 }
@@ -64,7 +67,7 @@ export interface Writer {
   raiseKeyQuery(itemId: string, ourAnswer: string, workingMd: string, expect: Expect): Promise<void>;
   saveSolution(
     itemId: string,
-    s: { sections: { kind: SectionKind; md: string }[]; evelynAnswer: string; topic?: string; pipeline: PipelineDoc; note?: string },
+    s: { sections: { kind: SectionKind; md: string }[]; evelynAnswer: string; topic?: string; pipeline: PipelineDoc; note?: string; runId: string },
     expect: Expect,
   ): Promise<number>;
   setPipeline(itemId: string, pipeline: PipelineDoc, expect: Expect): Promise<void>;
@@ -88,7 +91,8 @@ export type Deps = {
   writer: Writer;
   steps: Steps;
   rules: Rule[];
-  /** The question's images for the models; `files` are the names the question refers to. */
+  /** The question's raster images for the models; `files` are the names the question refers to.
+   *  Throws when a named file cannot be read: an image is never dropped silently. */
   images(item: ItemDoc, files: string[]): Promise<ModelImage[]>;
   /** Whether an asset file of the item is available locally. Undefined: no local asset folder; the image check is skipped (recorded as assetsChecked false). */
   assetExists?: (itemId: string, file: string) => boolean;
@@ -153,6 +157,23 @@ export async function processItem(itemId: string, runId: string, deps: Deps): Pr
 
   const stored = await deps.reader.run(itemId, runId);
   if (stored?.result && stored.result !== "failed") return stored;
+  if (stored && !sameFrom(stored.startedFrom, first)) {
+    // Changed since this run started: nothing more is run or paid for, unless the change is this
+    // run's own final write (recorded as `intent` just before it), whose bookkeeping is finished here.
+    const run: RunDoc = { ...stored };
+    delete run.result;
+    delete run.error;
+    try {
+      if (await ownWriteLanded(stored, first, deps)) await finishOwnWrite(run, first, deps);
+      else run.result = "superseded";
+    } catch (e) {
+      run.result = "failed";
+      run.error = redact(e instanceof Error ? e.message : String(e)).slice(0, 500);
+    }
+    run.finishedAt = now();
+    await deps.writer.saveRun(run);
+    return run;
+  }
   const run: RunDoc = stored
     ? { ...stored, result: undefined, error: undefined, finishedAt: undefined }
     : {
@@ -169,6 +190,16 @@ export async function processItem(itemId: string, runId: string, deps: Deps): Pr
     else if (!(e instanceof Done)) {
       run.result = "failed";
       run.error = redact(e instanceof Error ? e.message : String(e)).slice(0, 500);
+      run.flags = [...new Set<Flag>([...run.flags, "step_failed"])];
+      // Into Praveen's queue, if the item is still as the run found it (a superseded hold is fine to lose).
+      try {
+        const cur = await deps.reader.item(itemId);
+        if (cur && !NEVER_TOUCH.includes(cur.stage) && sameFrom(run.startedFrom, cur)) {
+          await deps.writer.setPipeline(itemId, { ...(cur.pipeline ?? {}), flags: run.flags, heldFor: "praveen" }, run.startedFrom);
+        }
+      } catch {
+        // superseded or unreachable: the run record still says failed
+      }
     }
   }
   run.finishedAt = now();
@@ -176,6 +207,31 @@ export async function processItem(itemId: string, runId: string, deps: Deps): Pr
   await deps.writer.saveRun(run);
   return run;
 }
+
+/** Whether the item now is exactly what this run's recorded final write would have left. */
+async function ownWriteLanded(run: RunDoc, cur: ItemDoc, deps: Deps): Promise<boolean> {
+  const i = run.intent;
+  if (!i || cur.stage !== i.stage || (cur.version || 0) !== i.toVersion) return false;
+  if (i.writing === "ready" || i.writing === "held") return (await deps.reader.solutionRunId(run.itemId, i.toVersion))?.runId === run.runId;
+  return true;
+}
+
+/** The bookkeeping after this run's own final write landed (a crash came between the write and its suggestion). */
+async function finishOwnWrite(run: RunDoc, item: ItemDoc, deps: Deps) {
+  const i = run.intent!;
+  if (!run.suggested && (i.writing === "item_data" || i.writing === "key_query")) {
+    await deps.writer.suggest(i.writing === "item_data" ? "items_need_data" : "keys_queried", [run.itemId], item.batchId);
+    run.suggested = true;
+  }
+  run.flags = i.flags;
+  run.result = i.writing;
+}
+
+/** Raster images the solvers' image input takes. */
+const RASTER = new Set(["png", "jpg", "jpeg", "gif", "webp"]);
+/** Figures the solvers cannot be given: an item that needs one is not solved. */
+const NON_RASTER_FIGURE = new Set(["svg", "svgz", "tif", "tiff", "bmp", "eps", "emf", "wmf", "pdf", "ai", "heic"]);
+const extOf = (f: string) => path.extname(f).slice(1).toLowerCase();
 
 async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Promise<void> {
   const { itemId } = item;
@@ -186,6 +242,10 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
   run.corrections = 0;
   run.assetsChecked = !!deps.assetExists;
   delete run.wouldBe;
+  delete run.intent;
+  delete run.suggested;
+  delete run.filesNotSent;
+  let answerToConfirm = false;
   const counters = new Map<Step, number>();
 
   async function step<T>(name: Step, fn: () => Promise<{ ok: boolean; output: T; cost?: number; model?: string }>): Promise<{ ok: boolean; output: T }> {
@@ -226,8 +286,10 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
     // A model-worded "missing" line that names a model or vendor is not shown to the client as it is.
     const safe = findings.map((f) => (f.code === "model_missing" && namesMaker(f.detail) ? { ...f, detail: "part of the question" } : f));
     await guard();
+    await intend("item_data", "item_data", expect.version);
     await writer.flagItemData(itemId, intakeNote(safe), expect);
     await writer.suggest("items_need_data", [itemId], item.batchId);
+    run.suggested = true;
     return finish("item_data");
   }
   async function toKeyQuery(answer: Answer, solves: Solves): Promise<never> {
@@ -235,9 +297,16 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
     const working = [solves.solver1, solves.solver2].map((r) => (r?.ok ? r.value.working : "")).find((w) => w.trim() && !namesMaker(w));
     if (!working) return hold(["step_failed"], "key_query");
     await guard();
+    await intend("key_query", "key_query", expect.version);
     await writer.raiseKeyQuery(itemId, answerText(answer), working, expect);
     await writer.suggest("keys_queried", [itemId], item.batchId);
+    run.suggested = true;
     return finish("key_query");
+  }
+  /** Recorded (and saved) just before a final item write, so a resume can recognise the write as this run's own. */
+  async function intend(writing: NonNullable<RunDoc["result"]>, stage: ItemDoc["stage"], toVersion: number) {
+    run.intent = { writing, stage, toVersion, flags: [...flags], at: now() };
+    await writer.saveRun(run);
   }
 
   if ((item.interactions ?? []).some((i) => UNVERIFIED_KINDS.includes(i.kind))) flags.add("unverified_type");
@@ -249,14 +318,15 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
   // [1] Intake, code part: a type we cannot read is our problem, never the client's.
   if (probe.unsupported.length) return hold(["type_not_supported"]);
   if (run.mode === "fresh") {
-    const code = await step("intake", async () => {
-      const r = intakeCode(item, (f) => {
-        if (!deps.assetExists) return true; // skipped, recorded as assetsChecked false
-        try { return deps.assetExists(itemId, f); } catch { return false; }
-      });
-      return { ok: true, output: { findings: r.findings, assetsChecked: !!deps.assetExists } };
+    // Never cached: it is free, and on a resume the asset folder (or its contents) may differ.
+    const r = intakeCode(item, (f) => {
+      if (!deps.assetExists) return true; // skipped, recorded as assetsChecked false
+      try { return deps.assetExists(itemId, f); } catch { return false; }
     });
-    if (code.output.findings.length) return toItemData(code.output.findings);
+    const output = { findings: r.findings, assetsChecked: !!deps.assetExists };
+    const entry: RunStep = { step: "intake", key: "intake#code", at: now(), ok: true, output, cost: 0 };
+    run.steps = [...run.steps.filter((x) => x.key !== "intake#code"), entry];
+    if (r.findings.length) return toItemData(r.findings);
   }
 
   // [2] Course: only a spreadsheet course counts.
@@ -270,11 +340,15 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
   const course = sheetCourse;
   if (!sectionTitle("diploma", course)) return hold(["section_title_unset"]);
 
-  // Images: never solve an image item blind.
-  if (files.length && !deps.assetExists) {
-    throw new Error(`the question refers to ${files.length} file(s) of images but no local asset folder was given (--assets-dir or --pull-assets); not solved without them`);
+  // Images: never solve an image item blind, and never drop a figure silently.
+  const raster = [...new Set(files.filter((f) => RASTER.has(extOf(f))))];
+  const notSent = [...new Set(files.filter((f) => !RASTER.has(extOf(f))))];
+  if (notSent.length) run.filesNotSent = notSent;
+  if (notSent.some((f) => NON_RASTER_FIGURE.has(extOf(f)))) return hold(["type_not_supported"]);
+  if (raster.length && !deps.assetExists) {
+    throw new Error(`the question refers to ${raster.length} file(s) of images but no local asset folder was given (--assets-dir or --pull-assets); not solved without them`);
   }
-  const images = files.length ? await deps.images(item, files) : [];
+  const images = raster.length ? await deps.images(item, raster) : [];
 
   // [1] Intake, model part.
   if (run.mode === "fresh") {
@@ -337,6 +411,8 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
         if (run.mode === "key_right" && d.flag) return hold(["no_agreement"]);
         if (d.flag) flags.add(d.flag);
         if (run.mode === "key_right") flags.add("key_confirmed_by_reviewer");
+        // No key came with the item: ours alone, so Praveen sees it and the reviewer confirms it.
+        if (d.confirm) { flags.add("answer_to_confirm"); answerToConfirm = true; }
         answer = d.answer;
       } else if (d.outcome === "key_query") {
         if (run.mode === "key_right") return hold(["no_agreement"]);
@@ -383,7 +459,9 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
       if (!c.ok || "failed" in c.output) return hold(["step_failed"]);
       const findings = c.output.findings;
       if (name === "working" && findings.some((f) => f.code === "answer_disputed")) {
-        // The answer itself is never changed in a correction: back to [3], once.
+        // The answer itself is never changed in a correction: back to [3], once. run.corrections is
+        // NOT reset by the restart: a correction made before it still counts, so after a restart no
+        // further correction is granted once one was used (the next failing check holds second_failure).
         answerRestarts++;
         if (answerRestarts > 1) return hold(["no_agreement"]);
         restart = true;
@@ -409,8 +487,11 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
 
   async function saveDraft(draft: Draft, a: Answer, passed: boolean): Promise<never> {
     run.flags = [...flags];
-    const pipeline: PipelineDoc = { flags: [...flags], ...(flags.size ? { heldFor: "praveen" as const } : {}), ...(passed ? { passedAt: now() } : {}) };
+    const pipeline: PipelineDoc = {
+      flags: [...flags], ...(flags.size ? { heldFor: "praveen" as const } : {}), ...(passed ? { passedAt: now() } : {}), ...(answerToConfirm ? { answerToConfirm: true } : {}),
+    };
     await guard();
+    await intend(flags.size ? "held" : "ready", "ready", expect.version + 1);
     await writer.saveSolution(
       itemId,
       {
@@ -419,6 +500,7 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
         ...(item.topic?.trim() || !draft.topic?.trim() ? {} : { topic: draft.topic.trim() }),
         pipeline,
         ...(run.mode === "changes" ? { note: "Revised after review." } : {}),
+        runId: run.runId,
       },
       expect,
     );
@@ -438,9 +520,11 @@ export type Selection = { take: ItemDoc[]; refused: { itemId: string; why: strin
  */
 export function selectItems(items: ItemDoc[], latestRuns: Map<string, RunDoc>, opts: { only?: string[]; limit?: number; asReceived?: boolean }): Selection {
   const out: Selection = { take: [], refused: [], skipped: [] };
+  // A run that ended in a decision; "failed" and "superseded" ones (and unfinished ones) do not count as done.
+  const decided = (r?: RunDoc) => !!r?.result && r.result !== "failed" && r.result !== "superseded";
   for (const raw of items) {
     const named = !!opts.only?.includes(raw.itemId);
-    if (opts.only && !named) continue;
+    if (opts.only && !named) { out.skipped.push({ itemId: raw.itemId, why: "not named in --only" }); continue; }
     const it = opts.asReceived && named ? { ...raw, stage: "received" as const } : raw;
     if (NEVER_TOUCH.includes(it.stage)) {
       out.refused.push({ itemId: it.itemId, why: `${it.stage}: the pipeline never touches it` });
@@ -448,12 +532,14 @@ export function selectItems(items: ItemDoc[], latestRuns: Map<string, RunDoc>, o
     }
     const last = latestRuns.get(it.itemId);
     const answeredAt = it.keyQuery?.answeredAt;
-    const eligible =
-      it.stage === "received" ||
-      it.stage === "changes_requested" ||
-      (it.stage === "drafting" && !!answeredAt && !(last && new Date(last.startedAt) >= new Date(answeredAt)));
+    // An answered key query is taken until a run started after the answer reached a decision.
+    const keyAnswered = it.stage === "drafting" && !!answeredAt && !(decided(last) && new Date(last!.startedAt) >= new Date(answeredAt));
+    const eligible = it.stage === "received" || it.stage === "changes_requested" || keyAnswered;
     if (!eligible) {
-      if (named) out.refused.push({ itemId: it.itemId, why: `stage ${it.stage} is not one the run takes` });
+      const why =
+        it.stage === "drafting" && answeredAt ? "its answered key query was already run" :
+        it.stage === "drafting" ? "drafting with no answered key query (with Evelyn)" : `stage ${it.stage} is not one the run takes`;
+      (named ? out.refused : out.skipped).push({ itemId: it.itemId, why });
       continue;
     }
     if (!named && last?.startedFrom && sameFrom(last.startedFrom, it)) {
@@ -462,7 +548,10 @@ export function selectItems(items: ItemDoc[], latestRuns: Map<string, RunDoc>, o
     }
     out.take.push(it);
   }
-  if (opts.limit !== undefined) out.take = out.take.slice(0, opts.limit);
+  if (opts.limit !== undefined && out.take.length > opts.limit) {
+    for (const it of out.take.slice(opts.limit)) out.skipped.push({ itemId: it.itemId, why: `over --limit ${opts.limit}` });
+    out.take = out.take.slice(0, opts.limit);
+  }
   return out;
 }
 
@@ -477,6 +566,7 @@ export function asReceivedReader(reader: Reader, ids: string[]): Reader {
     latestRun: (a) => reader.latestRun(a),
     lastVerdict: (a) => reader.lastVerdict(a),
     latestSections: (a) => reader.latestSections(a),
+    solutionRunId: (a, v) => reader.solutionRunId(a, v),
   };
 }
 
@@ -510,7 +600,7 @@ export function mongoWriter(actor: Actor): Writer {
     raiseKeyQuery: async (itemId, ourAnswer, workingMd, expect) => { await storeRaiseKeyQuery(itemId, ourAnswer, workingMd, actor, { expect }); },
     saveSolution: (itemId, s, expect) =>
       storeSaveSolution(itemId, s.sections, actor, {
-        submit: false, stage: "ready", note: s.note, expect,
+        submit: false, stage: "ready", note: s.note, expect, runId: s.runId,
         set: { evelynAnswer: s.evelynAnswer, pipeline: s.pipeline, ...(s.topic ? { topic: s.topic } : {}) },
       }),
     setPipeline: (itemId, pipeline, expect) => setPipelineIfUnchanged(itemId, pipeline, expect),
@@ -532,6 +622,7 @@ export function mongoReader(): Reader {
       return v ? { verdict: v.verdict, body: v.body, createdAt: v.createdAt } : null;
     },
     latestSections: (itemId) => latestSections(itemId),
+    solutionRunId: (itemId, version) => solutionRunId(itemId, version),
     candidates: async ({ only, batch }) => {
       const { Item } = await ks();
       const filter: Record<string, unknown> = only ? { itemId: { $in: only } } : { stage: { $in: ["received", "drafting", "changes_requested"] } };
@@ -588,16 +679,27 @@ export function folderAssets(dir: string): Pick<Deps, "assetExists" | "images"> 
       try { return statSync(file(itemId, f)).isFile(); } catch { return false; }
     },
     images: async (item, files) =>
-      [...new Set(files)].flatMap((f) => {
+      [...new Set(files)].map((f) => {
         const mime = IMAGE_MIME[path.extname(f).slice(1).toLowerCase()];
-        if (!mime) return []; // svg and others: the models cannot take them; the intake model still reads the text
-        try { return [{ mime, data: new Uint8Array(readFileSync(file(item.itemId, f))) }]; } catch { return []; }
+        // The run only asks for raster files; anything else, or a file that cannot be read, is an error, never dropped.
+        if (!mime) throw new Error(`image ${f} of item ${item.itemId} is not a type the solvers can take`);
+        try {
+          return { mime, data: new Uint8Array(readFileSync(file(item.itemId, f))) };
+        } catch {
+          throw new Error(`image ${f} of item ${item.itemId} could not be read from the asset folder; not solved without it`);
+        }
       }),
   };
 }
 
 /** No local asset folder: the image check is skipped (assetsChecked false) and no image is sent. */
-export const noAssets: Pick<Deps, "assetExists" | "images"> = { assetExists: undefined, images: async () => [] };
+export const noAssets: Pick<Deps, "assetExists" | "images"> = {
+  assetExists: undefined,
+  images: async (item, files) => {
+    if (files.length) throw new Error(`item ${item.itemId}: no local asset folder, its images cannot be read`);
+    return [];
+  },
+};
 
 export function defaultRules(): Rule[] {
   return loadRules();
@@ -627,7 +729,10 @@ export function parseArgs(argv: string[]): RunArgs {
   for (let i = 0; i < argv.length; i++) {
     const o = argv[i];
     switch (o) {
-      case "--only": a.only = value(i++, o).split(",").map((s) => s.trim()).filter(Boolean); break;
+      case "--only":
+        a.only = value(i++, o).split(",").map((s) => s.trim()).filter(Boolean);
+        if (!a.only.length) throw new Error("--only names no item");
+        break;
       case "--batch": a.batch = value(i++, o); break;
       case "--limit": {
         const n = Number(value(i++, o));

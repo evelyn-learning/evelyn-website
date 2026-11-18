@@ -43,9 +43,13 @@ function hostOf(uri: string): string {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  // A dry run opens the database read-only, before the first connection: no collection or index is
+  // created on connect and any model write throws (db.ts connectOptions / blockWrites).
+  if (args.dryRun) process.env.KEYSTONE_READONLY = "1";
+  else if (process.env.KEYSTONE_READONLY === "1") throw new Error("Refusing to run: KEYSTONE_READONLY=1 is set for a writing run (use --dry-run).");
   const uri = process.env.KEYSTONE_MONGODB_URI;
   if (!uri) throw new Error("Refusing to run: set KEYSTONE_MONGODB_URI explicitly.");
-  console.log(`Database: ${KEYSTONE_DB} on ${hostOf(uri)}${args.dryRun ? " (DRY RUN: nothing is written)" : " (WRITING)"}`);
+  console.log(`Database: ${KEYSTONE_DB} on ${hostOf(uri)}${args.dryRun ? " (DRY RUN: read-only connection, nothing is written)" : " (WRITING)"}`);
   if (process.env.KEYSTONE_PIPELINE_LIVE !== "1") throw new Error("Refusing to run: model calls are off (set KEYSTONE_PIPELINE_LIVE=1).");
   assertKeys(); // names missing variables, never their values
 
@@ -73,7 +77,7 @@ async function main() {
     console.log(`Assets: pulled ${ids.length} item folder(s) into ${assetsDir}`);
   }
   if (assetsDir) console.log(`Assets: read from ${assetsDir}`);
-  else console.log("!! NO LOCAL ASSET FOLDER: the intake image check is SKIPPED (assetsChecked:false on each run) and items with images are not solved. Use --assets-dir or --pull-assets.");
+  else console.log("!! NO LOCAL ASSET FOLDER: the intake image check is SKIPPED (assetsChecked:false on each run, resumed runs included) and every item whose question has images ends \"failed\", unsolved. Use --assets-dir or --pull-assets.");
   const assets = assetsDir ? folderAssets(assetsDir) : noAssets;
 
   const out = await runPipeline(args, {

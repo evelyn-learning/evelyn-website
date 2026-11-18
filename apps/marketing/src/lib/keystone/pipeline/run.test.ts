@@ -10,6 +10,7 @@ import type { Draft } from "./write";
 import type { CheckResult, Finding } from "./checks";
 import type { CalcFinding } from "./calc";
 import type { ModelReply } from "./types";
+import { visibleStage } from "../config";
 import { parseArgs, processItem, runPipeline, selectItems, type Deps, type Reader, type Steps, type Writer } from "./run";
 
 /** assert.ok with a message always: without one, Node re-parses the transformed source to build it, which stalls under tsx. */
@@ -34,7 +35,7 @@ type Activity = { itemId: string; type: string; verdict?: string; body?: string 
 class FakeStore implements Reader, Writer {
   items = new Map<string, ItemDoc>();
   runs = new Map<string, RunDoc>();
-  solutions: { itemId: string; version: number; sections: { kind: SectionKind; md: string }[]; releasedAt?: Date }[] = [];
+  solutions: { itemId: string; version: number; sections: { kind: SectionKind; md: string }[]; releasedAt?: Date; runId?: string }[] = [];
   activity: Activity[] = [];
   suggestions: { kind: string; itemIds: string[]; batchId?: string }[] = [];
   verdicts = new Map<string, { verdict?: string; body?: string; createdAt: Date }>();
@@ -50,6 +51,7 @@ class FakeStore implements Reader, Writer {
   }
   async lastVerdict(id: string) { return this.verdicts.get(id) ?? null; }
   async latestSections(id: string) { return this.sections.get(id) ?? null; }
+  async solutionRunId(id: string, version: number) { const r = this.solutions.find((x) => x.itemId === id && x.version === version); return r ? { runId: r.runId } : null; }
   async candidates(q: { only?: string[]; batch?: string }) {
     return [...this.items.values()].filter((i) => (!q.only || q.only.includes(i.itemId)) && (!q.batch || i.batchId === q.batch)).map((i) => structuredClone(i));
   }
@@ -64,18 +66,20 @@ class FakeStore implements Reader, Writer {
     const i = this.unchanged(id, e);
     this.itemWrites++;
     Object.assign(i, { stage: "item_data", updatedAt: new Date(i.updatedAt.getTime() + 1) });
+    if (i.pipeline) delete i.pipeline.heldFor;
     this.activity.push({ itemId: id, type: "verdict", verdict: "item_data", body: note });
   }
   async raiseKeyQuery(id: string, ourAnswer: string, workingMd: string, e: Expect) {
     const i = this.unchanged(id, e);
     this.itemWrites++;
     Object.assign(i, { stage: "key_query", keyQuery: { ourAnswer, workingHtml: workingMd, raisedAt: new Date() }, updatedAt: new Date(i.updatedAt.getTime() + 1) });
+    if (i.pipeline) delete i.pipeline.heldFor;
   }
-  async saveSolution(id: string, s: { sections: { kind: SectionKind; md: string }[]; evelynAnswer: string; topic?: string; pipeline: PipelineDoc; note?: string }, e: Expect) {
+  async saveSolution(id: string, s: { sections: { kind: SectionKind; md: string }[]; evelynAnswer: string; topic?: string; pipeline: PipelineDoc; note?: string; runId: string }, e: Expect) {
     const i = this.unchanged(id, e);
     this.itemWrites++;
     const version = (i.version || 0) + 1;
-    this.solutions.push({ itemId: id, version, sections: s.sections });
+    this.solutions.push({ itemId: id, version, sections: s.sections, runId: s.runId });
     Object.assign(i, { version, stage: "ready", evelynAnswer: s.evelynAnswer, pipeline: s.pipeline, updatedAt: new Date(i.updatedAt.getTime() + 1) });
     return version;
   }
@@ -600,7 +604,9 @@ const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", co
     equal(b.result, "failed", "image item not solved without its images");
     ok(/images/.test(b.error ?? ""), `says why: ${b.error}`);
     equal(calls.agreeOnAnswer, 1, "only the text item was solved");
-    equal(store.items.get("101")!.stage, "received", "nothing written");
+    equal(store.items.get("101")!.stage, "received", "stage untouched");
+    equal(store.items.get("101")!.pipeline?.heldFor, "praveen", "a failed run is in Praveen's queue");
+    ok(store.items.get("101")!.pipeline?.flags.includes("step_failed"), "with step_failed");
   }
   // --- with an asset folder, a missing image is an intake finding ---
   {
@@ -621,6 +627,167 @@ const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", co
     equal(calls.agreeOnAnswer, 1, "not redone");
   }
 
+  // --- CRITICAL 1: resume never reuses a stale code intake; an image is never dropped ---
+  {
+    const img = item({ questionHtml: '<p>See</p><img src="/api/keystone/asset/100/fig.png" alt="f"/>' });
+    const store = new FakeStore([img]);
+    const { steps: s, calls } = steps();
+    const r1 = await processItem("100", "r1", deps(store, s, { assetExists: undefined }));
+    equal(r1.result, "failed", "run 1 without an asset folder fails");
+    equal(r1.assetsChecked, false, "assetsChecked false");
+    const r2 = await processItem("100", "r1", deps(store, s, { assetExists: () => false }));
+    equal(r2.result, "item_data", "resume with the folder, file missing → item_data, never ready");
+    equal(r2.assetsChecked, true, "checked this time");
+    equal(calls.agreeOnAnswer, 0, "never solved");
+    equal(store.items.get("100")!.stage, "item_data", "stage item_data");
+    equal(store.items.get("100")!.pipeline?.heldFor, undefined, "now waits on the client, not Praveen");
+    deepEqual(store.items.get("100")!.pipeline?.flags, ["step_failed"], "flag history kept");
+  }
+  {
+    const img = item({ questionHtml: '<p>See</p><img src="/api/keystone/asset/100/fig.png" alt="f"/>' });
+    const store = new FakeStore([img]);
+    const { steps: s, calls } = steps();
+    const run = await processItem("100", "r1", deps(store, s, { images: async () => { throw new Error("image fig.png of item 100 could not be read"); } }));
+    equal(run.result, "failed", "an unreadable image fails the run");
+    equal(calls.agreeOnAnswer, 0, "not solved without it");
+    equal(store.solutions.length, 0, "nothing written");
+  }
+  {
+    const { folderAssets, noAssets } = await import("./run");
+    const { mkdtempSync, writeFileSync, mkdirSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const dir = mkdtempSync(`${tmpdir()}/ks-run-assets-`);
+    mkdirSync(`${dir}/100`);
+    writeFileSync(`${dir}/100/a.png`, new Uint8Array([1, 2]));
+    const fa = folderAssets(dir);
+    equal((await fa.images(item(), ["a.png"])).length, 1, "a readable image is returned");
+    await assert.rejects(() => fa.images(item(), ["a.png", "gone.png"]), /could not be read/, "an unreadable one throws, never dropped");
+    await assert.rejects(() => noAssets.images(item(), ["a.png"]), /no local asset folder/, "no folder: throws for any file");
+  }
+
+  // --- 7: a figure the solvers cannot take → held type_not_supported, file recorded ---
+  {
+    const store = new FakeStore([item({ questionHtml: '<p>See</p><img src="/api/keystone/asset/100/graph.svg" alt="g"/>' })]);
+    const { steps: s, calls } = steps();
+    const run = await processItem("100", "r1", deps(store, s));
+    equal(run.result, "held", "held");
+    deepEqual(run.flags, ["type_not_supported"], "type_not_supported");
+    deepEqual(run.filesNotSent, ["graph.svg"], "file recorded on the run");
+    equal(calls.agreeOnAnswer, 0, "not solved");
+  }
+
+  // --- 6: answer to confirm ---
+  {
+    // In a fresh run intake's no_key finding comes first for choice items, so this is reached on a return
+    // (here: sent back, cause "answer") or for a type whose key intake does not require.
+    const store = new FakeStore([item({ key: "", keys: {}, stage: "changes_requested", version: 1, releasedVersion: 1 })]);
+    store.verdicts.set("100", { verdict: "changes", body: "Check the answer.", createdAt: T0 });
+    const { steps: s } = steps({
+      classifyCause: async () => okReply({ cause: "answer" as const, why: "" }, 0.01, "m-audit"),
+      agreeOnAnswer: async () => ({ decision: { outcome: "pass", answer: B, confirm: true }, solves: solves(B), cost: 0.3 }),
+    });
+    const run = await processItem("100", "r1", deps(store, s));
+    equal(run.result, "held", "held for Praveen");
+    deepEqual(run.flags, ["answer_to_confirm"], "answer_to_confirm");
+    const it = store.items.get("100")!;
+    equal(it.pipeline?.answerToConfirm, true, "answerToConfirm on the item");
+    equal(it.pipeline?.heldFor, "praveen", "heldFor");
+    ok(it.pipeline?.passedAt, "it passed the checks");
+  }
+
+  // --- 4: resume after the item changed → superseded before any step runs or is paid for ---
+  {
+    const store = new FakeStore([item()]);
+    const { steps: s, calls } = steps({ writeSolution: async () => { throw new Error("killed"); } });
+    const r1 = await processItem("100", "r1", deps(store, s));
+    equal(r1.result, "failed", "crashed in write");
+    const stepsBefore = store.runs.get("100|r1")!.steps.length;
+    store.items.get("100")!.updatedAt = new Date(T0.getTime() + 99);
+    const r2 = await processItem("100", "r1", deps(store, s));
+    equal(r2.result, "superseded", "superseded on resume");
+    equal(calls.writeSolution, 1, "write not retried");
+    equal(calls.agreeOnAnswer, 1, "nothing re-run");
+    equal(store.runs.get("100|r1")!.steps.length, stepsBefore, "no step added");
+  }
+
+  // --- 5b: a crash between our own final write and its bookkeeping ---
+  {
+    // pass: the solution write landed, then the process died
+    const store = new FakeStore([item()]);
+    const crashing: Writer = Object.assign(Object.create(store), {
+      saveRun: (r: RunDoc) => store.saveRun(r),
+      saveSolution: async (...a: Parameters<Writer["saveSolution"]>) => { await store.saveSolution(...a); throw new Error("crash after write"); },
+    });
+    const { steps: s, calls } = steps();
+    const r1 = await processItem("100", "r1", { ...deps(store, s), writer: crashing });
+    equal(r1.result, "failed", "crashed");
+    ok(store.runs.get("100|r1")!.intent?.writing === "ready", "intent recorded before the write");
+    const r2 = await processItem("100", "r1", deps(store, s));
+    equal(r2.result, "ready", "own write recognised: ready, not superseded");
+    equal(calls.agreeOnAnswer, 1, "nothing re-run");
+    equal(store.solutions.length, 1, "one solution");
+  }
+  {
+    // item_data: the stage write landed, the suggestion did not
+    const store = new FakeStore([item({ questionHtml: "" })]);
+    let fail = true;
+    const crashing: Writer = Object.assign(Object.create(store), {
+      saveRun: (r: RunDoc) => store.saveRun(r),
+      flagItemData: (...a: Parameters<Writer["flagItemData"]>) => store.flagItemData(...a),
+      suggest: async (...a: Parameters<Writer["suggest"]>) => { if (fail) { fail = false; throw new Error("crash before suggest"); } return store.suggest(...a); },
+    });
+    const r1 = await processItem("100", "r1", { ...deps(store, steps().steps), writer: crashing });
+    equal(r1.result, "failed", "crashed before the suggestion");
+    const r2 = await processItem("100", "r1", { ...deps(store, steps().steps), writer: crashing });
+    equal(r2.result, "item_data", "finished as item_data");
+    deepEqual(store.suggestions.map((x) => x.kind), ["items_need_data"], "suggested exactly once");
+    const r3 = await processItem("100", "r1", { ...deps(store, steps().steps), writer: crashing });
+    equal(r3.result, "item_data", "finished run returned as is");
+    equal(store.suggestions.length, 1, "no second suggestion");
+  }
+  {
+    // someone else produced the same version: not ours → superseded
+    const store = new FakeStore([item()]);
+    const crashing: Writer = Object.assign(Object.create(store), {
+      saveRun: (r: RunDoc) => store.saveRun(r),
+      saveSolution: async () => { throw new Error("crash before write"); },
+    });
+    const { steps: s } = steps();
+    await processItem("100", "r1", { ...deps(store, s), writer: crashing });
+    const i = store.items.get("100")!;
+    Object.assign(i, { stage: "ready", version: 1, updatedAt: new Date() });
+    store.solutions.push({ itemId: "100", version: 1, sections: [], runId: "someone-else" });
+    const r2 = await processItem("100", "r1", deps(store, s));
+    equal(r2.result, "superseded", "another writer's version is not taken as ours");
+  }
+
+  // --- 11: after an answer-dispute restart no further correction is granted ---
+  {
+    const store = new FakeStore([item()]);
+    let calcs = 0, works = 0;
+    const { steps: s, calls } = steps({
+      calcCheck: async () => (calcs++ === 0 ? [{ code: "calc_mismatch", detail: "off" } as CalcFinding] : []),
+      workingCheck: async () => (works++ === 0 ? { findings: [{ check: "working", code: "answer_disputed", detail: "no" }], cost: 0.05, model: "m" } : { findings: [], cost: 0.05, model: "m" }),
+      rulesAudit: async () => auditFail(9),
+    });
+    const run = await processItem("100", "r1", deps(store, s));
+    equal(calls.agreeOnAnswer, 2, "restarted once");
+    equal(run.corrections, 1, "corrections stays 1");
+    deepEqual(run.flags, ["second_failure"], "the audit failure after the restart is a second failure");
+    equal(calls.writeSolution, 3, "write, correction, fresh write after restart — no further correction");
+  }
+
+  // --- 10: --only that names nothing ---
+  assert.throws(() => parseArgs(["--only", " , "]), /names no item/, "empty --only rejected");
+
+  // --- 12: what Castle Rock sees for an item held before a solution exists ---
+  {
+    // visibleStage maps only "ready" to "drafting": a held item in Received shows as Received (with Evelyn).
+    equal(visibleStage("received", "reviewer"), "received", "held Received item: Castle Rock sees Received (gap noted in the report)");
+    equal(visibleStage("drafting", "reviewer"), "drafting", "held Drafting item: Castle Rock sees Drafting");
+    equal(visibleStage("ready", "tech"), "drafting", "ready shows as Drafting");
+  }
+
   // --- selection ---
   {
     const later = new Date(T0.getTime() + 5000);
@@ -634,19 +801,37 @@ const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", co
       item({ itemId: "7", stage: "approved" }),
       item({ itemId: "8", pipeline: { flags: ["no_agreement"], heldFor: "praveen" } }),
     ];
+    items.push(
+      item({ itemId: "9", stage: "drafting", keyQuery: { ourAnswer: "C", workingHtml: "", raisedAt: T0, answeredAt: T0 } }),
+      item({ itemId: "10", stage: "drafting", keyQuery: { ourAnswer: "C", workingHtml: "", raisedAt: T0, answeredAt: T0 } }),
+      item({ itemId: "11", stage: "drafting", keyQuery: { ourAnswer: "C", workingHtml: "", raisedAt: T0, answeredAt: T0 } }),
+    );
     const runs = new Map<string, RunDoc>([
-      ["5", { startedAt: new Date(T0.getTime() + 1) } as RunDoc],
+      ["5", { result: "ready", startedAt: new Date(T0.getTime() + 1) } as RunDoc],
       ["8", { result: "held", startedAt: T0, startedFrom: { stage: "received", version: 0, updatedAt: T0 } } as RunDoc],
+      ["9", { result: "failed", startedAt: new Date(T0.getTime() + 1) } as RunDoc],
+      ["10", { startedAt: new Date(T0.getTime() + 1) } as RunDoc],
+      ["11", { result: "superseded", startedAt: new Date(T0.getTime() + 1) } as RunDoc],
     ]);
     const sel = selectItems(items, runs, {});
-    deepEqual(sel.take.map((i) => i.itemId), ["1", "3", "4"], "received, changes_requested, answered key query with no later run");
+    deepEqual(sel.take.map((i) => i.itemId), ["1", "3", "4", "9", "10", "11"], "received, changes_requested, answered key queries with no decided run since");
+    deepEqual(
+      [...sel.take, ...sel.skipped, ...sel.refused].map((x) => x.itemId).sort(),
+      items.map((i) => i.itemId).sort(),
+      "every candidate is taken, skipped or refused: none dropped silently",
+    );
+    ok(sel.skipped.every((x) => x.why.length > 0) && sel.refused.every((x) => x.why.length > 0), "each with a reason");
+    ok(sel.skipped.some((x) => x.itemId === "5" && /already run/.test(x.why)), "decided key query says so");
+    deepEqual(selectItems(items, runs, { only: ["9"] }).take.map((i) => i.itemId), ["9"], "a failed key-right run can be named");
+    const limited = selectItems(items, runs, { limit: 2 });
+    ok(limited.skipped.some((x) => /--limit/.test(x.why)), "over the limit is listed");
     const named = selectItems(items, runs, { only: ["2", "7", "8"] });
     deepEqual(named.take.map((i) => i.itemId), ["8"], "a held item can be named");
     deepEqual(named.refused.map((r) => r.itemId), ["2", "7"], "in_review and approved refused");
     ok(/approved/.test(named.refused[1].why), "says why");
     const asRec = selectItems(items, runs, { only: ["2"], asReceived: true });
     deepEqual(asRec.take.map((i) => [i.itemId, i.stage]), [["2", "received"]], "as-received overlay");
-    equal(selectItems(items, runs, { limit: 2 }).take.length, 2, "limit");
+    equal(limited.take.length, 2, "limit");
   }
 
   console.log("run.test ok");
