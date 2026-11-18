@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
-import { acceptedAnswers, answerForm, prefixed, canonicalPairs, canonicalResponse, decide, isNumber, parseKey, readKey, sameAnswer, typedAnswer } from "./answers";
+import { acceptedAnswers, answerForm, multiAnswer, prefixed, canonicalPairs, canonicalResponse, decide, isNumber, parseKey, readKey, sameAnswer, typedAnswer } from "./answers";
 import type { Answer } from "./answers";
 import type { Interaction } from "../qti-interactions";
 
 const A: Answer = { kind: "choice", letters: ["A"] }, B: Answer = { kind: "choice", letters: ["B"] };
 const num = (value: string): Answer => ({ kind: "number", value });
 const lab = (...values: string[]): Answer => ({ kind: "labels", values });
+/** Labels whose every position is a typed entry (as the canonicalisation marks textEntry positions). */
+const typ = (...values: string[]): Answer => ({ kind: "labels", values, typedAt: values.map((_, i) => i) });
 
 // outcome table (spec §5 [3])
 {
@@ -36,7 +38,7 @@ const lab = (...values: string[]): Answer => ({ kind: "labels", values });
 
 // alsoAccepted alternatives
 {
-  const half = num("0.5"), alt = lab("50%"); // not a fraction: only alsoAccepted can make it match
+  const half = num("0.5"), alt = typ("50%"); // not a fraction: only alsoAccepted can make it match
   assert.deepEqual(decide(alt, alt, half, undefined, [alt]), { outcome: "pass", answer: alt, confirm: false });
   assert.deepEqual(decide(alt, alt, half), { outcome: "key_query", answer: alt });
   assert.deepEqual(decide(alt, half, half, alt, [alt]), { outcome: "pass", answer: alt, confirm: false, flag: "solvers_split" });
@@ -129,7 +131,7 @@ const lab = (...values: string[]): Answer => ({ kind: "labels", values });
   const te: Interaction = { kind: "textEntry", responseId: "RESPONSE" };
   assert.deepEqual(keyOf("NR", "0.998", { RESPONSE: ["0.998"] }, [te]), { kind: "number", value: "0.998" });
   assert.deepEqual(keyOf("NR", " 7358 ", undefined, [te]), { kind: "number", value: "7358" });
-  assert.deepEqual(keyOf("TI", "mitochondria", { RESPONSE: ["mitochondria"] }, [te]), { kind: "labels", values: ["mitochondria"] });
+  assert.deepEqual(keyOf("TI", "mitochondria", { RESPONSE: ["mitochondria"] }, [te]), typ("mitochondria"));
   // match: pairs kept as P→S and sorted
   const match: Interaction = { kind: "match", responseId: "RESPONSE", premises: [], responses: [] };
   assert.deepEqual(keyOf("DDL", "", { RESPONSE: ["P2 S1", "P1 S2"] }, [match]), { kind: "labels", values: ["P1→S2", "P2→S1"] });
@@ -140,12 +142,12 @@ const lab = (...values: string[]): Answer => ({ kind: "labels", values });
   assert.deepEqual(keyOf("TI", "", { RESPONSE: ["C", "A", "B"] }, [order]), { kind: "labels", values: ["C", "A", "B"] });
   // several responses: sorted by responseId, key order within, each value prefixed "<responseId>="
   const r = (id: string): Interaction => ({ kind: "textEntry", responseId: id });
-  assert.deepEqual(keyOf("TI", "", { R2: ["y"], R1: ["x"] }, [r("R1"), r("R2")]), { kind: "labels", values: ["R1=x", "R2=y"] });
-  assert.deepEqual(keyOf("TI", "", { R2: ["5"], R1: ["3"] }, [r("R1"), r("R2")]), { kind: "labels", values: ["R1=3", "R2=5"] });
+  assert.deepEqual(keyOf("TI", "", { R2: ["y"], R1: ["x"] }, [r("R1"), r("R2")]), typ("R1=x", "R2=y"));
+  assert.deepEqual(keyOf("TI", "", { R2: ["5"], R1: ["3"] }, [r("R1"), r("R2")]), typ("R1=3", "R2=5"));
   // typed response: several values are alternatives; first is the key
   const alt = { itemType: "NR", key: "0.5", keys: { RESPONSE: ["0.5", "1/2", "50%"] }, interactions: [te] };
   assert.deepEqual(parseKey(alt), { kind: "number", value: "0.5" });
-  assert.deepEqual(acceptedAnswers(alt), [num("0.5"), lab("1/2"), lab("50%")]);
+  assert.deepEqual(acceptedAnswers(alt), [num("0.5"), typ("1/2"), typ("50%")]);
   assert.deepEqual(acceptedAnswers({ itemType: "NR", key: "7", keys: { RESPONSE: ["7"] }, interactions: [te] }), [num("7")]);
   assert.deepEqual(acceptedAnswers({ itemType: "MC", key: "B", keys: { RESPONSE: ["B"] }, interactions: [choice()] }), [{ kind: "choice", letters: ["B"] }]);
   assert.deepEqual(acceptedAnswers({ itemType: "MC", key: "" }), []);
@@ -166,20 +168,20 @@ const o = (label: string) => ({ label, html: label });
 // typedAnswer and fraction equivalence
 {
   assert.deepEqual(typedAnswer(" 12.5 "), num("12.5"));
-  assert.deepEqual(typedAnswer("1/2"), lab("1/2"));
-  assert.deepEqual(typedAnswer("x = 3"), lab("x = 3"));
+  assert.deepEqual(typedAnswer("1/2"), typ("1/2"));
+  assert.deepEqual(typedAnswer("x = 3"), typ("x = 3"));
   assert.deepEqual(typedAnswer("1,234"), num("1,234"));
   assert.ok(isNumber("0.5") && !isNumber("1/2") && !isNumber("2e3"));
-  assert.ok(sameAnswer(num("0.5"), lab("1/2")));
-  assert.ok(sameAnswer(lab("1/2"), num("0.5")));
-  assert.ok(sameAnswer(lab("2/4"), num("0.5")));
-  assert.ok(!sameAnswer(num("0.333"), lab("1/3")), "a repeating decimal is never equal");
-  assert.ok(sameAnswer(num("-0.75"), lab("-3/4")));
-  assert.ok(sameAnswer(num("3"), lab("6/2")));
-  assert.ok(!sameAnswer(num("0.5"), lab("1/0")));
+  assert.ok(sameAnswer(num("0.5"), typ("1/2")));
+  assert.ok(sameAnswer(typ("1/2"), num("0.5")));
+  assert.ok(sameAnswer(typ("2/4"), num("0.5")));
+  assert.ok(!sameAnswer(num("0.333"), typ("1/3")), "a repeating decimal is never equal");
+  assert.ok(sameAnswer(num("-0.75"), typ("-3/4")));
+  assert.ok(sameAnswer(num("3"), typ("6/2")));
+  assert.ok(!sameAnswer(num("0.5"), typ("1/0")));
   assert.ok(!sameAnswer(num("0.5"), lab("1/2", "x")));
-  assert.ok(!sameAnswer(num("0.5"), lab("one half")));
-  assert.ok(sameAnswer(lab("1/2"), lab("1/2")), "a fraction matches itself");
+  assert.ok(!sameAnswer(num("0.5"), typ("one half")));
+  assert.ok(sameAnswer(typ("1/2"), typ("1/2")), "a fraction matches itself");
 }
 
 // canonicalPairs: orientation, case, separators, order
@@ -230,7 +232,7 @@ const o = (label: string) => ({ label, html: label });
   assert.equal(canonicalResponse(answerForm({ itemType: "ORD", interactions: [ord] })!.responses[0], ["s1", "s9"]), null);
   // several typed responses: first value only, decimals canonical
   const t1: Interaction = { kind: "textEntry", responseId: "R1" }, t2: Interaction = { kind: "textEntry", responseId: "R2" };
-  assert.deepEqual(parseKey({ itemType: "TI", key: "", keys: { R1: ["3.0", "3"], R2: ["x"] }, interactions: [t2, t1] }), lab("R1=3", "R2=x"));
+  assert.deepEqual(parseKey({ itemType: "TI", key: "", keys: { R1: ["3.0", "3"], R2: ["x"] }, interactions: [t2, t1] }), typ("R1=3", "R2=x"));
 }
 
 // answerForm
@@ -259,7 +261,7 @@ const o = (label: string) => ({ label, html: label });
   assert.deepEqual(readKey({ itemType: "DD", key: "12.5" }), { answer: lab("12.5"), exact: false, detail: "form unknown: itemType DD has no readable interactions" });
   assert.deepEqual(readKey({ itemType: "MS", key: "", keys: { RESPONSE: ["A", "C"] } }), { answer: { kind: "choice", letters: ["A", "C"] }, exact: false, detail: "form unknown: itemType MS has no readable interactions" });
   assert.deepEqual(readKey({ itemType: "MS", key: "", keys: { RESPONSE: ["A", "C"] }, options: [o("A"), o("B"), o("C")] }), { answer: { kind: "choice", letters: ["A", "C"] }, exact: true });
-  assert.deepEqual(readKey({ itemType: "NR", key: "1/2" }), { answer: lab("1/2"), exact: true });
+  assert.deepEqual(readKey({ itemType: "NR", key: "1/2" }), { answer: typ("1/2"), exact: true });
   assert.ok(sameAnswer(parseKey({ itemType: "NR", key: "1/2" })!, typedAnswer("1/2")));
   assert.ok(sameAnswer(parseKey({ itemType: "NR", key: "1/2" })!, typedAnswer("0.5")));
   assert.deepEqual(readKey({ itemType: "MC", key: "B", options: [o("A"), o("B")] }), { answer: { kind: "choice", letters: ["B"] }, exact: true });
@@ -276,23 +278,23 @@ const o = (label: string) => ({ label, html: label });
 {
   const t1: Interaction = { kind: "textEntry", responseId: "R1" }, t2: Interaction = { kind: "textEntry", responseId: "R2" };
   const k = parseKey({ itemType: "TI", key: "", keys: { R1: ["1/2"], R2: ["3"] }, interactions: [t1, t2] })!;
-  assert.deepEqual(k, lab("R1=1/2", "R2=3"));
-  assert.ok(sameAnswer(lab("R1=0.5", "R2=3"), k));
-  assert.ok(sameAnswer(lab("R1=0.50", "R2=3.0"), k));
-  assert.ok(!sameAnswer(lab("R1=0.5", "R2=4"), k));
-  assert.ok(!sameAnswer(lab("R2=0.5", "R1=3"), k), "prefixes must match");
+  assert.deepEqual(k, typ("R1=1/2", "R2=3"));
+  assert.ok(sameAnswer(typ("R1=0.5", "R2=3"), k));
+  assert.ok(sameAnswer(typ("R1=0.50", "R2=3.0"), k));
+  assert.ok(!sameAnswer(typ("R1=0.5", "R2=4"), k));
+  assert.ok(!sameAnswer(typ("R2=0.5", "R1=3"), k), "prefixes must match");
   assert.ok(!sameAnswer(lab("P1→0.5"), lab("P1→1/2")), "a pair never goes through the number rule");
   assert.ok(!sameAnswer(lab("R1=P1→0.5"), lab("R1=P1→1/2")));
   // typed non-numeric normalisation
-  assert.ok(sameAnswer(lab("x = 3"), lab("x=3")));
-  assert.ok(sameAnswer(lab("x=3"), lab("X = 3")));
-  assert.ok(sameAnswer(lab("50 %"), lab("50%")));
-  assert.ok(sameAnswer(lab("R1=x = 3"), lab("R1=x=3")));
-  assert.ok(sameAnswer(lab("( a + b ) / 2"), lab("(a+b)/2")));
-  assert.ok(!sameAnswer(lab("x=3"), lab("x=4")));
-  assert.ok(!sameAnswer(lab("a b"), lab("ab")), "only operator spacing is dropped");
-  assert.ok(!sameAnswer(lab("R1=a b"), lab("R1=ab")));
-  assert.ok(sameAnswer(lab("1/2"), lab("1 / 2")));
+  assert.ok(sameAnswer(typ("x = 3"), typ("x=3")));
+  assert.ok(sameAnswer(typ("x=3"), typ("X = 3")));
+  assert.ok(sameAnswer(typ("50 %"), typ("50%")));
+  assert.ok(sameAnswer(typ("R1=x = 3"), typ("R1=x=3")));
+  assert.ok(sameAnswer(typ("( a + b ) / 2"), typ("(a+b)/2")));
+  assert.ok(!sameAnswer(typ("x=3"), typ("x=4")));
+  assert.ok(!sameAnswer(typ("a b"), typ("ab")), "only operator spacing is dropped");
+  assert.ok(!sameAnswer(typ("R1=a b"), typ("R1=ab")));
+  assert.ok(sameAnswer(typ("1/2"), typ("1 / 2")));
 }
 
 // maxChoices: count limit (0 = unlimited)
@@ -327,6 +329,69 @@ const o = (label: string) => ({ label, html: label });
   const te: Interaction = { kind: "textEntry", responseId: "RESPONSE" };
   assert.deepEqual(readKey({ itemType: "NR", key: "", keys: { OTHER: ["7"] }, interactions: [te] }), { answer: num("7"), exact: true });
   assert.equal(readKey({ itemType: "NR", key: "", keys: { X1: ["7"], X2: ["8"] }, interactions: [te] }).exact, false);
+}
+
+// --- review round 3: the typed rule only at typed positions ---
+{
+  // identifier-valued positions compare exactly
+  const ord: Interaction = { kind: "order", responseId: "O", choices: [o("1"), o("01"), o("2")] };
+  const ordItem = { itemType: "ORD", key: "", keys: { O: ["1", "01", "2"] }, interactions: [ord] };
+  const ordKey = parseKey(ordItem)!;
+  const ordForm = answerForm(ordItem)!.responses[0];
+  assert.ok(!sameAnswer(lab(...canonicalResponse(ordForm, ["01", "1", "2"])!), ordKey), "wrong order with numeric-looking identifiers");
+  assert.ok(sameAnswer(lab(...canonicalResponse(ordForm, ["1", "01", "2"])!), ordKey));
+  const dd: Interaction = { kind: "inlineChoice", responseId: "D", choices: [o("1"), o("1.0"), o("01")] };
+  const ddItem = { itemType: "DDL", key: "", keys: { D: ["1"] }, interactions: [dd] };
+  const ddForm = answerForm(ddItem)!.responses[0];
+  assert.ok(!sameAnswer(lab(...canonicalResponse(ddForm, ["1.0"])!), parseKey(ddItem)!));
+  assert.ok(!sameAnswer(lab(...canonicalResponse(ddForm, ["01"])!), parseKey(ddItem)!));
+  // multi-response choice key R1=1
+  const c1: Interaction = { kind: "choice", responseId: "R1", maxChoices: 1, options: [o("1"), o("01"), o("1.0")] };
+  const t2: Interaction = { kind: "textEntry", responseId: "R2" };
+  const mItem = { itemType: "TI", key: "", keys: { R1: ["1"], R2: ["1/2"] }, interactions: [c1, t2] };
+  const mKey = parseKey(mItem)!;
+  assert.deepEqual(mKey, { kind: "labels", values: ["R1=1", "R2=1/2"], typedAt: [1] });
+  const fs = answerForm(mItem)!.responses;
+  const reply = (r1: string, r2: string) => multiAnswer([{ response: fs[0], values: canonicalResponse(fs[0], [r1])! }, { response: fs[1], values: canonicalResponse(fs[1], [r2])! }]);
+  assert.ok(!sameAnswer(reply("01", "1/2"), mKey));
+  assert.ok(!sameAnswer(reply("1.0", "1/2"), mKey));
+  assert.ok(sameAnswer(reply("1", "0.5"), mKey), "the typed position still uses the fraction rule");
+  // typed positions still work
+  const t1: Interaction = { kind: "textEntry", responseId: "R1" }, tt2: Interaction = { kind: "textEntry", responseId: "R2" };
+  const tItem = { itemType: "TI", key: "", keys: { R1: ["1/2"], R2: ["3"] }, interactions: [t1, tt2] };
+  const tfs = answerForm(tItem)!.responses;
+  assert.ok(sameAnswer(multiAnswer([{ response: tfs[0], values: ["0.5"] }, { response: tfs[1], values: ["3"] }]), parseKey(tItem)!));
+  assert.ok(sameAnswer(typedAnswer("x = 3"), typedAnswer("x=3")));
+  // a typed position on one side only → exact
+  assert.ok(!sameAnswer(lab("R1=0.5", "R2=3"), typ("R1=1/2", "R2=3")));
+  assert.ok(!sameAnswer(lab("x = 3"), typ("x=3")));
+  assert.ok(sameAnswer(lab("R1=3"), typ("r1=3")), "exact rule still case-insensitive");
+  // a number comes only from a typed entry: against a single label it compares as typed, marked or not
+  assert.ok(sameAnswer(num("0.5"), lab("1/2")));
+  assert.ok(sameAnswer(num("0.5"), typ("1/2")));
+  assert.ok(!sameAnswer(num("1"), lab("01x")));
+}
+
+// typed text fallback, signs, Unicode minus
+{
+  assert.ok(sameAnswer(num("-3"), typ("- 3")), "a leading sign joins its number");
+  assert.ok(sameAnswer(typ("- 3"), num("-3")));
+  assert.ok(!sameAnswer(num("-3"), typ("- 4")));
+  assert.ok(!sameAnswer(num("3"), num("4")));
+  assert.ok(sameAnswer(typ("x − 3"), typ("x-3")));
+  assert.ok(sameAnswer(typ("x−3"), typ("x - 3")));
+  assert.ok(sameAnswer(typ("– 3 m"), typ("-3 m")));
+  assert.ok(!sameAnswer(typ("x − 3"), typ("x+3")));
+}
+
+// detail when keys sit only under other responseIds
+{
+  const one: Interaction = { kind: "choice", responseId: "RESPONSE", maxChoices: 1, options: [o("A"), o("B")] };
+  assert.equal(readKey({ itemType: "MC", key: "", keys: { OTHER: ["A"], X: ["B"] }, interactions: [one] }).detail, "key not readable: keys are under OTHER, X; the item's responses are RESPONSE");
+  const r1: Interaction = { kind: "textEntry", responseId: "R1" }, r2: Interaction = { kind: "textEntry", responseId: "R2" };
+  const d = readKey({ itemType: "TI", key: "", keys: { R1: ["3"], OTHER: ["4"] }, interactions: [r1, r2] }).detail!;
+  assert.equal(d, "key not readable: keys are under OTHER; the item's responses are R1, R2");
+  assert.ok(!d.includes("(empty)"));
 }
 
 console.log("answers tests passed");

@@ -8,7 +8,10 @@ import type { Interaction } from "../qti-interactions";
 export type Answer =
   | { kind: "choice"; letters: string[] }
   | { kind: "number"; value: string }
-  | { kind: "labels"; values: string[] }
+  /** typedAt: indices of positions that are typed entries (textEntry), set only by the canonicalisation in this
+   *  module; between two labels answers the number/fraction and typed-text rules apply only where both sides
+   *  mark a position (a number against a single label is always a typed comparison: see sameAnswer). */
+  | { kind: "labels"; values: string[]; typedAt?: number[] }
   | { kind: "text"; value: string };
 
 export type Decision =
@@ -39,10 +42,10 @@ function toPlain(s: string): string | null {
 export const isNumber = (s: string) => toPlain(s) !== null;
 
 /** A typed value as an Answer, read the same way on the key side and the solver side:
- *  a plain decimal is a number; anything else ("1/2", "x = 3", "50%") is one label. */
+ *  a plain decimal is a number; anything else ("1/2", "x = 3", "50%") is one label marked as typed (typedAt [0]). */
 export function typedAnswer(value: string): Answer {
   const t = value.trim();
-  return isNumber(t) ? { kind: "number", value: t } : { kind: "labels", values: [t] };
+  return isNumber(t) ? { kind: "number", value: t } : { kind: "labels", values: [t], typedAt: [0] };
 }
 
 function letters(list: string[]): string[] {
@@ -199,6 +202,20 @@ export function prefixed(responseId: string, values: string[]): string[] {
   return values.map((v) => `${responseId}=${v}`);
 }
 
+/** A multi-response Answer from each response's canonical values (sorted responseId order): values prefixed
+ *  "<responseId>=", and typedAt listing the positions of typed entries (textEntry). Used by the key and the solvers. */
+export function multiAnswer(parts: { response: ResponseForm; values: string[] }[]): Extract<Answer, { kind: "labels" }> {
+  const values: string[] = [];
+  const typedAt: number[] = [];
+  for (const { response, values: vs } of parts) {
+    for (const v of prefixed(response.responseId, vs)) {
+      if (response.kind === "textEntry") typedAt.push(values.length);
+      values.push(v);
+    }
+  }
+  return typedAt.length ? { kind: "labels", values, typedAt } : { kind: "labels", values };
+}
+
 export const formUnknown = (itemType: string) => `form unknown: itemType ${itemType} has no readable interactions`;
 
 export type KeyReading = { answer: Answer | null; exact: boolean; detail?: string };
@@ -213,10 +230,15 @@ export function readKey(item: Pick<ItemDoc, "itemType" | "key" | "keys" | "inter
   if (!key && !keyIds.length) return { answer: null, exact: true };
   const form = answerForm(item);
   if (form?.form === "text") return { answer: null, exact: true };
-
   const valuesFor = (id: string): string[] => (keys[id] ?? []).map((v) => String(v).trim()).filter(Boolean);
   const loose = (answer: Answer | null, detail: string): KeyReading => ({ answer, exact: false, detail });
-  const unreadable = (vals: string[]) => `key not readable: ${vals.join(", ") || "(empty)"}`;
+  const own = form ? form.responses.map((r) => r.responseId) : [];
+  // Nothing usable for the item's own responses: say where the keys are instead of "(empty)".
+  const elsewhere = () => {
+    const others = keyIds.filter((id) => !own.includes(id)).sort();
+    return others.length ? `key not readable: keys are under ${others.join(", ")}; the item's responses are ${own.join(", ")}` : "key not readable: no key values";
+  };
+  const unreadable = (vals: string[]) => (vals.some((v) => v.trim()) ? `key not readable: ${vals.join(", ")}` : elsewhere());
   // Best effort without a known form (old behaviour).
   const legacy = (): Answer => {
     if (keyIds.length === 1 && !key) {
@@ -260,16 +282,17 @@ export function readKey(item: Pick<ItemDoc, "itemType" | "key" | "keys" | "inter
     return c ? { answer: { kind: "labels", values: c }, exact: true } : loose({ kind: "labels", values: canon(one.interaction, given) }, unreadable(given));
   }
   // Several responses: each read with its own rule, values prefixed with the responseId.
-  const out: string[] = [];
-  let bad: string[] | null = null;
+  const parts: { response: ResponseForm; values: string[] }[] = [];
+  let bad: string | null = null;
   for (const r of form.responses) {
     const given = valuesFor(r.responseId);
     const c = canonicalResponse(r, r.kind === "textEntry" ? given.slice(0, 1) : given);
-    if (!c && !bad) bad = prefixed(r.responseId, given.length ? given : ["(empty)"]);
-    out.push(...prefixed(r.responseId, c ?? canon(r.interaction, given)));
+    if (!c && !bad) bad = given.length ? unreadable(prefixed(r.responseId, given)) : elsewhere();
+    parts.push({ response: r, values: c ?? canon(r.interaction, given) });
   }
-  if (!out.length) return loose(legacy(), unreadable([key]));
-  return bad ? loose({ kind: "labels", values: out }, unreadable(bad)) : { answer: { kind: "labels", values: out }, exact: true };
+  const answer = multiAnswer(parts);
+  if (!answer.values.length) return loose(legacy(), unreadable([key]));
+  return bad ? loose(answer, bad) : { answer, exact: true };
 }
 
 export function parseKey(item: Pick<ItemDoc, "itemType" | "key" | "keys" | "interactions">): Answer | null {
@@ -366,38 +389,47 @@ function gcd(a: bigint, b: bigint): bigint {
 }
 
 export function sameAnswer(a: Answer, b: Answer, precision?: number): boolean {
-  // A number and a single fraction label ("0.5" and "1/2") are equal when the fraction's decimal is exactly the number.
-  if (a.kind === "number" && b.kind === "labels") return b.values.length === 1 && sameFraction(a.value, b.values[0], precision);
-  if (a.kind === "labels" && b.kind === "number") return a.values.length === 1 && sameFraction(b.value, a.values[0], precision);
+  // A number and a single label ("0.5" and "1/2", "-3" and "- 3") compare as typed values. A number only ever
+  // comes from a typed entry, so the comparison is a typed one even when the label does not carry typedAt
+  // (write.ts compares fraction literals this way).
+  if (a.kind === "number" && b.kind === "labels") return b.values.length === 1 && sameTyped(a.value, b.values[0], precision);
+  if (a.kind === "labels" && b.kind === "number") return a.values.length === 1 && sameTyped(b.value, a.values[0], precision);
   if (a.kind !== b.kind) return false;
   if (a.kind === "choice" && b.kind === "choice") {
     const x = letters(a.letters), y = letters(b.letters);
     return x.length === y.length && x.every((l, i) => l === y[i]);
   }
   if (a.kind === "number" && b.kind === "number") return sameNumber(a.value, b.value, precision);
-  if (a.kind === "labels" && b.kind === "labels") return a.values.length === b.values.length && a.values.every((v, i) => sameLabel(v, b.values[i], precision));
+  if (a.kind === "labels" && b.kind === "labels") {
+    if (a.values.length !== b.values.length) return false;
+    // The typed rule only where BOTH sides mark the position as a typed entry; identifiers stay exact.
+    const typed = (i: number) => !!a.typedAt?.includes(i) && !!b.typedAt?.includes(i);
+    return a.values.every((v, i) => (typed(i) ? sameTypedLabel(v, b.values[i], precision) : normLabel(v) === normLabel(b.values[i])));
+  }
   return false; // text is judged elsewhere
 }
 
-/** Typed text for comparison: lower case, whitespace collapsed, no spaces around = + - × / % ( ).
- *  "x = 3" equals "x=3" and "50 %" equals "50%", but "a b" stays different from "ab". */
+/** Typed text for comparison: lower case, whitespace collapsed, Unicode minus (and an en dash before a digit) as "-",
+ *  no spaces around = + - × / % ( ). "x = 3" equals "x=3", "x − 3" equals "x-3", "- 3" equals "-3",
+ *  "50 %" equals "50%", but "a b" stays different from "ab". */
 const normTyped = (s: string) =>
-  s.trim().toLowerCase().replace(/\s+/g, " ").replace(/ ?([=+\-−×/%()]) ?/g, "$1");
+  s.trim().toLowerCase().replace(/\u2212/g, "-").replace(/\u2013(?=\s*\d)/g, "-").replace(/\s+/g, " ").replace(/ ?([=+\-×/%()]) ?/g, "$1");
 
-/** Two typed values: numbers by digits, a number and a fraction exactly, other text by normTyped. */
+/** Two typed values: two numbers by digits only; a number and a fraction exactly; otherwise (never two numbers)
+ *  the normalised typed text of both sides. */
 function sameTyped(x: string, y: string, precision?: number): boolean {
   const a = typedAnswer(x), b = typedAnswer(y);
   if (a.kind === "number" && b.kind === "number") return sameNumber(a.value, b.value, precision);
-  if (a.kind === "number" && b.kind === "labels") return sameFraction(a.value, b.values[0], precision);
-  if (a.kind === "labels" && b.kind === "number") return sameFraction(b.value, a.values[0], precision);
-  return a.kind === "labels" && b.kind === "labels" && !!a.values[0] && normTyped(a.values[0]) === normTyped(b.values[0]);
+  if (a.kind === "number" && b.kind === "labels" && sameFraction(a.value, b.values[0], precision)) return true;
+  if (a.kind === "labels" && b.kind === "number" && sameFraction(b.value, a.values[0], precision)) return true;
+  const tx = normTyped(x), ty = normTyped(y);
+  return !!tx && tx === ty;
 }
 
-/** One position of a labels answer. Equal as labels (identifiers, pairs: the exact rule); otherwise, when
- *  neither is a pair, equal as typed values — whole, or as "<responseId>=<value>" with the same prefix. */
-function sameLabel(x: string, y: string, precision?: number): boolean {
+/** One typed position: equal as labels, or as typed values — whole (single response), or as
+ *  "<responseId>=<value>" with the same prefix (several responses). */
+function sameTypedLabel(x: string, y: string, precision?: number): boolean {
   if (normLabel(x) === normLabel(y)) return true;
-  if (x.includes("→") || y.includes("→")) return false;
   if (sameTyped(x, y, precision)) return true;
   const px = x.indexOf("="), py = y.indexOf("=");
   if (px <= 0 || py <= 0) return false;

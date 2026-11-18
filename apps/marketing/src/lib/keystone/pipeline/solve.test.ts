@@ -249,7 +249,7 @@ async function main() {
     const typed = item({ itemType: "NR", key: "", interactions: [{ kind: "textEntry", responseId: "RESPONSE" }], keys: { RESPONSE: ["0.5", "50%"] } });
     const f = fakeVendors({ anthropic: [solve("labels", { values: ["50%"] })], openai: [solve("number", { value: "50%" })] });
     const r = await agreeOnAnswer(typed, [], "Math 30-1", undefined, f.deps);
-    assert.deepEqual(r.decision, { outcome: "pass", answer: { kind: "labels", values: ["50%"] }, confirm: false });
+    assert.deepEqual(r.decision, { outcome: "pass", answer: { kind: "labels", values: ["50%"], typedAt: [0] }, confirm: false });
     assert.equal(f.seen.length, 2);
     // a fraction equal to the key passes directly; legacy NR key "1/2" matches "1/2" and "0.5"
     const g = fakeVendors({ anthropic: [solve("labels", { values: ["1/2"] })], openai: [solve("number", { value: "0.5" })] });
@@ -416,6 +416,42 @@ async function main() {
         assert.equal(px.user, py.user);
       }
     }
+  }
+  // --- review round 3 ---
+  // identifier-valued positions never go through the number rule
+  {
+    const dd = item({ itemType: "DDL", key: "", keys: { D: ["1"] }, interactions: [{ kind: "inlineChoice", responseId: "D", choices: [opt("1", "one"), opt("1.0", "one point oh"), opt("01", "oh one")] }] });
+    for (const v of ["1.0", "01"]) {
+      const f = fakeVendors({ anthropic: [solve("labels", { values: [v] })], openai: [solve("labels", { values: [v] })] });
+      assert.equal((await agreeOnAnswer(dd, [], "M", undefined, f.deps)).decision.outcome, "key_query", v);
+    }
+    const ord = item({ itemType: "ORD", key: "", keys: { O: ["1", "01", "2"] }, interactions: [{ kind: "order", responseId: "O", choices: [opt("1", "a"), opt("01", "b"), opt("2", "c")] }] });
+    const g = fakeVendors({ anthropic: [solve("labels", { values: ["01", "1", "2"] })], openai: [solve("labels", { values: ["01", "1", "2"] })] });
+    assert.equal((await agreeOnAnswer(ord, [], "M", undefined, g.deps)).decision.outcome, "key_query");
+    const mx = item({ itemType: "TI", key: "", keys: { R1: ["1"], R2: ["1/2"] }, interactions: [
+      { kind: "choice", responseId: "R1", maxChoices: 1, options: [opt("1", "a"), opt("01", "b")] },
+      { kind: "textEntry", responseId: "R2" },
+    ] });
+    const h = fakeVendors({ anthropic: [multiReply({ R1: ["01"], R2: ["0.5"] })], openai: [multiReply({ R1: ["01"], R2: ["0.5"] })] });
+    assert.equal((await agreeOnAnswer(mx, [], "M", undefined, h.deps)).decision.outcome, "key_query");
+    const k = fakeVendors({ anthropic: [multiReply({ R1: ["1"], R2: ["0.5"] })], openai: [multiReply({ R1: ["1"], R2: ["1/2"] })] });
+    const rk = await agreeOnAnswer(mx, [], "M", undefined, k.deps);
+    assert.equal(rk.decision.outcome, "pass");
+    // minor 3: a single-choice response inside a multi-response item asks for the one choice
+    const u = solverPrompt(mx, "M").user;
+    assert.match(u, /For R1: the identifier of the one correct choice/);
+    const many = item({ itemType: "TI", interactions: [{ kind: "choice", responseId: "R1", maxChoices: 2, options: [opt("A", "a"), opt("B", "b")] }, { kind: "textEntry", responseId: "R2" }] });
+    assert.match(solverPrompt(many, "M").user, /For R1: the identifier of each correct choice/);
+  }
+  // minor 5: a reply that mixes the single and the per-response form is a failed solve
+  {
+    const mx = item({ itemType: "TI", key: "", keys: { R1: ["3"], R2: ["4"] }, interactions: [{ kind: "textEntry", responseId: "R1" }, { kind: "textEntry", responseId: "R2" }] });
+    const f = fakeVendors({ anthropic: [solve("labels", { values: ["3"], responses: [{ responseId: "R1", values: ["3"] }, { responseId: "R2", values: ["4"] }] })] });
+    const b = await blindSolve("solver1", mx, [], "M", undefined, f.deps);
+    assert.ok(!b.ok && b.detail === "reply mixes the single and the per-response form");
+    const g = fakeVendors({ anthropic: [solve("choice", { letters: ["B"], responses: [{ responseId: "RESPONSE", values: ["B"] }] })] });
+    const c = await blindSolve("solver1", mc, [], "M", undefined, g.deps);
+    assert.ok(!c.ok && c.detail === "reply mixes the single and the per-response form");
   }
   console.log("solve tests passed");
 }

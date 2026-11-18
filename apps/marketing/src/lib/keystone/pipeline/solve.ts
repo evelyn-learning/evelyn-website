@@ -9,7 +9,7 @@
 // No `next/*` imports: this runs from tsx scripts on a laptop too.
 
 import type { ItemDoc } from "../db";
-import { acceptedAnswers, answerForm, canonicalResponse, decide, formUnknown, prefixed, readKey, typedAnswer, type Answer, type AnswerForm, type Decision, type ResponseForm } from "./answers";
+import { acceptedAnswers, answerForm, canonicalResponse, decide, formUnknown, multiAnswer, readKey, typedAnswer, type Answer, type AnswerForm, type Decision, type ResponseForm } from "./answers";
 import { questionAsText } from "./intake";
 import { callModel } from "./models";
 import type { ModelDeps, ModelImage, ModelReply } from "./types";
@@ -79,7 +79,9 @@ const NUMBER_RULE = "the value only: no units, at the precision the question ask
 function responseLine(r: ResponseForm, several: boolean): string {
   const where = several ? `For ${r.responseId}: ` : "";
   switch (r.kind) {
-    case "choice": return `${where}the identifier of each correct choice (identifiers: ${list(r.identifiers)}).`;
+    case "choice": return r.maxChoices === 1
+      ? `${where}the identifier of the one correct choice (identifiers: ${list(r.identifiers)}).`
+      : `${where}the identifier of each correct choice (identifiers: ${list(r.identifiers)}).`;
     case "textEntry": return `${where}the typed answer, ${NUMBER_RULE}.`;
     case "inlineChoice": return `${where}the identifier of the chosen drop-down choice (one of: ${list(r.identifiers)}).`;
     case "order": return `${where}the identifiers of the items in the correct order, first to last, one value each (identifiers: ${list(r.identifiers)}).`;
@@ -148,6 +150,11 @@ export function solverPrompt(item: ItemDoc, course: string, hint?: string): { sy
 function toAnswer(form: AnswerForm, raw: RawSolve["answer"]): Answer | string {
   const values = raw.values.map((v) => v.trim()).filter(Boolean);
   const misfit = (expected: string) => `answer kind "${raw.kind}" does not fit this item (expected ${expected})`;
+  // A confused reply is never half-read.
+  const flat = raw.letters.some((l) => l.trim()) || !!raw.value.trim() || values.length > 0;
+  const perResponse = raw.responses.length > 0;
+  const several = form.form === "labels" && form.responses.length > 1;
+  if ((several && flat) || (!several && perResponse)) return "reply mixes the single and the per-response form";
   switch (form.form) {
     case "choice-one": case "choice-many": {
       if (raw.kind !== "choice") return misfit("choice");
@@ -180,15 +187,15 @@ function toAnswer(form: AnswerForm, raw: RawSolve["answer"]): Answer | string {
         if (byId.has(id)) return `responseId ${id} given twice`;
         byId.set(id, e.values);
       }
-      const out: string[] = [];
+      const parts: { response: ResponseForm; values: string[] }[] = [];
       for (const r of form.responses) {
         const vs = byId.get(r.responseId);
         if (!vs) return `no answer for responseId ${r.responseId}`;
         const c = canonicalResponse(r, vs);
         if (!c) return `values for ${r.responseId} do not fit it: ${JSON.stringify(vs)}`;
-        out.push(...prefixed(r.responseId, c));
+        parts.push({ response: r, values: c });
       }
-      return { kind: "labels", values: out };
+      return multiAnswer(parts);
     }
   }
 }
