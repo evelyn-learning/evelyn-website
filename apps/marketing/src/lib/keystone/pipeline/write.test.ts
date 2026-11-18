@@ -626,6 +626,13 @@ async function main() {
     assert.deepEqual(numericLiterals("0.5 m^{-1}"), ["0.5"], "unit exponent with a sign is skipped");
     assert.deepEqual(numericLiterals("50% and 0.5%"), ["0.5", "0.005"], "percentages divided by 100");
     assert.deepEqual(numericLiterals("\u2212(0.5)"), ["-0.5"], "sign through one bracketed literal");
+    // the values are read by answers.ts's readNumber (exact decimals)
+    await expect("-3.0", "It is - 3.", true);
+    await expect("0.50", "It is 0.5.", true);
+    await expect("12", "It is 1,2.", false);
+    assert.deepEqual(numericLiterals("$5 \\times 10^{-1}$ and 2.5e3"), ["0.5", "2500"], "exponent forms through readNumber");
+    assert.deepEqual(numericLiterals("1e5000"), ["1e5000"], "an exponent beyond 1000 stays a literal that equals nothing");
+    await expect("1", "It is 1e5000.", false);
   }
 
   // the prompt names what the check rejects

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { acceptedAnswers, answerForm, multiAnswer, prefixed, canonicalPairs, canonicalResponse, decide, isNumber, parseKey, readKey, sameAnswer, typedAnswer } from "./answers";
+import { acceptedAnswers, answerForm, multiAnswer, prefixed, canonicalPairs, canonicalResponse, decide, isNumber, parseKey, readKey, readNumber, sameAnswer, shiftDecimal, typedAnswer } from "./answers";
 import type { Answer } from "./answers";
 import type { Interaction } from "../qti-interactions";
 
@@ -382,6 +382,59 @@ const o = (label: string) => ({ label, html: label });
   assert.ok(sameAnswer(typ("x−3"), typ("x - 3")));
   assert.ok(sameAnswer(typ("– 3 m"), typ("-3 m")));
   assert.ok(!sameAnswer(typ("x − 3"), typ("x+3")));
+}
+
+// readNumber: the ONE number reader (write.ts and calc.ts use it); exact decimals, never floating point
+{
+  const v = (t: string, forms?: Parameters<typeof readNumber>[1]) => readNumber(t, forms)?.value ?? null;
+  const pl = (t: string, forms?: Parameters<typeof readNumber>[1]) => readNumber(t, forms)?.plain ?? null;
+  assert.equal(v("0.50"), "0.5", "trailing zeros");
+  assert.equal(v("0.50"), v("0.5"), "0.50 = 0.5");
+  assert.equal(v("1,2"), null, "1,2 is not 12");
+  assert.equal(v("- 3"), "-3", "a spaced leading sign");
+  assert.equal(v("- 3"), v("-3.0"), "- 3 = -3.0");
+  for (const m of ["\u2212", "\u2013", "\u2014", "\u2010", "\u2011", "\ufe63", "\uff0d"]) assert.equal(v(`${m}0.5`), "-0.5", `minus variant ${JSON.stringify(m)}`);
+  assert.equal(v("+4"), "4", "plus sign");
+  assert.equal(v("2,500"), "2500", "thousands comma");
+  assert.equal(v("2{,}500"), "2500", "LaTeX thousands group");
+  assert.equal(v("2\u2009500"), "2500", "thin space group");
+  assert.equal(v("2 500"), "2500", "space group");
+  assert.equal(v("1,234.50"), "1234.5", "grouped with decimals");
+  assert.equal(v(".5"), "0.5", "leading point");
+  assert.equal(pl(".5"), ".5", "plain keeps the written digits");
+  assert.equal(pl("4.0"), "4.0", "plain keeps trailing zeros");
+  assert.equal(v("-0.0"), "0", "negative zero is zero");
+  // forms are opt-in: a plain decimal by default
+  for (const t of ["2.5e3", "1/2", "50%", "2.50 \u00d7 10^{3}", "12 m", "abc", "", "1.2.3", "--3"]) assert.equal(v(t), null, `not a plain decimal: ${t}`);
+  assert.equal(v("2.5e3", { exponent: true }), "2500", "e-notation");
+  assert.equal(pl("2.50E+3", { exponent: true }), "2500", "E+ notation");
+  assert.equal(v("2.50 \u00d7 10^{3}", { exponent: true }), "2500", "times ten to the power, braces");
+  assert.equal(v("2.50 \\times 10^{3}", { exponent: true }), "2500", "LaTeX times");
+  assert.equal(v("5 \u00d7 10^{-1}", { exponent: true }), "0.5", "negative power");
+  assert.equal(pl("2.50 x 10^-3", { exponent: true }), "0.00250", "x as times; plain keeps digits");
+  assert.equal(v("2.5 \u00d7 10^\u22123", { exponent: true }), "0.0025", "Unicode minus in the power");
+  assert.equal(v("2.5\u00b710^-2", { exponent: true }), "0.025", "middle dot");
+  assert.equal(v("-3.01 \u00d7 10^23", { exponent: true }), "-301000000000000000000000", "signed mantissa");
+  assert.equal(v("1e1001", { exponent: true }), null, "an exponent beyond 1000 is not read");
+  assert.equal(v("1/2", { fraction: true }), "0.5", "fraction");
+  assert.equal(v("-1/2", { fraction: true }), "-0.5", "signed fraction");
+  assert.equal(v("3 / 4", { fraction: true }), "0.75", "spaced fraction");
+  assert.equal(v("1/3", { fraction: true }), null, "a repeating fraction is never equal to a decimal");
+  assert.equal(v("1/0", { fraction: true }), null, "zero denominator");
+  assert.equal(v("50%", { percent: true }), "0.5", "percent");
+  assert.equal(v("0.5 %", { percent: true }), "0.005", "spaced percent");
+  assert.equal(v("50\\%", { percent: true }), "0.5", "LaTeX percent");
+  assert.equal(shiftDecimal("2.50", 3), "2500");
+  assert.equal(shiftDecimal("-0.5", -2), "-0.005");
+  assert.equal(shiftDecimal("-0", 2), "0");
+  // the comparison side
+  assert.ok(sameAnswer(num("-3.0"), typ("- 3")), "- 3 equals -3.0 (spaced sign re-read as a number)");
+  assert.ok(sameAnswer(typedAnswer("- 3"), num("-3.0")), "typedAnswer reads - 3 as a number");
+  assert.deepEqual(typedAnswer("- 3"), num("-3"), "the spaced sign is closed up in the value");
+  assert.ok(sameAnswer(num("0.50"), num("0.5")));
+  assert.ok(!sameAnswer(num("1,2"), num("12")));
+  assert.ok(sameAnswer(num("2{,}500"), num("2500")), "LaTeX group in a typed value");
+  assert.ok(sameAnswer(num("\u20100.5"), num("-0.5")), "hyphen as minus");
 }
 
 // detail when keys sit only under other responseIds

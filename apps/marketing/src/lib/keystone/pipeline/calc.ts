@@ -4,7 +4,7 @@
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import type { ItemDoc } from "../db";
-import { sameAnswer } from "./answers";
+import { readNumber, sameAnswer } from "./answers";
 import type { Answer } from "./answers";
 import { closingCheck, type Draft } from "./write";
 
@@ -58,29 +58,11 @@ function runPython(entries: { expr: string; expect: string; rounding: string }[]
 const THIN = "\u2009\u202f\u00a0";
 const NUMBER_TOKEN = new RegExp(`(?<![\\w.])[+\\-\\u2212]?(?:\\d+\\/\\d+(?![\\d.])|\\d{1,3}(?:[,${THIN}]\\d{3})+(?:\\.\\d+)?|\\d+(?:\\.\\d+)?|\\.\\d+)`, "g");
 
-const PLAIN = /^[+-]?(?:\d+\.?\d*|\.\d+)$/;
-const SCI = /^([+-]?(?:\d+\.?\d*|\.\d+))\s*(?:[eE]\s*([+-]?\d+)|(?:\\times|\\cdot|×|·|x|X|\*)\s*10\s*\^\s*\{?\s*([+-]?\d+)\s*\}?)$/;
-
-/** Exact plain decimal for "2.50e3", "2.50 × 10^3", "2.50 \\times 10^{3}", "2.50*10^3", "2.50 x 10^-3" (Unicode minus allowed).
- *  A number with no exponent comes back as written; anything else is null. String arithmetic only, no floats. */
+/** Exact plain decimal for "2.50e3", "2.50 × 10^3", "2.50 \\times 10^{3}", "2.50*10^3", "2.50 x 10^-3" (any minus sign),
+ *  read by answers.ts's readNumber (exponent form); a number with no exponent comes back with its digits as written.
+ *  Anything else is null. String arithmetic only, no floats. */
 export function toPlainDecimal(text: string): string | null {
-  const t = text.trim().replace(/[\u2212\u2013]/g, "-");
-  if (PLAIN.test(t)) return t;
-  const m = SCI.exec(t);
-  if (!m) return null;
-  const exp = Number(m[2] ?? m[3]);
-  if (!Number.isInteger(exp) || Math.abs(exp) > 1000) return null;
-  const sign = m[1].startsWith("-") ? "-" : "";
-  const [whole, frac = ""] = m[1].replace(/^[+-]/, "").split(".");
-  const digits = whole + frac;
-  const point = whole.length + exp;
-  let out: string;
-  if (point <= 0) out = "0." + "0".repeat(-point) + digits;
-  else if (point >= digits.length) out = digits + "0".repeat(point - digits.length);
-  else out = digits.slice(0, point) + "." + digits.slice(point);
-  const [ip, fp] = out.split(".");
-  const clean = (ip.replace(/^0+(?=\d)/, "") || "0") + (fp !== undefined ? "." + fp : "");
-  return /^0(\.0*)?$/.test(clean) ? clean : sign + clean;
+  return readNumber(text, { exponent: true })?.plain ?? null;
 }
 
 const SCI_IN_TEXT = /(?<![\w.])([+\-\u2212]?(?:\d+\.?\d*|\.\d+))\s*(?:\\times|\\cdot|×|·|x|\*)\s*10\s*\^\s*\{?\s*([+\-\u2212]?\d+)\s*\}?/g;
@@ -91,7 +73,7 @@ const UNIT_BASE = "m\\/s|km\\/h|mol\\/L|kg|g|m|cm|mm|km|s|min|h|kJ|J|N|Pa|kPa|V|
 const UNIT_EXP = new RegExp(`((?:\\\\(?:text|mathrm)\\{[^{}]*\\})|(?<![A-Za-z\\\\])(?:${UNIT_BASE}))\\s*\\^\\s*\\{?\\s*[+\\-\\u2212]?\\d+\\s*\\}?`, "g");
 
 function plainText(md: string, keepText = false): string {
-  let t = md.replace(UNIT_EXP, "$1"); // m/s^2, \text{m}^{2}: the 2 is a unit exponent, not a number (a lone variable such as x^2 is not a unit)
+  let t = md.replace(/(\d)\{,\}(?=\d{3}(?!\d))/g, "$1,").replace(UNIT_EXP, "$1"); // m/s^2, \text{m}^{2}: the 2 is a unit exponent, not a number (a lone variable such as x^2 is not a unit)
   t = t.replace(/\^\s*\{?\s*(?:\\circ|°)\s*\}?|\\degree|\\textdegree/g, "°");
   t = t.replace(/\\(?:text|mathrm|textbf|mathbf)\{([^{}]*)\}/g, keepText ? " $1 " : " ");
   t = t.replace(/\\[,;:!]|\\ |~/g, "").replace(/\\circ/g, "°");
@@ -109,7 +91,8 @@ function plainText(md: string, keepText = false): string {
 export function statedNumbers(md: string): string[] {
   const out: string[] = [];
   for (const m of plainText(md).matchAll(NUMBER_TOKEN)) {
-    out.push(m[0].replace(/\u2212/g, "-").replace(new RegExp(`[,${THIN}]`, "g"), "").replace(/^\+/, ""));
+    // a fraction token stays "p/q"; every other token is read by readNumber (sign, thousands groups)
+    out.push(m[0].includes("/") ? m[0].replace(/^\+/, "").replace(/^\u2212/, "-") : readNumber(m[0])?.plain ?? m[0]);
   }
   return out;
 }
@@ -169,8 +152,7 @@ function unitMissing(draft: Draft, answer: Extract<Answer, { kind: "number" }>, 
   if (!sentence) return []; // cannot find the sentence: no finding
   const text = sentence.replace(new RegExp(`[${THIN}]`, "g"), " ");
   for (const m of text.matchAll(NUMBER_TOKEN)) {
-    const n = m[0].replace(/−/g, "-").replace(/,/g, "");
-    if (!sameAnswer(num(n), answer)) continue;
+    if (!sameAnswer(num(m[0]), answer)) continue; // sameAnswer reads the token with readNumber
     if (AFTER_NUMBER.test(text.slice((m.index ?? 0) + m[0].length))) return [];
   }
   return [{ code: "unit_missing", detail: `the question asks for the answer in ${unit} but the short section gives ${answer.value} without a unit` }];
@@ -213,7 +195,8 @@ function earlyRounding(entries: { expr: string; expect: string; rounding: string
     if (!entries[j].rounding.trim() || !rj?.ok || rj.raw === undefined || sameAnswer(num(rj.raw), num(expect))) continue;
     // One-digit integers (and 1dp values with one significant digit) are skipped on purpose: a rounded "2" matches
     // exponents, counts and constants far more often than it marks early rounding.
-    if (!PLAIN.test(expect) || (decimalPlaces(expect) < 2 && sigDigits(expect) < 2)) continue;
+    const plain = readNumber(expect)?.plain;
+    if (plain === undefined || (decimalPlaces(plain) < 2 && sigDigits(plain) < 2)) continue;
     if (CONSTANTS.some((c) => sameAnswer(num(c), num(expect)))) continue; // common given constants
 
     if (given.some((g) => sameAnswer(num(g), num(expect)))) continue; // a quantity the question gives

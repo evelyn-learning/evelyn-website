@@ -48,6 +48,12 @@ assert.equal(toPlainDecimal("-3.01 × 10^23"), "-301000000000000000000000");
 assert.equal(toPlainDecimal("0.998"), "0.998");
 assert.equal(toPlainDecimal("12 m"), null);
 assert.equal(toPlainDecimal("abc"), null);
+// the reader is answers.ts's readNumber: Unicode minus variants, spaced signs, LaTeX thousands groups
+assert.equal(toPlainDecimal("\u22122.5e3"), "-2500");
+assert.equal(toPlainDecimal("5 \u00d7 10^{-1}"), "0.5");
+assert.equal(toPlainDecimal("1e1001"), null, "an exponent beyond 1000 is not read");
+assert.deepEqual(statedNumbers("It is \u22124 and +5 and 2{,}500"), ["-4", "5", "2500"]);
+assert.deepEqual(statedNumbers("$\\frac{1}{2}$ and 0.50 and .5"), ["1/2", "0.50", ".5"], "written digits kept");
 
 const python = spawnSync("python3", ["-I", "-c", "import sys; sys.path.append(__import__('site').getusersitepackages()); import sympy"], { encoding: "utf8" });
 const havePython = python.status === 0;

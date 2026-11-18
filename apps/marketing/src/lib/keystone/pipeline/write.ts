@@ -12,7 +12,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { DIPLOMA_COURSES, SECTIONS, SECTION_TITLE, normaliseCourse, sectionTitle, type SectionKind } from "../config";
 import type { ItemDoc } from "../db";
-import { sameAnswer, type Answer } from "./answers";
+import { readNumber, sameAnswer, type Answer } from "./answers";
 import { htmlToPlainText, questionAsText } from "./intake";
 import { callModel } from "./models";
 import type { ModelDeps, ModelReply } from "./types";
@@ -252,21 +252,6 @@ function normaliseLatex(s: string): string {
     .replace(/([+-])[ \t]*\(\s*(\d+(?:[.,]\d+)*)\s*\)/g, "$1$2");
 }
 
-/** Moves the decimal point of a plain decimal string by `exp` places, exactly (no floats). */
-function shiftDecimal(num: string, exp: number): string {
-  const neg = num.startsWith("-");
-  const [i, f = ""] = num.replace(/^[+-]/, "").split(".");
-  const all = i + f;
-  const digits = all.replace(/^0+(?=\d)/, "");
-  const point = i.length - (all.length - digits.length) + exp;
-  let out: string;
-  if (point <= 0) out = `0.${"0".repeat(-point)}${digits}`;
-  else if (point >= digits.length) out = digits + "0".repeat(point - digits.length);
-  else out = `${digits.slice(0, point)}.${digits.slice(point)}`;
-  out = out.replace(/^0+(?=\d)/, "");
-  return neg && /[1-9]/.test(out) ? `-${out}` : out;
-}
-
 const GROUP_SEP = "[,\\u2009\\u202f\\u00a0]";
 const GROUP_RE = new RegExp(GROUP_SEP, "g");
 // sticky matchers, run at an index (no slicing of the text)
@@ -297,17 +282,17 @@ function scanLiterals(text: string): Lit[] {
     const before = tailOf(s, i);
     // ignored positions: a unit exponent ("m/s^2", "m^{-1}"), a subscript, digits glued to a letter
     if (/[A-Za-z]\s*\^\s*[+-]?\s*$/.test(before) || /_\s*$/.test(before) || /[A-Za-z]$/.test(before)) { i = end; continue; }
-    let lit = m[0].replace(GROUP_RE, "");
     // A sign with only spaces before the digits is BINARY only after a digit, ")", "]", "}" or a single-letter
     // variable standing as its own token ("x - 3", "2a - 3"); anywhere else (after a word, "=", "(", ",", at the
     // start) it is UNARY and belongs to the number.
     let head = before;
+    let neg = false;
     const sign = /([+-])[ \t\u2009\u202f\u00a0]*$/.exec(before);
     if (sign) {
       head = before.slice(0, before.length - sign[0].length).replace(/[ \t\u2009\u202f\u00a0]+$/, "");
       const single = /[^A-Za-z][A-Za-z]$/.test(head) || (!bounded && /^[A-Za-z]$/.test(head));
       const binary = /[0-9)\]}]$/.test(head) || single;
-      if (!binary && sign[1] === "-") lit = `-${lit}`;
+      neg = !binary && sign[1] === "-";
     }
     let taint: string | undefined;
     if (/[\u00b1\u2213]\s*$/.test(head)) taint = "\u00b1";
@@ -316,20 +301,23 @@ function scanLiterals(text: string): Lit[] {
     else if (FN_ARG.test(head)) taint = "a function argument";
     const sci = stickyAt(SCI_TIMES, s, end) ?? stickyAt(SCI_E, s, end);
     const frac = sci ? null : /^[0-9]+$/.test(m[0]) ? stickyAt(FRAC, s, end) : null;
-    if (sci) {
-      lit = shiftDecimal(lit, Number(sci[1]));
-      end += sci[0].length;
-    } else if (frac) {
-      lit = `${lit}/${frac[1]}`;
-      end += frac[0].length;
-    }
+    if (sci) end += sci[0].length;
+    else if (frac) end += frac[0].length;
     if (!taint && stickyAt(POWER, s, end)) taint = "raised to a power";
     const pct = stickyAt(PERCENT, s, end);
-    if (pct) {
-      if (lit.includes("/")) taint ??= "a percentage";
-      else lit = shiftDecimal(lit, -2).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
-      end += pct[0].length;
+    if (pct && frac) taint ??= "a percentage";
+    const span = `${neg ? "-" : ""}${s.slice(i, pct ? end + pct[0].length : end)}`;
+    let lit: string;
+    if (frac) {
+      // a fraction literal stays "p/q" (signed); literalIs reads it
+      lit = `${neg ? "-" : ""}${m[0].replace(GROUP_RE, "")}/${frac[1]}`;
+    } else {
+      // the value is read by answers.ts's readNumber: thousands groups, exponent and percent, exactly
+      const r = readNumber(span, { exponent: !!sci, percent: !!pct });
+      // an exponent beyond what readNumber reads stays a literal that equals nothing
+      lit = r === null ? span.replace(/\s+/g, "") : pct ? r.value : r.plain;
     }
+    if (pct) end += pct[0].length;
     out.push(taint ? { lit, taint } : { lit });
     i = end;
   }
@@ -344,10 +332,11 @@ export function numericLiterals(text: string): string[] {
   return scanLiterals(text).map((l) => l.lit);
 }
 
-/** Exact equality of a literal (decimal or fraction) and the agreed value: no rounding, trailing zeros ignored. */
+/** Exact equality of a literal (decimal or fraction) and the agreed value, both read by readNumber: no rounding,
+ * trailing zeros ignored; a fraction that does not terminate equals nothing. */
 function literalIs(lit: string, value: string): boolean {
-  const n: Answer = { kind: "number", value };
-  return lit.includes("/") ? sameAnswer(n, { kind: "labels", values: [lit] }) : sameAnswer({ kind: "number", value: lit }, n);
+  const a = readNumber(lit, { fraction: true }), b = readNumber(value);
+  return a !== null && b !== null && a.value === b.value;
 }
 
 const stemText = (item: ItemDoc) => htmlToPlainText(item.questionHtml ?? "").replace(/<[^<>]*>/g, " ").replace(/&[a-z#0-9]+;/gi, " ");

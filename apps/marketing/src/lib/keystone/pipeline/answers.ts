@@ -21,31 +21,114 @@ export type Decision =
   /** detail: for our own queue only (e.g. why the form is unreadable); never shown to a solver. */
   | { outcome: "hold"; why: "no_agreement" | "written_response" | "unreadable_form"; detail?: string };
 
-const NUMBER = /^[+-]?(\d+\.?\d*|\.\d+)$/;
 const LETTERS = /^[A-Z](,[A-Z])*$/i;
-
-const SEP = /[,    ]/;
-const GROUPED = /^[+-]?\d{1,3}([,    ]\d{3})+(\.\d*)?$/;
 const EXPONENT = /^[+-]?(\d+\.?\d*|\.\d+)e[+-]?\d+$/i;
 
-/** Plain decimal text, or null when the text is not a plain decimal. Separators (comma, thin space, NBSP, space)
- *  are accepted only as thousands groups of three, so "1,2" is never read as 12. A unit or "%" makes it null. */
-function toPlain(s: string): string | null {
-  let t = s.trim().replace(/^[−–]/, "-");
-  if (SEP.test(t)) {
-    if (!GROUPED.test(t)) return null;
-    t = t.replace(/[,    ]/g, "");
-  }
-  return NUMBER.test(t) ? t : null;
+// --- the ONE number reader -----------------------------------------------------------------------
+// write.ts (numeric literals in a draft) and calc.ts (stated numbers, expected values) read numbers through
+// readNumber; the comparison below (sameNumber, fractions, canonical response values) does too. Exact decimal
+// strings only: never binary floating point.
+
+/** Every hyphen, dash and minus sign that reads as "-" before a number. */
+const MINUS = "\u2010-\u2014\u2212\ufe63\uff0d-";
+const LEAD_SIGN = new RegExp(`^([+${MINUS}])[ \t\u00a0\u2009\u202f]*`);
+const UNSIGNED = /^(?:\d+\.?\d*|\.\d+)$/;
+/** Thousands separators between digit groups: comma, LaTeX "{,}", thin / narrow no-break / no-break space, space. */
+const GROUP = "(?:,|\\{,\\}|[ \u00a0\u2009\u202f])";
+const GROUPED = new RegExp(`^\\d{1,3}(?:${GROUP}\\d{3})+(?:\\.\\d*)?$`);
+const GROUP_ALL = new RegExp(GROUP, "g");
+const FRACTION = /^(\d+)\s*\/\s*(\d+)$/;
+/** "a × 10^n" (× · * x X \times \cdot; braces optional) or "aEn"; n may carry any minus sign. */
+const POWER_OF_TEN = new RegExp(`^(.*?)\\s*(?:[eE]\\s*([+${MINUS}]?\\d+)|(?:\\\\times|\\\\cdot|[\u00d7\u00b7*xX])\\s*10\\s*\\^\\s*\\{?\\s*([+${MINUS}]?\\d+)\\s*\\}?)$`);
+const PERCENT = /\s*\\?%$/;
+/** The largest power of ten an exponent form may carry (larger is not read: the digits would be unbounded). */
+const MAX_EXPONENT = 1000;
+
+/** Which written forms readNumber accepts besides a plain decimal; each is opt-in. */
+export type NumberForms = { exponent?: boolean; fraction?: boolean; percent?: boolean };
+/** value: the canonical plain decimal (no leading or trailing zeros, "0" for zero), for exact comparison.
+ *  plain: the same number as a plain decimal with the digits as written (trailing zeros kept, "4.0", ".5";
+ *  thousands groups removed, sign normalised to "-" or none), for display and decimal-place counts. */
+export type NumberReading = { value: string; plain: string };
+
+/** Moves the decimal point of a plain decimal string by `exp` places, exactly (no floats). Zero carries no sign. */
+export function shiftDecimal(num: string, exp: number): string {
+  const neg = num.startsWith("-");
+  const [i, f = ""] = num.replace(/^[+-]/, "").split(".");
+  const all = i + f;
+  const digits = all.replace(/^0+(?=\d)/, "");
+  const point = i.length - (all.length - digits.length) + exp;
+  let out: string;
+  if (point <= 0) out = `0.${"0".repeat(-point)}${digits}`;
+  else if (point >= digits.length) out = digits + "0".repeat(point - digits.length);
+  else out = `${digits.slice(0, point)}.${digits.slice(point)}`;
+  out = out.replace(/^0+(?=\d)/, "");
+  return neg && /[1-9]/.test(out) ? `-${out}` : out;
 }
-/** True when the text is a plain decimal (thousands groups allowed; no unit, "%", fraction or exponent). */
-export const isNumber = (s: string) => toPlain(s) !== null;
+
+/** An unsigned plain decimal as written, thousands groups removed; null when it is not one ("1,2" is never 12). */
+function unsignedPlain(t: string): string | null {
+  if (UNSIGNED.test(t)) return t;
+  return GROUPED.test(t) ? t.replace(GROUP_ALL, "") : null;
+}
+
+/** Canonical form of a plain decimal: no leading or trailing zeros, no sign on zero. */
+function canonPlain(plain: string): string {
+  const neg = plain.startsWith("-");
+  const [i, f = ""] = plain.replace(/^[+-]/, "").split(".");
+  const int = i.replace(/^0+/, "") || "0";
+  const frac = f.replace(/0+$/, "");
+  return `${neg && (int !== "0" || frac) ? "-" : ""}${int}${frac ? "." + frac : ""}`;
+}
+
+/** A number written in `text` (the whole text, trimmed), or null. Always: a plain decimal with an optional leading
+ * sign ("+", "-" or any dash or minus variant, spaces allowed after it: "- 3" is -3) and thousands groups of three
+ * ("2,500", "2{,}500", thin or plain spaces; "1,2" is not a number). With forms: `exponent` "2.5e3", "2.50 × 10^{3}",
+ * "5 \\times 10^{-1}" (powers up to 1000); `fraction` "p/q" of two integers when its decimal terminates ("1/3" is
+ * null: never equal to a written decimal); `percent` "n%" or "n\\%" as n/100. Units or other text make it null. */
+export function readNumber(text: string, forms: NumberForms = {}): NumberReading | null {
+  let t = text.trim();
+  const sign = LEAD_SIGN.exec(t);
+  const neg = !!sign && sign[1] !== "+";
+  if (sign) t = t.slice(sign[0].length);
+  let shift = 0;
+  if (forms.percent) {
+    const p = PERCENT.exec(t);
+    if (p) { shift -= 2; t = t.slice(0, p.index); }
+  }
+  let plain: string | null = null;
+  const frac = forms.fraction ? FRACTION.exec(t) : null;
+  if (frac) {
+    plain = fractionDecimal(frac[1], frac[2]);
+  } else {
+    plain = unsignedPlain(t);
+    if (plain === null && forms.exponent && t.length <= 200) {
+      const e = POWER_OF_TEN.exec(t);
+      const n = e ? Number((e[2] ?? e[3]).replace(new RegExp(`^[${MINUS}]`), "-")) : NaN;
+      if (e && Number.isInteger(n) && Math.abs(n) <= MAX_EXPONENT) {
+        const m = unsignedPlain(e[1]);
+        if (m !== null) { plain = shiftDecimal(m, n); }
+      }
+    }
+  }
+  if (plain === null) return null;
+  if (shift) plain = shiftDecimal(plain, shift);
+  if (neg) plain = `-${plain}`;
+  const value = canonPlain(plain);
+  if (value === "0") plain = plain.replace(/^-/, "");
+  return { value, plain };
+}
+
+/** True when the text is a plain decimal (thousands groups and a spaced leading sign allowed; no unit, "%",
+ *  fraction or exponent). */
+export const isNumber = (s: string) => readNumber(s) !== null;
 
 /** A typed value as an Answer, read the same way on the key side and the solver side:
  *  a plain decimal is a number; anything else ("1/2", "x = 3", "50%") is one label marked as typed (typedAt [0]). */
 export function typedAnswer(value: string): Answer {
   const t = value.trim();
-  return isNumber(t) ? { kind: "number", value: t } : { kind: "labels", values: [t], typedAt: [0] };
+  // a number keeps its text as written, with a spaced leading sign closed up ("- 3" → "-3")
+  return isNumber(t) ? { kind: "number", value: t.replace(LEAD_SIGN, (m, sign: string) => sign) } : { kind: "labels", values: [t], typedAt: [0] };
 }
 
 function letters(list: string[]): string[] {
@@ -326,11 +409,10 @@ function canon(r: Interaction, vals: string[]): string[] {
 type Dec = { neg: boolean; int: string; frac: string };
 
 function parseDec(s: string): Dec | null {
-  const t = toPlain(s);
-  if (t === null) return null;
-  const neg = t.startsWith("-");
-  const body = t.replace(/^[+-]/, "");
-  const [i, f = ""] = body.split(".");
+  const r = readNumber(s);
+  if (r === null) return null;
+  const neg = r.plain.startsWith("-");
+  const [i, f = ""] = r.plain.replace(/^-/, "").split(".");
   return { neg, int: i, frac: f };
 }
 
@@ -362,13 +444,10 @@ function sameNumber(a: string, b: string, precision?: number): boolean {
 const normLabel = (s: string) => s.trim().replace(/\s+/g, " ").toLowerCase();
 
 const B0 = BigInt(0), B1 = BigInt(1), B2 = BigInt(2), B5 = BigInt(5), B10 = BigInt(10);
-const FRACTION = /^([+-]?)(\d+)\s*\/\s*(\d+)$/;
 
-/** "a/b" of integers as an exact decimal, or null when it is not such a fraction or its expansion does not terminate. */
-function fractionDecimal(s: string): string | null {
-  const m = s.trim().replace(/^[−–]/, "-").match(FRACTION);
-  if (!m) return null;
-  const num = BigInt(m[2]), den = BigInt(m[3]);
+/** p/q of two unsigned integers as an exact plain decimal, or null when q is 0 or the expansion does not terminate. */
+function fractionDecimal(p: string, q: string): string | null {
+  const num = BigInt(p), den = BigInt(q);
   if (den === B0) return null;
   let rest = den, twos = 0, fives = 0;
   const g = gcd(num, den);
@@ -380,7 +459,7 @@ function fractionDecimal(s: string): string | null {
   const scaled = ((num / g) * B10 ** BigInt(places)) / (den / g);
   const digits = scaled.toString().padStart(places + 1, "0");
   const int = digits.slice(0, digits.length - places), frac = digits.slice(digits.length - places);
-  return `${m[1] === "-" ? "-" : ""}${int}${places ? "." + frac : ""}`;
+  return `${int}${places ? "." + frac : ""}`;
 }
 
 function gcd(a: bigint, b: bigint): bigint {
@@ -438,8 +517,9 @@ function sameTypedLabel(x: string, y: string, precision?: number): boolean {
 }
 
 function sameFraction(number: string, label: string, precision?: number): boolean {
-  const d = fractionDecimal(label);
-  return d !== null && sameNumber(number, d, precision);
+  if (!label.includes("/")) return false;
+  const d = readNumber(label, { fraction: true });
+  return d !== null && sameNumber(number, d.plain, precision);
 }
 
 export function decide(s1: Answer, s2: Answer, key: Answer | null, s3?: Answer, alsoAccepted: Answer[] = []): Decision {
