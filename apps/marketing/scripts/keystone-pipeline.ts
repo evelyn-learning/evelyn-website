@@ -127,6 +127,21 @@ async function main() {
   console.log("\n=== Summary ===");
   console.log("item       result          cost      flags");
   for (const r of out.runs) console.log(`${r.itemId.padEnd(10)} ${(r.result ?? "").padEnd(15)} $${r.cost.toFixed(4).padStart(8)} ${r.flags.join(", ")}${r.error ? `  (${r.error})` : ""}`);
+  // Why each held or failed item stopped: every step that did not pass, with its findings (internal, for the owner).
+  const stopped = out.runs.filter((r) => r.flags.length || r.result === "failed" || r.result === "held");
+  if (stopped.length) {
+    console.log("\n=== Why held ===");
+    for (const r of stopped) {
+      console.log(`\n${r.itemId}: ${r.result ?? "unfinished"} [${r.flags.join(", ")}] corrections ${r.corrections}`);
+      for (const st of r.steps) {
+        const o = (st.output && typeof st.output === "object" ? st.output : {}) as { findings?: { check?: string; code?: string; ruleId?: string; section?: string; quote?: string; detail?: string }[]; failed?: string };
+        const fs = Array.isArray(o.findings) ? o.findings : [];
+        if (st.ok && !fs.length && !o.failed) continue;
+        console.log(`  ${st.key ?? st.step}: ${st.ok ? "ran" : "DID NOT PASS"}${o.failed ? ` — could not run: ${String(o.failed).slice(0, 300)}` : ""}`);
+        for (const f of fs) console.log(`    - ${[f.check, f.code, f.ruleId, f.section].filter(Boolean).join(" / ")}: ${String(f.detail ?? "").slice(0, 300)}${f.quote ? ` | quote: "${String(f.quote).slice(0, 160)}"` : ""}`);
+      }
+    }
+  }
   console.log(`\nresults: ${[...byResult].map(([k, v]) => `${k} ${v}`).join(", ") || "none"}`);
   console.log(`flags:   ${[...byFlag].map(([k, v]) => `${k} ${v}`).join(", ") || "none"}`);
   console.log(`refused: ${out.refused.length}, skipped: ${out.skipped.length}`);

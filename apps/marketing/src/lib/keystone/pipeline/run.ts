@@ -807,7 +807,13 @@ export function selectItems(
 
 /** A reader that shows the named items as Received (dry run with --as-received only). */
 export function asReceivedReader(reader: Reader, ids: string[]): Reader {
-  const over = (i: ItemDoc | null) => (i && ids.includes(i.itemId) ? { ...i, stage: "received" as const } : i);
+  // Dry run only (asReceived is refused otherwise). KEYSTONE_DRY_TRUST_COURSE=1 also treats the item's existing
+  // course as if it came from the spreadsheet, so a sample of older items can be walked before real sheets arrive.
+  const trust = process.env.KEYSTONE_DRY_TRUST_COURSE === "1";
+  const over = (i: ItemDoc | null) =>
+    i && ids.includes(i.itemId)
+      ? { ...i, stage: "received" as const, ...(trust && i.course?.trim() ? { courseSource: "sheet" as const } : {}) }
+      : i;
   return {
     ...reader,
     item: async (id) => over(await reader.item(id)),
