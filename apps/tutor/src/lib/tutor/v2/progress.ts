@@ -62,6 +62,26 @@ export function v2ProgressAsPainted(plan: LessonPlan, goals: V2State['goals'], v
   return { ...full, currentSegmentId: v2Progress(plan, goals, { ...view, board: painted }).currentSegmentId };
 }
 
+/** Task 7n (CHIP_ON_PAINT, fix round 1 M3): which board the chip is read off, as a reply's page turns are held for their sentences
+ *  and painted (useV2Turns). `begin` a reply with the board shown before it; `hold` each page turn handed to the voice client;
+ *  `done` when the reply's state arrives (a page still held: `shown` is the board before the reply); `painted` as a held page
+ *  paints (true: the last held page is up, report again). A reply holding two pages keeps the chip on the board before the reply
+ *  until the second paints. A page never painted (withdrawn, cut) never lights; the next reply starts afresh. */
+export class V2PagesHeld {
+  private turn = 0; private n = 0; private before: V2State['board'] | null = null;
+  /** The board the chip is read off while a page of the reply is held; null: the state's own board. */
+  shown: V2State['board'] | null = null;
+  begin(board: V2State['board']): number { this.turn += 1; this.n = 0; this.shown = null; this.before = board; return this.turn; }
+  hold(turn: number): void { if (turn === this.turn) this.n += 1; }
+  done(turn: number): void { if (turn === this.turn && this.n > 0) this.shown = this.before; }
+  painted(turn: number): boolean {
+    if (turn !== this.turn) return false;
+    this.n = Math.max(0, this.n - 1);
+    if (this.n > 0 || !this.shown) return false;
+    this.shown = null; return true;
+  }
+}
+
 function v2Milestone(plan: LessonPlan, goals: V2State['goals']): TutorMilestone | null {
   const reached = (kind: string, need: (status: string | undefined) => boolean) => plan.segments.some((seg) => seg.kind === kind && need(goals[seg.id]?.status));
   return reached('recap', (s) => s === 'shown' || s === 'demonstrated') ? 'recap_reached'

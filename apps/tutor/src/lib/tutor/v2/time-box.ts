@@ -31,22 +31,29 @@ export function v2StartClock(state: V2State, nowMs: number, enabled: boolean = T
   return { ...state, startedAtMs: nowMs };
 }
 
-/** Task 7n (FLAG_CLOCK_PAUSE): at most this much paused time is taken off the clock (a malformed or hostile client value). */
-export const V2_CLOCK_PAUSE_MAX_MS = 6 * 60 * 60000;
-/** Task 7n (FLAG_CLOCK_PAUSE): the time the tester's debug flag panel has held the lesson clock (state.clockPausedMs, bounded);
- *  0 with the switch off. Mic test 4 (embed-1795028886172): 4.71 min of open flags made the wrap minute fire with ~14 min taught. */
-export function v2ClockPausedMs(state: Pick<V2State, 'clockPausedMs'>, enabled: boolean = TUTOR_V2_FLAG_CLOCK_PAUSE): number {
+/** Task 7n (FLAG_CLOCK_PAUSE): the paused total is honoured only outside production. Only the tester's debug flag panel sets it,
+ *  and that panel exists only in development (V2FlagBar V2_FLAGS_ON), so production has no legitimate sender (fix round 1, I2). */
+export const V2_CLOCK_PAUSE_HONOURED = process.env.NODE_ENV !== 'production';
+/** Task 7n (FLAG_CLOCK_PAUSE): the time the tester's debug flag panel has held the lesson clock (state.clockPausedMs); 0 with the
+ *  switch off, in production, or for a malformed value. Fix round 1 (I2): never more than the wall time since the start (the
+ *  lesson's minutes never go negative) nor than `capMs` (the box plus the margin, when the session has a box). Mic test 4
+ *  (embed-1795028886172): 4.71 min of open flags made the wrap minute fire with ~14 min taught. */
+export function v2ClockPausedMs(state: Pick<V2State, 'clockPausedMs' | 'startedAtMs'>, wallMs: number, capMs?: number, enabled: boolean = TUTOR_V2_FLAG_CLOCK_PAUSE, honoured: boolean = V2_CLOCK_PAUSE_HONOURED): number {
   const p = state.clockPausedMs;
-  return enabled && typeof p === 'number' && Number.isFinite(p) && p > 0 ? Math.min(p, V2_CLOCK_PAUSE_MAX_MS) : 0;
+  if (!enabled || !honoured || typeof p !== 'number' || !Number.isFinite(p) || p <= 0) return 0;
+  const elapsed = Math.max(0, wallMs - state.startedAtMs);
+  return Math.min(p, elapsed, typeof capMs === 'number' && Number.isFinite(capMs) && capMs > 0 ? capMs : Infinity);
 }
-/** Task 7n (FLAG_CLOCK_PAUSE): the lesson clock's "now": the wall clock less the paused time. Every time rule of the turn reads
- *  this (time fit, wrap, time left, the stamps it writes); never billing or the recorded length (memory.ts reads the wall). */
-export function v2LessonNowMs(wallMs: number, state: Pick<V2State, 'clockPausedMs'>, enabled: boolean = TUTOR_V2_FLAG_CLOCK_PAUSE): number {
-  return wallMs - v2ClockPausedMs(state, enabled);
+/** Task 7n (FLAG_CLOCK_PAUSE): the lesson clock's "now": the wall clock less the paused time, never before the start. Every time
+ *  rule of the turn reads this (time fit, wrap, time left, the stamps it writes); never billing or the recorded length (memory.ts
+ *  reads the wall). `boxMin`: the session's box, so the pause is capped at the box plus the margin. */
+export function v2LessonNowMs(wallMs: number, state: Pick<V2State, 'clockPausedMs' | 'startedAtMs'>, boxMin?: number, enabled: boolean = TUTOR_V2_FLAG_CLOCK_PAUSE, honoured: boolean = V2_CLOCK_PAUSE_HONOURED): number {
+  const cap = typeof boxMin === 'number' && boxMin > 0 ? (boxMin + v2OverrunMin()) * 60000 : undefined;
+  return wallMs - v2ClockPausedMs(state, wallMs, cap, enabled, honoured);
 }
 /** Task 7n (FLAG_CLOCK_PAUSE): the client's hard stop, re-armed after a pause: the stop minute less the lesson time used. */
-export function v2HardStopDelayMs(stopMin: number, state: Pick<V2State, 'startedAtMs' | 'clockPausedMs'>, wallMs: number): number {
-  return Math.max(5000, stopMin * 60000 - (v2LessonNowMs(wallMs, state, true) - state.startedAtMs));
+export function v2HardStopDelayMs(stopMin: number, state: Pick<V2State, 'startedAtMs' | 'clockPausedMs'>, wallMs: number, honoured: boolean = V2_CLOCK_PAUSE_HONOURED): number {
+  return Math.max(5000, stopMin * 60000 - (v2LessonNowMs(wallMs, state, stopMin, true, honoured) - state.startedAtMs));
 }
 
 /** Task 7f's switches, B to F, as one value: each its own flag (default on); tests pass some off for one turn. */

@@ -7,6 +7,7 @@ import { TUTOR_V2_STATE_CARRY } from '../orchestrator/flags';
 import type { V2Session, V2State } from './types';
 import { discussionOf } from './discussion';
 import { v2CloseInviteOn } from './close-invite';
+import { V2_CLOCK_PAUSE_HONOURED } from './time-box';
 
 export const V2_MAX_BOARD_PROBLEMS = 12;
 /** Task 7g: at most this many sentences owed a card are carried. */
@@ -48,7 +49,8 @@ export function v2ReadCarried(raw: unknown, enabled: boolean = TUTOR_V2_STATE_CA
   if (s.closeAsk === 'more') out.closeAsk = 'more';
   if (Array.isArray(s.visitPages)) { const list = s.visitPages.filter((x): x is number => typeof x === 'number' && Number.isInteger(x) && x >= 0 && x < 200).slice(-20); if (list.length) out.visitPages = list; }
   // Task 7n (FLAG_CLOCK_PAUSE): the flag panel's paused total, whatever STATE_CARRY says (its own switch, read in time-box.ts).
-  if (typeof s.clockPausedMs === 'number' && Number.isFinite(s.clockPausedMs) && s.clockPausedMs > 0) out.clockPausedMs = Math.min(Math.floor(s.clockPausedMs), 6 * 60 * 60000);
+  // Fix round 1 (I2): never in production (no legitimate sender); bounded by elapsed time and the box where it is read (time-box.ts).
+  if (V2_CLOCK_PAUSE_HONOURED && typeof s.clockPausedMs === 'number' && Number.isFinite(s.clockPausedMs) && s.clockPausedMs > 0) out.clockPausedMs = Math.min(Math.floor(s.clockPausedMs), 6 * 60 * 60000);
   if (!enabled) return out;
   if (typeof s.summaryBegunAt === 'number' && Number.isFinite(s.summaryBegunAt) && s.summaryBegunAt > 0) out.summaryBegunAt = s.summaryBegunAt;
   if (typeof s.repliesSinceBoard === 'number' && Number.isFinite(s.repliesSinceBoard) && s.repliesSinceBoard >= 0) out.repliesSinceBoard = Math.min(1000, Math.floor(s.repliesSinceBoard));

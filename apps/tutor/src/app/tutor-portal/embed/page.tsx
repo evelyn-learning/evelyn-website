@@ -2194,7 +2194,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     const onStarted = () => postClock();
     window.addEventListener('evelyn:session-started', onStarted);
     const onFlagPause = (e: Event) => {
-      if (!TUTOR_V2_FLAG_CLOCK_PAUSE) return;
+      if (!TUTOR_V2_FLAG_CLOCK_PAUSE || process.env.NODE_ENV === 'production') return;
       const fp = flagPauseRef.current; const paused = !!(e as CustomEvent<{ paused?: boolean }>).detail?.paused; const now = Date.now();
       if (paused && fp.sinceMs === null) fp.sinceMs = now;
       else if (!paused && fp.sinceMs !== null) { fp.totalMs += now - fp.sinceMs; fp.sinceMs = null; }

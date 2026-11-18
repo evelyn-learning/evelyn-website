@@ -53,6 +53,7 @@ import { v2CloseCalledOff } from '@/lib/tutor/v2/close-mic';
 import { withTargetPauses, type V2CardStress } from '@/lib/tutor/v2/target-pauses';
 import { v2HeardIsNoise } from '@/lib/tutor/v2/heard';
 import { WordsWatch } from '@/lib/tutor/v2/words-watch';
+import { V2_CLOCK_PAUSE_HONOURED, v2LessonNowMs } from '@/lib/tutor/v2/time-box';
 import { v2SpeechParts } from '@/lib/tutor/v2/languages';
 import { v2SpeakSounds, v2SpeakWaveDash } from '@/lib/tutor/v2/spoken-sounds';
 import { trimToSpoken } from '@/lib/tutor/v2/interrupted';
@@ -739,7 +740,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     const last = (role: string) => text([...(state?.history ?? [])].reverse().find((m) => m.role === role));
     return {
       turns: state?.history.length ?? 0,
-      minutesIn: state ? Math.round((Date.now() - state.startedAtMs) / 6000) / 10 : 0,
+      // Task 7n fix round 1 (M7): the lesson clock (less the flag time), as the engine reads it.
+      minutesIn: state ? Math.round(((TUTOR_V2_FLAG_CLOCK_PAUSE ? v2LessonNowMs(Date.now(), state) : Date.now()) - state.startedAtMs) / 6000) / 10 : 0,
       tutorBusy: !!turnsRef.current?.busy,
       // The reply being spoken when the flag was raised: every sentence sent to the voice, and how many had begun.
       speaking: { sentences: turnSentencesRef.current, begun: startedCountRef.current },
@@ -751,7 +753,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   // Task 7n (FLAG_CLOCK_PAUSE): an open flag holds the lesson clock (useV2Turns pauseClock) and the host's clock message (the
   // embed page's evelyn:clock, told by a window event). Only this debug tool pauses the clock.
   const holdClock = (paused: boolean) => {
-    if (!TUTOR_V2_FLAG_CLOCK_PAUSE) return;
+    if (!TUTOR_V2_FLAG_CLOCK_PAUSE || !V2_CLOCK_PAUSE_HONOURED) return;
     turnsRef.current?.pauseClock(paused);
     if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('evelyn:lesson-clock-paused', { detail: { paused } }));
   };

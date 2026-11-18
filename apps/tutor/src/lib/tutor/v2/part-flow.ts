@@ -20,7 +20,7 @@ import { V2_PART_FRAME_JA, isPartFrame } from './reply-gate';
 import type { V2Board, V2State } from './types';
 import { TUTOR_V2_LEVEL_CHECK_CHIP, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PART_ASK_LANGS, TUTOR_V2_PART_ASK_NAMED, TUTOR_V2_PART_ENTERED, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PRACTICE_ON_PART_PAGE } from '../orchestrator/flags';
 import { v2LevelCheckBegun } from './level-check-count';
-import { v2EndingAsk, v2IsAskLead, v2WithoutFillers } from './language-pack';
+import { V2_LANGUAGE_PACKS, v2EndingAsk, v2IsAskLead, v2WithoutFillers } from './language-pack';
 
 /** `history` (Task 7g, LEVEL_CHECK_CHIP): when present, a level check under way lights its chip before any goal is marked. */
 type View = Pick<V2State, 'board' | 'goals' | 'workingLevel'> & { closed?: boolean; history?: V2State['history'] } & Partial<Pick<V2State, 'practiceSaid' | 'timeFit' | 'summaryBegunAt' | 'visitPages'>>;
@@ -244,9 +244,10 @@ const READY_BUT = /\b(?:but|skip|again|explain|repeat|wait|summary|instead)\b|[?
 
 /** Task 7e fix round 1: an answer that asks something or declines / redirects ("Please explain that again."): the reply
  *  answers it, and moving into the held part waits for the ask again. */
-export function v2AnswerAsksOrDeclines(said: string | null, lastTutor: string = ''): boolean {
+/** Task 7n fix round 1 (M1): `languages` / `plan` as v2MoveAnswer takes them. */
+export function v2AnswerAsksOrDeclines(said: string | null, lastTutor: string = '', languages?: readonly string[], plan?: LessonPlan): boolean {
   const s = (said ?? '').trim();
-  return !!s && (v2MoveAnswer(s, lastTutor) === 'question' || DECLINE.test(s));
+  return !!s && (v2MoveAnswer(s, lastTutor, languages, undefined, plan) === 'question' || DECLINE.test(s));
 }
 
 /** The student's answer to "shall we go on, or do you have a question first?": 'go' (yes, let's, no questions), 'question'
@@ -254,12 +255,12 @@ export function v2AnswerAsksOrDeclines(said: string | null, lastTutor: string = 
  *  `lastTutor`: the reply they answer; when its last sentence is a part ask that offers a question first, a bare "No." is a go. */
 /** Task 7n (PART_ASK_LANGS, `langs`): a leading filler of the lesson's `languages` (language-pack.ts) is taken off first
  *  (「えっと、はい」 is a go), and a part ask the reply ends on by position (v2EndingPartAsk) offers a question first as an English
- *  frame does. */
-export function v2MoveAnswer(said: string | null, lastTutor: string = '', languages?: readonly string[], langs: boolean = TUTOR_V2_PART_ASK_LANGS): 'go' | 'question' | 'other' {
+ *  frame does. Fix round 1 (I1): that ask is read only with the `plan`, as a part ask naming a plan part (v2EndingPartAsk). */
+export function v2MoveAnswer(said: string | null, lastTutor: string = '', languages?: readonly string[], langs: boolean = TUTOR_V2_PART_ASK_LANGS, plan?: LessonPlan): 'go' | 'question' | 'other' {
   const s = langs ? v2WithoutFillers((said ?? '').trim(), languages) : (said ?? '').trim();
   if (!s) return 'other';
   const last = stripBoardBlocks(lastTutor).split(SENTENCES).map((x) => x.trim()).filter(Boolean).pop() ?? '';
-  const ending = langs && !(last && v2IsPartAsk(last)) ? v2EndingPartAsk(lastTutor, languages) : null;
+  const ending = langs && plan && !(last && v2IsPartAsk(last)) ? v2EndingPartAsk(lastTutor, plan, languages) : null;
   const offersQuestion = (!!last && v2IsPartAsk(last) && QUESTIONS_FIRST.test(last)) || (!!ending && QUESTIONS_FIRST.test(ending.ask));
   if (NO_QUESTIONS.test(s)) return 'go';
   // Final review I4: ahead of the decline and question checks (「いいえ」 is a decline word, 「質問」 a question's).
@@ -293,7 +294,8 @@ const NOT_THE_LESSON = /\bnext (?:sentence|example|one|question|exercise|word|st
 const movesOn = (sentence: string) => V2_PART_ASKS.includes(sentence.trim()) || ((MOVE_FRAME.test(sentence) || V2_PART_FRAME_JA.test(sentence)) && !NOT_THE_LESSON.test(sentence));
 const asks = (x: string) => /(?:[?？]|か[。．]?)["'」』）)]*\s*$/.test(x);
 /** Task 7i: the lead of a part ask, said just before it ("Next is present perfect.", the runtime's NEXTS, "Next: …"). */
-const NEXT_LEAD = /^(?:(?:ok(?:ay)?|good|great|so|now|right)[,.!]?\s+)?next(?: (?:is|up is|up|comes|we have)\b|:)/i;
+// Task 7n fix round 1 (M2): the English pack's lead (language-pack.ts), read alone with PART_ASK_LANGS off.
+const NEXT_LEAD = V2_LANGUAGE_PACKS.en!.askLead;
 
 /** The part whose page is waiting for the student's yes: the page held at the last part change (not lapsed), or a part the
  *  last reply offered by name ("Would you like to practise your pronunciation…?", "Shall we move on to the past simple?")
@@ -320,7 +322,7 @@ export function v2PendingPart(plan: LessonPlan, state: View & Pick<V2State, 'his
   // part-change ask (v2AsksPartChange), and the part comes from it alone. The overview's "…At the end, you can practice
   // pronunciation if you like. Are you ready?" pended Pronunciation, and "Yes." opened its page (mic test 3,
   // embed-1794967959470, flag 1).
-  const ending = langs && !(lastAsk && v2IsPartAsk(lastAsk)) ? v2EndingAsk(sentences, languages) : null;
+  const ending = langs && !(lastAsk && v2IsPartAsk(lastAsk)) ? v2EndingPartAsk(lastTutor, plan, languages) : null;
   const before = sentences.length >= 2 ? sentences[sentences.length - 2]! : '';
   const lead = ending ? ending.lead : before && (langs ? v2IsAskLead(before, languages) : NEXT_LEAD.test(before)) ? before : '';
   const askText = ending ? [lead, ending.ask].filter(Boolean).join(' ') : askNamed ? [lead, lastAsk].filter(Boolean).join(' ') : lastAsk;
@@ -336,7 +338,7 @@ export function v2PendingPart(plan: LessonPlan, state: View & Pick<V2State, 'his
     // opened the next part's page. Otherwise the part comes from the held page or the part named in the ask.
     // Task 7c (7a re-review): a name of the part in hand ("Good, that's your job covered. Any questions first, or shall we go
     // on?") names no part to go to: the frame decides.
-    const index = pickNow ? pickNow.i : others.length ? -1 : movesOn(lastAsk) || !!ending ? v2NextPart(plan, state, cur) : -1;
+    const index = pickNow ? pickNow.i : others.length ? -1 : movesOn(lastAsk) ? v2NextPart(plan, state, cur) : -1;
     if (index >= 0 && index !== cur && index < plan.segments.length - 1 && !paged(plan, state.board, index)) return { index, title: v2PartOf(plan.segments[index]!).label! };
     return null;
   }
@@ -357,9 +359,15 @@ export function v2PendingPart(plan: LessonPlan, state: View & Pick<V2State, 'his
 /** Task 7n (PART_ASK_LANGS): the part ask a reply ends on, read by position in the lesson's `languages` (language-pack.ts
  *  v2EndingAsk): `ask` its own sentences, `lead` the lead that names the part. Null: none, or the switch off. English asks
  *  stay with the frames (v2IsPartAsk). */
-export function v2EndingPartAsk(lastTutor: string, languages?: readonly string[], langs: boolean = TUTOR_V2_PART_ASK_LANGS): { ask: string; lead: string } | null {
-  if (!langs) return null;
-  return v2EndingAsk(stripBoardBlocks(lastTutor).split(SENTENCES).map((x) => x.trim()).filter(Boolean), languages);
+/** Fix round 1 (I1): a part ask only when it names a plan part, in its own words or in the lead before it (「次は X です。」):
+ *  「次の問題に進みましょうか？」, 「次の文に行きましょうか？」, 「では、行きましょうか。」 are the lesson's own next question, sentence or start,
+ *  as English's NOT_THE_LESSON keeps "the next question" out. No plan: none. */
+export function v2EndingPartAsk(lastTutor: string, plan: LessonPlan | undefined, languages?: readonly string[], langs: boolean = TUTOR_V2_PART_ASK_LANGS): { ask: string; lead: string } | null {
+  if (!langs || !plan) return null;
+  const ending = v2EndingAsk(stripBoardBlocks(lastTutor).split(SENTENCES).map((x) => x.trim()).filter(Boolean), languages);
+  if (!ending) return null;
+  const text = [ending.lead, ending.ask].filter(Boolean).join(' ');
+  return plan.segments.some((seg) => !!v2PartOf(seg).label && v2PartNamedIn(seg, text)) ? ending : null;
 }
 
 /** A part's name as said in a sentence ("Your job" → "your job"; a name that starts with a proper noun keeps it). */

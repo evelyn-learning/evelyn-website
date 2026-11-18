@@ -240,10 +240,10 @@ export function v2CountPractice(plan: LessonPlan, state: V2State, said: string |
   if (!v2PracticePart(plan, i)) return;
   const id = plan.segments[i]!.id;
   const lastAsk = stripBoardBlocks(lastTutor).split(/(?<=[.!?。！？])\s*/).map((x) => x.trim()).filter(Boolean).pop() ?? '';
-  const asked = v2AsksPartChange(plan, lastAsk) || !!v2EndingPartAsk(lastTutor, languages, langs);
-  const moveOn = MOVE_ON_ASKED.test(langs ? v2WithoutFillers(said, languages) : said) || (asked && v2MoveAnswer(said, lastTutor, languages, langs) === 'go');
+  const asked = v2AsksPartChange(plan, lastAsk) || !!v2EndingPartAsk(lastTutor, plan, languages, langs);
+  const moveOn = MOVE_ON_ASKED.test(langs ? v2WithoutFillers(said, languages) : said) || (asked && v2MoveAnswer(said, lastTutor, languages, langs, plan) === 'go');
   if (moveOn) { if (!(state.moveOnAsked ?? []).includes(id)) state.moveOnAsked = [...(state.moveOnAsked ?? []), id].slice(-20); return; }
-  if (v2MoveAnswer(said, lastTutor, languages, langs) === 'question' || !v2LearnerSentence(said)) return;
+  if (v2MoveAnswer(said, lastTutor, languages, langs, plan) === 'question' || !v2LearnerSentence(said)) return;
   state.practiceSaid = { ...(state.practiceSaid ?? {}), [id]: Math.min(99, (state.practiceSaid?.[id] ?? 0) + 1) };
 }
 

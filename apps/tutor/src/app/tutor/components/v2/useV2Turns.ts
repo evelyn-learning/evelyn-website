@@ -14,7 +14,7 @@ import type { TutorMilestone } from '@/lib/tutor/orchestrator/types';
 import { V2_OPENING_BLOCK_START, clearV2State, loadV2State, saveV2State, v2StateFromCheckpoint } from '@/lib/tutor/v2/resume';
 import { v2MemoryLines, v2ProfileCommit } from '@/lib/tutor/v2/memory';
 import { V2_BACKGROUND_MAX_LINES } from '@/lib/tutor/v2/background';
-import { v2ProgressAsPainted } from '@/lib/tutor/v2/progress';
+import { V2PagesHeld, v2ProgressAsPainted } from '@/lib/tutor/v2/progress';
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from 'react';
 import type { WhiteboardCommand } from '@core/knowledge/types';
 import { mapFunctionCallToCommand } from '@/app/tutor/hooks/toolDefinitions';
@@ -28,7 +28,7 @@ import { V2_CONTROL_TOOL_NAMES } from '@/lib/tutor/v2/tool-names';
 import { mentionsTool } from '@/lib/tutor/v2/tool-talk';
 import { newV2State, type V2State, type V2ToolCall } from '@/lib/tutor/v2/types';
 import { TUTOR_LESSON_CLOSE_AUTO_END, TUTOR_V2_CHIP_ON_PAINT, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FLAG_CLOCK_PAUSE, TUTOR_V2_TIME_BOX, TUTOR_WORKING_LEVEL, TUTOR_WORKING_LEVEL_ESTIMATE } from '@/lib/tutor/orchestrator/flags';
-import { v2HardStop, v2HardStopDelayMs, v2HardStopMinutes, v2StartClock } from '@/lib/tutor/v2/time-box';
+import { V2_CLOCK_PAUSE_HONOURED, v2HardStop, v2HardStopDelayMs, v2HardStopMinutes, v2StartClock } from '@/lib/tutor/v2/time-box';
 import { v2HardStopNextTime } from '@/lib/tutor/v2/close-invite';
 import { goodbyeLine } from '@/lib/tutor/voice/timebox-lines';
 import { parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
@@ -170,10 +170,10 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   const planRef = useRef<LessonPlan | null>(null); const reportedRef = useRef(''); const milestoneRef = useRef<TutorMilestone | null>(null);
   // Task 7n (CHIP_ON_PAINT): the board shown while a page of this reply is still held for its sentence (null: all painted), and
   // the reply's page calls held and not yet painted.
-  const shownBoardRef = useRef<V2State['board'] | null>(null); const pagesHeldRef = useRef({ turn: 0, n: 0 });
+  const pagesHeldRef = useRef(new V2PagesHeld());
   const reportProgress = useCallback(() => {
     const plan = planRef.current; if (!plan) return;
-    const now = v2ProgressAsPainted(plan, stateRef.current.goals, stateRef.current, shownBoardRef.current);
+    const now = v2ProgressAsPainted(plan, stateRef.current.goals, stateRef.current, pagesHeldRef.current.shown);
     const sig = `${now.currentSegmentId}|${now.completedSegmentIds.join(',')}`;
     if (sig !== reportedRef.current) { reportedRef.current = sig; p.current.onLessonPlanProgress?.({ plan, currentSegmentId: now.currentSegmentId }); p.current.onCompletedSegmentsChange?.(now.completedSegmentIds); }
     if (now.milestone && now.milestone !== milestoneRef.current) { milestoneRef.current = now.milestone; p.current.onMilestone?.(now.milestone); }
@@ -327,8 +327,8 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     let text = '';
     const settled: V2ToolCall[] = [];
     // Task 7n (CHIP_ON_PAINT): this reply's page calls held for their sentence; the chip moves when the last is painted.
-    const turnNo = ++pagesHeldRef.current.turn; pagesHeldRef.current.n = 0; shownBoardRef.current = null; const boardBefore = stateRef.current.board;
-    const pageShown = () => { if (pagesHeldRef.current.turn !== turnNo || --pagesHeldRef.current.n > 0) return; if (shownBoardRef.current) { shownBoardRef.current = null; reportProgress(); } };
+    const turnNo = pagesHeldRef.current.begin(stateRef.current.board);
+    const pageShown = () => { if (pagesHeldRef.current.painted(turnNo)) reportProgress(); };
     try {
       const done = await streamV2Turn({
         session, state: stateRef.current, studentSaid, embedToken: p.current.embedToken, signal: abort.signal,
@@ -383,7 +383,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
           // A rewritten item stands where the one it replaces stood (WhiteboardCanvas.tsx).
           if (cmd && call.replaces) (cmd as unknown as { takesPlaceOf?: string }).takesPlaceOf = call.replaces;
           const pageHeld = TUTOR_V2_CHIP_ON_PAINT && !!p.current.holdBoard && (call.name === 'new_page' || call.name === 'go_to_page');
-          if (cmd && pageHeld) pagesHeldRef.current.n += 1;
+          if (cmd && pageHeld) pagesHeldRef.current.hold(turnNo);
           if (cmd) { const paint = () => { void drawn.then(() => { p.current.onWhiteboardCommand([cmd]); if (pageHeld) pageShown(); }); }; if (p.current.holdBoard) p.current.holdBoard(call, paint); else paint(); }
           if (text && !/\n\n$/.test(text)) text += '\n\n';
         },
@@ -395,7 +395,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       }
       // Task 7n (FLAG_CLOCK_PAUSE): a pause closed while the turn ran is kept. (CHIP_ON_PAINT): a page still held, the chip stays.
       stateRef.current = pausedTotalRef.current > (done.state.clockPausedMs ?? 0) ? { ...done.state, clockPausedMs: pausedTotalRef.current } : done.state;
-      if (pagesHeldRef.current.turn === turnNo && pagesHeldRef.current.n > 0) shownBoardRef.current = boardBefore;
+      pagesHeldRef.current.done(turnNo);
       if (p.current.pronunciation) { const a = done.state.pronunciation?.armed; p.current.onPronunciationArm?.(a ? { seq: a.seq, reference: a.reference } : null); }
       requestLevelEstimate();
       reportSheet();
@@ -587,7 +587,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         log: (type, message) => p.current.onDebugEvent?.(type, message),
       }, farewell);
     // A resumed session's box runs from when the lesson first began.
-    }, afterPause ? v2HardStopDelayMs(stopMin, stateRef.current, Date.now()) : Math.max(5000, stopMin * 60000 - (resumedRef.current ? Date.now() - stateRef.current.startedAtMs : 0)));
+    }, afterPause || (TUTOR_V2_FLAG_CLOCK_PAUSE && resumedRef.current) ? v2HardStopDelayMs(stopMin, stateRef.current, Date.now()) : Math.max(5000, stopMin * 60000 - (resumedRef.current ? Date.now() - stateRef.current.startedAtMs : 0)));
   }, []);
   // Unmounted: a stop under way (waiting on the last words or the goodbye) does nothing more.
   // (Set false on mount: React's development double mount runs this clean-up once before the real mount.)
@@ -650,7 +650,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   // state the turns send (subtracted by the turn route's time rules). Billing and the recorded length read the wall clock.
   const pauseSinceRef = useRef<number | null>(null); const pausedTotalRef = useRef(0);
   const pauseClock = useCallback((paused: boolean) => {
-    if (!TUTOR_V2_FLAG_CLOCK_PAUSE || !openedRef.current || endingRef.current) return;
+    if (!TUTOR_V2_FLAG_CLOCK_PAUSE || !V2_CLOCK_PAUSE_HONOURED || !openedRef.current || endingRef.current) return;
     if (paused) { if (pauseSinceRef.current === null) { pauseSinceRef.current = Date.now(); if (hardStopRef.current) { clearTimeout(hardStopRef.current); hardStopRef.current = null; } } return; }
     const since = pauseSinceRef.current; if (since === null) return; pauseSinceRef.current = null;
     pausedTotalRef.current = Math.max(pausedTotalRef.current, stateRef.current.clockPausedMs ?? 0) + (Date.now() - since);

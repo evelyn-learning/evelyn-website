@@ -358,7 +358,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const input: V2TurnInput = given.session.mode === 'voice' && given.studentSaid ? { ...given, studentSaid: heardAsWords(given.studentSaid) } : given;
   const { session } = input;
   // Task 7n (FLAG_CLOCK_PAUSE): the lesson clock, less the time the tester's flag panel held it (time-box.ts v2LessonNowMs).
-  const nowMs = v2LessonNowMs(input.nowMs ?? Date.now(), input.state);
+  const nowMs = v2LessonNowMs(input.nowMs ?? Date.now(), input.state, session.timeBoxMinutes);
   const callModel = input.callModel ?? defaultModelCall;
   const applyBoard = input.applyBoard ?? applyToModelBoard;
   // The turn works on a copy: a failed model call leaves the caller's state as it was.
@@ -449,7 +449,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // pronunciation, taken up after the offer, ran on the conversation's page (mic test 1, embed-1794882458629). Opened before
   // the facts, so the board they show is the board the reply speaks over.
   let released: V2ToolCall | null = null; let releasedFrom = -1;
-  if (partFlow && session.plan && input.studentSaid !== null && !state.closed && !closingTurn && v2MoveAnswer(input.studentSaid, lastTutorText, askLangs) === 'go') {
+  if (partFlow && session.plan && input.studentSaid !== null && !state.closed && !closingTurn && v2MoveAnswer(input.studentSaid, lastTutorText, askLangs, undefined, session.plan) === 'go') {
     const pending = v2PendingPart(session.plan, state, lastTutorText, input.studentSaid, undefined, askLangs);
     if (pending && !(arrivalOn && state.timeFit?.dropped.includes(session.plan.segments[pending.index]!.id))) {
       const id = `inl_${nowMs.toString(36)}_0`; const args = { title: pending.title }; releasedFrom = state.board.current;
@@ -769,7 +769,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const releaseOn = partFlow && askEvery && TUTOR_V2_HELD_PART_RELEASE && !!session.plan;
   let movedIn: string | null = null;
   // Not while the reply answers their question or redirect ("Please explain that again."): it asks again after (7a I2).
-  const answeredAsk = v2AnswerAsksOrDeclines(input.studentSaid, lastTutorText);
+  const answeredAsk = v2AnswerAsksOrDeclines(input.studentSaid, lastTutorText, askLangs, session.plan);
   const movesIntoHeld = (said: string): boolean => {
     if (!releaseOn || !session.plan || released || movedIn !== null || state.closed || closingTurn || heldAt || answeredAsk) return false;
     const i = v2HeldPartWaiting(session.plan, state);
@@ -932,7 +932,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           // Task 7a (PART_ASK_EVERY): a page of the part in hand, or the first teaching part after the level check, is no part
           // change and goes straight on; a check-in does not leave the way open (mayOpenPart strict).
           const partChange = !askEvery || closingPage || !pagePart || !session.plan || v2PartChangeAsked(session.plan, state, pagePart.index);
-          const holdIt = part.block.kind === 'page' && !discussion && !summaryBegun && !(summaryBefore && closingPage) && ((closingPage ? frameDueOld : frameDue) || (closesLesson(part.block.body) && !!v2UnreachedOffer(session.plan, state))) && partChange && !boardHasPage(part.block.body) && !state.closed && !closingTurn && !releasing && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length, strict: askEvery, ...(askEvery && TUTOR_V2_PAGE_NEEDS_GO ? { go: v2MoveAnswer(input.studentSaid, lastTutorText) === 'go' } : {}) });
+          const holdIt = part.block.kind === 'page' && !discussion && !summaryBegun && !(summaryBefore && closingPage) && ((closingPage ? frameDueOld : frameDue) || (closesLesson(part.block.body) && !!v2UnreachedOffer(session.plan, state))) && partChange && !boardHasPage(part.block.body) && !state.closed && !closingTurn && !releasing && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length, strict: askEvery, ...(askEvery && TUTOR_V2_PAGE_NEEDS_GO ? { go: v2MoveAnswer(input.studentSaid, lastTutorText, askLangs, undefined, session.plan) === 'go' } : {}) });
           // Task 6g: the summary begins here, so a practice ask waiting before it is dropped; any other page lets it go.
           if (part.block.kind === 'page' && !holdIt) { if (closingPage) { gate.summaryBegins(); closingOpened = true; } else gate.releaseAsk(); }
           if (summaryLine) { nextTimeAt = { raw: part.block.raw, line: summaryLine }; nextTimeSaid = true; gate.push(` ${summaryLine} `); gate.flush(); }
@@ -1487,7 +1487,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const last = v2ReplySentences(said).pop() ?? '';
     const plan = session.plan;
     // Task 7n (PART_ASK_LANGS): an ask it ends on by position in the lesson's languages holds its part as well.
-    const q = last && (v2IsPartAsk(last) || !!v2EndingPartAsk(said, askLangs)) ? v2PendingPart(plan, { ...state, heldPage: undefined }, said, null, undefined, askLangs) : null;
+    const q = last && (v2IsPartAsk(last) || !!v2EndingPartAsk(said, plan, askLangs)) ? v2PendingPart(plan, { ...state, heldPage: undefined }, said, null, undefined, askLangs) : null;
     if (q) ownAsk = { id: plan.segments[q.index]!.id, title: q.title };
   }
 
