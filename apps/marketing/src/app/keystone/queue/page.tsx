@@ -167,7 +167,7 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
 
         <section className="ks-card ks-q-sec" id="animate">
           <h2>To animate · {build.length}</h2>
-          <p className="ks-sub">Items with a written solution and no animation yet. Tick items, then choose how each is built, or that it needs none.</p>
+          <p className="ks-sub">Items with a written solution and no animation yet. Items that need no animation are sorted out automatically, with the reason Castle Rock reads; you can put any of them back. Tick items here, then choose how each is built.</p>
           {build.length ? (
             <form action={setAnimateRouteAction}>
               <ul className="ks-q-list">
@@ -181,6 +181,7 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
                       <span className="ks-q-meta">
                         {t.course || "No course"} · {STAGE_LABEL[t.stage as keyof typeof STAGE_LABEL] ?? t.stage} · <b>{ROUTE_WORDS[t.route]}</b>
                         {t.requestedAt && t.route !== "undecided" ? ` since ${pacificTime(new Date(t.requestedAt))}` : ""}
+                        {t.askedBy ? <b className="bad"> · Asked for by Castle Rock ({t.askedBy})</b> : ""}
                       </span>
                     </div>
                   </li>
@@ -196,6 +197,7 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
                 <button className="ks-btn" name="route" value="none">
                   No animation needed
                 </button>
+                <input type="text" name="reason" maxLength={240} placeholder="Reason Castle Rock will read (optional)" style={{ flex: "1 1 260px", minWidth: 0 }} />
                 <button className="ks-btn" name="route" value="undecided">
                   Clear the choice
                 </button>
@@ -218,8 +220,10 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
                       <span className="ks-q-meta">
                         {t.course || "No course"}
                         {t.requestedAt ? ` · decided ${pacificTime(new Date(t.requestedAt))}` : ""}
+                        {t.by === "auto" ? " automatically" : t.by ? ` by ${t.by}` : ""}
                       </span>
                     </div>
+                    <div className="ks-q-why">{t.reason || "No reason recorded: Castle Rock sees the standard sentence."}</div>
                   </li>
                 ))}
               </ul>

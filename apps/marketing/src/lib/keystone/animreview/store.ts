@@ -405,7 +405,7 @@ export async function recordPublish(input: PublishInput, expectVersion: number):
 // ---------- the "To animate" list (owner's queue) ----------
 
 export type AnimateChoice = "api" | "hand" | "none" | "undecided";
-export type ToAnimate = { itemId: string; course: string; stage: string; route: AnimateChoice; requestedAt?: Date };
+export type ToAnimate = { itemId: string; course: string; stage: string; route: AnimateChoice; requestedAt?: Date; reason?: string; by?: string; askedBy?: string };
 const ROUTES = ["api", "hand", "none"];
 
 /**
@@ -427,21 +427,67 @@ export async function toAnimate(role: Role | undefined): Promise<ToAnimate[] | n
     stage: i.stage,
     route: ROUTES.includes(i.animate?.route ?? "") ? (i.animate!.route as AnimateChoice) : "undecided",
     requestedAt: i.animate?.requestedAt,
+    reason: i.animate?.reason,
+    by: i.animate?.requestedBy,
+    askedBy: i.animate?.askedBy,
   }));
 }
 
-/** The owner's decision for the ticked items; "undecided" clears it. */
-export async function setAnimateRoute(itemIds: string[], route: AnimateChoice, who: Who): Promise<Outcome<number>> {
+export const AUTO = "auto";
+export const NO_ANIMATION_DEFAULT = "This solution is worked in a few written steps with nothing to show on a board.";
+
+/**
+ * The owner's decision for the ticked items. "undecided" (clear the choice / put back on the list) is stored as
+ * "wanted", so the automatic decision never marks the item "no animation" again. `reason` goes with "none".
+ */
+export async function setAnimateRoute(itemIds: string[], route: AnimateChoice, who: Who, reason?: string): Promise<Outcome<number>> {
   if (who.role !== "evelyn") return { error: OWNER_ONLY };
   writable();
   const ids = itemIds.filter(isItemId);
   if (!ids.length) return { error: "Tick at least one item." };
   const { Item } = await ks();
-  const r =
-    route === "undecided"
-      ? await Item.updateMany({ itemId: { $in: ids } }, { $unset: { animate: "" } })
-      : await Item.updateMany({ itemId: { $in: ids } }, { $set: { animate: { route, requestedAt: new Date(), requestedBy: who.username } } });
+  const why = (reason ?? "").replace(/\s+/g, " ").trim().slice(0, 240);
+  const animate = { route: route === "undecided" ? "wanted" : route, requestedAt: new Date(), requestedBy: who.username, ...(route === "none" && why ? { reason: why } : {}) };
+  const r = await Item.updateMany({ itemId: { $in: ids } }, { $set: { animate } });
   return { ok: r.modifiedCount };
+}
+
+/** Items the automatic decision has not looked at: a written solution, no animation, no player, no decision at all. */
+export async function needsDecision(): Promise<string[]> {
+  const { Animation, Item } = await ks();
+  const have = await Animation.distinct("itemId");
+  return (
+    await Item.find({ stage: { $in: ["ready", "in_review", "approved"] }, version: { $gt: 0 }, itemId: { $nin: have }, player: { $exists: false }, animate: { $exists: false } })
+      .select("itemId")
+      .sort({ itemId: 1 })
+      .lean()
+  ).map((i) => i.itemId);
+}
+
+/**
+ * Records the automatic decision. It never overrides a person: it writes only where there is no decision yet,
+ * except `reasonOnly`, which fills the reason of an item already marked "No animation needed".
+ */
+export async function recordTriage(itemId: string, animate: boolean, reason: string, reasonOnly = false): Promise<boolean> {
+  writable();
+  if (!isItemId(itemId)) return false;
+  const { Item } = await ks();
+  const r = reasonOnly
+    ? await Item.updateOne({ itemId, "animate.route": "none" }, { $set: { "animate.reason": reason } })
+    : await Item.updateOne({ itemId, animate: { $exists: false } }, { $set: { animate: { route: animate ? "wanted" : "none", requestedAt: new Date(), requestedBy: AUTO, reason } } });
+  return r.modifiedCount === 1;
+}
+
+/**
+ * Castle Rock asks for an animation on an item marked "No animation needed": it goes back on the owner's To
+ * animate list, marked as their request. Any signed-in user may ask; the item's review status does not change.
+ */
+export async function askForAnimation(itemId: string, who: Who): Promise<Outcome> {
+  writable();
+  if (!isItemId(itemId)) return { error: "No such item." };
+  const { Item } = await ks();
+  const r = await Item.updateOne({ itemId, "animate.route": "none" }, { $set: { "animate.route": "wanted", "animate.askedBy": who.username, "animate.requestedAt": new Date() } });
+  return r.modifiedCount ? { ok: true } : { error: "This item is not marked as needing no animation." };
 }
 
 /** For the build scripts and the session: item ids queued for a route that still have no animation, oldest request first. */

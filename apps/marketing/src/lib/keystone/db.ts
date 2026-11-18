@@ -158,7 +158,7 @@ export type ItemDoc = {
   /** Animated (voiced) player attached to the item: files under assets/<itemId>/player/. */
   player?: { entry: string; voice?: string; height: number; note?: string; attachedAt: Date; version?: number };
   /** The owner's decision on this item's animation: build with API credits, build by hand in a session, or none needed. Absent: not decided. */
-  animate?: { route: "api" | "hand" | "none"; requestedAt: Date; requestedBy: string };
+  animate?: { route: "api" | "hand" | "none" | "wanted"; requestedAt: Date; requestedBy: string; reason?: string; askedBy?: string };
   stage: Stage;
   /** The latest key query (kept for the record once answered). Undefined on items never queried. */
   keyQuery?: KeyQueryDoc;
@@ -434,7 +434,7 @@ function defineModels(conn: Connection): Models {
       required: false,
     },
     animate: {
-      type: new Schema({ route: String, requestedAt: Date, requestedBy: String }, { _id: false }),
+      type: new Schema({ route: String, requestedAt: Date, requestedBy: String, reason: String, askedBy: String }, { _id: false }),
       required: false,
     },
     stage: { type: String, index: true },

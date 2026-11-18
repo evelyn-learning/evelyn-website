@@ -161,6 +161,29 @@ async function main() {
   console.log(`refused: ${out.refused.length}, skipped: ${out.skipped.length}`);
   console.log(`total cost: $${total.toFixed(4)} over ${out.runs.length} item(s)`);
   if (out.leftOver.length) console.log(`spend cap reached: not started: ${out.leftOver.join(", ")}`);
+  // Each new written solution is also sorted: needs an animation, or not (with the reason Castle Rock reads).
+  // Never fails the run; KEYSTONE_ANIM_TRIAGE=off skips it.
+  if (!args.dryRun && process.env.KEYSTONE_ANIM_TRIAGE !== "off") {
+    try {
+      const { needsDecision, recordTriage } = await import("../src/lib/keystone/animreview/store");
+      const { triageItem } = await import("../src/lib/keystone/animated/triage");
+      const { ks } = await import("../src/lib/keystone/db");
+      const { Item, Solution } = await ks();
+      const ran = new Set(out.runs.map((r) => r.itemId));
+      const text = (h: string) => h.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+      console.log("\n=== Animation needed? ===");
+      for (const itemId of (await needsDecision()).filter((id) => ran.has(id))) {
+        const item = await Item.findOne({ itemId }).select("subject course itemType questionHtml version").lean();
+        const sol = item?.version ? await Solution.findOne({ itemId, version: item.version }).select("sections").lean() : null;
+        if (!item || !sol) continue;
+        const t = await triageItem({ subject: item.subject || "", course: item.course || "", itemType: item.itemType, questionText: text(item.questionHtml || ""), hasImages: /<img/i.test(item.questionHtml || ""), written: sol.sections.map((x) => `## ${x.kind}\n${x.md}`).join("\n\n") });
+        if (t.ok) await recordTriage(itemId, t.animate, t.reason);
+        console.log(`${itemId}: ${t.ok ? `${t.animate ? "animate" : "no animation"} · ${t.reason}` : `not decided (${t.error})`}  ($${t.cost.toFixed(4)})`);
+      }
+    } catch (e) {
+      console.log(`animation sorting skipped: ${(e as Error).message}`);
+    }
+  }
   await closeKs();
 }
 

@@ -6,7 +6,8 @@ import { ITEM_TYPE_LABEL, OWNER_LABEL, SECTION_TITLE, STAGES, STAGE_HELP, STAGE_
 import { getItem, holdReasons, itemChecks, neighbours, reviewQueue } from "@/lib/keystone/queries";
 import { pacificTime } from "@/lib/keystone/pipeline/status";
 import type { OwnerPipeline } from "@/lib/keystone/store";
-import { setStageAction } from "../../actions";
+import { askForAnimationAction, setStageAction } from "../../actions";
+import { NO_ANIMATION_DEFAULT } from "@/lib/keystone/animreview/store";
 import { TopBar } from "../../_components/TopBar";
 import { Feed, Note, StageChip, ago } from "../../_components/ui";
 import { ReviewBar } from "./ReviewBar";
@@ -293,6 +294,16 @@ export default async function ItemPage({
                   />
                 )}
               </div>
+              {!item.player && item.animate?.route === "none" && solution && (
+                <form action={askForAnimationAction} className="ks-note info ks-noanim">
+                  <input type="hidden" name="itemId" value={itemId} />
+                  <b>No animated version.</b> {item.animate.reason || NO_ANIMATION_DEFAULT} If you would like one,{" "}
+                  <button className="ks-linkbtn">ask for an animation</button>.
+                </form>
+              )}
+              {!item.player && item.animate?.askedBy && item.animate.route !== "none" && (
+                <div className="ks-note info ks-noanim">An animated version has been asked for and is on Evelyn&apos;s list.</div>
+              )}
               {solution ? (
                 solution.sections.map((s, i) => (
                   <div key={s.kind} className="ks-section">

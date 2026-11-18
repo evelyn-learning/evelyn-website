@@ -186,6 +186,16 @@ export async function setAnimateRouteAction(form: FormData) {
   const { setAnimateRoute } = await import("@/lib/keystone/animreview/store");
   const asked = String(form.get("route"));
   const route = asked === "api" || asked === "hand" || asked === "none" ? asked : "undecided";
-  await setAnimateRoute(form.getAll("itemId").map(String), route, { username: user.username, role: user.role });
+  await setAnimateRoute(form.getAll("itemId").map(String), route, { username: user.username, role: user.role }, String(form.get("reason") || ""));
+  revalidatePath("/keystone", "layout");
+}
+
+/** Any signed-in user, on an item marked "No animation needed": ask for an animated version (it returns to the owner's list). */
+export async function askForAnimationAction(form: FormData) {
+  const user = await requireUser();
+  const itemId = String(form.get("itemId") || "");
+  const { askForAnimation } = await import("@/lib/keystone/animreview/store");
+  const r = await askForAnimation(itemId, { username: user.username, role: user.role });
+  if ("ok" in r) await addComment(itemId, "Asked for an animated version of this solution.", user);
   revalidatePath("/keystone", "layout");
 }

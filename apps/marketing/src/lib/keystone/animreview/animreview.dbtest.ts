@@ -206,6 +206,22 @@ const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2
     assert.deepEqual(await s.queuedFor("hand"), []);
     ok(await s.setAnimateRoute([D], "undecided", OWNER));
     assert.deepEqual((await s.toAnimate("evelyn"))!.filter((t) => t.itemId === D).map((t) => t.route), ["undecided"]);
+    // the automatic decision never overrides a person; put back = "wanted", so it is not decided again
+    assert.ok(!(await s.needsDecision()).includes(D));
+    assert.equal(await s.recordTriage(D, false, "Only algebra."), false);
+    await Item.updateOne({ itemId: D }, { $unset: { animate: "" } });
+    assert.ok((await s.needsDecision()).includes(D));
+    assert.equal(await s.recordTriage(D, false, "Only algebra."), true);
+    let t = (await s.toAnimate("evelyn"))!.find((x) => x.itemId === D)!;
+    assert.deepEqual([t.route, t.reason, t.by], ["none", "Only algebra.", "auto"]);
+    assert.equal(await s.recordTriage(D, false, "Three lines of algebra.", true), true);
+    // Castle Rock asks for one: back on the list, marked as theirs
+    ok(await s.askForAnimation(D, REVIEWER));
+    t = (await s.toAnimate("evelyn"))!.find((x) => x.itemId === D)!;
+    assert.deepEqual([t.route, t.askedBy], ["undecided", "qa-rev"]);
+    err(await s.askForAnimation(D, REVIEWER), /not marked/);
+    ok(await s.setAnimateRoute([D], "none", OWNER, "  My own   reason. "));
+    assert.equal((await s.toAnimate("evelyn"))!.find((x) => x.itemId === D)!.reason, "My own reason.");
     await Item.deleteMany({ itemId: { $in: [C, D] } });
 
     console.log("animreview.dbtest: ok");
