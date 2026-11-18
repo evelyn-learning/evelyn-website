@@ -125,7 +125,19 @@ export type BatchDoc = {
   uploadedBy: string;
 };
 
+export type OutboxDoc = {
+  kind: "batch_received" | "items_need_data" | "keys_queried" | "course_missing" | "batch_in_review" | "sample_requested";
+  to: ("julie" | "vance" | "markus")[];
+  subject: string;
+  bodyMd: string;
+  itemIds: string[];
+  batchId?: string;
+  createdAt: Date;
+  draftedAt?: Date;
+};
+
 type Models = {
+  Outbox: Model<OutboxDoc & { openKey?: string }>;
   Batch: Model<BatchDoc>;
   User: Model<UserDoc>;
   Session: Model<SessionDoc>;
@@ -257,7 +269,23 @@ function defineModels(conn: Connection): Models {
     receivedAt: { type: Date, default: () => new Date() },
     uploadedBy: String,
   });
+  // openKey = "<kind>|<batchId>" while a suggestion is open, removed when drafted; the unique index
+  // is what stops two concurrent suggest() calls from creating two open suggestions.
+  const Outbox = new Schema<OutboxDoc & { openKey?: string }>({
+    kind: { type: String, required: true },
+    to: [String],
+    subject: String,
+    bodyMd: String,
+    itemIds: [String],
+    batchId: String,
+    createdAt: { type: Date, default: () => new Date() },
+    draftedAt: Date,
+    openKey: String,
+  });
+  Outbox.index({ kind: 1, batchId: 1, draftedAt: 1 });
+  Outbox.index({ openKey: 1 }, { unique: true, sparse: true });
   return {
+    Outbox: conn.model<OutboxDoc & { openKey?: string }>("Outbox", Outbox, "outbox"),
     Batch: conn.model<BatchDoc>("Batch", Batch, "batches"),
     User: conn.model<UserDoc>("User", User, "users"),
     Session: conn.model<SessionDoc>("Session", Session, "sessions"),
