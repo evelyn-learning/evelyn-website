@@ -65,19 +65,19 @@ ${steps}
 }
 
 /** Their QTI item with our solution in modalFeedback "solution" (theirs replaced). */
-function qtiItem(apip: string, sections: { title: string; html: string }[]): string {
+export function qtiItem(apip: string, sections: { title: string; html: string }[]): string {
   // QTI body elements take no style attribute; vertical-align lives in solution.html only.
   const body = sections
     .map((s) => `<div class="step"><div class="text">${esc(s.title)}</div>${s.html.replace(/\sstyle="[^"]*"/g, "").trim()}</div>`)
     .join("");
   const feedback = `<modalFeedback outcomeIdentifier="FEEDBACK" showHide="show" identifier="solution">${body}</modalFeedback>`;
   if (/<modalFeedback\b[^>]*identifier="solution"[\s\S]*?<\/modalFeedback>/.test(apip)) {
-    return apip.replace(/<modalFeedback\b[^>]*identifier="solution"[^>]*>[\s\S]*?<\/modalFeedback>/, feedback);
+    return apip.replace(/<modalFeedback\b[^>]*identifier="solution"[^>]*>[\s\S]*?<\/modalFeedback>/, () => feedback);
   }
-  return apip.replace(/<\/assessmentItem>\s*$/, `${feedback}</assessmentItem>`);
+  return apip.replace(/<\/assessmentItem>\s*$/, () => `${feedback}</assessmentItem>`);
 }
 
-function qtiManifest(itemId: string, files: string[]): string {
+export function qtiManifest(itemId: string, files: string[]): string {
   const deps = files.map((f) => `<file href="${esc(f)}" />`).join("");
   return `<?xml version="1.0" encoding="UTF-8"?><manifest xmlns="http://www.imsglobal.org/xsd/imscp_v1p1" identifier="Manifest_${itemId}"><metadata><schema>QTIv2.1 Package</schema><schemaversion>1.0.0</schemaversion></metadata><organizations /><resources><resource identifier="item_${itemId}" type="imsqti_item_xmlv2p1" href="item_${itemId}_apip.xml"><file href="item_${itemId}_apip.xml" /><file href="item_${itemId}_metadata.xml" />${deps}</resource></resources></manifest>`;
 }

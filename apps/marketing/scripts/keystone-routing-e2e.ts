@@ -11,8 +11,9 @@
  *   solution refused by the server) → tech re-sends → back with Evelyn.
  *
  * The key queries are raised through the lib (as the pipeline does), so the
- * script needs the app's database settings too: KEYSTONE_MONGODB_URI (or
- * MONGODB_URI) and KEYSTONE_DB_NAME when it is not castle_rock_review.
+ * script needs the app's database settings too: KEYSTONE_MONGODB_URI, set
+ * explicitly (MONGODB_URI is never taken), and KEYSTONE_DB_NAME when it is not
+ * castle_rock_review. It prints the database name and host before it starts.
  *
  *   KS_BASE=https://keystone.evelynlearning.com KS_PW_PRAVEEN=… \
  *   KS_REVIEWER=qa-reviewer KS_PW_REVIEWER=… KS_TECH=qa-tech KS_PW_TECH=… KS_SHOTS=<dir> \
@@ -27,6 +28,8 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import JSZip from "jszip";
 import { closeKs, ks } from "../src/lib/keystone/db";
+import { KEYSTONE_DB } from "../src/lib/keystone/config";
+import { explicitTarget } from "../src/lib/keystone/dbtarget";
 import { raiseKeyQuery, setVerdict, type Actor } from "../src/lib/keystone/store";
 
 const BASE = process.env.KS_BASE!;
@@ -99,6 +102,8 @@ const PASTED =
   'QA TEST: the postamble did not come through. <table width="250" border="0" id="Item1_x"><colgroup><col /><col /></colgroup> <tbody> <tr> <th align="center"><p id="Item1_y">Description</p></th><th align="center"><p>Structure Number</p></th> </tr> <tr> <td><p>A saturated and non-cyclic hydrocarbon</p></td> <td><p><span class="fill-in-the-blank">&nbsp;</span></p></td> </tr> <tr> <td><p>A carboxylic acid</p></td> <td><p>&nbsp;</p></td> </tr> <tr> <td><p>An aliphatic alkene</p></td> <td><p>&nbsp;</p></td> </tr> <tr> <td><p>An aromatic</p></td> <td><p>&nbsp;</p></td> </tr> </tbody> </table>';
 
 async function main() {
+  // Before anything connects: an explicit target only, said out loud.
+  console.log(explicitTarget(process.env, KEYSTONE_DB).line);
   await mkdir(SHOTS, { recursive: true });
   const zip = await testZip();
   const browser = await chromium.launch();

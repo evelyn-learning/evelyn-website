@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/keystone/auth";
 import { ksBase } from "@/lib/keystone/paths";
 import { ITEM_TYPE_LABEL, STAGE_LABEL, type Stage } from "@/lib/keystone/config";
-import { latestVerdicts, listItems, recentActivity, recentUploads, stageCounts } from "@/lib/keystone/queries";
+import { latestVerdicts, listItems, ownerQueue, recentActivity, recentUploads, stageCounts } from "@/lib/keystone/queries";
 import { TopBar } from "./_components/TopBar";
 import { Feed, ItemsTable, ago } from "./_components/ui";
 
@@ -227,10 +227,19 @@ export default async function Overview({ searchParams }: { searchParams: Promise
   const todo = await listItems({ stage: ["received", "drafting", "changes_requested"] });
   const verdicts = await latestVerdicts(todo.map((t) => t.itemId));
   const crFeed = await recentActivity({ roles: ["reviewer", "tech"], limit: 12 });
+  const queue = await ownerQueue(user.role);
   return (
     <>
       <TopBar user={user} on="home" />
       <main className="ks-main">
+        {queue && (
+          <p className="ks-note info ks-q-line">
+            <Link href={`${base}/queue`}>
+              <b>Your queue:</b> {queue.waiting.length} waiting for you · {queue.beforeSolution.length} held before a solution · {queue.going.length} going out by itself
+              {queue.blocked.length ? ` · ${queue.blocked.length} blocked batch${queue.blocked.length === 1 ? "" : "es"}` : ""} →
+            </Link>
+          </p>
+        )}
         <div className="ks-card ks-hero">
           <div>
             <div className="ks-big">{todo.length}</div>

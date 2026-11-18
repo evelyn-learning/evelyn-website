@@ -2,8 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/keystone/auth";
 import { ksBase } from "@/lib/keystone/paths";
-import { ITEM_TYPE_LABEL, OWNER_LABEL, SECTION_TITLE, STAGES, STAGE_HELP, STAGE_LABEL, STAGE_OWNER, can, sectionTitle } from "@/lib/keystone/config";
-import { getItem, neighbours, reviewQueue } from "@/lib/keystone/queries";
+import { ITEM_TYPE_LABEL, OWNER_LABEL, SECTION_TITLE, STAGES, STAGE_HELP, STAGE_LABEL, STAGE_OWNER, can, releasedVersionOf, sectionTitle } from "@/lib/keystone/config";
+import { getItem, holdReasons, itemChecks, neighbours, reviewQueue } from "@/lib/keystone/queries";
+import { pacificTime } from "@/lib/keystone/pipeline/status";
+import type { OwnerPipeline } from "@/lib/keystone/store";
 import { setStageAction } from "../../actions";
 import { TopBar } from "../../_components/TopBar";
 import { Feed, Note, StageChip, ago } from "../../_components/ui";
@@ -12,8 +14,13 @@ import { PlayerButton } from "./PlayerButton";
 import { ctxBackHref, ctxLabel, ctxQuery, isFiltered, parseCtx } from "@/lib/keystone/listctx";
 import { playerUrl } from "@/lib/keystone/assets";
 import { InteractionView } from "./InteractionView";
+import { ChecksPanel } from "../../_components/ChecksPanel";
+import { DoneNote, HeldControls, HoldControl } from "../../_components/OwnerControls";
+import { OwnerKeys } from "../../_components/OwnerKeys";
 
 export const dynamic = "force-dynamic";
+
+const viewingOldFor = (solution: { version: number } | null, item: { version: number }) => !!solution && solution.version !== item.version;
 
 export async function generateMetadata({ params }: { params: Promise<{ itemId: string }> }) {
   return { title: `Item ${(await params).itemId}` };
@@ -40,7 +47,15 @@ export default async function ItemPage({
   const q = ctxQuery(ctx);
   const filter = { stage: ctx.stage, subject: ctx.subject, role: user.role };
   const listName = ctxLabel({ stage: ctx.stage, subject: ctx.subject });
-  const [nb, queue] = await Promise.all([neighbours(itemId, filter), reviewQueue()]);
+  const [nb, queue, checks] = await Promise.all([neighbours(itemId, filter), reviewQueue(), itemChecks(itemId, user.role)]);
+  // Evelyn only, decided here on the server: the hold, its reasons and the Checks panel are never rendered for
+  // Castle Rock (for them `item.stage` is never "ready" and itemChecks returns null).
+  const forOwner = user.role === "evelyn";
+  const pipe = forOwner ? (item.pipeline as OwnerPipeline | undefined) : undefined;
+  // Something to send: the current version's solution row exists and is unreleased (the actions check this again).
+  const sendable = !!solution && solution.version === item.version && !solution.releasedAt && releasedVersionOf(item) < item.version;
+  const ownerHeld = forOwner && item.stage === "ready" && pipe?.heldFor === "praveen" && sendable && !viewingOldFor(solution, item);
+  const ownerGoing = forOwner && item.stage === "ready" && !pipe?.heldFor && sendable;
   const useList = isFiltered(ctx) || !!ctx.from || user.role !== "reviewer";
   // A key query is not a solution: its panel takes the solution's place, for every role.
   const keyQuery = item.stage === "key_query";
@@ -133,6 +148,27 @@ export default async function ItemPage({
                 <Note body={ask.body} />
               </div>
             )}
+          </div>
+        )}
+        {forOwner && <DoneNote done={sp.done} />}
+        {ownerHeld && (
+          <div className="ks-note ks-owner">
+            <b>Held for you.</b> Castle Rock sees this item as Drafting until you send it.
+            <ul className="ks-q-why">
+              {holdReasons(pipe).map((w, i) => (
+                <li key={i}>{w}</li>
+              ))}
+            </ul>
+            {pipe?.seenAt && <div className="ks-q-seen">Seen {pacificTime(new Date(pipe.seenAt))}</div>}
+            <HeldControls itemId={itemId} back="item" ids />
+            <OwnerKeys />
+          </div>
+        )}
+        {ownerGoing && (
+          <div className="ks-note info ks-owner">
+            <b>Passed our checks.</b>{" "}
+            {pipe?.releaseAt ? `Goes to Castle Rock's review by itself ${pacificTime(new Date(pipe.releaseAt))}.` : "No release time yet."}
+            <HoldControl itemId={itemId} back="item" />
           </div>
         )}
         {item.reviewNote && (
@@ -250,6 +286,8 @@ export default async function ItemPage({
             </section>
           )}
         </div>
+
+        {forOwner && <ChecksPanel run={checks} itemKey={item.key || (item.keySource === "evelyn" ? "none supplied" : "–")} />}
 
         <section className="ks-card" style={{ marginTop: 16 }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>

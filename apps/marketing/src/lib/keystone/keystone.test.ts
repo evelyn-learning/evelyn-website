@@ -271,5 +271,13 @@ const sample = path.join(homedir(), "Downloads", "Item234035.zip");
     assert.equal(items[0].resources.size, 1);
     console.log("  real QTI sample 234035 parsed");
   }
+  // M7: a writing script needs KEYSTONE_MONGODB_URI explicitly and says which database and host
+  {
+    const { explicitTarget } = await import("./dbtarget");
+    assert.throws(() => explicitTarget({ MONGODB_URI: "mongodb://127.0.0.1:27017" }, "castle_rock_review"), /KEYSTONE_MONGODB_URI explicitly/, "M7: MONGODB_URI alone is refused");
+    assert.throws(() => explicitTarget({ KEYSTONE_MONGODB_URI: "  " }, "castle_rock_review"), /explicitly/, "M7: blank is refused");
+    const t = explicitTarget({ KEYSTONE_MONGODB_URI: "mongodb://user:secret@db.example:27017/x?authSource=admin" }, "castle_rock_review");
+    assert.equal(t.line, "Database: castle_rock_review on db.example:27017", "M7: name and host, no credentials");
+  }
   console.log("keystone tests passed");
 })();
