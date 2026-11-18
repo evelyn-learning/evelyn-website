@@ -499,8 +499,8 @@ function runCurated(): void {
   // nor any prose rule ever saw "ac" as a token. Prose emits letter NAMES
   // directly ("4 ay see" — bare split letters would re-enter the
   // article-'a' guards); spans split then respell per round-22.
-  tts('what do we need b^2 - 4ac to equal?', 'what do we need bee squared - 4 ay see to equal?', 'prose-4ac-discriminant');
-  tts('plug a = 2, b = k, c = 8 into b^2 - 4ac = 0.', 'plug A equals 2, bee equals k, see equals 8 into bee squared - 4 ay see equals 0.', 'prose-4ac-plugin');
+  tts('what do we need b^2 - 4ac to equal?', 'what do we need bee squared minus 4 ay see to equal?', 'prose-4ac-discriminant');
+  tts('plug a = 2, b = k, c = 8 into b^2 - 4ac = 0.', 'plug A equals 2, bee equals k, see equals 8 into bee squared minus 4 ay see equals 0.', 'prose-4ac-plugin');
   tts('So 2ab plus 4ac minus 3bc.', 'So 2 ay bee plus 4 ay see minus 3 bee see.', 'prose-coeff-products');
   tts('The discriminant is $b^2 - 4ac$.', 'The discriminant is bee squared minus 4 A c.', 'span-4ac');
   // Guards: ordinals, meridiems, units — digit-glued runs that must stay.

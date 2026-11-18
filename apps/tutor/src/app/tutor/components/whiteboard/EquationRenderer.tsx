@@ -155,7 +155,14 @@ export function EquationRenderer({
     const fit = () => {
       const el = containerRef.current;
       if (!el) return;
-      const containerWidth = el.clientWidth;
+      // The room the equation has is its row's, not its own box's. Centred in a row the box is only as wide as
+      // the math in it, so once a line was split the box shrank to the split, the next measure found it "narrower"
+      // and split again: a short reaction that had a whole page to itself ended as three lines 237 px wide (AP
+      // Environmental Science, portal-03406355). Alone in its row, the row's width is the room.
+      const outer = el.parentElement;
+      const row = outer?.parentElement;
+      const rowWidth = row && row.childElementCount === 1 ? row.clientWidth : 0;
+      const containerWidth = Math.max(el.clientWidth, rowWidth);
       if (containerWidth <= 0) return;
 
       // Split at the current width: columns layout first (the classic
@@ -200,7 +207,7 @@ export function EquationRenderer({
         if (!m) return;
         naturalWidth = m.scrollWidth;
         delete el.dataset.fitScale;
-        if (naturalWidth <= containerWidth) {
+        if (naturalWidth <= containerWidth + 1) {
           fade?.update();
           return;
         }
@@ -216,7 +223,7 @@ export function EquationRenderer({
       }
 
       // reflow / leftflush mode
-      if (containerWidth >= naturalWidth) {
+      if (containerWidth + 1 >= naturalWidth) {
         // Panel widened enough for the one-line form again.
         renderTex(processedLatex);
         mode = 'natural';

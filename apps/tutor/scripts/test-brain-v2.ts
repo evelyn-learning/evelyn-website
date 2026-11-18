@@ -1,10 +1,11 @@
 import { BoardInlineStream, boardBlocksIn, inlineToolCall, stripBoardBlocks } from '../src/lib/tutor/v2/board-inline';
-import { richBlocks, typesetMaths, typesetPowers } from '../src/lib/tutor/v2/rich-text';
+import { richBlocks, typesetMaths, typesetPowers, looksLikeCodeLine, isCodeBody } from '../src/lib/tutor/v2/rich-text';
+import { segment, autoWrapLatex, autoWrapUnicodeMath } from '../src/lib/tutor/whiteboard/inline-math';
 import { circuitNetlist, figureCatalogueFor } from '../src/lib/tutor/v2/figure-catalogue';
 import { heardAsWords } from '../src/lib/tutor/v2/heard';
 import { mayOpenPart, partOffer } from '../src/lib/tutor/v2/part-close';
 import { mentionsTool } from '../src/lib/tutor/v2/tool-talk';
-import { applyToModelBoard, renderBoard, boardMisfit, spacedRoman, taskOnly, wordsAsText } from '../src/lib/tutor/v2/board';
+import { applyToModelBoard, renderBoard, boardMisfit, spacedRoman, taskOnly, wordsAsText, stackedRow } from '../src/lib/tutor/v2/board';
 import { anchorSentenceFinal, anchorSentenceIndex, asksAloud, inlineSentenceIndex, saidCovers, unsaidAsk, asksAnywhere } from '../src/lib/tutor/v2/board-timing';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { speaksMaths, unwrittenEquations } from '../src/lib/tutor/v2/spoken-maths';
@@ -17,16 +18,23 @@ import { renderFacts, V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S } from '../src/li
 import type Anthropic from '@anthropic-ai/sdk';
 import { SEED_AP_CALCBC_U4_LHOPITAL } from '../src/lib/tutor/lesson-plan/seeds/ap-calcbc-u4-lhopital';
 import { V2_CONSTITUTION } from '../src/lib/tutor/v2/constitution';
-import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, DISCUSSION_VERDICT_WORDS, V2_DISCUSSION_CONSTITUTION, discussionOf, renderDiscussionMap } from '../src/lib/tutor/v2/discussion';
+import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, DISCUSSION_VERDICT_WORDS, V2_DISCUSSION_CONSTITUTION, directionAnswered, discussionOf, discussionStageIndex, reflectAsked, reflectAtMinutes, renderDiscussionMap, untoldCases } from '../src/lib/tutor/v2/discussion';
 import { PRIVATE_ECS_AI_LITERACY_CH2 } from '../src/lib/tutor/lesson-plan/private/ecs-ai-literacy-ch2';
 import { SEED_PLANS, getLessonPlan, isPrivatePlan } from '../src/lib/tutor/lesson-plan/store';
+import type { LessonPlan as PlanT } from '../src/lib/tutor/lesson-plan/types';
 import { renderPlanMap } from '../src/lib/tutor/v2/plan-map';
 import { v2Tools } from '../src/lib/tutor/v2/tools';
-import { runV2Turn, v2SessionPart, type V2ModelCall, V2_CHECK_INS } from '../src/lib/tutor/v2/turn';
+import { runV2Turn, v2SessionPart, v2StudentBlock, type V2ModelCall, V2_CHECK_INS } from '../src/lib/tutor/v2/turn';
 import { newV2State, type V2Session } from '../src/lib/tutor/v2/types';
+import { answeredAsItEnded } from '../src/lib/tutor/v2/interrupted';
 import { paintsOnBoard, streamV2Turn } from '../src/lib/tutor/v2/client';
 import { gradeOfLevel, isMathsSubject, isScienceSubject } from '../src/lib/tutor/v2/session-kind';
-import { v2Progress } from '../src/lib/tutor/v2/progress';
+import { v2Progress, goalForProblem, goalForTitle, goalForTalk, laterPartAlone, wholeProblem } from '../src/lib/tutor/v2/progress';
+import * as envsciSeed from '../src/lib/tutor/lesson-plan/seeds/ap-envsci-u1-carbon-water-cycles';
+import { SEED_AP_STATS_U2_SCATTERPLOTS } from '../src/lib/tutor/lesson-plan/seeds/ap-stats-u2-scatterplots';
+import { SEED_AP_APGOV_U2_PRESIDENCY } from '../src/lib/tutor/lesson-plan/seeds/ap-apgov-u2-presidency';
+import { SEED_AP_CALCBC_U5_FIRST_DERIVATIVE_ANALYSIS } from '../src/lib/tutor/lesson-plan/seeds/ap-calcbc-u5-first-derivative-analysis';
+import { closeDueMinutes, reopensClose, asksToWait } from '../src/lib/tutor/v2/close-heard';
 import { v2Background } from '../src/lib/tutor/v2/background';
 import { V2_MASTERY_DOWN, V2_MASTERY_UP, V2_MASTERY_UP_MIXED, v2Mastery, v2MemoryLines, v2ProfileCommit } from '../src/lib/tutor/v2/memory';
 import { v2StateFromCheckpoint } from '../src/lib/tutor/v2/resume';
@@ -262,7 +270,7 @@ async function main() {
     const orderCall: V2ModelCall = async (params, onText) => { if (/board check/.test(lastOf(params))) return msg([{ type: 'text', text: '1: none\n<board equation with="Yes, du = dx and v">du = dx,\\quad v = -\\cos x</board>\n3: none' }], 'end_turn'); onText?.(parts8); return msg([{ type: 'text', text: parts8 }], 'end_turn'); };
     const ord = await runV2Turn({ session: voice, state: st6(), studentSaid: 'du is dx and v is negative cos x', callModel: orderCall });
     const ordItems = ord.state.board.pages[0].items.filter((it) => it.tool === 'show_equation');
-    check('what the check writes for an earlier sentence goes above the item that followed it', ordItems.length === 2 && /du=dx/.test(ordItems[0].core ?? '') && ord.toolCalls.find((c) => /du = dx/.test(String(c.args.latex)))?.before === ordItems[1].id, { ordItems, calls: ord.toolCalls });
+    check('what the check writes for an earlier sentence goes under what is already up, never above it', ordItems.length === 2 && /du=dx/.test(ordItems[1].core ?? '') && ord.toolCalls.every((c) => c.before === undefined), { ordItems, calls: ord.toolCalls });
     // Round 9 (biology, embed-1794520770137).
     const heldCalls: Array<{ name: string; outcome: string }> = [];
     await runV2Turn({ session: physics, state: pages7(), studentSaid: 'Uh, yes, they do.', callModel: say7(flip), boardPass: false, onToolCall: (c) => heldCalls.push(c) });
@@ -315,6 +323,14 @@ async function main() {
     check('a circuit figure is drawn by the circuit tool, and the catalogue offers one circuit', circ?.name === 'show_circuit' && /\n  circuit: /.test(`\n${figureCatalogueFor({ subject: 'sci', topic: 'physics', level: '12' })}`) && !/simple_circuit/.test(figureCatalogueFor({ subject: 'sci', topic: 'physics', level: '12' })), circ);
     const gr = inlineToolCall(boardBlocksIn('<board graph x="0..5" y="0..1.2" xname="time, in time constants" yname="fraction of full charge">1 - e^{-x}</board>')[0]);
     check('a graph block names its axes', gr?.args.xLabel === 'time, in time constants' && gr?.args.yLabel === 'fraction of full charge', gr);
+    // A derivative named in a sentence is set whole, and so is a number on x standing by itself (portal-8e2d86f3).
+    check('f prime in a sentence is one piece of mathematics', typesetMaths("Critical point: where f'(x) = 0 or f'(x) does not exist.") === "Critical point: where $f'(x) = 0$ or $f'(x)$ does not exist." && typesetMaths("At x = 0: f' goes from negative to positive.") === "At $x = 0$: $f'$ goes from negative to positive." && typesetMaths("Sign of f' and the shape of f") === "Sign of $f'$ and the shape of $f$", typesetMaths("At x = 0: f' goes from negative to positive."));
+    check('a number on x said by itself is mathematics; "2x faster" is not', typesetMaths('For x < 0, 2x is negative, so f is falling.') === 'For $x < 0$, $2x$ is negative, so $f$ is falling.' && typesetMaths('It runs 2x faster now.') === 'It runs 2x faster now.' && typesetMaths("the student's answer") === "the student's answer", typesetMaths('It runs 2x faster now.'));
+    {
+      const fd = SEED_AP_CALCBC_U5_FIRST_DERIVATIVE_ANALYSIS;
+      check('a plan problem asked in other words is known by its formula; a formula of the tutor\'s own belongs to no part', goalForProblem(fd, 'For f(x) = x³ − 12x, find the intervals where f is increasing and where it is decreasing, and find the local maximum and local minimum.') === 'try-analyze' && goalForProblem(fd, 'For f(x) = x^4 - 8x^2 + 1 on the closed interval [-3, 2], find the absolute maximum and the absolute minimum, using the Candidates Test.') === 'try-absolute' && goalForProblem(fd, 'For f(x) = x^3 - 3x on the closed interval [-2, 3], find the absolute maximum and the absolute minimum, using the Candidates Test.') === null && goalForProblem(fd, 'For f(x) = x^2 on the closed interval [-1, 2], find the absolute maximum and the absolute minimum.') === null);
+    }
+    check('several statements typed as one row go up one to a line', stackedRow('f(-3) = 81 - 72 + 1 = 10, \\quad f(-2) = 16 - 32 + 1 = -15, \\quad f(0) = 1, \\quad f(2) = -15') === '\\begin{aligned} &f(-3) = 81 - 72 + 1 = 10 \\\\ &f(-2) = 16 - 32 + 1 = -15 \\\\ &f(0) = 1 \\\\ &f(2) = -15 \\end{aligned}' && stackedRow('f(0) = 0, \\quad f(2) = 4') === 'f(0) = 0, \\quad f(2) = 4' && stackedRow('x = \\frac{a}{b} \\quad \\text{for all } t') === 'x = \\frac{a}{b} \\quad \\text{for all } t' && stackedRow('a = 1 \\\\ b = 2, \\quad c = 3') === 'a = 1 \\\\ b = 2, \\quad c = 3', stackedRow('f(0) = 0, \\quad f(2) = 4'));
     check('a unit with a prefix on a card is not mathematics', typesetMaths('A 100 μF capacitor charges through a 10 kΩ resistor.') === 'A 100 μF capacitor charges through a 10 kΩ resistor.', typesetMaths('A 100 μF capacitor charges through a 10 kΩ resistor.'));
     check('the opening is short and ends by asking', /three sentences at most/.test(JSON.stringify((await (async () => { let seen = ''; const spy: V2ModelCall = async (params, onText) => { seen = JSON.stringify(params.messages); onText?.('Hi.'); return msg([{ type: 'text', text: 'Hi.' }], 'end_turn'); }; await runV2Turn({ session: voice, state: newV2State(1_000_000), studentSaid: null, callModel: spy, boardPass: false }); return seen; })()))), '');
     const paras = new SentenceStream(); const paraCut = [...paras.push('Yes, both right. They ranked above mestizos.\n\nNext is the debate. Las Casas argued one side.\n'), ...paras.push('\nWhich side won? '), ...paras.flush()];
@@ -348,7 +364,9 @@ async function main() {
     check('a before-and-after pair is two catalogue figures, and half a pair is refused', boardMisfit('show_diagram', pair) === null && /radius is missing/.test(String(boardMisfit('show_diagram', { type: 'before_after', params: { ...pair.params, after: { kind: 'rotation', params: {} } } }))) && /at is the place along/.test(String(boardMisfit('show_diagram', { type: 'rigid_body', params: { forces: [{ at: 3, direction: 'down', label: '5 N' }] } }))) && boardMisfit('show_diagram', { type: 'rigid_body', params: { forces: [{ at: 0.2, direction: 'down', label: '5 N' }], supports: [{ at: 0.5 }] } }) === null, pair);
     check('each subject is offered its own tool figures', /\n  boxplot: /.test(`\n${figureCatalogueFor({ subject: 'math', topic: 'ap-statistics', level: '12' })}`) && /annotated_passage/.test(figureCatalogueFor({ subject: 'ela', topic: 'ap-english-lit', level: '11' })) && /rigid_body[\s\S]*before_after|before_after[\s\S]*rigid_body/.test(physCat) && /molecule/.test(figureCatalogueFor({ subject: 'sci', topic: 'chemistry', level: '11' })) && !/molecule|boxplot/.test(physCat), physCat.length);
     const stmt = stub([msg([{ type: 'text', text: 'Yes, it never stops. The program crashes with a StackOverflowError.' }], 'end_turn')]);
-    const rStmt = await runV2Turn({ session: voice, state: { ...newV2State(1_000_000), history: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'What happens?' }] }, studentSaid: 'it goes on forever', callModel: stmt.call, boardPass: false });
+    const rStmt = await runV2Turn({ session: voice, state: { ...newV2State(1_000_000), history: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'What happens?' }] }, studentSaid: 'it goes on forever', nowMs: 1_000_000 + 60000, callModel: stmt.call, boardPass: false });
+    const rBye = await runV2Turn({ session: { ...voice, timeBoxMinutes: 30 }, state: { ...newV2State(1_000_000), history: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'What happens?' }] }, studentSaid: 'ok', nowMs: 1_000_000 + 29 * 60000, callModel: stub([msg([{ type: 'text', text: 'Good work today.' }], 'end_turn')]).call, boardPass: false });
+    check('with the close due, a goodbye is not followed by a check-in', rBye.spoken === 'Good work today.', rBye.spoken);
     check('a spoken reply that asks nothing ends by handing the turn over', V2_CHECK_INS.some((c) => rStmt.spoken.endsWith(c)) && V2_CHECK_INS.some((c) => JSON.stringify(rStmt.state.history[rStmt.state.history.length - 1]).includes(c)), rStmt.spoken);
     const asked = stub([msg([{ type: 'text', text: 'Have you met the disc method before? Picture the region spinning around the axis.' }], 'end_turn')]);
     const ra = await runV2Turn({ session: voice, state: { ...newV2State(1_000_000), history: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'Hello.' }] }, studentSaid: 'ok', callModel: asked.call, boardPass: false });
@@ -412,7 +430,7 @@ async function main() {
     const re = await runV2Turn({ session, state: newV2State(1_000_000), studentSaid: 'e', nowMs: 1_000_000 + 10 * 60000, callModel: early.call });
     check('the tutor cannot end the lesson by itself with time left: it is sent back to offer the choice', !re.state.closed && re.modelCalls === 2 && /not ended/.test(re.toolCalls[0].outcome));
     const late = stub([msg([{ type: 'text', text: 'Time is nearly up. Well done.' }, { type: 'tool_use', id: 'z2', name: 'end_lesson', input: { because: 'time_nearly_used', summary: 's' } }], 'tool_use')]);
-    const rl = await runV2Turn({ session, state: newV2State(1_000_000), studentSaid: 'e', nowMs: 1_000_000 + 22 * 60000, callModel: late.call });
+    const rl = await runV2Turn({ session, state: newV2State(1_000_000), studentSaid: 'e', nowMs: 1_000_000 + 23.5 * 60000, callModel: late.call });
     check('near the end of the time it can', rl.state.closed);
   }
   {
@@ -494,6 +512,21 @@ async function main() {
   const c = stub([msg([{ type: 'text', text: 'Good work today.' }, { type: 'tool_use', id: 't7', name: 'end_lesson', input: { because: 'student_asked', summary: 'Did 0/0 limits.' } }], 'tool_use')]);
   const r3 = await runV2Turn({ session, state: r2.state, studentSaid: 'Can we stop?', callModel: c.call });
   check('end_lesson closes the session without another model call', r3.state.closed && r3.state.closeSummary === 'Did 0/0 limits.' && r3.modelCalls === 1);
+  {
+    // A lesson stopped before its recap ends on a recap page made from the plan's own points.
+    const planR = SEED_AP_CALCBC_U5_FIRST_DERIVATIVE_ANALYSIS;
+    const bye = () => stub([msg([{ type: 'text', text: 'Good work today.' }, { type: 'tool_use', id: 'e9', name: 'end_lesson', input: { because: 'student_asked', summary: 's' } }], 'tool_use')]);
+    const stR = newV2State(1_000_000); applyToModelBoard(stR.board, 'pg', 'new_page', { title: 'Try it' }); stR.goals = { 'concept-first-deriv': { status: 'shown', at: 1 } } as never;
+    const rr = await runV2Turn({ session: { ...session, plan: planR }, state: stR, studentSaid: "I'll just stop here", callModel: bye().call });
+    const note = rr.toolCalls.find((c) => c.name === 'annotate');
+    check('a lesson stopped early ends on a recap page of the plan\'s points, with no further model call', rr.state.closed && rr.modelCalls === 1 && rr.toolCalls.some((c) => c.name === 'new_page' && c.args.title === 'Recap') && /Critical points/.test(String(note?.args.text)) && rr.state.board.pages[rr.state.board.current].title === 'Recap' && !!rr.state.partsSeen?.recap, rr.toolCalls.map((c) => [c.name, c.outcome]));
+    const stN = newV2State(1_000_000); applyToModelBoard(stN.board, 'pg', 'new_page', { title: 'Opening' });
+    const rn = await runV2Turn({ session: { ...session, plan: planR }, state: stN, studentSaid: "I'll just stop here", callModel: bye().call });
+    check('no recap page when the idea was never taught', rn.state.closed && !rn.toolCalls.some((c) => c.name === 'new_page'), rn.toolCalls.map((c) => c.name));
+    const stH = newV2State(1_000_000); applyToModelBoard(stH.board, 'pg', 'new_page', { title: 'Recap' }); stH.goals = { 'concept-first-deriv': { status: 'shown', at: 1 } } as never;
+    const rh = await runV2Turn({ session: { ...session, plan: planR }, state: stH, studentSaid: 'bye', callModel: bye().call });
+    check('no second recap page when one is already up', rh.state.closed && !rh.toolCalls.some((c) => c.name === 'new_page'), rh.toolCalls.map((c) => c.name));
+  }
   const roles = r3.state.history.map((m) => m.role).join(',');
   check('stored history never has two assistant messages in a row', !/assistant,assistant/.test(roles), roles);
 
@@ -655,10 +688,39 @@ async function main() {
   const tEnd = await runV2Turn({ session: { ...s13, timeBoxMinutes: 30 }, state: newV2State(0), studentSaid: 'x is 3', facts: { nowMs: 22 * 60000 }, nowMs: 22 * 60000, callModel: ended.call, boardPass: false });
   const refusal = tEnd.toolCalls.find((c) => c.name === 'end_lesson')?.outcome ?? '';
   check('a close refused with time left is not worded as something to repeat to the student', /^not ended/.test(refusal) && !/minutes remain|has not asked/.test(refusal) && !tEnd.state.closed, refusal);
-  check('the facts say how much time is left and that the close is not due', /about 8 left, which is time for more/.test(renderFacts(s13, newV2State(0), { nowMs: 22 * 60000 })) && /the close is near/.test(renderFacts(s13, newV2State(0), { nowMs: 26 * 60000 })), renderFacts(s13, newV2State(0), { nowMs: 22 * 60000 }).split('\n')[1]);
+  check('the facts say how much time is left and that the close is not due', /about 8 left, which is time for more/.test(renderFacts(s13, newV2State(0), { nowMs: 22 * 60000 })) && /tell the student/.test(renderFacts(s13, newV2State(0), { nowMs: 28.5 * 60000 })), renderFacts(s13, newV2State(0), { nowMs: 22 * 60000 }).split('\n')[1]);
   const planP = { segments: [{ id: 'hook', kind: 'hook' }, { id: 'c', kind: 'concept' }, { id: 't1', kind: 'try_yourself' }, { id: 't2', kind: 'try_yourself' }, { id: 'mis', kind: 'misconception_check' }, { id: 'recap', kind: 'recap' }] } as never;
   const goalsP = { hook: { status: 'shown', at: 1 }, c: { status: 'shown', at: 2 }, t1: { status: 'shown', at: 3 }, t2: { status: 'demonstrated', at: 4 }, mis: { status: 'shown', at: 9 } } as never;
+  {
+    // A part the lesson was on and has left is behind the student (portal-a4f66d55).
+    const leftTry = v2Progress(planP, { hook: { status: 'shown', at: 1 }, c: { status: 'shown', at: 2 }, t1: { status: 'shown', at: 3 } } as never, { t1: 3, c: 9 });
+    check('a practice problem the lesson has left shows as done, and the part the board is on is the one in hand', leftTry.currentSegmentId === 'c' && leftTry.completedSegmentIds.includes('t1'), leftTry);
+    const onTry = v2Progress(planP, { hook: { status: 'shown', at: 1 }, t1: { status: 'shown', at: 3 } } as never, { t1: 3 });
+    check('while it is the part in hand it is not done', onTry.currentSegmentId === 't1' && !onTry.completedSegmentIds.includes('t1'), onTry);
+    check('a closing question answered as it ended was heard', answeredAsItEnded('Yeah.', ['Good.', 'Shall we go on, or do you have a question first?'], 2) && answeredAsItEnded("Yeah, let's go.", ['Shall we go on?'], 1));
+    check('but not a longer reply, an earlier sentence, or a statement', !answeredAsItEnded('wait what did you say about the wheat side of it', ['Shall we go on?'], 1) && !answeredAsItEnded('Yeah.', ['What is your first step?', 'Take your time.', 'Shall we go on?'], 1) && !answeredAsItEnded('Yeah.', ['The curve bows out.'], 1));
+  }
   check('the part in hand is the one the tutor last marked, not one left open earlier', v2Progress(planP, goalsP).currentSegmentId === 'mis' && v2Progress(planP, { ...(goalsP as object), mis: { status: 'demonstrated', at: 9 } } as never).currentSegmentId === 'recap' && v2Progress(planP, { hook: { status: 'shown' } } as never).currentSegmentId === 'c', v2Progress(planP, goalsP).currentSegmentId);
+  // portal-1115afec (AP US Government, federalism): the plan runs practice problem, then common-mistake check; the
+  // tutor took the check first. The chips showed Recap in hand through the whole practice problem.
+  const planF = { segments: [{ id: 'hook', kind: 'hook' }, { id: 'c', kind: 'concept' }, { id: 'w', kind: 'worked_example' }, { id: 'try', kind: 'try_yourself' }, { id: 'mis', kind: 'misconception_check' }, { id: 'recap', kind: 'recap' }] } as never;
+  const goalsF = { hook: { status: 'shown', at: 1 }, c: { status: 'shown', at: 2 }, w: { status: 'shown', at: 3 }, mis: { status: 'demonstrated', at: 4 } };
+  check('a part taken out of order does not carry the lesson past one never started', v2Progress(planF, goalsF as never).currentSegmentId === 'try'
+    && v2Progress(planF, { ...goalsF, try: { status: 'skipped', at: 5 } } as never).currentSegmentId === 'recap'
+    && v2Progress(planF, { ...goalsF, try: { status: 'shown', at: 5 }, recap: { status: 'shown', at: 6 } } as never).currentSegmentId === 'recap', v2Progress(planF, goalsF as never).currentSegmentId);
+  const money = 'Working: categorical $581B ÷ total $692B ≈ 84%, so most grant money comes with federal conditions attached.';
+  const shownMoney = (t: string) => segment(autoWrapLatex(autoWrapUnicodeMath(typesetPowers(typesetMaths(t))))).filter((x) => x.kind === 'math').map((x) => x.body);
+  check('amounts of money on a card are not mathematics', typesetPowers(typesetMaths(money)) === money && shownMoney(money).length === 0
+    && typesetMaths('Maya has $50 and a $15 ticket, from $5 to $10.') === 'Maya has $50 and a $15 ticket, from $5 to $10.'
+    && typesetMaths('It costs $5, and $x$ more gives y = 2x.') === 'It costs $5, and $x$ more gives $y = 2x$.'
+    && typesetMaths('Here $3 + 4 = 7$ and $2M$ stay.') === 'Here $3 + 4 = 7$ and $2M$ stay.', `${typesetPowers(typesetMaths(money))} | ${JSON.stringify(shownMoney(money))}`);
+  check('words over the closing words call the close off; thanks and a goodbye do not', reopensClose('Wait, I have a question about Lopez.') && reopensClose('can we do one more') && reopensClose('no')
+    && !reopensClose('Okay, thank you so much. Bye!') && !reopensClose('Thanks, see you next time.') && !reopensClose('yeah') && !reopensClose(' ... ') && !reopensClose('Thank you, Mr. Cole.') && reopensClose('Okay, wait.') && reopensClose('Thanks. One more?'), String(reopensClose('Thank you, Mr. Cole.')));
+  const early = stub([msg([{ type: 'text', text: 'Good work today.' }, { type: 'tool_use', id: 'e1', name: 'end_lesson', input: { because: 'time_nearly_used', summary: 'done' } }], 'tool_use'), msg([{ type: 'text', text: 'What would you like next?' }], 'end_turn')]);
+  const tEarly = await runV2Turn({ session: { ...s13, timeBoxMinutes: 30 }, state: newV2State(0), studentSaid: 'regulate commerce', facts: { nowMs: 24.4 * 60000 }, nowMs: 24.4 * 60000, callModel: early.call, boardPass: false });
+  const late = stub([msg([{ type: 'text', text: 'Good work today.' }, { type: 'tool_use', id: 'e1', name: 'end_lesson', input: { because: 'time_nearly_used', summary: 'done' } }], 'tool_use')]);
+  const tLate = await runV2Turn({ session: { ...s13, timeBoxMinutes: 30 }, state: newV2State(0), studentSaid: 'regulate commerce', facts: { nowMs: 28.5 * 60000 }, nowMs: 28.5 * 60000, callModel: late.call, boardPass: false });
+  check('a lesson is not closed by the tutor with more than five minutes of thirty left', !tEarly.state.closed && tLate.state.closed === true && /about 6 left, which is time for more/.test(renderFacts(s13, newV2State(0), { nowMs: 24.4 * 60000 })), renderFacts(s13, newV2State(0), { nowMs: 24.4 * 60000 }).split('\n')[1]);
   check('brackets in spoken mathematics are heard as pauses and a product is said', speakGroups('the factors are (x minus 5)(x + 2), since') === 'the factors are x minus 5, times, x + 2, since' && speakGroups('1 + 2(x minus 4) equals 9') === '1 + 2 times, x minus 4, equals 9' && speakGroups('the point (3 comma 4) and (as we said) f of x') === 'the point (3 comma 4) and (as we said) f of x', speakGroups('1 + 2(x minus 4) equals 9'));
   const fig = (kind: string, params: object) => inlineToolCall(boardBlocksIn(`<board figure kind="${kind}">${JSON.stringify(params)}</board>`)[0]);
   const refr = fig('refraction', { n1: 1, n2: 1.33, angle: 30, media: ['air', 'water'] });
@@ -700,6 +762,45 @@ async function main() {
   check('a number line reads fractions and keeps a 0-to-1 scale to 0 to 1 (demo check 11-13)', nlHalf.min === 0 && nlHalf.max === 1 && nlHalf.step === 0.5 && nlHalf.points.map((p) => p.value).join() === '0,0.5,1', JSON.stringify(nlHalf));
   const nlInt = inlineToolCall(boardBlocksIn('<board numberline>\n-3 | open\n2\n</board>')[0]).args as { min: number; max: number; step: number };
   check('a number line of whole numbers keeps its room either side', nlInt.min === -7 && nlInt.max === 6 && nlInt.step === 1, JSON.stringify(nlInt));
+  // portal-02fd8638 (compound inequalities): "-2 < x ≤ 3" was written as two shaded values and went up as two rays,
+  // each to the end of the line, so everything from -6 to 7 was shaded and each ray ended on a filled dot.
+  type Iv = { from: number; to: number; fromInclusive: boolean; toInclusive: boolean; fromOpenEnded?: boolean; toOpenEnded?: boolean };
+  const nl = (body: string) => (inlineToolCall(boardBlocksIn(`<board numberline>\n${body}\n</board>`)[0]).args as { intervals: Iv[] }).intervals;
+  const between = nl('-2 | open | right\n3 | closed | left');
+  check('two values shaded towards each other are the stretch between them', between.length === 1 && between[0].from === -2 && between[0].to === 3 && between[0].fromInclusive === false && between[0].toInclusive === true && !between[0].fromOpenEnded && !between[0].toOpenEnded && JSON.stringify(nl('3 | closed | left\n-2 | open | right')) === JSON.stringify(between), JSON.stringify(between));
+  const apart = nl('-2 | open | left\n5 | closed | right');
+  check('two values shaded away from each other are two rays, each running on past the end of the line', apart.length === 2 && apart[0].to === -2 && apart[0].toInclusive === false && apart[0].fromOpenEnded === true && apart[1].from === 5 && apart[1].fromInclusive === true && apart[1].toOpenEnded === true && nl('4 | open | right').length === 1 && nl('4 | open | right')[0].toOpenEnded === true, JSON.stringify(apart));
+  check('the turn after keeping quiet is told not to remark on the wait', /no remark about the wait/.test(renderFacts(s13, newV2State(0), { nowMs: 60000, silenceSeconds: 5 })) && v2StudentBlock(null, { ...newV2State(0), history: [{ role: 'user', content: 'x' }] } as never, 5) === '[The student has said nothing more: they had finished.]' && v2StudentBlock(null, { ...newV2State(0), history: [{ role: 'user', content: 'x' }] } as never, 75) === '[The student has not replied.]');
+  // portal-50a1e584 (Algebra 1, relations and functions).
+  check('a set of numbers at the end of a line is not program code', !looksLikeCodeLine('Domain = inputs, each once, in order: {−3, −1, 2, 5}') && !isCodeBody('Domain = inputs, each once, in order: {−3, −1, 2, 5}\nRange = outputs, each once, in order: {−6, 0, 4}') && looksLikeCodeLine('int[] a = {1, 2, 3};') && looksLikeCodeLine('if (n <= 0) { return 0; }') && looksLikeCodeLine('}'));
+  check('a function at a negative number is typeset like its fellows', typesetMaths('If f(x) = 5 − 2x, what is f(−4)? Give the number.') === 'If $f(x) = 5 - 2x$, what is $f(-4)$? Give the number.' && typesetMaths('Evaluating f(x)') === 'Evaluating $f(x)$', typesetMaths('If f(x) = 5 − 2x, what is f(−4)? Give the number.'));
+  check('a request to wait is heard as one', asksToWait("Yeah, I'm here. I I just want you to pause for a second. I'm looking at something else.") && asksToWait('hold on, give me a minute') && asksToWait('wait a sec') && asksToWait('one moment please') && !asksToWait('I waited a second and then divided') && !asksToWait('wait, why is it negative?') && !asksToWait('the answer is 3'));
+  const planR = { title: 'Relations and functions', estimatedMinutes: 25, los: [{ id: 'lo1', description: 'Tell a function from a relation.' }], segments: [{ id: 'hook', kind: 'hook' }, { id: 'c', kind: 'concept' }, { id: 'w1', kind: 'worked_example', problem: 'Is the relation {(−3, 4), (−1, 0), (2, 4), (5, −6)} a function? State its domain and range.' }, { id: 't2', kind: 'try_yourself', problem: 'If f(x) = 5 − 2x, what is f(−4)?' }, { id: 't3', kind: 'try_yourself', problem: 'The relation {(−5, 2), (−1, 7), (0, 2), (3, 9), (6, 7)} is a function. How many numbers are in its range? Type your answer as a number.' }, { id: 'mis', kind: 'misconception_check', question: 'Given f(x) = 2x + 1, a student writes f(3) = f · 3 = 3f. Another student decides f(3) means "set 2x + 1 equal to 3 and solve", getting x = 1. What went wrong in each case?' }, { id: 'recap', kind: 'recap' }] } as never;
+  check('a problem put on the board is known for the part of the plan it belongs to', goalForProblem(planR, 'Is the relation {(−3, 4), (−1, 0), (2, 4), (5, −6)} a function? If so, state its domain and range.') === 'w1' && goalForProblem(planR, 'If $f(x) = 5 - 2x$, what is f(−4)? Give the number.') === 't2' && goalForProblem(planR, 'The relation {(−5, 2), (−1, 7), (0, 2), (3, 9), (6, 7)} is a function. How many numbers are in its range? Give a number.') === 't3' && goalForProblem(planR, 'Given f(x) = 2x + 1, one student writes f(3) = 3f. Another decides f(3) means solve 2x + 1 = 3. What went wrong in each case?') === 'mis' && goalForProblem(planR, 'Is the relation {(1, 5), (2, 5), (3, 5)} a function? Say yes or no, and why.') === null, String(goalForProblem(planR, 'Given f(x) = 2x + 1, one student writes f(3) = 3f. Another decides f(3) means solve 2x + 1 = 3. What went wrong in each case?')));
+  const shownT2 = v2Progress(planR, { t2: { status: 'shown', at: 5 } } as never);
+  check('with a practice problem on the board, the parts only told before it are behind the student', shownT2.currentSegmentId === 't2' && shownT2.completedSegmentIds.join() === 'hook,c,w1', JSON.stringify(shownT2));
+    const sayR = (text: string): V2ModelCall => async (_params, onText) => { onText?.(text); return msg([{ type: 'text', text }], 'end_turn'); };
+  const tGoal = await runV2Turn({ session: { ...s13, plan: planR }, state: newV2State(0), studentSaid: 'ok', nowMs: 60000, callModel: sayR('Try this one.\n\n<board problem>If f(x) = 5 − 2x, what is f(−4)? Give the number.</board>\n\nWhat do you get?'), boardPass: false });
+  check('putting a plan problem on the board marks its part as begun, without the tutor recording it', tGoal.state.goals.t2?.status === 'shown' && !tGoal.state.goals.t3, JSON.stringify(tGoal.state.goals));
+  check('the close of a lesson is due with two minutes left, and the tutor is told to say so', closeDueMinutes(30) === 2 && closeDueMinutes(60) === 2 && closeDueMinutes(5) === 1 && /about 2 left[^\n]*tell the student/i.test(renderFacts(s13, newV2State(0), { nowMs: 28.2 * 60000 })) && /time for more/.test(renderFacts(s13, newV2State(0), { nowMs: 27 * 60000 })) && v2StudentBlock(null, { ...newV2State(0), history: [{ role: 'user', content: 'x' }] } as never, undefined, undefined, undefined, true) === '[No one has spoken. The session is nearly out of time: see the time below.]', renderFacts(s13, newV2State(0), { nowMs: 28.2 * 60000 }).split('\n')[1]);
+  // portal-ddf273bf (AP US Government, separation of powers; first lesson taken on the local stack, five flags).
+  const tryText = 'Congress passes a controversial law creating a new federal regulatory agency, over the objection of the President, who believes the law oversteps executive authority. (a) Describe the tool the President could use in response to the bill before it becomes law, and explain what Congress could do next. (b) The agency\'s first director resigns, and the President nominates a replacement. Explain how the Senate\'s power of advice and consent applies to this nomination. (c) A different group later sues, arguing the law creating the agency is unconstitutional. Explain how a federal court could resolve this dispute using judicial review, and note one important fact about where that power does NOT come from.';
+  const planS = { title: 'Separation of powers', estimatedMinutes: 25, los: [{ id: 'lo1', description: 'Explain checks and balances.' }], segments: [{ id: 'hook', kind: 'hook' }, { id: 'c', kind: 'concept' }, { id: 'try', kind: 'try_yourself', problem: tryText }, { id: 'mis', kind: 'misconception_check', question: 'True or false: separation of powers and checks and balances are two names for the same principle of the Constitution.' }, { id: 'recap', kind: 'recap' }] } as never;
+  const partA = 'Congress passes a controversial law creating a new federal regulatory agency, over the objection of the President, who believes the law oversteps executive authority. (a) Describe the tool the President could use in response to the bill before it becomes law, and explain what Congress could do next.';
+  const partC = 'A different group later sues, arguing the law creating the agency is unconstitutional. (c) Explain how a federal court could resolve this dispute using judicial review, and note one important fact about where that power does NOT come from.';
+  check('a part of a plan problem is known for the whole it belongs to', wholeProblem(planS, partA)?.goal === 'try' && wholeProblem(planS, partA)?.statement === tryText && wholeProblem(planS, partC)?.goal === 'try' && wholeProblem(planS, tryText)?.statement === tryText && wholeProblem(planR, 'If f(x) = 5 − 2x, what is f(−4)? Give the number.') === null);
+  const sessS = { ...s13, plan: planS };
+  const t1 = await runV2Turn({ session: sessS, state: newV2State(0), studentSaid: 'ok', nowMs: 60000, callModel: sayR(`Let us test it.\n\n<board page>Practice</board>\n\n<board problem>${partA}</board>\n\nStart with part (a).`), boardPass: false });
+  const card1 = t1.toolCalls.find((c) => c.name === 'show_problem');
+  check('the first part of a plan problem goes up as the whole problem, all its parts in view', /\(b\)[\s\S]*\(c\)/.test(String(card1?.args.statement ?? '')) && /^painted/.test(card1?.outcome ?? ''), String(card1?.args.statement ?? '').slice(0, 80));
+  const t2 = await runV2Turn({ session: sessS, state: t1.state, studentSaid: 'veto', nowMs: 120000, callModel: sayR(`Right. Now part (b).\n\n<board problem>The agency's first director resigns, and the President nominates a replacement. Explain how the Senate's power of advice and consent applies to this nomination.</board>\n\nHow does it apply?`), boardPass: false });
+  const card2 = t2.toolCalls.find((c) => c.name === 'show_problem');
+  check('a later part of it is not a second card: the board points at the problem already up', /^not painted again/.test(card2?.outcome ?? '') && card2?.pointsAt === card1?.id && card2?.turnsTo === undefined, card2?.outcome);
+  const t3 = await runV2Turn({ session: sessS, state: { ...t2.state, goals: { ...t2.state.goals, try: { status: 'shown', at: 1 }, mis: { status: 'demonstrated', at: 2 }, recap: { status: 'shown', at: 3 } } }, studentSaid: 'ok', nowMs: 180000, callModel: sayR('Here is the recap.\n\n<board page>Recap</board>\n\n<board note>Four checks.</board>\n\nGot it?'), boardPass: false });
+  const t4 = await runV2Turn({ session: sessS, state: t3.state, studentSaid: 'Can you show me that question again?', nowMs: 240000, callModel: sayR(`Sure. Here is part (c) again.\n\n<board problem>${partC}</board>\n\nTry it.`), boardPass: false });
+  const card4 = t4.toolCalls.find((c) => c.name === 'show_problem');
+  check('asked for again from another page, the board turns back to the page the problem is on', /^not painted again[\s\S]*turned back/.test(card4?.outcome ?? '') && card4?.pointsAt === card1?.id && card4?.turnsTo === 0 && t4.state.board.current === 0 && t4.state.board.pages[1].items.every((it) => it.tool !== 'show_problem'), `${card4?.outcome} · turnsTo=${card4?.turnsTo}`);
+  check('and the practice problem is the part in hand again', v2Progress(planS, t4.state.goals).currentSegmentId === 'try', v2Progress(planS, t4.state.goals).currentSegmentId);
   const triBlank = drawFigure('geometry_figure', { shape: 'triangle', sides: [3, 4, 5], sideLabels: ['a', 'b', 'c'], angleLabels: ['', '', '90°'] });
   check('an empty label on a triangle is no label, not a refusal (demo check 11-13)', 'svg' in triBlank, JSON.stringify(triBlank).slice(0, 200));
   const cellNamed = drawFigure('cell', { cellType: 'plant', organelles: ['nucleus', 'chloroplasts', 'vacuole', 'cell wall', 'mitochondria', 'lysosome'] });
@@ -732,7 +833,14 @@ async function main() {
     check('a teaching session keeps its tools', !v2Tools('math').some((t) => t.name === 'record_thinking') && v2Tools('math').some((t) => t.name === 'track_gap'));
 
     const open = stub([msg([{ type: 'text', text: 'Hi Jo. Today is about AI and student writing, and there are no right answers. What is your first reaction when a student uses AI on a draft?' }], 'end_turn')]);
-    const r0 = await runV2Turn({ session: dSession, state: newV2State(1_000_000), studentSaid: null, nowMs: 1_000_000, callModel: open.call });
+    // A plan with no scripted welcome leaves the opening to the tutor.
+    const { welcome: _w, welcomeBoard: _wb, ...unscripted } = dPlan.metadata as Record<string, unknown>;
+    const r0 = await runV2Turn({ session: { ...dSession, plan: { ...dPlan, metadata: unscripted } }, state: newV2State(1_000_000), studentSaid: null, nowMs: 1_000_000, callModel: open.call });
+    const none = stub([]);
+    const rw = await runV2Turn({ session: { ...dSession, studentName: 'Jo Smith', teacher: { name: 'Sofia' } } as V2Session, state: newV2State(1_000_000), studentSaid: null, nowMs: 1_000_000, callModel: none.call });
+    check('a scripted welcome is spoken word for word with no model call, with its board up (ECS review 11-17)', rw.spoken.startsWith('Welcome to the ECS Voice Tutors, powered by Evelyn Learning. I\'m Sofia.') && /To begin, Jo: when you hear/.test(rw.spoken) && !/[{}]|board/.test(rw.spoken) && none.seen.length === 0 && rw.toolCalls.some((c) => c.name === 'annotate' && !/^not /.test(c.outcome)) && rw.state.history.length === 2, `${rw.spoken} | ${JSON.stringify(rw.toolCalls.map((c) => [c.name, c.outcome]))}`);
+    const rwNoName = await runV2Turn({ session: { ...dSession, studentName: '' }, state: newV2State(1_000_000), studentSaid: null, nowMs: 1_000_000, callModel: stub([]).call });
+    check('the welcome reads cleanly without a name', /To begin: when you hear/.test(rwNoName.spoken) && /I'm your thinking partner\./.test(rwNoName.spoken), rwNoName.spoken);
     const sys0 = (open.seen[0].system as Anthropic.TextBlockParam[]).map((b) => b.text).join('\n');
     const user0 = JSON.stringify(open.seen[0].messages);
     check('the opening uses the discussion prompt and the discussion opener', sys0.startsWith(V2_DISCUSSION_CONSTITUTION.slice(0, 60)) && user0.includes(DISCUSSION_OPENING.slice(1, 40)) && !sys0.includes(V2_CONSTITUTION.slice(0, 60)));
@@ -758,12 +866,36 @@ async function main() {
       msg([{ type: 'text', text: 'Thanks, Jo.' }, { type: 'tool_use', id: 'e5', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's', next_direction: 'showing steps' } }], 'tool_use'),
       msg([{ type: 'text', text: 'What would you most like to explore next?' }], 'end_turn'),
     ]);
-    const ru = await runV2Turn({ session: dSession, state: r1.state, studentSaid: 'Worth trying, I guess.', nowMs: 1_000_000 + 7 * 60000, callModel: unasked.call });
+    const reflected = { ...r1.state, history: [...r1.state.history, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'What are you thinking now, and has anything shifted?' }] }] };
+    const ruf = await runV2Turn({ session: dSession, state: r1.state, studentSaid: 'Worth trying, I guess.', nowMs: 1_000_000 + 7 * 60000, callModel: stub([msg([{ type: 'text', text: 'Thanks, Jo.' }, { type: 'tool_use', id: 'e6', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's' } }], 'tool_use'), msg([{ type: 'text', text: 'What are you thinking now?' }], 'end_turn')]).call });
+    check('a discussion cannot close before asking what they are thinking now (embed-1794971130343)', (!ruf.state.closed && /not yet asked what they are thinking now/.test(ruf.toolCalls[0].outcome)) || reflectAsked(r1.state.history, discussionOf(dPlan)), ruf.toolCalls[0]?.outcome);
+    const paceState = { ...r1.state, goals: { orient: { status: 'shown' as const }, explore: { status: 'shown' as const } } };
+    const fp7 = renderFacts(dSession, paceState, { nowMs: r1.state.startedAtMs + 7 * 60000 });
+    const fp9 = renderFacts(dSession, paceState, { nowMs: r1.state.startedAtMs + 9.2 * 60000 });
+    check('the facts say when the last two stages are due by the plan\'s times, and when a stage has overrun', reflectAtMinutes(dPlan, 15) === 8 && /time to ask what they are thinking now/.test(fp9) && !/time to ask what they are thinking now/.test(fp7) && /stage \[explore\] has had its time/.test(renderFacts(dSession, { ...r1.state, goals: { orient: { status: 'shown' as const } } }, { nowMs: r1.state.startedAtMs + 6 * 60000 })), `${fp7}\n${fp9}`);
+    const sameQ = { ...r1.state, history: [...r1.state.history, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'Would you want that for every student, or only the ones whose work worries you?' }] }, { role: 'user' as const, content: 'Ah, a reference.' }, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'A baseline. Would you want that baseline for every student, or only the ones whose work worries you?' }] }] };
+    check('the same question asked twice is pointed out', /asked the same question as the reply before it/.test(renderFacts(dSession, sameQ, { nowMs: r1.state.startedAtMs + 5 * 60000 })));
+    const ru = await runV2Turn({ session: dSession, state: reflected, studentSaid: 'Worth trying, I guess.', nowMs: 1_000_000 + 7 * 60000, callModel: unasked.call });
     check('a discussion cannot close on a direction it wrote itself, before asking them', !ru.state.closed && /not asked them yet/.test(ru.toolCalls[0].outcome), ru.toolCalls[0]?.outcome);
-    const asked = { ...r1.state, history: [...r1.state.history, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'What would be most valuable for you to explore next?' }] }] };
+    const asked = { ...reflected, history: [...reflected.history, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'What would be most valuable for you to explore next?' }] }] };
     const done = stub([msg([{ type: 'text', text: 'You are leaving with a question for your team. Thanks, Jo.' }, { type: 'tool_use', id: 'e2', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's', next_direction: 'a conversation with my grade team' } }], 'tool_use')]);
     const rd = await runV2Turn({ session: dSession, state: asked, studentSaid: 'Talk to my grade team.', nowMs: 1_000_000 + 9 * 60000, callModel: done.call });
     check('with a direction chosen it ends before the clock and keeps the direction', rd.state.closed && rd.state.nextDirection === 'a conversation with my grade team');
+    const closingWords = discussionOf(dPlan)!.closing!;
+    check('the plan\'s closing words end the session, once, and are kept in the history (ECS review 11-17)', rd.spoken.endsWith(closingWords) && rd.spoken.split(closingWords).length === 2 && JSON.stringify(rd.state.history.at(-2)).includes(closingWords.slice(0, 40)), rd.spoken);
+    const late = stub([msg([{ type: 'text', text: 'Thanks, Jo. The time is up.' }, { type: 'tool_use', id: 'e9', name: 'end_lesson', input: { because: 'time_nearly_used', summary: 's', next_direction: 'comparing Kelly with Diego' } }], 'tool_use')]);
+    const rl = await runV2Turn({ session: dSession, state: r1.state, studentSaid: 'hello', nowMs: 1_000_000 + 13 * 60000, callModel: late.call });
+    check('when the time runs out before the question was asked, no direction is kept (embed-1794953503551)', rl.state.closed && !rl.state.nextDirection && /the close names none/.test(renderFacts(dSession, { ...r1.state, thinking: { ...r1.state.thinking!, direction: undefined } }, { nowMs: 1_000_000 + 13 * 60000 })), String(rl.state.nextDirection));
+    const steer = stub([msg([{ type: 'text', text: 'You are right to say so. What do you actually think?' }, { type: 'tool_use', id: 's1', name: 'record_thinking', input: { shift_withdrawn: true } }], 'tool_use'), msg([{ type: 'text', text: '' }], 'end_turn')]);
+    const rs = await runV2Turn({ session: dSession, state: r1.state, studentSaid: 'It\'s a shift because that was sort of the only answer you were going to accept from me.', nowMs: 1_000_000 + 5 * 60000, callModel: steer.call });
+    const fs0 = JSON.stringify(steer.seen[0].messages.at(-1));
+    const fs1 = renderFacts(dSession, rs.state, { nowMs: 1_000_000 + 6 * 60000 });
+    check('a person who says they were steered is heard: the shift is withdrawn and the facts hold it (embed-1794951911157)', /they feel steered toward an answer/.test(fs0) && rs.state.thinking?.steered === true && rs.state.thinking.shifts.length === 0 && /they said they felt steered/.test(fs1) && !/shifts:/.test(fs1), fs1);
+    const hypo = { ...r1.state, history: [...r1.state.history, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'Think of a student who used AI only to tidy one paragraph. What would the chatbot have to do, in a case like that one, for the ideas in the paragraph to stop being the ideas of the student who wrote it?' }] }] };
+    check('a hypothetical student and an over-long question are pointed out', /it put a hypothetical student to them/.test(renderFacts(dSession, hypo, { nowMs: 1_000_000 + 5 * 60000 })) && /its question ran to \d+ words/.test(renderFacts(dSession, hypo, { nowMs: 1_000_000 + 5 * 60000 })), renderFacts(dSession, hypo, { nowMs: 1_000_000 + 5 * 60000 }));
+    const dMap = renderDiscussionMap(dPlan, discussionOf(dPlan)!);
+    check('the map sends board points to the board, keeps the scenario for the tutor, and carries the lead-in and closing', /board points[^\n]*\n\s+- Kelly wrote her story herself/.test(dMap) && /not for the board\): Kelly finishes writing/.test(dMap) && !/as written \(for the board\)/.test(dMap) && /Before the first case, lead in with this/.test(dMap) && /Closing words the session says/.test(dMap));
+    check('the prompt takes no side and offers ideas as possibilities', /You have no position to bring them to/.test(V2_DISCUSSION_CONSTITUTION) && /Offer ideas as possibilities/.test(V2_DISCUSSION_CONSTITUTION) && /Never put the full scenario on the board when the plan gives points/.test(V2_DISCUSSION_CONSTITUTION));
 
     const mute = stub([
       msg([{ type: 'tool_use', id: 'm1', name: 'record_thinking', input: { position: 'Worried about a slippery slope' } }], 'tool_use'),
@@ -782,7 +914,7 @@ async function main() {
     const rb = await runV2Turn({ session: dSession, state: { ...r1.state, thinking: { ...r1.state.thinking!, direction: undefined } }, studentSaid: 'I have about eight minutes.', nowMs: 1_000_000 + 60000, callModel: box.call });
     const fb = renderFacts(dSession, rb.state, { nowMs: 1_000_000 + 5 * 60000 });
     check('a stated time becomes the clock, and their example and the complication count reach the facts', /of about 8 \(the time they said they have\); about 3 left: time to reflect/.test(fb) && /their own student or experience: a grade 7 boy/.test(fb) && /complications you have brought in: 1/.test(fb), fb);
-    const named = { ...rb.state, history: [...rb.state.history, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'Where would you like to take this next?' }] }], thinking: { ...rb.state.thinking!, direction: 'parents', complications: 3 } };
+    const named = { ...rb.state, history: [...rb.state.history, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'What are you thinking now?' }] }, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'Where would you like to take this next?' }] }], thinking: { ...rb.state.thinking!, direction: 'parents', complications: 3 } };
     const fn = renderFacts(dSession, named, { nowMs: 1_000_000 + 5 * 60000 });
     check('a named direction is shown as not to be asked again; three complications are enough', /direction they chose: parents \(named; don't ask for it again\)/.test(fn) && /that is enough/.test(fn), fn);
     const endNamed = stub([msg([{ type: 'text', text: 'Bye, Jo.' }, { type: 'tool_use', id: 'e3', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's' } }], 'tool_use')]);
@@ -800,8 +932,122 @@ async function main() {
     check('the map gives the spoken version of a case and the author\'s reflection questions', /to tell aloud: Kelly finishes a story/.test(renderDiscussionMap(dPlan, discussionOf(dPlan)!)) && /Does this still sound like me\?/.test(renderDiscussionMap(dPlan, discussionOf(dPlan)!)));
     const selfOrder = stub([msg([{ type: 'text', text: 'Record the direction, then close.' }, { type: 'tool_use', id: 'e4', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's', next_direction: 'a talk with my department.' } }], 'tool_use')]);
     const rso = await runV2Turn({ session: dSession, state: asked, studentSaid: 'My department, I think.', nowMs: 1_000_000 + 9 * 60000, callModel: selfOrder.call });
-    check('an order to itself is never said, and a close with nothing left to say still closes in words', rso.state.closed && !/Record the direction/.test(rso.spoken) && rso.spoken === 'Thank you for thinking this through with me. The direction you chose: a talk with my department.', rso.spoken);
+    check('an order to itself is never said, and a close with nothing left to say still closes in words', rso.state.closed && !/Record the direction/.test(rso.spoken) && rso.spoken === `Thank you for thinking this through with me. The direction you chose: a talk with my department.\n\n${closingWords}`, rso.spoken);
+    // Asked but unanswered: silence after the question is no direction (local test embed-1794971130343).
+    const silentEnd = stub([msg([{ type: 'text', text: 'Thank you, Jo.' }, { type: 'tool_use', id: 'e5', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's', next_direction: 'start with the ones who worry you' } }], 'tool_use'), msg([{ type: 'text', text: 'What would you like to explore next?' }], 'end_turn')]);
+    const rsil = await runV2Turn({ session: dSession, state: asked, studentSaid: null, facts: { silenceSeconds: 20 }, nowMs: 1_000_000 + 9 * 60000, callModel: silentEnd.call });
+    check('a direction question met with silence does not close with a direction', !rsil.state.closed && !rsil.state.nextDirection && !directionAnswered(asked.history, null) && directionAnswered(asked.history, 'My department.'), String(rsil.state.nextDirection));
+    const dMeta = discussionOf(PRIVATE_ECS_AI_LITERACY_CH2)!;
+    const hist = (texts: string[]) => texts.map((t) => ({ role: 'assistant' as const, content: [{ type: 'text' as const, text: t }] }));
+    const untoldAll = untoldCases(dMeta, hist(['Welcome. What is your first reaction?']));
+    const namedOnly = untoldCases(dMeta, hist([`${dMeta.cases[0].spoken} What do you make of it?`, "Would you say the same about Diego's case, where the AI rewrites the whole story?"]));
+    check('a case is untold until its spoken version has been said; its name alone does not tell it', untoldAll.length === dMeta.cases.length && namedOnly.length === dMeta.cases.length - 1 && !namedOnly.includes(dMeta.cases[0]), `${untoldAll.length} ${namedOnly.length}`);
+    const fu = renderFacts({ ...dSession, plan: PRIVATE_ECS_AI_LITERACY_CH2 }, { ...r1.state, history: hist([`${dMeta.cases[0].spoken}`]) }, { nowMs: 1_000_000 + 3 * 60000 });
+    check('the facts list the cases not yet told', /not yet told to them: /.test(fu) && !fu.includes(`not yet told to them: ${dMeta.cases[0].title}`), fu);
+    // Second local test (embed-1795030468491): the second case told with nothing on the board; the title twice; chips a stage ahead.
+    const c0 = dMeta.cases[0], c1 = dMeta.cases[1];
+    const tellNoBoard = stub([msg([{ type: 'text', text: `${c1.spoken} How does that sit with you?` }], 'end_turn')]);
+    const toldFirst = { ...r1.state, goals: {}, history: [...r1.state.history, { role: 'assistant' as const, content: [{ type: 'text' as const, text: `${c0.spoken} What do you make of it?` }] }] };
+    const rtb = await runV2Turn({ session: dSession, state: structuredClone(toldFirst), studentSaid: "Who's Diego?", nowMs: 1_000_000 + 5 * 60000, callModel: tellNoBoard.call });
+    const pagesNow = rtb.state.board.pages;
+    check('a case told without its board gets its page and points from the session itself', pagesNow.some((pg) => pg.title === c1.title && pg.items.some((it) => it.summary.includes(c1.glance![0]))), JSON.stringify(pagesNow.map((pg) => [pg.title, pg.items.map((it) => it.summary)])));
+    const dupTitle = stub([msg([{ type: 'text', text: `<board page>${c1.title}</board>\n${c1.spoken}\n<board note style="highlight">${c1.title}\n${c1.glance!.join('\n')}</board>\nHow does that sit with you?` }], 'end_turn')]);
+    const rdt = await runV2Turn({ session: dSession, state: structuredClone(toldFirst), studentSaid: 'Go on.', nowMs: 1_000_000 + 5 * 60000, callModel: dupTitle.call });
+    const diegoPage = rdt.state.board.pages.find((pg) => pg.title === c1.title);
+    check('a note does not repeat the title of its page', !!diegoPage && diegoPage.items.length === 1 && !diegoPage.items[0].summary.startsWith(c1.title) && diegoPage.items[0].summary.includes(c1.glance![0]), JSON.stringify(diegoPage));
+    const A = (t: string) => ({ role: 'assistant' as const, content: [{ type: 'text' as const, text: t }] }); const U = (t: string) => ({ role: 'user' as const, content: t });
+    const h1 = [A('Welcome. What is your first reaction?'), U('Cheating.')];
+    const h2 = [...h1, A(`${c0.spoken} What do you make of it?`), U('Fine.')];
+    const h3 = [...h2, A(`${c1.spoken} And this one?`), U('Worse.')];
+    const h4 = [...h3, A('What bothers you most in it?'), U('Not knowing.')];
+    const h5 = [...h4, A('What are you thinking now, and has anything shifted?'), U('No.')];
+    const h6 = [...h5, A('What would you like to explore next?'), U('Rules.')];
+    const stageAt = (h: typeof h1, closed = false) => discussionStageIndex(dPlan, dMeta, h, closed);
+    check('the stage in hand is read from the conversation: opening, cases, probing, reflecting, direction, done', [stageAt(h1), stageAt(h2), stageAt(h3), stageAt(h4), stageAt(h5), stageAt(h6), stageAt(h6, true)].join(',') === '0,1,1,2,3,4,5', [stageAt(h1), stageAt(h2), stageAt(h3), stageAt(h4), stageAt(h5), stageAt(h6), stageAt(h6, true)].join(','));
+    check('stages follow the conversation after a turn, whatever the tutor marked', Object.keys(rtb.state.goals).join(',') === 'orient' && rtb.state.goals.orient.status === 'shown', JSON.stringify(rtb.state.goals));
+    check('asking leave to go on to a case is pointed out', /asked leave to move on/.test(renderFacts(dSession, { ...r1.state, history: [...r1.state.history, A('The first part is done. Shall we go on to Diego, who used AI in a different way?')] }, { nowMs: r1.state.startedAtMs + 5 * 60000 })));
     check('the verdict-word scan catches praise and passes a plain acknowledgement', DISCUSSION_VERDICT_WORDS.test('Excellent point.') && DISCUSSION_VERDICT_WORDS.test("That's right, Jo.") && !DISCUSSION_VERDICT_WORDS.test('Tying it to what the student decides is a useful test.'));
+  }
+  {
+    // AP US Government, portal-84f8660d: the lesson went concept → common-mistake check → concept → worked example.
+    const pp = SEED_AP_APGOV_U2_PRESIDENCY; const C = 'concept-presidency-formal-informal-powers'; const M = 'misconception-executive-orders-are-laws'; const W = 'worked-federalist-70-energy';
+    {
+      // AP Environmental Science, portal-03406355.
+      const ep = Object.values(envsciSeed)[0] as unknown as PlanT;
+      const opened = "Deforestation hits two cycles Good. Here's a case that hits both cycles: the Amazon rainforest being cut and burned. For water, the trees stop transpiring, so less rain falls. Carbon: the trees' stored carbon goes straight into the air as CO₂. This affects both.";
+      check('a page whose heading names no part is placed by what is said on opening it', goalForTitle(ep, 'Deforestation hits two cycles') === null && goalForTalk(ep, opened) === 'worked-disruption'
+        && goalForTalk(ep, "Water's cycle Let's follow water now. Picture a rainy soccer afternoon: some soaks in, some runs off, some evaporates. That whole loop is the water cycle.") === null
+        && goalForTalk(ep, 'Recap Carbon moves through photosynthesis, respiration, decomposition and combustion. Burning fossil fuels, deforestation, paving and dams are the main human changes to the carbon and water cycle.') === null);
+      const seg = (id: string) => (ep.segments.find((x) => x.id === id) as unknown as { problem: string }).problem;
+      check('one later part of a problem in parts, asked by itself, is told from its first part', laterPartAlone(seg('try-process-id'), 'For a forest scenario, fallen leaves rot on the forest floor. Which carbon-cycle process is responsible: photosynthesis, respiration, decomposition, or combustion?')
+        && !laterPartAlone(seg('try-process-id'), 'A growing forest absorbs CO₂ from the atmosphere. Which process is that?')
+        && !laterPartAlone(seg('try-synthesis'), 'Atmospheric CO₂ has risen from about 280 ppm in 1850 to about 420 ppm today. Name the two largest human sources of this CO₂.')
+        && !laterPartAlone(seg('try-synthesis'), seg('try-synthesis')));
+    }
+    check('a page is known for the part of the plan its heading belongs to', ['Formal powers', 'War Powers Resolution', 'Executive agreements', 'Bargaining and the bully pulpit', 'The 22nd Amendment'].every((t) => goalForTitle(pp, t) === C) && goalForTitle(pp, 'Federalist No. 70') === W && goalForTitle(pp, 'Practice') === null && goalForTitle(pp, 'Page 1') === null && goalForTitle(pp, 'Recap') === 'recap');
+    check('a passage on the board is the worked example that reads it', goalForProblem(pp, 'Energy in the Executive is a leading character in the definition of good Government. ... Decision, activity, secrecy, and despatch, will generally characterize the proceedings of one man, in a much more eminent degree than the proceedings of any greater number.') === W);
+    const done = { [M]: { status: 'demonstrated' as const, at: 3 } };
+    check('the part in hand is the one the board is on', v2Progress(pp, {}, { [C]: 1 }).currentSegmentId === C && v2Progress(pp, done, { [C]: 4 }).currentSegmentId === C && v2Progress(pp, { ...done, [C]: { status: 'shown', at: 5 } }, { [C]: 6, [W]: 7 }).currentSegmentId === W);
+    check('a part just finished stays the chip until the board moves on', v2Progress(pp, done, { [C]: 1 }).currentSegmentId === M && v2Progress(pp, { ...done, [C]: { status: 'shown', at: 5 } }, { [C]: 4 }).currentSegmentId === C && v2Progress(pp, done).currentSegmentId !== M);
+    check('a part the board never showed is not counted done because a later one is', !v2Progress(pp, done, { [C]: 4 }).completedSegmentIds.includes(W) && v2Progress(pp, done, { [C]: 4 }).completedSegmentIds.includes('hook') && v2Progress(pp, done).completedSegmentIds.includes(W));
+    check('a request to wait put as a question is still one', asksToWait('Wait, uh, can you give me a second, please?') && asksToWait('Could you hold on a minute?') && !asksToWait('hold on, what does that mean?'));
+    const nb = { pages: [{ title: 'p', items: [] as never[] }], current: 0 };
+    const q = 'sends U.S. troops into hostilities and Congress never declares war or authorizes the use of force, what must happen after 60 days under the War Powers Resolution?';
+    const note = 'Executive agreement: a deal with a foreign government, made without Senate ratification\nTreaty: needs two-thirds of the Senate\nDurability: ';
+    check('a card in slightly other words is not put up twice on a page', applyToModelBoard(nb, 'a', 'show_problem', { statement: `If a president ${q}` }).painted && !applyToModelBoard(nb, 'b', 'show_problem', { statement: `If the President ${q}` }).painted && applyToModelBoard(nb, 'c', 'show_problem', { statement: 'Troops were sent into hostilities on day 1. On day 20, Congress passes a law authorizing the use of force. Does the 60-day withdrawal deadline still apply? Say yes or no, and why.' }).painted
+      && applyToModelBoard(nb, 'd', 'annotate', { text: `${note}a successor president can withdraw from an executive agreement alone` }).painted && !applyToModelBoard(nb, 'e', 'annotate', { text: `${note}?` }).painted && applyToModelBoard(nb, 'f', 'annotate', { text: 'Declaring war: Congress only\nOrdering troops into hostilities: the President, as commander-in-chief' }).painted);
+  }
+  {
+    // AP Statistics, portal-b8ee9d0f: every plan problem was put in the tutor's own words.
+    const sp = SEED_AP_STATS_U2_SCATTERPLOTS;
+    check('a plan problem reworded by the tutor is still known for its part', goalForProblem(sp, 'For each pair, say which variable is explanatory and which is response: hours of sleep and reaction time.') === 'try-explan-response'
+      && goalForProblem(sp, 'A scatterplot of hours studied (x) against exam score (y) for 30 students. The points form a fairly tight upward band, with one student at 8 hours who scored only 50. What is the direction of the relationship, in context?') === 'worked-describe'
+      && goalForProblem(sp, 'A scatterplot of arm span (x, in cm) against height (y, in cm) for 50 people. The points cluster tightly around a straight upward line, with no clear outliers. Describe the scatterplot with all four DUFS parts, in context.') === 'try-describe'
+      && goalForProblem(sp, 'A scatterplot of car age (x, in years) against resale value (y, in thousands of dollars) for 40 cars. The points fall steeply at first, then level off, with no clear outliers. Describe the scatterplot with all four DUFS parts, in context.') === null
+      && goalForTitle(sp, 'Explanatory and response variables') === 'concept-scatter');
+    {
+      // Each field the turn keeps in the state must be let through by the endpoint, or it is gone by the next turn.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const fs = require('fs') as typeof import('fs'); const path = require('path') as typeof import('path');
+      const route = fs.readFileSync(path.join(__dirname, '../src/app/api/tutor/brain-v2/turn/route.ts'), 'utf8');
+      check('the endpoint keeps what the board has shown of the plan between turns', /partsSeen \? \{ partsSeen \}/.test(route) && /problemCards \? \{ problemCards \}/.test(route));
+    }
+    check('a thought about the student is not said to them', stripToolTalk("Take your time. The student is still thinking, so I'll stay quiet.") === 'Take your time.' && stripToolTalk('One student at 8 hours scored only 50. I will mark the student on the plot.') !== '' && !mentionsTool('The student who studied 8 hours scored 50.'));
+  }
+  {
+    // A problem the tutor makes up is worked out apart, and the result is a fact from the next turn on (portal-8e2d86f3).
+    const ownText = 'Try this one. <board problem>For f(x) = x^3 - 3x on the closed interval [-2, 3], find the absolute maximum and the absolute minimum.</board> Start with the candidates.';
+    const ownSeen: Anthropic.MessageCreateParamsNonStreaming[] = [];
+    const ownCall: V2ModelCall = async (p, onText) => { ownSeen.push(structuredClone(p)); if (ownSeen.length === 1) { onText?.(ownText); return msg([{ type: 'text', text: ownText }], 'end_turn'); } return msg([{ type: 'text', text: "f'(x) = 3x² − 3 = 0 gives x = −1 and x = 1. Absolute max 18 at x = 3." }], 'end_turn'); };
+    const ownVoice: V2Session = { ...session, mode: 'voice' };
+    const ro = await runV2Turn({ session: ownVoice, state: newV2State(1_000_000), studentSaid: 'ok', callModel: ownCall, boardPass: false, ownKey: true });
+    const keys = Object.entries(ro.state.ownKeys ?? {});
+    check('a problem of the tutor\'s own is worked out after the reply that set it', keys.length === 1 && /x = −1 and x = 1/.test(keys[0][1]) && ownSeen.length === 2 && /x\^3 - 3x/.test(JSON.stringify(ownSeen[1].messages)) && !ownSeen[1].system, keys);
+    check('its worked answer is a fact while its card is on the page in view', /you set yourself[\s\S]*x = −1 and x = 1/.test(renderFacts(ownVoice, ro.state, { nowMs: 1_060_000 })));
+    const away = structuredClone(ro.state); away.board.pages.push({ title: 'Next', items: [] }); away.board.current = away.board.pages.length - 1;
+    check('and not once the board has moved to another page', !/you set yourself/.test(renderFacts(ownVoice, away, { nowMs: 1_060_000 })));
+    // Interrupted before it was worked: the next turn works it.
+    const left = structuredClone(ro.state); left.ownKeys = { [keys[0]?.[0] ?? 'x']: '' };
+    const again = stub([msg([{ type: 'text', text: 'Take your time.' }], 'end_turn'), msg([{ type: 'text', text: 'x = −1 and x = 1; max 18.' }], 'end_turn')]);
+    const ra = await runV2Turn({ session: ownVoice, state: left, studentSaid: 'one moment', callModel: again.call, boardPass: false, ownKey: true });
+    check('a problem left unworked by an interrupted turn is worked at the end of the next', /max 18/.test(ra.state.ownKeys?.[keys[0]?.[0] ?? 'x'] ?? ''), ra.state.ownKeys);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require('fs') as typeof import('fs'); const path = require('path') as typeof import('path');
+    {
+      // A question asked aloud with no card: its answer is worked after the reply and is a fact on the next turn only.
+      const ask = stub([msg([{ type: 'text', text: 'Good. Now set 3x^2 - 3 = 0. What values of x do you get?' }], 'end_turn'), msg([{ type: 'text', text: 'x^2 = 1, so x = 1 and x = -1. Check: 3(1) - 3 = 0.' }], 'end_turn')]);
+      const rq1 = await runV2Turn({ session: ownVoice, state: newV2State(1_000_000), studentSaid: 'the derivative is 3x squared minus 3', callModel: ask.call, boardPass: false, askedKey: true });
+      check('a question asked aloud is worked out after the reply', rq1.modelCalls >= 1 && /x = 1 and x = -1/.test(rq1.state.askedKey?.key ?? '') && /What values of x/.test(rq1.state.askedKey?.q ?? '') && /worked out apart/.test(JSON.stringify(ask.seen[1]?.messages ?? '') ) === false && /Find what the tutor is leaving/.test(JSON.stringify(ask.seen[1]?.messages ?? '')), [rq1.state.askedKey, ask.seen.length]);
+      check('and the tutor is given it when the student answers', /the question you asked last \("What values of x do you get\?"\).*x = 1 and x = -1/.test(renderFacts(ownVoice, rq1.state, { nowMs: 1_060_000 })));
+      check('the worked answer is not spoken', !/Check: 3\(1\)/.test(rq1.spoken));
+      const open = stub([msg([{ type: 'text', text: 'We have f(x) = x^3 - 3x here. What do you notice about its shape?' }], 'end_turn'), msg([{ type: 'text', text: 'open' }], 'end_turn')]);
+      const ro2 = await runV2Turn({ session: ownVoice, state: structuredClone(rq1.state), studentSaid: 'plus and minus one', callModel: open.call, boardPass: false, askedKey: true });
+      check('a question with nothing to work out leaves no answer, and the old one is dropped', ro2.state.askedKey === undefined, ro2.state.askedKey);
+      const plain = stub([msg([{ type: 'text', text: 'Shall we go on to the next part?' }], 'end_turn')]);
+      const rp2 = await runV2Turn({ session: ownVoice, state: newV2State(1_000_000), studentSaid: 'ok', callModel: plain.call, boardPass: false, askedKey: true });
+      check('a question with no mathematics about it costs no call', rp2.modelCalls === 1 && plain.seen.length === 1, plain.seen.length);
+    }
+    check('the endpoint keeps the worked answers between turns', /ownKeys \? \{ ownKeys \}/.test(fs.readFileSync(path.join(__dirname, '../src/app/api/tutor/brain-v2/turn/route.ts'), 'utf8')) && /askedKey \? \{ askedKey \}/.test(fs.readFileSync(path.join(__dirname, '../src/app/api/tutor/brain-v2/turn/route.ts'), 'utf8')));
   }
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);

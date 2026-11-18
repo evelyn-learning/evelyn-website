@@ -2480,8 +2480,19 @@ export function speakTypedMaths(text: string): string {
   // or a ratio it is "1 over 52" (embed-1794364217274). Halves to twelfths keep their everyday reading.
   t = t.replace(/(?<![\d./:])(\d{1,3})\/(\d{2,4})(?![\d/]|\.\d|\s*\/)/g, (m, a: string, b: string) => (Number(b) >= 13 && a !== b ? `${a} over ${b}` : m));
   // f'(a) → f prime of a; f''(x) → f double prime of x; a bare f' → f prime.
-  t = t.replace(/(?<![A-Za-z])([A-Za-z])(''?|′′?)\(([A-Za-z0-9]{1,3})\)/g, (_m, f: string, p: string, a: string) => `${f} ${p.length > 1 ? 'double prime' : 'prime'} of ${a}`);
+  t = t.replace(/(?<![A-Za-z])([A-Za-z])(''?|′′?)\(([-−]?)([A-Za-z0-9]{1,3})\)/g, (_m, f: string, p: string, neg: string, a: string) => `${f} ${p.length > 1 ? 'double prime' : 'prime'} of ${neg ? 'negative ' : ''}${a}`);
   t = t.replace(/(?<![A-Za-z])([f-hF-Hy])(''?|′′?)(?![A-Za-z'’(])/g, (_m, f: string, p: string) => `${f} ${p.length > 1 ? 'double prime' : 'prime'}`);
+  // A closed interval after a word that places something on it: "+ 1 on [-3, 2]" was heard as one run, "one on
+  // minus three two" (AP Calculus BC, portal-8e2d86f3). Only after such a word: "[1, 2]" elsewhere may be a list.
+  const END = String.raw`[-−]?(?:\d+(?:\.\d+)?|[a-z]|π|√\d+)`;
+  // (Text between dollar signs has its own reader further down, which knows both.)
+  t = outsideMathSpans(t, (w) => w
+    .replace(new RegExp(String.raw`\b(on|over|outside|inside|within|interval)\s+\[\s*(${END})\s*,\s*(${END})\s*\]`, 'g'), (_m, wd: string, lo: string, hi: string) => `${wd === 'interval' ? 'interval' : `${wd} the interval`} from ${lo} to ${hi}`)
+    .replace(/(?<=[\d)²³⁴⁵⁶⁷⁸⁹]|(?<![A-Za-z])[a-z])(?<!\b\d{4}) - (?=\d|\(|√|[a-z](?![A-Za-z]))/g, ' minus ')
+    .replace(/(?<=^|[\s(=,\[])-(?=\d|√)/g, 'negative '));
+  // The minus typed on a keyboard. The voice dropped it between terms ("x^3 - 3x" was heard as "x cube 3x") and
+  // said "minus 27" for a number below zero (same session). Between two terms it is "minus"; in front of a lone
+  // number it is "negative". Never inside a word or a range ("well-known", "10-15", "2019 - 2021").
   // eˣ, xⁿ: a raised letter ("e true", embed-1794342128162). 3! is a factorial. A typed "lim" is "the limit of",
   // and a middle dot is a product.
   const SUPL: Record<string, string> = { 'ˣ': 'x', 'ʸ': 'y', 'ⁿ': 'n', 'ᵗ': 't', 'ᵏ': 'k', 'ⁱ': 'i' };
@@ -2508,6 +2519,9 @@ export function speakTypedMaths(text: string): string {
 export function rewriteForTTS(raw: string, opts?: RewriteForTTSOptions): string {
   let t = raw;
   t = speakTypedMaths(t);
+  // "No. 51" is "number 51": the voice read "Federalist No. 51" as "Federalist no 51" (AP US Government,
+  // portal-ddf273bf). Only before a numeral, and not at the start of a sentence, where "No." is the answer no.
+  t = t.replace(/(?<=[A-Za-z,;:(]\s)(N|n)os\.\s*(?=\d)/g, (_m, c: string) => `${c}umbers `).replace(/(?<=[A-Za-z,;:(]\s)(N|n)o\.\s*(?=\d)/g, (_m, c: string) => `${c}umber `);
   // A fraction over zero has no everyday reading, so the voice invents one: "0/0" was spoken as
   // "zero zeroths" (Praveen, embed-1794328944377, L'Hôpital). It is always "N over zero"; the same
   // goes for the infinity form, whose slash was otherwise left for the voice to guess at.

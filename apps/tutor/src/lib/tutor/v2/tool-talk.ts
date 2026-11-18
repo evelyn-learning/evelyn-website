@@ -14,8 +14,11 @@ const BOARD_ORDER = /(?:^|[.!?]\s+)(?:open|start|turn to|create|add|begin) (?:a|
 /** An order to itself said aloud ("Record the direction, then close.", discussion replay round 8). */
 const SELF_ORDER = /(?:^|[.!?]\s+)(?:record|log) (?:the|their|this|that|it)\b|\bthen close\b/i;
 
+/** A thought about the student said aloud to them ("The student is still thinking, so I'll stay quiet.", portal-b8ee9d0f). */
+const ASIDE = /\bthe student\b[^.!?]*\bI(?:'ll|’ll| will| should|'m| am)\b/i;
+
 export function mentionsTool(text: string): boolean {
-  return TOOL_NAME.test(text) || BOARD_ORDER.test(text) || SELF_ORDER.test(text);
+  return ASIDE.test(text) || TOOL_NAME.test(text) || BOARD_ORDER.test(text) || SELF_ORDER.test(text);
 }
 
 /** Removes the sentences of `text` that name a tool. Paragraph breaks are kept. */

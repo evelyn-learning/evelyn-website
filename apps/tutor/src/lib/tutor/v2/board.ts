@@ -66,6 +66,17 @@ const PLAIN_WORDS = 'and|at|so|then|gives|give|when|if|for|the|is|are|or|to|of|w
 export function spacedRoman(latex: string): string {
   return latex.replace(/\\mathrm\s*\{((?:[^{}]|\{[^{}]*\})*)\}/g, (_m, body: string) => `\\mathrm{${body.replace(/(?<=[A-Za-z,)])[ ]+(?=[A-Za-z(])/g, '\\ ')}}`);
 }
+/** Several statements typed as one row, with \quad between them, wrap wherever the row runs out, in the middle
+ *  of a statement: "f(−3) = 81 − 72 + 1 = 10, f(−2) = 16 − 32 + 1" broke before "= −15" (AP Calculus BC,
+ *  portal-8e2d86f3). Three or more, or two long ones, go up one to a line. */
+export function stackedRow(latex: string): string {
+  if (/\\\\|\\begin\s*\{/.test(latex)) return latex;
+  const parts = latex.split(/\s*,?\s*\\q?quad\s*/).map((x) => x.trim().replace(/,$/, '').trim()).filter(Boolean);
+  const balanced = (x: string) => x.split('{').length === x.split('}').length && x.split('\\left').length === x.split('\\right').length;
+  if (parts.length < 2 || !parts.every((x) => balanced(x) && /=|<|>|\\(?:approx|le|ge|neq|implies|to)\b/.test(x))) return latex;
+  if (parts.length < 3 && latex.replace(/\\[A-Za-z]+|[{}\s]/g, '').length <= 48) return latex;
+  return `\\begin{aligned} ${parts.map((x) => `&${x}`).join(' \\\\ ')} \\end{aligned}`;
+}
 export function wordsAsText(latex: string): string {
   const re = new RegExp(String.raw`(?<![\\A-Za-z])(?:${PLAIN_WORDS})(?![A-Za-z])(?:\s+(?:${PLAIN_WORDS})(?![A-Za-z]))*`, 'gi');
   // Leave what is already inside \text{…} (and its relatives) alone.
@@ -159,7 +170,11 @@ export function applyToModelBoard(board: V2Board, id: string, name: string, args
     // The same thing in another form is not a repeat: a cycle drawn from stages already listed as steps was
     // refused, and the tutor said "here is the loop" over nothing (browser run, 2026-11-11).
     const items = board.pages[p].items;
-    const at = items.findIndex((it) => { if (FIGURE_FORMS.has(name) && it.tool !== name) return false; const exact = name === 'show_equation' && it.tool === 'show_equation'; const have = exact ? it.core ?? norm(it.summary) : (it.core ?? norm(it.summary)).toLowerCase(); const mine = exact ? core : core.toLowerCase(); return have === mine || (mine.length >= 12 && have.includes(mine)) || (have.length >= 24 && mine.includes(have) && mine.length < have.length * 1.15); });
+    let at = items.findIndex((it) => { if (FIGURE_FORMS.has(name) && it.tool !== name) return false; const exact = name === 'show_equation' && it.tool === 'show_equation'; const have = exact ? it.core ?? norm(it.summary) : (it.core ?? norm(it.summary)).toLowerCase(); const mine = exact ? core : core.toLowerCase(); return have === mine || (mine.length >= 12 && have.includes(mine)) || (have.length >= 24 && mine.includes(have) && mine.length < have.length * 1.15); });
+    // The same card in slightly other words is the same card: a problem went up twice on one page with "a
+    // president" changed to "the President", and a three-line note again with its last line left as a question
+    // mark (AP US Government, portal-84f8660d).
+    if (at < 0 && p === board.current && (name === 'show_problem' || name === 'annotate')) at = items.findIndex((it) => it.tool === name && nearlySame(name, it.summary, summary));
     if (at < 0) continue;
     // A problem the student is sent back to must be where they can see it. One set many items ago, or on
     // another page, is put up again: "try the problem already on your board" pointed at a card twenty items
@@ -174,6 +189,21 @@ export function applyToModelBoard(board: V2Board, id: string, name: string, args
   }
   board.pages[board.current].items.push({ id, tool: name, summary, core, ...(name === 'show_function_graph' ? { args: { functions: args.functions, points: args.points, segments: args.segments, xRange: args.xRange, yRange: args.yRange, title: args.title } } : {}) });
   return { painted: true, detail: `painted on page ${board.current + 1}` };
+}
+
+function nearlySame(name: string, have: string, mine: string): boolean {
+  if (name === 'annotate') {
+    const lines = (x: string) => x.split('\n').map((l) => norm(l)).filter((l) => l.length >= 12);
+    const a = lines(have); const b = lines(mine);
+    if (a.length < 2 || b.length < 2) return false;
+    const same = b.filter((l) => a.includes(l)).length;
+    return same >= 2 && same / b.length >= 0.6;
+  }
+  const pairs = (x: string) => { const t = x.toLowerCase().match(/[a-z]+|\d+(?:\.\d+)?/g) ?? []; return new Set(t.slice(0, -1).map((w, i) => `${w} ${t[i + 1]}`)); };
+  const a = pairs(have); const b = pairs(mine);
+  if (a.size < 8 || b.size < 8) return false;
+  const both = [...b].filter((x) => a.has(x)).length;
+  return both / Math.max(a.size, b.size) >= 0.85;
 }
 
 /** The board, for the facts block: the current page in full, earlier pages by title and item count. */

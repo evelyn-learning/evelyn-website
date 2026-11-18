@@ -59,6 +59,9 @@ export interface ITutorSession extends Document {
   inputMode: "text" | "voice";
   voiceEngine?: "classic" | "realtime" | "realtime-2" | "realtime-validated" | "claude-brain" | "gemini-live";
   startedAt: Date;
+  /** When the session was last sat down to: the start of its latest attempt. Equal to `startedAt` until it is
+   *  resumed. The admin list orders and dates sessions by it. Absent on documents saved before 2026-11-17. */
+  lastStartedAt?: Date;
   endedAt?: Date;
   duration?: number;
   /** Additive (2026-10-03): one entry per page-mount ATTEMPT of this session,
@@ -282,6 +285,9 @@ const TutorSessionSchema = new Schema<ITutorSession>(
       type: Date,
       default: Date.now,
     },
+    lastStartedAt: {
+      type: Date,
+    },
     endedAt: {
       type: Date,
     },
@@ -421,6 +427,7 @@ const TutorSessionSchema = new Schema<ITutorSession>(
 
 // Query indexes
 TutorSessionSchema.index({ status: 1, startedAt: -1 });
+TutorSessionSchema.index({ lastStartedAt: -1, startedAt: -1 });
 TutorSessionSchema.index({ subject: 1, topic: 1 });
 // Learner home: one learner's sessions, newest first.
 TutorSessionSchema.index({ sourcePartnerId: 1, studentId: 1, startedAt: -1 });
@@ -429,11 +436,11 @@ TutorSessionSchema.index({ sourcePartnerId: 1, studentId: 1, startedAt: -1 });
 // baseline had to be computed by collection scan.
 TutorSessionSchema.index({ clientIp: 1, startedAt: -1 });
 
-// TTL index: auto-delete after 180 days (also serves as startedAt query index)
-TutorSessionSchema.index(
-  { startedAt: 1 },
-  { expireAfterSeconds: 180 * 24 * 60 * 60 }
-);
+// Sessions are kept: nothing expires them (Praveen, 2026-11-17). Until then this index deleted a session 180 days
+// after its FIRST start, so one opened in July and taken again in November would have gone in January.
+// The index on the database must be dropped once for this to take effect (an index with the same key and other
+// options is not replaced): db.tutorsessions.dropIndex('startedAt_1'), after which this plain one is built.
+TutorSessionSchema.index({ startedAt: 1 });
 
 export const TutorSession =
   mongoose.models.TutorSession ||

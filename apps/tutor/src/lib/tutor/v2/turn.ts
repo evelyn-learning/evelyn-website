@@ -17,11 +17,13 @@
  */
 import { drawFigure } from './drawn-figures';
 import { typesetMaths } from './rich-text';
+import { closeDueMinutes } from './close-heard';
+import { goalForProblem, goalForTalk, goalForTitle, laterPartAlone, wholeProblem } from './progress';
 import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient } from '../ai/model-registry';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
 import { catalogueSubjects, figureCatalogueFor, tutorFigureLines } from './figure-catalogue';
-import { applyToModelBoard, boardMisfit, renderBoard, summariseBoardCall, taskOnly, spacedRoman, wordsAsText } from './board';
+import { applyToModelBoard, boardMisfit, renderBoard, summariseBoardCall, taskOnly, spacedRoman, wordsAsText, stackedRow } from './board';
 import { BoardInlineStream, boardBlocksIn, inlineToolCall, insertBlock, stripBoardBlocks, type InlineBlock, type InlinePart } from './board-inline';
 import { speaksMaths, unwrittenEquations } from './spoken-maths';
 import { saidCovers, unsaidAsk, asksAnywhere } from './board-timing';
@@ -33,7 +35,7 @@ import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
 import { leftOpen, mayOpenPart, namesPart, partOffer } from './part-close';
 import { heardAsWords } from './heard';
-import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, V2_DISCUSSION_CONSTITUTION, directionAsked, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap } from './discussion';
+import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, DISCUSSION_STEERED, V2_DISCUSSION_CONSTITUTION, caseToldIn, directionAnswered, directionAsked, discussionOf, reflectAsked, syncDiscussionStages, untoldCases, effectiveMinutes, recordThinking, renderDiscussionMap, scriptedWelcome } from './discussion';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, V2_NOTE_OWN_ANSWER_TOOL, V2_SET_CURRENT_PROBLEM_TOOL, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
 
@@ -44,6 +46,12 @@ export const V2_UNWRITTEN_WORDS = 30;
 export const V2_CHECK_INS = ['Does that make sense so far?', 'Are you with me so far?', 'Is that clear, or shall I go over it again?', 'Does that make sense?'];
 const V2_FIGURE_TOOL_NAMES = new Set(['show_free_body_diagram', 'show_number_line', 'show_function_graph', 'show_table', 'show_timeline', 'show_graphic_organizer', 'show_geometry', 'show_venn_diagram', 'show_tree', 'show_stats', 'show_lewis_constructed', 'show_cycle_diagram', 'show_concept_map', 'show_map', 'show_diagram', 'show_sketch', 'show_circuit', 'show_ray_diagram', 'show_drawn_figure']);
 export const V2_MAX_MODEL_CALLS = 5;
+/** The longest answer key kept for a problem of the tutor's own. */
+export const V2_OWN_KEY_CHARS = 700;
+/** Asked on a clean page, with the problem alone: the same model that agreed with a wrong root mid-lesson solves it right. */
+/** The answer to a question asked aloud. Asked to solve from the problem as stated: the board may hold the student's own slip. */
+export const V2_ASKED_KEY = 'A tutor has just said the words below to a student, with the board as shown. Find what the tutor is leaving the student to answer or to do: the last question asked or task set ("solve it and tell me what you get" is one). If it has a definite answer that can be worked out from what is given (a value, an expression, a set of values, an interval, which of two things is larger, whether a statement of fact is true), work it out yourself, carefully and completely, from the problem as it was set. Do not rely on working shown on the board or quoted by the tutor: it may be the student\'s and may be wrong. Check every value by substituting it back. Then write the answer with the working that leads to it, in plain text, under 90 words. If there is no such question or task, or it has no such answer (it asks what the student thinks or notices, whether they follow, what they would like to do, or to explain something in their own words), write only the word: open';
+export const V2_OWN_KEY = 'A tutor has just set a student the problem below. Work it out yourself, carefully and completely, so the tutor can check the student\'s work against yours. Then write the answer key as plain text in under 110 words: each step that produces a value the student will have to find (with the value), then the final answer. Check every value by substituting it back before you write it. If the problem cannot be answered as it is written, say so in one sentence instead. Write the key only: no greeting, no advice on teaching.';
 export const V2_MAX_TOKENS = 8000;
 export const V2_NOTE_MAX_CHARS = 1500;
 export const V2_MAX_GAPS = 12;
@@ -79,6 +87,10 @@ export interface V2TurnInput {
   boardPass?: boolean;
   /** Run the maths check after a reply that spoke mathematics. Default: on for real model calls, off for a stubbed one. */
   mathsCheck?: boolean;
+  /** Work out, after the reply, a problem the tutor set that is not the plan's. Default: on for real model calls, off for a stubbed one. */
+  ownKey?: boolean;
+  /** Work out the answer to a question asked aloud (default: on for real model calls, off for stubs). */
+  askedKey?: boolean;
   callModel?: V2ModelCall;
   applyBoard?: V2BoardPort;
   onText?: (delta: string) => void;
@@ -137,13 +149,17 @@ export function v2SessionPart(session: V2Session): string {
 }
 
 /** What goes in the user turn in place of the student's words when they have not spoken. */
-export function v2StudentBlock(studentSaid: string | null, state: V2State, silenceSeconds?: number, resumed?: boolean, session?: V2Session): string {
+export function v2StudentBlock(studentSaid: string | null, state: V2State, silenceSeconds?: number, resumed?: boolean, session?: V2Session, timeCheck?: boolean): string {
   if (studentSaid !== null) return studentSaid;
   if (!!discussionOf(session?.plan) && !resumed && state.history.length === 0) return DISCUSSION_OPENING;
   if (state.history.length === 0 && !resumed && session?.homework) return v2HomeworkOpener(session.homework);
   if (state.history.length === 0 && !resumed && session?.homeworkSheet) return v2SheetOpener(session.homeworkSheet);
   if (resumed) return '[The student\'s page was reloaded in the middle of the lesson and they have just come back. Welcome them back in one short sentence, say where the lesson stood, and carry on from there. What was on the board before is still on it.]';
   if (state.history.length === 0) return '[The session has just started. The student has joined and is waiting for you to begin the lesson. Greet them, then tell them what this lesson is about and what it will cover, and ask whether that sounds good. Keep all of it short: three sentences at most, the plan as two or three plain things and not a list of every step. If what is known about this student shows an earlier session, add one sentence on where that left off. Wait for their answer before teaching.]';
+  // After the tutor chose to wait and nothing more came: read as "has not replied", the tutor answered a student
+  // it had kept waiting with "I'm here." (algebra, portal-02fd8638).
+  if (timeCheck && state.history.length > 0) return '[No one has spoken. The session is nearly out of time: see the time below.]';
+  if (Math.round(silenceSeconds ?? 0) === V2_WAITED_RECHECK_S) return '[The student has said nothing more: they had finished.]';
   return silenceSeconds ? '[The student has not replied.]' : '[The student sent nothing.]';
 }
 
@@ -190,11 +206,21 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     // flow is 8–12 minutes in a box of up to 15. Until then, the clock-or-request rule below holds.
     const box = effectiveMinutes(session.timeBoxMinutes, state.thinking);
     const left = box ? box - (nowMs - state.startedAtMs) / 60000 : 0;
-    const direction = (typeof args.next_direction === 'string' ? args.next_direction.trim().slice(0, 300) : '') || state.thinking?.direction || '';
+    // A direction is one they named after being asked. When the time ran out in a long silence the close gave
+    // "the direction you chose" for a question that had never been put (embed-1794953503551).
+    const direction = !directionAnswered(state.history, studentSaid) ? '' : (typeof args.next_direction === 'string' ? args.next_direction.trim().slice(0, 300) : '') || state.thinking?.direction || '';
     // The direction is theirs to name: a direction the tutor wrote itself closed the live test without the
     // question ever being asked (embed-1794694217385). Until it has been asked, only their request or the clock ends it.
+    // The close comes after they have said where they stand now: a session went from the middle straight to its end.
+    if (args.because !== 'student_asked' && box && left > 1.5 && !reflectAsked(state.history, discussion)) {
+      return 'not ended: you have not yet asked what they are thinking now and whether anything has shifted. Say nothing of this message. Ask that now as one short question. What they would like to explore next comes after their answer, and the close after that.';
+    }
     if (args.because !== 'student_asked' && box && left > 1.5 && !directionAsked(state.history)) {
-      return 'not ended: you have not asked them yet what they would like to explore next. Say nothing of this message. Ask them that now, in a sentence of your own, and close after they answer.';
+      return 'not ended: you have not asked them yet what they would like to explore next. Say nothing of this message. Ask them that now as one short question, and close after they answer.';
+    }
+    // Asked, and no word from them since: the question was announced or went unheard.
+    if (args.because !== 'student_asked' && box && left > 1.5 && !directionAnswered(state.history, studentSaid)) {
+      return 'not ended: they have not answered yet. Say nothing of this message. Ask them once more, as one short plain question, what they would like to explore next, and wait for their answer.';
     }
     if (args.because !== 'student_asked' && !direction && box && left > 1.5) {
       return 'not ended: they have not chosen a direction yet. Say nothing of this message. Ask them, in a sentence of your own, what would be most valuable for them to explore further.';
@@ -210,6 +236,7 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     state.note = note.slice(0, V2_NOTE_MAX_CHARS);
     return note.length > V2_NOTE_MAX_CHARS ? `saved, cut to ${V2_NOTE_MAX_CHARS} characters` : 'saved';
   }
+  if (name === 'set_goal_status' && discussion?.stageStarts) return 'recorded';
   if (name === 'set_goal_status') {
     const goal = typeof args.goal === 'string' ? args.goal.replace(/^\[|\]$/g, '').trim() : '';
     const status = args.status as GoalStatus;
@@ -263,7 +290,7 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     if ((session.homework || session.homeworkSheet) && studentSaid !== null && V2_BARE_ASSENT.test(studentSaid) && left > 1.5) {
       return 'not ended: "yes" does not say whether they are finished. Ask, in one short question with one meaning, whether they have any question about it.';
     }
-    if (args.because !== 'student_asked' && !homeworkDone && session.timeBoxMinutes && left > session.timeBoxMinutes * 0.2) {
+    if (args.because !== 'student_asked' && !homeworkDone && session.timeBoxMinutes && left > closeDueMinutes(session.timeBoxMinutes)) {
       // Said to the student as the tutor's own thought. The first wording was repeated to them: "The system says
       // there are about seven minutes left and you haven't asked to stop" (embed-1794595194384).
       return `not ended: the session goes on. Whether to stop is the student's choice, and they have not made it. Say nothing of this message or of the clock. In one sentence of your own, ask what they would like now: something harder, more practice, a question of their own, or to stop here.`;
@@ -280,7 +307,12 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const input: V2TurnInput = given.session.mode === 'voice' && given.studentSaid ? { ...given, studentSaid: heardAsWords(given.studentSaid) } : given;
   const { session } = input;
   const nowMs = input.nowMs ?? Date.now();
-  const callModel = input.callModel ?? defaultModelCall;
+  // A discussion whose plan scripts the welcome opens on those words exactly, the same in every session: no model
+  // call (the partner asked for one consistent introduction, 2026-11-17).
+  const welcome = !given.state.history.length && given.studentSaid === null && !given.facts?.resumed ? (() => { const d = discussionOf(session.plan); return d ? scriptedWelcome(d, { person: session.studentName, tutor: session.teacher?.name }) : null; })() : null;
+  const callModel: V2ModelCall = welcome
+    ? async (_params, onText) => { onText?.(welcome); return { id: 'scripted_welcome', type: 'message', role: 'assistant', model: '', content: [{ type: 'text', text: welcome, citations: null }], stop_reason: 'end_turn', stop_sequence: null, usage: { input_tokens: 0, output_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } } as unknown as Anthropic.Message; }
+    : input.callModel ?? defaultModelCall;
   const applyBoard = input.applyBoard ?? applyToModelBoard;
   // The turn works on a copy: a failed model call leaves the caller's state as it was.
   const state: V2State = structuredClone(input.state);
@@ -288,10 +320,16 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   /** The first reply of the session: nothing has been said by either side. */
   const opening = !state.history.length && input.studentSaid === null;
   const discussion = !!discussionOf(session.plan);
-  const studentText = v2StudentBlock(input.studentSaid, state, input.facts?.silenceSeconds, input.facts?.resumed, session);
+  const studentText = v2StudentBlock(input.studentSaid, state, input.facts?.silenceSeconds, input.facts?.resumed, session, input.facts?.timeCheck);
+  const dMeta = discussionOf(session.plan);
+  if (dMeta && session.plan) syncDiscussionStages(state, session.plan, dMeta, nowMs);
+  const untoldBefore = dMeta ? untoldCases(dMeta, state.history) : [];
   const facts = renderFacts(session, state, { ...input.facts, nowMs, heard: input.studentSaid });
   // "Your last reply brought in a complication" is said once, in this turn's facts; a new one sets it again.
   if (state.thinking?.justComplicated) state.thinking = { ...state.thinking, justComplicated: false };
+  // Said once by them, it holds for the rest of the conversation (shown in the facts from the next turn on; this
+  // turn's facts carry it as a note on the last reply).
+  if (discussion && input.studentSaid && DISCUSSION_STEERED.test(input.studentSaid)) state.thinking = { ...(state.thinking ?? { position: '', weighed: [], shifts: [] }), steered: true };
   // The student's words come first and carry the cache mark; the facts follow and are
   // never stored, so next turn's request shares this one's prefix up to the words.
   const userNow: Anthropic.MessageParam = {
@@ -308,13 +346,14 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
 
   const stored: Anthropic.MessageParam[] = [{ role: 'user', content: [{ type: 'text', text: studentText }] }];
   const spoken: string[] = [];
+  let pageUnplaced = '';
   const toolCalls: V2ToolCall[] = [];
   const usage: V2TurnResult['usage'] = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0 };
   const t0 = Date.now();
   let firstTextMs: number | null = null;
   let modelCalls = 0;
 
-  const waitingOnTutor = session.mode === 'voice' && input.studentSaid === null && [V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S].includes(Math.round(input.facts?.silenceSeconds ?? 0));
+  const waitingOnTutor = session.mode === 'voice' && input.studentSaid === null && (input.facts?.timeCheck === true || [V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S].includes(Math.round(input.facts?.silenceSeconds ?? 0)));
   // A typed message is sent whole: there is nothing more to listen for. A tutor that kept listening to one sat
   // silent for four minutes (demo check, 2026-11-13; the voice client rechecks a silence, the typed one does not).
   const typedAndSent = session.mode === 'text' && input.studentSaid !== null;
@@ -333,7 +372,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       for (const k of Object.keys(args)) delete args[k];
       args.text = text;
     }
-    if (block.name === 'show_equation' && typeof args.latex === 'string') args.latex = spacedRoman(wordsAsText(args.latex));
+    if (block.name === 'show_equation' && typeof args.latex === 'string') args.latex = stackedRow(spacedRoman(wordsAsText(args.latex)));
     // The label over an equation is typeset as a note is: "at x = -2" stood in plain letters above its working (embed-1794595194384).
     if (block.name === 'show_equation' && typeof args.label === 'string' && !args.label.includes('$')) args.label = typesetMaths(args.label);
     // A graph drawn on a page that already has one is the same picture with more on it: a circle went up, and
@@ -391,7 +430,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       if (same) replaces = same.id;
     }
     const sayWith = typeof sayWithRaw === 'string' && sayWithRaw.trim() ? sayWithRaw.trim() : undefined;
-    let outcome: string; let pointsAt: string | undefined;
+    let outcome: string; let pointsAt: string | undefined; let turnsTo: number | undefined;
     if (V2_CONTROL_TOOL_NAMES.has(block.name)) {
       // At the opening, and when the last reply ended on a statement and the student has waited, silence is
       // not open to the tutor: a session sat on a blank screen until the student spoke, and a tutor went quiet
@@ -419,15 +458,57 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         const page = replaces ? state.board.pages[state.board.current] : undefined;
         const was = page?.items.find((it) => it.id === replaces);
         if (page && was) page.items = page.items.filter((it) => it !== was);
-        const o = applyBoard(state.board, block.id, block.name, args); outcome = o.painted ? o.detail : `not painted: ${o.detail}`;
+        // A problem of the plan, as the tutor is putting it up.
+        const put = block.name !== 'show_problem' || !session.plan || discussion ? '' : typeof args.statement === 'string' ? args.statement : typeof (args.problem as { statement?: unknown } | undefined)?.statement === 'string' ? (args.problem as { statement: string }).statement : typeof args.problem === 'string' ? args.problem : '';
+        const planGoal = put && session.plan ? goalForProblem(session.plan, put) : null;
+        const whole = put && session.plan ? wholeProblem(session.plan, put) : null;
+        // Its card, when it is already on the board: on whichever page it stands.
+        const cardId = planGoal ? state.problemCards?.[planGoal] : undefined;
+        const cardPage = cardId ? state.board.pages.findIndex((pg) => pg.items.some((it) => it.id === cardId)) : -1;
+        let o: V2BoardOutcome & { turnTo?: number };
+        let partAlone = false;
+        if (cardId && cardPage >= 0 && (whole || cardPage !== state.board.current)) {
+          // Asked for again, or its next part asked: the problem is one card, and the board goes to it. From
+          // another page the board turns back to its page, so the parts and the working done on it are in
+          // view together and what is written next goes there ("show me that question again" put part (c)
+          // alone on the recap page, AP US Government, portal-ddf273bf).
+          const away = cardPage !== state.board.current;
+          if (away) state.board.current = cardPage;
+          o = { painted: false, detail: away ? `already on page ${cardPage + 1} "${state.board.pages[cardPage].title}"` : `already on the board (page ${cardPage + 1})`, pointAt: cardId, ...(away ? { turnTo: cardPage } : {}) };
+        } else {
+          // The first part of a problem in parts goes up as the whole problem. One later part asked by itself
+          // goes up as asked: the whole card would open with a part the tutor is not asking.
+          partAlone = !!whole && laterPartAlone(whole.statement, put);
+          if (whole && !partAlone && typeof args.statement === 'string') args.statement = whole.statement;
+          o = applyBoard(state.board, block.id, block.name, args);
+        }
+        outcome = o.painted ? o.detail : `not painted: ${o.detail}`;
+        // A problem of the tutor's own making has no answer in the plan: it is worked out apart, after this reply.
+        if (put && !planGoal && o.painted) state.ownKeys = { ...(state.ownKeys ?? {}), [block.id]: '' };
+        if (planGoal) {
+          if (o.painted && !partAlone) state.problemCards = { ...(state.problemCards ?? {}), [planGoal]: block.id };
+          // A problem of the plan on the board is that part of the plan begun, whether or not the tutor records
+          // it: a whole lesson ran with the phases showing Hook, because no progress was recorded until the
+          // close (Algebra 1, portal-50a1e584). Gone back to while still open, it is the part in hand again.
+          const g = state.goals[planGoal];
+          if (!g) state.goals[planGoal] = { status: 'shown', at: nowMs };
+          else if (g.status === 'shown' && !o.painted) state.goals[planGoal] = { ...g, at: nowMs };
+        }
+        // A page headed for a part of the plan, or that part's passage, is the lesson on that part.
+        if (session.plan && !discussion && o.painted && (block.name === 'new_page' || block.name === 'show_passage')) {
+          const part = block.name === 'new_page' ? goalForTitle(session.plan, String(args.title ?? '')) : goalForProblem(session.plan, String(args.text ?? ''));
+          if (part) state.partsSeen = { ...(state.partsSeen ?? {}), [part]: nowMs };
+          else if (block.name === 'new_page') pageUnplaced = String(args.title ?? '');
+        }
+        if (o.turnTo !== undefined) turnsTo = o.turnTo;
         if (!o.painted) { if (page && was) page.items.push(was); replaces = undefined; }
-        if (!o.painted && o.pointAt && !boardOnly) { pointsAt = o.pointAt; outcome = `not painted again: ${o.detail}; the board has scrolled back to it`; }
+        if (!o.painted && o.pointAt && !boardOnly) { pointsAt = o.pointAt; outcome = turnsTo !== undefined ? `not painted again: ${o.detail}; the board has turned back to that page and shows it. Carry on with it there: what you write next goes on that page` : `not painted again: ${o.detail}; the board has scrolled back to it`; }
       }
     }
     const result: Anthropic.ToolResultBlockParam = { type: 'tool_result', tool_use_id: block.id, content: outcome };
     // The board pass often offers again what the reply already put up; a call of its that did nothing leaves no trace.
     if (boardOnly && /^not /.test(outcome)) return result;
-    const call: V2ToolCall = { id: block.id, name: block.name, args, outcome, ...(sayWith ? { sayWith } : {}), ...(inline && !sayWith ? { inline: true } : {}), ...(replaces && !/^not /.test(outcome) ? { replaces } : {}), ...(markBeforeTurn ? { beforeTurn: true } : {}), ...(placeAbove && !/^not /.test(outcome) ? { before: placeAbove } : {}), ...(pointsAt ? { pointsAt } : {}), ...(block.name === 'new_page' && inline && !/^not /.test(outcome) && pageAgreed ? { agreed: true } : {}), ...(carryNow.length && block.name === 'new_page' && !/^not /.test(outcome) ? { carries: carryNow } : {}) };
+    const call: V2ToolCall = { id: block.id, name: block.name, args, outcome, ...(sayWith ? { sayWith } : {}), ...(inline && !sayWith ? { inline: true } : {}), ...(replaces && !/^not /.test(outcome) ? { replaces } : {}), ...(pointsAt && turnsTo !== undefined ? { turnsTo } : {}), ...(markBeforeTurn ? { beforeTurn: true } : {}), ...(placeAbove && !/^not /.test(outcome) ? { before: placeAbove } : {}), ...(pointsAt ? { pointsAt } : {}), ...(block.name === 'new_page' && inline && !/^not /.test(outcome) && pageAgreed ? { agreed: true } : {}), ...(carryNow.length && block.name === 'new_page' && !/^not /.test(outcome) ? { carries: carryNow } : {}) };
     toolCalls.push(call);
     input.onToolCall?.(call);
     return result;
@@ -437,6 +518,13 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const boardProblems: string[] = [];
   const settleInline = (b: InlineBlock, boardOnly = false): boolean => {
     let { name, args } = inlineToolCall(b);
+    // A note whose first line is the title of the page it stands on says the title twice (flagged in a local
+    // test, embed-1795030468491: "page 2's title is The Revision Assistant, and the title on the card is too").
+    if (name === 'annotate' && typeof args.text === 'string') {
+      const lines = args.text.split('\n'); const plain = (x: string) => x.replace(/[^a-z0-9]+/gi, '').toLowerCase();
+      const title = state.board.pages[state.board.current]?.title ?? '';
+      if (lines.length > 1 && title && plain(lines[0]) === plain(title)) args = { ...args, text: lines.slice(1).join('\n') };
+    }
     // A page block naming a page that exists turns back to it.
     if (name === 'new_page') { const at = state.board.pages.findIndex((pg, i) => i !== state.board.current && pg.title.replace(/\s+/g, '').toLowerCase() === String(args.title ?? '').replace(/\s+/g, '').toLowerCase()); if (at >= 0) { name = 'go_to_page'; args = { pageIndex: at, page: at + 1, title: state.board.pages[at].title }; } }
     inlineN += 1;
@@ -455,7 +543,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     return !failed;
   };
   // How much had been said when the reply turned to a new page (-1: it did not).
-  let saidChars = 0; let pageTurnAt = -1; let pageBefore = -1; let markBeforeTurn = false;
+  let saidChars = 0; let pageTurnAt = -1; let pageBefore = -1; let pagesBefore = 0; let markBeforeTurn = false;
   // The item of this reply that a check addition belongs above (see the check's additions, below).
   let placeAbove: string | undefined;
   // The student was asked whether to go on and has answered: the page for the next part turns as the reply
@@ -499,7 +587,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
             input.onToolCall?.({ id: `held_${nowMs.toString(36)}`, name: 'new_page', args: { title: part.block.body.trim() }, outcome: 'not opened yet: the student is asked first' });
             continue;
           }
-          if (part.block.kind === 'page' && pageTurnAt < 0) { pageTurnAt = saidChars; pageBefore = state.board.current; }
+          if (part.block.kind === 'page' && pageTurnAt < 0) { pageTurnAt = saidChars; pageBefore = state.board.current; pagesBefore = state.board.pages.length; }
           if (part.block.kind === 'page') {
             const from = state.board.current; // A line of working is not carried: written just before the turn, it closes what came
             // before it: the count of domains for the molecule just answered was moved onto the next part's page
@@ -677,7 +765,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const missing = [
       confirmedNoFigure ? 'You confirmed the student\'s answer and drew nothing: if what they found can be seen in a picture (an angle, an image, a point or a crossing on a graph, a length, a position), draw that figure now with the answer marked on it, as the third step.' : '',
       promised ? 'You spoke of a picture or pointed at something as shown ("here is…"), and this reply drew no figure: draw it now, as the third step.' : '',
-      cardNoFigure ? 'This reply put up a problem and no figure with it: if the problem describes something that can be drawn (a circuit, a shape, a set-up, a graph), draw it now as the third step, with what the student is to find left out.' : '',
+      cardNoFigure ? 'This reply put up a problem and no figure with it: if the problem describes something that can be drawn (a circuit, a shape, a set-up, a graph, a plot of data it describes in words), draw it now as the third step, with what the student is to find left out.' : '',
       confirmedBare ? 'You confirmed the student\'s answer and wrote nothing for it: in the second step, write the one line of working that gives it, with with="the opening words of the sentence that confirms it".' : '',
     ].filter(Boolean).join(' ');
     const check = `[board check — from the system running the session, not from the student]\nYou have just said the reply above aloud. In it you put on the board: ${listed.length ? `\n${listed.join('\n')}` : 'nothing. A reply of this length that leaves the board untouched is a tutor talking at an empty board: unless it was only small talk or a question about what is already up, the heart of what you said belongs there, in the form that fits it.'}\n\nFirst, and rarely: does a numbered item state outright the answer to the very thing this reply asks the student to work out, so that reading the board answers your question for them? Only then, withdraw it by writing "withdraw N" on a line by itself, followed by that question as you asked it, in quotation marks; and if the reply points the student at that item ("the table below"), write it again in the second step with the part they are to find left as a question mark. Everything else stays: an item that sets the question out, leaves a blank or a question mark for them to fill, lists things for them to compare, shows working the student has already given, or shows what you yourself explained. When unsure, it stays.\n\nSecond: what is only heard is lost. If something you said aloud that the student needs to hold on to is not on the board (the working behind a result, a step the student gave, a correction, a hint; a name, a date, a term, the two sides of a question), write it now as board blocks, in whichever kind fits, each with with="the opening words of the sentence in which you say it", for example <board equation with="The derivative of the top">…</board>. Write only what you said: nothing new, nothing already there, and never an answer you left for the student to find.${unwritten.length ? ` These equations were said aloud and no board item holds them: ${unwritten.map((e) => `"${e}"`).join('; ')}. Each goes up now as an equation, unless it is there in another form or is the answer the student is to find.` : ''}${askedOnCard ? '' : ' A question you set that comes with its own numbers, data or expression, none of them on the board, is written as a problem block holding the question as you asked it; a question about what is already on the board needs none.'}\n\nThird, a picture. Name to yourself the one thing in this reply a student could look at rather than read: an equation that is a curve, a function, points on axes, an arrangement of things a problem or an explanation describes (a circuit, an apparatus, a shape, a set-up), a set of data values or counts, pushes and pulls on a thing, values on a number line, events in order, the stages of a process, two things set side by side. If there is one and no figure of that very thing is on the board (a figure of something else, an earlier circuit or an earlier graph, does not count), draw it now in the figure form that fits (${catalogueSubjects(session).includes('physics') ? 'graph, chart, forces' : 'graph, chart'}, numberline, timeline, steps, cycle, ranks, web, map, compare, table)${catalogue ? ', or as an exact figure from the catalogue below when one of them shows it better' : ''}, with with="…" as above. A formula written out is not a figure of its curve. A general case told in letters (a circle of radius r about a centre) is drawn with plain numbers standing in for the letters, so there is something to see. Draw the situation as you described it, with the numbers you gave, never the answer the student is to find. What has no shape gets no figure.${missing ? `\n\nIn this reply: ${missing}` : ''}\n\nAnswer in three lines or groups, in this order. First: "withdraw N" with the question it answers in quotation marks, or "1: none". Second: the missing blocks, or "2: none". Third: the figure block itself (saying it is drawn does not draw it), or "3: none" followed by a few words on why nothing here can be drawn.${catalogue ? `\n\nThe catalogue of exact figures for this lesson. One is written <board figure kind="its kind" with="…">its parameters as one JSON object</board>. Give the values the reply gave, as they were said; leave out whatever the student is to find.\n${catalogue}` : ''}`;
@@ -757,6 +845,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       const namesNewPage = (atWord: number) => atWord >= partBeginsAtWord;
       const beforeTurn = (b: InlineBlock) => {
         if (pageTurnAt < 0 || pageBefore < 0 || b.kind === 'page') return false;
+        // Turned BACK to a page for a look, nothing belongs on the page left behind: a second copy of a note was
+        // recorded on the practice page and shown on the page turned to (portal-84f8660d).
+        if (state.board.pages.length <= pagesBefore) return false;
         const want = letters(b.attrs.with ?? '').slice(0, 3);
         if (want.length >= 2) for (let at = 0; at + want.length <= saidLetters.length; at++) if (want.every((w, k) => saidLetters[at + k] === w)) return at < leadAtWord && !namesNewPage(at);
         // The check sometimes quotes the problem card rather than a sentence ("Two 6 Ω resistors are connected in
@@ -792,7 +883,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         const nextAny = b.kind === 'problem' || b.kind === 'page' ? undefined : inlinePainted.map((x) => ({ id: x.id, at: after.indexOf(x.raw), card: x.label.startsWith('problem') })).filter((x) => x.at >= 0 && onPage.has(x.id)).sort((x, y) => x.at - y.at)[0];
         // A figure drawn for a problem stands under its card, as in a book: put above, it pushed the card down two
         // seconds after the student had begun to read it (biology, embed-1794520770137).
-        const next = nextAny && b.kind === 'figure' && nextAny.card ? undefined : nextAny;
+        // The board is written top to bottom: a card that arrives later goes under what is already up. Written in
+        // above, it pushed a table and a note down while the student was reading them (AP US Government,
+        // portal-84f8660d, twice). TUTOR_V2_BOARD_INSERTS=on brings the old placing back.
+        const next = process.env.TUTOR_V2_BOARD_INSERTS !== 'on' || (nextAny && b.kind === 'figure' && nextAny.card) ? undefined : nextAny;
         placeAbove = next?.id;
         let ok = false; try { ok = settleInline(b, true); } finally { placeAbove = undefined; }
         if (!ok) continue;
@@ -801,6 +895,78 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       }
     } catch { /* the reply stands without it */ }
   }
+
+  // A case told aloud has its points on the board. Told in answer to "Who's Diego?", the second case went up
+  // nowhere, and the rest of the conversation ran under the first case's page (local test embed-1795030468491).
+  if (dMeta && !input.signal?.aborted) {
+    const saidAll = rawSpoken.join('\n\n') || '';
+    for (const c of untoldBefore) {
+      if (!c.glance?.length || !caseToldIn(c, saidAll)) continue;
+      const plain = (x: string) => x.replace(/[^a-z0-9]+/gi, '').toLowerCase();
+      const up = state.board.pages.some((pg) => pg.items.some((it) => plain(it.summary).includes(plain(c.glance![0]))));
+      if (up) continue;
+      const now = state.board.pages[state.board.current]?.title ?? '';
+      const raw = `${plain(now) === plain(c.title) ? '' : `<board page>${c.title}</board>\n`}<board note style="highlight">${c.glance.join('\n')}</board>`;
+      try {
+        for (const b of boardBlocksIn(raw)) settleInline(b, true);
+        const holder = [...stored].reverse().find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((x) => x.type === 'text'));
+        const textBlock = (holder?.content as Anthropic.ContentBlockParam[] | undefined)?.find((x): x is Anthropic.TextBlockParam => x.type === 'text');
+        if (textBlock) textBlock.text = `${raw}\n${textBlock.text}`;
+      } catch { /* the reply stands without it */ }
+    }
+  }
+
+  // The answer key for a problem the tutor made up. The plan's problems come with their answers and were judged
+  // right all lesson; on its own problem the tutor had nothing to judge by, and told a student who solved
+  // 3x² − 3 = 0 as x = ±√3 that the roots were right, twice, until the student corrected it (AP Calculus BC,
+  // portal-8e2d86f3; replayed, 5 replies of 8 agreed). Given the problem worked out beforehand, 0 of 8 did. So each
+  // such problem is solved once on a clean page while the student is reading it, and the result is a fact from the
+  // next turn on (facts.ts). Left unworked by an interrupted turn, it is worked at the end of the next.
+  const unworked = Object.entries(state.ownKeys ?? {}).filter(([id, key]) => !key && state.board.pages.some((pg) => pg.items.some((it) => it.id === id))).slice(-2);
+  const ownKeys: Promise<Array<[string, string]>> = (input.ownKey ?? (!input.callModel && process.env.TUTOR_V2_OWN_KEY !== 'off')) && unworked.length && !state.closed && !input.signal?.aborted
+    ? Promise.all(unworked.map(([id]) => {
+      const item = state.board.pages.flatMap((pg) => pg.items).find((it) => it.id === id);
+      return callModel({
+        model: '', max_tokens: 3000, thinking: { type: 'adaptive' }, output_config: { effort: 'medium' },
+        messages: [{ role: 'user', content: `${V2_OWN_KEY}\n\nThe problem:\n${item?.summary ?? ''}` }],
+      } as unknown as Anthropic.MessageCreateParamsNonStreaming, undefined, input.signal).then((response): [string, string] => {
+        usage.inputTokens += response.usage.input_tokens; usage.outputTokens += response.usage.output_tokens;
+        usage.cacheReadTokens += response.usage.cache_read_input_tokens ?? 0; usage.cacheCreationTokens += response.usage.cache_creation_input_tokens ?? 0;
+        const text = response.content.filter((b): b is Anthropic.TextBlock => b.type === 'text').map((b) => b.text).join(' ').replace(/\s+/g, ' ').trim();
+        return [id, text.slice(0, V2_OWN_KEY_CHARS)];
+      }).catch((): [string, string] => [id, '']);
+    }))
+    : Promise.resolve([]);
+
+  // The same for a question asked aloud with no card. Most of what a tutor asks is asked this way ("what do you
+  // get when you set that to zero?"), and the reply to it is judged with nothing to judge by. The answer is worked
+  // while the tutor is still saying the question, and is a fact on the next turn only: the next reply that speaks
+  // replaces it or drops it. Not when this reply put up a problem card (the card has its own answer), and not for
+  // a question with no answer to work out.
+  const saidAloud = spoken.join(' ');
+  // A page whose heading named no part of the plan: what was said and written on opening it may.
+  if (pageUnplaced && session.plan) {
+    const wrote = toolCalls.filter((c) => c.name === 'annotate' && !/^not /.test(c.outcome)).map((c) => String((c.args as { text?: unknown }).text ?? '')).join(' ');
+    const part = goalForTalk(session.plan, `${pageUnplaced} ${saidAloud} ${wrote}`);
+    if (part) state.partsSeen = { ...(state.partsSeen ?? {}), [part]: nowMs };
+  }
+  // Asked as a question or as a thing to do: "Solve 3x² − 12 = 0 and tell me what you get." has no question mark,
+  // and in the first replay such a reply got no answer worked and the tutor agreed with a wrong one.
+  const sentencesAloud = saidAloud.split(/(?<=[.?!])\s+/).map((x) => x.trim()).filter(Boolean);
+  const lastAsk = [...sentencesAloud].reverse().find((x) => /\?["')\]]*$/.test(x) && !/^(is that clear|does that make sense|are you with me|shall i go over)/i.test(x)) ?? sentencesAloud[sentencesAloud.length - 1];
+  const cardNow = toolCalls.some((c) => c.name === 'show_problem' && !/^not /.test(c.outcome));
+  const mathsInView = () => (state.board.pages[state.board.current]?.items ?? []).some((it) => (it.tool === 'show_equation' || it.tool === 'show_problem' || it.tool === 'show_function_graph') && /\d/.test(it.summary));
+  const askedKey: Promise<string | null> = (input.askedKey ?? (!input.callModel && process.env.TUTOR_V2_ASKED_KEY !== 'off')) && !!lastAsk && !cardNow && !discussion && !session.homework && !session.homeworkSheet && !state.closed && !input.signal?.aborted && (speaksMaths(saidAloud, 3) || mathsInView())
+    ? callModel({
+      model: '', max_tokens: 2500, thinking: { type: 'adaptive' }, output_config: { effort: 'medium' },
+      messages: [{ role: 'user', content: `${V2_ASKED_KEY}\n\nThe board shows:\n${renderBoard(state.board)}\n\nThe tutor said:\n${saidAloud.slice(-900)}` }],
+    } as unknown as Anthropic.MessageCreateParamsNonStreaming, undefined, input.signal).then((response) => {
+      usage.inputTokens += response.usage.input_tokens; usage.outputTokens += response.usage.output_tokens;
+      usage.cacheReadTokens += response.usage.cache_read_input_tokens ?? 0; usage.cacheCreationTokens += response.usage.cache_creation_input_tokens ?? 0;
+      const text = response.content.filter((b): b is Anthropic.TextBlock => b.type === 'text').map((b) => b.text).join(' ').replace(/\s+/g, ' ').trim();
+      return text && !/^\W*open\b/i.test(text) && text.length > 8 ? text.slice(0, V2_OWN_KEY_CHARS) : null;
+    }).catch(() => null)
+    : Promise.resolve(null);
 
   const fix = await mathsCheck;
   if (fix && !state.closed && !input.signal?.aborted) {
@@ -812,10 +978,34 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     if (textBlock) textBlock.text = `${textBlock.text}\n\n${words}`;
   }
 
+  for (const [id, key] of await ownKeys) if (key && state.ownKeys) state.ownKeys = { ...state.ownKeys, [id]: key };
+  // A reply that spoke has answered the last question or moved on from it; one with no words leaves it standing.
+  const asked = await askedKey;
+  if (spoken.length) { if (asked && lastAsk) state.askedKey = { q: lastAsk.trim().slice(0, 200), key: asked }; else delete state.askedKey; }
+
+  // A lesson that ends before its recap ends on a recap all the same. A student who said "I'll just stop here"
+  // got a spoken summary and was left looking at the problem page (AP Calculus BC, portal-8e2d86f3; Praveen
+  // 11-17: open a short recap page). The page is the plan's own points to remember, put up by the engine as
+  // the closing words are said: no further reply, nothing more spoken. Only when the idea itself was taught.
+  if (state.closed && session.plan && !discussion && !session.homework && !session.homeworkSheet && !input.signal?.aborted && process.env.TUTOR_V2_CLOSE_RECAP !== 'off') {
+    const recapPart = session.plan.segments.find((seg) => seg.kind === 'recap');
+    const points = ((recapPart as { mustRemember?: unknown } | undefined)?.mustRemember as unknown[] | undefined ?? []).filter((x): x is string => typeof x === 'string' && !!x.trim());
+    const reached = (id: string) => !!state.goals[id] || !!state.partsSeen?.[id];
+    const taught = session.plan.segments.some((seg) => seg.kind === 'concept' && reached(seg.id));
+    const hasRecapPage = state.board.pages.some((pg) => goalForTitle(session.plan!, pg.title) === recapPart?.id);
+    if (recapPart && points.length && taught && !reached(recapPart.id) && !hasRecapPage && state.board.pages.length) {
+      const stamp = nowMs.toString(36);
+      settle({ type: 'tool_use', id: `recap_page_${stamp}`, name: 'new_page', input: { title: 'Recap' } } as Anthropic.ToolUseBlock, true);
+      settle({ type: 'tool_use', id: `recap_note_${stamp}`, name: 'annotate', input: { text: points.slice(0, 6).map((x) => `- ${x.trim()}`).join('\n') } } as Anthropic.ToolUseBlock, true);
+    }
+  }
+
   // A spoken reply that asks the student nothing leaves them not knowing whose move it is. Going on unasked a
   // moment later turned a page the student was still reading and talked over their answer (AP Lit and AP Calc BC,
   // 2026-11-11: "give the student the chance to say yes, I get this"). The reply ends by handing over instead.
-  if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && spoken.length && !toolCalls.some((c) => c.name === 'keep_listening' || c.name === 'end_lesson') && !asksAnywhere(spoken.join(' ').split(/(?<=[.?!])\s+/))) {
+  if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && spoken.length && !toolCalls.some((c) => c.name === 'keep_listening' || c.name === 'end_lesson') && !asksAnywhere(spoken.join(' ').split(/(?<=[.?!])\s+/))
+    // With the close due the tutor is saying goodbye: "Good work today." was followed by "Are you with me so far?" (portal-84f8660d).
+    && !(session.timeBoxMinutes && session.timeBoxMinutes - (nowMs - state.startedAtMs) / 60000 <= closeDueMinutes(session.timeBoxMinutes))) {
     const ins = discussion ? DISCUSSION_CHECK_INS : V2_CHECK_INS;
     const words = ins[state.history.length % ins.length];
     input.onText?.(`\n\n${words}`);
@@ -843,6 +1033,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   }
 
   state.history = [...state.history, ...stored];
+  if (dMeta && session.plan) syncDiscussionStages(state, session.plan, dMeta, nowMs);
   // Fed back as a fact next turn: how long the tutor has been talking without writing.
   const painted = toolCalls.some((c) => !V2_CONTROL_TOOL_NAMES.has(c.name) && !/^not /.test(c.outcome));
   state.repliesSinceBoard = painted ? 0 : (state.repliesSinceBoard ?? 0) + 1;
@@ -853,6 +1044,16 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   if (discussion && state.closed && !finalWords.trim()) {
     finalWords = state.nextDirection && !/^not (?:asked|sure)/i.test(state.nextDirection) ? `Thank you for thinking this through with me. The direction you chose: ${state.nextDirection.replace(/[.\s]+$/, '')}.` : 'Thank you for thinking this through with me.';
     input.onText?.(finalWords);
+  }
+  // The plan's own last words: that the session is over and what comes next. One session closed on a summary
+  // and stopped, and the person did not know it had finished (partner review, 2026-11-17).
+  const closing = discussion && state.closed && !input.signal?.aborted ? discussionOf(session.plan)?.closing?.trim() : '';
+  if (closing && !finalWords.includes(closing)) {
+    input.onText?.(`\n\n${closing}`);
+    finalWords = `${finalWords}\n\n${closing}`;
+    const holder = [...state.history].reverse().find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));
+    const textBlock = [...((holder?.content as Anthropic.ContentBlockParam[] | undefined) ?? [])].reverse().find((c): c is Anthropic.TextBlockParam => c.type === 'text');
+    if (textBlock) textBlock.text = `${textBlock.text}\n\n${closing}`;
   }
   return { spoken: finalWords, toolCalls, ...(withdrawnLabels.length ? { withdrawn: withdrawnLabels } : {}), state, usage, firstTextMs, totalMs: Date.now() - t0, modelCalls };
 }

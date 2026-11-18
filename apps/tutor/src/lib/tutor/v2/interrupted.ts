@@ -53,3 +53,14 @@ export function trimToSpoken(state: V2State, sentences: string[], started: numbe
   next.history[i] = { role: 'assistant', content: [{ type: 'text', text: said ? `${said} ${V2_CUT_MARK}` : V2_CUT_MARK }, ...others] };
   return next;
 }
+
+/** The student came in over the last sentence of a reply, a question, with a brief answer to it: they heard it.
+ *  Counted as unheard, "Shall we go on, or do you have a question first?" answered "Yeah." a moment before it
+ *  ended was struck from the record, and the tutor asked it again (AP Macroeconomics, portal-a4f66d55, twice).
+ *  Anything longer, or said over an earlier sentence, is still a cut: the question may not have got through. */
+const BRIEF_ANSWER = /^\s*(?:(?:oh|um|uh|well|so)[, ]+)*(?:yes|yeah|yep|yup|ya|ok|okay|sure|alright|all right|mhm|uh[- ]?huh|no|nope|nah|not yet|go on|go ahead|let'?s (?:go|go on|move on|do it|continue)|i do|i don'?t|got it|makes sense)\b/i;
+export function answeredAsItEnded(studentSaid: string, sentences: string[], started: number): boolean {
+  if (!sentences.length || started !== sentences.length) return false;
+  const words = studentSaid.trim().split(/\s+/).filter(Boolean);
+  return /\?["')\]]*$/.test(sentences[sentences.length - 1].trim()) && words.length > 0 && words.length <= 6 && BRIEF_ANSWER.test(studentSaid);
+}

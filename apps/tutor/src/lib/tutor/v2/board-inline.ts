@@ -107,6 +107,23 @@ function codeLanguage(code: string): string {
   return /\b(?:public|private|static|void|String|System\.)\b|\bint\s+\w+\s*[(=;]/.test(code) ? 'java' : /^\s*def\s|:\s*$|\bprint\(/m.test(code) ? 'python' : /\b(?:const|let|function)\b|=>/.test(code) ? 'javascript' : 'code';
 }
 
+/** The shaded stretches of a number line, from its marked values and the way each is shaded.
+ *  A value shaded to the right and a larger one shaded to the left are the two ends of one stretch: "-2 < x ≤ 3".
+ *  Drawn as two rays, each to the end of the line, they covered each other and the whole line from -6 to 7 was
+ *  shaded (compound inequalities, portal-02fd8638). A ray runs on past the end of the line: it has no end to mark,
+ *  and the filled dot it was given at the edge read as "up to 7, and 7 is included". */
+export function numberLineIntervals(marks: Array<{ value: number; included: boolean; right: boolean }>, lo: number, hi: number): Array<{ from: number; to: number; fromInclusive: boolean; toInclusive: boolean; color: string; fromOpenEnded?: boolean; toOpenEnded?: boolean }> {
+  const sorted = [...marks].sort((a, b) => a.value - b.value);
+  const out: ReturnType<typeof numberLineIntervals> = [];
+  for (let i = 0; i < sorted.length; i++) {
+    const m = sorted[i]; const next = sorted[i + 1];
+    if (m.right && next && !next.right && next.value > m.value) { out.push({ from: m.value, to: next.value, fromInclusive: m.included, toInclusive: next.included, color: 'blue' }); i += 1; }
+    else if (m.right) out.push({ from: m.value, to: hi, fromInclusive: m.included, toInclusive: false, toOpenEnded: true, color: 'blue' });
+    else out.push({ from: lo, to: m.value, fromInclusive: false, toInclusive: m.included, fromOpenEnded: true, color: 'blue' });
+  }
+  return out;
+}
+
 export function inlineToolCall(b: InlineBlock): { name: string; args: Record<string, unknown> } {
   // Program code keeps its shape: one fixed-width listing, whether it was written as code or as a note
   // (a method written as a note came out in the board's prose font, AP CS A recursion, 2026-11-11).
@@ -246,7 +263,7 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
     return { name: 'show_number_line', args: {
       ...(b.attrs.title ? { title: b.attrs.title } : {}), min: lo, max: hi, step,
       points: rows.map((c) => ({ value: num(c[0]), label: c[0], style: open(c) ? 'open' : 'filled' })),
-      intervals: rows.filter((c) => /right|left|greater|less|above|below/i.test(c[2] ?? '')).map((c) => (/right|greater|above/i.test(c[2]) ? { from: num(c[0]), to: hi, fromInclusive: !open(c), toInclusive: true, color: 'blue' } : { from: lo, to: num(c[0]), fromInclusive: true, toInclusive: !open(c), color: 'blue' })),
+      intervals: numberLineIntervals(rows.filter((c) => /right|left|greater|less|above|below/i.test(c[2] ?? '')).map((c) => ({ value: num(c[0]), included: !open(c), right: /right|greater|above/i.test(c[2]) })), lo, hi),
     } };
   }
   if (b.kind === 'graph') {

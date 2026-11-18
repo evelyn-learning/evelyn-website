@@ -609,6 +609,9 @@ interface EmbedConfig {
    *  token; absent/false = not a trial. Only consumed when
    *  NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is on. */
   is_trial?: boolean;
+  /** A reviewer's link (a partner testing a session): the v2 voice client shows "Pause and leave a note", and
+   *  the spoken note is saved in the session record as v2_review_note events (V2FlagBar). */
+  review_notes?: boolean;
   /** Asks for the v2 turn engine; honoured only where TUTOR_BRAIN_V2_CLAIM is on. */
   brain_version?: string;
   /** Open-scope session (2026-09-10). When true the student may change the

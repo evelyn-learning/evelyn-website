@@ -1515,8 +1515,14 @@ console.log('OK — tts-pronunciation rewrites validated');
   // Mathematics typed in a sentence gets its words (embed-1794336536781: "one x", "fef aye", "infinity over zeroth").
   const say = (x: string) => rewriteForTTS(x);
   assert.match(say("what's left is f'(a) over g'(a)"), /f prime of a over g prime of a/i);
-  assert.match(say('the derivative of 1/x is -1/x².'), /1 over x is -1 over x squared/);
-  assert.match(say('simplify (1/x) divided by (-1/x²)'), /\(1 over x\) divided by \(-1 over x squared/);
+  assert.match(say('the derivative of 1/x is -1/x².'), /1 over x is negative 1 over x squared/);
+  // The keyboard minus and a closed interval (AP Calculus BC, portal-8e2d86f3).
+  assert.match(say('For f(x) = x^3 - 3x on the closed interval [-2, 3], find the maximum.'), /x cubed minus 3x on the closed interval from negative 2 to 3,/);
+  assert.match(say("Your arithmetic on -27 + 36 is right, but the test needs f'(-3)."), /on negative 27 \+ 36 is right.*f prime of negative 3/);
+  assert.match(say('Find the max of x⁴ − 8x² + 1 on [-3, 2].'), /on the interval from negative 3 to 2\./);
+  assert.match(say('A well-known range of 10-15, from 2019 - 2021.'), /well-known range of 10-15, from 2019 - 2021/);
+  assert.match(say('$x^3 - 3x$ on $[-2, 3]$'), /x cubed minus 3x on the interval from minus 2 to 3/);
+  assert.match(say('simplify (1/x) divided by (-1/x²)'), /\(1 over x\) divided by \(negative 1 over x squared/);
   assert.match(say("Here's an ∞⁰ form"), /infinity to the power 0 form/);
   assert.match(say('a 1^∞ form'), /1 to the power infinity form/);
   assert.match(say('x/2 and 3x/4 and x/y'), /x over 2 and 3x over 4 and x over (y|why)/);
@@ -1590,6 +1596,12 @@ console.log('OK — tts-pronunciation rewrites validated');
   assert.equal(maths9('The minus sign stays attached to the $5$.'), 'The minus sign stays attached to the 5.');
   assert.equal(maths9('It costs $5 and $3.'), 'It costs 5 dollars and 3 dollars.');
   assert.equal(speechRateForLevel('7'), 0.78); assert.equal(speechRateForLevel('9-10'), 0.88); assert.equal(speechRateForLevel('grade 4'), 0.7);
-  for (const full of ['12', 'ap', 'college', undefined]) assert.equal(speechRateForLevel(full), undefined);
+  // An AP lesson at the full rate was "a little fast" (Praveen, AP US Government, portal-ddf273bf): the oldest
+  // students and levels with no grade number are spoken to a little slower than the voice's own pace too.
+  for (const full of ['12', 'ap', 'college', undefined]) assert.equal(speechRateForLevel(full), 0.88);
+  assert.match(rewriteForTTS('Federalist No. 51 is one of those essays.'), /Federalist Number 51/);
+  assert.match(rewriteForTTS('See Nos. 10 and 51.'), /Numbers 10 and 51/);
+  assert.match(rewriteForTTS('Use the no. 3 on the list.'), /the number 3 on the list/);
+  assert.match(rewriteForTTS('No. That is not right. No 5 is there.'), /^No\. That is not right\. No 5 is there\.$/);
   for (const keep of ['The scores are 62, 66, 70, 73, 75.', 'In 1492, 1519, and 1550 to 1551.', 'It cost 1,250,000 dollars.']) assert.equal(speakDataRuns(keep), keep);
 }

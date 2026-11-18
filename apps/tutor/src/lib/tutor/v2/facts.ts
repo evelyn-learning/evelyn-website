@@ -4,11 +4,12 @@
  * The one thing the runtime adds to a turn. Facts only: nothing in here tells
  * the model what to do.
  */
+import { closeDueMinutes } from './close-heard';
 import { renderBoard } from './board';
 import { v2HomeworkFacts, v2HomeworkGuardFacts, v2SheetFacts } from './homework-facts';
 import { renderGoalStatus } from './plan-map';
 import type { V2Session, V2State } from './types';
-import { discussionOf, effectiveMinutes, lastReplyNotes, renderThinking } from './discussion';
+import { discussionOf, effectiveMinutes, lastReplyNotes, reflectAsked, reflectAtMinutes, renderThinking, stagePace, untoldCases } from './discussion';
 
 /** After the tutor chose to keep listening: how long the student stays silent before it is told so (TutorVoiceV2).
  *  At that point silence is no longer open to it: it kept listening twice and the student sat with a blank
@@ -25,6 +26,8 @@ export interface V2TurnFacts {
   answerCheck?: string;
   /** Seconds the student was silent before this turn, when that is why the turn exists. */
   silenceSeconds?: number;
+  /** No one spoke: the turn exists because the session is nearly out of time (useV2Turns). */
+  timeCheck?: boolean;
   /** The page was reloaded and the session has just been picked up again (resume.ts). */
   resumed?: boolean;
   /** A draft of this reply was held back, and why (homework-turn.ts). */
@@ -40,18 +43,27 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // minutes" ran to 10.4).
   const box = discussion ? effectiveMinutes(session.timeBoxMinutes, state.thinking) : session.timeBoxMinutes;
   const left = box ? box - (f.nowMs - state.startedAtMs) / 60000 : 0;
+  const usedExact = (f.nowMs - state.startedAtMs) / 60000;
+  const reflectAt = discussion && session.plan ? reflectAtMinutes(session.plan, box) : null;
+  const reflected = discussion ? reflectAsked(state.history, discussionOf(session.plan)) : false;
+  const reflectDue = reflectAt !== null && usedExact >= reflectAt;
   const lines = [
     // A discussion runs 8–12 minutes and may close early once the person has chosen where to go next: the teaching
     // line's "time for more, not at its close" would hold it open.
-    discussion ? `time: ${usedMin} min used${box ? ` of about ${box}${box !== session.timeBoxMinutes ? ' (the time they said they have)' : ''}; ${left > box * 0.4 ? `about ${Math.round(left)} left: plenty of time, not yet time to reflect or close unless they ask` : left > 4 ? `about ${Math.round(left)} left` : left > 1.5 ? `about ${Math.round(left)} left: time to reflect and choose a direction` : 'the time is up'}` : ''}` :
+    discussion ? `time: ${usedMin} min used${box ? ` of about ${box}${box !== session.timeBoxMinutes ? ' (the time they said they have)' : ''}; ${left > 1.5 && reflectDue ? `about ${Math.round(left)} left: time to ask what they are thinking now${reflected ? ' (asked)' : ''} and then what they would like to explore next` : left > box * 0.4 ? `about ${Math.round(left)} left: plenty of time, not yet time to reflect or close unless they ask` : left > 4 ? `about ${Math.round(left)} left` : left > 1.5 ? `about ${Math.round(left)} left: time to reflect and choose a direction` : `the time is up${state.thinking?.direction ? '' : ': they have not named a direction, so the close names none'}`}` : ''}` :
     // What is left, said outright: with only "22 used of 30" the tutor said goodbye, was refused the close, and
     // took the goodbye back in the same breath (embed-1794593747478, embed-1794595194384).
     // Homework: a solved problem does not go on spending the student's minutes.
     session.homework || session.homeworkSheet
       ? `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > 1.5 ? `about ${Math.round(left)} left` : 'the time is up'}` : ''}; the session ends when ${session.homeworkSheet ? 'the sheet' : 'this problem'} is done`
-      : `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > session.timeBoxMinutes * 0.2 ? `about ${Math.round(left)} left, which is time for more: the lesson is not at its close unless the student asks to stop` : left > 1.5 ? `about ${Math.round(left)} left: the close is near` : 'the time is up'}` : ''}`,
+      : `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${left > closeDueMinutes(session.timeBoxMinutes) ? `about ${Math.round(left)} left, which is time for more: the lesson is not at its close unless the student asks to stop` : left > 0.75 ? `about ${Math.max(1, Math.round(left))} left: tell the student so now, once and in a few words, then use what is left for the one thing that matters most (finish the step in hand, or say what to take away), and close when that is done. Do not start anything new` : 'the time is up: close now, in a sentence or two'}` : ''}`,
     `board:\n  ${renderBoard(state.board)}`,
   ];
+  // The answer to a problem of the tutor's own that is on the page in view (turn.ts, ownKeys): the latest one.
+  const keyed = [...(state.board.pages[state.board.current]?.items ?? [])].reverse().find((it) => state.ownKeys?.[it.id]);
+  if (keyed) lines.push(`the problem on the board that you set yourself ("${keyed.summary.replace(/\s+/g, ' ').slice(0, 70)}…"), worked out apart from the lesson for your checking (the student has not seen this; check each thing they say about it against this before you agree or disagree): ${state.ownKeys![keyed.id]}`);
+  // The answer to the question the tutor last asked aloud (turn.ts, askedKey).
+  if (state.askedKey?.key) lines.push(`the question you asked last ("${state.askedKey.q.replace(/\s+/g, ' ').slice(0, 120)}"), worked out apart from the lesson for your checking (the student has not seen this; check what they answer against this before you agree or disagree): ${state.askedKey.key}`);
   if ((state.repliesSinceBoard ?? 0) >= 1) lines.push(`board last written on: ${state.repliesSinceBoard} ${state.repliesSinceBoard === 1 ? 'reply' : 'replies'} ago`);
   if (state.boardProblems?.length) lines.push(`not painted in your last reply:\n${state.boardProblems.map((x) => `  - ${x}`).join('\n')}`);
   if (session.homework) lines.push(...v2HomeworkFacts(session.homework, state.homework));
@@ -61,6 +73,11 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   lines.push(`your note: ${state.note.trim() || '(empty — nothing written yet)'}`);
   const thinking = discussion ? renderThinking(state.thinking) : '';
   if (thinking) lines.push(thinking);
+  const pace = discussion && session.plan && !reflectDue ? stagePace(session.plan, state.goals, usedExact, box) : '';
+  if (pace) lines.push(pace);
+  const meta = state.history.length ? discussionOf(session.plan) : null;
+  const untold = meta ? untoldCases(meta, state.history) : [];
+  if (untold.length) lines.push(`not yet told to them: ${untold.map((c) => c.title).join('; ')}. They know nothing of ${untold.length === 1 ? 'it' : 'these'}: no name or detail from ${untold.length === 1 ? 'it' : 'them'} until the reply that tells it in full. That reply tells it at once: it does not ask whether to go on, and it does not say a case is coming`);
   const lastNotes = discussion ? lastReplyNotes(state.history, session.mode === 'voice', f.heard) : [];
   if (lastNotes.length) lines.push(`your last reply: ${lastNotes.join('; ')}`);
   // Said once in the prompt, the length and the opener drift back within a few turns (live test 2, 2026-11-15: replies of
@@ -75,7 +92,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   if (f.silenceSeconds) lines.push(Math.round(f.silenceSeconds) === V2_NO_ASK_RECHECK_S
     ? `your last reply has finished and it ended on a statement: no question, and nothing for them to do. They are waiting for you to go on`
     : Math.round(f.silenceSeconds) === V2_WAITED_RECHECK_S
-    ? `you kept listening after the student's last words, and they have said nothing more for ${V2_WAITED_RECHECK_S} seconds: they had finished. Take what they said as their answer and reply to it now`
+    ? `you kept listening after the student's last words, and they have said nothing more for ${V2_WAITED_RECHECK_S} seconds: they had finished. Take what they said as their answer and reply to it now, as you would have straight away: no remark about the wait, and no telling them you are here`
     : `the student has said nothing for ${Math.round(f.silenceSeconds)} seconds`);
   return `<facts>\n${lines.join('\n')}\n</facts>`;
 }

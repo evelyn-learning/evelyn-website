@@ -36,16 +36,19 @@ import { inkTurnEndTimeoutMs } from '@/lib/tutor/voice/ink-turn-end';
 import type { RealtimeHandle } from '@/lib/tutor/orchestrator/types';
 import type { WhiteboardCommand } from '@core/knowledge/types';
 import { type V2ComposerStatus, V2Composer, V2_HANDLE_STUBS } from './TutorClientV2';
-import { V2FlagBar, V2_FLAGS_ON, type V2FlagState } from './V2FlagBar';
+import { V2FlagBar, V2_FLAGS_ON, reviewNotesClaim, type V2FlagState } from './V2FlagBar';
 import { useV2Turns, type V2TurnsConfig } from './useV2Turns';
 import { isOwnVoice } from '@/lib/tutor/v2/own-voice';
-import { trimToSpoken } from '@/lib/tutor/v2/interrupted';
+import { answeredAsItEnded, trimToSpoken } from '@/lib/tutor/v2/interrupted';
 import { isMathsSubject, isScienceSubject } from '@/lib/tutor/v2/session-kind';
 import { anchorSentenceIndex, asksAnywhere, inlineSentenceIndex } from '@/lib/tutor/v2/board-timing';
 import { summariseBoardCall } from '@/lib/tutor/v2/board';
 import { V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S } from '@/lib/tutor/v2/facts';
+import { asksToWait } from '@/lib/tutor/v2/close-heard';
+import { useMicReacquire } from '../../hooks/useMicReacquire';
 import { outsideMathSpans, speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakLessonNotation, speakLetterUnits, speakGroups, speakNumberPlurals, speakSlashes } from '@/lib/tutor/voice/tts-pronunciation';
 import { cueStop, cueTick, cueTurnAccepted, initialThinkingCue } from '@/lib/tutor/voice/thinking-cue';
+import { useScreenAwake } from './useScreenAwake';
 import { playThinkingPulse, playTurnChime, primeThinkingCueAudio } from '@/lib/tutor/voice/thinking-cue-audio';
 
 export interface TutorVoiceV2Props extends Omit<V2TurnsConfig, 'mode' | 'onSentence' | 'onCut' | 'closeDelayMs'> {
@@ -112,7 +115,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const openingTurnRef = useRef(true);
   // What the composer's status chip shows: the same states the host page is told, plus the student's words so far.
   const [composerStatus, setComposerStatus] = useState<V2ComposerStatus>({ state: 'idle' });
-  const showState = useCallback((state: 'listening' | 'hearing' | 'processing' | 'thinking' | 'speaking' | 'error') => { setComposerStatus((was) => (was.state === state ? was : { state, ...(state === 'hearing' || state === 'processing' ? { heard: was.heard } : {}), level: was.level, ...(was.quiet && state !== 'hearing' ? { quiet: true } : {}) })); p.current.onVoiceStateChange?.(state); }, []);
+  const showState = useCallback((state: 'listening' | 'hearing' | 'processing' | 'thinking' | 'speaking' | 'error') => { setComposerStatus((was) => (was.state === state ? was : { state, ...(state === 'hearing' || state === 'processing' ? { heard: was.heard } : {}), level: was.level, ...(was.quiet && state !== 'hearing' ? { quiet: true } : {}), ...(was.micChanged ? { micChanged: true } : {}) })); p.current.onVoiceStateChange?.(state); }, []);
   const micUiAtRef = useRef(0);
   const openingSpeechRef = useRef<string[] | null>([]); const micLiveRef = useRef(false); const micLiveAtRef = useRef(0); const tapAtRef = useRef(0);
   const paintedThisTurnRef = useRef<Array<{ id: string; tool: string; summary: string }>>([]);
@@ -211,6 +214,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   }, [props.thinkingCue]);
 
   const soonAfterSpeechRef = useRef<number | undefined>(undefined);
+  const lastStudentSaidRef = useRef('');
   const clearSilence = () => { if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; } };
   const armSilence = useCallback((soonS?: number, delayS?: number) => {
     clearSilence();
@@ -321,11 +325,14 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
         if (silentReply && !realtimeRef.current?.isSpeechPending()) showState('listening');
         // One early recheck, and only when the silence answered the student's own words: a silent answer
         // to a silence check-in goes back to the ordinary schedule (it looped every 12 s, embed-1794339843244).
-        const recheck = silentReply && lastTurnWasStudentRef.current;
+        const recheck = silentReply && lastTurnWasStudentRef.current && !asksToWait(lastStudentSaidRef.current);
         // A reply that asked the student nothing leaves them not knowing whose move it is (the tutor made a
         // statement and waited 44 s, embed-1794355900794). It learns of the silence early, once, and can go on.
         const said = turnSentencesRef.current;
-        const noAsk = !silentReply && (lastTurnWasStudentRef.current || openingTurnRef.current) && said.length > 0 && !asksAnywhere(said) && !turnsRef.current?.isEnding() && !turnsRef.current?.closed;
+        const noAsk = !silentReply && (lastTurnWasStudentRef.current || openingTurnRef.current) && said.length > 0 && !asksAnywhere(said) && !turnsRef.current?.isEnding() && !turnsRef.current?.closed
+          // The tutor said it would wait, or the student asked it to: the silence that follows is theirs to break
+          // ("pause for a second" was answered "I'll wait", and the lesson went on five seconds later, portal-50a1e584).
+          && !turnsRef.current?.keptListeningRef.current && !asksToWait(lastStudentSaidRef.current);
         lastTurnWasStudentRef.current = false;
         // The opening is the first reply only. Left on until the student spoke, a second reply before that put its
         // whole page up at once, a note, a formula and a problem together (AP Calc BC, embed-1794446765164).
@@ -398,7 +405,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       // by useV2Turns instead).
       // The sentence playing when they came in is counted as unheard: cut at "What's your first…", the
       // question did not get through, and the tutor says it again.
-      const heardCount = Math.max(0, startedCountRef.current - 1);
+      // Unless it is the reply's closing question and they have plainly answered it (interrupted.ts).
+      const heardCount = answeredAsItEnded(text, turnSentencesRef.current, startedCountRef.current) ? startedCountRef.current : Math.max(0, startedCountRef.current - 1);
       const st = turnsRef.current?.stateRef.current;
       if (turnsRef.current?.busy) cutHeardRef.current = turnSentencesRef.current.slice(0, heardCount).join(' ');
       else if (st) {
@@ -410,7 +418,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     realtimeRef.current?.resumeSpeech();
     silenceStepRef.current = 0;
     if (p.current.thinkingCue) { const r = cueTurnAccepted(cueRef.current, Date.now()); cueRef.current = r.state; play(r.play); }
-    lastTurnWasStudentRef.current = true; openingTurnRef.current = false;
+    lastTurnWasStudentRef.current = true; openingTurnRef.current = false; lastStudentSaidRef.current = text;
     turnsRef.current?.send(text);
   }, [liftPause, dropBoard]);
 
@@ -475,6 +483,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
 
   // The student's voice. Exactly one recogniser owns the microphone, chosen as v1 chooses it.
   const listening = started && realtime.isConnected && !props.standby && !turns.closed;
+  // The screen stays on while the conversation runs (useScreenAwake.ts).
+  useScreenAwake(started && !turns.closed, props.onDebugEvent);
   const onTranscript = useCallback((t: PerceptionTranscript) => heard(t.text), [heard]);
   const onPartial = useCallback((x: { text: string }) => { setComposerStatus((was) => ({ ...was, heard: x.text })); hearingPartial(x.text); }, [hearingPartial]);
   const onSpeechStart = useCallback(() => {
@@ -511,6 +521,11 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const releaseOpeningSpeech = useCallback(() => { const held = openingSpeechRef.current; if (!held) return; openingSpeechRef.current = null; const since = (t: number) => (t && tapAtRef.current ? `${t - tapAtRef.current} ms` : 'never'); p.current.onDebugEvent?.('v2_opening_speech', `released ${since(Date.now())} after the tap; microphone live at ${since(micLiveAtRef.current)}${micLiveAtRef.current ? '' : ' (the wait ran out)'}; ${held.length} sentence(s) were waiting`); for (const s of held) realtimeRef.current?.speakText(s); }, []);
   const onMicLevel = useCallback((level: number) => { if (openingSpeechRef.current && !micLiveRef.current) { micLiveRef.current = true; micLiveAtRef.current = Date.now(); setTimeout(releaseOpeningSpeech, MIC_SETTLE_MS); } if (level > MIC_SOUND_LEVEL) lastSoundAtRef.current = Date.now(); const now = Date.now(); if (now - micUiAtRef.current > 110) { micUiAtRef.current = now; setComposerStatus((was) => (Math.abs((was.level ?? 0) - level) < 0.04 && !(was.quiet && level > MIC_SOUND_LEVEL) ? was : { ...was, level, ...(level > MIC_SOUND_LEVEL ? { quiet: false } : {}) })); } }, [releaseOpeningSpeech]);
   const onInkDiagnostic = useCallback((type: string, message: string) => p.current.onDebugEvent?.(type, message), []);
+  // The microphone follows the student to a new input device (AirPods taken by a phone, a headset unplugged):
+  // without it the lesson went on speaking to a student it could no longer hear (portal-1f1d7348).
+  const onMicNotice = useCallback((up: boolean) => setComposerStatus((was) => (!!was.micChanged === up ? was : { ...was, micChanged: up })), []);
+  const onMicEvent = useCallback((type: string, message: string) => p.current.onDebugEvent?.(type, message), []);
+  useMicReacquire({ enabled: listening, onDebugEvent: onMicEvent, onNotice: onMicNotice });
   usePerceptionWS({
     enabled: listening && !TUTOR_STT_ENGINE_INK2,
     onTranscript, onSpeechStart, onSpeechStop, onMicLevel, onTranscriptionFailed: onNoTranscript, onError: onRecogniserError,
@@ -561,8 +576,10 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   }, [props.handleRef, start, heard]);
 
   const flagSession = useMemo(() => {
+    // One folder per session: by student, every session's flags ran together in one file.
+    if (props.sessionId) return props.sessionId;
     try { return String(JSON.parse(atob((props.embedToken ?? '').split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).student_id || 'session'); } catch { return 'session'; }
-  }, [props.embedToken]);
+  }, [props.embedToken, props.sessionId]);
   const flagSnapshot = useCallback(() => {
     const state = turnsRef.current?.stateRef.current;
     const text = (m: { content: unknown } | undefined) => !m ? '' : typeof m.content === 'string' ? m.content : (m.content as Array<{ type: string; text?: string }>).filter((b) => b.type === 'text').map((b) => b.text).join(' ');
@@ -578,6 +595,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       board: state?.board,
     };
   }, []);
+  const reviewNotes = useMemo(() => reviewNotesClaim(props.embedToken), [props.embedToken]);
+  const reviewNote = useCallback((lines: string[]) => { for (const line of lines) p.current.onDebugEvent?.('v2_review_note', line); }, []);
   const flagStart = useCallback(() => { clearSilence(); if (pauseTimerRef.current) { clearTimeout(pauseTimerRef.current); pauseTimerRef.current = null; } soundPauseRef.current = false; realtimeRef.current?.pauseSpeech(); p.current.onDebugEvent?.('v2_flag', 'opened'); }, []);
   const flagStop = useCallback(() => {
     p.current.onDebugEvent?.('v2_flag', 'closed');
@@ -588,7 +607,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   }, [armSilence]);
 
   return (<>
-    {V2_FLAGS_ON && started && <V2FlagBar session={flagSession} flagRef={flagRef} snapshot={flagSnapshot} onStart={flagStart} onStop={flagStop} />}
+    {(V2_FLAGS_ON || reviewNotes) && started && <V2FlagBar session={flagSession} flagRef={flagRef} snapshot={flagSnapshot} onStart={flagStart} onStop={flagStop} onReviewNote={reviewNotes ? reviewNote : undefined} ended={turns.closed} />}
     <V2Composer
       composerSlot={props.composerSlot}
       closed={turns.closed}

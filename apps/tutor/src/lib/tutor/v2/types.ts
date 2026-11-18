@@ -95,6 +95,17 @@ export interface V2State {
   note: string;
   /** `at`: when the goal was last marked, so the part in hand can be told from one left open earlier (progress.ts). */
   goals: Record<string, { status: GoalStatus; why?: string; at?: number }>;
+  /** The board card of each plan problem that has been put up: goal id → item id (turn.ts). */
+  problemCards?: Record<string, string>;
+  /** When the board last showed each part of the plan to be the one in hand (progress.ts). */
+  partsSeen?: Record<string, number>;
+  /** Problems the tutor set that are not the plan's: board item id → the problem worked out apart from the lesson,
+   *  for the tutor to check answers by ('' until it has been worked). The plan's problems carry their answers;
+   *  these had none, and the tutor agreed with a wrong answer (AP Calculus BC, portal-8e2d86f3). */
+  ownKeys?: Record<string, string>;
+  /** The question the tutor last asked aloud, when it has an answer that can be worked out: that answer, worked apart
+   *  from the lesson while the student thinks, for the tutor to check their reply by. Replaced or dropped by the next reply. */
+  askedKey?: { q: string; key: string };
   /** Gaps the tutor has found in what the student knows, with how far each has been worked on. Optional: older states have none. */
   gaps?: V2Gap[];
   board: V2Board;
@@ -115,6 +126,8 @@ export interface V2State {
     justComplicated?: boolean;
     /** The direction they named, once they have. */
     direction?: string;
+    /** They said they felt led to an answer: no more cases or consequences that point away from their view. */
+    steered?: boolean;
   };
   /** Discussion sessions: the direction the person chose to explore next, given with end_lesson. */
   nextDirection?: string;
@@ -142,6 +155,8 @@ export interface V2ToolCall {
   carries?: string[];
   /** Not painted: it repeats this item on the page in view, and the board scrolls back to it. */
   pointsAt?: string;
+  /** Not painted: the item it repeats is on another page, and the board turns back to that page (its index). */
+  turnsTo?: number;
 }
 
 export interface V2TurnResult {

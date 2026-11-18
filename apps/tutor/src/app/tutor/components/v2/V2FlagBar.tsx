@@ -6,11 +6,41 @@
  * the note with the turn and the board at the moment the flag was raised, and the lesson goes on.
  * Shot (key \): a picture of the tab as it is now, whichever board page is in view. The browser asks once
  * per session which tab to share; pictures taken while a flag is open are listed in that flag.
+ *
+ * REVIEWER NOTES (production): a partner reviewing a session does the same thing with one button. A link whose
+ * signed token carries `review_notes: true` shows "Pause and leave a note"; the note is spoken, and is saved in
+ * the session's own record as `v2_review_note` events, next to the turn it is about. No pictures (a phone
+ * cannot share its tab) and no keys. A partner's notes on three sessions came a day later, by email, from
+ * memory (2026-11-17). Kill switch: NEXT_PUBLIC_TUTOR_REVIEW_NOTES=off.
  */
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from 'react';
 import { createPortal } from 'react-dom';
 
 export const V2_FLAGS_ON = process.env.NODE_ENV === 'development';
+export const V2_REVIEW_NOTES_ON = process.env.NEXT_PUBLIC_TUTOR_REVIEW_NOTES !== 'off';
+/** A session-record event holds 500 characters; a note is cut into parts that fit. */
+export const V2_REVIEW_NOTE_PART = 420;
+
+/** Whether this link is a reviewer's: its token carries review_notes. */
+export function reviewNotesClaim(embedToken: string | undefined | null): boolean {
+  if (!V2_REVIEW_NOTES_ON || !embedToken) return false;
+  try { return JSON.parse(atob(embedToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).review_notes === true; } catch { return false; }
+}
+
+/** A reviewer's note as lines for the session record: where it was raised, the note, what the tutor was saying. */
+export function reviewNoteLines(n: number, note: string, snapshot: Record<string, unknown>): string[] {
+  const board = snapshot.board as { pages?: Array<{ title?: string }>; current?: number } | undefined;
+  const page = board?.pages?.[board.current ?? -1]?.title;
+  const where = `note ${n} · ${snapshot.minutesIn ?? '?'} min in · turn ${snapshot.turns ?? '?'}${page ? ` · board page "${page}"` : ''}`;
+  const words = note.replace(/\s+/g, ' ').trim();
+  const parts: string[] = [];
+  for (let at = 0; at < words.length; at += V2_REVIEW_NOTE_PART) parts.push(words.slice(at, at + V2_REVIEW_NOTE_PART));
+  const tutor = String(snapshot.lastTutor ?? '').replace(/<board\b[^>]*>[\s\S]*?<\/board>/g, ' ').replace(/\s+/g, ' ').trim();
+  return [
+    ...(parts.length ? parts.map((x, i) => `${where}${parts.length > 1 ? ` · part ${i + 1}/${parts.length}` : ''}: ${x}`) : [`${where}: (no words heard)`]),
+    ...(tutor ? [`note ${n} · the tutor's last reply: ${tutor.slice(-V2_REVIEW_NOTE_PART)}`] : []),
+  ];
+}
 /** Words can still be on their way from the recogniser when the flag is closed. */
 const TRAILING_WORDS_MS = 2500;
 
@@ -23,6 +53,10 @@ export function V2FlagBar(props: {
   snapshot: () => Record<string, unknown>;
   onStart: () => void;
   onStop: () => void;
+  /** A reviewer's link: one button, no pictures, and the note goes to the session record through this. */
+  onReviewNote?: (lines: string[]) => void;
+  /** The session has ended: the reviewer's button stays in view and can no longer be pressed. */
+  ended?: boolean;
 }) {
   const p = useRef(props); p.current = props;
   const [mounted, setMounted] = useState(false);
@@ -30,6 +64,18 @@ export function V2FlagBar(props: {
   const phaseRef = useRef(phase); phaseRef.current = phase;
   const [words, setWords] = useState('');
   const [status, setStatus] = useState('');
+  // A reviewer's note is one text they can change before it is saved: what they say is added to it as it is
+  // heard, and they may correct it, add to it by typing, or drop it ("Can I edit something I've already said?
+  // How about cancelling?", first reviewer-link test, embed-1795035527652).
+  const [typed, setTyped] = useState('');
+  const typedRef = useRef(typed); typedRef.current = typed;
+  const takenRef = useRef(0);
+  const takeHeard = useCallback(() => {
+    const heard = p.current.flagRef.current.words;
+    if (heard.length <= takenRef.current) return;
+    const more = heard.slice(takenRef.current).join(' ').trim(); takenRef.current = heard.length;
+    if (more) { const next = `${typedRef.current}${typedRef.current && !/\s$/.test(typedRef.current) ? ' ' : ''}${more}`; typedRef.current = next; setTyped(next); }
+  }, []);
   const countRef = useRef({ flags: 0, shots: 0 });
   const openRef = useRef<{ at: number; snapshot: Record<string, unknown>; shots: string[] } | null>(null);
   const streamRef = useRef<{ stream: MediaStream; video: HTMLVideoElement } | null>(null);
@@ -37,9 +83,9 @@ export function V2FlagBar(props: {
   useEffect(() => { setMounted(true); return () => { streamRef.current?.stream.getTracks().forEach((t) => t.stop()); }; }, []);
   useEffect(() => {
     if (phase === 'idle') return;
-    const t = setInterval(() => setWords(p.current.flagRef.current.words.join(' ')), 300);
+    const t = setInterval(() => { if (p.current.onReviewNote) takeHeard(); else setWords(p.current.flagRef.current.words.join(' ')); }, 300);
     return () => clearInterval(t);
-  }, [phase]);
+  }, [phase, takeHeard]);
 
   const post = useCallback((query: string, init: RequestInit) => fetch(`/api/tutor/v2-flag?session=${encodeURIComponent(p.current.session)}${query}`, { method: 'POST', ...init }), []);
 
@@ -77,29 +123,57 @@ export function V2FlagBar(props: {
       p.current.flagRef.current = { active: true, words: [] };
       openRef.current = { at: Date.now(), snapshot: p.current.snapshot(), shots: [] };
       p.current.onStart();
-      setWords(''); setStatus(''); setPhase('open');
+      setWords(''); setStatus(''); setTyped(''); typedRef.current = ''; takenRef.current = 0; setPhase('open');
       // A picture goes with every flag once the tab is shared; the first share needs the tester's own click.
       if (streamRef.current?.stream.active) void shot();
       return;
     }
     setPhase('saving');
     setTimeout(() => {
-      const open = openRef.current!; openRef.current = null;
+      if (!openRef.current) return;
+      const open = openRef.current; openRef.current = null;
       const note = p.current.flagRef.current.words.join(' ').trim();
       p.current.flagRef.current = { active: false, words: [] };
       countRef.current.flags += 1;
       const n = countRef.current.flags;
+      if (p.current.onReviewNote) {
+        takeHeard();
+        const whole = typedRef.current.trim();
+        setTyped('');
+        p.current.onReviewNote(reviewNoteLines(n, whole, open.snapshot));
+        setStatus(whole ? `Note ${n} saved` : `Note ${n}: nothing heard or typed`);
+        p.current.onStop();
+        setPhase('idle');
+        return;
+      }
       void post('', { headers: { 'content-type': 'application/json' }, body: JSON.stringify({ n, at: new Date(open.at).toISOString(), closedAt: new Date().toISOString(), note, shots: open.shots, ...open.snapshot }) })
         .then((res) => setStatus(res.ok ? `Flag ${n} saved${note ? '' : ' (no words heard)'}` : `Flag ${n} NOT saved (${res.status})`))
         .catch(() => setStatus(`Flag ${n} NOT saved`));
       p.current.onStop();
       setPhase('idle');
     }, TRAILING_WORDS_MS);
-  }, [post, shot]);
+  }, [post, shot, takeHeard]);
+
+  /** Drop the note being made: nothing is saved and the session carries on. The flag stays up for a moment
+   *  first: words still on their way from the recogniser were taken as the person's answer and cut the
+   *  tutor off ("And I'm able to edit as well, okay", embed-1795038051986). */
+  const cancel = useCallback(() => {
+    if (phaseRef.current !== 'open') return;
+    openRef.current = null;
+    setPhase('saving');
+    setTimeout(() => {
+      p.current.flagRef.current = { active: false, words: [] };
+      setTyped(''); typedRef.current = ''; takenRef.current = 0;
+      setStatus('Note dropped');
+      p.current.onStop();
+      setPhase('idle');
+    }, TRAILING_WORDS_MS);
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
+      if (p.current.onReviewNote) return;
       if (e.metaKey || e.ctrlKey || e.altKey || (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable))) return;
       if (e.key === '`') { e.preventDefault(); toggle(); }
       else if (e.key === '\\') { e.preventDefault(); void shot(); }
@@ -109,6 +183,29 @@ export function V2FlagBar(props: {
   }, [toggle, shot]);
 
   if (!mounted) return null;
+  if (props.onReviewNote) {
+    const off = !!props.ended && phase === 'idle';
+    return createPortal(
+      <div data-v2-review-notes className="fixed bottom-20 left-3 z-[9999] flex flex-col items-start gap-2 w-[min(24rem,calc(100vw-1.5rem))]">
+        {phase !== 'idle' && (
+          <div className="w-full rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-950 shadow">
+            <div className="font-semibold">{phase === 'open' ? 'Paused. Say your note; you can edit it here before saving.' : 'One moment…'}</div>
+            <textarea value={typed} onChange={(e) => { typedRef.current = e.target.value; setTyped(e.target.value); }} readOnly={phase !== 'open'} rows={4} placeholder="Your words appear here as you speak. You can also type." className="mt-2 w-full rounded border border-amber-300 bg-white px-2 py-1 text-sm text-gray-900" />
+          </div>
+        )}
+        <div className="flex items-center gap-2">
+          {phase === 'idle'
+            ? <button type="button" onClick={toggle} disabled={off} className={`px-3.5 py-2 rounded-full text-sm font-medium border shadow ${off ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white border-gray-300 text-gray-800'}`}>{off ? 'Session ended' : 'Pause and leave a note'}</button>
+            : <>
+                <button type="button" onClick={toggle} disabled={phase === 'saving'} className="px-3.5 py-2 rounded-full text-sm font-medium border shadow bg-amber-600 border-amber-700 text-white disabled:opacity-60">Save note and carry on</button>
+                <button type="button" onClick={cancel} disabled={phase === 'saving'} className="px-3.5 py-2 rounded-full text-sm font-medium border shadow bg-white border-gray-300 text-gray-700 disabled:opacity-60">Cancel</button>
+              </>}
+          {status && phase === 'idle' && !off && <span className="text-xs text-gray-600 bg-white/90 rounded px-1.5 py-0.5">{status}</span>}
+        </div>
+      </div>,
+      document.body,
+    );
+  }
   const btn = 'px-2.5 py-1 rounded-md text-xs font-medium border shadow-sm';
   return createPortal(
     <div data-v2-flag-bar className="fixed bottom-16 left-3 z-[9999] flex flex-col items-start gap-1.5 max-w-sm">

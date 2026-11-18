@@ -116,13 +116,13 @@ export function buildSearchClause(
 ): Record<string, unknown> {
   const approx = parseApproxDate(q, now);
   if (approx) {
-    return {
-      startedAt: {
-        $gte: new Date(approx.getTime() - 3 * 86_400_000),
-        // end of the target day + 3 days
-        $lt: new Date(approx.getTime() + 4 * 86_400_000),
-      },
+    const window = {
+      $gte: new Date(approx.getTime() - 3 * 86_400_000),
+      // end of the target day + 3 days
+      $lt: new Date(approx.getTime() + 4 * 86_400_000),
     };
+    // Either start: when it was first opened, or when it was last picked up again (`lastStartedAt`).
+    return { $or: [{ startedAt: window }, { lastStartedAt: window }] };
   }
   const rx = new RegExp(escapeRegex(q.trim()), 'i');
   const or: Record<string, unknown>[] = [
@@ -167,14 +167,16 @@ export function buildSessionFilter(
   if (params.host) filter.sourceHost = params.host;
   if (params.mode === 'text' || params.mode === 'voice') filter.inputMode = params.mode;
   if (params.audio === '1') filter.hasAudio = true;
-  if (params.range && RANGE_MS[params.range]) {
-    filter.startedAt = { $gte: new Date(now.getTime() - RANGE_MS[params.range]) };
+  const q = params.q?.trim();
+  // A typed date overrides the range chip (the typed date is the more specific intent).
+  if (params.range && RANGE_MS[params.range] && !(q && parseApproxDate(q, now))) {
+    // A session picked up again later counts from its last sitting: one first opened in July and taken in
+    // November was filed under July and left out of "today" (portal-1115afec). In $and, so the search box's
+    // own $or below cannot overwrite it.
+    const since = { $gte: new Date(now.getTime() - RANGE_MS[params.range]) };
+    filter.$and = [...((filter.$and as unknown[] | undefined) ?? []), { $or: [{ startedAt: since }, { lastStartedAt: since }] }];
   }
-  if (params.q && params.q.trim()) {
-    // Applied last: an approx-date search overrides the range chip's
-    // startedAt (the typed date is the more specific intent).
-    Object.assign(filter, buildSearchClause(params.q, lessonPlanIds, now));
-  }
+  if (q) Object.assign(filter, buildSearchClause(q, lessonPlanIds, now));
   return filter;
 }
 

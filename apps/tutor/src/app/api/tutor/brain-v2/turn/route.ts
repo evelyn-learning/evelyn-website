@@ -30,6 +30,7 @@ interface TurnBody {
   studentSaid?: unknown;
   silenceSeconds?: unknown;
   resumed?: unknown;
+  timeCheck?: unknown;
 }
 
 const bad = (message: string) => new Response(JSON.stringify({ error: message }), { status: 400, headers: { 'Content-Type': 'application/json' } });
@@ -49,10 +50,19 @@ function readState(raw: unknown): V2State | null {
     ...(typeof t.example === 'string' ? { example: t.example.slice(0, 240) } : {}),
     ...(typeof t.direction === 'string' ? { direction: t.direction.slice(0, 240) } : {}),
     ...(t.justComplicated === true ? { justComplicated: true } : {}),
+    ...(t.steered === true ? { steered: true } : {}),
     ...(typeof t.theirMinutes === 'number' && Number.isFinite(t.theirMinutes) ? { theirMinutes: Math.min(60, Math.max(2, Math.round(t.theirMinutes))) } : {}),
     ...(typeof t.complications === 'number' && Number.isFinite(t.complications) ? { complications: Math.min(20, Math.max(0, Math.round(t.complications))) } : {}),
   } : undefined;
-  return { history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), ...(thinking ? { thinking } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}), ...(homework ? { homework } : {}) };
+  // What the board has shown of the plan (turn.ts). Left out of this list, both were dropped between turns: the
+  // phases never followed the board and a plan problem's card was never found again (AP Statistics, portal-b8ee9d0f).
+  const map = <T,>(x: unknown, ok: (v: unknown) => v is T): Record<string, T> | undefined => { if (!x || typeof x !== 'object' || Array.isArray(x)) return undefined; const out = Object.fromEntries(Object.entries(x as Record<string, unknown>).filter((e): e is [string, T] => ok(e[1])).slice(0, 60)); return Object.keys(out).length ? out : undefined; };
+  const problemCards = map(s.problemCards, (v): v is string => typeof v === 'string' && v.length < 80);
+  const partsSeen = map(s.partsSeen, (v): v is number => typeof v === 'number' && Number.isFinite(v));
+  const ownKeys = map(s.ownKeys, (v): v is string => typeof v === 'string' && v.length <= 800);
+  const ak = s.askedKey as { q?: unknown; key?: unknown } | undefined;
+  const askedKey = ak && typeof ak === 'object' && typeof ak.q === 'string' && typeof ak.key === 'string' && ak.key ? { q: ak.q.slice(0, 200), key: ak.key.slice(0, 800) } : undefined;
+  return { ...(problemCards ? { problemCards } : {}), ...(partsSeen ? { partsSeen } : {}), ...(ownKeys ? { ownKeys } : {}), ...(askedKey ? { askedKey } : {}), history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), ...(thinking ? { thinking } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}), ...(homework ? { homework } : {}) };
 }
 
 export async function POST(req: NextRequest) {
@@ -101,7 +111,7 @@ export async function POST(req: NextRequest) {
       // A client that has gone (interrupted turn, closed tab) is not an error: stop writing, stop the model.
       const send = (event: Record<string, unknown>) => { if (req.signal.aborted) return; try { controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`)); } catch { /* stream already closed */ } };
       try {
-        const facts = { ...(silenceSeconds ? { silenceSeconds } : {}), ...(body.resumed === true ? { resumed: true } : {}) };
+        const facts = { ...(silenceSeconds ? { silenceSeconds } : {}), ...(body.resumed === true ? { resumed: true } : {}), ...(body.timeCheck === true ? { timeCheck: true } : {}) };
         const turnInput = {
           session, state, studentSaid, signal: req.signal,
           ...(Object.keys(facts).length ? { facts } : {}),
