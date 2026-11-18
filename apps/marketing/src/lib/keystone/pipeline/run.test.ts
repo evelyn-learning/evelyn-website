@@ -1182,6 +1182,89 @@ const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", co
     }
   }
 
+  // --- C1: only the files the QUESTION shows ever reach a model; the client's solution images never do ---
+  {
+    const SOL_HTML = '<p>Their working</p><img src="/api/keystone/asset/100/sol_answer.png" alt="x = 4"/>';
+    const APIP = '<assessmentItem><itemBody><p>See</p><img src="resources/q.png"/></itemBody><modalFeedback identifier="solution"><img src="resources/sol_answer.png"/></modalFeedback></assessmentItem>';
+    const probe = (p: Partial<ItemDoc> = {}) => item({
+      questionHtml: '<p>See the graph.</p><img src="/api/keystone/asset/100/q.png" alt="graph"/>',
+      castleRockSolutionHtml: SOL_HTML,
+      qti: { apip: APIP, metadata: "", resources: ["resources/q.png", "resources/sol_answer.png"] },
+      ...p,
+    });
+    const watch = () => {
+      const seen = { asked: [] as string[][], intake: [] as number[], solve: [] as number[] };
+      const { steps: s, calls } = steps({
+        intakeModel: async (_it, images) => { seen.intake.push(images.length); return { complete: true, missing: [] }; },
+        agreeOnAnswer: async (_it, images) => { seen.solve.push(images.length); return { decision: { outcome: "pass", answer: B, confirm: false }, solves: solves(B), cost: 0.2 }; },
+      });
+      const images = async (_i: ItemDoc, files: string[]) => { seen.asked.push([...files]); return files.map(() => ({ mime: "image/png", data: PNG })); };
+      return { seen, s, calls, images };
+    };
+    // fresh
+    {
+      const store = new FakeStore([probe()]);
+      const w = watch();
+      const run = await processItem("100", "r1", deps(store, w.s, { images: w.images }));
+      equal(run.result, "ready", "C1 probe: solved");
+      deepEqual(w.seen.asked, [["q.png"]], "C1 probe: only the question's own file is read for the models");
+      deepEqual(w.seen.intake, [1], "C1 probe: intake model got exactly one image");
+      deepEqual(w.seen.solve, [1], "C1 probe: solvers got exactly one image");
+      deepEqual(run.filesNotSent, ["sol_answer.png"], "C1 probe: the solution image is recorded as not sent");
+    }
+    // only images are in the client's solution: none sent, still solved
+    {
+      const store = new FakeStore([probe({ questionHtml: "<p>Which value is right?</p>", qti: { apip: APIP, metadata: "", resources: ["resources/sol_answer.png"] } })]);
+      const w = watch();
+      const run = await processItem("100", "r1", deps(store, w.s, { images: w.images }));
+      equal(run.result, "ready", "C1 solution-only images: still solved");
+      deepEqual(w.seen.asked, [], "C1 solution-only images: no file read for a model");
+      deepEqual(w.seen.solve, [0], "C1 solution-only images: zero images to the solvers");
+      deepEqual(w.seen.intake, [0], "C1 solution-only images: zero images to intake");
+      deepEqual(run.filesNotSent, ["sol_answer.png"], "C1 solution-only images: recorded");
+    }
+    // a figure-like solution file (svg) does not hold: it is answer-side
+    {
+      const apip = APIP.replace("sol_answer.png", "sol.svg");
+      const store = new FakeStore([probe({ castleRockSolutionHtml: '<img src="/api/keystone/asset/100/sol.svg"/>', qti: { apip, metadata: "", resources: ["resources/q.png", "resources/sol.svg"] } })]);
+      const w = watch();
+      const run = await processItem("100", "r1", deps(store, w.s, { images: w.images }));
+      equal(run.result, "ready", "C1 svg in their solution: not held");
+      deepEqual(w.seen.solve, [1], "C1 svg in their solution: only q.png sent");
+    }
+    // changes (cause answer → solved again), owner rewrite (cause answer), key-right: the same one image
+    {
+      const store = new FakeStore([probe({ stage: "changes_requested", version: 1, releasedVersion: 1, evelynAnswer: "B" })]);
+      store.verdicts.set("100", { verdict: "changes", body: "The answer is wrong.", createdAt: T0 });
+      const w = watch();
+      const s2 = { ...w.s, classifyCause: async () => okReply({ cause: "answer" as const, why: "" }, 0.01, "m-audit") };
+      const run = await processItem("100", "r1", deps(store, s2, { images: w.images }));
+      equal(run.mode, "changes", "C1 changes: mode");
+      deepEqual(w.seen.asked, [["q.png"]], "C1 changes: only q.png read");
+      deepEqual(w.seen.solve, [1], "C1 changes: solvers got one image");
+    }
+    {
+      const store = new FakeStore([probe({ stage: "ready", version: 1, releasedVersion: 0, evelynAnswer: "B", pipeline: { flags: ["owner_sent_back"], heldFor: "praveen", fixNote: "The answer is wrong." } as PipelineDoc })]);
+      store.sections.set("100", draft().sections);
+      const w = watch();
+      const s2 = { ...w.s, classifyCause: async () => okReply({ cause: "answer" as const, why: "" }, 0.01, "m-audit") };
+      const run = await processItem("100", "r1", deps(store, s2, { images: w.images }));
+      equal(run.mode, "owner", "C1 owner: mode");
+      deepEqual(w.seen.asked, [["q.png"]], "C1 owner: only q.png read");
+      deepEqual(w.seen.solve, [1], "C1 owner: solvers got one image");
+    }
+    {
+      const later = new Date(T0.getTime() + 5000);
+      const store = new FakeStore([probe({ stage: "drafting", keyQuery: { ourAnswer: "C", workingHtml: "", raisedAt: T0, answeredAt: later, reviewerReason: "Key is right" } })]);
+      store.verdicts.set("100", { verdict: "key_right", body: "Key is right", createdAt: later });
+      const w = watch();
+      const run = await processItem("100", "r1", deps(store, w.s, { images: w.images }));
+      equal(run.mode, "key_right", "C1 key_right: mode");
+      deepEqual(w.seen.asked, [["q.png"]], "C1 key_right: only q.png read");
+      deepEqual(w.seen.solve, [1], "C1 key_right: solvers got one image");
+    }
+  }
+
   // --- selection ---
   {
     const later = new Date(T0.getTime() + 5000);

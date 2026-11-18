@@ -50,7 +50,8 @@ function splitPassage(html: string): { passages: string[]; stem: string } {
   return { passages, stem: out + html.slice(i) };
 }
 
-const lastSegment = (src: string) => decodeText(src).split(/[?#]/)[0].split("/").pop() ?? "";
+/** The file name an image marker shows for a src (entities decoded, query and fragment dropped). */
+export const lastSegment = (src: string) => decodeText(src).split(/[?#]/)[0].split("/").pop() ?? "";
 
 // ---- cleanMarkup: the question as clean, well-formed HTML + MathML (lossless, never linearised) ----
 // Rules: nothing dropped, merged or reordered (except scripts, styles, comments, annotations, rubric blocks and

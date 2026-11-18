@@ -36,7 +36,7 @@ import {
 import { readKey, type Answer, type Decision } from "./answers";
 import { calcCheck, type CalcFinding } from "./calc";
 import { BANNED_WORDS, proseOf, renderCheck, rulesAudit, workingCheck, type CheckResult, type Finding, type RenderCheckOpts } from "./checks";
-import { intakeCode, intakeModel, intakeNote, type IntakeFinding } from "./intake";
+import { intakeCode, intakeModel, intakeNote, lastSegment, type IntakeFinding } from "./intake";
 import { callModel, redact } from "./models";
 import { suggestFor } from "./outbox";
 import { releaseAt, sampleAfterRun } from "./release";
@@ -287,6 +287,29 @@ export function sniffImage(data: Uint8Array): ImageType | null {
   return null;
 }
 
+/**
+ * The image files the QUESTION itself shows (stem, passage, options / choices), exactly the names intake's
+ * image markers produce: intakeCode without the package resource list. The only images a model ever receives.
+ */
+export function shownImages(item: ItemDoc): string[] {
+  const out: string[] = [];
+  intakeCode({ ...item, qti: item.qti ? { ...item.qti, resources: [] } : undefined }, (f) => { out.push(f); return true; });
+  return [...new Set(out)];
+}
+
+const srcFiles = (html: string) =>
+  [...html.matchAll(/<(?:[\w-]+:)?(?:img|object|embed)\b[^>]*?\b(?:src|data)\s*=\s*(?:"([^"]*)"|'([^']*)')/gi)].map((m) => lastSegment(m[1] ?? m[2] ?? "")).filter(Boolean);
+
+/** Files referenced by the client's own solution and by feedback in the item XML: answer-side, never question-side. */
+export function answerSideFiles(item: ItemDoc): string[] {
+  const parts = [item.castleRockSolutionHtml ?? ""];
+  const apip = item.qti?.apip ?? "";
+  for (const m of apip.matchAll(/<((?:[\w-]+:)?(?:modalFeedback|feedbackBlock|feedbackInline))\b[\s\S]*?<\/\1\s*>/gi)) parts.push(m[0]);
+  const out: string[] = [];
+  for (const p of parts) out.push(...srcFiles(p));
+  return [...new Set(out)];
+}
+
 async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Promise<void> {
   const { itemId } = item;
   const { steps, writer } = deps;
@@ -415,16 +438,18 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
 
   // Images: never solve an image item blind, and never let a figure go out missing or broken.
   // The question's own images (stem, passages, options, choices): intakeCode without the package resource list.
-  const shownFiles: string[] = [];
-  intakeCode({ ...item, qti: item.qti ? { ...item.qti, resources: [] } : undefined }, (f) => { shownFiles.push(f); return true; });
-  const shown = [...new Set(shownFiles)];
+  // These, and ONLY these, ever reach a model (intake and the blind solvers). A package resource the question
+  // does not show (the client's own worked solution, feedback, anything else) is never sent: it can carry the answer.
+  const shown = shownImages(item);
+  const toSend = shown.filter((f) => SENDABLE.has(extOf(f)));
   const resourceOnly = [...new Set(files)].filter((f) => !shown.includes(f));
+  const theirs = new Set(answerSideFiles(item));
   // Shown as an image: only the formats the solvers' image input takes (allow list, by name and by content).
-  // Package resources the question does not show: sendable ones are sent, figure-like ones hold, others pass.
-  const refused = [...shown.filter((f) => !SENDABLE.has(extOf(f))), ...resourceOnly.filter((f) => FIGURE_LIKE.has(extOf(f)))];
-  const passThrough = resourceOnly.filter((f) => !SENDABLE.has(extOf(f)) && !FIGURE_LIKE.has(extOf(f)));
-  const toSend = [...shown, ...resourceOnly].filter((f) => SENDABLE.has(extOf(f)));
-  if (refused.length || passThrough.length) run.filesNotSent = [...refused, ...passThrough];
+  // A resource the question does not show that looks like a figure, and is not part of the client's solution or
+  // feedback, holds (a figure the question may need that we cannot place); every resource-only file is recorded.
+  const refused = [...shown.filter((f) => !SENDABLE.has(extOf(f))), ...resourceOnly.filter((f) => FIGURE_LIKE.has(extOf(f)) && !theirs.has(f))];
+  const notSent = [...new Set([...shown.filter((f) => !SENDABLE.has(extOf(f))), ...resourceOnly])];
+  if (notSent.length) run.filesNotSent = notSent;
   if (refused.length) return hold(["type_not_supported"]);
   if (toSend.length && !deps.assetExists) {
     throw new Error(`the question refers to ${toSend.length} file(s) of images but no local asset folder was given (--assets-dir or --pull-assets); not solved without them`);
