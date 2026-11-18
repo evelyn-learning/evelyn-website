@@ -3,6 +3,7 @@ import { ks, type ActivityDoc, type Flag, type ItemDoc, type PipelineDoc, type R
 import { FLAG_WORDS, noteText } from "./pipeline/status";
 import { HELD_BEFORE_SOLUTION_FILTER, NEEDS_OWNER_FILTER, WAITING_ON_OWNER_FILTER } from "./pipeline/holds";
 import { blockedBatches, type BlockedBatch } from "./pipeline/release";
+import { SENT_FOR_REVIEW } from "./store";
 
 export type ItemRow = Pick<
   ItemDoc,
@@ -204,12 +205,70 @@ export async function recentActivity(opts: { limit?: number; roles?: string[]; t
   const limit = opts.limit ?? 12;
   if (seesUnreleased(opts.viewer)) return Activity.find(q).sort({ createdAt: -1 }).limit(limit).lean<ActivityDoc[]>();
   // Over-fetch: unreleased revisions are dropped below.
-  const rows = await Activity.find(q).sort({ createdAt: -1 }).limit(limit * 3).lean<ActivityDoc[]>();
+  const fetched = await Activity.find(q).sort({ createdAt: -1 }).limit(limit * 3).lean<ActivityDoc[]>();
+  const rows = await atReleaseTime(fetched, q, limit * 3);
   const items = await Item.find({ itemId: { $in: [...new Set(rows.map((r) => r.itemId))] } })
     .select("itemId version releasedVersion")
     .lean<Pick<ItemDoc, "itemId" | "version" | "releasedVersion">[]>();
   const top = new Map(items.map((i) => [i.itemId, releasedFor(i, opts.viewer)]));
   return activitySeenBy(rows, (id) => top.get(id) ?? 0, opts.viewer).slice(0, limit);
+}
+
+/**
+ * Castle Rock's feed shows a solution when it reached them, however it was released: the version's revision row
+ * ("Solution written.", "Revised …") is shown at the version's release time (Solution.releasedAt), exactly as a
+ * manual submit (whose row is written at the release) appears. So a timer release or the owner's "Send to review"
+ * of a version written two days earlier reads, and sorts, like a submit made now; the owner's separate
+ * "Sent for review." row is folded into it (one row per released version). Pure reordering of rows Castle Rock
+ * may already see; nothing about the pipeline is shown.
+ */
+async function atReleaseTime(fetched: ActivityDoc[], q: Record<string, unknown>, cap: number): Promise<ActivityDoc[]> {
+  const { Activity, Solution } = await ks();
+  if (q.type && !(q.type as { $in?: string[] }).$in?.includes("revision")) return fetched;
+  const cutoff = fetched.length >= cap ? fetched[fetched.length - 1].createdAt : new Date(0);
+  // Versions released since the oldest row read: their revision rows may be older than every row read.
+  const released = await Solution.find({ releasedAt: { $gte: cutoff } }).select("itemId version releasedAt").lean<Pick<SolutionDoc, "itemId" | "version" | "releasedAt">[]>();
+  const key = (itemId: string, version?: number) => `${itemId}\u0000${version ?? 0}`;
+  const keys = new Map<string, { itemId: string; version: number }>();
+  for (const s of released) keys.set(key(s.itemId, s.version), { itemId: s.itemId, version: s.version });
+  for (const r of fetched) if (r.type === "revision" && r.version) keys.set(key(r.itemId, r.version), { itemId: r.itemId, version: r.version });
+  if (!keys.size) return fetched;
+  const pairs = [...keys.values()];
+  const [revisions, rows] = await Promise.all([
+    Activity.find({ ...q, type: "revision", $or: pairs }).lean<(ActivityDoc & { _id?: unknown })[]>(),
+    Solution.find({ $or: pairs }).select("itemId version releasedAt").lean<Pick<SolutionDoc, "itemId" | "version" | "releasedAt">[]>(),
+  ]);
+  const releasedAt = new Map(rows.filter((s) => s.releasedAt).map((s) => [key(s.itemId, s.version), new Date(s.releasedAt!)]));
+  // One row per released version: the write's own row (not the owner's "Sent for review."), at the release time.
+  const primary = new Map<string, ActivityDoc & { _id?: unknown }>();
+  for (const r of revisions) {
+    const k = key(r.itemId, r.version);
+    const cur = primary.get(k);
+    const curWrite = !!cur && cur.body !== SENT_FOR_REVIEW;
+    const isWrite = r.body !== SENT_FOR_REVIEW;
+    const better = !cur || (!curWrite && isWrite) || (curWrite === isWrite && new Date(r.createdAt) > new Date(cur.createdAt));
+    if (better) primary.set(k, r);
+  }
+  const out: ActivityDoc[] = [];
+  const seen = new Set<string>();
+  for (const r of fetched as (ActivityDoc & { _id?: unknown })[]) {
+    if (r.type !== "revision" || !r.version) { out.push(r); continue; }
+    const k = key(r.itemId, r.version);
+    if (seen.has(k)) continue;
+    const p = primary.get(k) ?? r;
+    seen.add(k);
+    const at = releasedAt.get(k);
+    out.push(at && at > new Date(p.createdAt) ? { ...p, createdAt: at } : p);
+  }
+  // Versions released inside the window whose row was written before it.
+  for (const [k, p] of primary) {
+    if (seen.has(k) || !releasedAt.has(k)) continue;
+    const at = releasedAt.get(k)!;
+    if (at < cutoff) continue;
+    seen.add(k);
+    out.push(at > new Date(p.createdAt) ? { ...p, createdAt: at } : p);
+  }
+  return out.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export async function recentUploads(limit = 8) {
