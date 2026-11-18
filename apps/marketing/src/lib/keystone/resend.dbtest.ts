@@ -112,6 +112,7 @@ const qti = (itemId: string, question: string, key: string): QtiItem => ({
       ok(after.pipeline?.resentAt instanceof Date, "C2 probe: resentAt recorded");
       equal(after.pipeline?.releaseAt, undefined, "C2 probe: no release time");
       equal(after.pipeline?.runId, undefined, "C2 probe: no run owns the record");
+      ok(!("grade" in after), "C2 probe: an absent field is not stored as null by the re-send");
       ok((await sol(it, 1))?.staleAt instanceof Date, "C2 probe: the old unreleased row is stale");
       await rel.releaseDue(NOW);
       equal((await item(it)).stage, "received", "C2 probe: the timer released nothing");

@@ -518,6 +518,9 @@ export async function releaseIfHeld(itemId: string, actor: Actor): Promise<void>
   if (item?.version && releasedVersionOf(item) < item.version) await releaseSolution(itemId, actor, { log: false });
 }
 
+/** The object without its undefined fields (top level). */
+const definedOnly = <T extends Record<string, unknown>>(o: T): Partial<T> => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as Partial<T>;
+
 /** JSON with object keys sorted, so the same content always gives the same text. */
 function stableJson(v: unknown): string {
   if (Array.isArray(v)) return `[${v.map(stableJson).join(",")}]`;
@@ -643,7 +646,8 @@ export async function ingestQtiItems(items: QtiItem[], actor: Actor, uploadId: s
       // that read the old item can no longer match it (stage / updatedAt moved, flags no longer empty).
       await Item.collection.updateOne(
         { itemId: q.itemId },
-        { $set: { ...keep, ...answered, stage, receivedAt: now, ...(plan?.set ?? {}) }, ...(plan?.addFlag ? { $addToSet: { "pipeline.flags": plan.addFlag } } : {}), ...(plan?.unset ? { $unset: plan.unset } : {}) },
+        // (the native driver would store an undefined field as null: dropped here, as mongoose did)
+        { $set: definedOnly({ ...keep, ...answered, stage, receivedAt: now, ...(plan?.set ?? {}) }), ...(plan?.addFlag ? { $addToSet: { "pipeline.flags": plan.addFlag } } : {}), ...(plan?.unset ? { $unset: plan.unset } : {}) },
       );
       // The unreleased version was written for the old question: it can never be released by any path.
       if (plan) await Solution.updateMany({ itemId: q.itemId, version: { $gt: releasedVersionOf(existing) }, releasedAt: { $exists: false } }, { $set: { staleAt: now } });
