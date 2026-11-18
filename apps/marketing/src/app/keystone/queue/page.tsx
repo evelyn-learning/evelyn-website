@@ -38,6 +38,7 @@ function Facts({ r }: { r: QueueRow }) {
 }
 
 type AnimNote = Map<string, string>;
+const ROUTE_WORDS = { undecided: "Not decided", api: "Queued for API credits", hand: "Queued for a by-hand build", none: "No animation needed" } as const;
 
 function Head({ r, base, anim }: { r: QueueRow; base: string; anim?: AnimNote }) {
   return (
@@ -76,6 +77,8 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
   const anim: AnimNote = new Map(
     (anims ?? []).map((a) => [a.itemId, `Animation v${a.latest}: ${ANIMATION_STATUS_LABEL[a.status]}${a.openFlags ? `, ${a.openFlags} open flag${a.openFlags === 1 ? "" : "s"}` : ""}`]),
   );
+  const build = (todo ?? []).filter((t) => t.route !== "none");
+  const skipped = (todo ?? []).filter((t) => t.route === "none");
   const open = (id: string, ready = true) => `${base}/item/${encodeURIComponent(id)}${ready ? "?stage=ready" : ""}`;
 
   return (
@@ -163,21 +166,23 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
         </section>
 
         <section className="ks-card ks-q-sec" id="animate">
-          <h2>To animate · {todo?.length ?? 0}</h2>
-          <p className="ks-sub">Items with a written solution and no animation yet. Tick the ones to build with API credits; the rest are built by hand in a session.</p>
-          {todo?.length ? (
+          <h2>To animate · {build.length}</h2>
+          <p className="ks-sub">Items with a written solution and no animation yet. Tick items, then choose how each is built, or that it needs none.</p>
+          {build.length ? (
             <form action={setAnimateRouteAction}>
               <ul className="ks-q-list">
-                {todo.map((t) => (
+                {build.map((t) => (
                   <li key={t.itemId} className="ks-q-row" data-item={t.itemId}>
-                    <label className="ks-q-head" style={{ cursor: "pointer" }}>
-                      <input type="checkbox" name="itemId" value={t.itemId} />
-                      <b>Item {t.itemId}</b>
+                    <div className="ks-q-head">
+                      <input type="checkbox" name="itemId" value={t.itemId} aria-label={`Item ${t.itemId}`} />
+                      <Link href={open(t.itemId, false)}>
+                        <b>Item {t.itemId}</b>
+                      </Link>
                       <span className="ks-q-meta">
-                        {t.course || "No course"} · {STAGE_LABEL[t.stage as keyof typeof STAGE_LABEL] ?? t.stage} ·{" "}
-                        {t.route === "api" ? `Queued for API credits${t.requestedAt ? ` ${pacificTime(new Date(t.requestedAt))}` : ""}` : "By hand"}
+                        {t.course || "No course"} · {STAGE_LABEL[t.stage as keyof typeof STAGE_LABEL] ?? t.stage} · <b>{ROUTE_WORDS[t.route]}</b>
+                        {t.requestedAt && t.route !== "undecided" ? ` since ${pacificTime(new Date(t.requestedAt))}` : ""}
                       </span>
-                    </label>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -185,13 +190,45 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
                 <button className="ks-btn ok" name="route" value="api">
                   Build with API credits
                 </button>
-                <button className="ks-btn" name="route" value="hand">
-                  Back to by hand
+                <button className="ks-btn ok" name="route" value="hand">
+                  Build by hand
+                </button>
+                <button className="ks-btn" name="route" value="none">
+                  No animation needed
+                </button>
+                <button className="ks-btn" name="route" value="undecided">
+                  Clear the choice
                 </button>
               </div>
             </form>
           ) : (
-            <div className="ks-empty">Every item with a written solution has an animation.</div>
+            <div className="ks-empty">No item is waiting for an animation.</div>
+          )}
+          {skipped.length > 0 && (
+            <form action={setAnimateRouteAction} style={{ marginTop: 16 }}>
+              <h3>No animation needed · {skipped.length}</h3>
+              <ul className="ks-q-list">
+                {skipped.map((t) => (
+                  <li key={t.itemId} className="ks-q-row" data-item={t.itemId}>
+                    <div className="ks-q-head">
+                      <input type="checkbox" name="itemId" value={t.itemId} aria-label={`Item ${t.itemId}`} />
+                      <Link href={open(t.itemId, false)}>
+                        <b>Item {t.itemId}</b>
+                      </Link>
+                      <span className="ks-q-meta">
+                        {t.course || "No course"}
+                        {t.requestedAt ? ` · decided ${pacificTime(new Date(t.requestedAt))}` : ""}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <div className="ks-q-ctl">
+                <button className="ks-btn" name="route" value="undecided">
+                  Put back on the list
+                </button>
+              </div>
+            </form>
           )}
         </section>
       </main>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/keystone/auth";
 import { ksBase } from "@/lib/keystone/paths";
 import { ITEM_TYPE_LABEL, STAGE_LABEL, type Stage } from "@/lib/keystone/config";
+import { toAnimate } from "@/lib/keystone/animreview/store";
 import { latestVerdicts, listItems, ownerQueue, recentActivity, recentUploads, stageCounts } from "@/lib/keystone/queries";
 import { TopBar } from "./_components/TopBar";
 import { Feed, ItemsTable, ago } from "./_components/ui";
@@ -228,6 +229,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
   const verdicts = await latestVerdicts(todo.map((t) => t.itemId));
   const crFeed = await recentActivity({ roles: ["reviewer", "tech"], limit: 12 });
   const queue = await ownerQueue(user.role);
+  const toBuild = ((await toAnimate(user.role)) ?? []).filter((t) => t.route !== "none");
   return (
     <>
       <TopBar user={user} on="home" />
@@ -237,6 +239,14 @@ export default async function Overview({ searchParams }: { searchParams: Promise
             <Link href={`${base}/queue`}>
               <b>Your queue:</b> {queue.waiting.length} waiting for you · {queue.beforeSolution.length} held before a solution · {queue.going.length} going out by itself
               {queue.blocked.length ? ` · ${queue.blocked.length} blocked batch${queue.blocked.length === 1 ? "" : "es"}` : ""} →
+            </Link>
+          </p>
+        )}
+        {queue && toBuild.length > 0 && (
+          <p className="ks-note info ks-q-line">
+            <Link href={`${base}/queue#animate`}>
+              <b>To animate:</b> {toBuild.length} with no animation yet · {toBuild.filter((t) => t.route === "undecided").length} not decided ·{" "}
+              {toBuild.filter((t) => t.route === "api").length} queued for API credits · {toBuild.filter((t) => t.route === "hand").length} queued by hand →
             </Link>
           </p>
         )}

@@ -404,9 +404,15 @@ export async function recordPublish(input: PublishInput, expectVersion: number):
 
 // ---------- the "To animate" list (owner's queue) ----------
 
-export type ToAnimate = { itemId: string; course: string; stage: string; route: "api" | "hand"; requestedAt?: Date };
+export type AnimateChoice = "api" | "hand" | "none" | "undecided";
+export type ToAnimate = { itemId: string; course: string; stage: string; route: AnimateChoice; requestedAt?: Date };
+const ROUTES = ["api", "hand", "none"];
 
-/** Items whose written solution exists (ready, in review or approved) and that have no animation yet. Null for any role but Evelyn. */
+/**
+ * Items whose written solution exists (ready, in review or approved) and that have no animation, with the owner's
+ * decision on each: undecided, queued for API credits, queued for a by-hand build, or no animation needed.
+ * Null for any role but Evelyn.
+ */
 export async function toAnimate(role: Role | undefined): Promise<ToAnimate[] | null> {
   if (role !== "evelyn") return null;
   const { Animation, Item } = await ks();
@@ -415,26 +421,33 @@ export async function toAnimate(role: Role | undefined): Promise<ToAnimate[] | n
     .select("itemId course stage animate")
     .sort({ itemId: 1 })
     .lean();
-  return items.map((i) => ({ itemId: i.itemId, course: i.course || "", stage: i.stage, route: i.animate?.route === "api" ? "api" : "hand", requestedAt: i.animate?.requestedAt }));
+  return items.map((i) => ({
+    itemId: i.itemId,
+    course: i.course || "",
+    stage: i.stage,
+    route: ROUTES.includes(i.animate?.route ?? "") ? (i.animate!.route as AnimateChoice) : "undecided",
+    requestedAt: i.animate?.requestedAt,
+  }));
 }
 
-/** The owner's choice of route for the ticked items: "api" queues them for the API build, "hand" takes them off it. */
-export async function setAnimateRoute(itemIds: string[], route: "api" | "hand", who: Who): Promise<Outcome<number>> {
+/** The owner's decision for the ticked items; "undecided" clears it. */
+export async function setAnimateRoute(itemIds: string[], route: AnimateChoice, who: Who): Promise<Outcome<number>> {
   if (who.role !== "evelyn") return { error: OWNER_ONLY };
   writable();
   const ids = itemIds.filter(isItemId);
   if (!ids.length) return { error: "Tick at least one item." };
   const { Item } = await ks();
   const r =
-    route === "api"
-      ? await Item.updateMany({ itemId: { $in: ids } }, { $set: { animate: { route: "api", requestedAt: new Date(), requestedBy: who.username } } })
-      : await Item.updateMany({ itemId: { $in: ids } }, { $unset: { animate: "" } });
+    route === "undecided"
+      ? await Item.updateMany({ itemId: { $in: ids } }, { $unset: { animate: "" } })
+      : await Item.updateMany({ itemId: { $in: ids } }, { $set: { animate: { route, requestedAt: new Date(), requestedBy: who.username } } });
   return { ok: r.modifiedCount };
 }
 
-/** For the API build script: item ids queued for the API route that still have no animation. */
-export async function queuedForApi(): Promise<string[]> {
+/** For the build scripts and the session: item ids queued for a route that still have no animation, oldest request first. */
+export async function queuedFor(route: "api" | "hand"): Promise<string[]> {
   const { Animation, Item } = await ks();
   const have = await Animation.distinct("itemId");
-  return (await Item.find({ "animate.route": "api", itemId: { $nin: have } }).select("itemId").sort({ "animate.requestedAt": 1 }).lean()).map((i) => i.itemId);
+  return (await Item.find({ "animate.route": route, itemId: { $nin: have } }).select("itemId").sort({ "animate.requestedAt": 1 }).lean()).map((i) => i.itemId);
 }
+export const queuedForApi = () => queuedFor("api");

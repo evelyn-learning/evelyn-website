@@ -193,13 +193,19 @@ const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2
     await Item.create({ itemId: D, stage: "approved", version: 1, course: "Math 30-1" });
     await Animation.deleteMany({ itemId: D });
     assert.equal(await s.toAnimate("reviewer"), null);
-    assert.deepEqual((await s.toAnimate("evelyn"))!.filter((t) => t.itemId === D).map((t) => t.route), ["hand"]);
+    assert.deepEqual((await s.toAnimate("evelyn"))!.filter((t) => t.itemId === D).map((t) => t.route), ["undecided"]);
     err(await s.setAnimateRoute([D], "api", REVIEWER), /Only Evelyn/);
     ok(await s.setAnimateRoute([D], "api", OWNER));
     assert.deepEqual((await s.toAnimate("evelyn"))!.filter((t) => t.itemId === D).map((t) => t.route), ["api"]);
     assert.ok((await s.queuedForApi()).includes(D));
     ok(await s.setAnimateRoute([D], "hand", OWNER));
     assert.ok(!(await s.queuedForApi()).includes(D));
+    assert.deepEqual(await s.queuedFor("hand"), [D]);
+    ok(await s.setAnimateRoute([D], "none", OWNER));
+    assert.deepEqual((await s.toAnimate("evelyn"))!.filter((t) => t.itemId === D).map((t) => t.route), ["none"]);
+    assert.deepEqual(await s.queuedFor("hand"), []);
+    ok(await s.setAnimateRoute([D], "undecided", OWNER));
+    assert.deepEqual((await s.toAnimate("evelyn"))!.filter((t) => t.itemId === D).map((t) => t.route), ["undecided"]);
     await Item.deleteMany({ itemId: { $in: [C, D] } });
 
     console.log("animreview.dbtest: ok");

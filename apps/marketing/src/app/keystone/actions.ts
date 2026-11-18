@@ -184,7 +184,8 @@ export async function setAnimateRouteAction(form: FormData) {
   const user = await requireUser();
   if (user.role !== "evelyn") return;
   const { setAnimateRoute } = await import("@/lib/keystone/animreview/store");
-  const route = String(form.get("route")) === "api" ? "api" : "hand";
+  const asked = String(form.get("route"));
+  const route = asked === "api" || asked === "hand" || asked === "none" ? asked : "undecided";
   await setAnimateRoute(form.getAll("itemId").map(String), route, { username: user.username, role: user.role });
   revalidatePath("/keystone", "layout");
 }
