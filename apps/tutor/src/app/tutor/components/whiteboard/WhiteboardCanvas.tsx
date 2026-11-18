@@ -96,6 +96,7 @@ import DnaRenderer from './DnaRenderer';
 import FoodWebRenderer from './FoodWebRenderer';
 import { InlineMathText } from './InlineMathText';
 import { RichBoardText } from './RichBoardText';
+import { NoteTargetText } from './NoteTargetText';
 import { isProseNotLatex } from '@/lib/tutor/whiteboard/inline-math';
 import { CellContent } from './CellContent';
 import { stripRedundantChoiceLabel, stripEmbeddedChoiceBlock } from './choiceLabel';
@@ -3092,7 +3093,11 @@ function CommandRendererInner({ command }: CommandRendererProps) {
         />
       );
 
-    case 'annotate':
+    case 'annotate': {
+      // Task 7o (tutor brain v2, spoken language lessons): a note carrying the marker draws its short quoted targets, and any
+      // stress words it carries, as a sentence card draws a stress word (NoteTargetText). Every other note renders as before.
+      const noteMarks = { quoted: (command as { targets?: boolean }).targets === true || undefined, stress: (command as { stress?: string[] }).stress };
+      const marked = !!noteMarks.quoted || !!noteMarks.stress?.length;
       return (
         <div
           className={`p-4 rounded-lg ${
@@ -3114,11 +3119,12 @@ function CommandRendererInner({ command }: CommandRendererProps) {
               instead of being clipped by the pane's overflow-x-hidden. */}
           {/* One paragraph per line of the note: a list of conditions or steps written with newlines ran together as one line. */}
           {/* rich (tutor brain v2): a heading, labelled points and program code are set out as such (RichBoardText). */}
-          {(command as { rich?: boolean }).rich ? <RichBoardText text={String(command.text ?? '')} titled /> : String(command.text ?? '').split(/\n+/).filter((line) => line.trim()).map((line, i) => (
-            <HScrollFade key={i} as="p" className={`text-lg overflow-x-auto${i ? ' mt-1.5' : ''}`}><InlineMathText text={line} /></HScrollFade>
+          {(command as { rich?: boolean }).rich ? <RichBoardText text={String(command.text ?? '')} titled {...(marked ? { quoted: noteMarks.quoted, stress: noteMarks.stress } : {})} /> : String(command.text ?? '').split(/\n+/).filter((line) => line.trim()).map((line, i) => (
+            <HScrollFade key={i} as="p" className={`text-lg overflow-x-auto${i ? ' mt-1.5' : ''}`}>{marked ? <NoteTargetText text={line} quoted={noteMarks.quoted} stress={noteMarks.stress} /> : <InlineMathText text={line} />}</HScrollFade>
           ))}
         </div>
       );
+    }
 
     case 'showSentence':
       return <SentenceCard sentence={command.sentence} emphasis={command.emphasis} emphasisAt={command.emphasisAt} label={command.label} gloss={command.gloss} />;

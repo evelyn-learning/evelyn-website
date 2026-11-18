@@ -31,6 +31,8 @@ const BREAK = `<break time="${V2_TARGET_PAUSE_MS}ms"/>`;
 const QUOTED = /"([^"\n]+)"|“([^“”\n]+)”|「([^「」\n]+)」/g;
 /** A target: one to three Latin words, the first may be an ending ("-ed"); a trailing stop or comma may sit inside. */
 const TARGET = new RegExp(`^-?[A-Za-z][A-Za-z'’-]*(?:\\s+[A-Za-z][A-Za-z'’-]*){0,${V2_TARGET_MAX_WORDS - 1}}[.,;:!?]?$`);
+/** The same test, for the board's note targets (Task 7o, note-targets.ts). */
+export const V2_TARGET_TEST = TARGET;
 
 /** The first V2_TARGET_MAX_PER_PART short quoted targets, their quotes replaced by marks. Anything else unchanged. */
 export function markTargets(text: string, max: number = V2_TARGET_MAX_PER_PART): string {

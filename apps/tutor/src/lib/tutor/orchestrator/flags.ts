@@ -2118,3 +2118,27 @@ export const TUTOR_V2_CHIP_ON_PAINT = process.env.NEXT_PUBLIC_TUTOR_V2_CHIP_ON_P
  *  clock message leaves it out. Billing and the recorded session length are unchanged. Only the debug flag tool pauses. Mic test
  *  4 (embed-1795028886172: 4.71 min of flags) (Task 7n, item 3). Default ON; NEXT_PUBLIC_TUTOR_V2_FLAG_CLOCK_PAUSE=off ⇒ as before. */
 export const TUTOR_V2_FLAG_CLOCK_PAUSE = process.env.NEXT_PUBLIC_TUTOR_V2_FLAG_CLOCK_PAUSE !== 'off';
+
+/** Tutor brain v2 (v2/note-targets.ts, v2/turn.ts): in a spoken lesson that teaches a language, the session part asks for the
+ *  target word or short phrase of a rule / correction note in double quotes (a <board note> block or annotate), every time it
+ *  stands as the target; the quotes are taken off a note's spoken copy, so it is said as before. Mic test 4
+ *  (embed-1795028886172, flag 2: "use for + the number of years: for six years" with no emphasis on "for") (Task 7o, item 1).
+ *  Default ON; NEXT_PUBLIC_TUTOR_V2_NOTE_TARGET_QUOTES=off ⇒ as before. */
+export const TUTOR_V2_NOTE_TARGET_QUOTES = process.env.NEXT_PUBLIC_TUTOR_V2_NOTE_TARGET_QUOTES !== 'off';
+
+/** Tutor brain v2 (v2/note-targets.ts, v2/turn.ts, toolDefinitions annotate, WhiteboardCanvas / RichBoardText / NoteTargetText):
+ *  a note of such a lesson carries `targets: true`, and the board draws each short quoted span in it (at most three words, the 7h
+ *  target test; straight, curly or 「」 quotes, or **…**) as a sentence card draws a stress word (amber, semibold, underlined),
+ *  without the quote marks. Every other note renders as before (Task 7o, item 2). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_NOTE_TARGET_MARK=off ⇒ as before. */
+export const TUTOR_V2_NOTE_TARGET_MARK = process.env.NEXT_PUBLIC_TUTOR_V2_NOTE_TARGET_MARK !== 'off';
+
+/** Tutor brain v2 (v2/note-targets.ts, v2/turn.ts): a note of such a lesson that quotes no target, written in a reply that put up a
+ *  sentence card with stress words, carries those stress words that stand in it as whole words (`stress`), and the board marks
+ *  them there (Task 7o, item 3). Default ON; NEXT_PUBLIC_TUTOR_V2_NOTE_STRESS_MARK=off ⇒ as before. */
+export const TUTOR_V2_NOTE_STRESS_MARK = process.env.NEXT_PUBLIC_TUTOR_V2_NOTE_STRESS_MARK !== 'off';
+
+/** Tutor brain v2 (v2/markdown-stars.ts, v2/turn.ts): in such a lesson the `**` of markdown bold is taken out of the reply's words
+ *  as they stream, so captions and the transcript never show the asterisks (mic test 4, 12.87 min: 「一緒に仕事をする**人**に使います」)
+ *  (Task 7o, item 4). Default ON; NEXT_PUBLIC_TUTOR_V2_NO_MARKDOWN_STARS=off ⇒ as before. */
+export const TUTOR_V2_NO_MARKDOWN_STARS = process.env.NEXT_PUBLIC_TUTOR_V2_NO_MARKDOWN_STARS !== 'off';

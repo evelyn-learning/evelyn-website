@@ -45,7 +45,9 @@ import { v2NoteCorrectedSentence, v2SentenceCardsOn, v2SentenceCardsSection } fr
 import { LearnerCardWatch, V2_REPLY_MISHEARD, v2LearnerCardsOn, v2OwedCardCheckLine, v2PracticeAnswerSentences, v2SentenceOnBoard, v2SentencesNotCarded } from './learner-card';
 import { v2StopAsked } from './stop-signal';
 import { V2_CLOSE_INVITE_LINE, V2_CLOSE_INVITE_REFUSAL, V2_CLOSE_INVITE_WAIT, V2_CLOSE_MORE_LINE, V2_CLOSE_REOPEN_REFUSAL, v2CloseInviteOn, v2CloseInviteOwed, v2CloseReopened, v2ReplyAsksMoreOrFinish, v2ReplyInvites } from './close-invite';
-import { TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_NO_FALSE_SILENCE } from '../orchestrator/flags';
+import { TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_NOTE_TARGET_QUOTES, TUTOR_V2_NOTE_TARGET_MARK, TUTOR_V2_NOTE_STRESS_MARK, TUTOR_V2_NO_MARKDOWN_STARS } from '../orchestrator/flags';
+import { v2NoteTargetsOn, v2NoteTargetsSection, v2NoteHasTarget, v2NoteStressWords, v2UnquoteNoteTargets } from './note-targets';
+import { V2StarStrip } from './markdown-stars';
 import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, V2_DISCUSSION_CONSTITUTION, directionAsked, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap } from './discussion';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, V2_NOTE_OWN_ANSWER_TOOL, V2_SET_CURRENT_PROBLEM_TOOL, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
@@ -188,6 +190,8 @@ export function v2SessionPart(session: V2Session): string {
     v2PronunciationOn(session) ? v2PronunciationSection() : '',
     // Only for a lesson with a second teaching language: every other session part is unchanged.
     v2SentenceCardsOn(session) ? v2SentenceCardsSection(session.languages!) : '',
+    // Task 7o (NOTE_TARGET_QUOTES): only for a spoken lesson that teaches a language: every other session part is unchanged.
+    TUTOR_V2_NOTE_TARGET_QUOTES && v2NoteTargetsOn(session) ? v2NoteTargetsSection() : '',
     // A free trial is the student's to steer (Praveen 2026-10-28: a trial student asked five times for another
     // topic and was kept on the plan). A partner whose showcase is a written lesson keeps its plan (trialKeepsPlan).
     session.trial && !session.trialKeepsPlan ? 'This is a free trial lesson, and the student may take it anywhere. The plan below is the topic they picked when they started. If they ask for a different topic, or a different subject altogether, teach that from then on, starting in the same reply, and leave the plan behind.' : '',
@@ -387,6 +391,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const partFlow = (input.partFlags?.pageChip ?? TUTOR_V2_PART_PAGE_CHIP) && session.mode === 'voice' && !discussion && !session.homework && !session.homeworkSheet && v2PlanLabelled(session.plan);
   const askEvery = v2AskEveryOn(session, input.partFlags?.askEvery);
   // Task 7g (QUESTION_CARD): spoken lessons that teach a language (two teaching languages, or pronunciation measured).
+  // Task 7o: spoken lessons that teach a language (note-targets.ts): the target of a note is marked on the board.
+  const noteTargets = v2NoteTargetsOn(session);
   const questionCards = TUTOR_V2_QUESTION_CARD && session.mode === 'voice' && !discussion && !session.homework && !session.homeworkSheet && ((session.languages?.length ?? 0) >= 2 || !!session.pronunciation);
   const stopAsked = TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid);
   // Task 7k (PRACTICE_ON_PART_PAGE): their words ask for practice of another part (time-fit.ts v2PartPracticeAsked: recognising
@@ -617,6 +623,13 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       const same = toolCalls.find((c) => c.name === 'show_equation' && !/^not /.test(c.outcome) && page.items.some((it) => it.id === c.id) && String(c.args.label ?? '').trim().toLowerCase() === (args.label as string).trim().toLowerCase());
       if (same) replaces = same.id;
     }
+    // Task 7o (NOTE_TARGET_MARK, NOTE_STRESS_MARK; mic test 4 flag 2): a note of a spoken language lesson is marked for the board:
+    // its short quoted spans are drawn as targets; a note quoting none carries the stress words of this reply's cards that stand
+    // in it. The text (its record and its spoken copy) is unchanged.
+    if (block.name === 'annotate' && noteTargets && typeof args.text === 'string') {
+      if (TUTOR_V2_NOTE_TARGET_MARK) args.targets = true;
+      if (TUTOR_V2_NOTE_STRESS_MARK && !v2NoteHasTarget(args.text)) { const stress = v2NoteStressWords(args.text, toolCalls); if (stress.length) args.stress = stress; }
+    }
     const sayWith = typeof sayWithRaw === 'string' && sayWithRaw.trim() ? sayWithRaw.trim() : undefined;
     let outcome: string; let pointsAt: string | undefined;
     if (V2_CONTROL_TOOL_NAMES.has(block.name)) {
@@ -829,6 +842,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Task 7a: the page opened on their yes turns as the reply begins (TutorVoiceV2: an agreed page before any words).
   if (released) { pageTurnAt = 0; pageBefore = releasedFrom; toolCalls.push(released); input.onToolCall?.(released); }
   if (visit) { pageTurnAt = 0; pageBefore = visitFrom; toolCalls.push(visit); input.onToolCall?.(visit); }
+  // Task 7o (NO_MARKDOWN_STARS): spoken lessons that teach a language (mic test 4, 12.87 min).
+  const stars = TUTOR_V2_NO_MARKDOWN_STARS && noteTargets ? new V2StarStrip() : null;
   for (; modelCalls < V2_MAX_MODEL_CALLS;) {
     const params = {
       model: '',
@@ -840,7 +855,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       messages,
     } as unknown as Anthropic.MessageCreateParamsNonStreaming;
     const inline = new BoardInlineStream();
-    const gate = new ReplyGate((t) => {
+    const gate = new ReplyGate((piece) => {
+      // Task 7o (NO_MARKDOWN_STARS): no markdown bold in the words heard, captioned or written in the transcript.
+      const t = stars ? stars.push(piece) : piece;
+      if (stars && !t) return;
       if (firstTextMs === null && t.trim()) firstTextMs = Date.now() - t0;
       saidChars += t.length; saidNow += t;
       input.onText?.(t);
@@ -978,7 +996,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           // Task 6f: a note or a table of example sentences a lead-in points at is spoken there too (board-timing.ts
           // noteSentencesToSay): announced before it, at once; otherwise only if the next sentence points back at it.
           if ((part.block.kind === 'note' || part.block.kind === 'table') && gated && languageLesson && TUTOR_V2_SAY_NOTE_SENTENCES) {
-            const note = noteSentencesToSay(part.block.kind, part.block.body, `${saidNow}${gate.heldAsk}`);
+            // Task 7o (NOTE_TARGET_QUOTES): the quotes asked for around a note's targets are the board's: said as before, without them.
+            const note = noteSentencesToSay(part.block.kind, part.block.kind === 'note' && TUTOR_V2_NOTE_TARGET_QUOTES && noteTargets ? v2UnquoteNoteTargets(part.block.body) : part.block.body, `${saidNow}${gate.heldAsk}`);
             if (note) {
               saidCards.set(part.block.raw, note.say); sinceWords = [];
               if (note.announced) gate.speakCard(note.say, { perSentence: true }); else gate.speakCardIf(note.say, pointsBackAtBoard, { perSentence: true });
@@ -1596,6 +1615,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const owedAfter = owedCards();
   if (owedAfter.length) state.cardsOwed = owedAfter;
   let finalWords = stripToolTalk(spoken.join('\n\n'));
+  // Task 7o (NO_MARKDOWN_STARS): the transcript's final text, as streamed (the stored reply keeps the model's words).
+  if (stars) finalWords = finalWords.replace(/\*\*/g, '');
   // A discussion that closes with nothing left to say would end in silence: its closing words were an order to
   // itself, which the net above removed (replay round 8). It closes on the direction they chose instead.
   if (discussion && state.closed && !finalWords.trim()) {

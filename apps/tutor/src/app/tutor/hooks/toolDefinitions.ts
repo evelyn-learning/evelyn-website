@@ -2673,6 +2673,9 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       text: funcArgs.text,
       style: funcArgs.style || 'default',
       ...(funcArgs.rich === true ? { rich: true } : {}),
+      // Task 7o (tutor brain v2, spoken language lessons): the note's targets are marked on the board (NoteTargetText).
+      ...(funcArgs.targets === true ? { targets: true } : {}),
+      ...(Array.isArray(funcArgs.stress) && funcArgs.stress.some((w: unknown) => typeof w === 'string' && w.trim()) ? { stress: (funcArgs.stress as unknown[]).filter((w): w is string => typeof w === 'string' && w.trim().length > 0) } : {}),
     } as unknown as WhiteboardCommand;
   }
   if (funcName === 'show_sentence') {
