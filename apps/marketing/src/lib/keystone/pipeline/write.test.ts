@@ -502,6 +502,108 @@ async function main() {
     assert.match(g.seen[0].user, /never change the answer/i);
   }
 
+  // round 4, I-1 and I-2: any other label as a word token, in any case, inside maths too
+  {
+    const check = async (short: string, pass: boolean, answer: Answer, it: ItemDoc, closing: string, stated: StatedAnswer, tag: string) => {
+      const r = await run(withShort(short, `Working. ${closing}`, stated), answer, it);
+      ok(r.ok === pass, `${tag}: "${short}" should ${pass ? "pass" : "fail"}: ${JSON.stringify(r)}`);
+    };
+    const agreedA = (short: string, pass: boolean) => check(short, pass, A, item(), "So the answer is A.", choice("A"), "agreed A");
+    for (const s of [
+      "(b) is right, so the answer is A.", "b is right, so the answer is A.", "The correct option is b, so the answer is A.",
+      "The answer is b, so the answer is A.", "Answer: b\nSo the answer is A.", "Pick b. So the answer is A.",
+      "Option-b wins, so the answer is A.", "Choice #b wins, so the answer is A.",
+      "The answer is $B$, so the answer is A.", "The answer is $\\text{B}$, so the answer is A.", "It is $(b)$, so the answer is A.",
+      "It is $$B$$\nSo the answer is A.",
+    ]) await agreedA(s, false);
+    for (const s of [
+      "After the collision the two cars move together at 8.3 m/s, 42\u00b0 South of East, so the answer is A.",
+      "A ball rolls 60 m. So the answer is A.",
+      "Using $b^2 - 4ac$ gives two roots, so the answer is A.",
+      "I think of the limiting case first, so the answer is A.",
+    ]) await agreedA(s, true);
+    const B: Answer = { kind: "choice", letters: ["B"] };
+    await check("A ball travels 60 m, so the answer is B.", true, B, item(), "So the answer is B.", choice("B"), "agreed B");
+    await check("The answer is a trap, so the answer is B.", false, B, item(), "So the answer is B.", choice("B"), "agreed B, a after a lead word");
+    await check("Pick a ball, so the answer is B.", false, B, item(), "So the answer is B.", choice("B"), "agreed B, a after pick");
+
+    const lower = item({ options: [{ label: "a", html: "1" }, { label: "b", html: "2" }, { label: "c", html: "3" }, { label: "d", html: "4" }] });
+    const la: Answer = { kind: "choice", letters: ["a"] };
+    await check("b is right, so the answer is a.", false, la, lower, "So the answer is a.", choice("a"), "lower-case labels");
+    await check("The first graph matches, so the answer is a.", true, la, lower, "So the answer is a.", choice("a"), "lower-case labels");
+
+    const roman = item({ options: [{ label: "i", html: "x" }, { label: "ii", html: "y" }, { label: "iii", html: "z" }] });
+    const rii: Answer = { kind: "choice", letters: ["ii"] };
+    const ri: Answer = { kind: "choice", letters: ["i"] };
+    await check("i is right, so the answer is ii.", false, rii, roman, "So the answer is ii.", choice("ii"), "roman");
+    await check("I is right, so the answer is ii.", false, rii, roman, "So the answer is ii.", choice("ii"), "roman");
+    await check("The second statement is true, so the answer is ii.", true, rii, roman, "So the answer is ii.", choice("ii"), "roman");
+    await check("I think sixty is right, so the answer is i.", true, ri, roman, "So the answer is i.", choice("i"), "roman");
+    await check("I think the second holds, so the answer is ii.", true, rii, roman, "So the answer is ii.", choice("ii"), "roman, pronoun I");
+
+    const numbered = item({ options: [{ label: "1", html: "60" }, { label: "2", html: "30" }, { label: "3", html: "120" }, { label: "4", html: "20" }] });
+    const one: Answer = { kind: "choice", letters: ["1"] };
+    await check("The value 2.5 m is reached, so the answer is 1.", true, one, numbered, "So the answer is 1.", choice("1"), "digit labels");
+    await check("It is $\\text{2}$, so the answer is 1.", false, one, numbered, "So the answer is 1.", choice("1"), "digit labels in maths");
+  }
+
+  // round 4, I-3 and I-4: sign variants, ±, percentages, functions and powers
+  {
+    const nItem = item({ itemType: "NR", options: [], questionHtml: "<p>Find the value.</p>" });
+    const nd = (value: string, s: string) =>
+      run({ topic: "t", statedAnswer: num(value), calc: [], sections: [{ kind: "short", md: s }, { kind: "diploma", md: s }] }, { kind: "number", value }, nItem);
+    const expect = async (value: string, s: string, pass: boolean) => {
+      const r = await nd(value, s);
+      ok(r.ok === pass, `agreed ${value}: "${s}" should ${pass ? "pass" : "fail"}: ${JSON.stringify(r)}`);
+    };
+    for (const s of [
+      "It is \u20130.5.", "It is \u20140.5.", "It is \u20110.5.", "It is \u20100.5.", "It is -\u200b0.5.", "It is -\u00ad0.5.", "It is -\u20600.5.",
+      "It is \u2212(0.5).", "It is -(0.5).", "It is \u00b10.5.", "It is $\\pm 0.5$.", "It is \u22130.5.", "It is $\\mp 0.5$.",
+      "It is 0.5%.", "It is $0.5\\%$.", "It is $\\sqrt{0.5}$.", "It is sqrt(0.5).", "It is \u221a0.5.", "It is 0.5^2.",
+      "It is 0.5 or $\\pm 0.5$.", "It is 0.5, not \\sqrt{0.5}.",
+    ]) await expect("0.5", s, false);
+    for (const s of ["It is 0.5.", "It is 50%.", "It is 1/2.", "It is 5 \u00d7 10^{-1}.", "It is 0.5 m^{-1}.", "It is $0.5\\ \\text{m}^{-1}$."]) await expect("0.5", s, true);
+    for (const s of ["It is \u22120.5.", "It is \u20130.5.", "It is \u2212(0.5).", "It is -(0.5)."]) await expect("-0.5", s, true);
+    await expect("-0.5", "It is 0.5.", false);
+    await expect("2500", "The energy is $2{,}500$ J.", true);
+    const pm = await nd("0.5", "It is 0.5 or $\\pm 0.5$.");
+    ok(!pm.ok && pm.detail === "the last sentence of the Short answer gives another value: 0.5 (\u00b1)", !pm.ok ? pm.detail : "passed");
+    const pct = await nd("0.5", "It is 0.5 or 0.5%.");
+    ok(!pct.ok && pct.detail === "the last sentence of the Short answer gives another value: 0.005", !pct.ok ? pct.detail : "passed");
+    assert.deepEqual(numericLiterals("$2{,}500$"), ["2500"], "{,} joins digit groups");
+    assert.deepEqual(numericLiterals("0.5 m^{-1}"), ["0.5"], "unit exponent with a sign is skipped");
+    assert.deepEqual(numericLiterals("50% and 0.5%"), ["0.5", "0.005"], "percentages divided by 100");
+    assert.deepEqual(numericLiterals("\u2212(0.5)"), ["-0.5"], "sign through one bracketed literal");
+  }
+
+  // the prompt names what the check rejects
+  {
+    const f = fake(good);
+    await writeSolution(item(), "Math 30-1", A, {}, f.deps);
+    ok(f.seen[0].system.includes("Do not write \u00b1 before the final value, do not give it as a percentage unless the agreed value is one, and do not mention any other option label in the Short answer, in any case or inside maths."), "prompt lists what the check rejects");
+  }
+
+  // performance: 200 000 characters finish quickly and never throw
+  {
+    const NA: Answer = { kind: "number", value: "0.5" };
+    const nItem = item({ itemType: "NR", options: [], questionHtml: "<p>Find the value.</p>" });
+    for (const unit of [" 1", "1\\, ", "B ", "option ", "- ", "a. ", "$B$ "]) {
+      const big = unit.repeat(Math.ceil(200000 / unit.length)).slice(0, 200000);
+      for (const [answer, it, stated] of [[A, item(), choice("A")], [NA, nItem, num("0.5")]] as [Answer, ItemDoc, StatedAnswer][]) {
+        const t0 = Date.now();
+        let threw = "";
+        try {
+          await run({ topic: "t", statedAnswer: stated, calc: [], sections: [{ kind: "short", md: `${big} So the answer is A.` }, { kind: "diploma", md: big }] }, answer, it);
+          numericLiterals(big);
+          lastSentence(big);
+        } catch (e) { threw = String(e); }
+        const ms = Date.now() - t0;
+        ok(threw === "", `${JSON.stringify(unit)} x200k (${answer.kind}) threw: ${threw}`);
+        ok(ms < 3000, `${JSON.stringify(unit)} x200k (${answer.kind}) took ${ms} ms`);
+      }
+    }
+  }
+
   console.log("write.test.ts: all passed");
 }
 

@@ -180,9 +180,10 @@ export function lastSentence(md: string): string {
   let start = 0;
   for (const m of line.matchAll(/[.!?](?=\s)/g)) {
     const at = m.index ?? 0;
-    const before = line.slice(start, at);
+    // a bounded tail: abbreviations are short; the line is trimmed, so text always follows a match
+    const before = line.slice(Math.max(start, at - 32), at);
     if (m[0] === "." && ABBREV_END.test(before)) continue;
-    if (line.slice(at + 1).trim()) start = at + 1;
+    start = at + 1;
   }
   return line.slice(start).trim();
 }
@@ -190,6 +191,9 @@ export function lastSentence(md: string): string {
 // --- numeric literals --------------------------------------------------------------------------
 
 const SIGN_GAP = /\\[,;:! ]|~/g;
+/** Every look-behind into the text reads at most this many characters, so each scan stays linear. */
+const TAIL = 64;
+const tailOf = (s: string, i: number) => s.slice(Math.max(0, i - TAIL), i);
 
 /** NFKC (full-width letters and digits become ASCII), keeping a thin or no-break space between digit groups as a
  * thousands separator (NFKC would turn it into a plain space), and the fraction slash as "/". */
@@ -198,23 +202,34 @@ export function nfkc(s: string): string {
 }
 
 const SPACED: [RegExp, string][] = [
-  [/\\pm(?![A-Za-z])/g, " ± "], [/\\approx(?![A-Za-z])/g, " ≈ "], [/\\neq?(?![A-Za-z])/g, " ≠ "],
-  [/\\leq?(?![A-Za-z])/g, " ≤ "], [/\\geq?(?![A-Za-z])/g, " ≥ "], [/\\(?:to|rightarrow)(?![A-Za-z])/g, " → "],
+  [/\\pm(?![A-Za-z])/g, " \u00b1 "], [/\\mp(?![A-Za-z])/g, " \u2213 "], [/\\approx(?![A-Za-z])/g, " \u2248 "], [/\\neq?(?![A-Za-z])/g, " \u2260 "],
+  [/\\leq?(?![A-Za-z])/g, " \u2264 "], [/\\geq?(?![A-Za-z])/g, " \u2265 "], [/\\(?:to|rightarrow)(?![A-Za-z])/g, " \u2192 "],
 ];
+/** Hyphens, dashes and minus signs that read as "-". */
+const DASHES = /[\u2010-\u2014\u2212\ufe63\uff0d]/g;
+/** Zero-width characters and the soft hyphen: deleted. */
+const INVISIBLE = /[\u200b-\u200d\u2060\ufeff\u00ad]/g;
 
-/** LaTeX and Unicode normalised for reading numbers: $ removed, \text{…} → content, \frac{p}{q} → p/q,
- * thin-space commands removed between a sign and a digit (a thin space between digit groups kept as U+2009),
- * otherwise a space; \times → ×, \cdot → ·, U+2212 and "\-" → "-", ^{…} → ^…. */
+/** LaTeX and Unicode normalised for reading numbers: dashes and minus signs → "-", invisible characters deleted,
+ * $ removed, \text{…} → content, \frac{p}{q} → p/q, \sqrt → √, function commands → their names, "{,}" and a "\,"
+ * between digit groups → ",", thin-space commands removed between a sign and a digit, otherwise a space;
+ * \times → ×, \cdot → ·, \% → %, ^{…} → ^…, "-(0.5)" → "-0.5". */
 function normaliseLatex(s: string): string {
   let t = nfkc(s)
+    .replace(DASHES, "-")
+    .replace(INVISIBLE, "")
     .replace(/\$/g, " ")
-    .replace(/\u2212|\\-/g, "-")
-    .replace(/\\times(?![A-Za-z])/g, "×")
-    .replace(/\\cdot(?![A-Za-z])/g, "·")
-    .replace(/\\[dt]?frac\s*\{\s*([+-]?\d+)\s*\}\s*\{\s*(\d+)\s*\}/g, "$1/$2");
-  t = t.replace(SIGN_GAP, (m, offset: number, whole: string) => {
-    const before = whole.slice(0, offset);
-    const after = whole.slice(offset + m.length);
+    .replace(/\\-/g, "-")
+    .replace(/(\d)\{,\}(?=\d{3}(?!\d))/g, "$1,")
+    .replace(/\\%/g, "%")
+    .replace(/\\times(?![A-Za-z])/g, "\u00d7")
+    .replace(/\\cdot(?![A-Za-z])/g, "\u00b7")
+    .replace(/\\[dt]?frac\s*\{\s*([+-]?\d+)\s*\}\s*\{\s*(\d+)\s*\}/g, "$1/$2")
+    .replace(/\\sqrt(?![A-Za-z])/g, " \u221a")
+    .replace(/\\(sin|cos|tan|log|ln|exp)(?![A-Za-z])/g, " $1 ");
+  t = t.replace(SIGN_GAP, (m: string, offset: number, whole: string) => {
+    const before = tailOf(whole, offset);
+    const after = whole.slice(offset + m.length, offset + m.length + 8);
     if (/[+-]\s*$/.test(before) && /^\s*\d/.test(after)) return "";
     if (m === "\\," && /\d$/.test(before) && /^\d{3}(?!\d)/.test(after)) return ",";
     return " ";
@@ -224,7 +239,9 @@ function normaliseLatex(s: string): string {
   return t
     .replace(/\^\s*\{\s*([^{}]*?)\s*\}/g, "^$1")
     .replace(/\\[A-Za-z]+/g, " ")
-    .replace(/[{}]/g, " ");
+    .replace(/[{}]/g, " ")
+    // a sign applied to one bracketed literal applies to that literal
+    .replace(/([+-])[ \t]*\(\s*(\d+(?:[.,]\d+)*)\s*\)/g, "$1$2");
 }
 
 /** Moves the decimal point of a plain decimal string by `exp` places, exactly (no floats). */
@@ -243,37 +260,51 @@ function shiftDecimal(num: string, exp: number): string {
 }
 
 const GROUP_SEP = "[,\\u2009\\u202f\\u00a0]";
-const NUMBER_AT = new RegExp(`^(?:\\d{1,3}(?:${GROUP_SEP}\\d{3})+(?:\\.\\d+)?|\\d+(?:\\.\\d+)?|\\.\\d+)`);
+const GROUP_RE = new RegExp(GROUP_SEP, "g");
+// sticky matchers, run at an index (no slicing of the text)
+const NUMBER_AT = new RegExp(`(?:\\d{1,3}(?:${GROUP_SEP}\\d{3})+(?:\\.\\d+)?|\\d+(?:\\.\\d+)?|\\.\\d+)`, "y");
+const SCI_TIMES = /\s*[\u00d7\u00b7*]\s*10\s*\^\s*([+-]?\d+)/y;
+const SCI_E = /[eE]([+-]?\d+)(?![A-Za-z0-9])/y;
+const FRAC = /\s*\/\s*(\d+)(?!\d|\.\d)/y;
+const POWER = /\s*\^/y;
+const PERCENT = /\s*%/y;
+const stickyAt = (re: RegExp, s: string, at: number) => { re.lastIndex = at; return re.exec(s); };
 
-/** Numeric literals in a text, in order: unary signs attached; "a × 10^n", "a·10^n", "aEn" as one plain decimal
- * (exact); "p/q" of two integers as one fraction literal "p/q"; thousands groups joined. Ignored: digits of an
- * exponent after a letter (a unit exponent, "m/s^2"), digits directly after "_" (subscripts), and digits glued
- * to a preceding letter (formulas and unit names such as "H2O", "m2"). */
-export function numericLiterals(text: string): string[] {
+/** A numeric literal; `taint` names why it can never be the agreed value ("±", a function argument, a power). */
+type Lit = { lit: string; taint?: string };
+
+function scanLiterals(text: string): Lit[] {
   const s = normaliseLatex(text);
-  const out: string[] = [];
+  const out: Lit[] = [];
   let i = 0;
   while (i < s.length) {
-    const m = NUMBER_AT.exec(s.slice(i));
+    const c = s.charCodeAt(i);
+    if (!((c >= 48 && c <= 57) || c === 46)) { i++; continue; }
+    const m = stickyAt(NUMBER_AT, s, i);
     const prev = s[i - 1] ?? "";
     if (!m || (i > 0 && /[0-9.]/.test(prev))) { i++; continue; }
     let end = i + m[0].length;
-    const before = s.slice(0, i);
-    // ignored positions
-    if (/[A-Za-z]\s*\^\s*$/.test(before) || /_\s*$/.test(before) || /[A-Za-z]$/.test(before)) { i = end; continue; }
-    let lit = m[0].replace(new RegExp(GROUP_SEP, "g"), "");
+    const bounded = i > TAIL;
+    const before = tailOf(s, i);
+    // ignored positions: a unit exponent ("m/s^2", "m^{-1}"), a subscript, digits glued to a letter
+    if (/[A-Za-z]\s*\^\s*[+-]?\s*$/.test(before) || /_\s*$/.test(before) || /[A-Za-z]$/.test(before)) { i = end; continue; }
+    let lit = m[0].replace(GROUP_RE, "");
     // A sign with only spaces before the digits is BINARY only after a digit, ")", "]", "}" or a single-letter
     // variable standing as its own token ("x - 3", "2a - 3"); anywhere else (after a word, "=", "(", ",", at the
     // start) it is UNARY and belongs to the number.
+    let head = before;
     const sign = /([+-])[ \t\u2009\u202f\u00a0]*$/.exec(before);
     if (sign) {
-      const pre = before.slice(0, before.length - sign[0].length).replace(/[ \t\u2009\u202f\u00a0]+$/, "");
-      const binary = /[0-9)\]}]$/.test(pre) || /(?:^|[^A-Za-z])[A-Za-z]$/.test(pre);
+      head = before.slice(0, before.length - sign[0].length).replace(/[ \t\u2009\u202f\u00a0]+$/, "");
+      const single = /[^A-Za-z][A-Za-z]$/.test(head) || (!bounded && /^[A-Za-z]$/.test(head));
+      const binary = /[0-9)\]}]$/.test(head) || single;
       if (!binary && sign[1] === "-") lit = `-${lit}`;
     }
-    const rest = s.slice(end);
-    const sci = /^\s*[×·*]\s*10\s*\^\s*([+-]?\d+)/.exec(rest) ?? /^[eE]([+-]?\d+)(?![A-Za-z0-9])/.exec(rest);
-    const frac = /^[0-9]+$/.test(m[0]) ? /^\s*\/\s*(\d+)(?!\d|\.\d)/.exec(rest) : null;
+    let taint: string | undefined;
+    if (/[\u00b1\u2213]\s*$/.test(head)) taint = "\u00b1";
+    else if (/\u221a\s*[([]?\s*$/.test(head) || /(?:^|[^A-Za-z])(?:sqrt|log|ln|sin|cos|tan|exp)\s*[([]?\s*$/i.test(head)) taint = "a function argument";
+    const sci = stickyAt(SCI_TIMES, s, end) ?? stickyAt(SCI_E, s, end);
+    const frac = sci ? null : /^[0-9]+$/.test(m[0]) ? stickyAt(FRAC, s, end) : null;
     if (sci) {
       lit = shiftDecimal(lit, Number(sci[1]));
       end += sci[0].length;
@@ -281,10 +312,25 @@ export function numericLiterals(text: string): string[] {
       lit = `${lit}/${frac[1]}`;
       end += frac[0].length;
     }
-    out.push(lit);
+    if (!taint && stickyAt(POWER, s, end)) taint = "raised to a power";
+    const pct = stickyAt(PERCENT, s, end);
+    if (pct) {
+      if (lit.includes("/")) taint ??= "a percentage";
+      else lit = shiftDecimal(lit, -2).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
+      end += pct[0].length;
+    }
+    out.push(taint ? { lit, taint } : { lit });
     i = end;
   }
   return out;
+}
+
+/** Numeric literals in a text, in order: unary signs attached; "a × 10^n", "a·10^n" and "aEn" as one plain decimal
+ * (exact); "p/q" of two integers as one fraction literal "p/q"; "n%" as n/100 (exact); thousands groups joined.
+ * Ignored: digits of an exponent after a letter (a unit exponent, "m/s^2", "m^{-1}"), digits directly after "_"
+ * (subscripts), and digits glued to a preceding letter (formulas and unit names such as "H2O", "m2"). */
+export function numericLiterals(text: string): string[] {
+  return scanLiterals(text).map((l) => l.lit);
 }
 
 /** Exact equality of a literal (decimal or fraction) and the agreed value: no rounding, trailing zeros ignored. */
@@ -295,57 +341,70 @@ function literalIs(lit: string, value: string): boolean {
 
 const stemText = (item: ItemDoc) => htmlToPlainText(item.questionHtml ?? "").replace(/<[^<>]*>/g, " ").replace(/&[a-z#0-9]+;/gi, " ");
 
-/** A problem with how a last sentence states the agreed number, or null. */
+/** A problem with how a last sentence states the agreed number, or null. A tainted literal (after ±, inside a
+ * function, raised to a power) never states the value and always counts as another value. */
 function numberSentenceProblem(sentence: string, value: string, stemNumbers: string[], where: "Short" | "Diploma"): string | null {
-  const lits = numericLiterals(sentence);
-  if (!lits.some((l) => literalIs(l, value))) return `the ${where} answer's last sentence does not state the agreed value`;
-  const other = lits.find((l) => !literalIs(l, value) && !stemNumbers.some((g) => g === l || (!l.includes("/") && !g.includes("/") && literalIs(l, g))));
-  return other === undefined ? null : `the last sentence of the ${where} answer gives another value: ${other}`;
+  const lits = scanLiterals(sentence);
+  const states = (l: Lit) => !l.taint && literalIs(l.lit, value);
+  if (!lits.some(states)) return `the ${where} answer's last sentence does not state the agreed value`;
+  const fromStem = (l: Lit) => !l.taint && stemNumbers.some((g) => g === l.lit || (!l.lit.includes("/") && !g.includes("/") && literalIs(l.lit, g)));
+  const other = lits.find((l) => !states(l) && !fromStem(l));
+  if (other === undefined) return null;
+  return `the last sentence of the ${where} answer gives another value: ${other.lit}${other.taint ? ` (${other.taint})` : ""}`;
 }
 
-const isLetterLabel = (l: string) => /^[A-Za-z]$/.test(l);
+// --- option labels in the Short answer ------------------------------------------------------------
 
-/** Text with LaTeX math removed, for scanning prose. "$60$" is a number in math; a "$" right before a digit and
- * after a space or the start is currency, never a delimiter. null when the remaining delimiters are unbalanced. */
-function proseOnly(md: string): string | null {
-  let t = md.replace(/\$\$[\s\S]*?\$\$/g, " ").replace(/\$(\d[\d.,]*)\$/g, " $1 ").replace(/(^|\s)\$(?=\d)/g, "$1\u00a4");
+const WORD_ONLY = /^[\p{L}\p{N}_]+$/u;
+/** Word tokens: a decimal or grouped number ("2.5", "1,250") is one token; otherwise a maximal run of letters,
+ * digits and "_". */
+const TOKEN = /\d+(?:[.,]\d+)+|[\p{L}\p{N}_]+/gu;
+/** A lead word just before a token (skipping spaces, ":", "-", "#", "(", "=" and is/was/are). */
+const LEAD_BEFORE = /(?:^|[^\p{L}\p{N}_])(?:options?|choices?|answers?|pick|select|letter)(?:[\s:#(=-]|is|was|are)*$/iu;
+const PRONOUN_I_NEXT = /^\s+(?:am|think|would|have|had|will|can|could|should|do|did|need|want|see|get|find|use|take|know|mean|say|start|then|first|also|now)(?![\p{L}\p{N}_])/u;
+
+type LabelEq = (a: string, b: string) => boolean;
+
+/** Text with LaTeX math removed, for scanning prose. A math span that is a single token naming a label of the item
+ * ("$B$", "$\text{(2)}$") stays as that token; "$60$" is a number in math; a "$" right before a digit and after a
+ * space or the start is currency, never a delimiter. null when the remaining delimiters are unbalanced. */
+function proseOnly(md: string, labels: string[], eq: LabelEq): string | null {
+  const span = (inner: string) => {
+    const tok = /^[([]?\s*([\p{L}\p{N}_]+)\s*[)\]]?$/u.exec(normaliseLatex(inner).trim())?.[1];
+    return tok !== undefined && labels.some((l) => eq(l, tok)) ? ` ${tok} ` : " ";
+  };
+  let t = md
+    .replace(/\$\$([\s\S]*?)\$\$/g, (_m: string, inner: string) => span(inner))
+    .replace(/\$(\d[\d.,]*)\$/g, " $1 ")
+    .replace(/(^|\s)\$(?=\d)/g, "$1\u00a4");
   if (((t.match(/\$/g) ?? []).length) % 2) return null;
-  t = t.replace(/\$[^$]*\$/g, " ");
+  t = t.replace(/\$([^$]*)\$/g, (_m: string, inner: string) => span(inner));
   return t;
 }
 
-const LEAD = /\b(?:options?|choices?|answers?)\s*\(?\s*([A-Za-z0-9_]+)/gi;
-
-/** Other option labels of the item a Short answer names (closing removed, math removed). */
-function otherLabelsNamed(prose: string, agreed: string[], labels: string[]): string[] {
-  const isAgreed = (l: string) => agreed.some((a) => a.toUpperCase() === l.toUpperCase());
-  const others = labels.filter((l) => !isAgreed(l));
+/** Other option labels of the item a Short answer names (closing removed, math handled by proseOnly). A word token
+ * equal to another label names it. Exempt, and only these: the article "a"/"A" followed by a lower-case word and not
+ * after a lead word (option, choice, answer, pick, select, letter); the pronoun "I" before a common verb or adverb.
+ * A label with other characters is matched as a whole, delimited by non-word characters. */
+function otherLabelsNamed(prose: string, agreed: string[], labels: string[], eq: LabelEq): string[] {
+  const others = labels.filter((l) => !agreed.some((a) => a.toUpperCase() === l.toUpperCase()));
   const named = new Set<string>();
-  for (const l of others) {
-    if (isLetterLabel(l)) {
-      // a standalone capital; the words "A" / "I" are exempt unless they follow option/choice/answer
-      const L = l.toUpperCase();
-      for (const m of prose.matchAll(new RegExp(`(?<![A-Za-z0-9_])${L}(?![A-Za-z0-9_])`, "g"))) {
-        const at = m.index ?? 0;
-        const after = prose.slice(at + 1);
-        const lead = /\b(?:options?|choices?|answers?)\s*\(?\s*$/i.test(prose.slice(0, at));
-        const word = (L === "A" && /^ [a-z]/.test(after)) || (L === "I" && /^ /.test(after));
-        if (word && !lead) continue;
-        named.add(l);
-      }
-    } else if (/^\d+$/.test(l)) {
-      // a digit token equal to another label (not part of a decimal); fail-closed
-      const re = new RegExp(`(?<![A-Za-z0-9_]|\\d\\.)${l}(?![A-Za-z0-9_]|\\.\\d)`, "g");
-      if (re.test(prose)) named.add(l);
-    } else {
-      const esc = l.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      if (new RegExp(`(?<![A-Za-z0-9_])${esc}(?![A-Za-z0-9_])`, "i").test(prose)) named.add(l);
+  const wordOthers = others.filter((l) => WORD_ONLY.test(l));
+  if (wordOthers.length) {
+    for (const m of prose.matchAll(TOKEN)) {
+      const tok = m[0];
+      const hit = wordOthers.find((l) => eq(l, tok));
+      if (hit === undefined || named.has(hit)) continue;
+      const at = m.index ?? 0;
+      const after = prose.slice(at + tok.length, at + tok.length + 24);
+      if ((tok === "a" || tok === "A") && /^\s+[a-z]/.test(after) && !LEAD_BEFORE.test(tailOf(prose, at))) continue;
+      if (tok === "I" && PRONOUN_I_NEXT.test(after)) continue;
+      named.add(hit);
     }
   }
-  // any case, after option/choice/answer: "option b", "Choice (b)"
-  for (const m of prose.matchAll(LEAD)) {
-    const hit = others.find((l) => l.toUpperCase() === m[1].toUpperCase());
-    if (hit) named.add(hit);
+  for (const l of others.filter((x) => !WORD_ONLY.test(x))) {
+    const esc = l.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (new RegExp(`(?<![\\p{L}\\p{N}_])${esc}(?![\\p{L}\\p{N}_])`, "iu").test(prose)) named.add(l);
   }
   return labels.filter((l) => named.has(l));
 }
@@ -383,10 +442,12 @@ function draftProblem(d: Reply, answer: Answer, item: ItemDoc): string | null {
     if (beforeClosing(diploma, closing) === null) return `the Diploma answer does not end with "${closing}" or ", s${closing.slice(1)}"`;
     const agreed = agreedLabels(answer, item);
     const own = itemLabels(item);
+    // an item with no labels of its own: capitals A-Z, matched by case (lower-case letters are units and variables)
     const labels = own.length ? own : [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"];
-    const prose = proseOnly(shortBody);
+    const eq: LabelEq = own.length ? (x, y) => x.toUpperCase() === y.toUpperCase() : (x, y) => x === y;
+    const prose = proseOnly(shortBody, labels, eq);
     if (prose === null) return "unbalanced math delimiters in the Short answer";
-    const other = otherLabelsNamed(prose, agreed, labels);
+    const other = otherLabelsNamed(prose, agreed, labels, eq);
     if (other.length) return `the Short answer names option ${other.join(", ")} besides the agreed ${agreed.join(", ")}`;
     return null;
   }
@@ -471,6 +532,7 @@ function systemText(course: string, diplomaTitle: string, rules: Rule[]): string
     `- A table is a GitHub-flavoured Markdown table with a line "Table: Caption text" directly above it.`,
     `- Common errors is a bullet list ("- ").`,
     `- The user message says exactly how the Short answer and the Diploma answer must state the final answer. Follow it to the letter: code checks it.`,
+    `- Do not write \u00b1 before the final value, do not give it as a percentage unless the agreed value is one, and do not mention any other option label in the Short answer, in any case or inside maths.`,
     ``,
     `## Output`,
     `Reply with JSON only:`,
