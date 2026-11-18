@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { decide, parseKey, sameAnswer } from "./answers";
+import { acceptedAnswers, decide, parseKey, sameAnswer } from "./answers";
 import type { Answer } from "./answers";
 import type { Interaction } from "../qti-interactions";
 
@@ -16,15 +16,15 @@ const lab = (...values: string[]): Answer => ({ kind: "labels", values });
   assert.deepEqual(decide(A, A, null, B), { outcome: "hold", why: "no_agreement" });
   assert.deepEqual(decide(A, B, A), { outcome: "need_third" });
   assert.deepEqual(decide(A, B, A, A), { outcome: "pass", answer: A, confirm: false, flag: "solvers_split" });
-  assert.deepEqual(decide(A, B, A, B), { outcome: "hold", why: "no_agreement" }); // two agree but not with the key
+  assert.deepEqual(decide(A, B, A, B), { outcome: "hold", why: "no_agreement" }); // split solvers; third sides with B but the key is A: majority disagrees with the key
   assert.deepEqual(decide(A, B, null, A), { outcome: "hold", why: "no_agreement" });
   // extra rows
   assert.deepEqual(decide(A, B, null), { outcome: "need_third" });
-  assert.deepEqual(decide(A, B, B, A), { outcome: "hold", why: "no_agreement" }); // 3 different-ish: s1=A,s3=A agree, key B
+  assert.deepEqual(decide(A, B, B, A), { outcome: "hold", why: "no_agreement" }); // solvers split A/B, third says A, but the key is B: the majority disagrees with the key
   const C: Answer = { kind: "choice", letters: ["C"] };
-  assert.deepEqual(decide(A, B, A, C), { outcome: "hold", why: "no_agreement" }); // all differ
-  assert.deepEqual(decide(A, B, B, B), { outcome: "pass", answer: B, confirm: false, flag: "solvers_split" }); // s2+s3 agree with key
-  assert.deepEqual(decide(A, A, A, B), { outcome: "pass", answer: A, confirm: false }); // s3 ignored when s1=s2=key
+  assert.deepEqual(decide(A, B, A, C), { outcome: "hold", why: "no_agreement" }); // all three solvers differ
+  assert.deepEqual(decide(A, B, B, B), { outcome: "pass", answer: B, confirm: false, flag: "solvers_split" }); // s2 and s3 agree and match the key
+  assert.deepEqual(decide(A, A, A, B), { outcome: "pass", answer: A, confirm: false }); // s1 and s2 agree with the key, so the third answer is not consulted
   assert.deepEqual(decide(A, A, B, A), { outcome: "key_query", answer: A });
   // written response
   const T: Answer = { kind: "text", value: "x" };
@@ -32,6 +32,15 @@ const lab = (...values: string[]): Answer => ({ kind: "labels", values });
   assert.deepEqual(decide(A, T, A), { outcome: "hold", why: "written_response" });
   assert.deepEqual(decide(A, A, T), { outcome: "hold", why: "written_response" });
   assert.deepEqual(decide(A, B, A, T), { outcome: "hold", why: "written_response" });
+}
+
+// alsoAccepted alternatives
+{
+  const half = num("0.5"), alt = lab("1/2");
+  assert.deepEqual(decide(alt, alt, half, undefined, [alt]), { outcome: "pass", answer: alt, confirm: false });
+  assert.deepEqual(decide(alt, alt, half), { outcome: "key_query", answer: alt });
+  assert.deepEqual(decide(alt, half, half, alt, [alt]), { outcome: "pass", answer: alt, confirm: false, flag: "solvers_split" });
+  assert.deepEqual(decide(alt, num("0.7"), half, num("0.7"), [alt]), { outcome: "hold", why: "no_agreement" });
 }
 
 // sameAnswer
@@ -62,7 +71,33 @@ const lab = (...values: string[]): Answer => ({ kind: "labels", values });
   assert.ok(sameAnswer(num("9.995"), num("10"), 2));
   assert.ok(sameAnswer(num("2.5"), num("3"), 0));
   assert.ok(sameAnswer(num("7358.4"), num("7358"), 0));
+  // thousands separators only as groups of three
+  assert.ok(!sameAnswer(num("1,2"), num("12")));
+  assert.ok(!sameAnswer(num("1,5"), num("1.5")));
+  assert.ok(!sameAnswer(num("1,5"), num("15")));
+  assert.ok(!sameAnswer(num("1,23"), num("123")));
+  assert.ok(sameAnswer(num("1,234"), num("1234")));
+  assert.ok(sameAnswer(num("12,345.60"), num("12345.6")));
+  assert.ok(sameAnswer(num("1\u00a0234"), num("1234")));
+  assert.ok(sameAnswer(num("1 234 567"), num("1234567")));
+  assert.ok(!sameAnswer(num("1,2345"), num("12345")));
+  // unparseable is never equal, even to itself
+  assert.ok(!sameAnswer(num(""), num("")));
+  assert.ok(!sameAnswer(num("abc"), num("ABC")));
+  assert.ok(!sameAnswer(num("abc"), num("abc")));
+  assert.ok(sameAnswer(num("2.50e3"), num(" 2.50E3 ")));
+  // unicode minus; units and % stay different
+  assert.ok(sameAnswer(num("\u22120.5"), num("-0.5")));
+  assert.ok(sameAnswer(num("\u20135"), num("-5")));
+  assert.ok(!sameAnswer(num("0.5%"), num("0.5")));
+  assert.ok(!sameAnswer(num("12 m/s"), num("12")));
+  assert.ok(sameAnswer(num("1."), num("1")));
+  // negative rounding: half away from zero on the magnitude
+  assert.ok(sameAnswer(num("-0.5"), num("-1"), 0));
+  assert.ok(sameAnswer(num("-0.4"), num("0"), 0));
+  assert.ok(!sameAnswer(num("-0.5"), num("0"), 0));
   // labels
+  assert.ok(!sameAnswer(lab("P1 S2"), lab("P1\u2192S2")));
   assert.ok(!sameAnswer(lab("Oocyte", "Sperm"), lab("Sperm", "Oocyte")));
   assert.ok(sameAnswer(lab("Oocyte", "Sperm"), lab(" oocyte ", "SPERM")));
   assert.ok(sameAnswer(lab("cell  wall"), lab("Cell wall")));
@@ -107,6 +142,17 @@ const lab = (...values: string[]): Answer => ({ kind: "labels", values });
   const r = (id: string): Interaction => ({ kind: "textEntry", responseId: id });
   assert.deepEqual(keyOf("TI", "", { R2: ["y"], R1: ["x"] }, [r("R1"), r("R2")]), { kind: "labels", values: ["x", "y"] });
   assert.deepEqual(keyOf("TI", "", { R2: ["5"], R1: ["3"] }, [r("R1"), r("R2")]), { kind: "labels", values: ["3", "5"] });
+  // typed response: several values are alternatives; first is the key
+  const alt = { itemType: "NR", key: "0.5", keys: { RESPONSE: ["0.5", "1/2", "50%"] }, interactions: [te] };
+  assert.deepEqual(parseKey(alt), { kind: "number", value: "0.5" });
+  assert.deepEqual(acceptedAnswers(alt), [num("0.5"), lab("1/2"), lab("50%")]);
+  assert.deepEqual(acceptedAnswers({ itemType: "NR", key: "7", keys: { RESPONSE: ["7"] }, interactions: [te] }), [num("7")]);
+  assert.deepEqual(acceptedAnswers({ itemType: "MC", key: "B", keys: { RESPONSE: ["B"] }, interactions: [choice()] }), [{ kind: "choice", letters: ["B"] }]);
+  assert.deepEqual(acceptedAnswers({ itemType: "MC", key: "" }), []);
+  assert.deepEqual(acceptedAnswers({ itemType: "WR", key: "x" }), []);
+  // legacy single non-choice, non-numeric interaction with only `key`: whole key as one label
+  assert.deepEqual(keyOf("TI", "C,A,B", undefined, [order]), { kind: "labels", values: ["C,A,B"] });
+  assert.deepEqual(keyOf("DDL", " P1 S2 ", undefined, [match]), { kind: "labels", values: ["P1 S2"] });
   // legacy, key only
   assert.deepEqual(keyOf("MC", "D"), { kind: "choice", letters: ["D"] });
   assert.deepEqual(keyOf("MS", "A,C,D"), { kind: "choice", letters: ["A", "C", "D"] });

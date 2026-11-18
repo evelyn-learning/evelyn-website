@@ -18,12 +18,21 @@ export type Decision =
 const NUMBER = /^[+-]?(\d+\.?\d*|\.\d+)$/;
 const LETTERS = /^[A-Z](,[A-Z])*$/i;
 
-function isNumber(s: string): boolean {
-  return NUMBER.test(cleanNumber(s));
+const SEP = /[,\u2009\u202f\u00a0 ]/;
+const GROUPED = /^[+-]?\d{1,3}([,\u2009\u202f\u00a0 ]\d{3})+(\.\d*)?$/;
+const EXPONENT = /^[+-]?(\d+\.?\d*|\.\d+)e[+-]?\d+$/i;
+
+/** Plain decimal text, or null when the text is not a plain decimal. Separators (comma, thin space, NBSP, space)
+ *  are accepted only as thousands groups of three, so "1,2" is never read as 12. A unit or "%" makes it null. */
+function toPlain(s: string): string | null {
+  let t = s.trim().replace(/^[\u2212\u2013]/, "-");
+  if (SEP.test(t)) {
+    if (!GROUPED.test(t)) return null;
+    t = t.replace(/[,\u2009\u202f\u00a0 ]/g, "");
+  }
+  return NUMBER.test(t) ? t : null;
 }
-function cleanNumber(s: string): string {
-  return s.trim().replace(/[,    ]/g, "");
-}
+const isNumber = (s: string) => toPlain(s) !== null;
 
 function letters(list: string[]): string[] {
   return [...new Set(list.map((l) => l.trim().toUpperCase()).filter(Boolean))].sort();
@@ -50,14 +59,19 @@ export function parseKey(item: Pick<ItemDoc, "itemType" | "key" | "keys" | "inte
 
   if (responses.length === 1) {
     const one = responses[0];
-    const vals = keys[one.responseId] ? valuesFor(one.responseId) : key ? key.split(",").map((v) => v.trim()).filter(Boolean) : [];
-    if (!vals.length) return legacy();
-    if (one.kind === "choice") return { kind: "choice", letters: letters(vals) };
-    if (one.kind === "textEntry") {
-      const text = keys[one.responseId] ? vals.join(",") : key;
-      return isNumber(text) ? { kind: "number", value: text.trim() } : { kind: "labels", values: [text.trim()] };
+    const given = keys[one.responseId] ? valuesFor(one.responseId) : [];
+    if (one.kind === "choice") {
+      const vals = given.length ? given : key.split(",");
+      return letters(vals).length ? { kind: "choice", letters: letters(vals) } : legacy();
     }
-    return { kind: "labels", values: canon(one, vals) };
+    if (one.kind === "textEntry") {
+      // Several values are alternative accepted answers; the first is the key (see acceptedAnswers).
+      const text = given.length ? given[0] : key;
+      return text ? textAnswer(text) : legacy();
+    }
+    // match / gapMatch / order / inlineChoice: structured values only come from `keys`.
+    if (!given.length) return key ? { kind: "labels", values: [key] } : legacy();
+    return { kind: "labels", values: canon(one, given) };
   }
   if (responses.length > 1) {
     const out: string[] = [];
@@ -75,6 +89,23 @@ export function parseKey(item: Pick<ItemDoc, "itemType" | "key" | "keys" | "inte
   return legacy();
 }
 
+function textAnswer(text: string): Answer {
+  return isNumber(text) ? { kind: "number", value: text.trim() } : { kind: "labels", values: [text.trim()] };
+}
+
+/** One Answer per accepted alternative (a typed response with several key values); otherwise [parseKey(item)] or []. */
+export function acceptedAnswers(item: Pick<ItemDoc, "itemType" | "key" | "keys" | "interactions">): Answer[] {
+  const first = parseKey(item);
+  if (!first) return [];
+  const responses = (item.interactions ?? []).filter((i) => i.kind !== "unsupported");
+  const one = responses.length === 1 ? responses[0] : null;
+  if (one && one.kind === "textEntry") {
+    const vals = (item.keys?.[one.responseId] ?? []).map((v) => String(v).trim()).filter(Boolean);
+    if (vals.length > 1) return vals.map(textAnswer);
+  }
+  return [first];
+}
+
 function canon(r: Interaction, vals: string[]): string[] {
   if (r.kind === "match" || r.kind === "gapMatch") return vals.map((v) => v.replace(/\s+/g, "→")).sort();
   return vals;
@@ -85,14 +116,15 @@ function canon(r: Interaction, vals: string[]): string[] {
 type Dec = { neg: boolean; int: string; frac: string };
 
 function parseDec(s: string): Dec | null {
-  const t = cleanNumber(s);
-  if (!NUMBER.test(t)) return null;
+  const t = toPlain(s);
+  if (t === null) return null;
   const neg = t.startsWith("-");
   const body = t.replace(/^[+-]/, "");
   const [i, f = ""] = body.split(".");
   return { neg, int: i, frac: f };
 }
 
+// Precision rounding is half away from zero on the magnitude: -0.5 -> -1, 0.5 -> 1, -0.4 -> -0 (equals 0).
 function roundTo(d: Dec, places: number): Dec {
   if (d.frac.length <= places) return d;
   const up = d.frac.charCodeAt(places) - 48 >= 5; // half-up on the magnitude (half away from zero)
@@ -110,8 +142,9 @@ function canonDec(d: Dec): string {
 
 function sameNumber(a: string, b: string, precision?: number): boolean {
   const x = parseDec(a), y = parseDec(b);
-  // Anything we cannot parse exactly (e.g. 2.50e3) is equal only to the identical text.
-  if (!x || !y) return a.trim().toLowerCase() === b.trim().toLowerCase();
+  // Unparseable text (empty, "abc", "0.5%", "12 m/s") is never equal to anything. The one exception is
+  // identical exponent-form text (e.g. "2.50e3" vs "2.50E3"), which we do not evaluate but can recognise as the same.
+  if (!x || !y) return EXPONENT.test(a.trim()) && a.trim().toLowerCase() === b.trim().toLowerCase();
   if (precision === undefined) return canonDec(x) === canonDec(y);
   return canonDec(roundTo(x, precision)) === canonDec(roundTo(y, precision));
 }
@@ -129,16 +162,17 @@ export function sameAnswer(a: Answer, b: Answer, precision?: number): boolean {
   return false; // text is judged elsewhere
 }
 
-export function decide(s1: Answer, s2: Answer, key: Answer | null, s3?: Answer): Decision {
+export function decide(s1: Answer, s2: Answer, key: Answer | null, s3?: Answer, alsoAccepted: Answer[] = []): Decision {
+  const matchesKey = (x: Answer) => !!key && (sameAnswer(x, key) || alsoAccepted.some((a) => sameAnswer(x, a)));
   if ([s1, s2, key, s3].some((x) => x?.kind === "text")) return { outcome: "hold", why: "written_response" };
   const hold: Decision = { outcome: "hold", why: "no_agreement" };
   if (sameAnswer(s1, s2)) {
-    if (key) return sameAnswer(s1, key) ? { outcome: "pass", answer: s1, confirm: false } : { outcome: "key_query", answer: s1 };
+    if (key) return matchesKey(s1) ? { outcome: "pass", answer: s1, confirm: false } : { outcome: "key_query", answer: s1 };
     if (!s3) return { outcome: "need_third" };
     return sameAnswer(s1, s3) ? { outcome: "pass", answer: s1, confirm: true } : hold;
   }
   if (!s3) return { outcome: "need_third" };
   if (!key) return hold;
   const winner = sameAnswer(s1, s3) ? s1 : sameAnswer(s2, s3) ? s2 : null;
-  return winner && sameAnswer(winner, key) ? { outcome: "pass", answer: winner, confirm: false, flag: "solvers_split" } : hold;
+  return winner && matchesKey(winner) ? { outcome: "pass", answer: winner, confirm: false, flag: "solvers_split" } : hold;
 }
