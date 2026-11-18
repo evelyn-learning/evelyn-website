@@ -36,7 +36,7 @@
  * session): maths and science, one-language lessons, typed lessons, homework and a discussion are unchanged.
  */
 import type Anthropic from '@anthropic-ai/sdk';
-import { TUTOR_V2_BOARD_LEARNER_SENTENCE, TUTOR_V2_CARD_EVERY_SENTENCE } from '../orchestrator/flags';
+import { TUTOR_V2_BOARD_LEARNER_SENTENCE, TUTOR_V2_CARD_EVERY_SENTENCE, TUTOR_V2_CORRECTION_CARD_NOW } from '../orchestrator/flags';
 import { languageNameOf } from '../voice/language-request';
 import { stripBoardBlocks, type InlineBlock, type InlinePart } from './board-inline';
 import { v2IsPracticeAsk } from './languages';
@@ -397,15 +397,42 @@ function cardIsOf(card: string, sentence: string): boolean {
   return c.filter((w) => inT.has(w)).length / c.length >= 0.5 && t.filter((w) => inC.has(w)).length / t.length >= 0.5;
 }
 
+/** Card words beyond the learner's that a card of their sentence may add (the corrected words: "at", "a", "the"). */
+const COVER_EXTRA_MAX = 3;
+/** Task 7m (CORRECTION_CARD_NOW): a sentence card on the board already holds this sentence of theirs, corrected: every word they
+ *  said is on it (a plural or "-es" form counts) and it adds at most COVER_EXTRA_MAX words. "I have worked, Nagoya Corporation,
+ *  for 6 year." against the card "I have worked at Nagoya Corporation for six years." on page 3 was owed again and carded twice
+ *  (mic test 4, 9.94); a new practice sentence ("I have worked at Toyota for three years.") is not held by it. */
+export function v2BoardCardHolds(board: V2Board, sentence: string): boolean {
+  const said = v2SentenceWords(sentence);
+  if (said.length < 3) return false;
+  const same = (w: string, c: string) => c === w || c === `${w}s` || c === `${w}es` || w === `${c}s` || w === `${c}es`;
+  return board.pages.some((pg) => pg.items.some((it) => {
+    if (it.tool !== 'show_sentence') return false;
+    const left = v2SentenceWords(it.summary);
+    for (const w of said) { const at = left.findIndex((c) => same(w, c)); if (at < 0) return false; left.splice(at, 1); }
+    return left.length <= COVER_EXTRA_MAX;
+  }));
+}
+
 /** Task 7g: the sentences of theirs that no card of the reply is of (each card counts for one sentence, the closest first), and
- *  that are not up already. */
-export function v2SentencesNotCarded(sentences: readonly string[], cards: readonly string[], board: V2Board, corrected: readonly string[] = []): string[] {
+ *  that are not up already. Task 7m (CORRECTION_CARD_NOW): nor held, corrected, by a card on the board (v2BoardCardHolds). */
+export function v2SentencesNotCarded(sentences: readonly string[], cards: readonly string[], board: V2Board, corrected: readonly string[] = [], held: boolean = TUTOR_V2_CORRECTION_CARD_NOW): string[] {
   const left = [...cards];
   return sentences.filter((s) => {
     const at = left.findIndex((c) => cardIsOf(c, s));
     if (at >= 0) { left.splice(at, 1); return false; }
-    return !v2SentenceCarded(board, s, corrected);
+    return !v2SentenceCarded(board, s, corrected) && !(held && v2BoardCardHolds(board, s));
   });
+}
+
+/** Task 7m (CORRECTION_CARD_NOW, mic test 4 flag 6): the board check's line when the reply left sentences of their answer with no
+ *  card ("「sell」の過去形は「sold」です…" and nothing written: the card came a reply later). */
+export function v2OwedCardCheckLine(session: V2Session, owed: readonly string[]): string {
+  if (!owed.length) return '';
+  const support = session.languages?.[1] ? languageNameOf(session.languages[1].toLowerCase().split(/[-_]/)[0]!) : 'their own language';
+  const one = owed.length === 1;
+  return `Your reply answered ${one ? 'this sentence' : 'these sentences'} of theirs and put no card of ${one ? 'it' : 'them'} on the board: ${owed.map((x) => JSON.stringify(x)).join('; ')}. Write ${one ? 'it' : 'each'} now as one sentence card, <board sentence stress="the changed words" gloss="a short ${support} note of the point" with="the opening words of the sentence in which you correct it">the sentence</board>: your corrected sentence when the reply says it or it follows plainly from your correction, the changed words stressed; when it does not, their own sentence as they said it (without fillers) with the wrong word stressed and the right form in the gloss. A whole sentence only, never a starter ending in "…", and none already on the board.`;
 }
 
 /** A reply that says it did not catch their words, or asks them to say it again: what it heard is not theirs to card. */

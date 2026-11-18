@@ -32,7 +32,7 @@ import { useOpenAIRealtime, type OpenAIVoice } from '@/app/tutor/hooks/useOpenAI
 import { usePerceptionWS, type PerceptionTranscript } from '@/app/tutor/hooks/usePerceptionWS';
 import { useCartesiaInkWS } from '@/app/tutor/hooks/useCartesiaInkWS';
 import { useAudioRecorder } from '@/app/tutor/hooks/useAudioRecorder';
-import { BARGEIN_GATE_POLL_MS, TUTOR_MIC_REACQUIRE, TUTOR_PRONUNCIATION_ASSESS, TUTOR_STT_ENGINE_INK2, TUTOR_V2_BARGEIN_ENERGY_GATE, TUTOR_V2_HEARD_NOISE, TUTOR_V2_NO_WORDS_RECOVER, TUTOR_V2_SPOKEN_SOUNDS, TUTOR_V2_TARGET_PAUSE, TUTOR_V2_TARGET_PUNCT } from '@/lib/tutor/orchestrator/flags';
+import { BARGEIN_GATE_POLL_MS, TUTOR_MIC_REACQUIRE, TUTOR_PRONUNCIATION_ASSESS, TUTOR_STT_ENGINE_INK2, TUTOR_V2_BARGEIN_ENERGY_GATE, TUTOR_V2_HEARD_NOISE, TUTOR_V2_NO_WORDS_RECOVER, TUTOR_V2_SPOKEN_SOUNDS, TUTOR_V2_TARGET_PAUSE, TUTOR_V2_TARGET_PUNCT, TUTOR_V2_CARD_STRESS_SPOKEN, TUTOR_V2_WAVE_DASH } from '@/lib/tutor/orchestrator/flags';
 import type { BargeInFrame } from '@/lib/tutor/voice/bargein-gate';
 import { armV2SoundGate, stepV2SoundGate } from '@/lib/tutor/v2/sound-gate';
 import { V2MicWatch } from '@/lib/tutor/v2/mic-watch';
@@ -50,11 +50,11 @@ import { useV2Turns, type V2TurnsConfig } from './useV2Turns';
 import { isOwnVoice } from '@/lib/tutor/v2/own-voice';
 import { V2EchoClock, v2IsEcho } from '@/lib/tutor/v2/echo-window';
 import { v2CloseCalledOff } from '@/lib/tutor/v2/close-mic';
-import { withTargetPauses } from '@/lib/tutor/v2/target-pauses';
+import { withTargetPauses, type V2CardStress } from '@/lib/tutor/v2/target-pauses';
 import { v2HeardIsNoise } from '@/lib/tutor/v2/heard';
 import { WordsWatch } from '@/lib/tutor/v2/words-watch';
 import { v2SpeechParts } from '@/lib/tutor/v2/languages';
-import { v2SpeakSounds } from '@/lib/tutor/v2/spoken-sounds';
+import { v2SpeakSounds, v2SpeakWaveDash } from '@/lib/tutor/v2/spoken-sounds';
 import { trimToSpoken } from '@/lib/tutor/v2/interrupted';
 import { isMathsSubject, isScienceSubject } from '@/lib/tutor/v2/session-kind';
 import { anchorSentenceIndex, asksAnywhere, inlineSentenceIndex } from '@/lib/tutor/v2/board-timing';
@@ -108,6 +108,8 @@ const QUIET_MIC_MS = 20000;
 const WAITED_RECHECK_S = V2_WAITED_RECHECK_S;
 /** After a reply that asked nothing: how long after it finishes speaking before the tutor is told of the silence. */
 const NO_ASK_RECHECK_S = V2_NO_ASK_RECHECK_S;
+/** Task 7m (WAVE_DASH): a wave dash standing for "something" is not read "kara" (v2/spoken-sounds.ts). */
+const waveDash = (s: string) => (TUTOR_V2_WAVE_DASH ? v2SpeakWaveDash(s) : s);
 const MIC_SOUND_LEVEL = 0.12;
 /** A held board item is painted after this long whatever the voice is doing. */
 const BOARD_HOLD_MAX_MS = 45000;
@@ -141,6 +143,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const paintedThisTurnRef = useRef<Array<{ id: string; tool: string; summary: string }>>([]);
   const shownThenWithdrawnRef = useRef<Array<{ id: string; tool: string; summary: string }>>([]);
   const turnSentencesRef = useRef<string[]>([]);
+  /** Task 7m (CARD_STRESS_SPOKEN): this reply's sentence cards and their stressed words. */
+  const cardStressRef = useRef<V2CardStress[]>([]);
   const startedCountRef = useRef(0);
   const heldBoardRef = useRef<Array<{ idx: number; id?: string; what?: string; untilDone?: boolean; isPage?: boolean; paint: () => void; timer: ReturnType<typeof setTimeout> }>>([]);
   const turnBusyRef = useRef(false);
@@ -296,6 +300,9 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       if (shown) shownThenWithdrawnRef.current.push(shown);
       p.current.onDebugEvent?.('v2_board_withdrawn', held ? `${held.what ?? id}: withdrawn before it was shown` : `${shown?.summary.slice(0, 80) ?? id}: withdrawn after it was shown, left up unless it is rewritten`);
     },
+    // Task 7m (CARD_STRESS_SPOKEN): this reply's sentence cards and their stressed words, for the voice (plainSpeech). Told as the
+    // call arrives, before the sentence kept for it (useV2Turns) is spoken.
+    onBoardCallArrived: (call) => { if (call.name === 'show_sentence' && typeof call.args.sentence === 'string' && Array.isArray(call.args.emphasis)) cardStressRef.current.push({ sentence: call.args.sentence, stress: (call.args.emphasis as unknown[]).map(String) }); },
     holdBoard: (call, paintNow) => {
       const paint = () => {
         const old = shownThenWithdrawnRef.current.find((x) => x.tool === call.name);
@@ -363,7 +370,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     onTutorBusy: (busy) => {
       props.onTutorBusy?.(busy);
       turnBusyRef.current = busy;
-      if (busy) { captionsRef.current.begin(); cutHeardRef.current = null; releaseBoard(); paintedThisTurnRef.current = []; paintFnsRef.current.clear(); turnSentencesRef.current = []; startedCountRef.current = 0; segStartRef.current = 0; paraStartRef.current = 0; pageTurnAtRef.current = 0; lastBlockAtRef.current = -1; clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); showState('thinking'); }
+      if (busy) { cardStressRef.current = []; captionsRef.current.begin(); cutHeardRef.current = null; releaseBoard(); paintedThisTurnRef.current = []; paintFnsRef.current.clear(); turnSentencesRef.current = []; startedCountRef.current = 0; segStartRef.current = 0; paraStartRef.current = 0; pageTurnAtRef.current = 0; lastBlockAtRef.current = -1; clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); showState('thinking'); }
       else { captionsRef.current.streamEnd(); waitingRef.current = false; cueRef.current = cueStop(); realtimeRef.current?.signalBrainThinking(false); placeBoard(true); if (!realtimeRef.current?.isSpeechPending()) releaseBoard(); else releaseBoard(startedCountRef.current);
         // The tutor chose to say nothing and wait (keep_listening). If the student was in fact finished, it finds out soon.
         const silentReply = turnSentencesRef.current.length === 0 && !turnsRef.current?.isEnding();
@@ -542,7 +549,9 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   // Task 7c (SPOKEN_SOUNDS): a sound in phonetic symbols ("/z/") is said in words first: speakSlashes read "/s/" as "per second".
   // Task 7h (TARGET_PAUSE): in a lesson that teaches a language, a short quoted target is set apart by a pause either side
   // (v2/target-pauses.ts): marked before the rest of the path; after it dashes (a comma in Japanese, Task 7l), or with TARGET_PUNCT off the voice's break tags.
-  const plainSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => withTargetPauses(sentence, (sentence) => rewrite(speakSlashes(speakNumberPlurals(speakDataRuns(speakLessonNotation(TUTOR_V2_SPOKEN_SOUNDS ? v2SpeakSounds(sentence) : sentence))))), TUTOR_V2_TARGET_PAUSE && ((p.current.tutorLanguages?.length ?? 0) >= 2 || !!p.current.pronunciation), TUTOR_V2_TARGET_PUNCT), []);
+  // Task 7m: a sentence card's stressed words set apart too (CARD_STRESS_SPOKEN); a wave dash standing for "something" not read
+  // "kara" (WAVE_DASH).
+  const plainSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => withTargetPauses(sentence, (sentence) => rewrite(speakSlashes(speakNumberPlurals(speakDataRuns(waveDash(speakLessonNotation(TUTOR_V2_SPOKEN_SOUNDS ? v2SpeakSounds(sentence) : sentence)))))), TUTOR_V2_TARGET_PAUSE && ((p.current.tutorLanguages?.length ?? 0) >= 2 || !!p.current.pronunciation), TUTOR_V2_TARGET_PUNCT, TUTOR_V2_CARD_STRESS_SPOKEN ? cardStressRef.current : []), []);
   const relayMode = useMemo(() => ({
     instructions: TRANSPORT_ONLY,
     onUserTranscript: onRelayTranscript,

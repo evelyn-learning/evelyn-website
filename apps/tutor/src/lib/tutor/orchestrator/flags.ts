@@ -2063,3 +2063,38 @@ export const TUTOR_V2_PRACTICE_ON_PART_PAGE = process.env.NEXT_PUBLIC_TUTOR_V2_P
  *  flag 8: "it's always in a hurry to end") (Task 7k, item 2). Default ON; NEXT_PUBLIC_TUTOR_V2_CLOSE_REOPENED=off ⇒ as
  *  before. */
 export const TUTOR_V2_CLOSE_REOPENED = process.env.NEXT_PUBLIC_TUTOR_V2_CLOSE_REOPENED !== 'off';
+
+/** Tutor brain v2 (v2/target-pauses.ts, TutorVoiceV2, useV2Turns): a sentence card's stressed words are set apart in its spoken
+ *  copy by the Task 7l punctuation (dashes English-led, commas Japanese-led), and so is a stress word inside a longer quoted
+ *  correction ("we say "in the home appliance division.""); at most two marks a piece of speech; captions, transcript, echo
+ *  guard and board unchanged. Mic test 4 (embed-1795028886172, flag 1: "the word the should have been emphasised") (Task 7m,
+ *  item 1). Default ON; NEXT_PUBLIC_TUTOR_V2_CARD_STRESS_SPOKEN=off ⇒ as before. */
+export const TUTOR_V2_CARD_STRESS_SPOKEN = process.env.NEXT_PUBLIC_TUTOR_V2_CARD_STRESS_SPOKEN !== 'off';
+
+/** Tutor brain v2 (v2/sentences.ts, v2/board-timing.ts, v2/facts.ts, v2/turn.ts): no false silence turn. The sentence cut
+ *  also falls after `…"` before a capital, so `Try starting with "I have worked with…"` is the reply's last sentence and an ask
+ *  ("try starting with" counts anywhere); a 2-second recheck after a reply that asked says so and asks for one short line (take
+ *  your time, or a hint), no claim, no new card; a silence turn carries no owed-card line and keeps the owed card for the next
+ *  learner turn. Mic test 4 (embed-1795028886172, flag 4) (Task 7m, item 2). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_NO_FALSE_SILENCE=off ⇒ as before. */
+export const TUTOR_V2_NO_FALSE_SILENCE = process.env.NEXT_PUBLIC_TUTOR_V2_NO_FALSE_SILENCE !== 'off';
+
+/** Tutor brain v2 (v2/turn.ts, v2/board-timing.ts): a question card in a spoken language lesson is labelled once and said
+ *  once. A leading "Question:" / 「質問：」 is cut from its statement (the title says it); an inline question card's question is
+ *  spoken where the card stands (before the hint that follows it) unless already said; the after-reply ask splits at 。 and
+ *  hears a Japanese hand-over (答えてみて…), and adds nothing when the card's question was said. Mic test 4
+ *  (embed-1795028886172, flag 5a) (Task 7m, item 3). Default ON; NEXT_PUBLIC_TUTOR_V2_QUESTION_ONCE=off ⇒ as before. */
+export const TUTOR_V2_QUESTION_ONCE = process.env.NEXT_PUBLIC_TUTOR_V2_QUESTION_ONCE !== 'off';
+
+/** Tutor brain v2 (v2/turn.ts, v2/learner-card.ts, v2/board-timing.ts): every correction is on the board in the same reply.
+ *  A reply that leaves a sentence of the learner's answer owed a card runs the board check in the same turn (its length
+ *  counted by characters for a language written without spaces) with a line asking for that card; a card of a starter
+ *  fragment ending in "…" is refused; a sentence whose card is already on the board is not owed. Mic test 4
+ *  (embed-1795028886172, flag 6; 9.94 and 11.31 min) (Task 7m, item 4). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_CORRECTION_CARD_NOW=off ⇒ as before. */
+export const TUTOR_V2_CORRECTION_CARD_NOW = process.env.NEXT_PUBLIC_TUTOR_V2_CORRECTION_CARD_NOW !== 'off';
+
+/** Tutor brain v2 (v2/spoken-sounds.ts, TutorVoiceV2): a wave dash 〜 / ～ standing for "something" is not spoken (the voice
+ *  read 「今、〜しています」 as 「今、からしています」); kept between two numbers or times. Mic test 4 (embed-1795028886172,
+ *  6.76 min) (Task 7m, item 5). Default ON; NEXT_PUBLIC_TUTOR_V2_WAVE_DASH=off ⇒ as before. */
+export const TUTOR_V2_WAVE_DASH = process.env.NEXT_PUBLIC_TUTOR_V2_WAVE_DASH !== 'off';

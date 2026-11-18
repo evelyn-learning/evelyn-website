@@ -5,7 +5,7 @@
  * the opening words of the sentence it belongs with (tools.ts); this finds that sentence among the
  * ones sent to the voice, so the client can hold the item until it starts playing.
  */
-import { TUTOR_V2_PRACTICE_ASK_CAP } from '../orchestrator/flags';
+import { TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_PRACTICE_ASK_CAP, TUTOR_V2_QUESTION_ONCE } from '../orchestrator/flags';
 
 const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean);
 
@@ -116,8 +116,24 @@ export function asksAnywhere(sentences: string[]): boolean {
 /** Task 6e fix round 1 (F2): a request to say the sentence that names "you" ("Now you say it: …") hands over too; taken
  *  for a statement, it got "Are you with me so far?" added, and the "Yes." to that set the request off again. */
 const YOU_SAY = /\b(?:now )?you (?:say|try|repeat)\b|\bsay it (?:again|back|once more|with me|after me)\b|\brepeat after me\b|\bsay the (?:whole )?sentence\b|言ってみて|言ってください/i;
+/** Task 7m (NO_FALSE_SILENCE): a starter offered anywhere in the sentence hands over ("Now, another sentence about you, with
+ *  "I have…" Try starting with "I have worked with…""; DO_THIS is anchored at a clause's start). Not "start with" alone: "Let's
+ *  start with the past simple." is the tutor's own plan. */
+const TRY_STARTING = /\btry (?:starting|beginning)\b/i;
+/** Task 7m (QUESTION_ONCE, mic test 4 flag 5a): a Japanese request to answer, say, write or use hands over (「まず、一文で答えて
+ *  みてください。」 was taken for a statement, and the card was read out after it). */
+const JA_HAND_OVER = /(?:答え|話し|書い|言っ|読ん|使っ|作っ|続け)てみて|(?:答え|話し|書い|続け)てください/;
 export function asksAloud(sentences: string[]): boolean {
-  return sentences.slice(-2).some((x) => /[?？]/.test(x) || TO_THE_STUDENT.test(x) || (TUTOR_V2_PRACTICE_ASK_CAP && YOU_SAY.test(x)) || x.split(/[,;:]\s+|\s+and\s+/).some((clause) => DO_THIS.test(clause.trim())));
+  return sentences.slice(-2).some((x) => /[?？]/.test(x) || TO_THE_STUDENT.test(x) || (TUTOR_V2_PRACTICE_ASK_CAP && YOU_SAY.test(x)) || (TUTOR_V2_NO_FALSE_SILENCE && TRY_STARTING.test(x)) || (TUTOR_V2_QUESTION_ONCE && JA_HAND_OVER.test(x)) || x.split(/[,;:]\s+|\s+and\s+/).some((clause) => DO_THIS.test(clause.trim())));
+}
+
+/** Task 7m (CORRECTION_CARD_NOW): how long a spoken reply is, in words: a run of Japanese or Chinese script (written without
+ *  spaces) counts one word per two characters; anything else by its spaces. A Japanese correction of 70 characters was
+ *  "4 words" to the board check's length trigger (mic test 4 flag 6). */
+export function v2SpokenWords(text: string): number {
+  const cjk = (text.match(/[\u3040-\u30ff\u3400-\u9fff]/g) ?? []).length;
+  const rest = text.replace(/[\u3040-\u30ff\u3400-\u9fff\u3000-\u303f\uff00-\uffef]+/g, ' ').split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
+  return rest + Math.ceil(cjk / 2);
 }
 
 /** In a spoken lesson, what a problem card asks must also be heard: a tutor who tells the scenario and stops,
@@ -128,9 +144,31 @@ export function asksAloud(sentences: string[]): boolean {
  *  (a 90-word source excerpt, fifteen data values) is a voice reciting the board (embed-1794416183291). */
 const SAY_ASK_WORDS = 30;
 const SAY_WHOLE_CARD_WORDS = 45;
-export function unsaidAsk(statement: string, sentences: string[]): string | null {
+/** Task 7m (QUESTION_ONCE): a card's question, as it is spoken where the card stands: its last run of sentences that ask (end
+ *  in ? or ？), without a leading label ("Question:"). Null when the card asks no question (an instruction is the reply's to say), holds
+ *  mathematics, or the question is longer than SAY_ASK_WORDS words. */
+export function cardQuestion(statement: string): string | null {
+  const card = statement.replace(/\s+/g, ' ').trim().replace(/^(?:\*\*)?(?:question|質問)\s*\d*\s*[:：](?:\*\*)?\s*/i, '');
+  if (!card || /\$|\\[a-zA-Z]/.test(card)) return null;
+  const parts = card.split(/(?<=[.!?。！？])\s+|(?<=[。！？])/).map((x) => x.trim()).filter(Boolean);
+  // The run of questions that ends at the card's last one ("Can you tell me a little about your job? What do you do?"); an
+  // instruction after it ("Answer with one sentence…") is the reply's to say.
+  const last = parts.map((x) => /[?？]$/.test(x)).lastIndexOf(true);
+  if (last < 0) return null;
+  let first = last;
+  while (first > 0 && /[?？]$/.test(parts[first - 1]!)) first -= 1;
+  const q = parts.slice(first, last + 1).join(' ');
+  return norm(q).length <= SAY_ASK_WORDS ? q : null;
+}
+export function unsaidAsk(statement: string, sentences: string[], opts: { questionOnce?: boolean } = {}): string | null {
   const card = statement.replace(/\s+/g, ' ').trim();
   if (!card || !sentences.length) return null;
+  // Task 7m (QUESTION_ONCE, mic test 4 flag 5a): the card's question already heard (said where the card stands, or by the
+  // model) is not said again after the reply's own lead-in and hint.
+  if (opts.questionOnce ?? TUTOR_V2_QUESTION_ONCE) {
+    const q = cardQuestion(card);
+    if (q && sentences.some((y) => ` ${norm(y).join(' ')} `.includes(` ${norm(q).join(' ')} `))) return null;
+  }
   // A bare instruction is not the question: "Here is a new one. Say yes or no, and say why." was taken as asked, and
   // a nine-year-old heard no question while "Does the bulb light up?" sat on the card (demo check, 2026-11-13).
   const cardAbout = about(card);

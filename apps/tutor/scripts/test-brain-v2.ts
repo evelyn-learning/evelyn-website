@@ -8,7 +8,7 @@ import { mayOpenPart, partOffer } from '../src/lib/tutor/v2/part-close';
 import { mentionsTool } from '../src/lib/tutor/v2/tool-talk';
 import { applyToModelBoard, renderBoard, boardMisfit, spacedRoman, taskOnly, wordsAsText } from '../src/lib/tutor/v2/board';
 import { anchorSentenceFinal, anchorSentenceIndex, asksAloud, inlineSentenceIndex, saidCovers, unsaidAsk, unsaidBoardItem, asksAnywhere } from '../src/lib/tutor/v2/board-timing';
-import { TUTOR_V2_CLOSE_BY_CONTENT, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM } from '../src/lib/tutor/orchestrator/flags';
+import { TUTOR_V2_CLOSE_BY_CONTENT, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM } from '../src/lib/tutor/orchestrator/flags';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { speaksMaths, unwrittenEquations } from '../src/lib/tutor/v2/spoken-maths';
 import { renderFacts, V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S } from '../src/lib/tutor/v2/facts';
@@ -766,7 +766,11 @@ async function main() {
     check('voice, real-run-B t49: the reply ends with the options, read', /Just say the number\.\n\n1, individual words; 2, a complete sentence; 3, speaking more naturally; 4, skip and continue\.$/.test(v49.spoken), v49.spoken);
     const t5 = 'Great. Here is the first question.\n\n<board problem difficulty="easy">Can you tell me a little about your job? What do you do?</board>\n\nPlease answer in English, and don\'t worry about mistakes.';
     const v5 = await runV2Turn({ session: lang, state: midLesson(), studentSaid: 'Yes, I am ready.', callModel: streaming(t5), boardPass: false, mathsCheck: false, nowMs: 2 * 60000 });
-    check('voice, real-run-A t5: the question on the card is asked aloud (the problem card\'s own path)', /What do you do\?$/.test(v5.spoken), v5.spoken);
+    // Task 7m (QUESTION_ONCE): the card's question is asked where the card stands, before the instruction after it, and once;
+    // with that switch off it is appended at the end, as before.
+    check('voice, real-run-A t5: the question on the card is asked aloud (the problem card\'s own path)', TUTOR_V2_QUESTION_ONCE
+      ? /^Great\. Here is the first question\.\s+Can you tell me a little about your job\? What do you do\?\s+Please answer in English, and don't worry about mistakes\.$/.test(v5.spoken) && v5.spoken.split('What do you do?').length === 2
+      : /What do you do\?$/.test(v5.spoken), v5.spoken);
     const x61 = await runV2Turn({ session: { ...lang, mode: 'text' }, state: midLesson(), studentSaid: 'A sentence, please.', callModel: streaming(t61), boardPass: false, mathsCheck: false, nowMs: 15 * 60000 });
     check('text: nothing is added (the board is in front of them)', /Please say it back to me\.$/.test(x61.spoken), x61.spoken);
     check('the kill switch defaults on', TUTOR_V2_SPEAK_BOARD_ITEM === true);

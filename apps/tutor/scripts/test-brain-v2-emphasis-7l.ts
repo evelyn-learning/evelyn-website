@@ -88,7 +88,7 @@ async function main() {
     const s = speak('One small thing: we say "two years ago," and "in Tokyo" for the place.');
     check('the whole sentence is one request (the dash and comma do not split it)', s.length === 1, s);
     check('the dash is not turned into a word by the path (rewriteForTTS is applied before the marks, so nothing reads them)', !/\b(dash|minus|hyphen)\b/i.test(s[0]!));
-    check('the voice client: the flag is passed as the fourth argument', /withTargetPauses\(sentence, .*TUTOR_V2_TARGET_PAUSE && \(\(p\.current\.tutorLanguages\?\.length \?\? 0\) >= 2 \|\| !!p\.current\.pronunciation\), TUTOR_V2_TARGET_PUNCT\), \[\]\);/.test(readFileSync(join(__dirname, '..', 'src', 'app', 'tutor', 'components', 'v2', 'TutorVoiceV2.tsx'), 'utf8')));
+    check('the voice client: the flag is passed as the fourth argument', /withTargetPauses\(sentence, .*TUTOR_V2_TARGET_PAUSE && \(\(p\.current\.tutorLanguages\?\.length \?\? 0\) >= 2 \|\| !!p\.current\.pronunciation\), TUTOR_V2_TARGET_PUNCT, TUTOR_V2_CARD_STRESS_SPOKEN \? cardStressRef\.current : \[\]\), \[\]\);/.test(readFileSync(join(__dirname, '..', 'src', 'app', 'tutor', 'components', 'v2', 'TutorVoiceV2.tsx'), 'utf8')));
   }
 
   console.log('4  captions, transcript and record are unchanged (the marks are only in the voice text)');

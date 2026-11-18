@@ -16,6 +16,8 @@
  * Only the voice's text changes: the transcript, the captions and the board keep the quotes.
  */
 
+import { TUTOR_V2_CARD_STRESS_SPOKEN } from '../orchestrator/flags';
+
 /** The pause either side of a target. */
 export const V2_TARGET_PAUSE_MS = 200;
 /** A quoted span of more words than this is a sentence, not a target. */
@@ -31,11 +33,11 @@ const QUOTED = /"([^"\n]+)"|“([^“”\n]+)”|「([^「」\n]+)」/g;
 const TARGET = new RegExp(`^-?[A-Za-z][A-Za-z'’-]*(?:\\s+[A-Za-z][A-Za-z'’-]*){0,${V2_TARGET_MAX_WORDS - 1}}[.,;:!?]?$`);
 
 /** The first V2_TARGET_MAX_PER_PART short quoted targets, their quotes replaced by marks. Anything else unchanged. */
-export function markTargets(text: string): string {
+export function markTargets(text: string, max: number = V2_TARGET_MAX_PER_PART): string {
   let n = 0;
   return text.replace(QUOTED, (whole, a?: string, b?: string, c?: string) => {
     const inner = (a ?? b ?? c ?? '').trim();
-    if (n >= V2_TARGET_MAX_PER_PART || !TARGET.test(inner)) return whole;
+    if (n >= max || !TARGET.test(inner)) return whole;
     n += 1;
     return `${OPEN}${inner}${CLOSE}`;
   });
@@ -104,11 +106,58 @@ export function targetPunctuation(spoken: string): string {
   return out.replace(new RegExp(`[${OPEN}${CLOSE}]`, 'g'), '');
 }
 
+/** Task 7m (CARD_STRESS_SPOKEN): a sentence card of this reply, its sentence and its stressed words (`<board sentence
+ *  stress="…">`, show_sentence.emphasis). */
+export interface V2CardStress { sentence: string; stress: readonly string[] }
+
+const wordsOf = (t: string) => (t.toLowerCase().match(/[\p{L}\p{N}'’]+/gu) ?? []).join(' ');
+const escapeRe = (w: string) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/** The first occurrence of each word as a whole word (Latin letters either side do not count), marked; at most `max`. */
+function markWords(text: string, words: readonly string[], max: number): { text: string; n: number } {
+  let out = text; let n = 0;
+  for (const w of words) {
+    if (n >= max) break;
+    const re = new RegExp(`(?<![A-Za-z'’${OPEN}])${escapeRe(w)}(?![A-Za-z'’${CLOSE}])`, 'i');
+    const m = re.exec(out);
+    if (!m) continue;
+    out = `${out.slice(0, m.index)}${OPEN}${m[0]}${CLOSE}${out.slice(m.index + m[0].length)}`; n += 1;
+  }
+  return { text: out, n };
+}
+
+/** Task 7m (CARD_STRESS_SPOKEN, mic test 4 flag 1, embed-1795028886172 3.68 min): the corrected word of a sentence card set
+ *  apart where it is heard. The card "I work in sales in the home appliance division." (stress "the") was spoken from its body
+ *  only, and the reply's quoted correction "in the home appliance division." is four words (more than a 7h target): "the" was
+ *  heard nowhere apart. Marks (as markTargets makes) go around a card's stressed words (a Latin word or phrase of at most
+ *  V2_TARGET_MAX_WORDS words) in a piece of speech that IS the card's sentence, and around them inside a longer quoted span that
+ *  holds one (the stress word only, never the whole quote). At most V2_TARGET_MAX_PER_PART marks a piece. Pure. */
+export function markStressed(text: string, cards: readonly V2CardStress[] = [], enabled: boolean = TUTOR_V2_CARD_STRESS_SPOKEN): string {
+  if (!enabled || !cards.length) return text;
+  const stressOf = (c: V2CardStress) => c.stress.map((w) => w.trim()).filter((w) => TARGET.test(w));
+  const me = wordsOf(text);
+  const own = cards.find((c) => me && wordsOf(c.sentence) === me && stressOf(c).length);
+  if (own) return markWords(text, stressOf(own), V2_TARGET_MAX_PER_PART).text;
+  const all = [...new Set(cards.flatMap(stressOf))];
+  if (!all.length) return text;
+  let n = 0;
+  return text.replace(QUOTED, (whole, a?: string, b?: string, c?: string) => {
+    const inner = (a ?? b ?? c ?? '').trim();
+    if (n >= V2_TARGET_MAX_PER_PART || TARGET.test(inner)) return whole;
+    const marked = markWords(whole, all, V2_TARGET_MAX_PER_PART - n);
+    n += marked.n;
+    return marked.text;
+  });
+}
+
 /** The voice's text for one piece of speech with its targets set apart: `rewrite` is the rest of the speech path
  *  (rewriteForTTS and the steps before it). `on`: a spoken language lesson with TUTOR_V2_TARGET_PAUSE on.
- *  `byPunctuation` (Task 7l, TUTOR_V2_TARGET_PUNCT): dashes / commas instead of the 7h break tags. */
-export function withTargetPauses(text: string, rewrite: (s: string) => string, on: boolean, byPunctuation = false): string {
+ *  `byPunctuation` (Task 7l, TUTOR_V2_TARGET_PUNCT): dashes / commas instead of the 7h break tags.
+ *  `stress` (Task 7m, CARD_STRESS_SPOKEN): the sentence cards of this reply so far; their stressed words are marked first
+ *  (markStressed), then short quoted targets up to the same cap. */
+export function withTargetPauses(text: string, rewrite: (s: string) => string, on: boolean, byPunctuation = false, stress: readonly V2CardStress[] = []): string {
   if (!on) return rewrite(text);
-  const marked = markTargets(text);
+  const stressed = markStressed(text, stress);
+  const used = (stressed.match(new RegExp(OPEN, 'g')) ?? []).length;
+  const marked = used ? markTargets(stressed, V2_TARGET_MAX_PER_PART - used) : markTargets(text);
   return marked === text ? rewrite(text) : (byPunctuation ? targetPunctuation : targetPauses)(rewrite(marked));
 }

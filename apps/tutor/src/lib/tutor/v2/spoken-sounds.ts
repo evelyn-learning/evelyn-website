@@ -10,6 +10,7 @@
  * with no digit, capital or dot in it. Pure.
  */
 import { IPA_SPOKEN } from '../voice/tts-pronunciation';
+import { TUTOR_V2_WAVE_DASH } from '../orchestrator/flags';
 
 /** A letter a sound is written with: lowercase Latin or IPA (with length and stress marks, combining marks). */
 const SOUND_LETTER = /^[a-zæçðøŋœɐ-ʯβθχ]$/u;
@@ -77,4 +78,19 @@ export function v2SpeakSounds(text: string): string {
     if (/\b(?:the|a|an|this|that)\s+$/i.test(before)) return `${name} sound`;
     return `the ${name} sound`;
   }).replace(/\u0001 ?/g, '');
+}
+
+/** A number or a time either side of a wave dash: "3〜5", "9:00〜10:00", "9時〜10時", "1月〜3月". */
+const RANGE_END_BEFORE = /[0-9０-９][0-9０-９:：.]*[時分秒月日年歳円人回個本枚点%％]?$/;
+const RANGE_END_AFTER = /^[0-9０-９]/;
+/** Task 7m (WAVE_DASH, mic test 4, embed-1795028886172 6.76 min): 「今、〜しています」 was heard as 「今、からしています」: the voice
+ *  reads a wave dash (〜 U+301C, ～ U+FF5E) as "kara" ("from … to"). Standing for "something" (a gap in a pattern, 「〜で」), it is
+ *  not spoken at all; joining two numbers or times ("3〜5人", "9:00〜10:00") it is kept, a range, read as before. For the voice
+ *  only: the board and the transcript keep it. Pure. */
+export function v2SpeakWaveDash(text: string, enabled: boolean = TUTOR_V2_WAVE_DASH): string {
+  if (!enabled || !/[〜～]/.test(text)) return text;
+  return text.replace(/\s*[〜～]\s*/g, (m, at: number) => {
+    const before = text.slice(0, at); const after = text.slice(at + m.length);
+    return RANGE_END_BEFORE.test(before) && RANGE_END_AFTER.test(after) ? m : /\s/.test(m) ? ' ' : '';
+  });
 }

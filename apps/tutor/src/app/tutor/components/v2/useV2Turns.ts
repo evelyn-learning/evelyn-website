@@ -105,6 +105,8 @@ export interface V2TurnsConfig {
   holdBoard?: (call: V2ToolCall, paint: () => void) => void;
   /** Voice: the board check withdrew this item; if it is still waiting for its sentence it must not be painted. */
   onBoardWithdraw?: (id: string) => void;
+  /** Voice (Task 7m, CARD_STRESS_SPOKEN): a board call has arrived, told before the sentence kept for it goes to the voice. */
+  onBoardCallArrived?: (call: V2ToolCall) => void;
   /** Voice: a turn was cut short (the student spoke over it); stop speaking. */
   onCut?: () => void;
   /** The voice client's record of what was actually played of the reply being cut short, or null if it has none. */
@@ -345,7 +347,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
           else if (!homeworkDoneRecordedRef.current) { homeworkDoneRecordedRef.current = true; p.current.onDebugEvent?.('homework_problem_done', 'all key parts confirmed'); }
         },
         onToolCall: (call) => {
-          settled.push(call);
+          settled.push(call); p.current.onBoardCallArrived?.(call);
           p.current.onDebugEvent?.('tool_call', `${call.name} → ${call.outcome}${call.sayWith ? ` · with "${call.sayWith}"` : ''}${call.inline ? ' · inline' : ''}`);
           // Written again, a thing already on the page is pointed at: the board glides back to it and marks it
           // ("it would have been awesome had it slowly scrolled up and showed me that problem", AP Precalculus).

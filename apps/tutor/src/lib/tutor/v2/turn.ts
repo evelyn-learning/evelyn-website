@@ -24,7 +24,7 @@ import { catalogueSubjects, figureCatalogueFor, tutorFigureLines } from './figur
 import { applyToModelBoard, boardMisfit, renderBoard, summariseBoardCall, taskOnly, spacedRoman, wordsAsText } from './board';
 import { BoardInlineStream, boardBlocksIn, inlineToolCall, insertBlock, stripBoardBlocks, type InlineBlock, type InlinePart } from './board-inline';
 import { speaksMaths, unwrittenEquations } from './spoken-maths';
-import { saidCovers, sentenceCardToSay, unsaidAsk, unsaidBoardItem, asksAnywhere, noteSentencesToSay, pointsBackAtBoard } from './board-timing';
+import { cardQuestion, saidCovers, sentenceCardToSay, unsaidAsk, unsaidBoardItem, asksAnywhere, noteSentencesToSay, pointsBackAtBoard, v2SpokenWords } from './board-timing';
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, v2AskEveryOn, v2SummaryBegun, V2_NO_ASK_RECHECK_S, V2_TIME_UP_MIN, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
 import { v2CloseOpen, v2LeftToStopMin, v2OverrunMin, v2TimeFlags, v2WrapDue, type V2TimeFlags } from './time-box';
@@ -42,10 +42,10 @@ import { v2HandsOver, v2ReplyAsks, v2ReplyHandsOver, v2ReplySentences } from './
 import { V2_LEVEL_WAIT, V2_LEVEL_WAIT_OVER, V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2MarkLevelKnownParts, v2ReopenLevelCheck, v2WorkingLevelSection } from './working-level';
 import { V2_PRACTISE_PRONUNCIATION_TOOL, v2ApplyPractisePronunciation, v2ConsumePronunciation, v2PronunciationOn, v2PronunciationSection } from './pronunciation';
 import { v2NoteCorrectedSentence, v2SentenceCardsOn, v2SentenceCardsSection } from './sentence-cards';
-import { LearnerCardWatch, V2_REPLY_MISHEARD, v2LearnerCardsOn, v2PracticeAnswerSentences, v2SentenceOnBoard, v2SentencesNotCarded } from './learner-card';
+import { LearnerCardWatch, V2_REPLY_MISHEARD, v2LearnerCardsOn, v2OwedCardCheckLine, v2PracticeAnswerSentences, v2SentenceOnBoard, v2SentencesNotCarded } from './learner-card';
 import { v2StopAsked } from './stop-signal';
 import { V2_CLOSE_INVITE_LINE, V2_CLOSE_INVITE_REFUSAL, V2_CLOSE_INVITE_WAIT, V2_CLOSE_MORE_LINE, V2_CLOSE_REOPEN_REFUSAL, v2CloseInviteOn, v2CloseInviteOwed, v2CloseReopened, v2ReplyAsksMoreOrFinish, v2ReplyInvites } from './close-invite';
-import { TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME } from '../orchestrator/flags';
+import { TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_NO_FALSE_SILENCE } from '../orchestrator/flags';
 import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, V2_DISCUSSION_CONSTITUTION, directionAsked, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap } from './discussion';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, V2_NOTE_OWN_ANSWER_TOOL, V2_SET_CURRENT_PROBLEM_TOOL, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
@@ -545,6 +545,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     if (block.name === 'show_problem' && questionCards) {
       delete args.difficulty; delete args.source;
       if (typeof args.title !== 'string' || !args.title.trim() || /\bproblem\b/i.test(args.title)) args.title = 'Question';
+      // Task 7m (QUESTION_ONCE, mic test 4 flag 5a): the title says "Question"; a "Question:" the model wrote into the statement
+      // stood under it again, bold (title "Question", body "Question: What did you do…").
+      if (TUTOR_V2_QUESTION_ONCE && typeof args.statement === 'string') args.statement = args.statement.replace(/^\s*(?:\*\*)?(?:question|質問)\s*\d*\s*[:：](?:\*\*)?\s*/i, '');
     }
     // Dollar signs inside an equation block are a sentence with maths in it, and render as raw red source
     // ("$r^2 = 25$, \\text{ so } $r = 5$", conic sections, 2026-11-11): it goes up as a note, which reads them.
@@ -643,7 +646,11 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       // drew "the lovely woods" and "the promises to keep" as forces on a box (AP Lit, embed-1794448513359).
       const misfit = block.name === 'show_free_body_diagram' && !catalogueSubjects(session).includes('physics') ? 'a force diagram is for physical forces on an object, and this lesson has none; use compare, steps or a note' : boardMisfit(block.name, args);
       const guarded = input.boardGuard?.(block.name, args) ?? null;
+      // Task 7m (CORRECTION_CARD_NOW, mic test 4, 11.31 min): a sentence card of a language lesson holds a whole sentence; "I have
+      // worked with…" is a starter for them to finish, said aloud, not a card.
+      const fragment = TUTOR_V2_CORRECTION_CARD_NOW && block.name === 'show_sentence' && ((session.languages?.length ?? 0) >= 2 || !!session.pronunciation) && /(?:…|\.\.\.)["'”’)]*\s*$/.test(String(args.sentence ?? ''));
       if (guarded) outcome = `not painted: ${guarded}`;
+      else if (fragment) outcome = 'not painted: a sentence card holds a whole sentence; one ending in "…" is a starter for them to finish: say it aloud instead';
       else if (!valid.ok) outcome = `not painted: ${valid.reason}`;
       else if (misfit) outcome = `not painted: ${misfit}`;
       else {
@@ -957,6 +964,14 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
             const say = learnerWatch?.isOwn(part.block.raw) ? null : sentenceCardToSay(part.block.body, `${saidNow}${gate.heldAsk}`, { leadIn: true, continuing: cardRun });
             if (say) { saidCards.set(part.block.raw, say); sinceWords = []; gate.speakCard(say); cardRun = true; }
           }
+          // Task 7m (QUESTION_ONCE, mic test 4 flag 5a): a question card of a spoken language lesson is asked where it stands, before
+          // the hint that follows it ("まず、一文で答えてみてください。Try starting with…"), unless the words before it said it; the
+          // model saying it straight after drops this (the gate). Read after the hint, the whole card came out a second time.
+          if (part.block.kind === 'problem' && gated && questionCards && TUTOR_V2_QUESTION_ONCE) {
+            const shown = toolCalls[toolCalls.length - 1];
+            const q = shown?.name === 'show_problem' && !/^not /.test(shown.outcome) ? cardQuestion(String(shown.args.statement ?? '')) : null;
+            if (q && !saidCovers(q, `${saidNow}${gate.heldAsk}`)) { saidCards.set(part.block.raw, q); sinceWords = []; gate.speakCard(q); }
+          }
           // Task 6f: a note or a table of example sentences a lead-in points at is spoken there too (board-timing.ts
           // noteSentencesToSay): announced before it, at once; otherwise only if the next sentence points back at it.
           if ((part.block.kind === 'note' || part.block.kind === 'table') && gated && languageLesson && TUTOR_V2_SAY_NOTE_SENTENCES) {
@@ -1157,7 +1172,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && spoken.length) {
     const card = [...toolCalls].reverse().find((c) => c.name === 'show_problem' && !/^not /.test(c.outcome));
     const sentencesSaid = spoken.join(' ').split(/(?<=[.!?])\s+|(?<=[？。])/).filter((x) => x.trim());
-    const more = card ? unsaidAsk(String(card.args.statement ?? ''), spoken.join(' ').split(/(?<=[.!?？])\s+/).filter(Boolean))
+    // Task 7m (QUESTION_ONCE): the sentences cut at 。 too (sentencesSaid): a Japanese reply was one "sentence" here.
+    const more = card ? unsaidAsk(String(card.args.statement ?? ''), TUTOR_V2_QUESTION_ONCE ? sentencesSaid : spoken.join(' ').split(/(?<=[.!?？])\s+/).filter(Boolean))
       : TUTOR_V2_SPEAK_BOARD_ITEM ? unsaidBoardItem(toolCalls, sentencesSaid, { sentences: !TUTOR_V2_SAY_SENTENCE_CARD }) : null;
     if (more) {
       input.onText?.(`\n\n${more}`);
@@ -1214,9 +1230,19 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // "Let's start with the chromosomes", the check wrote the next part's first note before the student had said yes
   // (biology, embed-1794520770137).
   const endedOnOffer = !!(heldAt as { raw: string } | null);
+  // Task 7g: the sentences of their answer this reply put on no card (owed). Task 7m (CORRECTION_CARD_NOW, mic test 4 flag 6): known
+  // before the board check, which then writes their card in this reply ("「sell」の過去形は「sold」です…" wrote none, and the card came
+  // a reply later); a Japanese reply's length is counted by its characters.
+  const owedCards = () => {
+    if (!answerSentences.length || state.closed || input.signal?.aborted || V2_REPLY_MISHEARD.test(stripBoardBlocks(spoken.join(' ')))) return [];
+    const cards = toolCalls.filter((c) => c.name === 'show_sentence' && (!/^not /.test(c.outcome) || !!c.pointsAt) && typeof c.args.sentence === 'string').map((c) => String(c.args.sentence));
+    return v2SentencesNotCarded(answerSentences, cards, state.board, state.correctedSentences ?? []);
+  };
+  const owedBefore = TUTOR_V2_CORRECTION_CARD_NOW ? owedCards() : [];
+  const saidWords = TUTOR_V2_CORRECTION_CARD_NOW && /[\u3040-\u30ff\u3400-\u9fff]/.test(said) ? v2SpokenWords(said) : said.split(/\s+/).length;
   // Typed lessons are checked as spoken ones are: a typed session opened and ran two replies on an empty board
   // (Praveen, 2026-11-12).
-  if (!state.closed && !input.signal?.aborted && said && (!endedOnOffer || speaksMaths(said)) && (speaksMaths(said) || inlinePainted.some((x) => !x.label.startsWith('problem')) || ((!paintedSoFar() || !drewFigure()) && said.split(/\s+/).length >= V2_UNWRITTEN_WORDS) || (opening && !paintedSoFar())
+  if (!state.closed && !input.signal?.aborted && said && (!endedOnOffer || speaksMaths(said)) && (speaksMaths(said) || inlinePainted.some((x) => !x.label.startsWith('problem')) || ((!paintedSoFar() || !drewFigure()) && saidWords >= V2_UNWRITTEN_WORDS) || (opening && !paintedSoFar()) || owedBefore.length > 0
     // Values said and nothing written: a student's set-up was confirmed aloud ("A⁻ is 0.05, HA is 0.1, pKa is 4.74")
     // and never put on the board (chemistry, embed-1794447993778).
     || (!paintedSoFar() && new Set(said.match(/\d+(?:\.\d+)?/g) ?? []).size >= 3)
@@ -1253,7 +1279,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       cardNoFigure ? 'This reply put up a problem and no figure with it: if the problem describes something that can be drawn (a circuit, a shape, a set-up, a graph), draw it now as the third step, with what the student is to find left out.' : '',
       confirmedBare ? 'You confirmed the student\'s answer and wrote nothing for it: in the second step, write the one line of working that gives it, with with="the opening words of the sentence that confirms it".' : '',
     ].filter(Boolean).join(' ');
-    const check = `[board check — from the system running the session, not from the student]\nYou have just said the reply above aloud. In it you put on the board: ${listed.length ? `\n${listed.join('\n')}` : 'nothing. A reply of this length that leaves the board untouched is a tutor talking at an empty board: unless it was only small talk or a question about what is already up, the heart of what you said belongs there, in the form that fits it.'}\n\nFirst, and rarely: does a numbered item state outright the answer to the very thing this reply asks the student to work out, so that reading the board answers your question for them? Only then, withdraw it by writing "withdraw N" on a line by itself, followed by that question as you asked it, in quotation marks; and if the reply points the student at that item ("the table below"), write it again in the second step with the part they are to find left as a question mark. Everything else stays: an item that sets the question out, leaves a blank or a question mark for them to fill, lists things for them to compare, shows working the student has already given, or shows what you yourself explained. When unsure, it stays.\n\nSecond: what is only heard is lost. If something you said aloud that the student needs to hold on to is not on the board (the working behind a result, a step the student gave, a correction, a hint; a name, a date, a term, the two sides of a question), write it now as board blocks, in whichever kind fits, each with with="the opening words of the sentence in which you say it", for example <board equation with="The derivative of the top">…</board>. Write only what you said: nothing new, nothing already there, and never an answer you left for the student to find.${unwritten.length ? ` These equations were said aloud and no board item holds them: ${unwritten.map((e) => `"${e}"`).join('; ')}. Each goes up now as an equation, unless it is there in another form or is the answer the student is to find.` : ''}${askedOnCard ? '' : ' A question you set that comes with its own numbers, data or expression, none of them on the board, is written as a problem block holding the question as you asked it; a question about what is already on the board needs none.'}\n\nThird, a picture. Name to yourself the one thing in this reply a student could look at rather than read: an equation that is a curve, a function, points on axes, an arrangement of things a problem or an explanation describes (a circuit, an apparatus, a shape, a set-up), a set of data values or counts, pushes and pulls on a thing, values on a number line, events in order, the stages of a process, two things set side by side. If there is one and no figure of that very thing is on the board (a figure of something else, an earlier circuit or an earlier graph, does not count), draw it now in the figure form that fits (${catalogueSubjects(session).includes('physics') ? 'graph, chart, forces' : 'graph, chart'}, numberline, timeline, steps, cycle, ranks, web, map, compare, table)${catalogue ? ', or as an exact figure from the catalogue below when one of them shows it better' : ''}, with with="…" as above. A formula written out is not a figure of its curve. A general case told in letters (a circle of radius r about a centre) is drawn with plain numbers standing in for the letters, so there is something to see. Draw the situation as you described it, with the numbers you gave, never the answer the student is to find. What has no shape gets no figure.${missing ? `\n\nIn this reply: ${missing}` : ''}\n\nAnswer in three lines or groups, in this order. First: "withdraw N" with the question it answers in quotation marks, or "1: none". Second: the missing blocks, or "2: none". Third: the figure block itself (saying it is drawn does not draw it), or "3: none" followed by a few words on why nothing here can be drawn.${catalogue ? `\n\nThe catalogue of exact figures for this lesson. One is written <board figure kind="its kind" with="…">its parameters as one JSON object</board>. Give the values the reply gave, as they were said; leave out whatever the student is to find.\n${catalogue}` : ''}`;
+    const check = `[board check — from the system running the session, not from the student]\nYou have just said the reply above aloud. In it you put on the board: ${listed.length ? `\n${listed.join('\n')}` : 'nothing. A reply of this length that leaves the board untouched is a tutor talking at an empty board: unless it was only small talk or a question about what is already up, the heart of what you said belongs there, in the form that fits it.'}\n\nFirst, and rarely: does a numbered item state outright the answer to the very thing this reply asks the student to work out, so that reading the board answers your question for them? Only then, withdraw it by writing "withdraw N" on a line by itself, followed by that question as you asked it, in quotation marks; and if the reply points the student at that item ("the table below"), write it again in the second step with the part they are to find left as a question mark. Everything else stays: an item that sets the question out, leaves a blank or a question mark for them to fill, lists things for them to compare, shows working the student has already given, or shows what you yourself explained. When unsure, it stays.\n\nSecond: what is only heard is lost. If something you said aloud that the student needs to hold on to is not on the board (the working behind a result, a step the student gave, a correction, a hint; a name, a date, a term, the two sides of a question), write it now as board blocks, in whichever kind fits, each with with="the opening words of the sentence in which you say it", for example <board equation with="The derivative of the top">…</board>. Write only what you said: nothing new, nothing already there, and never an answer you left for the student to find.${owedBefore.length ? ` ${v2OwedCardCheckLine(session, owedBefore)}` : ''}${unwritten.length ? ` These equations were said aloud and no board item holds them: ${unwritten.map((e) => `"${e}"`).join('; ')}. Each goes up now as an equation, unless it is there in another form or is the answer the student is to find.` : ''}${askedOnCard ? '' : ' A question you set that comes with its own numbers, data or expression, none of them on the board, is written as a problem block holding the question as you asked it; a question about what is already on the board needs none.'}\n\nThird, a picture. Name to yourself the one thing in this reply a student could look at rather than read: an equation that is a curve, a function, points on axes, an arrangement of things a problem or an explanation describes (a circuit, an apparatus, a shape, a set-up), a set of data values or counts, pushes and pulls on a thing, values on a number line, events in order, the stages of a process, two things set side by side. If there is one and no figure of that very thing is on the board (a figure of something else, an earlier circuit or an earlier graph, does not count), draw it now in the figure form that fits (${catalogueSubjects(session).includes('physics') ? 'graph, chart, forces' : 'graph, chart'}, numberline, timeline, steps, cycle, ranks, web, map, compare, table)${catalogue ? ', or as an exact figure from the catalogue below when one of them shows it better' : ''}, with with="…" as above. A formula written out is not a figure of its curve. A general case told in letters (a circle of radius r about a centre) is drawn with plain numbers standing in for the letters, so there is something to see. Draw the situation as you described it, with the numbers you gave, never the answer the student is to find. What has no shape gets no figure.${missing ? `\n\nIn this reply: ${missing}` : ''}\n\nAnswer in three lines or groups, in this order. First: "withdraw N" with the question it answers in quotation marks, or "1: none". Second: the missing blocks, or "2: none". Third: the figure block itself (saying it is drawn does not draw it), or "3: none" followed by a few words on why nothing here can be drawn.${catalogue ? `\n\nThe catalogue of exact figures for this lesson. One is written <board figure kind="its kind" with="…">its parameters as one JSON object</board>. Give the values the reply gave, as they were said; leave out whatever the student is to find.\n${catalogue}` : ''}`;
     try {
       const response = await callModel({
         model: '', max_tokens: 1500, thinking: { type: 'adaptive' }, output_config: { effort: 'low' }, system, tools,
@@ -1560,12 +1586,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   if (boardProblems.length) state.boardProblems = boardProblems; else delete state.boardProblems;
   // Task 7g (CARD_EVERY_SENTENCE): the sentences of their answer this reply put on no card are owed in the next facts, once. Not
   // when the reply says it did not catch them (replay v2audio-7: a card after "I didn't catch that"), was cut, or closed.
-  delete state.cardsOwed;
-  if (answerSentences.length && !state.closed && !input.signal?.aborted && !V2_REPLY_MISHEARD.test(stripBoardBlocks(spoken.join(' ')))) {
-    const cards = toolCalls.filter((c) => c.name === 'show_sentence' && (!/^not /.test(c.outcome) || !!c.pointsAt) && typeof c.args.sentence === 'string').map((c) => String(c.args.sentence));
-    const owed = v2SentencesNotCarded(answerSentences, cards, state.board, state.correctedSentences ?? []);
-    if (owed.length) state.cardsOwed = owed;
-  }
+  // Task 7m (NO_FALSE_SILENCE): a silence turn leaves the owed card for their next answer (its facts carry no owed line).
+  if (!(TUTOR_V2_NO_FALSE_SILENCE && input.studentSaid === null && !!input.facts?.silenceSeconds)) delete state.cardsOwed;
+  const owedAfter = owedCards();
+  if (owedAfter.length) state.cardsOwed = owedAfter;
   let finalWords = stripToolTalk(spoken.join('\n\n'));
   // A discussion that closes with nothing left to say would end in silence: its closing words were an order to
   // itself, which the net above removed (replay round 8). It closes on the direction they chose instead.

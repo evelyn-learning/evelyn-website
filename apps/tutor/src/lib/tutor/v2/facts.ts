@@ -22,6 +22,9 @@ import { V2_TIME_UP_MIN, v2CloseOpen, v2PlanContentDone, v2LeftToStopMin, v2Less
 import { V2_MORE_PRACTICE_MIN_LEFT, v2MorePracticeFacts, v2PracticeFacts, v2StayInPartLine, v2TimeFitFacts } from './time-fit';
 import { TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART } from '../orchestrator/flags';
 import { v2CloseInviteFacts, v2CloseReopened, v2MoreAskAnswered } from './close-invite';
+import { TUTOR_V2_NO_FALSE_SILENCE } from '../orchestrator/flags';
+import { SentenceStream } from './sentences';
+import { asksAnywhere } from './board-timing';
 
 /** After the tutor chose to keep listening: how long the student stays silent before it is told so (TutorVoiceV2).
  *  At that point silence is no longer open to it: it kept listening twice and the student sat with a blank
@@ -148,6 +151,16 @@ export function v2SummaryBegun(state: V2State, enabled: boolean = TUTOR_V2_CLOSE
   return enabled && typeof state.summaryBegunAt === 'number' && !state.closed;
 }
 
+/** Task 7m (NO_FALSE_SILENCE): whether the tutor's last reply asked them something (a question, an instruction, a starter to
+ *  try), cut into sentences as the voice client cuts it. */
+export function v2LastReplyAsked(history: V2State['history']): boolean {
+  const m = tutorReplies(history).pop();
+  if (!m) return false;
+  const cut = new SentenceStream();
+  const sentences = [...cut.push(replyText(m)), ...cut.flush()];
+  return sentences.length > 0 && asksAnywhere(sentences);
+}
+
 export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts): string {
   const usedMin = Math.max(0, Math.round((f.nowMs - state.startedAtMs) / 60000));
   const discussion = !!discussionOf(session.plan);
@@ -244,7 +257,10 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // Task 7b (BOARD_LEARNER_SENTENCE): their words just now were a sentence: it goes on the board as it should be (learner-card.ts).
   if (!summaryBegun || f.partVisit) lines.push(...v2LearnerSentenceFacts(session, state, f.heard, f.learnerCards));
   // Task 7g (CARD_EVERY_SENTENCE): sentences of their last answer the last reply left off the board.
-  if ((!summaryBegun || f.partVisit) && !state.closed) lines.push(...v2CardsOwedFacts(state));
+  // Task 7m (NO_FALSE_SILENCE): not on a silence turn: the owed card waits for their next answer (mic test 4, 9.94: carded on the
+  // 2 s recheck, a card already on page 3, with an invented reason for it).
+  const silenceTurn = TUTOR_V2_NO_FALSE_SILENCE && !!f.silenceSeconds && !f.heard;
+  if ((!summaryBegun || f.partVisit) && !state.closed && !silenceTurn) lines.push(...v2CardsOwedFacts(state));
   // How the last reply opened, so the next does not open the same way (D10).
   lines.push(...v2OpenerFact(session, state));
   // The question check at a part change, once in a while (Task 6e); at every part change in a spoken lesson whose plan parts
@@ -268,7 +284,11 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   if (f.stopAsked) lines.push('the student\'s words just now asked to end the session');
   if (f.answerCheck) lines.push(`answer check: ${f.answerCheck}`);
   if (f.notSent) lines.push(`your first draft of this reply was not sent (the student never saw it: do not mention it): ${f.notSent}`);
-  if (f.silenceSeconds) lines.push(Math.round(f.silenceSeconds) === V2_NO_ASK_RECHECK_S
+  // Task 7m (NO_FALSE_SILENCE): the early recheck after a reply that did ask (the client took it for one that asked nothing:
+  // mic test 4, 9.94): not "nothing for them to do"; one short line, nothing new.
+  const askedThem = silenceTurn && Math.round(f.silenceSeconds ?? 0) === V2_NO_ASK_RECHECK_S && v2LastReplyAsked(state.history);
+  if (askedThem) lines.push(`your last reply asked them for something, and they have been silent for ${Math.round(f.silenceSeconds!)} seconds since it finished: they may be thinking. Say one short line only: that they can take their time, or an offer of a hint or the first words. No claim about what they said, no new question, no card or other board item`);
+  else if (f.silenceSeconds) lines.push(Math.round(f.silenceSeconds) === V2_NO_ASK_RECHECK_S
     ? `your last reply has finished and it ended on a statement: no question, and nothing for them to do. They are waiting for you to go on`
     : Math.round(f.silenceSeconds) === V2_WAITED_RECHECK_S
     ? `you kept listening after the student's last words, and they have said nothing more for ${V2_WAITED_RECHECK_S} seconds: they had finished. Take what they said as their answer and reply to it now`
