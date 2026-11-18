@@ -60,6 +60,10 @@ export type PipelineDoc = {
    * releasedAt: the item has been moved to review under this claim; what is left is bookkeeping.
    */
   releaseClaim?: { owner: string; at: Date; releasedAt?: Date };
+  /** When the timed release sent this version to review (counts toward its batch's sample base). */
+  timerReleasedAt?: Date;
+  /** Why the item is held when no flag says it (e.g. "no release time"). Internal: never shown to the client. */
+  heldWhy?: string;
 };
 
 export type Step = "intake" | "course" | "cause" | "solve" | "write" | "calc" | "working" | "audit" | "render";
@@ -206,12 +210,13 @@ export type BatchDoc = {
   rows: BatchRow[];
   receivedAt: Date;
   uploadedBy: string;
-  /** The sample for Praveen was taken (pipeline/release.ts applySample); the timer releases nothing of the batch before. */
+  /** For information only: when the first item of the batch was held as sample. The gate is the sample invariant (pipeline/release.ts). */
   sampledAt?: Date;
-  /** The items picked as the sample. */
-  sampledIds?: string[];
-  /** A sample in progress: who took it, when, and the pick (reused if the caller died before finishing). */
-  sampling?: { owner: string; at: Date; ids?: string[] };
+  /** The per-batch guard of the release / sample top-up: one caller at a time, taken over when stale. */
+  releasing?: { owner: string; at: Date };
+  /** Why nothing of the batch can be released (and since when); unset once it can. */
+  blockedWhy?: string;
+  blockedAt?: Date;
   /** "batch_in_review" was suggested for the batch (once). */
   inReviewSuggestedAt?: Date;
 };
@@ -351,6 +356,7 @@ function defineModels(conn: Connection): Models {
         {
           flags: [String], passedAt: Date, releaseAt: Date, heldFor: String, answerToConfirm: Boolean, runId: String, wroteStage: String,
           releaseClaim: { type: new Schema({ owner: String, at: Date, releasedAt: Date }, { _id: false }), required: false },
+          timerReleasedAt: Date, heldWhy: String,
         },
         { _id: false },
       ),
@@ -408,8 +414,9 @@ function defineModels(conn: Connection): Models {
     receivedAt: { type: Date, default: () => new Date() },
     uploadedBy: String,
     sampledAt: Date,
-    sampledIds: { type: [String], default: undefined },
-    sampling: { type: new Schema({ owner: String, at: Date, ids: { type: [String], default: undefined } }, { _id: false }), required: false },
+    releasing: { type: new Schema({ owner: String, at: Date }, { _id: false }), required: false },
+    blockedWhy: String,
+    blockedAt: Date,
     inReviewSuggestedAt: Date,
   });
   const Lock = new Schema<LockDoc>({ _id: { type: String, required: true }, owner: String, expiresAt: Date });

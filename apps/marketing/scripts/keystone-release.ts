@@ -9,8 +9,9 @@
  *                  sampled and released and when each waiting item is due; writes nothing, takes no lock
  *   --now <iso>    with --dry-run only: plan as of this instant
  *
- * Exits 0 with a one-line summary ("release: ..."), also on an empty database. Two overlapping runs:
- * the second finds the lock held and exits 0 doing nothing.
+ * Exits 0 with a one-line summary ("release: ..."), also on an empty database. Every batch that cannot
+ * release prints one "blocked:" line with why, every run. Two overlapping runs: the second finds the lock
+ * held and exits 0 doing nothing. Every run that is not a dry run ends with the job's heartbeat.
  */
 import { randomUUID } from "node:crypto";
 import { KEYSTONE_DB } from "../src/lib/keystone/config";
@@ -51,33 +52,42 @@ async function main() {
 
   const { closeKs } = await import("../src/lib/keystone/db");
   const rel = await import("../src/lib/keystone/pipeline/release");
+  const { beat } = await import("../src/lib/keystone/pipeline/heartbeat");
+  const blockedLine = (b: { batchId: string; why: string; since?: Date }) => console.log(`blocked: batch ${b.batchId}: ${b.why}${b.since ? ` (since ${rel.mountain(b.since)})` : ""}`);
   const now = args.now ?? new Date();
   try {
     if (args.dryRun) {
       const plan = await rel.planRelease(now);
       console.log(`As of ${rel.mountain(now)} Mountain time: ${plan.inWindow ? "inside" : "outside"} the release window (Mon–Fri 08:00–17:00).`);
-      for (const s of plan.samples) {
-        console.log(s.ids.length ? `batch ${s.batchId}: would take the sample for Praveen: ${s.ids.join(", ")}` : `batch ${s.batchId}: sample not taken yet (${s.why ?? "nothing clean to sample"})`);
-      }
+      for (const s of plan.samples) console.log(`batch ${s.batchId}: would hold for Praveen as sample: ${s.ids.join(", ")}`);
+      for (const b of plan.blocked) blockedLine(b);
       for (const r of plan.rows) {
         console.log(`${r.itemId.padEnd(12)} ${(r.batchId ?? "-").padEnd(26)} ${r.releaseAt ? `due ${rel.mountain(r.releaseAt)}` : "no release time".padEnd(24)}  ${r.state}`);
       }
       const now_ = plan.rows.filter((r) => r.state === "would release now").length;
-      console.log(`release: dry run, would release ${now_}, ${plan.rows.length - now_} waiting, ${plan.samples.filter((s) => s.ids.length).length} batch sample(s) to take`);
+      console.log(`release: dry run, would release ${now_}, ${plan.rows.length - now_} waiting, ${plan.samples.length} batch sample(s) to top up, ${plan.blocked.length} batch(es) blocked`);
       return;
     }
     const owner = randomUUID();
     if (!(await rel.acquireLock(LOCK, owner, new Date(), LOCK_TTL_MS))) {
       console.log("release: another release run holds the lock; nothing done");
+      await beat("keystone-release");
       return;
     }
     try {
-      const released = await rel.releaseDue(now);
-      if (released.length) console.log(`released: ${released.join(", ")}`);
-      console.log(`release: ${released.length} released${rel.inWindow(now) ? "" : " (outside the window)"} at ${rel.mountain(now)} Mountain time`);
+      const r = await rel.releaseDueReport(now);
+      if (r.released.length) console.log(`released: ${r.released.join(", ")}`);
+      if (r.sampled.length) console.log(`held as sample: ${r.sampled.join(", ")}`);
+      if (r.heldUnbatched.length) console.log(`held as sample (no batch): ${r.heldUnbatched.join(", ")}`);
+      if (r.heldNoTime.length) console.log(`held for Praveen (no release time): ${r.heldNoTime.join(", ")}`);
+      // Outside the window nothing is evaluated or written: the recorded blocks are printed instead.
+      const blocked = rel.inWindow(now) ? r.blocked : await rel.blockedBatches();
+      for (const b of blocked) blockedLine(b);
+      console.log(`release: ${r.released.length} released, ${r.sampled.length + r.heldUnbatched.length} held as sample, ${blocked.length} batch(es) blocked${rel.inWindow(now) ? "" : " (outside the window)"} at ${rel.mountain(now)} Mountain time`);
     } finally {
       await rel.releaseLock(LOCK, owner);
     }
+    await beat("keystone-release");
   } finally {
     await closeKs();
   }

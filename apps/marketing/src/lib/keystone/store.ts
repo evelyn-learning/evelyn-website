@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import { SECTIONS, VERDICTS, canJudgeSolution, releasedVersionOf, type SectionKind, type Stage, type Verdict } from "./config";
+import { SECTIONS, STAGE_LABEL, VERDICTS, canJudgeSolution, releasedVersionOf, type SectionKind, type Stage, type Verdict } from "./config";
 import { ks, type ActivityDoc, type BatchRow, type ItemDoc, type PipelineDoc, type RunDoc, type SectionDoc } from "./db";
 import { renderInline, renderMarkdown } from "./render";
 import { assetUrl, saveAsset } from "./assets";
@@ -186,12 +186,16 @@ export async function releaseSolution(itemId: string, actor: Actor, opts: { log?
   }
 }
 
-/** The revision row a release logs (releaseSolution and the timed release write the same one). */
+/** The revision row releaseSolution logs. */
 export const SENT_FOR_REVIEW = "Sent for review.";
 
+/** The row the timed release logs: exactly what Evelyn's own "set status to In review" writes (actions.ts setStage). */
+export const IN_REVIEW_BODY = `Status set to ${STAGE_LABEL.in_review}.`;
+
 /**
- * The timed release's guarded form of releaseSolution (pipeline/release.ts): the same writes and the same
- * "Sent for review." row, safe for two callers and for a crash at any point.
+ * The timed release's guarded form of releaseSolution (pipeline/release.ts): the same writes, logged as the
+ * status change to In review that Evelyn makes by hand (so the feed reads "wrote" then "set the status to
+ * in review"), safe for two callers and for a crash at any point.
  *   1. One conditional update moves the item to review, only while it is still `ready` at `version`, clean,
  *      and claimed by `owner`; it also stamps the claim with releasedAt (the one point that decides).
  *   2. finishRelease: the solution row gets releasedAt, the row is logged unless one with this exact time
@@ -202,7 +206,7 @@ export async function releaseClaimed(itemId: string, version: number, owner: str
   const { Item } = await ks();
   const r = await Item.updateOne(
     { itemId, version, stage: "ready", "pipeline.releaseClaim.owner": owner, "pipeline.heldFor": { $exists: false }, "pipeline.flags": { $size: 0 } },
-    [{ $set: { stage: "in_review", releasedVersion: version, releasedAnswer: { $ifNull: ["$evelynAnswer", ""] }, updatedAt: at, "pipeline.releaseClaim.releasedAt": at } }],
+    [{ $set: { stage: "in_review", releasedVersion: version, releasedAnswer: { $ifNull: ["$evelynAnswer", ""] }, updatedAt: at, "pipeline.releaseClaim.releasedAt": at, "pipeline.timerReleasedAt": at } }],
   );
   if (r.modifiedCount !== 1) return false;
   await finishRelease(itemId, version, owner, actor, at);
@@ -213,8 +217,8 @@ export async function releaseClaimed(itemId: string, version: number, owner: str
 export async function finishRelease(itemId: string, version: number, owner: string, actor: Actor, at: Date) {
   const { Item, Solution, Activity } = await ks();
   await Solution.updateOne({ itemId, version, releasedAt: { $exists: false } }, { $set: { releasedAt: at } });
-  if (!(await Activity.exists({ itemId, version, type: "revision", body: SENT_FOR_REVIEW, createdAt: at }))) {
-    await log({ itemId, version, type: "revision", body: SENT_FOR_REVIEW, username: actor.username, name: actor.name, role: actor.role, createdAt: at });
+  if (!(await Activity.exists({ itemId, type: "stage", stage: "in_review", createdAt: at }))) {
+    await log({ itemId, type: "stage", stage: "in_review", body: IN_REVIEW_BODY, username: actor.username, name: actor.name, role: actor.role, createdAt: at });
   }
   await Item.updateOne({ itemId, "pipeline.releaseClaim.owner": owner }, { $unset: { "pipeline.releaseClaim": "" } });
 }

@@ -4,13 +4,15 @@
 // flagged, and a sample of each batch, waits for Praveen instead and is never released here.
 //
 // Safety, by construction:
-//   - nothing of a batch is released before the batch's sample was taken (applySample), and an item
-//     with no batch is always held as sample;
+//   - the sample invariant (sampleNeed) is enforced at release time: before anything of a batch is
+//     released, under a per-batch guard, the batch's sample is topped up to requiredSample(n) for the n
+//     that includes every item that is or was eligible, so later arrivals are sampled at the right rate;
+//     an item with no batch is always held as sample; a blocked batch releases nothing and says why;
 //   - each release is one claim (a conditional update that only one caller can win) followed by
 //     store.releaseClaimed, whose own conditional update is the single point that moves the item;
 //     a claim left by a crash is taken over after STALE_MS, a half-finished release is completed once;
 //   - outside the window, or on a read-only connection, nothing is written;
-//   - the client sees only the ordinary "Sent for review." row by Evelyn Learning.
+//   - the client sees only the ordinary "set the status to In review" row by Evelyn Learning.
 // No holiday calendar: only weekends are skipped.
 // No `next/*` imports: this runs from tsx scripts on the server.
 
@@ -125,117 +127,196 @@ export function mountain(d: Date): string {
   return `${WEEKDAYS[p.wd]} ${p.y}-${two(p.mo)}-${two(p.d)} ${two(p.h)}:${two(p.mi)}`;
 }
 
-/** The sample of a batch for Praveen: ceil(10%), at least 3, at most all; deterministic for (ids, seed), any input order. */
-export function pickSample(batchItemIds: string[], seed: string): string[] {
-  const ids = [...new Set(batchItemIds)].sort();
-  const k = Math.min(ids.length, Math.max(3, Math.ceil(ids.length / 10)));
+/** The sample a batch needs when `n` of its items are or were eligible: ceil(10%), at least 3, at most all. */
+export function requiredSample(n: number): number {
+  return n <= 0 ? 0 : Math.min(n, Math.max(3, Math.ceil(n / 10)));
+}
+
+/** The order the sample is drawn in: a hash of (seed, id), so it is deterministic and independent of input order. */
+export function sampleOrder(ids: string[], seed: string): string[] {
   const rank = (id: string) => createHash("sha256").update(`${seed}\u0000${id}`).digest("hex");
-  return ids
+  return [...new Set(ids)]
     .map((id) => ({ id, r: rank(id) }))
     .sort((a, b) => (a.r < b.r ? -1 : a.r > b.r ? 1 : a.id < b.id ? -1 : 1))
-    .slice(0, k)
-    .map((x) => x.id)
-    .sort();
+    .map((x) => x.id);
+}
+
+/** The sample of a batch for Praveen, drawn at once: the first requiredSample(n) of sampleOrder, sorted. */
+export function pickSample(batchItemIds: string[], seed: string): string[] {
+  const ids = [...new Set(batchItemIds)];
+  return sampleOrder(ids, seed).slice(0, requiredSample(ids.length)).sort();
+}
+
+/**
+ * The sample invariant of a batch. n = items clean-ready + items ever held as sample (flag `sample`, held or
+ * since sent to review by the owner) + items the timer released; h = items ever held as sample. Before any
+ * release, h must reach requiredSample(n); `topUp` is what to hold next (from the clean-ready items, in
+ * sampleOrder). Releasing a clean item leaves n and h unchanged, so after a top-up every release keeps it.
+ */
+export function sampleNeed(counts: { clean: string[]; sampled: number; timerReleased: number }, batchId: string): { n: number; h: number; required: number; topUp: string[] } {
+  const n = counts.clean.length + counts.sampled + counts.timerReleased;
+  const required = requiredSample(n);
+  const need = Math.max(0, required - counts.sampled);
+  return { n, h: counts.sampled, required, topUp: sampleOrder(counts.clean, batchId).slice(0, need) };
 }
 
 // --- the database part ---
 
-/** The pipeline's working stages: an item here (and not held) is still on its way to a decision. */
-const WORKING = ["received", "drafting"];
 /** Ready, passed clean, not held: the only items the timer may release. */
 const CLEAN = { stage: "ready", "pipeline.heldFor": { $exists: false }, "pipeline.flags": { $size: 0 } } as const;
 const NO_BATCH = { $or: [{ batchId: { $exists: false } }, { batchId: null }, { batchId: "" }] };
 const hasBatch = (b?: string | null): b is string => typeof b === "string" && b !== "";
 const isClean = (i: Pick<ItemDoc, "stage" | "pipeline">) => i.stage === "ready" && !i.pipeline?.heldFor && Array.isArray(i.pipeline?.flags) && i.pipeline.flags.length === 0;
+/** No release claim, or a stale one that never moved its item (cleared by the hold that matches it). */
+const unclaimed = (staleBefore: Date) => ({
+  $or: [{ "pipeline.releaseClaim": { $exists: false } }, { "pipeline.releaseClaim.at": { $lt: staleBefore }, "pipeline.releaseClaim.releasedAt": { $exists: false } }],
+});
+const HOLD_AS_SAMPLE = { $set: { "pipeline.flags": ["sample"], "pipeline.heldFor": "praveen" }, $unset: { "pipeline.releaseAt": "", "pipeline.releaseClaim": "" } };
 
 function refuseReadOnly() {
   if (isReadOnly()) throw new Error(`${READ_ONLY_MESSAGE}; the release writes, use the dry-run plan instead`);
 }
 
-type BatchRead = { batch: BatchDoc | null; done: boolean; why?: string; clean: string[]; pick: string[] };
+type Member = Pick<ItemDoc, "itemId" | "stage" | "pipeline" | "version" | "releasedVersion">;
+type BatchRead = { batch: BatchDoc | null; blocked?: string; members: Member[]; need: ReturnType<typeof sampleNeed> };
 
-/** Read-only: whether every item of the batch has left the working stages, and the sample it would take. */
+/**
+ * Read-only: the batch, why nothing of it may be released (if so), and its sample need. Blocked while the
+ * Batch record is missing, an item its sheet lists was never uploaded, or an item is still received or
+ * drafting with no hold (the pipeline has not finished it, or a person is writing it by hand). Items waiting
+ * on the client (item_data, key_query, changes_requested) do not block: the invariant samples them when they return.
+ */
 async function readBatch(batchId: string): Promise<BatchRead> {
   const { Batch, Item } = await ks();
   const batch = await Batch.findOne({ batchId }).lean<BatchDoc>();
-  if (!batch) return { batch: null, done: false, why: "no batch record", clean: [], pick: [] };
-  const members = await Item.find({ batchId }).select("itemId stage pipeline").lean<Pick<ItemDoc, "itemId" | "stage" | "pipeline">[]>();
+  const members = await Item.find({ batchId }).select("itemId stage pipeline version releasedVersion").lean<Member[]>();
+  const clean = members.filter(isClean).map((m) => m.itemId);
+  const sampled = members.filter((m) => m.pipeline?.flags?.includes("sample")).length;
+  const timerReleased = members.filter((m) => !isClean(m) && !m.pipeline?.flags?.includes("sample") && m.pipeline?.timerReleasedAt).length;
+  const need = sampleNeed({ clean, sampled, timerReleased }, batchId);
+  if (!batch) return { batch, blocked: "no batch record", members, need };
   const present = new Set(members.map((m) => m.itemId));
   // Listed in the batch's sheet but not uploaded yet (an item since moved to a newer batch counts there).
   const missing = (batch.itemIds ?? []).filter((i) => !present.has(i));
   const elsewhere = missing.length ? await Item.countDocuments({ itemId: { $in: missing } }) : 0;
-  const clean = members.filter(isClean).map((m) => m.itemId);
-  const pick = pickSample(clean, batchId);
-  if (elsewhere < missing.length) return { batch, done: false, why: `${missing.length - elsewhere} item(s) of the sheet not uploaded yet`, clean, pick };
-  const working = members.filter((m) => WORKING.includes(m.stage) && !m.pipeline?.heldFor).length;
-  if (working) return { batch, done: false, why: `${working} item(s) still in the pipeline`, clean, pick };
-  return { batch, done: true, clean, pick };
+  const why: string[] = [];
+  if (elsewhere < missing.length) why.push(`${missing.length - elsewhere} listed item(s) never uploaded`);
+  const received = members.filter((m) => m.stage === "received" && !m.pipeline?.heldFor).length;
+  if (received) why.push(`${received} item(s) not yet through the pipeline`);
+  const drafting = members.filter((m) => m.stage === "drafting" && !m.pipeline?.heldFor).length;
+  if (drafting) why.push(`${drafting} item(s) in drafting with no hold`);
+  return { batch, ...(why.length ? { blocked: why.join("; ") } : {}), members, need };
 }
 
-export type SampleStatus = "sampled" | "already" | "not_done" | "busy" | "no_batch";
+/** Runs `fn` holding the batch's guard (one caller per batch; a guard older than STALE_MS is taken over). "busy" when another caller has it. */
+async function withBatchGuard<T>(batchId: string, now: Date, fn: () => Promise<T>): Promise<T | "busy"> {
+  const { Batch } = await ks();
+  const owner = randomUUID();
+  const got = await Batch.findOneAndUpdate(
+    { batchId, $or: [{ releasing: { $exists: false } }, { "releasing.at": { $lt: new Date(now.getTime() - STALE_MS) } }] },
+    { $set: { releasing: { owner, at: now } } },
+  ).lean();
+  if (!got) return "busy";
+  try {
+    return await fn();
+  } finally {
+    await Batch.updateOne({ batchId, "releasing.owner": owner }, { $unset: { releasing: "" } });
+  }
+}
+
+/** Holds the batch's next sample items until h reaches the required number. Call under the batch guard. Returns the ids held and whether the invariant now holds. */
+async function topUp(batchId: string, r: BatchRead, now: Date): Promise<{ held: string[]; ok: boolean }> {
+  const { Item, Batch } = await ks();
+  const staleBefore = new Date(now.getTime() - STALE_MS);
+  const need = r.need.required - r.need.h;
+  if (need <= 0) return { held: [], ok: true };
+  const held: string[] = [];
+  let missed = 0;
+  // Every clean item in sample order: one that cannot be held (claimed in flight) is passed over for the next.
+  for (const itemId of sampleOrder(r.members.filter(isClean).map((m) => m.itemId), batchId)) {
+    if (held.length >= need) break;
+    const u = await Item.updateOne({ itemId, batchId, ...CLEAN, ...unclaimed(staleBefore) }, HOLD_AS_SAMPLE);
+    if (u.modifiedCount === 1) held.push(itemId);
+    else missed++;
+  }
+  if (held.length) await Batch.updateOne({ batchId, sampledAt: { $exists: false } }, { $set: { sampledAt: now } });
+  // Short with every clean item held: nothing is left to release, so nothing can break the invariant.
+  return { held, ok: held.length >= need || missed === 0 };
+}
+
+async function recordBlocked(batchId: string, why: string | undefined, now: Date) {
+  const { Batch } = await ks();
+  if (why) {
+    await Batch.updateOne({ batchId, blockedAt: { $exists: false } }, { $set: { blockedAt: now } });
+    await Batch.updateOne({ batchId }, { $set: { blockedWhy: why } });
+  } else {
+    await Batch.updateOne({ batchId, blockedWhy: { $exists: true } }, { $unset: { blockedWhy: "", blockedAt: "" } });
+  }
+}
+
+export type SampleStatus = "sampled" | "blocked" | "busy" | "no_batch";
 
 /**
- * Takes the batch's sample for Praveen once every item of it has left the working stages: the picked
- * clean items get flag `sample`, heldFor praveen and no releaseAt (each by a conditional update: only
- * while still ready, clean and unclaimed). Once per batch: a claim on the batch first (only one caller
- * wins; a claim older than STALE_MS is taken over and its stored pick finished), sampledAt last.
+ * Tops the batch's sample up to its invariant (under the batch guard) unless the batch is blocked.
+ * "sampled": the invariant holds now. Called by the run after a writing run, and by releaseDue.
  */
-export async function applySample(batchId: string, now = new Date()): Promise<{ status: SampleStatus; sampled: string[]; why?: string }> {
+export async function applySample(batchId: string, now = new Date()): Promise<{ status: SampleStatus; held: string[]; why?: string }> {
   refuseReadOnly();
-  const { Batch, Item } = await ks();
-  const r = await readBatch(batchId);
-  if (!r.batch) return { status: "no_batch", sampled: [], why: r.why };
-  if (r.batch.sampledAt) return { status: "already", sampled: r.batch.sampledIds ?? [] };
-  if (!r.done) return { status: "not_done", sampled: [], why: r.why };
-  const owner = randomUUID();
-  const prev = await Batch.findOneAndUpdate(
-    { batchId, sampledAt: { $exists: false }, $or: [{ sampling: { $exists: false } }, { "sampling.at": { $lt: new Date(now.getTime() - STALE_MS) } }] },
-    { $set: { "sampling.owner": owner, "sampling.at": now } },
-    { new: false },
-  ).lean<BatchDoc>();
-  if (!prev) {
-    const cur = await Batch.findOne({ batchId }).select("sampledAt sampledIds").lean<BatchDoc>();
-    return cur?.sampledAt ? { status: "already", sampled: cur.sampledIds ?? [] } : { status: "busy", sampled: [] };
-  }
-  // A caller that died after picking: its pick is finished, never a second one (its items are no longer clean).
-  const ids = prev.sampling?.ids ?? r.pick;
-  await Batch.updateOne({ batchId, "sampling.owner": owner }, { $set: { "sampling.ids": ids } });
-  for (const itemId of ids) {
-    await Item.updateOne(
-      { itemId, batchId, ...CLEAN, "pipeline.releaseClaim": { $exists: false } },
-      { $set: { "pipeline.flags": ["sample"], "pipeline.heldFor": "praveen" }, $unset: { "pipeline.releaseAt": "" } },
-    );
-  }
-  const done = await Batch.updateOne({ batchId, "sampling.owner": owner }, { $set: { sampledAt: now, sampledIds: ids }, $unset: { sampling: "" } });
-  return done.modifiedCount === 1 ? { status: "sampled", sampled: ids } : { status: "busy", sampled: [] };
+  const out = await withBatchGuard(batchId, now, async () => {
+    const r = await readBatch(batchId);
+    if (!r.batch) return { status: "no_batch" as const, held: [], why: r.blocked };
+    if (r.blocked) return { status: "blocked" as const, held: [], why: r.blocked };
+    const t = await topUp(batchId, r, now);
+    return t.ok ? { status: "sampled" as const, held: t.held } : { status: "blocked" as const, held: t.held, why: "the sample could not be completed" };
+  });
+  return out === "busy" ? { status: "busy", held: [] } : out;
 }
 
 /** Items with no batch are always held as sample (a batch of one is all sample). Returns the ids held. */
-export async function holdUnbatched(itemIds?: string[]): Promise<string[]> {
+export async function holdUnbatched(itemIds?: string[], now = new Date()): Promise<string[]> {
   refuseReadOnly();
   const { Item } = await ks();
-  const filter = { ...CLEAN, ...NO_BATCH, "pipeline.releaseClaim": { $exists: false }, ...(itemIds ? { itemId: { $in: itemIds } } : {}) };
+  const staleBefore = new Date(now.getTime() - STALE_MS);
+  const filter = { ...CLEAN, ...NO_BATCH, ...(itemIds ? { itemId: { $in: itemIds } } : {}) };
   const found = await Item.find(filter).select("itemId").lean<{ itemId: string }[]>();
   const held: string[] = [];
   for (const { itemId } of found) {
-    const r = await Item.updateOne({ ...filter, itemId }, { $set: { "pipeline.flags": ["sample"], "pipeline.heldFor": "praveen" }, $unset: { "pipeline.releaseAt": "" } });
+    const r = await Item.updateOne({ $and: [{ ...filter, itemId }, unclaimed(staleBefore)] }, HOLD_AS_SAMPLE);
     if (r.modifiedCount === 1) held.push(itemId);
   }
   return held;
 }
 
-/** After a run: sample every batch it touched (each that is finished) and hold its items without a batch. */
-export async function sampleAfterRun(batchIds: string[], unbatchedItemIds: string[], now = new Date()): Promise<{ batchId: string; status: SampleStatus; sampled: string[]; why?: string }[]> {
+/** A clean ready item with no release time would wait forever: held for Praveen with the reason. Returns the ids held. */
+export async function holdNoReleaseTime(now = new Date()): Promise<string[]> {
+  refuseReadOnly();
+  const { Item } = await ks();
+  const staleBefore = new Date(now.getTime() - STALE_MS);
+  const filter = { ...CLEAN, "pipeline.releaseAt": { $exists: false } };
+  const found = await Item.find(filter).select("itemId").lean<{ itemId: string }[]>();
+  const held: string[] = [];
+  for (const { itemId } of found) {
+    const r = await Item.updateOne(
+      { $and: [{ ...filter, itemId }, unclaimed(staleBefore)] },
+      { $set: { "pipeline.heldFor": "praveen", "pipeline.heldWhy": "no release time" }, $unset: { "pipeline.releaseClaim": "" } },
+    );
+    if (r.modifiedCount === 1) held.push(itemId);
+  }
+  return held;
+}
+
+/** After a run: top up the sample of every batch it touched and hold its items without a batch. */
+export async function sampleAfterRun(batchIds: string[], unbatchedItemIds: string[], now = new Date()): Promise<{ batchId: string; status: SampleStatus; held: string[]; why?: string }[]> {
   const out = [];
   for (const batchId of [...new Set(batchIds.filter(hasBatch))]) out.push({ batchId, ...(await applySample(batchId, now)) });
-  if (unbatchedItemIds.length) await holdUnbatched(unbatchedItemIds);
+  if (unbatchedItemIds.length) await holdUnbatched(unbatchedItemIds, now);
   return out;
 }
 
-/** Once per batch, when nothing releasable is left in it: the "ready for review" suggestion. */
+/** Once per batch, when nothing releasable is left in it: the "ready for review" suggestion. Call under the batch guard. */
 async function suggestInReview(batchId: string, now: Date): Promise<void> {
   const { Batch, Item } = await ks();
-  if (await Item.exists({ batchId, ...CLEAN })) return; // more to come (claimed ones in flight count too)
+  if (await Item.exists({ batchId, ...CLEAN })) return; // more to come
   const b = await Batch.findOneAndUpdate({ batchId, inReviewSuggestedAt: { $exists: false } }, { $set: { inReviewSuggestedAt: now } }, { new: true }).lean<BatchDoc>();
   if (!b) return;
   const count = await Item.countDocuments({ batchId, stage: "in_review" });
@@ -248,73 +329,115 @@ async function suggestInReview(batchId: string, now: Date): Promise<void> {
   }
 }
 
+export type BlockedBatch = { batchId: string; why: string; since?: Date };
+export type ReleaseReport = { released: string[]; blocked: BlockedBatch[]; sampled: string[]; heldNoTime: string[]; heldUnbatched: string[]; busy: string[] };
+
 /**
- * Releases every solution whose time has come: stage ready, not held, no flag, releaseAt <= now, its batch
- * sampled, its current version's solution row present and unreleased. Outside the window: [] and nothing
- * written. Returns the ids released by this call.
+ * Everything one release pass does (inside the window; outside it nothing is written and the report is empty):
+ *   0. finishes the bookkeeping of a release that moved its item and then died;
+ *   1. holds clean items with no batch (always sample) and with no release time (heldWhy);
+ *   2. per batch with clean items, under the batch guard: records / clears why it is blocked; tops the
+ *      sample up to the invariant; then releases each clean item whose releaseAt has come (claim, then
+ *      store.releaseClaimed), and suggests "batch_in_review" once after the last.
  */
-export async function releaseDue(now: Date, opts: { actor?: Actor; staleMs?: number } = {}): Promise<string[]> {
+export async function releaseDueReport(now: Date, opts: { actor?: Actor; staleMs?: number } = {}): Promise<ReleaseReport> {
   refuseReadOnly();
-  if (!inWindow(now)) return [];
+  const report: ReleaseReport = { released: [], blocked: [], sampled: [], heldNoTime: [], heldUnbatched: [], busy: [] };
+  if (!inWindow(now)) return report;
   const actor = opts.actor ?? RELEASE_ACTOR;
   const staleBefore = new Date(now.getTime() - (opts.staleMs ?? STALE_MS));
-  const { Item, Batch, Solution } = await ks();
+  const { Item, Solution, Batch } = await ks();
 
-  // 0. A release that moved its item to review and then died: finish its bookkeeping once.
+  // 0. Recovery.
   const half = await Item.find({ "pipeline.releaseClaim.releasedAt": { $exists: true }, "pipeline.releaseClaim.at": { $lt: staleBefore } })
     .select("itemId batchId releasedVersion pipeline").lean<ItemDoc[]>();
-  const touched = new Set<string>();
+  const recovered = new Set<string>();
   for (const h of half) {
     const c = h.pipeline!.releaseClaim!;
     await finishRelease(h.itemId, h.releasedVersion ?? 0, c.owner, actor, new Date(c.releasedAt!));
-    if (hasBatch(h.batchId)) touched.add(h.batchId);
+    if (hasBatch(h.batchId)) recovered.add(h.batchId);
   }
 
-  const dueFilter = { ...CLEAN, "pipeline.releaseAt": { $lte: now } };
-  const due0 = await Item.find(dueFilter).select("itemId batchId").lean<Pick<ItemDoc, "itemId" | "batchId">[]>();
-  // 1. No batch: always held as sample, never released.
-  const unbatched = due0.filter((i) => !hasBatch(i.batchId)).map((i) => i.itemId);
-  if (unbatched.length) await holdUnbatched(unbatched);
-  // 2. Sample every batch with releasable items that is not sampled yet; release nothing of one that is not.
-  const batchIds = [...new Set(due0.map((i) => i.batchId).filter(hasBatch))];
-  const unsampled = await Batch.find({ batchId: { $in: batchIds }, sampledAt: { $exists: false } }).select("batchId").lean<{ batchId: string }[]>();
-  for (const b of unsampled) await applySample(b.batchId, now);
-  const sampled = (await Batch.find({ batchId: { $in: batchIds }, sampledAt: { $exists: true } }).select("batchId").lean<{ batchId: string }[]>()).map((b) => b.batchId);
+  // 1. Never released by the timer.
+  report.heldUnbatched = await holdUnbatched(undefined, now);
+  report.heldNoTime = await holdNoReleaseTime(now);
 
-  // 3. One guarded claim per item, then the guarded release.
-  const due = await Item.find({ ...dueFilter, batchId: { $in: sampled } }).sort({ "pipeline.releaseAt": 1, itemId: 1 })
-    .select("itemId batchId version releasedVersion").lean<Pick<ItemDoc, "itemId" | "batchId" | "version" | "releasedVersion">[]>();
-  const released: string[] = [];
-  for (const it of due) {
-    if (!it.version || releasedVersionOf(it) >= it.version) continue;
-    const sol = await Solution.findOne({ itemId: it.itemId, version: it.version }).select("releasedAt").lean();
-    if (!sol || sol.releasedAt) continue;
-    const owner = randomUUID();
-    const claimed = await Item.findOneAndUpdate(
-      {
-        itemId: it.itemId, version: it.version, batchId: it.batchId, ...dueFilter,
-        $or: [{ "pipeline.releaseClaim": { $exists: false } }, { "pipeline.releaseClaim.at": { $lt: staleBefore }, "pipeline.releaseClaim.releasedAt": { $exists: false } }],
-      },
-      { $set: { "pipeline.releaseClaim": { owner, at: now } } },
-    ).lean();
-    if (!claimed) continue; // another caller has it
-    if (await releaseClaimed(it.itemId, it.version, owner, actor, now)) {
-      released.push(it.itemId);
-      touched.add(it.batchId!);
+  // 2. Per batch.
+  const batchIds = [...new Set([...((await Item.distinct("batchId", CLEAN)) as string[]).filter(hasBatch), ...recovered])].sort();
+  for (const batchId of batchIds) {
+    const done = await withBatchGuard(batchId, now, async () => {
+      const r = await readBatch(batchId);
+      if (r.blocked) {
+        await recordBlocked(batchId, r.blocked, now);
+        report.blocked.push({ batchId, why: r.blocked, since: r.batch?.blockedAt ?? now });
+        return;
+      }
+      const t = await topUp(batchId, r, now);
+      report.sampled.push(...t.held);
+      if (!t.ok) {
+        const why = "the sample could not be completed (an item is being released by another call)";
+        await recordBlocked(batchId, why, now);
+        report.blocked.push({ batchId, why, since: r.batch?.blockedAt ?? now });
+        return;
+      }
+      await recordBlocked(batchId, undefined, now);
+      const due = await Item.find({ batchId, ...CLEAN, "pipeline.releaseAt": { $lte: now } }).sort({ "pipeline.releaseAt": 1, itemId: 1 })
+        .select("itemId version releasedVersion").lean<Member[]>();
+      let any = recovered.has(batchId);
+      for (const it of due) {
+        if (!it.version || releasedVersionOf(it) >= it.version) continue;
+        const sol = await Solution.findOne({ itemId: it.itemId, version: it.version }).select("releasedAt").lean();
+        if (!sol || sol.releasedAt) continue;
+        const owner = randomUUID();
+        const claimed = await Item.findOneAndUpdate(
+          { $and: [{ itemId: it.itemId, version: it.version, batchId, ...CLEAN, "pipeline.releaseAt": { $lte: now } }, unclaimed(staleBefore)] },
+          { $set: { "pipeline.releaseClaim": { owner, at: now } } },
+        ).lean();
+        if (!claimed) continue;
+        if (await releaseClaimed(it.itemId, it.version, owner, actor, now)) {
+          report.released.push(it.itemId);
+          any = true;
+        }
+      }
+      if (any) await suggestInReview(batchId, now);
+    });
+    if (done === "busy") {
+      // No Batch document: nothing to guard, nothing to record it on; reported (and listed live by blockedBatches).
+      if (!(await Batch.exists({ batchId }))) report.blocked.push({ batchId, why: "no batch record" });
+      else report.busy.push(batchId);
     }
   }
+  return report;
+}
 
-  // 4. "Ready for review", once per batch, after its last releasable item.
-  for (const b of touched) await suggestInReview(b, now);
-  return released;
+/** The ids releaseDueReport(now) released. */
+export async function releaseDue(now: Date, opts: { actor?: Actor; staleMs?: number } = {}): Promise<string[]> {
+  return (await releaseDueReport(now, opts)).released;
+}
+
+/**
+ * Read-only: the batches nothing of which can be released, with why and since when. Recorded ones (Batch.blockedWhy,
+ * written by each release pass) plus, live, batch ids that clean items carry with no Batch record.
+ */
+export async function blockedBatches(): Promise<BlockedBatch[]> {
+  const { Batch, Item } = await ks();
+  const out: BlockedBatch[] = (await Batch.find({ blockedWhy: { $exists: true } }).select("batchId blockedWhy blockedAt").sort({ batchId: 1 }).lean<BatchDoc[]>())
+    .map((b) => ({ batchId: b.batchId, why: b.blockedWhy!, ...(b.blockedAt ? { since: b.blockedAt } : {}) }));
+  const ids = ((await Item.distinct("batchId", CLEAN)) as string[]).filter(hasBatch);
+  const known = new Set((await Batch.find({ batchId: { $in: ids } }).select("batchId").lean<{ batchId: string }[]>()).map((b) => b.batchId));
+  for (const batchId of ids.filter((b) => !known.has(b)).sort()) {
+    const first = await Item.findOne({ batchId, ...CLEAN }).sort({ "pipeline.passedAt": 1 }).select("pipeline").lean<ItemDoc>();
+    out.push({ batchId, why: "no batch record", ...(first?.pipeline?.passedAt ? { since: first.pipeline.passedAt } : {}) });
+  }
+  return out;
 }
 
 // --- dry run: read only ---
 
 export type PlanRow = { itemId: string; batchId?: string; releaseAt?: Date; state: string };
-export type Plan = { now: Date; inWindow: boolean; rows: PlanRow[]; samples: { batchId: string; ids: string[]; why?: string }[] };
+export type Plan = { now: Date; inWindow: boolean; rows: PlanRow[]; samples: { batchId: string; ids: string[] }[]; blocked: BlockedBatch[] };
 
-/** What releaseDue(now) would do, and when each waiting item is due. Reads only (safe on a read-only connection). */
+/** What releaseDueReport(now) would do, and when each waiting item is due. Reads only (safe on a read-only connection). */
 export async function planRelease(now: Date): Promise<Plan> {
   const { Item, Solution } = await ks();
   const open = inWindow(now);
@@ -326,21 +449,20 @@ export async function planRelease(now: Date): Promise<Plan> {
   for (const it of items) {
     const at = it.pipeline?.releaseAt ? new Date(it.pipeline.releaseAt) : undefined;
     const row = (state: string) => rows.push({ itemId: it.itemId, ...(it.batchId ? { batchId: it.batchId } : {}), ...(at ? { releaseAt: at } : {}), state });
-    if (!at) { row("no release time: waits for Praveen"); continue; }
     if (!hasBatch(it.batchId)) { row("no batch: would be held as sample"); continue; }
+    if (!at) { row("no release time: would be held for Praveen"); continue; }
     const r = reads.get(it.batchId)!;
-    if (!r.batch?.sampledAt) {
-      if (!r.done) { row(`batch not sampled yet (${r.why}): waits`); continue; }
-      if (r.pick.includes(it.itemId)) { row("would be held as sample"); continue; }
-    }
+    if (r.blocked) { row(`batch blocked (${r.blocked}): waits`); continue; }
+    if (r.need.topUp.includes(it.itemId)) { row("would be held as sample"); continue; }
     if (it.pipeline?.releaseClaim) { row("being released by another call"); continue; }
     const sol = await Solution.findOne({ itemId: it.itemId, version: it.version }).select("releasedAt").lean();
     if (!it.version || releasedVersionOf(it) >= it.version || !sol || sol.releasedAt) { row("no unreleased solution row: skipped"); continue; }
     if (at.getTime() > now.getTime()) { row(`waiting until ${mountain(at)}`); continue; }
     row(open ? "would release now" : `due; outside the window, goes at ${mountain(openAtOrAfter(now))}`);
   }
-  const samples = [...reads].filter(([, r]) => r.batch && !r.batch.sampledAt).map(([batchId, r]) => ({ batchId, ids: r.done ? r.pick : [], ...(r.done ? {} : { why: r.why }) }));
-  return { now, inWindow: open, rows, samples };
+  const samples = [...reads].filter(([, r]) => !r.blocked && r.need.topUp.length).map(([batchId, r]) => ({ batchId, ids: [...r.need.topUp].sort() }));
+  const blocked: BlockedBatch[] = [...reads].filter(([, r]) => r.blocked).map(([batchId, r]) => ({ batchId, why: r.blocked!, ...(r.batch?.blockedAt ? { since: r.batch.blockedAt } : {}) }));
+  return { now, inWindow: open, rows, samples, blocked };
 }
 
 // --- the cron job's lock ---

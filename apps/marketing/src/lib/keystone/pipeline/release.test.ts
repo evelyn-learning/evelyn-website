@@ -1,7 +1,7 @@
 // Pure tests for the timed release: the window, the release time and the sample. No database, no network.
 // Run: npx tsx src/lib/keystone/pipeline/release.test.ts
 import assert from "node:assert/strict";
-import { addLocalDays, inWindow, mountain, offsetMinutes, pickSample, releaseAt } from "./release";
+import { addLocalDays, inWindow, mountain, offsetMinutes, pickSample, releaseAt, requiredSample, sampleNeed, sampleOrder } from "./release";
 
 /** assert.ok with a message always (see run.test.ts). */
 const ok = (value: unknown, message: string) => assert.ok(value, message);
@@ -176,6 +176,40 @@ equal(local(Z("2026-11-16T17:00:00Z")), "Mon 2026-11-16 10:00", "the local forma
   const s = pickSample(ids(100), "batch-x");
   ok(s.every((id) => ids(100).includes(id)) && new Set(s).size === s.length, "picks distinct ids of the batch");
   equal(pickSample(["a", "a", "b"], "z").length, 2, "duplicates count once");
+}
+
+// --- the sample invariant, n = 0…120 ---
+{
+  for (let n = 0; n <= 120; n++) {
+    const want = n === 0 ? 0 : Math.min(n, Math.max(3, Math.ceil(n / 10)));
+    equal(requiredSample(n), want, `requiredSample(${n})`);
+    ok(requiredSample(n) <= n, `never more than all (${n})`);
+    ok(n === 0 || requiredSample(n) >= Math.min(3, n), `at least 3 or all (${n})`);
+    ok(requiredSample(n) * 10 >= n, `at least 10% (${n})`);
+    if (n > 0) ok(requiredSample(n) >= requiredSample(n - 1), `monotonic in n (${n})`);
+    // every way of splitting n into clean / held / released: the top-up brings h to the requirement exactly
+    for (const sampled of [0, 1, 3, 5]) {
+      for (const timerReleased of [0, 7, 30]) {
+        const cleanCount = n - sampled - timerReleased;
+        if (cleanCount < 0) continue;
+        const clean = Array.from({ length: cleanCount }, (_, i) => `c${i}`);
+        const need = sampleNeed({ clean, sampled, timerReleased }, "b");
+        equal(need.n, n, `n counts clean + sampled + released (${n})`);
+        const after = sampled + need.topUp.length;
+        ok(after >= Math.min(need.required, sampled + cleanCount), `top-up reaches the requirement when there are enough clean items (n ${n}, h ${sampled}, r ${timerReleased})`);
+        ok(need.topUp.length === Math.min(cleanCount, Math.max(0, need.required - sampled)), `holds no more than needed (n ${n}, h ${sampled})`);
+        deepEqual(need.topUp, sampleOrder(clean, "b").slice(0, need.topUp.length), "top-up follows the sample order");
+      }
+    }
+  }
+  // the brief's late arrivals: 9 processed (3 held, 6 released) + 1 → n 10, still 3: nothing more held
+  equal(sampleNeed({ clean: ["late"], sampled: 3, timerReleased: 6 }, "b").topUp.length, 0, "batch of 9 + 1 late: released");
+  // 30 processed (3 held, 27 released) + 1 → n 31 → 4 required: the late arrival is held
+  deepEqual(sampleNeed({ clean: ["late"], sampled: 3, timerReleased: 27 }, "b").topUp, ["late"], "batch of 30 + 1 late: the arrival is held");
+  // all at item_data when first looked at: nothing to sample; when 10 return clean: 3 held
+  equal(sampleNeed({ clean: [], sampled: 0, timerReleased: 0 }, "b").required, 0, "nothing eligible yet: nothing required");
+  equal(sampleNeed({ clean: Array.from({ length: 10 }, (_, i) => `r${i}`), sampled: 0, timerReleased: 0 }, "b").topUp.length, 3, "10 return clean: 3 held");
+  deepEqual(sampleOrder(["a", "b", "c"], "s"), sampleOrder(["c", "a", "b"], "s"), "sample order independent of input order");
 }
 
 console.log("release.test ok");
