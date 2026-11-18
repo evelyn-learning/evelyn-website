@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import type { ItemDoc } from "../db";
 import type { Interaction } from "../qti-interactions";
-import { intakeCode, intakeModel, intakeNote, questionAsText } from "./intake";
+import { existsSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import path from "node:path";
+import { cleanMarkup, htmlToPlainText, intakeCode, intakeModel, intakeNote, questionAsText } from "./intake";
 
 for (const k of ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "DEEPSEEK_API_KEY", "GEMINI_API_KEY"]) process.env[k] = "test-key";
 delete process.env.KEYSTONE_PIPELINE_LIVE;
@@ -71,7 +74,7 @@ assert.equal(intakeNote(intakeCode(item({ interactions: [{ ...choice, options: [
 
 // blanks: whitespace / nbsp content, class lists, single quotes
 for (const b of ['<span class="fill-in-the-blank"> </span>', '<span class="x fill-in-the-blank y">&nbsp;</span>', "<span class='fill-in-the-blank'>&#160;</span>", '<span class="fill-in-the-blank">&#xA0;</span>']) {
-  assert.equal(questionAsText(item({ questionHtml: `<p>x = ${b}</p>` })), "x = ____", b);
+  assert.equal(questionAsText(item({ questionHtml: `<p>x = ${b}</p>` })), "<p>x = ____</p>", b);
   assert.deepEqual(codes(item({ questionHtml: `<p>${b}</p>`, interactions: [choice], keys: { R1: ["B"] } })), ["empty_stem"], b);
 }
 
@@ -84,22 +87,21 @@ for (const b of ['<span class="fill-in-the-blank"> </span>', '<span class="x fil
   assert.deepEqual(codes(item({ ...base, qti: { apip, metadata: "", resources: [] } })), ["missing_passage"]);
 }
 
-// MathML survives into the question text
+// MathML survives into the question as markup (never linearised)
 {
   const t = questionAsText(item({
     questionHtml: '<p>Find <math><mfrac><mn>3</mn><mn>4</mn></mfrac><mo>+</mo><msqrt><mn>2</mn></msqrt><annotation encoding="x">3/4+\\sqrt2</annotation></math> and <math><mi>a</mi><mo>&lt;</mo><mi>b</mi></math> ok</p>',
     options: [opt("A", "<math><msup><mi>x</mi><mn>2</mn></msup></math>")],
   }));
-  assert.ok(t.includes("3/4 + sqrt(2)"), t);
-  assert.ok(!t.includes("sqrt2") && !t.includes("\\sqrt"), t);
-  assert.ok(t.includes("a < b"), t);
-  assert.ok(/A\. x\^2/.test(t), t);
+  assert.ok(t.includes("<mfrac><mn>3</mn><mn>4</mn></mfrac><mo>+</mo><msqrt><mn>2</mn></msqrt>"), t);
+  assert.ok(!t.includes("sqrt2") && !t.includes("annotation"), t);
+  assert.ok(t.includes("<mo>&lt;</mo>"), t);
+  assert.ok(t.includes("A. <math><msup><mi>x</mi><mn>2</mn></msup></math>"), t);
 }
-
-// sup/sub outside MathML keep their meaning
-assert.equal(questionAsText(item({ questionHtml: "<p>x<sup>2</sup> + H<sub>2</sub>O and 10<sup>-3</sup></p>" })), "x^2 + H_2O and 10^(-3)");
+assert.equal(questionAsText(item({ questionHtml: "<p>x<sup>2</sup> + H<sub>2</sub>O and 10<sup>-3</sup></p>" })), "<p>x<sup>2</sup> + H<sub>2</sub>O and 10<sup>-3</sup></p>");
 assert.doesNotThrow(() => questionAsText(item({ questionHtml: "<p>&#x110000; &#0; ok</p>" })));
 assert.deepEqual(codes(item({ questionHtml: "<div class='a cr-passage'><div>P</div></div><p></p>", interactions: [choice], keys: { R1: ["B"] } })), ["empty_stem"], "single-quoted passage class");
+assert.deepEqual(codes(item({ questionHtml: "<p><math><mn>1</mn></math></p>", interactions: [choice], keys: { R1: ["B"] } })), [], "math-only stem is not empty");
 
 // no key
 assert.deepEqual(codes(item({ interactions: [choice], keys: {} })), ["no_key"]);
@@ -133,14 +135,125 @@ for (const code of ["missing_passage", "no_choices", "empty_stem"] as const) ass
 // questionAsText
 {
   const t = questionAsText(item({
-    questionHtml: '<p>Fill <span class="fill-in-the-blank"></span> &amp; look at <img src="/api/keystone/asset/q1/Image_1.png" alt="x"></p>',
+    questionHtml: '<div class="cr-passage"><div class="cr-passage-title">T</div><p>Passage text</p></div><p>Fill <span class="fill-in-the-blank"></span> &amp; look at <img src="/api/keystone/asset/q1/Image_1.png" alt="x"></p>',
     interactions: [choice, { kind: "inlineChoice", responseId: "R2", choices: [opt("a", "hot"), opt("b", "cold")] }],
   }));
-  assert.ok(t.includes("Fill ____ & look at [image: Image_1.png]"), t);
-  assert.ok(!/[<>]/.test(t.replace(/\[image[^\]]*\]/g, "")), "no tags");
-  assert.ok(/A\W+3/.test(t) && /B\W+4/.test(t) && /hot/.test(t) && /cold/.test(t), t);
+  assert.ok(t.startsWith("Passage:\nT\n<p>Passage text</p>"), t);
+  assert.ok(t.includes("<p>Fill ____ &amp; look at [image: Image_1.png; alt: x]</p>"), t);
+  assert.ok(/A\. 3/.test(t) && /B\. 4/.test(t) && /a\. hot/.test(t) && /b\. cold/.test(t), t);
   const legacy = questionAsText(item({ options: [opt("A", "one"), opt("B", "<b>two</b>")] }));
-  assert.ok(/A\W+one/.test(legacy) && /B\W+two/.test(legacy) && !legacy.includes("<b>"));
+  assert.ok(legacy.includes("A. one") && legacy.includes("B. <b>two</b>"), legacy);
+  assert.equal(htmlToPlainText("<p>a</p>"), cleanMarkup("<p>a</p>"));
+}
+
+// cleanMarkup: attributes, blanks, images, drops, unwrap
+{
+  assert.equal(cleanMarkup('<p id="a" class="b" style="c">x</p>'), "<p>x</p>");
+  assert.equal(cleanMarkup('<table><tr><th colspan="2" class="h">H</th></tr><tr><td rowspan=\'2\' id="z">1</td><td>2</td></tr></table>'), '<table><tr><th colspan="2">H</th></tr>\n<tr><td rowspan="2">1</td><td>2</td></tr>\n</table>');
+  assert.equal(cleanMarkup('<math xmlns="http://www.w3.org/1998/Math/MathML" display="block" id="m"><mfenced open="[" close=")" separators=";" stretchy="true"><mn id="n">1</mn><mn>2</mn></mfenced></math>'), '<math><mfenced open="[" close=")" separators=";"><mn>1</mn><mn>2</mn></mfenced></math>');
+  assert.equal(cleanMarkup('<mfrac linethickness="0"><mn>1</mn><mn>2</mn></mfrac>'), '<mfrac linethickness="0"><mn>1</mn><mn>2</mn></mfrac>');
+  assert.equal(cleanMarkup('<menclose notation="box" class="q"><mi>x</mi></menclose>'), '<menclose notation="box"><mi>x</mi></menclose>');
+  for (const b of ['<span class="fill-in-the-blank"> </span>', '<span class="x fill-in-the-blank y">&nbsp;</span>', "<span class='fill-in-the-blank'>&#160;</span>", '<span class="fill-in-the-blank">&#xA0;</span>']) assert.equal(cleanMarkup(`<p>x = ${b}</p>`), "<p>x = ____</p>");
+  assert.equal(cleanMarkup('<img src="/api/keystone/asset/q1/Image_1.png">'), "[image: Image_1.png]");
+  assert.equal(cleanMarkup('<img src="a/Image_1.png" alt="Image_1">'), "[image: Image_1.png]");
+  assert.equal(cleanMarkup('<img src="a/b.png" alt="A graph">'), "[image: b.png; alt: A graph]");
+  assert.equal(cleanMarkup('<p>a<!-- c -->b<script>alert(1)</script><style>p{}</style><annotation>x</annotation><annotation-xml><math><mi>q</mi></math></annotation-xml>c</p>'), "<p>abc</p>");
+  assert.equal(cleanMarkup('<math><semantics><mrow><mi>x</mi></mrow><annotation encoding="a">LaTeX</annotation></semantics></math>'), "<math><mrow><mi>x</mi></mrow></math>");
+  assert.equal(cleanMarkup("<div>a</div><div>b</div>"), "a\nb");
+  assert.equal(cleanMarkup("<span>a</span><foo>b</foo>"), "ab");
+  assert.equal(cleanMarkup("<p>1 < 2 and x <y</p>"), "<p>1 &lt; 2 and x &lt;y</p>");
+  assert.equal(cleanMarkup("<p>1 &lt; 2 &#x2212; 3 &times; &deg;</p>"), "<p>1 &lt; 2 &#x2212; 3 &times; &deg;</p>", "entities untouched");
+  assert.equal(cleanMarkup("<p>3<math><mfrac><mn>1</mn><mn>2</mn></mfrac></math></p>"), "<p>3<math><mfrac><mn>1</mn><mn>2</mn></mfrac></math></p>");
+  assert.equal(cleanMarkup("<p>e<sup>x<sup>2</sup></sup></p>"), "<p>e<sup>x<sup>2</sup></sup></p>");
+  assert.equal(cleanMarkup("<ul><li>a<ul><li>b</li></ul></li></ul>"), "<ul><li>a<ul><li>b</li>\n</ul>\n</li>\n</ul>");
+  assert.equal(cleanMarkup("<p>unclosed <b>bold"), "<p>unclosed <b>bold</b></p>");
+  assert.equal(cleanMarkup("stray </i> close"), "stray close");
+}
+
+// cleanMarkup: the wrapper cannot be closed from inside
+for (const evil of ["</question>", "</QUESTION >", "< /question>", "&lt;/question&gt;", "<p></ question></p>", "</\nquestion>"]) {
+  const c = cleanMarkup(`<p>a ${evil} b</p>`);
+  assert.ok(!/<\s*\/\s*question/i.test(c), `${JSON.stringify(evil)} -> ${c}`);
+  const q = questionAsText(item({ questionHtml: `<p>${evil}</p>`, options: [opt("A", evil)] }));
+  assert.ok(!/<\s*\/\s*question/i.test(q), q);
+}
+
+// cleanMarkup: never throws; size caps
+{
+  assert.doesNotThrow(() => cleanMarkup("<b>".repeat(3000)));
+  assert.doesNotThrow(() => cleanMarkup("<mi>".repeat(3000) + "<mrow>".repeat(3000)));
+  assert.doesNotThrow(() => cleanMarkup('<a "'.repeat(60000)));
+  assert.doesNotThrow(() => cleanMarkup("<!-- never closed <p>x"));
+  const long = "<p>" + "a".repeat(250000) + "</p>";
+  const c = cleanMarkup(long);
+  assert.ok(c.endsWith("[question text truncated]") && c.length < 200100);
+  const r = intakeCode(item({ questionHtml: long, interactions: [choice], keys: { R1: ["B"] } }), all);
+  assert.deepEqual(r.findings.map((f) => f.code), ["too_long"]);
+  assert.equal(intakeNote(r.findings), "The question is too long to be checked as it arrived.");
+}
+
+// Lossless properties: nothing dropped, merged or reordered (MathML structure and text; text outside tags)
+{
+  const KEPT = new Set(["p", "br", "b", "strong", "i", "em", "u", "sup", "sub", "ul", "ol", "li", "table", "thead", "tbody", "tr", "th", "td", "caption",
+    "math", "mi", "mn", "mo", "mtext", "ms", "mrow", "mfrac", "msqrt", "mroot", "msup", "msub", "msubsup", "munder", "mover", "munderover", "mmultiscripts", "mprescripts", "none",
+    "mfenced", "mtable", "mtr", "mlabeledtr", "mtd", "mspace", "mstyle", "mpadded", "menclose", "mphantom", "merror"]);
+  const VOIDS = new Set(["br", "mspace", "none", "mprescripts"]);
+  const drop = (x: string) => x
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, (_m, c: string) => c.replace(/</g, "&lt;").replace(/>/g, "&gt;")) // CDATA text is kept, escaped
+    .replace(/<!--[\s\S]*?-->/g, "").replace(/<(annotation-xml|annotation|script|style)\b[^>]*?(?:\/>|>[\s\S]*?<\/\1>)/gi, "")
+    .replace(/<\/?semantics\b[^>]*>/gi, "")
+    .replace(/<span\b[^>]*fill-in-the-blank[^>]*>(?:\s|&nbsp;|&#0*160;|&#x0*a0;)*<\/span>/gi, " \x02 ").replace(/<img\b[^>]*>/gi, " \x02 ");
+  // tokens: kept tags as "<name"/"</name"; text as whitespace-separated words; unkept tags vanish (div/headings become a space)
+  const tokens = (x: string, _math: boolean): string[] => {
+    let y = drop(x).replace(/<\/(div|h[1-6])\s*>/gi, " ");
+    y = y.replace(/<(\/?)([A-Za-z][\w:.-]*)\b[^>]*?(\/?)>/g, (all, close: string, nm: string, self: string) => {
+      const n = nm.toLowerCase().replace(/^.*:/, "");
+      if (!KEPT.has(n)) return "";
+      if (close) return VOIDS.has(n) ? "" : ` <\x01/${n}> `;
+      return ` <\x01${n}> `;
+    });
+    return y.replace(/\[image: [^\]]*\]|____/g, " \x02 ").split(/\s+/).filter(Boolean);
+  };
+  const maths = (x: string) => [...x.matchAll(/<math\b[^>]*>[\s\S]*?<\/math>/gi)].map((m) => m[0]);
+  const check = (label: string, input: string) => {
+    const out = cleanMarkup(input);
+    assert.deepEqual(tokens(out, false), tokens(input, false), `text+structure ${label}`);
+    const mi = maths(input), mo = maths(out);
+    assert.equal(mo.length, mi.length, `math count ${label}`);
+    mi.forEach((x, i) => assert.deepEqual(tokens(mo[i], true), tokens(x, true), `math ${i} ${label}`));
+  };
+  const frags: Record<string, string> = {
+    mfrac: "<p>Find <math><mfrac><mn>3</mn><mn>4</mn></mfrac></math> now</p>",
+    msqrt: "<math><msqrt><mi>x</mi><mo>+</mo><mn>1</mn></msqrt></math>",
+    supsup: "<math><msup><msup><mn>2</mn><mn>3</mn></msup><mn>2</mn></msup></math>",
+    prescripts: '<math xmlns="http://www.w3.org/1998/Math/MathML"><mmultiscripts><mi>U</mi><none/><none/><mprescripts/><mn>92</mn><mn>238</mn></mmultiscripts></math>',
+    limit: "<math><munderover><mo>&#x2211;</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><msub><mi>a</mi><mi>i</mi></msub></math>",
+    matrix: "<math><mtable><mtr><mtd><mn>1</mn></mtd><mtd><mo>&#x2212;</mo><mn>2</mn></mtd></mtr><mtr><mtd><mn>3</mn></mtd><mtd><mn>4</mn></mtd></mtr></mtable></math>",
+    spaced: "<math><mn>12 500</mn><mo>+</mo><mn>1</mn><mo>.</mo><mn>5</mn></math>",
+    nestedSup: "<p>e<sup>x<sup>2</sup></sup> and H<sub>2</sub>O</p>",
+    lt: "<p>1 &lt; 2 and x &lt; y</p>",
+    lists: "<ul><li>a<ol><li>b</li><li>c</li></ol></li><li>d</li></ul>",
+    inline: "<p>3<math><mfrac><mn>1</mn><mn>2</mn></mfrac></math>is a mixed number</p>",
+    entities: "<p>2 &times; 3 &minus; 1 = 5&deg;</p><math><mn>30</mn><mo>&#xB0;</mo></math>",
+    table: '<table><caption>Cap</caption><thead><tr><th colspan="2">H</th></tr></thead><tbody><tr><td>a</td><td>b</td></tr></tbody></table>',
+    annotated: '<math><semantics><mrow><mi>x</mi></mrow><annotation encoding="a">LaTeX x</annotation></semantics></math><p>t</p>',
+    mixedBlocks: "<div>one</div><div>two<br>three</div><span>four</span>five",
+    blanksImgs: '<p>a <span class="fill-in-the-blank"></span> b <img src="r/Image_1.png"> c</p>',
+  };
+  for (const [k, v] of Object.entries(frags)) check(k, v);
+
+  // real packages, when present (untrusted data: read only)
+  const dl = path.join(homedir(), "Downloads");
+  for (const dir of ["Item146799", "Item234035", "Item294335", "Item298024"]) {
+    const d = path.join(dl, dir);
+    if (!existsSync(d)) continue;
+    for (const f of (require("node:fs") as typeof import("node:fs")).readdirSync(d).filter((n) => /_apip\.xml$|^passage_\d+\.xml$/.test(n))) {
+      const xml = readFileSync(path.join(d, f), "utf8");
+      const body = xml.match(/<itemBody\b[\s\S]*?<\/itemBody>/)?.[0] ?? xml;
+      check(`${dir}/${f} body`, body);
+      for (const c of xml.matchAll(/<simpleChoice\b[^>]*>([\s\S]*?)<\/simpleChoice>/g)) check(`${dir}/${f} choice`, c[1]);
+    }
+  }
 }
 
 // intakeModel through a fake fetch (role intake = Gemini)
@@ -182,6 +295,7 @@ async function main() {
   await intakeModel(closer, [], gemini({ complete: true, missing: [] }, seen));
   const u2 = String(seen[1].body.contents?.[0]?.parts?.find((p: any) => p.text)?.text);
   assert.equal(u2.split("</question>").length, 2, "a stray closing tag in the question cannot end the block early");
+  assert.match(sys, /HTML with MathML/);
   console.log("intake tests ok");
 }
 main().catch((e) => { console.error(e); process.exit(1); });
