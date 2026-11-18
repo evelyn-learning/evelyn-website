@@ -300,7 +300,7 @@ for (const evil of ["</question>", "</QUESTION >", "< /question>", "&lt;/questio
 {
   for (const ok of [
     '<p title="<!--">x</p><p title="-->">y</p>', "<!-- </script> <rubricBlock> <style> -->z", '<p title="<script>">a</p>', "<![CDATA[<!-- <script>]]>b",
-    '<math><mi title="<annotation>">x</mi></math>', "<p>a > b</p>", "<p>1 < 2 and x <y</p>", "<p>unclosed <b>bold", "stray </i> close", "<annotation/>x<script src='a'/>",
+    '<math><mi title="<annotation>">x</mi></math>', "<p>a > b</p>", "<p>unclosed <b>bold", "stray </i> close", "<annotation/>x<script src='a'/>",
     "<p>a<!-- c -->b<script>x</script><style>y</style><![CDATA[z]]><!DOCTYPE html><?xml version='1.0'?></p>",
   ]) assert.deepEqual(markupProblems(ok), [], ok);
   assert.equal(cleanMarkup('<p title="<!--">x</p><p title="-->">y</p><!-- </script> <rubricBlock> -->z'), "<p>x</p>\n<p>y</p>\nz", "text after tokens in attributes and comments kept");
@@ -320,6 +320,58 @@ for (const evil of ["</question>", "</QUESTION >", "< /question>", "&lt;/questio
 {
   assert.equal(cleanMarkup("a<!-->c<!--->d"), "acd", "empty comments");
   assert.equal(cleanMarkup("a<!---->b<!-- x -->c"), "abc", "text after a closed comment kept");
+}
+
+// ---- Round 6, 1: whitespace before ">" in a closing tag is well-formed ----
+{
+  for (const [inp, want] of [
+    ["<p>a</p><p>b</p >", "<p>a</p>\n<p>b</p>"], ["<p>a</p\n>z", "<p>a</p>\nz"], ["<div>a</div >", "a"], ["<math><mi>x</mi></math >", "<math><mi>x</mi></math>"],
+    ["<p>a</p><rubricBlock>{A,C,D}=1</rubricBlock >z", "<p>a</p>\nz"], ["a<script>x</script >b", "ab"], ["<math><mi>a</mi><annotation>q</annotation ></math>", "<math><mi>a</mi></math>"],
+  ] as const) {
+    assert.deepEqual(markupProblems(inp), [], `no problem: ${JSON.stringify(inp)}`);
+    assert.equal(cleanMarkup(inp), want, `output: ${JSON.stringify(inp)}`);
+  }
+}
+
+// ---- Round 6, 2: text the parser swallows after a stray "<" is reported, never lost silently ----
+{
+  for (const bad of ["5<x<10 is the range", "0<x and x>5", "x <y and z>w", "if a<b then c", "<p>see <?x and more text</p>", "<p>see <!x and more</p>", "<p>1 < 2 and x <y</p><p>next para</p>"]) {
+    assert.ok(markupProblems(bad).length > 0, `reported: ${JSON.stringify(bad)} -> ${JSON.stringify(cleanMarkup(bad))}`);
+    const r = intakeCode(item({ questionHtml: `<p>Q</p>${bad}`, options: [opt("A", "1"), opt("B", "2")], key: "A" }), all);
+    assert.ok(r.findings.some((f) => f.code === "malformed_markup"), `malformed_markup: ${JSON.stringify(bad)}`);
+  }
+  assert.deepEqual(markupProblems("if a<b then c"), ["unterminated tag"], "if a<b then c: the open tag never ends, so it is reported as unterminated");
+  assert.deepEqual(markupProblems("if a<b then c>d</b>"), ["stray < in text"], "if a<b then c>…: 'then' is a valueless attribute of a real b");
+  for (const ok of ["x<5", "3<4", "a < b", "a &lt; b", "<table><tr><td nowrap>x</td></tr></table>", "<ol reversed><li>a</li></ol>", "<input disabled>", '<?xml version="1.0"?><p>a</p>', "<!DOCTYPE html><p>a</p>", '<p class="">a</p>'])
+    assert.deepEqual(markupProblems(ok), [], `nothing raised: ${JSON.stringify(ok)}`);
+}
+
+// ---- Round 6, 3: a parse budget per call bounds the cost of many hostile fragments ----
+{
+  const slow = Array.from({ length: 100 }, (_, i) => opt(`A${i}`, `<p>${i}</p>` + "<x1></x2>".repeat(22_000)));
+  const it = item({ questionHtml: "<p>Pick one.</p>", options: slow, key: "A0" });
+  let t0 = performance.now();
+  const codesSlow = intakeCode(it, all).findings.map((f) => f.code);
+  let took = performance.now() - t0;
+  assert.ok(took < 5000, `intakeCode with 100 x 22 000 <x1></x2>: ${took.toFixed(0)} ms`);
+  assert.ok(codesSlow.includes("too_long") && codesSlow.filter((c) => c === "too_long").length === 1, `too_long once: ${codesSlow}`);
+  t0 = performance.now();
+  const q = questionAsText(it);
+  took = performance.now() - t0;
+  assert.ok(took < 5000, `questionAsText with 100 x 22 000 <x1></x2>: ${took.toFixed(0)} ms`);
+  assert.ok(q.endsWith("\n[question text truncated]") && q.split("[question text truncated]").length === 2, `truncated once: ${q.slice(-60)}`);
+}
+
+// ---- Round 6, 4: raw-text and embedding elements are dropped (they can carry a rubricBlock as text) ----
+{
+  for (const el of ["textarea", "title", "xmp", "noembed", "noframes", "iframe", "noscript", "template", "object"]) {
+    const out = cleanMarkup(`<p>Pick.</p><${el}><rubricBlock>{A,C,D}=1</rubricBlock></${el}><p>end</p>`);
+    assert.ok(!out.includes("A,C,D") && !out.includes("rubricBlock") && out.includes("Pick.") && out.includes("end"), `${el}: ${out}`);
+  }
+  assert.equal(cleanMarkup('<p>See <svg width="10"><text>{A,C,D}=1</text></svg> here</p>'), "<p>See [figure] here</p>", "svg marked in place");
+  assert.equal(cleanMarkup('<p>a<embed src="x.swf">b</p>'), "<p>ab</p>", "embed dropped");
+  assert.deepEqual(markupProblems('<p>a<embed src="x.swf">b</p>'), [], "embed is void: not unterminated");
+  assert.ok(!cleanMarkup("<plaintext><rubricBlock>{A,C,D}=1</rubricBlock>").includes("A,C,D"), "plaintext dropped");
 }
 
 // ---- every MathML element kept with its nesting ----
@@ -345,6 +397,7 @@ for (const evil of ["</question>", "</QUESTION >", "< /question>", "&lt;/questio
   assert.equal(cleanMarkup("<dl><dt>Term</dt><dd>Def</dd></dl>"), "Term\nDef", "dl");
   assert.equal(cleanMarkup("<section>A</section><blockquote>B</blockquote><figure><figcaption>C</figcaption></figure><h2>D</h2>E"), "A\nB\nC\nD\nE", "sections");
   assert.equal(cleanMarkup("<foo>a</foo><foo>b</foo>"), "a\nb", "unknown names are blocks");
+  assert.deepEqual(markupProblems("<foo>a</foo><foo>b</foo>"), ["stray < in text"], "an unknown name outside math is reported");
   assert.equal(cleanMarkup("x<div>y</div>z"), "x\ny\nz", "text around a div");
   assert.equal(cleanMarkup("<p>Code:</p><pre>  line 1\n    indented\tx\n\n  end</pre><p>after   it</p>"), "<p>Code:</p>\n  line 1\n    indented\tx\n\n  end\n<p>after it</p>", "pre kept exactly");
   assert.equal(cleanMarkup("<pre>a</pre><pre>b</pre>"), "a\nb", "two pre blocks");
@@ -560,7 +613,7 @@ for (const evil of ["</question>", "</QUESTION >", "< /question>", "&lt;/questio
     sections: '<section><h2>Heading</h2><blockquote>Quote</blockquote><figure><img src="r/f.png"><figcaption>Caption</figcaption></figure></section><article>Art</article>after',
     pre: "<p>Code</p><pre>  line 1\n    indented\tx\n\n  blank above</pre>tail",
     h2: "<h2>Title</h2>Body<h3>Sub</h3>More",
-    unknown: "<foo>a</foo><foo>b</foo><bar-baz>c</bar-baz>d",
+    unknown: "<bar-baz>a</bar-baz><bar-baz>b</bar-baz><my-el>c</my-el>d",
     textBeforeBlock: "x<div>y</div>z<blockquote>w</blockquote>v",
   };
   for (const [k, v] of Object.entries(frags)) check(k, v);

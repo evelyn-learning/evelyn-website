@@ -109,7 +109,37 @@ const MATH_ATTRS = new Set([
   "subscriptshift", "superscriptshift",
 ]);
 // Dropped with everything inside. rubricBlock can carry scoring data (the key). Value: the name used in problem reports.
-const DROPPED: Record<string, string> = { script: "script", style: "style", annotation: "annotation", "annotation-xml": "annotation-xml", rubricblock: "rubricBlock" };
+// Raw-text and embedding elements are dropped too: their content is not question text and can carry a rubricBlock as text.
+const DROPPED: Record<string, string> = {
+  script: "script", style: "style", annotation: "annotation", "annotation-xml": "annotation-xml", rubricblock: "rubricBlock",
+  textarea: "textarea", title: "title", xmp: "xmp", noembed: "noembed", noframes: "noframes", iframe: "iframe", noscript: "noscript",
+  template: "template", plaintext: "plaintext", svg: "svg", object: "object", embed: "embed",
+};
+// Shown in place of a dropped element so that its presence is not lost.
+const DROPPED_MARK: Record<string, string> = { svg: "[figure]" };
+const DROPPED_VOID = new Set(["embed"]); // never has a closing tag
+// Element names that are not reported as stray "<" text outside math (with the keep/inline lists, MathML names and DROPPED).
+const KNOWN_HTML = new Set([
+  "html", "head", "body", "meta", "link", "base", "div", "dl", "dt", "dd", "section", "article", "aside", "blockquote", "figure", "figcaption", "pre",
+  "header", "footer", "address", "fieldset", "legend", "details", "summary", "center", "main", "nav", "h1", "h2", "h3", "h4", "h5", "h6", "form", "hr",
+  "img", "colgroup", "col", "dfn", "nobr", "picture", "source", "track", "audio", "video", "canvas", "map", "area", "input", "button", "select",
+  "option", "optgroup", "output", "progress", "meter", "datalist", "menu", "dialog", "ruby", "rt", "rp", "data", "hgroup", "search", "param", "slot",
+  "frameset", "frame",
+]);
+// QTI elements that appear in item bodies and choices.
+const KNOWN_QTI = new Set([
+  "assessmentitem", "itembody", "responsedeclaration", "outcomedeclaration", "correctresponse", "value", "defaultvalue", "modalfeedback", "stylesheet",
+  "responseprocessing", "prompt", "choiceinteraction", "simplechoice", "inlinechoiceinteraction", "inlinechoice", "textentryinteraction",
+  "extendedtextinteraction", "matchinteraction", "simplematchset", "simpleassociablechoice", "associateinteraction", "gapmatchinteraction", "gaptext",
+  "gapimg", "gap", "orderinteraction", "hottextinteraction", "hottext", "hotspotinteraction", "hotspotchoice", "sliderinteraction", "feedbackinline",
+  "feedbackblock", "printedvariable", "templateblock", "templateinline", "include", "apipaccessibility", "companionmaterialsinfo", "data",
+]);
+// HTML boolean attributes: written without a value on purpose. Any other valueless attribute is how text like "0<x and x>5" parses.
+const BOOLEAN_ATTRS = new Set([
+  "allowfullscreen", "async", "autofocus", "autoplay", "checked", "controls", "default", "defer", "disabled", "formnovalidate", "hidden", "inert",
+  "ismap", "itemscope", "loop", "multiple", "muted", "nomodule", "novalidate", "open", "playsinline", "readonly", "required", "reversed", "selected",
+  "nowrap", "noshade", "compact", "noresize", "declare", "nohref",
+]);
 const VALID_NAME = /^(?:[a-z][a-z0-9._-]*:)?[a-z][a-z0-9._-]*$/;
 
 /** C0/C1 controls (except tab and newline) and the private-use area are removed; CR and form feed become a newline / a space. */
@@ -172,11 +202,31 @@ function cutSafe(s: string, max: number): string {
   return c;
 }
 
-type Cleaned = { text: string; problems: string[]; images: string[] };
+type Cleaned = { text: string; problems: string[]; images: string[]; skipped?: boolean };
+/** Source characters handed to the parser in one intakeCode / questionAsText call; past it, fragments are not parsed. */
+const PARSE_BUDGET = 1_000_000;
 type Ctx = { math: boolean; pre: boolean; layout: boolean };
 type Frame = { kids: PNode[]; i: number; ctx: Ctx; close: string };
 
 /** Walks the parsed tree iteratively (no recursion, so any depth is safe) and serialises it with the output rules. */
+/** Index just past a node, including the whitespace and ">" the parser leaves after a closing tag's name (`</p >`). */
+function endAfter(src: string, endIndex: number): number {
+  const e = endIndex + 1;
+  const m = /^\s*>/.exec(src.slice(e, e + 200));
+  return m ? e + m[0].length : e;
+}
+
+const escRe = (s: string) => s.replace(/[.*+?^$()|[\]{}\\]/g, "\\$&");
+
+/** A valueless attribute that is not an HTML boolean one (`<x and x>`): read from the open tag's source. */
+function hasStrayAttr(src: string, n: PNode): boolean {
+  const names = Object.keys(n.attribs ?? {}).filter((k) => n.attribs![k] === "" && !BOOLEAN_ATTRS.has(k));
+  if (!names.length || n.startIndex == null) return false;
+  const first = n.children?.find((c) => c.startIndex != null)?.startIndex ?? (n.endIndex ?? src.length) + 1;
+  const open = src.slice(n.startIndex, Math.min(first, n.startIndex + 20_000)).toLowerCase();
+  return names.some((k) => !new RegExp(`(?:^|[\\s"'/])${escRe(k)}\\s*=`).test(open));
+}
+
 function walk(src: string, root: PNode): Cleaned {
   const problems: string[] = [];
   const images: string[] = [];
@@ -184,7 +234,11 @@ function walk(src: string, root: PNode): Cleaned {
   // Output pieces: pre text is kept exactly, everything else has its whitespace collapsed at the end.
   const segs: { s: string; pre: boolean }[] = [];
   const out = (s: string, pre = false) => { if (s) segs.push({ s, pre }); };
-  const raw = (n: PNode) => (n.startIndex == null || n.endIndex == null ? "" : src.slice(Math.max(n.startIndex, n.endIndex + 1 - 300), n.endIndex + 1));
+  const raw = (n: PNode, element = false) => {
+    if (n.startIndex == null || n.endIndex == null) return "";
+    const end = element ? endAfter(src, n.endIndex) : n.endIndex + 1;
+    return src.slice(Math.max(n.startIndex, end - 300), end);
+  };
 
   const top: Ctx = { math: false, pre: false, layout: false };
   const stack: Frame[] = [{ kids: root.children ?? [], i: 0, ctx: top, close: "" }];
@@ -214,7 +268,8 @@ function walk(src: string, root: PNode): Cleaned {
       case "comment":
         if (!raw(n).endsWith("-->")) problem("unterminated comment");
         break;
-      case "directive": // doctype, processing instruction: dropped
+      case "directive": // doctype, xml declaration: dropped; any other `<!…` / `<?…` is stray "<" text the parser swallowed
+        if (n.name !== "!doctype" && n.name !== "?xml") problem("stray < in text");
         break;
       default: {
         if (!n.name) break;
@@ -223,17 +278,23 @@ function walk(src: string, root: PNode): Cleaned {
         // A stray `</p>` that the parser turned into an empty paragraph: a line break, as a browser shows it (`</br>` is a br).
         if (n.startIndex != null && src.startsWith("</", n.startIndex) && name !== "br") { enter(kids, ctx, "\n", ""); break; }
         if (!VALID_NAME.test(name)) {
-          // `<y</p>`: the parser reads "y<" as a tag name; its text is shown, its attributes never are.
+          // `<y</p>`: the parser reads "y<" as a tag name; its text is shown, its attributes never are (and that loss is reported).
+          problem("stray < in text");
           enter(kids, ctx, `&lt;${escAll(cleanChars(name))}`, "");
           break;
         }
         const bare = name.replace(/^.*:/, "");
         if (bare in DROPPED) {
-          const r = raw(n);
-          const closed = new RegExp(`</\\s*(?:[^\\s<>/]*:)?${bare.replace(/-/g, "\\-")}\\s*>$`, "i").test(r) || (!kids.length && /\/\s*>$/.test(r));
+          const r = raw(n, true);
+          const closed = DROPPED_VOID.has(bare) || new RegExp(`</\\s*(?:[^\\s<>/]*:)?${bare.replace(/-/g, "\\-")}\\s*>$`, "i").test(r) || (!kids.length && /\/\s*>$/.test(r));
           if (!closed) problem(`unterminated ${DROPPED[bare]} element`);
+          out(DROPPED_MARK[bare] ?? "");
           break;
         }
+        // Text such as "0<x and x>5" or "x <y and z>w" parses as an element: an unknown name outside math or a valueless attribute
+        // that is not a boolean attribute. Its words are lost to the parser, so it is reported (never silently).
+        if (!ctx.math && !MATH_NAMES.has(bare) && !bare.includes("-") && !HTML_KEEP.has(bare) && !INLINE.has(bare) && !KNOWN_HTML.has(bare) && !KNOWN_QTI.has(bare)) problem("stray < in text");
+        else if (hasStrayAttr(src, n)) problem("stray < in text");
         if (bare === "img") {
           const file = lastSegment(n.attribs?.src ?? "");
           if (file) images.push(file);
@@ -291,7 +352,8 @@ function clean(html: string): Cleaned {
     // A tag still open at the end of the input (an unbalanced quote, `<p title="…`) is discarded by the parser: say so.
     const last = root.children?.[root.children.length - 1];
     const parsedTo = last?.endIndex ?? -1;
-    if (parsedTo < src.length - 1 && src.slice(parsedTo + 1).trim()) r.problems.push("unterminated tag");
+    const rest = parsedTo < src.length - 1 ? src.slice(parsedTo + 1).replace(/^\s*>/, "").trim() : "";
+    if (rest) r.problems.push("unterminated tag");
     // A truncated fragment still reports what is broken in the part we kept (too_long is raised separately).
     return { ...r, text: neutralise(long ? `${r.text}\n${TRUNCATED}` : r.text) };
   } catch {
@@ -300,14 +362,23 @@ function clean(html: string): Cleaned {
   }
 }
 
-/** One cleaner per call: each distinct fragment is parsed once. */
-function cleaner(): (html: string) => Cleaned {
+type Cleaner = ((html: string) => Cleaned) & { spent: () => boolean };
+const SKIPPED: Cleaned = { text: "", problems: [], images: [], skipped: true };
+/** One cleaner per call: each distinct fragment is parsed once, and parsing stops once PARSE_BUDGET source characters are spent. */
+function cleaner(): Cleaner {
   const memo = new Map<string, Cleaned>();
-  return (html) => {
+  let used = 0;
+  const cl = (html: string) => {
     let r = memo.get(html);
-    if (!r) { r = clean(html); memo.set(html, r); }
+    if (!r) {
+      if (used >= PARSE_BUDGET) return SKIPPED;
+      used += Math.min(html.length, MAX_MARKUP);
+      r = clean(html);
+      memo.set(html, r);
+    }
     return r;
   };
+  return Object.assign(cl, { spent: () => used >= PARSE_BUDGET });
 }
 
 /**
@@ -337,15 +408,18 @@ const id = (v: unknown) => flat(String(v ?? ""), 200);
 /** Assembles the question; stops adding once past MAX_QUESTION (so huge option sets are not all cleaned). */
 class Builder {
   len = 0;
+  cut = false; // a fragment was not parsed (parse budget spent)
   constructor(readonly cl: (html: string) => Cleaned) {}
-  get full() { return this.len > MAX_QUESTION; }
+  get full() { return this.cut || this.len > MAX_QUESTION; }
   /** Lines for the options, stopping once the question so far plus these lines is past the cap (add() then counts the part). */
   lines(xs: Opt[]): string {
     const out: string[] = [];
     let more = 0;
     for (const o of xs) {
-      if (this.len + more > MAX_QUESTION) break;
-      const l = `${id(o.label)}. ${this.cl(o.html).text}`;
+      if (this.cut || this.len + more > MAX_QUESTION) break;
+      const c = this.cl(o.html);
+      if (c.skipped) { this.cut = true; break; }
+      const l = `${id(o.label)}. ${c.text}`;
       more += l.length + 1;
       out.push(l);
     }
@@ -367,7 +441,7 @@ function interactionText(it: Interaction, b: Builder): string {
 }
 
 /** questionAsText before the overall cap; `full` says it went past MAX_QUESTION (assembly stopped there). */
-function fullQuestion(item: ItemDoc, cl: (html: string) => Cleaned): { text: string; full: boolean } {
+function fullQuestion(item: ItemDoc, cl: (html: string) => Cleaned): { text: string; full: boolean; cut: boolean } {
   const { passages, stem } = splitPassage(item.questionHtml ?? "");
   const b = new Builder(cl);
   const parts: string[] = [];
@@ -376,20 +450,22 @@ function fullQuestion(item: ItemDoc, cl: (html: string) => Cleaned): { text: str
   let more = 0;
   for (const p of passages) {
     if (more > MAX_QUESTION) break;
-    const t = cl(p).text;
-    if (t) { passage.push(t); more += t.length + 1; }
+    const c = cl(p);
+    if (c.skipped) { b.cut = true; break; }
+    if (c.text) { passage.push(c.text); more += c.text.length + 1; }
   }
   if (passage.length) add(`Passage:\n${passage.join("\n")}`);
-  if (!b.full) add(cl(stem).text);
+  if (!b.full) { const c = cl(stem); if (c.skipped) b.cut = true; else add(c.text); }
   if (item.interactions?.length) { for (const it of item.interactions) if (!b.full) add(interactionText(it, b)); }
   else if (item.options?.length && !b.full) add(`Choices:\n${b.lines(item.options)}`);
-  return { text: neutralise(parts.join("\n\n")), full: b.full };
+  return { text: neutralise(parts.join("\n\n")), full: b.full, cut: b.cut };
 }
 
 /** The question as a student sees it, as clean HTML + MathML: the passage (if any), the stem, then the options or interaction choices. Capped at MAX_QUESTION characters. */
 export function questionAsText(item: ItemDoc): string {
-  const { text: t } = fullQuestion(item, cleaner());
-  return t.length > MAX_QUESTION ? `${cutSafe(t, MAX_QUESTION)}\n${TRUNCATED}` : t;
+  const { text: t, cut } = fullQuestion(item, cleaner());
+  if (t.length > MAX_QUESTION) return `${cutSafe(t, MAX_QUESTION)}\n${TRUNCATED}`;
+  return cut ? `${t}\n${TRUNCATED}` : t;
 }
 
 const hasInteractions = (item: ItemDoc) => !!item.interactions && item.interactions.length > 0;
@@ -430,7 +506,12 @@ export function intakeCode(item: ItemDoc, assetExists: (file: string) => boolean
 
   // Markup that is genuinely broken (an unterminated comment, script, …): part of the question may not have come through.
   const places = [{ where: "the stem", html: stem }, ...passages.map((html) => ({ where: "the passage", html })), ...allOptions(item)];
-  for (const { where, html } of places) for (const p of cl(html).problems) add("malformed_markup", `${p} in ${where}`);
+  for (const { where, html } of places) {
+    const c = cl(html);
+    if (c.skipped) break; // parse budget spent: too_long below
+    for (const p of c.problems) add("malformed_markup", `${p} in ${where}`);
+  }
+  if (cl.spent() && !findings.some((f) => f.code === "too_long")) add("too_long", `The question's markup is longer than ${PARSE_BUDGET} characters in all.`);
 
   // Images: stem, passages, every option, and every resource the package lists
   const files = new Set<string>(places.flatMap(({ html }) => cl(html).images));
