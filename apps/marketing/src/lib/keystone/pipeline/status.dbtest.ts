@@ -34,7 +34,7 @@ const OLD = new Date("2026-11-10T17:00:00Z");
   const { addLocalDays } = await import("./release");
   const { buildStatus, renderStatusEmail } = await import("./status");
   const { beat, lastBeat } = await import("./heartbeat");
-  const { Item, Solution, Activity, Outbox, Batch, Run, User } = await ks();
+  const { Item, Solution, Activity, Outbox, Batch, Run, User, Lesson } = await ks();
   equal(Item.db.name, DB, "must run against the status test database");
   const db = Item.db.db!;
   await db.dropDatabase();
@@ -57,22 +57,24 @@ const OLD = new Date("2026-11-10T17:00:00Z");
         createdAt: T0, updatedAt: T0, lastActivityAt: T0, ...extra,
       });
     };
-    await mk("st-rec1", "received");
-    await mk("st-rec2", "received");
-    await mk("st-draft-empty", "drafting", { receivedAt: T1 });
-    await mk("st-draft-sol", "drafting", { version: 1 });
+    // Unfinished items sit in the old batch, so the new batch (with the clean ready items) is not blocked.
+    await mk("st-rec1", "received", { batchId: "dbtest-st-old" });
+    await mk("st-rec2", "received", { batchId: "dbtest-st-old" });
+    await mk("st-draft-empty", "drafting", { receivedAt: T1, batchId: "dbtest-st-old" });
+    await mk("st-draft-sol", "drafting", { version: 1, batchId: "dbtest-st-old" });
     await Solution.create({ itemId: "st-draft-sol", version: 1, sections: [], author: "pipeline" });
     await mk("st-ready-sample", "ready", { version: 1, pipeline: { flags: ["sample"], heldFor: "praveen", runId: "r" } });
-    await mk("st-ready-clean-today", "ready", { version: 1, pipeline: { flags: [], runId: "r", passedAt: T0, releaseAt: new Date("2026-11-17T18:00:00Z") } });
-    await mk("st-ready-clean-later", "ready", { version: 1, pipeline: { flags: [], runId: "r", passedAt: T0, releaseAt: new Date("2026-11-18T18:00:00Z") } });
+    await mk("st-ready-clean-today", "ready", { version: 1, releasedVersion: 0, pipeline: { flags: [], runId: "r", passedAt: T0, releaseAt: new Date("2026-11-17T18:00:00Z") } });
+    await mk("st-ready-clean-later", "ready", { version: 1, releasedVersion: 0, pipeline: { flags: [], runId: "r", passedAt: T0, releaseAt: new Date("2026-11-18T18:00:00Z") } });
     // flags missing on pipeline (raw insert: mongoose would default it to [])
     await Item.collection.insertOne({
       itemId: "st-ready-noflags", subject: "Mathematics", stage: "ready", version: 1, batchId: "dbtest-st-new", receivedAt: T0, order: order++,
       pipeline: { heldFor: "praveen", runId: "r" }, createdAt: T0, updatedAt: T0, lastActivityAt: T0,
     });
     await mk("st-ready-two", "ready", { version: 1, pipeline: { flags: ["solvers_split", "unverified_type"], heldFor: "praveen", runId: "r" } });
-    await mk("st-rev1", "in_review", { version: 1 });
-    await mk("st-rev2", "in_review", { version: 1 });
+    // Sent to review by Praveen after being held as sample: they count toward the new batch's sample (3 of 5).
+    await mk("st-rev1", "in_review", { version: 1, pipeline: { flags: ["sample"], runId: "r" } });
+    await mk("st-rev2", "in_review", { version: 1, pipeline: { flags: ["sample"], runId: "r" } });
     await mk("st-kq", "key_query");
     await mk("st-data", "item_data");
     await mk("st-changes", "changes_requested", { version: 1 });
@@ -81,6 +83,16 @@ const OLD = new Date("2026-11-10T17:00:00Z");
     await mk("st-appr2", "approved", { version: 1 });
     await mk("st-appr3", "approved", { version: 1 });
     await mk("st-rej", "rejected");
+
+    await Solution.insertMany([
+      { itemId: "st-ready-clean-today", version: 1, sections: [], author: "pipeline" },
+      { itemId: "st-ready-clean-later", version: 1, sections: [], author: "pipeline" },
+    ]);
+    await Lesson.insertMany([
+      { itemId: "st-changes", version: 1, note: "n", cause: "format", proposedBy: "model", confirmed: false },
+      { itemId: "st-old-changes", version: 1, note: "n", cause: "style", proposedBy: "session", confirmed: true },
+      { itemId: "st-data", version: 1, note: "n", cause: "item", proposedBy: "session", confirmed: true },
+    ]);
 
     const pasted = `The postamble is missing ${"<table><tr><td>x &amp; y</td><td>long cell value here</td></tr></table>".repeat(13)}`;
     ok(pasted.length >= 900, `fixture: 900-character pasted note (${pasted.length})`);
@@ -165,7 +177,8 @@ const OLD = new Date("2026-11-10T17:00:00Z");
     ok(!/[<>]/.test(sendBack.note!), "pasted note is plain text");
     ok(sendBack.note!.startsWith("The postamble is missing x & y long cell value here"), `note words kept (${sendBack.note!.slice(0, 60)})`);
     equal(s.castleRockLastDay.find((r) => r.itemId === "st-appr1")!.note, undefined, "a verdict without a note has no note");
-    deepEqual(s.sendBacksOurs, { batch: 1, total: 2, causes: {} }, "send-backs: this (latest) batch 1, total 2");
+    deepEqual(s.sendBacksOurs, { batch: 1, total: 2, causes: { format: 1, style: 1 } }, "send-backs from lessons: this (latest) batch 1, total 2, cause item left out");
+    deepEqual(s.blocked, [], "no blocked batch");
     equal(Math.round(s.cost.yesterday * 1000) / 1000, 1, `yesterday's cost by step time, dry runs ignored (${s.cost.yesterday})`);
     equal(Math.round(s.cost.perItem * 1000) / 1000, 0.5, `cost per item so far: $2 over 4 items with real runs, dry runs ignored (${s.cost.perItem})`);
     deepEqual(s.suggestions, [{ subject: "1 answer key to check", to: ["julie"] }], "only open suggestions");
@@ -178,6 +191,25 @@ const OLD = new Date("2026-11-10T17:00:00Z");
     equal(email.subject, "Keystone: 3 waiting on you, 2 in review, 3 approved", "subject from the seed");
     ok(/^Keystone: \d+ waiting on you, \d+ in review, \d+ approved$/.test(email.subject), "subject matches the pattern");
     ok(!email.html.includes("<table><tr><td>x &amp; y"), "the pasted markup is not in the HTML as markup");
+
+    // --- blocked batches, heldWhy, and the sample left out of "going out today" ---
+    await Batch.updateOne({ batchId: "dbtest-st-old" }, { $set: { blockedWhy: "2 item(s) not yet through the pipeline", blockedAt: ago(5) } });
+    await Item.collection.updateOne({ itemId: "st-ready-noflags" }, { $set: { "pipeline.heldWhy": "no release time" } });
+    await Item.updateOne({ itemId: "st-rev2" }, { $set: { "pipeline.flags": [] } }); // the new batch now needs one more sample
+    const sb = await buildStatus(NOW);
+    deepEqual(sb.blocked, [{ batch: "old.xlsx", why: "2 item(s) not yet through the pipeline", since: ago(5) }], "blocked batch by file name, why and since");
+    equal(sb.waitingOnPraveen.find((w) => w.itemId === "st-ready-noflags")?.why, "no release time", "held with heldWhy: its text");
+    const { planRelease } = await import("./release");
+    const plan = await planRelease(NOW);
+    const sampled = plan.samples.flatMap((x) => x.ids);
+    equal(sampled.length, 1, `the release would hold one more as sample (${sampled})`);
+    equal(sb.releasingToday, sampled.includes("st-ready-clean-today") ? 0 : 1, "an item the release will hold as sample does not go out today");
+    const eb = renderStatusEmail(sb, NOW);
+    ok(eb.text.indexOf("BLOCKED BATCHES") >= 0 && eb.text.indexOf("BLOCKED BATCHES") < eb.text.indexOf("WAITING ON YOU"), "blocked batches near the top");
+    ok(eb.text.includes("- old.xlsx: 2 item(s) not yet through the pipeline (since Tue Nov 17, 2:00 am PT)"), "with since in Pacific");
+    await Batch.updateOne({ batchId: "dbtest-st-old" }, { $unset: { blockedWhy: "", blockedAt: "" } });
+    await Item.collection.updateOne({ itemId: "st-ready-noflags" }, { $unset: { "pipeline.heldWhy": "" } });
+    await Item.updateOne({ itemId: "st-rev2" }, { $set: { "pipeline.flags": ["sample"] } });
 
     // --- heartbeat ---
     equal(await lastBeat("keystone-release"), null, "no beat yet");

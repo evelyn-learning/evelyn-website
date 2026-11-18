@@ -1,7 +1,7 @@
 // Pure tests for the run: every model call and the database are faked (an in-memory store
 // implementing Reader and Writer). No network, no mongod. Run: npx tsx src/lib/keystone/pipeline/run.test.ts
 import assert from "node:assert/strict";
-import type { ItemDoc, PipelineDoc, RunDoc } from "../db";
+import type { ItemDoc, LessonDoc, PipelineDoc, RunDoc } from "../db";
 import type { SectionKind } from "../config";
 import { SupersededError, type Expect } from "../store";
 import type { Answer, Decision } from "./answers";
@@ -93,6 +93,13 @@ class FakeStore implements Reader, Writer {
     i.pipeline = pipeline;
   }
   async suggest(kind: "items_need_data" | "keys_queried" | "course_missing", itemIds: string[], batchId?: string) { this.suggestions.push({ kind, itemIds, batchId }); }
+  lessons: LessonDoc[] = [];
+  lessonCalls = 0;
+  /** Upsert-if-absent on itemId + version, like the unique index. */
+  async saveLesson(l: LessonDoc) {
+    this.lessonCalls++;
+    if (!this.lessons.some((x) => x.itemId === l.itemId && x.version === l.version)) this.lessons.push(structuredClone(l));
+  }
   sampled: { batchIds: string[]; unbatched: string[] }[] = [];
   async sample(batchIds: string[], unbatched: string[]) { this.sampled.push({ batchIds, unbatched }); }
 }
@@ -598,6 +605,81 @@ const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", co
     const { steps: s } = steps({ classifyCause: async () => ({ ok: false, reason: "shape", detail: "bad", cost: 0.02, model: "m-audit" }) });
     const run = await processItem("100", "r1", deps(store, s));
     deepEqual(run.flags, ["step_failed"], "cause model failure → step_failed");
+  }
+
+  // --- lessons: one per send-back the run picks up ---
+  {
+    // Task 17 step 1: a changes_requested item with a faked cause "format" leaves one lesson.
+    const long = `Put the table in the Diploma section. ${"Keep the units in every row. ".repeat(12)}`;
+    const store = new FakeStore([changes()]);
+    store.verdicts.set("100", { verdict: "changes", body: `${long}<table><tr><td>row</td></tr></table>`, createdAt: T0 });
+    store.sections.set("100", draft("old").sections);
+    const { steps: s } = steps({ classifyCause: async () => okReply({ cause: "format" as const, why: "layout" }, 0.01, "m-audit") });
+    const run = await processItem("100", "r1", deps(store, s));
+    equal(run.result, "ready", `the correction still goes through (${run.error ?? ""})`);
+    equal(store.lessons.length, 1, "one lesson");
+    const l = store.lessons[0];
+    deepEqual(
+      { itemId: l.itemId, version: l.version, cause: l.cause, proposedBy: l.proposedBy, confirmed: l.confirmed },
+      { itemId: "100", version: 1, cause: "format", proposedBy: "model", confirmed: false },
+      "lesson: the version sent back, the proposed cause, unconfirmed, by the model",
+    );
+    ok(l.note.startsWith("Put the table in the Diploma section.") && l.note.endsWith("row"), `note is the plain text of the note (${l.note.slice(-30)})`);
+    ok(l.note.length > 300 && !/[<>]/.test(l.note), `note kept full length, no markup (${l.note.length})`);
+    ok(l.createdAt instanceof Date, "createdAt set");
+    equal(l.ruleId, undefined, "no rule yet");
+    // repeated with the same run id: the finished run is returned, no second lesson
+    await processItem("100", "r1", deps(store, s));
+    equal(store.lessons.length, 1, "a repeated run writes no second lesson");
+  }
+  {
+    // resumed: the run fails after the cause step, then continues (same run id) and a new run starts (new id)
+    const store = new FakeStore([changes()]);
+    store.verdicts.set("100", { verdict: "changes", body: "Fix the spelling.", createdAt: T0 });
+    store.sections.set("100", draft("old").sections);
+    let boom = true;
+    const { steps: s, calls } = steps({ writeSolution: async () => { if (boom) throw new Error("killed"); return okReply(draft(), 0.1, "m-author"); } });
+    const r1 = await processItem("100", "r1", deps(store, s));
+    equal(r1.result, "failed", "first attempt fails in write");
+    equal(store.lessons.length, 1, "the lesson was written before the failure");
+    boom = false;
+    const r2 = await processItem("100", "r2", deps(store, s));
+    equal(r2.result, "ready", `a second run on the same send-back goes through (${r2.error ?? ""})`);
+    equal(store.lessons.length, 1, "still one lesson for the item and version");
+    ok(store.lessonCalls >= 2, "the second run asked again; the writer kept one (upsert-if-absent)");
+    equal(calls.classifyCause, 2, "each run classified once");
+  }
+  {
+    // the cause step failed: the send-back still happened → lesson "other" by the model, run held step_failed
+    const store = new FakeStore([changes()]);
+    store.verdicts.set("100", { verdict: "changes", body: "Something about the graph.", createdAt: T0 });
+    const { steps: s } = steps({ classifyCause: async () => ({ ok: false, reason: "shape", detail: "bad", cost: 0.02, model: "m-audit" }) });
+    const run = await processItem("100", "r1", deps(store, s));
+    deepEqual(run.flags, ["step_failed"], "cause failure still holds step_failed");
+    equal(run.result, "held", "held as before");
+    equal(store.lessons.length, 1, "a lesson is written anyway");
+    deepEqual([store.lessons[0].cause, store.lessons[0].proposedBy, store.lessons[0].confirmed], ["other", "model", false], "cause other, by the model, unconfirmed");
+    equal(store.lessons[0].note, "Something about the graph.", "the note");
+  }
+  {
+    // fresh and key-right runs write no lesson
+    const store = new FakeStore([item()]);
+    const { steps: s } = steps();
+    await processItem("100", "r1", deps(store, s));
+    equal(store.lessons.length, 0, "a fresh run writes no lesson");
+  }
+  {
+    // dry run: the lesson is recorded as an action on the dry writer, never written
+    const store = new FakeStore([changes()]);
+    store.verdicts.set("100", { verdict: "changes", body: "Use Canadian spelling.", createdAt: T0 });
+    store.sections.set("100", draft("old").sections);
+    const { steps: s } = steps({ classifyCause: async () => okReply({ cause: "format" as const, why: "" }, 0.01, "m-audit") });
+    const out = await runPipeline({ dryRun: true }, { reader: store, makeRealWriter: () => { throw new Error("no real writer in a dry run"); }, deps: deps(store, s), log: () => {} });
+    equal(store.lessons.length, 0, "dry run: no lesson written");
+    equal(store.lessonCalls, 0, "dry run: the store was never asked");
+    const a = out.dry!.actions.filter((x) => x.action === "saveLesson");
+    equal(a.length, 1, "dry run: the lesson is recorded as what would be written");
+    equal((a[0].detail as { cause: string }).cause, "format", "with its cause");
   }
 
   // --- release time: a clean pass gets releaseAt in the same write; a flagged one does not ---

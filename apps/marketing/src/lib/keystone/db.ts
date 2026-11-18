@@ -221,6 +221,29 @@ export type BatchDoc = {
   inReviewSuggestedAt?: Date;
 };
 
+/**
+ * One send-back ("Fix solution") from the client's reviewer, recorded by the run that picks it up (one per
+ * item and version: unique index). The run proposes the cause from the note (proposedBy "model", unconfirmed);
+ * a session confirms it (run.ts confirmLesson). Cause "item" is only ever set by a person: the fault was in the
+ * client's item, not ours, so it is not counted as a send-back caused by us. Internal: never shown to the client.
+ */
+export type LessonDoc = {
+  itemId: string;
+  /** The solution version the reviewer sent back. */
+  version: number;
+  /** The reviewer's note as plain text (splitNote(...).plain), full length. */
+  note: string;
+  cause: "answer" | "working" | "format" | "style" | "item" | "other";
+  proposedBy: "model" | "session";
+  confirmed: boolean;
+  /** The rule a session made from the lesson, when it made one. */
+  ruleId?: string;
+  createdAt: Date;
+};
+
+/** Heartbeats of the server jobs (pipeline/heartbeat.ts): one document per job, upserted. */
+export type HeartbeatDoc = { _id: string; at: Date };
+
 /** A named lock with an expiry (the hourly release job). */
 export type LockDoc = { _id: string; owner: string; expiresAt: Date };
 
@@ -236,6 +259,8 @@ export type OutboxDoc = {
 };
 
 type Models = {
+  Lesson: Model<LessonDoc>;
+  Heartbeat: Model<HeartbeatDoc>;
   Lock: Model<LockDoc>;
   Run: Model<RunDoc>;
   Outbox: Model<OutboxDoc & { openKey?: string }>;
@@ -458,8 +483,22 @@ function defineModels(conn: Connection): Models {
   });
   Run.index({ itemId: 1, runId: 1 }, { unique: true });
   Run.index({ itemId: 1, startedAt: -1 });
-  if (isReadOnly()) for (const schema of [Lock, Run, Outbox, Batch, User, Session, Item, Solution, Activity, Upload]) blockWrites(schema as Schema);
+  const Lesson = new Schema<LessonDoc>({
+    itemId: { type: String, required: true },
+    version: { type: Number, required: true },
+    note: String,
+    cause: { type: String, required: true },
+    proposedBy: { type: String, required: true },
+    confirmed: { type: Boolean, default: false },
+    ruleId: String,
+    createdAt: { type: Date, default: () => new Date() },
+  });
+  Lesson.index({ itemId: 1, version: 1 }, { unique: true });
+  const Heartbeat = new Schema<HeartbeatDoc>({ _id: { type: String, required: true }, at: { type: Date, required: true } }, { versionKey: false });
+  if (isReadOnly()) for (const schema of [Lesson, Heartbeat, Lock, Run, Outbox, Batch, User, Session, Item, Solution, Activity, Upload]) blockWrites(schema as Schema);
   return {
+    Lesson: conn.model<LessonDoc>("Lesson", Lesson, "lessons"),
+    Heartbeat: conn.model<HeartbeatDoc>("Heartbeat", Heartbeat, "heartbeats"),
     Lock: conn.model<LockDoc>("Lock", Lock, "locks"),
     Run: conn.model<RunDoc>("Run", Run, "runs"),
     Outbox: conn.model<OutboxDoc & { openKey?: string }>("Outbox", Outbox, "outbox"),

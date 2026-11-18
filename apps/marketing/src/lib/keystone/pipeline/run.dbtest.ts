@@ -17,15 +17,15 @@ delete process.env.KEYSTONE_PIPELINE_LIVE;
 
 const ok = (value: unknown, message: string) => assert.ok(value, message);
 const equal = (a: unknown, b: unknown, message: string) => assert.equal(a, b, message);
-const ids = ["991301", "991302", "991303", "991304", "991305", "991306", "991307", "991308", "991309", "991310"];
+const ids = ["991301", "991302", "991303", "991304", "991305", "991306", "991307", "991308", "991309", "991310", "991311", "991312"];
 const BATCH = "dbtest-run-1";
 
 (async () => {
   const { ks, closeKs } = await import("../db");
   const store = await import("../store");
   const { resetOutboxInit } = await import("./outbox");
-  const { processItem, mongoReader, mongoWriter } = await import("./run");
-  const { Item, Solution, Activity, Outbox, Run } = await ks();
+  const { processItem, mongoReader, mongoWriter, confirmLesson } = await import("./run");
+  const { Item, Solution, Activity, Outbox, Run, Lesson } = await ks();
   equal(Item.db.name, "castle_rock_review_test", "must run against the test database");
   const clean = async () => {
     await Item.deleteMany({ itemId: { $in: ids } });
@@ -33,6 +33,7 @@ const BATCH = "dbtest-run-1";
     await Activity.deleteMany({ itemId: { $in: ids } });
     await Run.deleteMany({ itemId: { $in: ids } });
     await Outbox.deleteMany({ batchId: BATCH });
+    await Lesson.deleteMany({ itemId: { $in: ids } });
   };
   const T0 = new Date("2026-11-17T10:00:00Z");
   const mk = (itemId: string, p: Record<string, unknown> = {}) =>
@@ -175,6 +176,40 @@ const BATCH = "dbtest-run-1";
     await assert.rejects(() => store.saveSolution("991310", sections, actor, { submit: false }), /E11000|duplicate/, "kept: the save collides instead of deleting it");
     await store.clearOrphans("991310", 0);
     equal(await Solution.countDocuments({ itemId: "991310" }), 1, "row without createdAt kept");
+    // lessons: one per item and version, on the real store (unique index), whatever the runs do
+    await Lesson.init(); // the unique index is in place before the test relies on it
+    await mk("991311", { stage: "changes_requested", version: 1, releasedVersion: 1, evelynAnswer: "B" });
+    await Solution.create({ itemId: "991311", version: 1, sections: [{ kind: "short", md: "Old. So the answer is B." }], author: "pipeline", releasedAt: T0 });
+    await Activity.create({ itemId: "991311", version: 1, type: "verdict", verdict: "changes", body: "Use <b>Canadian</b> spelling.<p>Also the units.</p>", username: "julie", name: "Julie May", role: "reviewer", createdAt: T0 });
+    throwInWrite = true;
+    const l1 = await processItem("991311", "run-l1", deps());
+    equal(l1.result, "failed", "send-back run crashed in write");
+    const l2 = await processItem("991311", "run-l2", deps());
+    equal(l2.result, "failed", "a second run crashed too");
+    throwInWrite = false;
+    const l3 = await processItem("991311", "run-l1", deps());
+    equal(l3.result, "ready", `resumed run finished (${l3.error ?? ""})`);
+    const lessons = await Lesson.find({ itemId: "991311" }).lean();
+    equal(lessons.length, 1, `one lesson for the item and version after three runs (${lessons.length})`);
+    equal(lessons[0].version, 1, "the version sent back");
+    equal(lessons[0].cause, "style", "the cause the run proposed");
+    equal(lessons[0].proposedBy, "model", "proposed by the model");
+    equal(lessons[0].confirmed, false, "unconfirmed");
+    const { splitNote } = await import("../note");
+    equal(lessons[0].note, splitNote("Use <b>Canadian</b> spelling.<p>Also the units.</p>").plain, `note through splitNote(...).plain (${lessons[0].note})`);
+    ok(/Also the units\.$/.test(lessons[0].note) && !lessons[0].note.includes("<p>"), "the pasted block markup is gone, its words kept");
+    // a direct second insert of the same item + version is absorbed, not a second row
+    await mongoWriter(actor).saveLesson({ itemId: "991311", version: 1, note: "again", cause: "answer", proposedBy: "model", confirmed: false, createdAt: new Date() });
+    equal(await Lesson.countDocuments({ itemId: "991311" }), 1, "upsert-if-absent: still one");
+    equal((await Lesson.findOne({ itemId: "991311" }).lean())!.cause, "style", "the first lesson is kept as it was");
+    await assert.rejects(() => Lesson.create({ itemId: "991311", version: 1, note: "x", cause: "other", proposedBy: "model", confirmed: false }), /E11000|duplicate/, "the unique index refuses a duplicate");
+    // confirmLesson updates and never creates
+    await confirmLesson("991311", 1, { cause: "item", ruleId: "R-units", confirmed: true, proposedBy: "session" });
+    const c = (await Lesson.findOne({ itemId: "991311" }).lean())!;
+    ok(c.cause === "item" && c.ruleId === "R-units" && c.confirmed === true && c.proposedBy === "session", "confirmed by a session, cause item, rule named");
+    await assert.rejects(() => confirmLesson("991312", 1, { confirmed: true, proposedBy: "session" }), /no lesson/, "no lesson: refused");
+    equal(await Lesson.countDocuments({ itemId: "991312" }), 0, "confirmLesson created nothing");
+
     console.log("run.dbtest ok");
   } finally {
     await clean();

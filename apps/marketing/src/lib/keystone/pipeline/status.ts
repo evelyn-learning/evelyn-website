@@ -5,11 +5,12 @@
 // The subject alone is the status: "Keystone: N waiting on you, M in review, K approved".
 
 import { OWNER_LABEL, STAGE_LABEL, STAGE_OWNER, STAGES, VERDICTS, type Role, type Stage } from "../config";
-import { ks, type Flag } from "../db";
+import { ks, type BatchDoc, type Flag, type LessonDoc } from "../db";
 import { splitNote } from "../note";
 import { lastBeat } from "./heartbeat";
+import { redact } from "./models";
 import { openSuggestions } from "./outbox";
-import { addLocalDays, inWindow } from "./release";
+import { addLocalDays, blockedBatches, inWindow, planRelease, type PlanRow } from "./release";
 
 export type Status = {
   byOwner: { owner: string; rows: { label: string; n: number }[] }[];
@@ -21,6 +22,8 @@ export type Status = {
   cost: { yesterday: number; perItem: number };
   failures: string[];
   suggestions: { subject: string; to: string[] }[];
+  /** Batches nothing of which can be released (release.ts blockedBatches): batch = its file name, else its id. */
+  blocked: { batch: string; why: string; since?: Date }[];
 };
 
 /** Why an item is held, in plain words (also used by the queue page). */
@@ -55,6 +58,14 @@ export function whyHeld(flags: readonly string[] | undefined | null): string {
   const list = Array.isArray(flags) ? flags : [];
   if (!list.length) return "Held, no reason recorded";
   return list.map((f) => FLAG_WORDS[f as Flag] ?? f).join(". ");
+}
+
+/** Why a held item is held: its flags in words, and pipeline.heldWhy (a hold no flag says, e.g. "no release time"). */
+export function heldReason(flags: readonly string[] | undefined | null, heldWhy: string | undefined | null): string {
+  const list = Array.isArray(flags) ? flags : [];
+  const why = (heldWhy ?? "").trim();
+  if (!list.length) return why || whyHeld(list);
+  return why ? `${whyHeld(list)}. ${why}` : whyHeld(list);
 }
 
 /** A note from Castle Rock as one line of plain text, at most 200 characters. */
@@ -137,27 +148,73 @@ type ItemRow = {
   batchId?: string;
   receivedAt?: Date;
   createdAt?: Date;
-  pipeline?: { flags?: string[]; heldFor?: string; releaseAt?: Date };
+  pipeline?: { flags?: string[]; heldFor?: string; heldWhy?: string; releaseAt?: Date };
 };
 
 /**
- * Send-backs caused by us: for now every "changes" verdict by Castle Rock (Task 17 replaces this with the
- * lessons' causes). `batch` = those on items of the latest batch (by receivedAt); `total` = all of them.
+ * Send-backs caused by us, from the lessons (one per send-back, pipeline/run.ts): every cause but "item"
+ * (the fault was in the client's item). `batch` = those on items of `latestBatchId`; `total` = all of them;
+ * `causes` = the count per cause over the total.
  */
-export async function sendBacksOurs(items: ItemRow[], castleRockUsers: string[]): Promise<Status["sendBacksOurs"]> {
-  const { Activity, Batch } = await ks();
-  const rows = await Activity.find(
-    { type: "verdict", verdict: "changes", $or: [{ role: { $in: CASTLE_ROCK_ROLES } }, { username: { $in: castleRockUsers } }] },
-    { itemId: 1 },
-  ).lean();
+export function countSendBacks(
+  lessons: Pick<LessonDoc, "itemId" | "cause">[],
+  batchOf: Map<string, string | undefined>,
+  latestBatchId: string | undefined,
+): Status["sendBacksOurs"] {
+  const ours = lessons.filter((l) => l.cause !== "item");
+  const causes: Record<string, number> = {};
+  for (const l of ours) causes[l.cause] = (causes[l.cause] ?? 0) + 1;
+  const batch = latestBatchId ? ours.filter((l) => batchOf.get(l.itemId) === latestBatchId).length : 0;
+  return { batch, total: ours.length, causes };
+}
+
+/** The lessons, counted per batch: the latest batch by receivedAt. */
+export async function sendBacksOurs(items: ItemRow[]): Promise<Status["sendBacksOurs"]> {
+  const { Lesson, Batch } = await ks();
+  const lessons = await Lesson.find({}, { itemId: 1, cause: 1 }).lean();
   const latest = await Batch.findOne({}, { batchId: 1 }).sort({ receivedAt: -1, _id: -1 }).lean();
-  const batchOf = new Map(items.map((i) => [i.itemId, i.batchId]));
-  const batch = latest ? rows.filter((r) => batchOf.get(r.itemId) === latest.batchId).length : 0;
-  return { batch, total: rows.length, causes: {} };
+  return countSendBacks(lessons, new Map(items.map((i) => [i.itemId, i.batchId])), latest?.batchId);
+}
+
+/** The plan states (release.ts planRelease) of an item the release will send to review once its time comes. */
+const RELEASES = [/^would release now$/, /^waiting until /, /^due; outside the window/, /^being released by another call$/];
+
+/**
+ * How many solutions go to review today: the release plan's rows the release would release (not held as
+ * sample, not in a blocked batch, not without a batch, release time or solution row) and due today.
+ */
+export function goingOutToday(rows: Pick<PlanRow, "releaseAt" | "state">[], now: Date): number {
+  return rows.filter((r) => r.releaseAt && RELEASES.some((re) => re.test(r.state)) && goesOutToday(new Date(r.releaseAt), now)).length;
+}
+
+// --- secrets in printed errors ---
+
+/** The Resend key values in `env` (the ones this job holds). */
+export function secretsOf(env: Record<string, string | undefined>): string[] {
+  return [env.KEYSTONE_RESEND_API_KEY, env.RESEND_API_KEY].map((k) => (k ?? "").trim()).filter(Boolean);
+}
+
+/** `text` with every given key replaced by "[key]", then the model-key scrub (models.ts redact: model keys, Bearer, sk-…). */
+export function scrubSecrets(text: string, keys: readonly string[]): string {
+  let out = String(text);
+  for (const k of keys) if (k) out = out.split(k).join("[key]");
+  return redact(out);
+}
+
+/**
+ * After the mail went out: records the heartbeat. A failure here is a warning, never an error: the mail was
+ * sent, and a failing exit would make cron (or a person) send it again.
+ */
+export async function afterSent(beatFn: () => Promise<void>, warn: (line: string) => void, keys: readonly string[]): Promise<void> {
+  try {
+    await beatFn();
+  } catch (e) {
+    warn(`warning: the status email was sent, but its heartbeat could not be recorded: ${scrubSecrets(e instanceof Error ? e.message : String(e), keys)}`);
+  }
 }
 
 export async function buildStatus(now: Date): Promise<Status> {
-  const { Item, Solution, Activity, Run, User } = await ks();
+  const { Item, Solution, Activity, Run, User, Batch } = await ks();
   const items = (await Item.find({}, { itemId: 1, stage: 1, order: 1, batchId: 1, receivedAt: 1, createdAt: 1, pipeline: 1 }).lean()) as unknown as ItemRow[];
 
   // counts by whose move it is
@@ -173,7 +230,7 @@ export async function buildStatus(now: Date): Promise<Status> {
   const waitingOnPraveen = items
     .filter((i) => i.pipeline?.heldFor === "praveen")
     .sort(byOrder)
-    .map((i) => ({ itemId: i.itemId, why: whyHeld(i.pipeline?.flags) }));
+    .map((i) => ({ itemId: i.itemId, why: heldReason(i.pipeline?.flags, i.pipeline?.heldWhy) }));
 
   // received, or drafting with no solution written: grouped by when their 2 days are up
   const drafting = items.filter((i) => i.stage === "drafting").map((i) => i.itemId);
@@ -188,10 +245,8 @@ export async function buildStatus(now: Date): Promise<Status> {
   }
   const notSolved = [...due.entries()].sort((a, b) => a[0] - b[0]).map(([at, n]) => ({ n, dueAt: new Date(at) }));
 
-  // the same "clean" test as the release (release.ts isClean): flags present and empty, not held
-  const releasingToday = items.filter(
-    (i) => i.stage === "ready" && !i.pipeline?.heldFor && Array.isArray(i.pipeline?.flags) && i.pipeline.flags.length === 0 && i.pipeline.releaseAt && goesOutToday(new Date(i.pipeline.releaseAt), now),
-  ).length;
+  // what the release would release (its own read-only plan: the sample it would hold and blocked batches left out), due today
+  const releasingToday = goingOutToday((await planRelease(now)).rows, now);
 
   // Castle Rock in the last day: their verdicts and notes
   const castleRockUsers = (await User.find({ role: { $in: CASTLE_ROCK_ROLES } }, { username: 1 }).lean()).map((u) => u.username);
@@ -248,16 +303,23 @@ export async function buildStatus(now: Date): Promise<Status> {
 
   const suggestions = (await openSuggestions()).map((s) => ({ subject: s.subject, to: [...(s.to ?? [])] }));
 
+  const blockedRows = await blockedBatches();
+  const files = new Map(
+    (await Batch.find({ batchId: { $in: blockedRows.map((b) => b.batchId) } }, { batchId: 1, filename: 1 }).lean<Pick<BatchDoc, "batchId" | "filename">[]>()).map((b) => [b.batchId, b.filename]),
+  );
+  const blocked = blockedRows.map((b) => ({ batch: files.get(b.batchId) || b.batchId, why: b.why, ...(b.since ? { since: new Date(b.since) } : {}) }));
+
   return {
     byOwner,
     waitingOnPraveen,
     notSolved,
     releasingToday,
     castleRockLastDay,
-    sendBacksOurs: await sendBacksOurs(items, castleRockUsers),
+    sendBacksOurs: await sendBacksOurs(items),
     cost,
     failures,
     suggestions,
+    blocked,
   };
 }
 
@@ -285,6 +347,12 @@ export function renderStatusEmail(s: Status, now: Date): { subject: string; html
     h.push(
       `<div style="background:#fdecec;border:1px solid #f3b4b4;padding:8px 12px;margin:0 0 12px"><strong style="color:#a11">Failures (${s.failures.length})</strong>${list(s.failures.map(esc), "")}</div>`,
     );
+  }
+
+  if (s.blocked.length) {
+    const line = (b: Status["blocked"][number]) => `${b.batch}: ${b.why}${b.since ? ` (since ${pacificTime(b.since)})` : ""}`;
+    t.push(`BLOCKED BATCHES (${s.blocked.length}): nothing of these is released`, ...s.blocked.map((b) => `- ${line(b)}`), "");
+    h.push(`<h3 ${H3}>Blocked batches (${s.blocked.length})</h3><p style="margin:0 0 4px;color:#555">Nothing of these is released.</p>`, list(s.blocked.map((b) => esc(line(b))), ""));
   }
 
   t.push(`WAITING ON YOU (${s.waitingOnPraveen.length})`);
@@ -362,13 +430,18 @@ export function statusSendConfig(env: Env): SendConfig {
 
 /** POSTs the email to Resend. Throws on a refusal with the HTTP status and Resend's message (never the key). */
 export async function sendStatusEmail(msg: { subject: string; html: string; text: string }, cfg: SendConfig, fetchFn: typeof fetch = fetch): Promise<{ id?: string }> {
-  const res = await fetchFn("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${cfg.key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: cfg.from, to: cfg.to, subject: msg.subject, html: msg.html, text: msg.text }),
-  });
+  let res: Response;
+  try {
+    res = await fetchFn("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${cfg.key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: cfg.from, to: cfg.to, subject: msg.subject, html: msg.html, text: msg.text }),
+    });
+  } catch (e) {
+    throw new Error(`Resend could not be reached: ${scrubSecrets(e instanceof Error ? e.message : String(e), [cfg.key]).slice(0, 300)}`);
+  }
   const body = await res.text().catch(() => "");
-  if (!res.ok) throw new Error(`Resend refused the email: HTTP ${res.status} ${body.split(cfg.key).join("[key]").slice(0, 300)}`);
+  if (!res.ok) throw new Error(`Resend refused the email: HTTP ${res.status} ${scrubSecrets(body, [cfg.key]).slice(0, 300)}`);
   try {
     return { id: (JSON.parse(body) as { id?: string }).id };
   } catch {

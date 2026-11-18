@@ -16,7 +16,8 @@
 import { readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { sectionTitle, type SectionKind } from "../config";
-import { ks, type Flag, type ItemDoc, type PipelineDoc, type RunDoc, type RunStep, type Step } from "../db";
+import { ks, type Flag, type ItemDoc, type LessonDoc, type PipelineDoc, type RunDoc, type RunStep, type Step } from "../db";
+import { splitNote } from "../note";
 import {
   SupersededError,
   flagItemDataIfUnchanged,
@@ -44,7 +45,7 @@ import type { ModelDeps, ModelImage, ModelReply } from "./types";
 import type { ImageType } from "./vendors/common";
 import { loadRules, writeSolution, type Draft, type Rule, type WriteOpts } from "./write";
 
-export type { Flag, RunDoc, Step } from "../db";
+export type { Flag, LessonDoc, RunDoc, Step } from "../db";
 
 export type Cause = "answer" | "working" | "format" | "style" | "other";
 type SuggestKind = "items_need_data" | "keys_queried" | "course_missing";
@@ -75,6 +76,11 @@ export interface Writer {
   ): Promise<number>;
   setPipeline(itemId: string, pipeline: PipelineDoc, expect: Expect): Promise<void>;
   suggest(kind: SuggestKind, itemIds: string[], batchId?: string): Promise<void>;
+  /**
+   * Records the send-back as a lesson, unless one exists for the same item and version (upsert-if-absent):
+   * a resumed or repeated run never adds a second. Not an item write: no `expect`, never superseded.
+   */
+  saveLesson(lesson: LessonDoc): Promise<void>;
   /** After a writing run: take the sample of each batch touched (once each batch is finished) and hold items without a batch. */
   sample?(batchIds: string[], unbatchedItemIds: string[]): Promise<void>;
 }
@@ -434,6 +440,12 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
       if (!r.ok) return { ok: false, output: { failed: `${r.reason}: ${r.detail}`, note }, cost: r.cost, model: r.model };
       return { ok: true, output: { cause: r.value.cause, why: r.value.why, note }, cost: r.cost, model: r.model };
     });
+    // The send-back happened whatever the cause step said: recorded once per item and version.
+    // A record about the past, not an item write: written before (and regardless of) any supersede check.
+    const proposed: Cause = c.ok ? (c.output as { cause: Cause }).cause : "other";
+    await writer.saveLesson({
+      itemId, version: expect.version, note: splitNote(c.output.note).plain, cause: proposed, proposedBy: "model", confirmed: false, createdAt: now(),
+    });
     if (!c.ok) return hold(["step_failed"]);
     const out = c.output as { cause: Cause; note: string };
     run.cause = out.cause;
@@ -636,7 +648,7 @@ export function asReceivedReader(reader: Reader, ids: string[]): Reader {
 
 // --- writers -----------------------------------------------------------------------------------
 
-export type DryAction = { itemId: string; action: "flagItemData" | "raiseKeyQuery" | "saveSolution" | "setPipeline" | "suggest"; detail: Record<string, unknown> };
+export type DryAction = { itemId: string; action: "flagItemData" | "raiseKeyQuery" | "saveSolution" | "setPipeline" | "suggest" | "saveLesson"; detail: Record<string, unknown> };
 
 /** Records what a run would write; writes nothing. */
 export class DryRunWriter implements Writer {
@@ -653,6 +665,40 @@ export class DryRunWriter implements Writer {
   async suggest(kind: SuggestKind, itemIds: string[], batchId?: string) {
     for (const itemId of itemIds) this.actions.push({ itemId, action: "suggest", detail: { kind, batchId } });
   }
+  async saveLesson(lesson: LessonDoc) {
+    const { itemId, ...detail } = lesson;
+    this.actions.push({ itemId, action: "saveLesson", detail });
+  }
+}
+
+const DUPLICATE_KEY = 11000;
+
+/** The lesson, inserted only when none exists for its item and version (the unique index settles a race). */
+export async function saveLesson(lesson: LessonDoc): Promise<void> {
+  const { Lesson } = await ks();
+  try {
+    await Lesson.updateOne({ itemId: lesson.itemId, version: lesson.version }, { $setOnInsert: lesson }, { upsert: true });
+  } catch (e) {
+    if ((e as { code?: number }).code !== DUPLICATE_KEY) throw e;
+  }
+}
+
+/**
+ * A session confirms (or corrects) the cause of a lesson the run proposed, and may name the rule it made
+ * from it. cause "item" = the fault was in the client's item, not ours (not counted as a send-back caused
+ * by us). Updates only: throws when no lesson exists for the item and version.
+ */
+export async function confirmLesson(
+  itemId: string,
+  version: number,
+  change: { cause?: LessonDoc["cause"]; ruleId?: string; confirmed: true; proposedBy: "session" },
+): Promise<void> {
+  const { Lesson } = await ks();
+  const set: Partial<LessonDoc> = { confirmed: true, proposedBy: "session" };
+  if (change.cause) set.cause = change.cause;
+  if (change.ruleId) set.ruleId = change.ruleId;
+  const r = await Lesson.updateOne({ itemId, version }, { $set: set });
+  if (r.matchedCount !== 1) throw new Error(`no lesson for item ${itemId} version ${version}: nothing confirmed`);
 }
 
 /** The Keystone database. Writes as `actor`. Build it only for a writing run. */
@@ -669,6 +715,7 @@ export function mongoWriter(actor: Actor): Writer {
       }),
     setPipeline: (itemId, pipeline, expect) => setPipelineIfUnchanged(itemId, pipeline, expect),
     suggest: (kind, itemIds, batchId) => suggestFor(kind, { itemIds }, batchId),
+    saveLesson: (lesson) => saveLesson(lesson),
     sample: async (batchIds, unbatched) => { await sampleAfterRun(batchIds, unbatched); },
   };
 }

@@ -10,7 +10,9 @@
  *
  * Without --print: sends through Resend (key: KEYSTONE_RESEND_API_KEY, else RESEND_API_KEY; the sender must
  * be an @evelynlearning.com address, the account that key belongs to), then records the heartbeat
- * "keystone-status-email" — its only database write.
+ * "keystone-status-email" — its only database write. If the mail went out and only the heartbeat fails, it
+ * prints a warning and exits 0 (a failing exit would get the mail sent twice). Every error printed passes
+ * through the key scrub (status.ts scrubSecrets) first.
  */
 import { KEYSTONE_DB } from "../src/lib/keystone/config";
 
@@ -59,15 +61,24 @@ async function main() {
       return;
     }
     const res = await status.sendStatusEmail(email, cfg);
-    const { beat } = await import("../src/lib/keystone/pipeline/heartbeat");
-    await beat(status.STATUS_HEARTBEAT, new Date());
     console.log(`status email: sent "${email.subject}" to ${cfg.to.join(", ")}${res.id ? ` (Resend id ${res.id})` : ""}`);
+    const { beat } = await import("../src/lib/keystone/pipeline/heartbeat");
+    await status.afterSent(() => beat(status.STATUS_HEARTBEAT, new Date()), (w) => console.warn(w), status.secretsOf(process.env));
   } finally {
-    await closeKs();
+    await closeKs().catch(() => {});
   }
 }
 
-main().catch((e) => {
-  console.error(e instanceof Error ? e.message : e);
+main().catch(async (e) => {
+  const msg = e instanceof Error ? e.message : String(e);
+  // The same scrub as the send path, for every error (network, database, configuration).
+  let scrubbed: string;
+  try {
+    const { scrubSecrets, secretsOf } = await import("../src/lib/keystone/pipeline/status");
+    scrubbed = scrubSecrets(msg, secretsOf(process.env));
+  } catch {
+    scrubbed = "error (message withheld: the key scrub could not load)";
+  }
+  console.error(scrubbed);
   process.exit(1);
 });
