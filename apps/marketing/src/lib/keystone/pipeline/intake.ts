@@ -7,6 +7,7 @@
 
 import type { ItemDoc } from "../db";
 import type { Interaction } from "../qti-interactions";
+import { mathmlToText } from "./mathml";
 import { callModel } from "./models";
 import type { ModelDeps, ModelImage } from "./types";
 
@@ -49,14 +50,18 @@ function withoutPassage(html: string): string {
 const lastSegment = (src: string) => decodeText(src).split(/[?#]/)[0].split("/").pop() ?? "";
 const imageFiles = (html: string) => [...html.matchAll(/<img\b[^>]*?\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)')/gi)].map((m) => lastSegment(m[1] ?? m[2] ?? "")).filter(Boolean);
 
-const BLANK = /<span\b[^>]*class\s*=\s*"[^"]*\bfill-in-the-blank\b[^"]*"[^>]*>\s*<\/span>/gi;
+// A blank: span.fill-in-the-blank (class list, either quote) holding nothing but whitespace or non-breaking spaces.
+const BLANK = /<span\b[^>]*class\s*=\s*(?:"[^"]*\bfill-in-the-blank\b[^"]*"|'[^']*\bfill-in-the-blank\b[^']*')[^>]*>(?:\s|&nbsp;|&#0*160;|&#x0*a0;)*<\/span>/gi;
 
-const HAS_BLANK = /\bfill-in-the-blank\b/;
+/** Each <math> replaced by its linear text (escaped, so the later tag strip cannot eat a "<" or ">"). */
+const withMathAsText = (html: string) =>
+  html.replace(/<math\b[^>]*\/>|<math\b[^>]*>[\s\S]*?<\/math>/gi, (m) =>
+    mathmlToText(m).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 
 /** Plain text of some HTML: tags stripped, blanks as "____", images as "[image: file]". */
 function plain(html: string): string {
   return decodeText(
-    html
+    withMathAsText(html)
       .replace(BLANK, "____")
       .replace(/<img\b[^>]*?\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)')[^>]*>/gi, (_m, a, b) => ` [image: ${lastSegment(a ?? b ?? "")}] `)
       .replace(/<\/(p|div|li|tr|h\d|table)>|<br\s*\/?>/gi, "\n")
@@ -105,6 +110,10 @@ function allOptionHtml(item: ItemDoc): string[] {
   return out;
 }
 
+// no_choices details start with a marker so intakeNote can pick the sentence that fits.
+const OPTIONS = "options: ";
+const BLANKS = "blanks: ";
+
 export function intakeCode(item: ItemDoc, assetExists: (file: string) => boolean): { findings: IntakeFinding[]; unsupported: string[] } {
   const interactions = item.interactions ?? [];
   const unsupported = interactions.flatMap((i) => (i.kind === "unsupported" ? [i.element] : []));
@@ -112,10 +121,10 @@ export function intakeCode(item: ItemDoc, assetExists: (file: string) => boolean
 
   const findings: IntakeFinding[] = [];
   const add = (code: IntakeFinding["code"], detail: string) => findings.push({ code, detail });
-  const written = item.itemType === "WR" || item.itemType === "SWR";
 
   // Stem
-  const stem = withoutPassage(item.questionHtml ?? "");
+  // A stem that is only a reading passage is empty by design: the question itself is missing.
+  const stem = withMathAsText(withoutPassage(item.questionHtml ?? ""));
   const visible = decodeText(stem.replace(BLANK, "").replace(/<[^>]*>/g, "")).trim();
   if (!visible && !/<img\b/i.test(stem)) add("empty_stem", "The question has no text or image.");
 
@@ -126,21 +135,24 @@ export function intakeCode(item: ItemDoc, assetExists: (file: string) => boolean
 
   // Passage named in the original XML but not delivered
   if (item.qti?.apip) {
-    const have = new Set((item.qti.passages ?? []).map((p) => p.file));
-    for (const rb of item.qti.apip.matchAll(/<rubricBlock\b[^>]*class="passage"[^>]*>([\s\S]*?)<\/rubricBlock>/g))
-      for (const o of rb[1].matchAll(/<object\b[^>]*\bdata="([^"]+)"/g))
-        if (!have.has(o[1])) add("missing_passage", `The passage ${o[1]} did not come through.`);
+    const have = new Set((item.qti.passages ?? []).map((p) => lastSegment(p.file)));
+    for (const rb of item.qti.apip.matchAll(/<rubricBlock\b[^>]*class\s*=\s*(?:"[^"]*\bpassage\b[^"]*"|'[^']*\bpassage\b[^']*')[^>]*>([\s\S]*?)<\/rubricBlock>/g))
+      for (const o of rb[1].matchAll(/<object\b[^>]*\bdata\s*=\s*(?:"([^"]+)"|'([^']+)')/g)) {
+        const f = lastSegment(o[1] ?? o[2]);
+        if (!have.has(f)) add("missing_passage", `The passage ${f} did not come through.`);
+      }
   }
 
   // Answer area
   for (const it of interactions) {
-    if (it.kind === "choice" && it.options.length < 2) add("no_choices", `Choice question ${it.responseId} has fewer than two options.`);
-    else if ((it.kind === "inlineChoice" || it.kind === "order") && it.choices.length < 2) add("no_choices", `${it.kind === "order" ? "Ordering" : "Drop-down"} ${it.responseId} has fewer than two choices.`);
-    else if (it.kind === "gapMatch" && (!it.choices.length || !it.gaps.length)) add("no_choices", `Drag-and-drop ${it.responseId} has no ${it.gaps.length ? "choices" : "gaps"}.`);
+    if (it.kind === "choice" && it.options.length < 2) add("no_choices", `${OPTIONS}Choice question ${it.responseId} has fewer than two options.`);
+    else if ((it.kind === "inlineChoice" || it.kind === "order") && it.choices.length < 2) add("no_choices", `${BLANKS}${it.kind === "order" ? "Ordering" : "Drop-down"} ${it.responseId} has fewer than two choices.`);
+    else if (it.kind === "gapMatch" && (!it.choices.length || !it.gaps.length)) add("no_choices", `${BLANKS}Drag-and-drop ${it.responseId} has no ${it.gaps.length ? "choices" : "gaps"}.`);
     else if (it.kind === "match" && (!it.premises.length || !it.responses.length)) add("no_premises", `Matching ${it.responseId} has an empty ${it.premises.length ? "second" : "first"} list.`);
   }
-  if (!hasInteractions(item) && !written && !HAS_BLANK.test(item.questionHtml ?? "") && !(item.options?.length)) {
-    add("no_choices", "The question has no answer area: no options, blank or choices came through.");
+  // Only a multiple-choice type with no options at all has a missing answer area; NR, TI, DDL and written types have none to lose.
+  if (!hasInteractions(item) && (item.itemType === "MC" || item.itemType === "MS") && !item.options?.length) {
+    add("no_choices", `${OPTIONS}The question has no answer area: no options came through.`);
   }
 
   // Key
@@ -184,9 +196,8 @@ export async function intakeModel(
   return { complete, missing };
 }
 
-const SENTENCE: Record<Exclude<IntakeFinding["code"], "missing_image" | "model_missing">, string> = {
+const SENTENCE: Record<Exclude<IntakeFinding["code"], "missing_image" | "model_missing" | "no_choices">, string> = {
   missing_passage: "The reading passage did not come through.",
-  no_choices: "The answer choices did not come through.",
   no_premises: "The matching lists did not come through, so the labels cannot be matched.",
   no_key: "No answer key came with this item.",
   empty_stem: "The question text did not come through.",
@@ -198,6 +209,7 @@ export function intakeNote(findings: IntakeFinding[]): string {
   for (const f of findings) {
     const s =
       f.code === "missing_image" ? `The image ${f.detail} did not come through.`
+      : f.code === "no_choices" ? (f.detail.startsWith(BLANKS) ? "The choices for the blanks did not come through." : "The answer options did not come through.")
       : f.code === "model_missing" ? `Missing: ${f.detail.slice(0, 200)}`
       : SENTENCE[f.code];
     if (!out.includes(s)) out.push(s);

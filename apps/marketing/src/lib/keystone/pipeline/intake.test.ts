@@ -56,10 +56,44 @@ assert.deepEqual(codes(item({ interactions: [{ kind: "gapMatch", responseId: "R1
 assert.deepEqual(codes(item({ interactions: [{ kind: "gapMatch", responseId: "R1", gaps: ["g1"], choices: [] }], keys: { R1: ["a g1"] } })), ["no_choices"]);
 {
   const r = intakeCode(item({ itemType: "MC", questionHtml: "<p>Use the table to answer.</p>", options: [], key: "B" }), all);
-  assert.deepEqual(r.findings, [{ code: "no_choices", detail: "The question has no answer area: no options, blank or choices came through." }]);
+  assert.deepEqual(r.findings.map((f) => f.code), ["no_choices"]);
+  assert.equal(intakeNote(r.findings), "The answer options did not come through.");
+  assert.deepEqual(codes(item({ itemType: "NR", key: "1", questionHtml: "<p>How many?</p>", options: [] })), [], "legacy NR with no blank span");
+  for (const t of ["TI", "DDL", "XYZ"]) assert.deepEqual(codes(item({ itemType: t, key: "1", options: [] })), [], t);
   assert.deepEqual(codes(item({ itemType: "WR", questionHtml: "<p>Explain.</p>", options: [], key: "" })), [], "written response has no answer area to check");
   assert.deepEqual(codes(item({ itemType: "NR", questionHtml: '<p>x = <span class="fill-in-the-blank"></span></p>', options: [], key: "4" })), []);
   assert.deepEqual(codes(item({ options: [opt("A", "1"), opt("B", "2")], key: "A" })), []);
+}
+
+// sentences fit the detail
+assert.equal(intakeNote(intakeCode(item({ interactions: [{ kind: "inlineChoice", responseId: "R1", choices: [] }], keys: { R1: ["a"] } }), all).findings), "The choices for the blanks did not come through.");
+assert.equal(intakeNote(intakeCode(item({ interactions: [{ ...choice, options: [] }], keys: { R1: ["a"] } }), all).findings), "The answer options did not come through.");
+
+// blanks: whitespace / nbsp content, class lists, single quotes
+for (const b of ['<span class="fill-in-the-blank"> </span>', '<span class="x fill-in-the-blank y">&nbsp;</span>', "<span class='fill-in-the-blank'>&#160;</span>", '<span class="fill-in-the-blank">&#xA0;</span>']) {
+  assert.equal(questionAsText(item({ questionHtml: `<p>x = ${b}</p>` })), "x = ____", b);
+  assert.deepEqual(codes(item({ questionHtml: `<p>${b}</p>`, interactions: [choice], keys: { R1: ["B"] } })), ["empty_stem"], b);
+}
+
+// passage matched by last path segment; single quotes and extra classes
+{
+  const apip = "<rubricBlock class='passage extra' view='candidate'><object data='files/passage_9.xml'/></rubricBlock>";
+  const base = { interactions: [choice], keys: { R1: ["B"] } };
+  assert.deepEqual(codes(item({ ...base, qti: { apip, metadata: "", resources: [], passages: [{ file: "passage_9.xml", xml: "<div/>" }] } })), []);
+  assert.deepEqual(codes(item({ ...base, qti: { apip, metadata: "", resources: [], passages: [{ file: "other/passage_9.xml", xml: "<div/>" }] } })), []);
+  assert.deepEqual(codes(item({ ...base, qti: { apip, metadata: "", resources: [] } })), ["missing_passage"]);
+}
+
+// MathML survives into the question text
+{
+  const t = questionAsText(item({
+    questionHtml: '<p>Find <math><mfrac><mn>3</mn><mn>4</mn></mfrac><mo>+</mo><msqrt><mn>2</mn></msqrt><annotation encoding="x">3/4+\\sqrt2</annotation></math> and <math><mi>a</mi><mo>&lt;</mo><mi>b</mi></math> ok</p>',
+    options: [opt("A", "<math><msup><mi>x</mi><mn>2</mn></msup></math>")],
+  }));
+  assert.ok(t.includes("3/4 + sqrt(2)"), t);
+  assert.ok(!t.includes("sqrt2") && !t.includes("\\sqrt"), t);
+  assert.ok(t.includes("a < b"), t);
+  assert.ok(/A\. x\^2/.test(t), t);
 }
 
 // no key
