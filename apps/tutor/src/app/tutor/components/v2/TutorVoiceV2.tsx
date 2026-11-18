@@ -32,7 +32,7 @@ import { useOpenAIRealtime, type OpenAIVoice } from '@/app/tutor/hooks/useOpenAI
 import { usePerceptionWS, type PerceptionTranscript } from '@/app/tutor/hooks/usePerceptionWS';
 import { useCartesiaInkWS } from '@/app/tutor/hooks/useCartesiaInkWS';
 import { useAudioRecorder } from '@/app/tutor/hooks/useAudioRecorder';
-import { BARGEIN_GATE_POLL_MS, TUTOR_MIC_REACQUIRE, TUTOR_PRONUNCIATION_ASSESS, TUTOR_STT_ENGINE_INK2, TUTOR_V2_BARGEIN_ENERGY_GATE, TUTOR_V2_HEARD_NOISE, TUTOR_V2_NO_WORDS_RECOVER, TUTOR_V2_SPOKEN_SOUNDS, TUTOR_V2_TARGET_PAUSE } from '@/lib/tutor/orchestrator/flags';
+import { BARGEIN_GATE_POLL_MS, TUTOR_MIC_REACQUIRE, TUTOR_PRONUNCIATION_ASSESS, TUTOR_STT_ENGINE_INK2, TUTOR_V2_BARGEIN_ENERGY_GATE, TUTOR_V2_HEARD_NOISE, TUTOR_V2_NO_WORDS_RECOVER, TUTOR_V2_SPOKEN_SOUNDS, TUTOR_V2_TARGET_PAUSE, TUTOR_V2_TARGET_PUNCT } from '@/lib/tutor/orchestrator/flags';
 import type { BargeInFrame } from '@/lib/tutor/voice/bargein-gate';
 import { armV2SoundGate, stepV2SoundGate } from '@/lib/tutor/v2/sound-gate';
 import { V2MicWatch } from '@/lib/tutor/v2/mic-watch';
@@ -541,8 +541,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const mathsSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => speakGroups(rewrite(outsideMathSpans(sentence, (w) => speakCoefficientLetters(speakSlashes(speakNumberPlurals(speakDataRuns(speakLessonNotation(w)))))))), []);
   // Task 7c (SPOKEN_SOUNDS): a sound in phonetic symbols ("/z/") is said in words first: speakSlashes read "/s/" as "per second".
   // Task 7h (TARGET_PAUSE): in a lesson that teaches a language, a short quoted target is set apart by a pause either side
-  // (v2/target-pauses.ts): marked before the rest of the path, the voice's break tags after it.
-  const plainSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => withTargetPauses(sentence, (sentence) => rewrite(speakSlashes(speakNumberPlurals(speakDataRuns(speakLessonNotation(TUTOR_V2_SPOKEN_SOUNDS ? v2SpeakSounds(sentence) : sentence))))), TUTOR_V2_TARGET_PAUSE && ((p.current.tutorLanguages?.length ?? 0) >= 2 || !!p.current.pronunciation)), []);
+  // (v2/target-pauses.ts): marked before the rest of the path; after it dashes (a comma in Japanese, Task 7l), or with TARGET_PUNCT off the voice's break tags.
+  const plainSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => withTargetPauses(sentence, (sentence) => rewrite(speakSlashes(speakNumberPlurals(speakDataRuns(speakLessonNotation(TUTOR_V2_SPOKEN_SOUNDS ? v2SpeakSounds(sentence) : sentence))))), TUTOR_V2_TARGET_PAUSE && ((p.current.tutorLanguages?.length ?? 0) >= 2 || !!p.current.pronunciation), TUTOR_V2_TARGET_PUNCT), []);
   const relayMode = useMemo(() => ({
     instructions: TRANSPORT_ONLY,
     onUserTranscript: onRelayTranscript,

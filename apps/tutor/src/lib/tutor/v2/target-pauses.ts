@@ -69,10 +69,46 @@ export function targetPauses(spoken: string): string {
   return out.replace(new RegExp(`[${OPEN}${CLOSE}]`, 'g'), '');
 }
 
+/** Task 7l: Japanese script in a part: a part led in Japanese (an English target quoted inside a Japanese sentence). */
+const JAPANESE = /[\u3040-\u30ff\u4e00-\u9fff]/;
+/** A mark that already pauses: a target after one of these (or a sentence's start) gets no mark before it, and a target
+ *  followed by one gets none after it. */
+const PAUSING = /[,.;:!?\u3001\u3002\uff0c\uff1a\uff1b\uff01\uff1f\u2014\u2013\u2026]/;
+
+/** Task 7l: the marks as punctuation, after rewriteForTTS: no break tag. mic test 3 (embed-1794967959470, flags 3 and 4):
+ *  each break tag splits the generation (the voice falls before it, the 200 ms became about 0.6 s). The product owner
+ *  chose by ear from the 7j samples: led in English, a long dash either side of the target (option J: "we need — have
+ *  worked — here, not — work."); led in Japanese, a comma either side (option I: "には、attended、を使います。").
+ *  Each target is set apart on its own. Nothing is added after a target that carries its own stop or comma, or that ends
+ *  the text or sits before a mark that pauses (so never a mark after a sentence's own full stop); nothing before a
+ *  target at the start of the text or after a comma, colon, stop or dash (never doubled). No dash or comma is a word
+ *  and neither splits the sentence into two requests (the voice gets the string whole). A stray mark is removed. */
+export function targetPunctuation(spoken: string): string {
+  const ja = JAPANESE.test(spoken);
+  const spans = [...spoken.matchAll(new RegExp(`${OPEN}\\s*([^${OPEN}${CLOSE}]*?)\\s*${CLOSE}`, 'g'))].filter((m) => m[1]);
+  let out = ''; let at = 0;
+  for (const m of spans) {
+    const start = m.index ?? 0; const end = start + m[0].length;
+    out += spoken.slice(at, start);
+    const prev = out.trimEnd();
+    if (prev && !PAUSING.test(prev.slice(-1))) out = prev + (ja ? '\u3001' : ' \u2014 ');
+    out += m[1];
+    const rest = spoken.slice(end).trimStart();
+    if (!/[.,;:!?]$/.test(m[1]!) && rest && !PAUSING.test(rest[0]!)) {
+      out += ja ? '\u3001' : ' \u2014';
+      if (!ja && !/^\s/.test(spoken.slice(end))) out += ' ';
+    }
+    at = end;
+  }
+  out += spoken.slice(at);
+  return out.replace(new RegExp(`[${OPEN}${CLOSE}]`, 'g'), '');
+}
+
 /** The voice's text for one piece of speech with its targets set apart: `rewrite` is the rest of the speech path
- *  (rewriteForTTS and the steps before it). `on`: a spoken language lesson with TUTOR_V2_TARGET_PAUSE on. */
-export function withTargetPauses(text: string, rewrite: (s: string) => string, on: boolean): string {
+ *  (rewriteForTTS and the steps before it). `on`: a spoken language lesson with TUTOR_V2_TARGET_PAUSE on.
+ *  `byPunctuation` (Task 7l, TUTOR_V2_TARGET_PUNCT): dashes / commas instead of the 7h break tags. */
+export function withTargetPauses(text: string, rewrite: (s: string) => string, on: boolean, byPunctuation = false): string {
   if (!on) return rewrite(text);
   const marked = markTargets(text);
-  return marked === text ? rewrite(text) : targetPauses(rewrite(marked));
+  return marked === text ? rewrite(text) : (byPunctuation ? targetPunctuation : targetPauses)(rewrite(marked));
 }

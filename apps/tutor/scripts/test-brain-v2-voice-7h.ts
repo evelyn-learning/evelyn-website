@@ -291,7 +291,7 @@ async function main() {
     const shown = cap.poll({ sentence: FLAG8, elapsedSec: 9, arrivedTotalSec: 3, playing: true }).text;
     check('the caption and the transcript never show a tag (they carry the sentence as written)', !shown.includes('<break') && !shown.includes(''), shown);
     const voice = readFileSync(join(__dirname, '..', 'src', 'app', 'tutor', 'components', 'v2', 'TutorVoiceV2.tsx'), 'utf8');
-    check('the voice client: pauses only in plain speech (not maths or science), only in a lesson that teaches a language', /const plainSpeech = useCallback\(\(sentence: string, rewrite: \(s: string\) => string\) => withTargetPauses\(sentence, .*TUTOR_V2_TARGET_PAUSE && \(\(p\.current\.tutorLanguages\?\.length \?\? 0\) >= 2 \|\| !!p\.current\.pronunciation\)\), \[\]\);/.test(voice) && !/(mathsSpeech|scienceSpeech) = useCallback[^\n]*withTargetPauses/.test(voice));
+    check('the voice client: pauses only in plain speech (not maths or science), only in a lesson that teaches a language', /const plainSpeech = useCallback\(\(sentence: string, rewrite: \(s: string\) => string\) => withTargetPauses\(sentence, .*TUTOR_V2_TARGET_PAUSE && \(\(p\.current\.tutorLanguages\?\.length \?\? 0\) >= 2 \|\| !!p\.current\.pronunciation\), TUTOR_V2_TARGET_PUNCT\), \[\]\);/.test(voice) && !/(mathsSpeech|scienceSpeech) = useCallback[^\n]*withTargetPauses/.test(voice));
   }
 
   console.log('each switch off alone');

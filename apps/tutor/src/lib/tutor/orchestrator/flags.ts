@@ -1989,6 +1989,14 @@ export const TUTOR_V2_CLOSE_HEARS = process.env.NEXT_PUBLIC_TUTOR_V2_CLOSE_HEARS
  *  the quotes are stripped with no pause, as before. */
 export const TUTOR_V2_TARGET_PAUSE = process.env.NEXT_PUBLIC_TUTOR_V2_TARGET_PAUSE !== 'off';
 
+/** Tutor brain v2 (v2/target-pauses.ts targetPunctuation, TutorVoiceV2 plainSpeech): HOW a target is set apart (Task 7l; needs
+ *  TUTOR_V2_TARGET_PAUSE on). By punctuation: a long dash either side when the speech part is led in English, a comma either
+ *  side when led in Japanese (the product owner's pick by ear from the 7j samples); nothing after a target ending its sentence,
+ *  nothing doubled beside a comma, colon or dash. Mic test 3 (embed-1794967959470, flags 3 and 4): each break tag splits the
+ *  generation (the voice falls before it; 200 ms became about 0.6 s). Default ON; NEXT_PUBLIC_TUTOR_V2_TARGET_PUNCT=off alone
+ *  ⇒ the 7h break tags. */
+export const TUTOR_V2_TARGET_PUNCT = process.env.NEXT_PUBLIC_TUTOR_V2_TARGET_PUNCT !== 'off';
+
 /** Tutor brain v2 (v2/part-flow.ts v2PendingPart; spoken lessons with labelled plans): a part waits for the learner's yes only
  *  after a real part-change ask (v2AsksPartChange: a strict move-on frame, or a part named), and the part comes from the ask
  *  itself (its "Next is …" lead included), never from a sentence before it. Mic test 3 (embed-1794967959470, flag 1): the
