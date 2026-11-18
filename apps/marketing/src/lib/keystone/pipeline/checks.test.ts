@@ -3,6 +3,7 @@ import type { ItemDoc } from "../db";
 import type { Answer } from "./answers";
 import { BANNED_WORDS, markdownImages, proseOf, renderCheck, rulesAudit, strayDollar, workingCheck, xmlProblem, type CheckResult, type Finding } from "./checks";
 import { MODEL_FOR } from "./models";
+import { qtiItem } from "../export";
 import { loadRules, type Draft, type Rule } from "./write";
 
 /** assert.ok with a message always: without one, Node re-parses the transformed source to build it, which stalls under tsx. */
@@ -355,9 +356,7 @@ async function testRound2() {
   f = fakeOpenAI([reply({ "R-table-caption": { why: "no table here" } })]);
   failed(await rulesAudit(item(), "Math 30-1", base, auditRules, f.deps), "na with a why", "contradictory verdict for R-table-caption");
   f = fakeOpenAI([reply({ "R-no-you": { verdict: "na" } })]);
-  failed(await rulesAudit(item(), "Math 30-1", base, auditRules, f.deps), "na on an all rule", "rule R-no-you cannot be not applicable");
-  f = fakeOpenAI([reply({ "R-answer-first": { verdict: "na" } })]);
-  failed(await rulesAudit(item(), "Math 30-1", base, auditRules, f.deps), "na on a short rule", "rule R-answer-first cannot be not applicable");
+  equal(findings(await rulesAudit(item(), "Math 30-1", base, auditRules, f.deps), "na on an all rule").length, 0, "an all rule may honestly be na");
   f = fakeOpenAI([audit(SMALL.filter((r) => r.appliesTo === "table").map((r) => ({ ...pass(r.id), verdict: "na" as const })))]);
   failed(await rulesAudit(item(), "Math 30-1", base, SMALL.filter((r) => r.appliesTo === "table"), f.deps), "every rule na", "audit marked every rule not applicable");
   f = fakeOpenAI([reply({ "R-no-you": { verdict: "fail", quote: "Fi", why: "x" } })]);
@@ -418,6 +417,14 @@ async function testRound2() {
   const svgFig = ['```figure alt="A box" caption="Setup"', '<svg viewBox="0 0 60 30" width="60" xmlns="http://www.w3.org/2000/svg"><text x="2" y="20">made with ChatGPT</text></svg>', "```", "", "So the answer is A."].join("\n");
   rs = await renderCheck(item(), draft([{ kind: "short", md: SHORT }, { kind: "diploma", md: svgFig }]));
   ok(rs.some((x) => x.code === "banned_word" && x.section === "diploma"), `SVG text scanned (got ${JSON.stringify(rs)})`);
+
+  // --- qtiItem keeps "$" sequences in the solution byte-identical (replacer function, not a replacement string) ---
+  const dollars = '<p>Cost $& and $$ and $1 and $` and $\'.</p>';
+  for (const apip of ['<assessmentItem identifier="q"><itemBody /></assessmentItem>', '<assessmentItem identifier="q"><itemBody /><modalFeedback outcomeIdentifier="FEEDBACK" showHide="show" identifier="solution"><p>theirs</p></modalFeedback></assessmentItem>']) {
+    const xml = qtiItem(apip, [{ title: "Short answer", html: dollars }]);
+    ok(xml.includes(dollars), `qtiItem keeps $&, $$ and $1 byte-identical (got ${xml})`);
+    ok(!xml.includes("theirs"), "their feedback is replaced");
+  }
 
   // --- render: the QTI package going back ---
   const APIP = '<?xml version="1.0" encoding="UTF-8"?><assessmentItem xmlns="http://www.imsglobal.org/xsd/apip/apipv1p0/qtiitem/imsqti_v2p1" identifier="q1"><itemBody><p>Q</p></itemBody></assessmentItem>';

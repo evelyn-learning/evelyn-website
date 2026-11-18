@@ -214,9 +214,6 @@ const AUDIT_SCHEMA = {
 
 type AuditReply = { verdicts: { id: string; verdict: "pass" | "fail" | "na"; quote: string; why: string }[] };
 
-/** Rules for scopes that every solution has; such a rule always applies. */
-const ALWAYS_APPLIES: readonly Rule["appliesTo"][] = ["all", "short", "diploma"];
-
 export async function rulesAudit(item: ItemDoc, course: string, draft: Draft, rules: Rule[], deps?: ModelDeps): Promise<CheckResult> {
   const courseName = normaliseCourse(course);
   const user = [
@@ -253,7 +250,6 @@ export async function rulesAudit(item: ItemDoc, course: string, draft: Draft, ru
   for (const v of r.value.verdicts) {
     const id = v.id.trim();
     if (v.verdict !== "fail" && (v.quote.trim() || v.why.trim())) return fail(`contradictory verdict for ${id}`);
-    if (v.verdict === "na" && ALWAYS_APPLIES.includes(byId.get(id)!.appliesTo)) return fail(`rule ${id} cannot be not applicable`);
   }
 
   // Each section's text is normalised once; md is the raw source, so figure SVG and table pipes are searched too.

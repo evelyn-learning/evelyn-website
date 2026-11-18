@@ -72,9 +72,9 @@ export function qtiItem(apip: string, sections: { title: string; html: string }[
     .join("");
   const feedback = `<modalFeedback outcomeIdentifier="FEEDBACK" showHide="show" identifier="solution">${body}</modalFeedback>`;
   if (/<modalFeedback\b[^>]*identifier="solution"[\s\S]*?<\/modalFeedback>/.test(apip)) {
-    return apip.replace(/<modalFeedback\b[^>]*identifier="solution"[^>]*>[\s\S]*?<\/modalFeedback>/, feedback);
+    return apip.replace(/<modalFeedback\b[^>]*identifier="solution"[^>]*>[\s\S]*?<\/modalFeedback>/, () => feedback);
   }
-  return apip.replace(/<\/assessmentItem>\s*$/, `${feedback}</assessmentItem>`);
+  return apip.replace(/<\/assessmentItem>\s*$/, () => `${feedback}</assessmentItem>`);
 }
 
 export function qtiManifest(itemId: string, files: string[]): string {
