@@ -138,6 +138,13 @@ export function v2Progress(plan: LessonPlan, goals: V2State['goals'], seen: Reco
   // order is all there is to go by.
   const at = onBoard >= 0 ? onBoard : stamped && evidence ? stamped.i : stamped ? (!done[stamped.i] ? stamped.i : passedOver >= 0 ? passedOver : after >= 0 ? after : stamped.i) : open >= 0 ? open : Math.max(0, next);
   const currentSegmentId = plan.segments[at]?.id ?? '';
+  // A part the lesson was on and has left is behind the student, practice problems too. The tutor seldom records
+  // one as finished, so a problem worked through and left went grey, and a part shown as the one in hand a minute
+  // before went grey when the board turned (Praveen, 2026-11-17: "we did try that question and it's over, so it
+  // should have been green"; AP Macroeconomics, portal-a4f66d55). Whether the student can do it alone is another
+  // record (the goal's own status, and the practice set at the close), not this one.
+  const left = plan.segments.filter((seg, i) => i !== at && !done[i] && (!!seen[seg.id] || goals[seg.id]?.status === 'shown')).map((seg) => seg.id);
+  if (left.length) completedSegmentIds.push(...left);
   const reached = (kind: string, need: (status: string | undefined) => boolean) => plan.segments.some((seg) => seg.kind === kind && need(goals[seg.id]?.status));
   const milestone: TutorMilestone | null = reached('recap', (s) => s === 'shown' || s === 'demonstrated') ? 'recap_reached'
     : reached('try_yourself', (s) => s === 'demonstrated') ? 'first_try_yourself_success'

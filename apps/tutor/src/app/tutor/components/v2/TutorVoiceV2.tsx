@@ -39,7 +39,7 @@ import { type V2ComposerStatus, V2Composer, V2_HANDLE_STUBS } from './TutorClien
 import { V2FlagBar, V2_FLAGS_ON, type V2FlagState } from './V2FlagBar';
 import { useV2Turns, type V2TurnsConfig } from './useV2Turns';
 import { isOwnVoice } from '@/lib/tutor/v2/own-voice';
-import { trimToSpoken } from '@/lib/tutor/v2/interrupted';
+import { answeredAsItEnded, trimToSpoken } from '@/lib/tutor/v2/interrupted';
 import { isMathsSubject, isScienceSubject } from '@/lib/tutor/v2/session-kind';
 import { anchorSentenceIndex, asksAnywhere, inlineSentenceIndex } from '@/lib/tutor/v2/board-timing';
 import { summariseBoardCall } from '@/lib/tutor/v2/board';
@@ -404,7 +404,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       // by useV2Turns instead).
       // The sentence playing when they came in is counted as unheard: cut at "What's your first…", the
       // question did not get through, and the tutor says it again.
-      const heardCount = Math.max(0, startedCountRef.current - 1);
+      // Unless it is the reply's closing question and they have plainly answered it (interrupted.ts).
+      const heardCount = answeredAsItEnded(text, turnSentencesRef.current, startedCountRef.current) ? startedCountRef.current : Math.max(0, startedCountRef.current - 1);
       const st = turnsRef.current?.stateRef.current;
       if (turnsRef.current?.busy) cutHeardRef.current = turnSentencesRef.current.slice(0, heardCount).join(' ');
       else if (st) {

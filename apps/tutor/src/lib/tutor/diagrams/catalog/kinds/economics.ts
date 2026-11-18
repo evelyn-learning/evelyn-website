@@ -467,7 +467,9 @@ export interface PPCFigure {
   points: PPCPoint[];
   /** Optional shifted PPC (economic growth or contraction). The shift is
    *  multiplicative on both axes' max values. */
-  shift?: { direction: 'out' | 'in'; factor: number; label?: string };
+  shift?: { direction: 'out' | 'in'; factor: number; label?: string;
+    /** Where the new curve meets each axis, when the tutor gave them: a change in one good only moves one end. */
+    xMax?: number; yMax?: number };
   title?: string;
 }
 
@@ -545,8 +547,18 @@ export function solveProductionPossibilities(params: Record<string, unknown>): P
   // really IS on the curve). Without this, brain's narrative ("A is
   // efficient, on the curve") visually contradicts the rendered dot
   // sitting well inside the curve (2026-05-14 PPC live test).
+  // A point given as ON the curve and lying on an axis is where the curve meets that axis, whatever `max` says.
+  // The tutor reads `max` as the scale of the axis and leaves room beyond the curve: a line from (0, 60) to
+  // (30, 0) was sent with max 70 and 35, drawn to 70 and 35, and its end points moved to (0, 70) and (30, 10);
+  // a student who read (20, 30) off that line was told it was wrong (AP Macroeconomics, portal-a4f66d55).
+  const endX = points.find((p) => p.position === 'on' && p.y === 0 && p.x > 0)?.x;
+  const endY = points.find((p) => p.position === 'on' && p.x === 0 && p.y > 0)?.y;
+  if (endX !== undefined) xRaw.max = endX;
+  if (endY !== undefined) yRaw.max = endY;
   for (const p of points) {
-    if (p.position === 'on') {
+    // A point labelled with its own coordinates stays where the label says: moved onto the curve, the dot and
+    // its label would disagree. It is then coloured by where it truly lies.
+    if (p.position === 'on' && !/\(\s*-?\d/.test(p.label ?? '')) {
       p.y = curveYAt(p.x, xRaw.max as number, yRaw.max as number, curve);
     }
   }
@@ -562,14 +574,22 @@ export function solveProductionPossibilities(params: Record<string, unknown>): P
     const s = params.shift as Record<string, unknown>;
     const dir = s.direction;
     const factor = typeof s.factor === 'number' && s.factor > 0 ? s.factor : 1.2;
-    if (dir === 'out' || dir === 'in') {
+    // The new ends, given outright: a change in one good only (better farming, with computers as before) moves
+    // one end. With only a factor, both ends moved and a "wheat side only" shift was drawn with more computers too.
+    const end = (v: unknown) => (typeof v === 'number' && v > 0 ? v : undefined);
+    const nx = end(s.xMax); const ny = end(s.yMax);
+    if (nx !== undefined || ny !== undefined) {
+      const xMax = nx ?? (xRaw.max as number); const yMax = ny ?? (yRaw.max as number);
+      const out = xMax >= (xRaw.max as number) && yMax >= (yRaw.max as number);
+      shift = { direction: out ? 'out' : 'in', factor: 1, label: typeof s.label === 'string' ? s.label : undefined, xMax, yMax };
+    } else if (dir === 'out' || dir === 'in') {
       shift = { direction: dir, factor, label: typeof s.label === 'string' ? s.label : undefined };
     }
   }
 
   return {
-    xAxis: { label: xRaw.label, max: xRaw.max },
-    yAxis: { label: yRaw.label, max: yRaw.max },
+    xAxis: { label: xRaw.label, max: xRaw.max as number },
+    yAxis: { label: yRaw.label, max: yRaw.max as number },
     curve,
     points,
     shift,

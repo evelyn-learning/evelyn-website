@@ -25,6 +25,7 @@ import { renderPlanMap } from '../src/lib/tutor/v2/plan-map';
 import { v2Tools } from '../src/lib/tutor/v2/tools';
 import { runV2Turn, v2SessionPart, v2StudentBlock, type V2ModelCall, V2_CHECK_INS } from '../src/lib/tutor/v2/turn';
 import { newV2State, type V2Session } from '../src/lib/tutor/v2/types';
+import { answeredAsItEnded } from '../src/lib/tutor/v2/interrupted';
 import { paintsOnBoard, streamV2Turn } from '../src/lib/tutor/v2/client';
 import { gradeOfLevel, isMathsSubject, isScienceSubject } from '../src/lib/tutor/v2/session-kind';
 import { v2Progress, goalForProblem, goalForTitle, wholeProblem } from '../src/lib/tutor/v2/progress';
@@ -688,6 +689,15 @@ async function main() {
   check('the facts say how much time is left and that the close is not due', /about 8 left, which is time for more/.test(renderFacts(s13, newV2State(0), { nowMs: 22 * 60000 })) && /tell the student/.test(renderFacts(s13, newV2State(0), { nowMs: 28.5 * 60000 })), renderFacts(s13, newV2State(0), { nowMs: 22 * 60000 }).split('\n')[1]);
   const planP = { segments: [{ id: 'hook', kind: 'hook' }, { id: 'c', kind: 'concept' }, { id: 't1', kind: 'try_yourself' }, { id: 't2', kind: 'try_yourself' }, { id: 'mis', kind: 'misconception_check' }, { id: 'recap', kind: 'recap' }] } as never;
   const goalsP = { hook: { status: 'shown', at: 1 }, c: { status: 'shown', at: 2 }, t1: { status: 'shown', at: 3 }, t2: { status: 'demonstrated', at: 4 }, mis: { status: 'shown', at: 9 } } as never;
+  {
+    // A part the lesson was on and has left is behind the student (portal-a4f66d55).
+    const leftTry = v2Progress(planP, { hook: { status: 'shown', at: 1 }, c: { status: 'shown', at: 2 }, t1: { status: 'shown', at: 3 } } as never, { t1: 3, c: 9 });
+    check('a practice problem the lesson has left shows as done, and the part the board is on is the one in hand', leftTry.currentSegmentId === 'c' && leftTry.completedSegmentIds.includes('t1'), leftTry);
+    const onTry = v2Progress(planP, { hook: { status: 'shown', at: 1 }, t1: { status: 'shown', at: 3 } } as never, { t1: 3 });
+    check('while it is the part in hand it is not done', onTry.currentSegmentId === 't1' && !onTry.completedSegmentIds.includes('t1'), onTry);
+    check('a closing question answered as it ended was heard', answeredAsItEnded('Yeah.', ['Good.', 'Shall we go on, or do you have a question first?'], 2) && answeredAsItEnded("Yeah, let's go.", ['Shall we go on?'], 1));
+    check('but not a longer reply, an earlier sentence, or a statement', !answeredAsItEnded('wait what did you say about the wheat side of it', ['Shall we go on?'], 1) && !answeredAsItEnded('Yeah.', ['What is your first step?', 'Take your time.', 'Shall we go on?'], 1) && !answeredAsItEnded('Yeah.', ['The curve bows out.'], 1));
+  }
   check('the part in hand is the one the tutor last marked, not one left open earlier', v2Progress(planP, goalsP).currentSegmentId === 'mis' && v2Progress(planP, { ...(goalsP as object), mis: { status: 'demonstrated', at: 9 } } as never).currentSegmentId === 'recap' && v2Progress(planP, { hook: { status: 'shown' } } as never).currentSegmentId === 'c', v2Progress(planP, goalsP).currentSegmentId);
   // portal-1115afec (AP US Government, federalism): the plan runs practice problem, then common-mistake check; the
   // tutor took the check first. The chips showed Recap in hand through the whole practice problem.

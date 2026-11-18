@@ -72,6 +72,16 @@ const fxSource = READ('src/app/tutor/components/whiteboard/ForeignExchangeRender
     expect(Math.abs(p.y - 97.98) < 0.1, 'PPC snaps `position:"on"` y to curve(x) — point ends up at y≈98 for x=20');
     expect(p.position === 'on', 'PPC point reports final position "on" after snap');
   }
+  // End points given as ON the curve say where the curve meets the axes, whatever the axis `max` (portal-a4f66d55).
+  {
+    const f = solveProductionPossibilities({ xAxis: { label: 'Computers', max: 35 }, yAxis: { label: 'Wheat', max: 70 }, curve: 'linear',
+      points: [{ x: 0, y: 60, label: '(0, 60)', position: 'on' }, { x: 30, y: 0, label: '(30, 0)', position: 'on' }, { x: 20, y: 30, label: '(20, 30)', position: 'on' }] });
+    expect(f.xAxis.max === 30 && f.yAxis.max === 60, 'PPC curve ends at the end points given, not at the axis max');
+    expect(f.points[0].y === 60 && f.points[1].y === 0 && f.points[1].position === 'on', 'PPC end points stay where they were given');
+    expect(f.points[2].y === 30 && f.points[2].position === 'outside', 'a point labelled with its coordinates is not moved; it is coloured by where it lies');
+    const g = solveProductionPossibilities({ xAxis: { label: 'Computers', max: 100 }, yAxis: { label: 'Wheat', max: 200 }, shift: { yMax: 250, label: 'Wheat side only' } });
+    expect(g.shift?.xMax === 100 && g.shift?.yMax === 250 && g.shift?.direction === 'out', 'PPC shift in one good moves one end only');
+  }
   // Brain's `position: "inside"` (with coords actually inside) is
   // honored as-is — no snap.
   {
