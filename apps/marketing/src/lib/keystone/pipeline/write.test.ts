@@ -119,6 +119,24 @@ for (const [bullet, want] of Object.entries(AUDIT_BULLETS)) for (const id of wan
   for (const id of ["R-diploma-no-alternate", "R-errors-sparingly", "R-required-sections"]) ok(!byId.has(id), `${id} removed`);
 }
 
+// first live dry run: the unit rules carry the exceptions the reviewer's approved solutions use (42° with no space)
+{
+  const si = byId.get("R-si-units")!;
+  const space = byId.get("R-unit-space")!;
+  assert.equal(si.source, "reviewer", "R-si-units stays a reviewer rule");
+  assert.equal(space.source, "reviewer", "R-unit-space stays a reviewer rule");
+  assert.equal(si.appliesTo, "all", "R-si-units applies to all");
+  assert.equal(space.appliesTo, "all", "R-unit-space applies to all");
+  assert.match(si.text, /degrees \(°, ′, ″\) for plane angles/, "R-si-units allows degrees for plane angles");
+  assert.match(si.text, /°C/, "R-si-units allows degrees Celsius");
+  assert.match(si.text, /any unit the question itself uses/, "R-si-units allows the question's own units");
+  assert.match(si.text, /an angle in degrees never breaks this rule/, "R-si-units says an angle in degrees is never a finding");
+  assert.match(space.text, /exceptions: no space before the angle degree sign or a prime mark/, "R-unit-space keeps the degree exception");
+  assert.match(space.text, /\$42\^\\circ\$/, "R-unit-space shows the unspaced angle form");
+  assert.match(space.text, /percent sign may be written with or without a space/, "R-unit-space keeps the percent exception");
+  assert.match(space.text, /\$25\\ \^\\circ\\text\{C\}\$/, "R-unit-space shows a space before °C");
+}
+
 // parseRules: comments, headings and prose ignored; source parsed; bad lines throw
 {
   const ok = parseRules("<!--\n- [R-x] not a rule inside a comment\n-->\n# Heading\n\n- a prose bullet\n- [R-a] (all, 2026-11-16) Rule a.\n- [R-b-c] (figure, 2026-11-17, house) Rule b.");

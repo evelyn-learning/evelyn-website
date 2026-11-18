@@ -187,9 +187,18 @@ function notAQuantity(expr: string, at: number, len: number): boolean {
   return false;
 }
 
-function earlyRounding(entries: { expr: string; expect: string; rounding: string }[], results: PyResult[], item: ItemDoc): CalcFinding[] {
-  const out: CalcFinding[] = [];
+type Entry = { expr: string; expect: string; rounding: string };
+
+/** Early rounding, per the reviewer's rule (R-diploma-round-last: rounding happens only at the final step): a calculation
+ * reuses the rounded result of an earlier one. Reuse is reported only when it can change a stated value: the reusing
+ * calculation is recomputed with the unrounded value in place of the rounded one, and the reuse is flagged only when the
+ * two results differ at the precision that calculation states (its own rounding). When that cannot be determined (the
+ * reusing calculation states no rounding, or the recomputation fails) the reuse is flagged, as before.
+ * Why: the first live dry run held a Physics solution for reusing 7507.3 (five significant digits) in a step whose answer
+ * has two; carrying digits like that does not change the answer and is how approved solutions write their working. */
+async function earlyRounding(entries: Entry[], results: PyResult[], item: ItemDoc, python: string): Promise<CalcFinding[]> {
   const given = statedNumbers((item.questionHtml ?? "").replace(/<[^>]*>/g, " "));
+  const hits: { i: number; j: number; expr: string }[] = [];
   for (let j = 0; j < entries.length; j++) {
     const rj = results[j];
     const expect = entries[j].expect.trim();
@@ -203,13 +212,38 @@ function earlyRounding(entries: { expr: string; expect: string; rounding: string
     if (given.some((g) => sameAnswer(num(g), num(expect)))) continue; // a quantity the question gives
     for (let i = j + 1; i < entries.length; i++) {
       const expr = entries[i].expr;
-      const hit = [...expr.matchAll(LITERAL)].some(
+      const reused = [...expr.matchAll(LITERAL)].filter(
         (m) => decimalPlaces(m[0]) === decimalPlaces(expect) && sameAnswer(num(m[0]), num(expect)) && !notAQuantity(expr, m.index ?? 0, m[0].length),
       );
-      if (hit) {
-        out.push({ code: "early_rounding", detail: `calculation ${i + 1} reuses ${expect}, the rounded result of calculation ${j + 1}, whose unrounded value is ${rj.raw}` });
+      if (!reused.length) continue;
+      // the same expression with the unrounded value in every reused place (right to left, so indexes stay valid)
+      let unrounded = expr;
+      for (const m of [...reused].reverse()) {
+        const at = m.index ?? 0;
+        unrounded = `${unrounded.slice(0, at)}(${rj.raw})${unrounded.slice(at + m[0].length)}`;
       }
+      hits.push({ i, j, expr: unrounded });
     }
+  }
+  if (!hits.length) return [];
+
+  // Recompute every reusing calculation with the unrounded value, at that calculation's own stated rounding.
+  const decidable = hits.filter((h) => entries[h.i].rounding.trim() && results[h.i]?.ok);
+  let recomputed: (PyResult | undefined)[] = [];
+  if (decidable.length) {
+    try {
+      recomputed = await runPython(decidable.map((h) => ({ expr: h.expr, expect: "", rounding: entries[h.i].rounding })), python);
+    } catch {
+      recomputed = [];
+    }
+  }
+  const out: CalcFinding[] = [];
+  for (const h of hits) {
+    const k = decidable.indexOf(h);
+    const r = k >= 0 ? recomputed[k] : undefined;
+    const sameAtStatedPrecision = r?.ok === true && sameAnswer(num(r.value), num(results[h.i].value));
+    if (sameAtStatedPrecision) continue;
+    out.push({ code: "early_rounding", detail: `calculation ${h.i + 1} reuses ${entries[h.j].expect.trim()}, the rounded result of calculation ${h.j + 1}, whose unrounded value is ${results[h.j].raw}` });
   }
   return out;
 }
@@ -241,7 +275,7 @@ export async function calcCheck(draft: Draft, answer: Answer, item: ItemDoc, opt
           findings.push({ code: "calc_mismatch", detail: `calculation ${i + 1} "${e.expr.slice(0, 80)}" computes ${r.value} but the solution states ${e.expect}` });
         }
       });
-      findings.push(...earlyRounding(entries, results, item));
+      findings.push(...(await earlyRounding(entries, results, item, opts?.python ?? "python3")));
     }
   }
 

@@ -203,14 +203,41 @@ async function main() {
     assert.equal(existsSync(marker), false, "hostile expression had a side effect");
     rmSync(join(marker, ".."), { recursive: true, force: true });
   }
+  // Early rounding is flagged only when the reuse changes the reusing calculation's result at its stated precision.
+  // This case was flagged before the first live dry run; it is quiet now because 1 - 0.00243 = 0.99757 and 1 - 0.002 = 0.998
+  // both round to 0.998 at 3dp, so the reuse cannot change the stated answer.
   {
     const f = await calcCheck(
       draft({ calc: [{ expr: "0.30**5", expect: "0.002", rounding: "3dp" }, { expr: "1 - 0.002", expect: "0.998", rounding: "3dp" }] }),
       NUM, item(),
     );
-    assert.deepEqual(codes(f), ["early_rounding"]);
-    assert.match(f[0].detail, /calculation 2/);
-    assert.match(f[0].detail, /calculation 1/);
+    assert.deepEqual(codes(f), [], "rounded reuse that leaves the 3dp answer unchanged is not early rounding");
+  }
+  // the dry run's Physics case: 7507.3 (five significant digits) reused in a step stated to 2 s.f. is not flagged
+  {
+    const f = await calcCheck(
+      draft({ calc: [{ expr: "sqrt(5600^2 + 5000^2)", expect: "7507.3", rounding: "1dp" }, { expr: "7507.3/900", expect: "8.3", rounding: "2sf" }] }),
+      NUM, item(),
+    );
+    assert.deepEqual(codes(f), [], `7507.3 carried into a 2 s.f. answer is not early rounding (got ${JSON.stringify(f)})`);
+  }
+  // rounding to 2 s.f. early changes the 3 s.f. answer (100 × 0.12 = 12.0, but 100 × 0.1225 = 12.3): flagged, as before
+  {
+    const f = await calcCheck(
+      draft({ calc: [{ expr: "0.35^2", expect: "0.12", rounding: "2sf" }, { expr: "100*0.12", expect: "12.0", rounding: "3sf" }] }),
+      NUM, item(),
+    );
+    assert.deepEqual(codes(f), ["early_rounding"], `early rounding that changes the answer is flagged (got ${JSON.stringify(f)})`);
+    assert.match(f[0].detail, /calculation 2/, "detail names the reusing calculation");
+    assert.match(f[0].detail, /calculation 1/, "detail names the rounded calculation");
+  }
+  // undeterminable (the reusing calculation states no rounding): still flagged
+  {
+    const f = await calcCheck(
+      draft({ calc: [{ expr: "0.30**5", expect: "0.002", rounding: "3dp" }, { expr: "1 - 0.002", expect: "0.998" }] }),
+      NUM, item(),
+    );
+    assert.deepEqual(codes(f), ["early_rounding"], `reuse into an unrounded calculation cannot be judged and stays flagged (got ${JSON.stringify(f)})`);
   }
   // exact intermediate values (no rounding) may be reused
   assert.deepEqual(codes(await calcCheck(

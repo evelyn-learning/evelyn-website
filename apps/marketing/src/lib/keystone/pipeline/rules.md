@@ -37,8 +37,8 @@
 - [R-no-diploma-wording] (all, 2026-11-17, house) The words diploma, exam, Alberta or any jurisdiction name appear only when the course is a diploma course.
 - [R-no-collapsible] (all, 2026-11-16) No section or part of the written solution is collapsible or hidden behind a control.
 - [R-canadian-spelling] (all, 2026-11-11) Spelling is Canadian (labelled, colour, centre).
-- [R-si-units] (all, 2026-11-11) Quantities use SI units.
-- [R-unit-space] (all, 2026-11-11) A space separates every number from its unit, e.g. $9.81\ \text{m/s}^2$.
+- [R-si-units] (all, 2026-11-11) Physical quantities use SI units; the units accepted for use with the SI are allowed too — degrees (°, ′, ″) for plane angles, degrees Celsius (°C), minutes, hours and days, litres (L, mL) and electronvolts (eV) — and so is any unit the question itself uses (e.g. ft) or the course's own convention uses; an angle in degrees never breaks this rule.
+- [R-unit-space] (all, 2026-11-11) A space separates a number from its unit, e.g. $9.81\ \text{m/s}^2$, $12\ \text{V}$, $25\ \text{mL}$, $25\ ^\circ\text{C}$; exceptions: no space before the angle degree sign or a prime mark ($42^\circ$, 42°, $5'$), and a percent sign may be written with or without a space (1.5 % or 70%), following the question's own spacing when it writes one.
 - [R-decimal-places] (all, 2026-11-11) Decimal places are kept consistent.
 - [R-italic-variables] (all, 2026-11-11) Variables are italic.
 - [R-latex-variables] (all, 2026-11-11, house) Variables are written in LaTeX, e.g. $x$, $v_{AB}$.
