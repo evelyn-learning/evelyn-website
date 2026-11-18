@@ -5,10 +5,11 @@
 // The subject alone is the status: "Keystone: N waiting on you, M in review, K approved".
 
 import { OWNER_LABEL, STAGE_LABEL, STAGE_OWNER, STAGES, VERDICTS, type Role, type Stage } from "../config";
-import { ks, type BatchDoc, type Flag, type LessonDoc } from "../db";
+import { ks, type BatchDoc, type Flag, type ItemDoc, type LessonDoc, type RunDoc } from "../db";
 import { splitNote } from "../note";
 import { lastBeat } from "./heartbeat";
 import { needsOwner } from "./holds";
+import { ownWriteState } from "./ownwrite";
 import { redact } from "./models";
 import { openSuggestions } from "./outbox";
 import { addLocalDays, blockedBatches, inWindow, planRelease, type PlanRow } from "./release";
@@ -298,11 +299,24 @@ export async function buildStatus(now: Date): Promise<Status> {
   }
   const stopped = await Run.find(
     { dryRun: { $ne: true }, result: { $exists: false }, finishedAt: { $exists: false }, startedAt: { $gt: dayAgo, $lte: new Date(now.getTime() - 2 * HOUR) } },
-    { itemId: 1, startedAt: 1 },
+    { itemId: 1, runId: 1, startedAt: 1, intent: 1 },
   )
     .sort({ startedAt: 1 })
     .lean();
-  for (const r of stopped) failures.push(`Run on item ${r.itemId} started ${pacificTime(new Date(r.startedAt))} and never finished`);
+  // An unfinished run whose own final write landed (its intent is what the item shows now, by the run's own test)
+  // only missed its bookkeeping (the next run finishes it): not a failure.
+  const stoppedItems = stopped.length
+    ? new Map((await Item.find({ itemId: { $in: stopped.map((r) => r.itemId) } }, { itemId: 1, stage: 1, version: 1, pipeline: 1 }).lean<ItemDoc[]>()).map((i) => [i.itemId, i]))
+    : new Map<string, ItemDoc>();
+  for (const r of stopped) {
+    const cur = stoppedItems.get(r.itemId);
+    const intent = (r as RunDoc).intent;
+    if (cur && intent) {
+      const sol = intent.writing === "ready" || intent.writing === "held" ? await Solution.findOne({ itemId: r.itemId, version: intent.toVersion }, { runId: 1 }).lean() : null;
+      if (ownWriteState(r as RunDoc, cur, sol?.runId) === "landed") continue;
+    }
+    failures.push(`Run on item ${r.itemId} started ${pacificTime(new Date(r.startedAt))} and never finished`);
+  }
   if (releaseTimerLate(await lastBeat(RELEASE_HEARTBEAT), now)) failures.push(TIMER_LATE_LINE);
 
   const suggestions = (await openSuggestions()).map((s) => ({ subject: s.subject, to: [...(s.to ?? [])] }));

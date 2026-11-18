@@ -224,6 +224,26 @@ const OLD = new Date("2026-11-10T17:00:00Z");
     await beat("keystone-release", ago(3));
     ok((await buildStatus(NOW)).failures.some((f) => /release timer/.test(f)), "a 3-hour-old heartbeat inside the window is a failure");
     ok(!(await buildStatus(new Date("2026-11-21T17:00:00Z"))).failures.some((f) => /release timer/.test(f)), "Saturday: no heartbeat failure");
+
+    // --- M9: an unfinished run whose own final write landed is not "never finished" ---
+    {
+      const from = { stage: "received", version: 0, updatedAt: T0 };
+      await Item.updateOne({ itemId: "st-draft-sol" }, { $set: { stage: "ready", version: 1 } });
+      await Solution.updateOne({ itemId: "st-draft-sol", version: 1 }, { $set: { runId: "run-landed" } });
+      await Run.insertMany([
+        // crashed between the final item write and saveRun: intent ready v1, the row carries its runId
+        { itemId: "st-draft-sol", runId: "run-landed", startedAt: ago(3), mode: "fresh", startedFrom: from, steps: [], corrections: 0, flags: [], cost: 0, assetsChecked: true,
+          intent: { writing: "ready", stage: "ready", toVersion: 1, flags: [], at: ago(3) } },
+        // crashed before its write: the item is not what it intended
+        { itemId: "st-rec1", runId: "run-stuck", startedAt: ago(3), mode: "fresh", startedFrom: from, steps: [], corrections: 0, flags: [], cost: 0, assetsChecked: true,
+          intent: { writing: "ready", stage: "ready", toVersion: 1, flags: [], at: ago(3) } },
+      ]);
+      const f = (await buildStatus(NOW)).failures;
+      ok(!f.some((x) => /st-draft-sol/.test(x)), `M9: own write landed: not a failure (${f})`);
+      ok(f.some((x) => /st-rec1/.test(x) && /never finished/.test(x)), `M9: a run that did not land is still reported (${f})`);
+      await Run.deleteMany({ runId: { $in: ["run-landed", "run-stuck"] } });
+      await Item.updateOne({ itemId: "st-draft-sol" }, { $set: { stage: "drafting", version: 1 } });
+    }
     process.env.KEYSTONE_READONLY = "1";
     await assert.rejects(() => beat("keystone-release", NOW), /read-only/, "beat refuses in read-only mode");
     delete process.env.KEYSTONE_READONLY;

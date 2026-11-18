@@ -41,6 +41,7 @@ import { callModel, redact } from "./models";
 import { suggestFor } from "./outbox";
 import { releaseAt, sampleAfterRun } from "./release";
 import { answerFromText } from "./retro";
+import { ownWriteState, type OwnWrite } from "./ownwrite";
 import { agreeOnAnswer, type Solves } from "./solve";
 import type { ModelDeps, ModelImage, ModelReply } from "./types";
 import type { ImageType } from "./vendors/common";
@@ -298,15 +299,11 @@ export async function processItem(itemId: string, runId: string, deps: Deps, opt
  *   landed_then_changed  marker present, but the item changed again after it
  *   not_ours             no marker from this run
  */
-async function ownWrite(run: RunDoc, cur: ItemDoc, deps: Deps): Promise<"landed" | "landed_then_changed" | "not_ours"> {
+async function ownWrite(run: RunDoc, cur: ItemDoc, deps: Deps): Promise<OwnWrite> {
   const i = run.intent;
   if (!i) return "not_ours";
-  const marked =
-    i.writing === "ready" || i.writing === "held"
-      ? (await deps.reader.solutionRunId(run.itemId, i.toVersion))?.runId === run.runId
-      : cur.pipeline?.runId === run.runId && cur.pipeline?.wroteStage === i.stage;
-  if (!marked) return "not_ours";
-  return cur.stage === i.stage && (cur.version || 0) === i.toVersion ? "landed" : "landed_then_changed";
+  const solutionRun = i.writing === "ready" || i.writing === "held" ? (await deps.reader.solutionRunId(run.itemId, i.toVersion))?.runId : undefined;
+  return ownWriteState(run, cur, solutionRun);
 }
 
 /** The bookkeeping after this run's own final write landed (a crash came between the write and its suggestion). */
