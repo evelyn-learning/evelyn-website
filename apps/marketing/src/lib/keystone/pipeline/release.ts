@@ -162,6 +162,15 @@ export function sampleNeed(counts: { clean: string[]; sampled: number; timerRele
 
 // --- the database part ---
 
+/**
+ * The timer releases a solution row only when it is unreleased, not stale (written for a question since
+ * re-sent), and written by the very run whose clean pass the item's pipeline record holds: a version saved by
+ * hand (no runId) or by another run never goes out by itself.
+ */
+export function timerMayRelease(sol: { releasedAt?: Date; runId?: string; staleAt?: Date } | null | undefined, pipelineRunId: string | undefined): boolean {
+  return !!sol && !sol.releasedAt && !sol.staleAt && !!sol.runId && sol.runId === pipelineRunId;
+}
+
 /** Ready, passed clean, not held: the only items the timer may release. */
 const CLEAN = { stage: "ready", "pipeline.heldFor": { $exists: false }, "pipeline.flags": { $size: 0 } } as const;
 const NO_BATCH = { $or: [{ batchId: { $exists: false } }, { batchId: null }, { batchId: "" }] };
@@ -419,15 +428,16 @@ export async function releaseDueReport(
       // after the read is left for the next pass, which counts it.
       const counted = cleanIds.filter((i) => !t.held.includes(i));
       const due = await Item.find({ batchId, itemId: { $in: counted }, ...CLEAN, "pipeline.releaseAt": { $lte: now } }).sort({ "pipeline.releaseAt": 1, itemId: 1 })
-        .select("itemId version releasedVersion").lean<Member[]>();
+        .select("itemId version releasedVersion pipeline.runId").lean<Member[]>();
       let any = recovered.has(batchId);
       for (const it of due) {
         if (!it.version || releasedVersionOf(it) >= it.version) continue;
-        const sol = await Solution.findOne({ itemId: it.itemId, version: it.version }).select("releasedAt").lean();
-        if (!sol || sol.releasedAt) continue;
+        const sol = await Solution.findOne({ itemId: it.itemId, version: it.version }).select("releasedAt runId staleAt").lean();
+        if (!timerMayRelease(sol, it.pipeline?.runId)) continue;
         const owner = randomUUID();
         const claimed = await Item.findOneAndUpdate(
-          { $and: [{ itemId: it.itemId, version: it.version, batchId, ...CLEAN, "pipeline.releaseAt": { $lte: now } }, unclaimed(staleBefore)] },
+          // The claim also requires the pipeline record to be the run that wrote this row (a hand-saved version never goes by the timer).
+          { $and: [{ itemId: it.itemId, version: it.version, batchId, ...CLEAN, "pipeline.releaseAt": { $lte: now }, "pipeline.runId": sol!.runId }, unclaimed(staleBefore)] },
           // (the item is one of `counted`: the claim never reaches an item this pass did not count)
           { $set: { "pipeline.releaseClaim": { owner, at: now } } },
         ).lean();
@@ -494,8 +504,9 @@ export async function planRelease(now: Date): Promise<Plan> {
     if (r.blocked) { row(`batch blocked (${r.blocked}): waits`); continue; }
     if (r.need.topUp.includes(it.itemId)) { row("would be held as sample"); continue; }
     if (it.pipeline?.releaseClaim) { row("being released by another call"); continue; }
-    const sol = await Solution.findOne({ itemId: it.itemId, version: it.version }).select("releasedAt").lean();
+    const sol = await Solution.findOne({ itemId: it.itemId, version: it.version }).select("releasedAt runId staleAt").lean();
     if (!it.version || releasedVersionOf(it) >= it.version || !sol || sol.releasedAt) { row("no unreleased solution row: skipped"); continue; }
+    if (!timerMayRelease(sol, it.pipeline?.runId)) { row("not written by the run that passed it (or written for an earlier question): never released by the timer"); continue; }
     if (at.getTime() > now.getTime()) { row(`waiting until ${mountain(at)}`); continue; }
     row(open ? "would release now" : `due; outside the window, goes at ${mountain(openAtOrAfter(now))}`);
   }

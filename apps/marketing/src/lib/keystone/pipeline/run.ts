@@ -121,6 +121,25 @@ export const OWNER_REWRITE: Flag = "owner_rewrite";
 const OWNER_KEEPS: Flag[] = ["sample"];
 const MAX_WARNINGS = 5;
 
+/**
+ * What a rewrite after the reviewer's send-back (changes mode) carries over from the item's record: the `sample`
+ * flag (the batch's sample count reads it), a `question_resent` hold Praveen has not cleared yet (the corrected
+ * version waits for his look), and the record of when the timer released / the question changed.
+ */
+export function carriedOver(item: Pick<ItemDoc, "pipeline">, mode: RunDoc["mode"]): { flags: Flag[]; fields: Partial<PipelineDoc> } {
+  if (mode !== "changes") return { flags: [], fields: {} };
+  const p = item.pipeline;
+  const had = Array.isArray(p?.flags) ? p!.flags : [];
+  const flags: Flag[] = [];
+  if (had.includes("sample")) flags.push("sample");
+  if (had.includes("question_resent") && p?.heldFor === "praveen") flags.push("question_resent");
+  const fields: Partial<PipelineDoc> = {
+    ...(p?.timerReleasedAt ? { timerReleasedAt: p.timerReleasedAt } : {}),
+    ...(flags.includes("question_resent") && p?.questionChangedAt ? { questionChangedAt: p.questionChangedAt } : {}),
+  };
+  return { flags, fields };
+}
+
 /** A held solution Praveen sent back with a note: taken by the run as an owner rewrite. */
 export const ownerSentBack = (i: Pick<ItemDoc, "stage" | "pipeline">) => i.stage === "ready" && !!i.pipeline?.flags?.includes(OWNER_SENT_BACK);
 const NEVER_TOUCH = ["approved", "delivered"];
@@ -366,7 +385,9 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
       const all = [...new Set<Flag>([...(item.pipeline?.flags ?? []), ...flags])];
       await writer.setPipeline(itemId, { ...kept, flags: all, heldFor: "praveen", runId: run.runId }, expect);
     } else {
-      await writer.setPipeline(itemId, { flags: [...flags], heldFor: "praveen", runId: run.runId }, expect);
+      const carry = carriedOver(item, run.mode);
+      const all = [...new Set<Flag>([...flags, ...carry.flags])];
+      await writer.setPipeline(itemId, { ...carry.fields, flags: all, heldFor: "praveen", runId: run.runId }, expect);
     }
     return finish("held");
   }
@@ -637,6 +658,8 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
       flags.add(OWNER_REWRITE);
       for (const f of item.pipeline?.flags ?? []) if (OWNER_KEEPS.includes(f)) flags.add(f);
     }
+    const carry = carriedOver(item, run.mode);
+    for (const f of carry.flags) flags.add(f);
     run.flags = [...flags];
     const passedAt = now();
     // A clean pass (no flag, so no hold) gets its release time in the same write; a held one never does.
@@ -645,6 +668,7 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
     const arrived = new Date(item.receivedAt ?? item.createdAt ?? passedAt);
     const from = corrected && sentBackAt && sentBackAt.getTime() > arrived.getTime() ? sentBackAt : arrived;
     const pipeline: PipelineDoc = {
+      ...carry.fields,
       flags: [...flags], runId: run.runId, ...(flags.size ? { heldFor: "praveen" as const } : {}), ...(passed ? { passedAt } : {}), ...(answerToConfirm ? { answerToConfirm: true } : {}),
       ...(passed && !flags.size && !owner ? { releaseAt: releaseAt(from, passedAt, corrected, itemId) } : {}),
     };

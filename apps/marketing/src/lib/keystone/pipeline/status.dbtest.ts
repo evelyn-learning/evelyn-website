@@ -85,8 +85,9 @@ const OLD = new Date("2026-11-10T17:00:00Z");
     await mk("st-rej", "rejected");
 
     await Solution.insertMany([
-      { itemId: "st-ready-clean-today", version: 1, sections: [], author: "pipeline" },
-      { itemId: "st-ready-clean-later", version: 1, sections: [], author: "pipeline" },
+      // written by run "r", the run whose clean pass the item's record holds (the timer releases only such rows)
+      { itemId: "st-ready-clean-today", version: 1, sections: [], author: "pipeline", runId: "r" },
+      { itemId: "st-ready-clean-later", version: 1, sections: [], author: "pipeline", runId: "r" },
     ]);
     await Lesson.insertMany([
       { itemId: "st-changes", version: 1, note: "n", cause: "format", proposedBy: "model", confirmed: false },

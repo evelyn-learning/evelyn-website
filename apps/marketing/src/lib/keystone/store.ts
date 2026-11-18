@@ -1,8 +1,9 @@
+import { createHash } from "node:crypto";
 import { Types } from "mongoose";
 import { SECTIONS, STAGE_LABEL, VERDICTS, canJudgeSolution, releasedVersionOf, type SectionKind, type Stage, type Verdict } from "./config";
-import { ks, type ActivityDoc, type BatchRow, type ItemDoc, type PipelineDoc, type RunDoc, type SectionDoc } from "./db";
+import { ks, type ActivityDoc, type BatchRow, type Flag, type ItemDoc, type PipelineDoc, type RunDoc, type SectionDoc } from "./db";
 import { renderInline, renderMarkdown } from "./render";
-import { assetUrl, saveAsset } from "./assets";
+import { assetUrl, readAsset, saveAsset } from "./assets";
 import type { QtiItem } from "./qti";
 
 // Domain operations shared by pages, route handlers and the seed script.
@@ -83,7 +84,9 @@ export async function saveSolution(
   });
   // A row from before releasedVersion existed counts as released up to its current version; pin that before moving on.
   const legacy = item.releasedVersion === undefined ? { releasedVersion: item.version || 0, releasedAnswer: item.version ? item.evelynAnswer || "" : "" } : {};
-  await Item.updateOne({ itemId }, { $set: { version, ...legacy, updatedAt: new Date() } });
+  // A version written by hand never inherits the pipeline's release time or claim: the timer releases only
+  // what the pipeline itself wrote and passed (release.ts timerMayRelease), and a stale time must not linger.
+  await Item.updateOne({ itemId }, { $set: { version, ...legacy, updatedAt: new Date() }, $unset: { "pipeline.releaseAt": "", "pipeline.releaseClaim": "" } });
   // The revision row below is the log entry for the release too.
   if (opts.submit && opts.stage !== "ready") await releaseSolution(itemId, actor, { log: false });
   const stage: Stage = opts.stage ?? (opts.submit ? "in_review" : "drafting");
@@ -178,13 +181,25 @@ export async function releaseSolution(itemId: string, actor: Actor, opts: { log?
   const item = await Item.findOne({ itemId }).lean();
   if (!item) throw new Error(`item ${itemId} not found`);
   if (!item.version) throw new Error(`item ${itemId} has no solution to release`);
+  const row = await Solution.findOne({ itemId, version: item.version }).select("staleAt").lean();
+  if (row?.staleAt) throw new Error(STALE_SOLUTION);
   const now = new Date();
-  await Solution.updateOne({ itemId, version: item.version, releasedAt: { $exists: false } }, { $set: { releasedAt: now } });
-  await Item.updateOne({ itemId }, { $set: { releasedVersion: item.version, releasedAnswer: item.evelynAnswer || "", stage: "in_review", updatedAt: now } });
+  await Solution.updateOne({ itemId, version: item.version, releasedAt: { $exists: false }, staleAt: { $exists: false } }, { $set: { releasedAt: now } });
+  // Released by hand: no longer waiting on the owner and never released again by the timer (flags kept as history).
+  await Item.updateOne(
+    { itemId },
+    {
+      $set: { releasedVersion: item.version, releasedAnswer: item.evelynAnswer || "", stage: "in_review", updatedAt: now },
+      $unset: { "pipeline.heldFor": "", "pipeline.heldWhy": "", "pipeline.releaseAt": "", "pipeline.releaseClaim": "" },
+    },
+  );
   if (opts.log ?? true) {
     await log({ itemId, version: item.version, type: "revision", body: SENT_FOR_REVIEW, username: actor.username, name: actor.name, role: actor.role });
   }
 }
+
+/** Why a solution written for an earlier version of a re-sent question is refused by every release path. */
+export const STALE_SOLUTION = "This solution was written for an earlier version of the question (it was re-sent); a new one must be written first.";
 
 /** The revision row releaseSolution logs. */
 export const SENT_FOR_REVIEW = "Sent for review.";
@@ -368,8 +383,9 @@ async function readHeld(itemId: string) {
   const item = await Item.findOne({ itemId }).select("itemId stage version releasedVersion evelynAnswer pipeline").lean<ItemDoc>();
   if (!item) return { error: "There is no such item." } as const;
   const unreleased = !!item.version && releasedVersionOf(item) < item.version;
-  const row = item.version ? await Solution.findOne({ itemId, version: item.version }).select("releasedAt").lean() : null;
-  return { item, unreleased: unreleased && !!row && !row.releasedAt } as const;
+  const row = item.version ? await Solution.findOne({ itemId, version: item.version }).select("releasedAt staleAt").lean() : null;
+  // A row written for an earlier version of a re-sent question is never sendable.
+  return { item, unreleased: unreleased && !!row && !row.releasedAt && !row.staleAt } as const;
 }
 
 const NOT_WAITING = "This item is no longer waiting for you.";
@@ -400,7 +416,7 @@ export async function sendToReviewByOwner(itemId: string, actor: Actor, now = ne
     const again = await Item.findOne({ itemId }).select("stage version releasedVersion").lean();
     return again?.stage === "in_review" && canJudgeSolution(again) ? { already: true } : { error: NOT_WAITING };
   }
-  await Solution.updateOne({ itemId, version: item.version, releasedAt: { $exists: false } }, { $set: { releasedAt: now } });
+  await Solution.updateOne({ itemId, version: item.version, releasedAt: { $exists: false }, staleAt: { $exists: false } }, { $set: { releasedAt: now } });
   await log({ itemId, version: item.version, type: "revision", body: SENT_FOR_REVIEW, username: actor.username, name: actor.name, role: actor.role, createdAt: now });
   return { done: true };
 }
@@ -467,7 +483,8 @@ export async function addComment(itemId: string, body: string, actor: Actor) {
 
 export async function setStage(itemId: string, stage: Stage, actor: Actor, note?: string) {
   const { Item } = await ks();
-  await Item.updateOne({ itemId }, { $set: { stage, updatedAt: new Date() } });
+  // A status set by hand: whatever release time or claim the pipeline gave is void (the timer never acts on a hand move).
+  await Item.updateOne({ itemId }, { $set: { stage, updatedAt: new Date() }, $unset: { "pipeline.releaseAt": "", "pipeline.releaseClaim": "" } });
   await log({ itemId, type: "stage", stage, body: note || stage, ...actor });
 }
 
@@ -482,9 +499,79 @@ export async function releaseIfHeld(itemId: string, actor: Actor): Promise<void>
   if (item?.version && releasedVersionOf(item) < item.version) await releaseSolution(itemId, actor, { log: false });
 }
 
-/** Adds or refreshes items from a QTI upload. Existing solutions and stages are kept. */
+/** JSON with object keys sorted, so the same content always gives the same text. */
+function stableJson(v: unknown): string {
+  if (Array.isArray(v)) return `[${v.map(stableJson).join(",")}]`;
+  if (v && typeof v === "object" && !(v instanceof Date)) {
+    return `{${Object.keys(v as object).filter((k) => (v as Record<string, unknown>)[k] !== undefined && k !== "_id").sort().map((k) => `${JSON.stringify(k)}:${stableJson((v as Record<string, unknown>)[k])}`).join(",")}}`;
+  }
+  return JSON.stringify(v ?? null);
+}
+
+/**
+ * A stable hash of what the solvers see of an item: the question HTML (with its passage), the options /
+ * choices, the interactions and the key(s). An identical re-send has the same hash and is not an event.
+ */
+export function questionHash(i: Pick<ItemDoc, "questionHtml" | "options" | "interactions" | "key" | "keys">): string {
+  const content = {
+    questionHtml: i.questionHtml ?? "",
+    options: (i.options ?? []).map((o) => ({ label: o.label, html: o.html })),
+    interactions: i.interactions ?? [],
+    key: i.key ?? "",
+    keys: i.keys ?? {},
+  };
+  return createHash("sha256").update(stableJson(content)).digest("hex");
+}
+
+/** Whether an image the (new) question shows has different bytes from the file already stored (or none was). */
+async function shownBytesChanged(itemId: string, fields: Pick<ItemDoc, "questionHtml" | "options" | "interactions">, files: Map<string, Uint8Array>): Promise<boolean> {
+  const visible = `${fields.questionHtml}\n${JSON.stringify(fields.options ?? [])}\n${JSON.stringify(fields.interactions ?? [])}`;
+  for (const [file, data] of files) {
+    if (!visible.includes(assetUrl(itemId, file))) continue;
+    const old = await readAsset(itemId, file);
+    if (!old || !Buffer.from(data).equals(old)) return true;
+  }
+  return false;
+}
+
+/** heldWhy is not set for a re-sent question: the flag's words say it (status.ts FLAG_WORDS.question_resent). */
+export const QUESTION_RESENT: Flag = "question_resent";
+const MID_REVIEW: Stage[] = ["in_review", "changes_requested"];
+const FINISHED: Stage[] = ["approved", "delivered"];
+
+type ResendPlan = { stage: Stage; set: Record<string, unknown>; addFlag?: Flag; unset?: Record<string, ""> };
+
+/**
+ * What a re-send whose question content changed does to the item (spec: "a re-sent item starts its own clock"):
+ *   - mid-review (in_review / changes_requested) or finished (approved / delivered): the stage is kept (the
+ *     client is reviewing, or has decided); flag question_resent, held for Praveen, questionChangedAt;
+ *   - anything else: back to `received` when it has an unreleased version or is at `ready` (else the stage the
+ *     re-send gives it as before), and the pipeline record starts again ({ flags: [], resentAt }): the release
+ *     time, any claim, hold, sample flag and owner's note go with the old question.
+ * The caller marks the unreleased solution rows stale in the same pass.
+ */
+function resendPlan(existing: ItemDoc, now: Date): ResendPlan {
+  const unreleased = (existing.version || 0) > releasedVersionOf(existing);
+  if (MID_REVIEW.includes(existing.stage) || FINISHED.includes(existing.stage)) {
+    return {
+      stage: existing.stage,
+      set: { "pipeline.questionChangedAt": now, "pipeline.heldFor": "praveen", updatedAt: now },
+      addFlag: QUESTION_RESENT,
+      unset: { "pipeline.releaseAt": "", "pipeline.releaseClaim": "" },
+    };
+  }
+  const reopened = existing.stage === "item_data" || existing.stage === "rejected" || existing.stage === "key_query";
+  const stage: Stage = unreleased || existing.stage === "ready" ? "received" : reopened ? (existing.version ? "drafting" : "received") : existing.stage;
+  return { stage, set: { pipeline: { flags: [], resentAt: now }, updatedAt: now } };
+}
+
+/**
+ * Adds or refreshes items from a QTI upload. Existing solutions are kept. A re-send whose question content
+ * changed (questionHash, or the bytes of an image the question shows) follows resendPlan; an identical re-send
+ * keeps the stage and the pipeline record exactly as they were.
+ */
 export async function ingestQtiItems(items: QtiItem[], actor: Actor, uploadId: string) {
-  const { Item, Batch } = await ks();
+  const { Item, Batch, Solution } = await ks();
   const created: string[] = [];
   const updated: string[] = [];
   const maxOrder = (await Item.findOne().sort({ order: -1 }).lean())?.order ?? 0;
@@ -492,8 +579,11 @@ export async function ingestQtiItems(items: QtiItem[], actor: Actor, uploadId: s
   for (const q of items) {
     let questionHtml = q.questionHtml;
     let castleRockSolutionHtml = q.castleRockSolutionHtml;
+    const newBytes = new Map<string, Uint8Array>();
     for (const [ref, data] of q.resources) {
-      const url = await saveAsset(q.itemId, ref.split("/").pop()!, data);
+      const file = ref.split("/").pop()!;
+      const url = assetUrl(q.itemId, file);
+      newBytes.set(file, data);
       questionHtml = questionHtml.split(`src="${ref}"`).join(`src="${url}"`);
       castleRockSolutionHtml = castleRockSolutionHtml.split(`src="${ref}"`).join(`src="${url}"`);
     }
@@ -520,14 +610,27 @@ export async function ingestQtiItems(items: QtiItem[], actor: Actor, uploadId: s
     // A re-sent key query stays on the item for the record, answered by the re-send.
     const answered = existing?.stage === "key_query" ? { "keyQuery.answeredAt": new Date(), "keyQuery.reviewerReason": "Item re-sent." } : {};
     if (existing) {
-      const stage: Stage = reopened ? (existing.version ? "drafting" : "received") : existing.stage;
+      // Read before the new files overwrite them: an image the question shows that changed is a changed question.
+      const changed = questionHash(existing) !== questionHash(fields) || (await shownBytesChanged(q.itemId, fields, newBytes));
+      const now = new Date();
+      const plan = changed ? resendPlan(existing, now) : null;
+      for (const [file, data] of newBytes) await saveAsset(q.itemId, file, data);
+      const stage: Stage = plan?.stage ?? (reopened ? (existing.version ? "drafting" : "received") : existing.stage);
       // Only a course that itself came from metadata is refreshed from it; a sheet course, or a row from before
       // courseSource existed (undefined, possibly a sheet course), is kept as it is.
       const { course: metadataCourse, ...withoutCourse } = fields;
       const keep = existing.courseSource === "metadata" ? { ...withoutCourse, course: metadataCourse } : withoutCourse;
-      await Item.updateOne({ itemId: q.itemId }, { $set: { ...keep, ...answered, stage, receivedAt: new Date() } });
+      // The question, the stage and the pipeline record change in ONE update: a timer claim or a run in flight
+      // that read the old item can no longer match it (stage / updatedAt moved, flags no longer empty).
+      await Item.collection.updateOne(
+        { itemId: q.itemId },
+        { $set: { ...keep, ...answered, stage, receivedAt: now, ...(plan?.set ?? {}) }, ...(plan?.addFlag ? { $addToSet: { "pipeline.flags": plan.addFlag } } : {}), ...(plan?.unset ? { $unset: plan.unset } : {}) },
+      );
+      // The unreleased version was written for the old question: it can never be released by any path.
+      if (plan) await Solution.updateMany({ itemId: q.itemId, version: { $gt: releasedVersionOf(existing) }, releasedAt: { $exists: false } }, { $set: { staleAt: now } });
       updated.push(q.itemId);
     } else {
+      for (const [file, data] of newBytes) await saveAsset(q.itemId, file, data);
       // Spreadsheet rows that arrived before the item: every batch listing it, newest first; each field comes
       // from the newest batch whose row carries it, batchId from the newest batch listing the item.
       const batches = await Batch.find({ itemIds: q.itemId }).sort({ receivedAt: -1 }).lean();

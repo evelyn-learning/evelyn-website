@@ -45,7 +45,9 @@ export type Flag =
   /** Praveen sent the held solution back with a note (pipeline.fixNote): the next run rewrites it. */
   | "owner_sent_back"
   /** The solution was rewritten after Praveen's note: always held for him again. */
-  | "owner_rewrite";
+  | "owner_rewrite"
+  /** The client re-sent the question (content changed) after our solution went to review: held for his look. */
+  | "question_resent";
 
 /** What the solutions pipeline last decided about an item. heldFor is set whenever flags is not empty. */
 export type PipelineDoc = {
@@ -74,6 +76,10 @@ export type PipelineDoc = {
   sentBackBy?: string;
   /** When Praveen last looked at the held item ("Keep holding"). */
   seenAt?: Date;
+  /** The question was re-sent with changed content and the pipeline record started again (store.ingestQtiItems). */
+  resentAt?: Date;
+  /** The question was re-sent with changed content after our solution went to review (flag question_resent). */
+  questionChangedAt?: Date;
 };
 
 export type Step = "intake" | "course" | "cause" | "solve" | "write" | "calc" | "working" | "audit" | "render";
@@ -186,6 +192,8 @@ export type SolutionDoc = {
   releasedAt?: Date;
   /** The pipeline run that wrote this version (lets a resumed run finish its own write). */
   runId?: string;
+  /** Written for a question since re-sent with changed content: never released by any path. */
+  staleAt?: Date;
 };
 
 export type ActivityDoc = {
@@ -395,7 +403,7 @@ function defineModels(conn: Connection): Models {
           flags: [String], passedAt: Date, releaseAt: Date, heldFor: String, answerToConfirm: Boolean, runId: String, wroteStage: String,
           releaseClaim: { type: new Schema({ owner: String, at: Date, releasedAt: Date }, { _id: false }), required: false },
           timerReleasedAt: Date, heldWhy: String,
-          fixNote: String, fixRequestedAt: Date, sentBackBy: String, seenAt: Date,
+          fixNote: String, fixRequestedAt: Date, sentBackBy: String, seenAt: Date, resentAt: Date, questionChangedAt: Date,
         },
         { _id: false },
       ),
@@ -421,6 +429,7 @@ function defineModels(conn: Connection): Models {
     createdAt: { type: Date, default: () => new Date() },
     releasedAt: Date,
     runId: String,
+    staleAt: Date,
   });
   Solution.index({ itemId: 1, version: 1 }, { unique: true });
   const Activity = new Schema<ActivityDoc>({

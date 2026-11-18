@@ -96,7 +96,14 @@ export async function setStageAction(form: FormData) {
   if (!STAGES.includes(stage) || stage === "key_query") return;
   if (stage === "delivered" ? !can.deliver(user.role) : !can.edit(user.role)) return;
   // A status that puts the solution in front of Castle Rock releases its latest version first.
-  if (stage === "in_review" || stage === "approved" || stage === "delivered") await releaseIfHeld(itemId, user);
+  // A solution written for an earlier version of a re-sent question is refused: the status is then left as it is.
+  if (stage === "in_review" || stage === "approved" || stage === "delivered") {
+    try {
+      await releaseIfHeld(itemId, user);
+    } catch {
+      return;
+    }
+  }
   await setStage(itemId, stage, user, `Status set to ${STAGE_LABEL[stage]}.`);
   revalidatePath("/keystone", "layout");
 }

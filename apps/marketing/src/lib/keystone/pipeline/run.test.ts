@@ -1265,6 +1265,31 @@ const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", co
     }
   }
 
+  // --- M4 / C2(b): a changes-mode rewrite keeps sample, timerReleasedAt and an uncleared question_resent hold ---
+  {
+    const released = new Date(T0.getTime() - 1000);
+    const store = new FakeStore([item({ stage: "changes_requested", version: 1, releasedVersion: 1, evelynAnswer: "B", pipeline: { flags: ["sample"], runId: "r0", timerReleasedAt: released } })]);
+    store.verdicts.set("100", { verdict: "changes", body: "Tidy the wording.", createdAt: T0 });
+    store.sections.set("100", draft().sections);
+    const run = await processItem("100", "r1", deps(store, steps().steps));
+    const p = store.items.get("100")!.pipeline!;
+    ok(p.flags.includes("sample"), "M4: sample kept on the rewrite");
+    equal(p.timerReleasedAt?.getTime(), released.getTime(), "M4: timerReleasedAt kept on the rewrite");
+    equal(run.result, "held", "M4: a sample item's correction waits for Praveen (a flag is never released by the timer)");
+    const st2 = new FakeStore([item({ stage: "changes_requested", version: 1, releasedVersion: 1, evelynAnswer: "B", pipeline: { flags: ["question_resent"], heldFor: "praveen", runId: "r0" } as PipelineDoc })]);
+    st2.verdicts.set("100", { verdict: "changes", body: "Tidy the wording.", createdAt: T0 });
+    st2.sections.set("100", draft().sections);
+    const r2 = await processItem("100", "r1", deps(st2, steps().steps));
+    equal(r2.result, "held", "C2(b): the corrected version of a re-sent question waits for his look");
+    ok(st2.items.get("100")!.pipeline!.flags.includes("question_resent"), "C2(b): question_resent carried");
+    equal(st2.items.get("100")!.pipeline!.releaseAt, undefined, "C2(b): no release time");
+    const st3 = new FakeStore([item({ stage: "changes_requested", version: 1, releasedVersion: 1, evelynAnswer: "B", pipeline: { flags: ["question_resent"], runId: "r0" } })]);
+    st3.verdicts.set("100", { verdict: "changes", body: "Tidy the wording.", createdAt: T0 });
+    st3.sections.set("100", draft().sections);
+    const r3 = await processItem("100", "r1", deps(st3, steps().steps));
+    equal(r3.result, "ready", "C2(b): once he cleared the hold, the flag is history and not carried");
+  }
+
   // --- selection ---
   {
     const later = new Date(T0.getTime() + 5000);

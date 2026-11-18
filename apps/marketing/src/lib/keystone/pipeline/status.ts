@@ -41,6 +41,7 @@ export const FLAG_WORDS: Record<Flag, string> = {
   answer_to_confirm: "No key supplied: answer to confirm",
   owner_sent_back: "Sent back by you",
   owner_rewrite: "Rewritten after your note",
+  question_resent: "The question was re-sent after our solution went out",
 };
 
 export const KEYSTONE_URL = "https://keystone.evelynlearning.com";
