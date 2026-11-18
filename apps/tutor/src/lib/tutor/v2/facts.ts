@@ -62,9 +62,9 @@ export interface V2TurnFacts {
   practiceShort?: { index: number; n: number } | null;
   /** Task 7f E: they asked for more practice at the close: given (true) or no time left (false). */
   morePractice?: boolean;
-  /** Task 7i (OPTIONAL_AT_ARRIVAL): the learner asked for an optional part left out for time: its name, and whether it still
-   *  fits before the hard stop (then it is taken: no longer left out). */
-  droppedAsked?: { label: string; fits: boolean };
+  /** Task 7i (OPTIONAL_AT_ARRIVAL), fix round 1: their words name an optional part left out for time: its name, its minutes, the
+   *  minutes left before the session must end, and whether it fits in them. Facts only (permissive): nothing changes on it. */
+  droppedAsked?: { label: string; minutes: number; left: number; fits: boolean };
 }
 
 /** A quoted span at the very start of a reply, in any of the quote pairs a tutor uses: 「…」, 『…』, “…”, "…", ‘…’, '…'. */
@@ -201,10 +201,10 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     if (!discussion && !(morePracticeAllowed && typeof state.closeInvitedAt === 'number')) lines.push(...v2CloseInviteFacts(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun }));
     // Task 7f B: the parts left out for time; C: the practice the part in hand still needs; E: more practice asked for at the close.
     if (!discussion) lines.push(...v2TimeFitFacts(session, state, tf.noSqueeze, f.nowMs));
-    // Task 7i (OPTIONAL_AT_ARRIVAL): they asked for an optional part left out for time.
-    if (!discussion && f.droppedAsked) lines.push(f.droppedAsked.fits
-      ? `they asked for the ${f.droppedAsked.label} part, left out earlier for time: it still fits before the session must end, so take it up now (its page opens as it begins), then go on to the summary`
-      : `they asked for the ${f.droppedAsked.label} part, left out for time: there is no time left for it before the session must end. Say so plainly in one short sentence and name it for next time`);
+    // Task 7i (OPTIONAL_AT_ARRIVAL), fix round 1: their words name a part left out for time. Permissive: the model reads their meaning.
+    if (!discussion && f.droppedAsked) { const d = f.droppedAsked; const left = Math.max(0, Math.floor(d.left)); lines.push(d.fits
+      ? `they mentioned the ${d.label} part, left out for time. If they are asking to do it now: there are about ${left} minutes before the session must end and it takes about ${d.minutes}, so you may take it up now (its page first), keeping the summary short; if they mean something else (a refusal, next time, a remark about it), it stays for next time`
+      : `they mentioned the ${d.label} part, left out for time. There are about ${left} minutes before the session must end, not enough for it (about ${d.minutes}): if they are asking for it, say so plainly in one short sentence; it stays for next time`); }
     if (!discussion && f.practiceShort && session.plan) lines.push(...v2PracticeFacts(session.plan, f.practiceShort));
     if (!discussion && f.morePractice !== undefined) lines.push(...v2MorePracticeFacts(f.morePractice, leftStop));
   }

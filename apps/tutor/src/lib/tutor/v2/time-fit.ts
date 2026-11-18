@@ -20,7 +20,7 @@ import type { LessonPlan, Segment } from '../lesson-plan/types';
 import { stripBoardBlocks } from './board-inline';
 import { v2LearnerSentence } from './learner-card';
 import { v2AsksPartChange, v2MoveAnswer, v2NextPart, v2PartInHand, v2PlanLabelled } from './part-flow';
-import { v2IsPageOfPart, v2PartIsOptional, v2PartNamedIn, v2PartOf } from './plan-map';
+import { v2IsPageOfPart, v2PartEntered, v2PartIsOptional, v2PartNamedIn, v2PartOf } from './plan-map';
 import { v2OverrunMin, v2Taught } from './time-box';
 import { TUTOR_V2_STAY_IN_PART } from '../orchestrator/flags';
 import type { V2Session, V2State } from './types';
@@ -77,7 +77,9 @@ function minutesFrom(plan: LessonPlan, i: number, state: Pick<V2State, 'goals' |
  *  required part's still to come) no longer fit before the box plus the margin, measured from `usedMin`. Time only runs on, so
  *  a part that does not fit now never will; one that fits is decided again next turn, and taken when the lesson enters it.
  *  Labelled plans only (the part in hand is known); empty when nothing is left out now. */
-export function v2ArrivalDrops(plan: LessonPlan, state: V2State, usedMin: number, boxMin: number | undefined, marginMin: number): string[] {
+/** Fix round 1 (minor 2): `asked`: the part the last reply asked about (held or pending); its decision was made at the ask, and
+ *  the answer to it is not overturned by the minutes that passed while they answered. */
+export function v2ArrivalDrops(plan: LessonPlan, state: V2State, usedMin: number, boxMin: number | undefined, marginMin: number, asked?: string | null): string[] {
   if (!boxMin || !(boxMin > 0) || !state.timeFit?.byArrival || !v2PlanLabelled(plan)) return [];
   const out: string[] = [];
   const view = { ...state, timeFit: { ...state.timeFit, dropped: [...state.timeFit.dropped] } };
@@ -86,7 +88,7 @@ export function v2ArrivalDrops(plan: LessonPlan, state: V2State, usedMin: number
     const nx = v2NextPart(plan, view, cur, true);
     if (nx < 0 || nx >= plan.segments.length - 1) break;
     const seg = plan.segments[nx]!;
-    if (!v2PartIsOptional(seg) || state.timeFit.taken?.includes(seg.id) || state.board.pages.some((pg) => v2IsPageOfPart(seg, pg.title)) || state.goals[seg.id]) break;
+    if (!v2PartIsOptional(seg) || seg.id === asked || state.timeFit.taken?.includes(seg.id) || state.board.pages.some((pg) => v2IsPageOfPart(seg, pg.title)) || state.goals[seg.id]) break;
     const need = minutesFrom(plan, nx, view);
     if (need === null || usedMin + need <= boxMin + marginMin + 1e-9) break;
     out.push(seg.id); view.timeFit.dropped.push(seg.id);
@@ -94,15 +96,28 @@ export function v2ArrivalDrops(plan: LessonPlan, state: V2State, usedMin: number
   return out;
 }
 
-/** Task 7i (OPTIONAL_AT_ARRIVAL): an optional part left out on arrival that the learner's words ask for (they name it, not in a
- *  refusal): its index and whether it still fits before the hard stop (its own minutes from now). Null: none asked for. */
-const REFUSES = /(?:no|not|don'?t|skip|without|never)|n't|いいえ|いらない|結構/i;
-export function v2DroppedAskedFor(plan: LessonPlan, state: V2State, said: string | null, usedMin: number, boxMin: number | undefined, marginMin: number): { index: number; fits: boolean } | null {
-  if (!said || !boxMin || !state.timeFit?.byArrival || REFUSES.test(said)) return null;
+/** Task 7i fix round 1 (the controller's ruling, as in 7f E: never decided by phrases): an optional part left out on arrival that
+ *  the learner's words name. Only the facts use it (v2TimeFitFacts' mention line): a mention changes no state. `left`: minutes to
+ *  the hard stop; `fits`: the part's own minutes fit in them. Null: none named. */
+export function v2DroppedMentioned(plan: LessonPlan, state: V2State, said: string | null, usedMin: number, boxMin: number | undefined, marginMin: number): { index: number; left: number; minutes: number; fits: boolean } | null {
+  if (!said || !boxMin || !state.timeFit?.byArrival) return null;
   const i = plan.segments.findIndex((seg) => state.timeFit!.dropped.includes(seg.id) && !!v2PartOf(seg).label && v2PartNamedIn(seg, said));
   if (i < 0) return null;
-  const own = v2PartOf(plan.segments[i]!).minutes ?? 0;
-  return { index: i, fits: usedMin + own <= boxMin + marginMin + 1e-9 };
+  const minutes = v2PartOf(plan.segments[i]!).minutes ?? 0;
+  const left = boxMin + marginMin - usedMin;
+  return { index: i, left, minutes, fits: minutes <= left + 1e-9 };
+}
+
+/** Task 7i fix round 1: a part left out on arrival that the lesson has ENTERED (plan-map.ts v2PartEntered, its being left out
+ *  aside: its page holds something, practice counted, a goal shown) was taken after all: out of `dropped`, into `taken` (never
+ *  left out again). Mutates; the ids taken. */
+export function v2TakeEnteredDropped(plan: LessonPlan, state: V2State): string[] {
+  const fit = state.timeFit;
+  if (!fit?.byArrival || !fit.dropped.length) return [];
+  const bare = { ...state, timeFit: undefined };
+  const ids = fit.dropped.filter((id) => { const seg = plan.segments.find((x) => x.id === id); return !!seg && v2PartEntered(seg, bare); });
+  if (ids.length) state.timeFit = { ...fit, dropped: fit.dropped.filter((id) => !ids.includes(id)), taken: [...(fit.taken ?? []), ...ids] };
+  return ids;
 }
 
 /** Task 7i (STAY_IN_PART): the time line's addition while the lesson is ahead of its plan in a required practice part (elapsed
@@ -159,10 +174,22 @@ export function v2TimeFitFacts(session: V2Session, state: V2State, on: boolean, 
   if (!dropped.length) return [];
   const list = names(dropped); const one = dropped.length === 1;
   // Task 7i (OPTIONAL_AT_ARRIVAL): left out as the lesson arrived at it: told once, in the reply that moves on to the part after.
+  // Fix round 1 (minor 1): told per part (`toldIds`): a part left out later is told, one already told is not told again.
   if (state.timeFit?.byArrival) {
-    if (state.timeFit.told || typeof state.summaryBegunAt === 'number') return [`left out for time (${state.timeFit.told ? 'already told' : 'name it in your summary as next time'}): ${list}, for next time; do not offer ${one ? 'it' : 'them'} unless they ask`];
-    const used = typeof nowMs === 'number' ? ` (about ${Math.max(0, Math.round((nowMs - state.startedAtMs) / 60000))} minutes used, and the session can run to about ${(session.timeBoxMinutes ?? 0) + v2OverrunMin()})` : '';
-    return [`left out for time: there is no longer time for ${list} and the summary${used}, so ${one ? 'it is' : 'they are'} left for the next session. Say nothing of ${one ? 'it' : 'them'} while the part in hand goes on; in the reply that closes the part in hand and moves on, tell them once, in one short sentence (in your own words, in the lesson's language), that there is no time left for ${one ? 'it' : 'them'} today and you will take ${one ? 'it' : 'them'} up next time, and go on to the next part; do not offer ${one ? 'it' : 'them'}`];
+    const toldIds = state.timeFit.toldIds ?? [];
+    const toTell = typeof state.summaryBegunAt === 'number' ? [] : dropped.filter((seg) => !toldIds.includes(seg.id));
+    const rest = dropped.filter((seg) => !toTell.includes(seg));
+    const lines: string[] = [];
+    if (rest.length) {
+      const r1 = rest.length === 1;
+      lines.push(`left out for time (${rest.every((seg) => toldIds.includes(seg.id)) ? 'already told' : 'name it in your summary as next time'}): ${names(rest)}, for next time; do not offer ${r1 ? 'it' : 'them'} unless they ask`);
+    }
+    if (toTell.length) {
+      const t1 = toTell.length === 1;
+      const used = typeof nowMs === 'number' ? ` (about ${Math.max(0, Math.round((nowMs - state.startedAtMs) / 60000))} minutes used, and the session can run to about ${(session.timeBoxMinutes ?? 0) + v2OverrunMin()})` : '';
+      lines.push(`left out for time: there is no longer time for ${names(toTell)} and the summary${used}, so ${t1 ? 'it is' : 'they are'} left for the next session. Say nothing of ${t1 ? 'it' : 'them'} while the part in hand goes on; in the reply that closes the part in hand and moves on, tell them once, in one short sentence (in your own words, in the lesson's language), that there is no time left for ${t1 ? 'it' : 'them'} today and you will take ${t1 ? 'it' : 'them'} up next time, and go on to the next part; do not offer ${t1 ? 'it' : 'them'}`);
+    }
+    return lines;
   }
   if (!state.timeFit?.told) return [`left out for time: the plan's parts add up to more than the ${session.timeBoxMinutes} minutes, so ${list} ${one ? 'is' : 'are'} left for the next session. Tell them once, in one short sentence in this reply (in your own words, in the lesson's language), that time does not allow ${one ? 'it' : 'them'} today and ${one ? 'it is' : 'they are'} for next time; then teach the parts in hand at their full depth`];
   return [`left out for time (already told): ${list}, for next time; do not offer ${one ? 'it' : 'them'} unless they ask`];
@@ -175,7 +202,12 @@ export function v2TimeFitAfterReply(plan: LessonPlan | undefined, state: V2State
   const said = stripBoardBlocks(spoken);
   const named = v2DroppedParts(plan, state).every((seg) => v2PartNamedIn(seg, said));
   // Task 7i: a part left out on arrival is told when a reply names it (the facts say when; turns are not counted).
-  if (fit.byArrival) { if (named) state.timeFit = { ...fit, told: true }; return; }
+  // Fix round 1 (minor 1): per part (`toldIds`); `told` once every part left out has been named.
+  if (fit.byArrival) {
+    const toldIds = [...new Set([...(fit.toldIds ?? []), ...v2DroppedParts(plan, state).filter((seg) => v2PartNamedIn(seg, said)).map((seg) => seg.id)])];
+    state.timeFit = { ...fit, toldIds, ...(fit.dropped.every((id) => toldIds.includes(id)) ? { told: true as const } : {}) };
+    return;
+  }
   const shown = (fit.shown ?? 0) + 1;
   state.timeFit = named || shown >= V2_DROP_TELL_TURNS ? { dropped: fit.dropped, told: true } : { dropped: fit.dropped, shown };
 }

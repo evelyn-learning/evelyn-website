@@ -28,7 +28,7 @@ import { saidCovers, sentenceCardToSay, unsaidAsk, unsaidBoardItem, asksAnywhere
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, v2AskEveryOn, v2SummaryBegun, V2_NO_ASK_RECHECK_S, V2_TIME_UP_MIN, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
 import { v2CloseOpen, v2LeftToStopMin, v2OverrunMin, v2TimeFlags, v2WrapDue, type V2TimeFlags } from './time-box';
-import { V2_MIN_PRACTICE, V2_MORE_PRACTICE_MIN_LEFT, v2ArrivalDrops, v2AsksMorePractice, v2CountPractice, v2DroppedAskedFor, v2PartsToDrop, v2PracticeMoreLine, v2PracticeShort, v2TimeFitAfterReply, v2TimeFitDue, v2TimeFitUpFront } from './time-fit';
+import { V2_MIN_PRACTICE, V2_MORE_PRACTICE_MIN_LEFT, v2ArrivalDrops, v2AsksMorePractice, v2CountPractice, v2DroppedMentioned, v2TakeEnteredDropped, v2PartsToDrop, v2PracticeMoreLine, v2PracticeShort, v2TimeFitAfterReply, v2TimeFitDue, v2TimeFitUpFront } from './time-fit';
 import { planGoalIds, renderPlanMap, v2NextTimeAllLine, v2PagePartLabel, v2NextTimeLine, v2PartIsOptional, v2PartNamedIn, v2PartOf, v2UnreachedOffer } from './plan-map';
 import { stripToolTalk } from './tool-talk';
 import { gradeOfLevel } from './session-kind';
@@ -392,21 +392,24 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Task 7f C (PART_MIN_PRACTICE): the learner's words count for the part in hand, before any page opens on their yes.
   if (tf.minPractice && partFlow && session.plan) v2CountPractice(session.plan, state, input.studentSaid, lastTutorText);
   // Task 7i (OPTIONAL_AT_ARRIVAL): an optional part is decided as the lesson arrives at it (time-fit.ts v2ArrivalDrops), measured
-  // against the box plus the margin from the real elapsed time; one left out that the learner asks for is taken while it still
-  // fits before the hard stop. Before any page opens on their yes: a yes to a part left out opens nothing.
-  const arrivalOn = tf.noSqueeze && TUTOR_V2_OPTIONAL_AT_ARRIVAL && !!session.plan && !!session.timeBoxMinutes && !discussion && !session.homework && !session.homeworkSheet;
+  // against the box plus the margin from the real elapsed time. Before any page opens on their yes: a yes to a part left out
+  // opens nothing. Labelled plans only (fix round 1, I2): a plan without part names keeps the 7f up-front drop.
+  // Fix round 1 (I1): a part left out that their words name is only told to the model (the facts, permissive: the minutes left);
+  // it is taken after all only once the lesson enters it (v2TakeEnteredDropped), never on their words.
+  const arrivalOn = tf.noSqueeze && TUTOR_V2_OPTIONAL_AT_ARRIVAL && !!session.timeBoxMinutes && !discussion && !session.homework && !session.homeworkSheet && v2PlanLabelled(session.plan);
   const marginMin = tf.overrun ? v2OverrunMin(true) : 0;
-  let droppedAsked: { label: string; fits: boolean } | undefined;
+  let droppedAsked: { label: string; minutes: number; left: number; fits: boolean } | undefined;
   if (arrivalOn && session.plan && state.timeFit?.byArrival && !state.closed) {
     const usedMin = (nowMs - state.startedAtMs) / 60000;
-    const ask = v2DroppedAskedFor(session.plan, state, input.studentSaid, usedMin, session.timeBoxMinutes, marginMin);
-    if (ask) {
-      const seg = session.plan.segments[ask.index]!;
-      droppedAsked = { label: v2PartOf(seg).label ?? seg.id, fits: ask.fits };
-      if (ask.fits) state.timeFit = { ...state.timeFit, dropped: state.timeFit.dropped.filter((id) => id !== seg.id), taken: [...(state.timeFit.taken ?? []), seg.id] };
-    }
-    const more = v2ArrivalDrops(session.plan, state, usedMin, session.timeBoxMinutes, marginMin);
-    if (more.length) state.timeFit = { dropped: [...state.timeFit.dropped, ...more], byArrival: true, ...(state.timeFit.taken ? { taken: state.timeFit.taken } : {}) };
+    v2TakeEnteredDropped(session.plan, state);
+    const named = v2DroppedMentioned(session.plan, state, input.studentSaid, usedMin, session.timeBoxMinutes, marginMin);
+    if (named) { const seg = session.plan.segments[named.index]!; droppedAsked = { label: v2PartOf(seg).label ?? seg.id, minutes: named.minutes, left: named.left, fits: named.fits }; }
+    // Fix round 1 (minor 2): the part the last reply asked about keeps the decision made at the ask.
+    const asked = v2PendingPart(session.plan, state, lastTutorText, null); const lastAsked = asked ? session.plan.segments[asked.index]!.id : null;
+    const more = v2ArrivalDrops(session.plan, state, usedMin, session.timeBoxMinutes, marginMin, lastAsked);
+    // Fix round 1 (minor 1): `toldIds` and the rest kept (a part already told is not told again); only `told`, "every part left
+    // out has been told", clears, as the new one has not been.
+    if (more.length) { const { told: _told, ...rest } = state.timeFit; void _told; state.timeFit = { ...rest, dropped: [...state.timeFit.dropped, ...more] }; }
     // A page held for a part now left out waits no more: the reply that tells them names it, and naming a held part opens it (7e).
     if (state.heldPage && state.timeFit.dropped.includes(state.heldPage.part)) delete state.heldPage;
   }
@@ -1471,6 +1474,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   state.history = [...state.history, ...stored];
   // Task 7f B: the parts left out for time are told once (a reply names them, or the facts have asked twice).
   if (tf.noSqueeze && state.timeFit && !input.signal?.aborted) v2TimeFitAfterReply(session.plan, state, spoken.join(' '));
+  // Task 7i fix round 1 (I1): a part left out that this reply entered (its page holds something) was taken after all.
+  if (arrivalOn && session.plan && !input.signal?.aborted) v2TakeEnteredDropped(session.plan, state);
   // Task 7a: the page held for their yes waits in the state; a page opened (or the close) lets it go.
   if (partFlow) {
     const held = heldAt as { part?: { id: string; title: string }; unasked?: boolean } | null;

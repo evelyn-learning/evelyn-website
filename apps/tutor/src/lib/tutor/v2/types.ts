@@ -166,8 +166,9 @@ export interface V2State {
    *  learner (or the facts have asked twice); `shown`: the turns the facts asked. Carried to the next session (memory.ts).
    *  Task 7i (OPTIONAL_AT_ARRIVAL, `byArrival`): nothing was dropped up front; an optional part is added to `dropped` when the
    *  lesson arrives at it and it no longer fits, and leaves it again when the learner asks for it while it still fits (`taken`:
-   *  such parts, never left out again). */
-  timeFit?: { dropped: string[]; told?: true; shown?: number; byArrival?: true; taken?: string[] };
+   *  such parts, never left out again; fix round 1: only once the lesson entered it). `toldIds`: the parts left out on arrival
+   *  that a reply has named to the learner (each told once). */
+  timeFit?: { dropped: string[]; told?: true; shown?: number; byArrival?: true; taken?: string[]; toldIds?: string[] };
   /** Task 7i (STAY_IN_PART): the sentences of the last reply the learner did not hear (a barge-in cut them: interrupted.ts
    *  trimToSpoken), named in the next turn's facts once, then cleared. */
   unheard?: string[];
