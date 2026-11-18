@@ -155,12 +155,12 @@ async function main() {
     assert.equal(r.ok, true);
     assert.equal(f.seen.length, 2);
 
-    // HTTP 529 twice → transport
+    // HTTP 529 every time → transport after MAX_ATTEMPTS (4) calls, marked transient
     const g = fakeFetch([overloaded, overloaded]);
     const r2 = await callModel(call("solver1"), deps(g.fn));
     assert.equal(!r2.ok && r2.reason, "transport");
-    assert.equal(g.seen.length, 2);
-    if (!r2.ok) { assert.equal(r2.cost, 0); assert.match(r2.detail, /529/); }
+    assert.equal(g.seen.length, 4, "529: four attempts");
+    if (!r2.ok) { assert.equal(r2.cost, 0); assert.match(r2.detail, /529/); assert.equal(r2.transient, true, "529 exhausted: transient"); }
   }
 
   // anthropic: images go as base64 image blocks before the text
@@ -259,12 +259,12 @@ async function main() {
     assert.equal(((await callModel(call("intake"), deps(h.fn))) as { reason?: string }).reason, "empty");
   }
 
-  // gemini: 503 twice → transport after two calls; 429 then 200 → ok
+  // gemini: 503 every time → transport after four calls; 429 then 200 → ok
   {
     const f = fakeFetch([{ status: 503, body: { error: { message: "unavailable" } } }]);
     const r = await callModel(call("intake"), deps(f.fn));
     assert.equal(!r.ok && r.reason, "transport");
-    assert.equal(f.seen.length, 2);
+    assert.equal(f.seen.length, 4, "503: four attempts");
     const g = fakeFetch([{ status: 429, body: { error: { message: "slow down" } } }, geminiText('{"ok":true}')]);
     assert.equal((await callModel(call("intake"), deps(g.fn))).ok, true);
     assert.equal(g.seen.length, 2);
@@ -307,10 +307,16 @@ async function main() {
     n = 0;
     const rg = await callModel(call("intake"), deps(counted));
     assert.equal(!rg.ok && rg.reason, "transport", "gemini html body");
-    assert.equal(n, 2, "gemini html body retried once");
-    const f = fakeFetch([{ status: 200, body: { id: "c1", object: "chat.completion", created: 1, model: "m", choices: [], usage: { prompt_tokens: 1, completion_tokens: 1 } } }]);
+    assert.equal(n, 4, "gemini html body (no status: like a network error) retried up to four attempts");
+    const f = fakeFetch([{ status: 200, body: { id: "c1", object: "chat.completion", created: 1, model: "m", choices: [], usage: { prompt_tokens: 1000, completion_tokens: 500 } } }]);
     const r = await callModel(call("solver2"), deps(f.fn));
     assert.equal(r.ok, false, "choices: [] is a failure");
+    // M6: the usage block is readable, so the call's cost is recorded
+    assert.ok(Math.abs(r.cost - costOf(MODEL_FOR.solver2, 1000, 500)) < 1e-12, `M6: unreadable 200 with readable usage is billed (${r.cost})`);
+    assert.equal(f.seen.length, 1, "M6: not retried");
+    const fa = fakeFetch([{ status: 200, body: { id: "msg_1", type: "message", role: "assistant", model: MODEL_FOR.solver1.model, stop_reason: "end_turn", usage: { input_tokens: 1000, output_tokens: 500 } } }]);
+    const ra = await callModel(call("solver1"), deps(fa.fn));
+    assert.ok(!ra.ok && Math.abs(ra.cost - costOf(MODEL_FOR.solver1, 1000, 500)) < 1e-12, `M6: anthropic content missing, usage readable: billed (${ra.cost})`);
     const g = fakeFetch([{ status: 200, body: { id: "msg_1", type: "message", role: "assistant", model: MODEL_FOR.solver1.model, content: [{ type: "text", text: '{"ok":true}' }], stop_reason: "end_turn" } }]);
     const r2 = await callModel(call("solver1"), deps(g.fn));
     assert.equal(!r2.ok && r2.reason, "transport", "missing usage");
@@ -407,6 +413,51 @@ async function main() {
     const f = fakeFetch([openaiMsg({ content: '{"ok":true}' })]);
     await callModel(call("solver3Text"), deps(f.fn));
     assert.equal(typeof f.seen[0].body.max_tokens, "number");
+  }
+
+  // I7: transient failures: up to four attempts, 2 s / 6 s / 18 s with jitter, Retry-After honoured (capped at 60 s)
+  {
+    const waits: number[] = [];
+    const sleep = async (ms: number) => { waits.push(ms); };
+    const withHeaders = (status: number, headers: Record<string, string>) => (async () => new Response(JSON.stringify({ error: { message: "x" } }), { status, headers: { "content-type": "application/json", ...headers } })) as unknown as typeof fetch;
+    // plain backoff, gemini 503 (fetch-based adapter)
+    const r = await callModel(call("intake"), { fetch: withHeaders(503, {}), sleep });
+    assert.equal(!r.ok && r.transient, true, "I7: exhausted 503 is transient");
+    assert.equal(waits.length, 3, `I7: three waits for four attempts (${waits})`);
+    [2000, 6000, 18000].forEach((base, k) => assert.ok(waits[k] >= base * 0.75 && waits[k] <= base * 1.25, `I7: wait ${k + 1} ≈ ${base} ms with jitter (${waits[k]})`));
+    // Retry-After in seconds, and as an HTTP date, and capped at 60 s
+    waits.length = 0;
+    await callModel(call("intake"), { fetch: withHeaders(429, { "retry-after": "5" }), sleep });
+    assert.deepEqual(waits, [5000, 5000, 5000], "I7: Retry-After seconds honoured");
+    waits.length = 0;
+    await callModel(call("intake"), { fetch: withHeaders(429, { "retry-after": "600" }), sleep });
+    assert.deepEqual(waits, [60000, 60000, 60000], "I7: Retry-After capped at 60 s");
+    const { retryAfterMs, backoffFor } = await import("./models");
+    const now = Date.parse("2026-11-17T10:00:00Z");
+    assert.equal(retryAfterMs("Tue, 17 Nov 2026 10:00:30 GMT", now), 30000, "I7: Retry-After HTTP date");
+    assert.equal(retryAfterMs("garbage", now), null, "I7: unreadable Retry-After ignored");
+    assert.equal(backoffFor(2, 2000, null, () => 0.5), 18000, "I7: third wait is 18 s at mid jitter");
+    // SDK adapters (anthropic / openai) read the header too
+    waits.length = 0;
+    const r2 = await callModel(call("solver2"), { fetch: withHeaders(503, { "retry-after": "2" }), sleep });
+    assert.ok(!r2.ok && r2.transient, "I7: openai 503 exhausted: transient");
+    assert.deepEqual(waits, [2000, 2000, 2000], "I7: openai Retry-After honoured");
+    // never retried: 400 / 401 / 403 / 404
+    for (const status of [400, 401, 403, 404]) {
+      for (const role of ["intake", "solver1", "solver2"] as Role[]) {
+        let n = 0;
+        const counted = (async () => { n++; return new Response(JSON.stringify({ error: { message: "no" } }), { status, headers: { "content-type": "application/json" } }); }) as unknown as typeof fetch;
+        const rr = await callModel(call(role), { fetch: counted, sleep });
+        assert.equal(n, 1, `I7: ${role} HTTP ${status} not retried`);
+        assert.ok(!rr.ok && !rr.transient, `I7: ${role} HTTP ${status} is not transient`);
+      }
+    }
+    // network errors retried, then transient
+    let n = 0;
+    const offline = (async () => { n++; throw new TypeError("fetch failed"); }) as unknown as typeof fetch;
+    const r3 = await callModel(call("solver1"), { fetch: offline, sleep });
+    assert.equal(n, 4, "I7: network error: four attempts");
+    assert.ok(!r3.ok && r3.transient, "I7: network error exhausted: transient");
   }
 
   console.log("models.test: ok");

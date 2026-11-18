@@ -28,7 +28,7 @@ export type Finding = {
 };
 
 /** A model-backed check's result, with the call's cost and serving model for the run record (0 and "" when no call was made). */
-export type CheckResult = { findings: Finding[]; cost: number; model: string } | { failed: string; cost: number; model: string };
+export type CheckResult = { findings: Finding[]; cost: number; model: string } | { failed: string; cost: number; model: string; transient?: boolean };
 
 // --- shared helpers --------------------------------------------------------------------------------
 
@@ -157,7 +157,7 @@ export async function workingCheck(item: ItemDoc, draft: Draft, answer: Answer, 
     "Check the working of each section.",
   ].join("\n\n");
   const r = await callModel<WorkingReply>({ role: "working", system: WORKING_SYSTEM, user, schema: WORKING_SCHEMA }, deps);
-  if (!r.ok) return { failed: `${r.reason}: ${r.detail}`, cost: r.cost, model: r.model };
+  if (!r.ok) return { failed: `${r.reason}: ${r.detail}`, cost: r.cost, model: r.model, ...(r.transient ? { transient: true } : {}) };
   const run = { cost: r.cost, model: r.model };
   const v = r.value;
   const problem = workingReplyProblem(v, draft);
@@ -227,7 +227,7 @@ export async function rulesAudit(item: ItemDoc, course: string, draft: Draft, ru
     `Give one verdict for each of the ${rules.length} rules.`,
   ].join("\n\n");
   const r = await callModel<AuditReply>({ role: "audit", system: AUDIT_SYSTEM, user, schema: AUDIT_SCHEMA }, deps);
-  if (!r.ok) return { failed: `${r.reason}: ${r.detail}`, cost: r.cost, model: r.model };
+  if (!r.ok) return { failed: `${r.reason}: ${r.detail}`, cost: r.cost, model: r.model, ...(r.transient ? { transient: true } : {}) };
   const run = { cost: r.cost, model: r.model };
   const fail = (failed: string) => ({ failed, ...run });
 

@@ -5,7 +5,7 @@
 
 import type { ModelCall, ModelDeps, ModelFailureReason, ModelReply, ModelSpec, Role, Vendor } from "./types";
 import { assertSchemaSupported, parseJsonReply, validate } from "./schema";
-import { IMAGE_TYPES, TransportError, type VendorReply } from "./vendors/common";
+import { IMAGE_TYPES, TransportError, UnreadableReply, retryableStatus, type VendorReply } from "./vendors/common";
 import { callAnthropic } from "./vendors/anthropic";
 import { callOpenAICompatible } from "./vendors/openai";
 import { callGemini } from "./vendors/gemini";
@@ -129,7 +129,28 @@ export function redact(text: string): string {
   return out.replace(/\b(?:sk-|AIza)[A-Za-z0-9_*.-]{8,}/g, "[redacted]").replace(/\bBearer\s+\S+/gi, "[redacted]");
 }
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const realSleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+/** Attempts per call for a transient failure (network error, 429, 500, 502, 503, 504, 529). */
+export const MAX_ATTEMPTS = 4;
+/** The longest a Retry-After header is honoured for. */
+export const RETRY_AFTER_CAP_MS = 60_000;
+
+/** A Retry-After header (seconds, or an HTTP date) as milliseconds from `now`, capped at 60 s; null when absent or unreadable. */
+export function retryAfterMs(header: string | null | undefined, now = Date.now()): number | null {
+  const v = (header ?? "").trim();
+  if (!v) return null;
+  const ms = /^\d+(?:\.\d+)?$/.test(v) ? Number(v) * 1000 : Date.parse(v) - now;
+  if (!Number.isFinite(ms)) return null;
+  return Math.min(RETRY_AFTER_CAP_MS, Math.max(0, ms));
+}
+
+/** The wait before attempt `attempt + 1` (attempt 0 is the first call): base, ×3, ×9 (2 s, 6 s, 18 s), ±25 % jitter; Retry-After wins when given. */
+export function backoffFor(attempt: number, base: number, retryAfter: number | null, random: () => number = Math.random): number {
+  if (retryAfter !== null) return retryAfter;
+  const plain = base * 3 ** attempt;
+  return Math.round(plain * (0.75 + 0.5 * random()));
+}
 
 function send(spec: ModelSpec, call: ModelCall, key: string, f: typeof fetch | undefined): Promise<VendorReply> {
   switch (spec.vendor) {
@@ -159,6 +180,7 @@ export async function callModel<T>(call: ModelCall, deps: ModelDeps = {}): Promi
   }
 
   const started = Date.now();
+  const sleep = deps.sleep ?? realSleep;
   let reply: VendorReply | undefined;
   for (let attempt = 0; ; attempt++) {
     try {
@@ -166,13 +188,17 @@ export async function callModel<T>(call: ModelCall, deps: ModelDeps = {}): Promi
       break;
     } catch (e) {
       if (e instanceof TransportError) {
-        if (e.retryable && attempt === 0) {
-          await sleep(deps.backoffMs ?? 2000);
+        // Transient: a network error or 429 / 500 / 502 / 503 / 504 / 529; never 400 / 401 / 403 / 404.
+        const transient = e.retryable && (e.status === undefined || retryableStatus(e.status));
+        if (transient && attempt + 1 < MAX_ATTEMPTS) {
+          await sleep(backoffFor(attempt, deps.backoffMs ?? 2000, retryAfterMs(e.retryAfter)));
           continue;
         }
-        return failed("transport", e.message);
+        return { ...failed("transport", e.message), ...(transient ? { transient: true } : {}) };
       }
-      // Anything else from an adapter (an unreadable 200, a missing field): no retry.
+      // A 200 whose content cannot be read but whose usage can: billed, so its cost is recorded. No retry.
+      if (e instanceof UnreadableReply) return failed("transport", `${spec.vendor}: ${e.message}`, costOf(spec, e.tokensIn, e.tokensOut, deps.now));
+      // Anything else from an adapter (an unreadable 200 with no usage, a missing field): no retry.
       return failed("transport", `${spec.vendor}: ${e instanceof Error ? e.message : String(e)}`);
     }
   }

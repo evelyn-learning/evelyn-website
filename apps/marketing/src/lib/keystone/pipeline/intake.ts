@@ -647,7 +647,7 @@ export async function intakeModel(
   item: ItemDoc,
   images: ModelImage[],
   deps?: ModelDeps,
-): Promise<({ complete: boolean; missing: string[] } | { failed: string }) & { cost: number; model: string }> {
+): Promise<({ complete: boolean; missing: string[] } | { failed: string; transient?: boolean }) & { cost: number; model: string }> {
   // A stray closing tag in the question must not end the data block early.
   const text = questionAsText(item).replace(/<\s*\/\s*question/gi, "&lt;/question");
   const r = await callModel<{ complete: boolean; missing: string[] }>(
@@ -656,7 +656,7 @@ export async function intakeModel(
   );
   // cost and model ride along on every outcome (failed calls cost money too).
   const run = { cost: r.cost, model: r.model };
-  if (!r.ok) return { failed: `${r.reason}: ${r.detail}`, ...run };
+  if (!r.ok) return { failed: `${r.reason}: ${r.detail}`, ...(r.transient ? { transient: true } : {}), ...run };
   const { complete, missing } = r.value;
   if (complete === (missing.length > 0)) return { failed: "inconsistent reply", ...run };
   return { complete, missing, ...run };

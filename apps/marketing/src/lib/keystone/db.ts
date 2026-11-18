@@ -93,6 +93,8 @@ export type RunStep = {
   output: unknown;
   cost: number;
   model?: string;
+  /** ok false and the cause was transient (network error, 429 / 5xx after every retry): the next run retries it. */
+  transient?: boolean;
 };
 
 /** One pipeline run of one item. Internal record (may carry model ids); never shown to the client. */
@@ -127,6 +129,8 @@ export type RunDoc = {
   ownWriteLanded?: boolean;
   /** Bookkeeping that failed without failing the item (e.g. the lesson row); scrubbed, at most 5. */
   warnings?: string[];
+  /** Times this run ended "failed" or held with step_failed (a resumed run adds to it): the attempt cap counts these. */
+  failedAttempts?: number;
 };
 
 export type ItemDoc = {
@@ -505,6 +509,7 @@ function defineModels(conn: Connection): Models {
     filesNotSent: [String],
     ownWriteLanded: Boolean,
     warnings: [String],
+    failedAttempts: Number,
   });
   Run.index({ itemId: 1, runId: 1 }, { unique: true });
   Run.index({ itemId: 1, startedAt: -1 });

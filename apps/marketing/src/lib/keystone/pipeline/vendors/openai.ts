@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import type { ModelCall, ModelSpec } from "../types";
 import { isStrictSchema } from "../schema";
-import { REQUEST_TIMEOUT_MS, TransportError, retryableStatus, toBase64, type VendorReply } from "./common";
+import { REQUEST_TIMEOUT_MS, TransportError, UnreadableReply, retryAfterOf, retryableStatus, toBase64, type VendorReply } from "./common";
 
 const DEEPSEEK_BASE_URL = "https://api.deepseek.com";
 // deepseek-v4-pro maximum output, "MAXIMUM: 384K" (read as 384,000 to stay under it).
@@ -51,18 +51,24 @@ export async function callOpenAICompatible(
   } catch (e) {
     if (e instanceof OpenAI.APIError) {
       const status = e instanceof OpenAI.APIConnectionError ? undefined : e.status;
-      throw new TransportError(`${flavour} ${status ? `HTTP ${status}` : "network error"}: ${e.message}`, retryableStatus(status));
+      throw new TransportError(`${flavour} ${status ? `HTTP ${status}` : "network error"}: ${e.message}`, retryableStatus(status), status, retryAfterOf((e as { headers?: unknown }).headers));
     }
     throw e;
   }
 
+  const usage = res && typeof res === "object" ? (res as { usage?: { prompt_tokens?: unknown; completion_tokens?: unknown } }).usage : undefined;
+  const billed = usage && typeof usage.prompt_tokens === "number" && typeof usage.completion_tokens === "number" ? usage as { prompt_tokens: number; completion_tokens: number } : null;
   if (!res || typeof res !== "object" || !Array.isArray(res.choices) || !res.usage) {
+    if (billed) throw new UnreadableReply(`${flavour}: unreadable 200 response (no choices)`, billed.prompt_tokens, billed.completion_tokens);
     throw new Error(`${flavour}: unreadable 200 response (no choices/usage)`);
   }
   // DeepSeek cache hits are priced at the cache-miss rate (an upper bound; see Minor 6 in the task-5 review).
   const base = { tokensIn: res.usage.prompt_tokens, tokensOut: res.usage.completion_tokens, model: res.model };
   const choice = res.choices[0];
-  if (!choice?.message) throw new Error(`${flavour}: 200 response with no choices`);
+  if (!choice?.message) {
+    if (billed) throw new UnreadableReply(`${flavour}: 200 response with no choices`, billed.prompt_tokens, billed.completion_tokens);
+    throw new Error(`${flavour}: 200 response with no choices`);
+  }
   if (choice.message.refusal) return { ...base, text: "", refusal: choice.message.refusal };
   if (choice.finish_reason === "content_filter") return { ...base, text: "", refusal: "finish_reason content_filter" };
   return { ...base, text: choice.message.content ?? "", truncated: choice.finish_reason === "length" };

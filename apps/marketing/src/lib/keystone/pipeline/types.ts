@@ -15,7 +15,8 @@ export type ModelReply<T> =
   /** model = the model that served the reply; fellBack = a vendor-side fallback served it
    * instead of MODEL_FOR[role].model (Anthropic refusal fallback). */
   | { ok: true; value: T; cost: number; model: string; ms: number; fellBack: boolean }
-  | { ok: false; reason: ModelFailureReason; detail: string; cost: number; model: string };
+  /** transient: the call failed on a network error or a 429 / 5xx after every retry: worth trying again later. */
+  | { ok: false; reason: ModelFailureReason; detail: string; cost: number; model: string; transient?: boolean };
 
 export type PriceChange = { from: string /* ISO date, in force from this day (UTC) */; pricePerMTokIn: number; pricePerMTokOut: number };
 
@@ -31,8 +32,10 @@ export type ModelSpec = {
 export type ModelDeps = {
   /** Injected HTTP for tests; also lifts the live switch (no real vendor is reached). */
   fetch?: typeof fetch;
-  /** Wait before the one transport retry; tests set 0. Default 2000 ms. */
+  /** The first wait before a transport retry (then ×3, ×9, with jitter); tests set 0. Default 2000 ms. */
   backoffMs?: number;
+  /** How a wait is spent (tests pass a fake that records the waits and returns at once). Default: a real timer. */
+  sleep?: (ms: number) => Promise<void>;
   /** Clock for date-aware prices; tests set it. Default: now. */
   now?: Date;
 };

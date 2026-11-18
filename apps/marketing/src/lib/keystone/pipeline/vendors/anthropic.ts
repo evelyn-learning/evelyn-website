@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { ModelCall, ModelSpec } from "../types";
-import { REQUEST_TIMEOUT_MS, TransportError, retryableStatus, toBase64, type ImageType, type VendorReply } from "./common";
+import { REQUEST_TIMEOUT_MS, TransportError, UnreadableReply, retryAfterOf, retryableStatus, toBase64, type ImageType, type VendorReply } from "./common";
 
 // Claude via the Messages API with JSON-schema structured output
 // (output_config.format). Thinking is always on for this model; effort "high".
@@ -39,11 +39,15 @@ export async function callAnthropic(spec: ModelSpec, call: ModelCall, apiKey: st
   } catch (e) {
     if (e instanceof Anthropic.APIError) {
       const status = e instanceof Anthropic.APIConnectionError ? undefined : e.status;
-      throw new TransportError(`anthropic ${status ? `HTTP ${status}` : "network error"}: ${e.message}`, retryableStatus(status));
+      throw new TransportError(`anthropic ${status ? `HTTP ${status}` : "network error"}: ${e.message}`, retryableStatus(status), status, retryAfterOf((e as { headers?: unknown }).headers));
     }
     throw e;
   }
   if (!res || typeof res !== "object" || !Array.isArray(res.content) || !res.usage) {
+    const u = res && typeof res === "object" ? (res as { usage?: { input_tokens?: unknown; output_tokens?: unknown } }).usage : undefined;
+    if (u && typeof u.input_tokens === "number" && typeof u.output_tokens === "number") {
+      throw new UnreadableReply("anthropic: unreadable 200 response (no content)", u.input_tokens, u.output_tokens);
+    }
     throw new Error("anthropic: unreadable 200 response (no content/usage)");
   }
 

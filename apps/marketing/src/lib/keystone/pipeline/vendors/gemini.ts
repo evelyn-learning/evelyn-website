@@ -37,7 +37,7 @@ export async function callGemini(spec: ModelSpec, call: ModelCall, apiKey: strin
   }
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new TransportError(`gemini HTTP ${res.status}: ${text.slice(0, 300)}`, retryableStatus(res.status));
+    throw new TransportError(`gemini HTTP ${res.status}: ${text.slice(0, 300)}`, retryableStatus(res.status), res.status, res.headers.get("retry-after"));
   }
   let data: GeminiResponse;
   try {
