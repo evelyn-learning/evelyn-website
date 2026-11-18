@@ -8,7 +8,7 @@
 import type { LessonPlan } from '../lesson-plan/types';
 import type { TutorMilestone } from '../orchestrator/types';
 import type { V2State } from './types';
-import { TUTOR_V2_PART_PAGE_CHIP } from '../orchestrator/flags';
+import { TUTOR_V2_CHIP_ON_PAINT, TUTOR_V2_PART_PAGE_CHIP } from '../orchestrator/flags';
 import { v2PartInHand, v2PartViewed, v2PartsDone, v2PlanLabelled } from './part-flow';
 
 export interface V2Progress { currentSegmentId: string; completedSegmentIds: string[]; milestone: TutorMilestone | null }
@@ -50,6 +50,16 @@ export function v2Progress(plan: LessonPlan, goals: V2State['goals'], view?: Pic
   const at = stamped ? (!done[stamped.i] ? stamped.i : after >= 0 ? after : stamped.i) : open >= 0 ? open : Math.max(0, next);
   const currentSegmentId = plan.segments[at]?.id ?? '';
   return { currentSegmentId, completedSegmentIds, milestone: v2Milestone(plan, goals) };
+}
+
+/** Task 7n (CHIP_ON_PAINT): the progress with the lit chip read off the board as painted (`painted`: the board shown while a page
+ *  this reply turns to is still held for its sentence; null: all painted). Green and the milestone stay the lesson position's
+ *  (the full state). Mic test 4 (embed-1795028886172, flag 7): the Summary chip lit while the correction was still being said
+ *  on the Past simple page. */
+export function v2ProgressAsPainted(plan: LessonPlan, goals: V2State['goals'], view: Parameters<typeof v2Progress>[2], painted: V2State['board'] | null, enabled: boolean = TUTOR_V2_CHIP_ON_PAINT): V2Progress {
+  const full = v2Progress(plan, goals, view);
+  if (!enabled || !painted || !view) return full;
+  return { ...full, currentSegmentId: v2Progress(plan, goals, { ...view, board: painted }).currentSegmentId };
 }
 
 function v2Milestone(plan: LessonPlan, goals: V2State['goals']): TutorMilestone | null {

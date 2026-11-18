@@ -2098,3 +2098,23 @@ export const TUTOR_V2_CORRECTION_CARD_NOW = process.env.NEXT_PUBLIC_TUTOR_V2_COR
  *  read 「今、〜しています」 as 「今、からしています」); kept between two numbers or times. Mic test 4 (embed-1795028886172,
  *  6.76 min) (Task 7m, item 5). Default ON; NEXT_PUBLIC_TUTOR_V2_WAVE_DASH=off ⇒ as before. */
 export const TUTOR_V2_WAVE_DASH = process.env.NEXT_PUBLIC_TUTOR_V2_WAVE_DASH !== 'off';
+
+/** Tutor brain v2 (v2/language-pack.ts, v2/part-flow.ts, v2/time-fit.ts, v2/turn.ts): the part-change ask is read in the lesson's
+ *  teaching languages, by position (the reply's last sentence a go-on, the question-first check before it, the lead 「次は X です。」
+ *  before that), the wording from the language pack; a go answer with a leading filler ("Uh, move on.", 「えっと、はい」) is a go,
+ *  and a move-on. Mic test 4 (embed-1795028886172, flag 3) (Task 7n, item 1). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_PART_ASK_LANGS=off ⇒ as before. */
+export const TUTOR_V2_PART_ASK_LANGS = process.env.NEXT_PUBLIC_TUTOR_V2_PART_ASK_LANGS !== 'off';
+
+/** Tutor brain v2 (v2/progress.ts, useV2Turns): the lit part chip follows the board as painted: while a page this reply turns to
+ *  is still held for its sentence, the chip stays on the page shown; it changes when that page is painted. Green stays the
+ *  lesson position's. Mic test 4 (embed-1795028886172, flag 7) (Task 7n, item 2). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_CHIP_ON_PAINT=off ⇒ as before. */
+export const TUTOR_V2_CHIP_ON_PAINT = process.env.NEXT_PUBLIC_TUTOR_V2_CHIP_ON_PAINT !== 'off';
+
+/** Tutor brain v2 (v2/time-box.ts, v2/turn.ts, v2/state-carry.ts, useV2Turns, TutorVoiceV2, the embed's evelyn:clock): while the
+ *  tester's debug flag panel is open the lesson clock is paused: the paused total rides in the state (`clockPausedMs`) and is
+ *  taken off the engine's clock server-side (time fit, wrap, time left), the client's hard stop is pushed back by it and the host
+ *  clock message leaves it out. Billing and the recorded session length are unchanged. Only the debug flag tool pauses. Mic test
+ *  4 (embed-1795028886172: 4.71 min of flags) (Task 7n, item 3). Default ON; NEXT_PUBLIC_TUTOR_V2_FLAG_CLOCK_PAUSE=off ⇒ as before. */
+export const TUTOR_V2_FLAG_CLOCK_PAUSE = process.env.NEXT_PUBLIC_TUTOR_V2_FLAG_CLOCK_PAUSE !== 'off';

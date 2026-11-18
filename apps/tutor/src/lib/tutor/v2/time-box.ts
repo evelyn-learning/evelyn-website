@@ -16,7 +16,7 @@
  * last fifth (D).
  */
 import type { LessonPlan } from '../lesson-plan/types';
-import { TUTOR_V2_CLOCK_FROM_START, TUTOR_V2_CLOSE_BY_CONTENT, TUTOR_V2_MORE_PRACTICE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_OVERRUN_MIN, TUTOR_V2_PART_ENTERED, TUTOR_V2_PART_MIN_PRACTICE, TUTOR_V2_TIME_BOX, TUTOR_V2_TIME_NO_SQUEEZE, TUTOR_V2_TIME_OVERRUN } from '../orchestrator/flags';
+import { TUTOR_V2_CLOCK_FROM_START, TUTOR_V2_CLOSE_BY_CONTENT, TUTOR_V2_FLAG_CLOCK_PAUSE, TUTOR_V2_MORE_PRACTICE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_OVERRUN_MIN, TUTOR_V2_PART_ENTERED, TUTOR_V2_PART_MIN_PRACTICE, TUTOR_V2_TIME_BOX, TUTOR_V2_TIME_NO_SQUEEZE, TUTOR_V2_TIME_OVERRUN } from '../orchestrator/flags';
 import { discussionOf } from './discussion';
 import { v2IsPageOfPart, v2OfferedOut, v2PartEntered, v2PartIsOptional, v2PartOf } from './plan-map';
 import type { V2Session, V2State } from './types';
@@ -29,6 +29,24 @@ import type { V2Session, V2State } from './types';
 export function v2StartClock(state: V2State, nowMs: number, enabled: boolean = TUTOR_V2_CLOCK_FROM_START): V2State {
   if (!enabled || state.history.length || state.closed || state.startedAtMs === nowMs) return state;
   return { ...state, startedAtMs: nowMs };
+}
+
+/** Task 7n (FLAG_CLOCK_PAUSE): at most this much paused time is taken off the clock (a malformed or hostile client value). */
+export const V2_CLOCK_PAUSE_MAX_MS = 6 * 60 * 60000;
+/** Task 7n (FLAG_CLOCK_PAUSE): the time the tester's debug flag panel has held the lesson clock (state.clockPausedMs, bounded);
+ *  0 with the switch off. Mic test 4 (embed-1795028886172): 4.71 min of open flags made the wrap minute fire with ~14 min taught. */
+export function v2ClockPausedMs(state: Pick<V2State, 'clockPausedMs'>, enabled: boolean = TUTOR_V2_FLAG_CLOCK_PAUSE): number {
+  const p = state.clockPausedMs;
+  return enabled && typeof p === 'number' && Number.isFinite(p) && p > 0 ? Math.min(p, V2_CLOCK_PAUSE_MAX_MS) : 0;
+}
+/** Task 7n (FLAG_CLOCK_PAUSE): the lesson clock's "now": the wall clock less the paused time. Every time rule of the turn reads
+ *  this (time fit, wrap, time left, the stamps it writes); never billing or the recorded length (memory.ts reads the wall). */
+export function v2LessonNowMs(wallMs: number, state: Pick<V2State, 'clockPausedMs'>, enabled: boolean = TUTOR_V2_FLAG_CLOCK_PAUSE): number {
+  return wallMs - v2ClockPausedMs(state, enabled);
+}
+/** Task 7n (FLAG_CLOCK_PAUSE): the client's hard stop, re-armed after a pause: the stop minute less the lesson time used. */
+export function v2HardStopDelayMs(stopMin: number, state: Pick<V2State, 'startedAtMs' | 'clockPausedMs'>, wallMs: number): number {
+  return Math.max(5000, stopMin * 60000 - (v2LessonNowMs(wallMs, state, true) - state.startedAtMs));
 }
 
 /** Task 7f's switches, B to F, as one value: each its own flag (default on); tests pass some off for one turn. */

@@ -32,7 +32,7 @@ import { useOpenAIRealtime, type OpenAIVoice } from '@/app/tutor/hooks/useOpenAI
 import { usePerceptionWS, type PerceptionTranscript } from '@/app/tutor/hooks/usePerceptionWS';
 import { useCartesiaInkWS } from '@/app/tutor/hooks/useCartesiaInkWS';
 import { useAudioRecorder } from '@/app/tutor/hooks/useAudioRecorder';
-import { BARGEIN_GATE_POLL_MS, TUTOR_MIC_REACQUIRE, TUTOR_PRONUNCIATION_ASSESS, TUTOR_STT_ENGINE_INK2, TUTOR_V2_BARGEIN_ENERGY_GATE, TUTOR_V2_HEARD_NOISE, TUTOR_V2_NO_WORDS_RECOVER, TUTOR_V2_SPOKEN_SOUNDS, TUTOR_V2_TARGET_PAUSE, TUTOR_V2_TARGET_PUNCT, TUTOR_V2_CARD_STRESS_SPOKEN, TUTOR_V2_WAVE_DASH } from '@/lib/tutor/orchestrator/flags';
+import { BARGEIN_GATE_POLL_MS, TUTOR_MIC_REACQUIRE, TUTOR_PRONUNCIATION_ASSESS, TUTOR_STT_ENGINE_INK2, TUTOR_V2_BARGEIN_ENERGY_GATE, TUTOR_V2_HEARD_NOISE, TUTOR_V2_NO_WORDS_RECOVER, TUTOR_V2_SPOKEN_SOUNDS, TUTOR_V2_TARGET_PAUSE, TUTOR_V2_TARGET_PUNCT, TUTOR_V2_CARD_STRESS_SPOKEN, TUTOR_V2_WAVE_DASH, TUTOR_V2_FLAG_CLOCK_PAUSE } from '@/lib/tutor/orchestrator/flags';
 import type { BargeInFrame } from '@/lib/tutor/voice/bargein-gate';
 import { armV2SoundGate, stepV2SoundGate } from '@/lib/tutor/v2/sound-gate';
 import { V2MicWatch } from '@/lib/tutor/v2/mic-watch';
@@ -747,9 +747,17 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       board: state?.board,
     };
   }, []);
-  const flagStart = useCallback(() => { clearSilence(); stopSoundGate(); if (pauseTimerRef.current) { clearTimeout(pauseTimerRef.current); pauseTimerRef.current = null; } soundPauseRef.current = false; realtimeRef.current?.pauseSpeech(); p.current.onDebugEvent?.('v2_flag', 'opened'); }, []);
+  // Task 7n (FLAG_CLOCK_PAUSE): an open flag holds the lesson clock (useV2Turns pauseClock) and the host's clock message (the
+  // embed page's evelyn:clock, told by a window event). Only this debug tool pauses the clock.
+  const holdClock = (paused: boolean) => {
+    if (!TUTOR_V2_FLAG_CLOCK_PAUSE) return;
+    turnsRef.current?.pauseClock(paused);
+    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('evelyn:lesson-clock-paused', { detail: { paused } }));
+  };
+  const flagStart = useCallback(() => { clearSilence(); stopSoundGate(); if (pauseTimerRef.current) { clearTimeout(pauseTimerRef.current); pauseTimerRef.current = null; } soundPauseRef.current = false; realtimeRef.current?.pauseSpeech(); p.current.onDebugEvent?.('v2_flag', 'opened'); holdClock(true); }, []);
   const flagStop = useCallback(() => {
     p.current.onDebugEvent?.('v2_flag', 'closed');
+    holdClock(false);
     realtimeRef.current?.resumeSpeech();
     // Closing a flag starts nothing: the lesson is where it was. The indicator goes back to what is true now
     // (it showed "Thinking…" after a flag, as if the note had been taken for an answer).

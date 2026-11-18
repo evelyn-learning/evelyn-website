@@ -172,6 +172,9 @@ export interface V2State {
   /** Task 7k fix round 1 (I1, PRACTICE_ON_PART_PAGE): indices of the board pages a practice visit opened. They never count for
    *  the position, done / green, a part reached or entered. */
   visitPages?: number[];
+  /** Task 7n (FLAG_CLOCK_PAUSE): milliseconds the tester's debug flag panel has held the lesson clock (development only). Taken
+   *  off the clock by every time rule (time-box.ts v2LessonNowMs); billing and the recorded length are unchanged. */
+  clockPausedMs?: number;
   /** Task 7f B (TIME_NO_SQUEEZE), timed plan-led lessons: the plan parts left out for time (optional parts, last first, until
    *  the rest fits the box), decided once when the first teaching part opens; `told` once a reply has named them to the
    *  learner (or the facts have asked twice); `shown`: the turns the facts asked. Carried to the next session (memory.ts).

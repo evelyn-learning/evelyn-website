@@ -19,10 +19,11 @@
 import type { LessonPlan, Segment } from '../lesson-plan/types';
 import { stripBoardBlocks } from './board-inline';
 import { v2LearnerSentence } from './learner-card';
-import { v2AsksPartChange, v2MoveAnswer, v2NextPart, v2OpenPagePart, v2PartInHand, v2PartViewed, v2PlanLabelled } from './part-flow';
+import { v2AsksPartChange, v2EndingPartAsk, v2MoveAnswer, v2NextPart, v2OpenPagePart, v2PartInHand, v2PartViewed, v2PlanLabelled } from './part-flow';
 import { v2IsPageOfPart, v2PartEntered, v2PartIsOptional, v2PartNamedIn, v2PartOf } from './plan-map';
 import { v2OverrunMin, v2Taught } from './time-box';
-import { TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART } from '../orchestrator/flags';
+import { v2WithoutFillers } from './language-pack';
+import { TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_PART_ASK_LANGS, TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART } from '../orchestrator/flags';
 import type { V2Session, V2State } from './types';
 
 /** The practice sentences of their own a practice part needs before it closes (Task 7f C). */
@@ -230,16 +231,19 @@ const MOVE_ON_ASKED = /\b(?:let'?s|let us|can we|could we|shall we|i(?:'d| would
 /** Task 7k (PRACTICE_ON_PART_PAGE, `viewOn`): on another part's page (v2PartViewed: practice they asked for of an earlier
  *  part), nothing is counted (fix round 1, I1: a visit never counts for a part's practice, the position's or the visited
  *  one's), and a move-on there is no move-on of the position's part. */
-export function v2CountPractice(plan: LessonPlan, state: V2State, said: string | null, lastTutor: string, viewOn: boolean = TUTOR_V2_PRACTICE_ON_PART_PAGE): void {
+/** Task 7n (PART_ASK_LANGS, `langs`): "Uh, move on." asks to move on (the filler taken off first, language-pack.ts), and a yes to
+ *  a part ask the reply ended on by position in the lesson's `languages` (part-flow.ts v2EndingPartAsk) is a move-on too. */
+export function v2CountPractice(plan: LessonPlan, state: V2State, said: string | null, lastTutor: string, viewOn: boolean = TUTOR_V2_PRACTICE_ON_PART_PAGE, languages?: readonly string[], langs: boolean = TUTOR_V2_PART_ASK_LANGS): void {
   if (!said || state.closed) return;
   if (v2PartViewed(plan, state, viewOn) >= 0) return;
   const i = v2PartInHand(plan, state);
   if (!v2PracticePart(plan, i)) return;
   const id = plan.segments[i]!.id;
   const lastAsk = stripBoardBlocks(lastTutor).split(/(?<=[.!?。！？])\s*/).map((x) => x.trim()).filter(Boolean).pop() ?? '';
-  const moveOn = MOVE_ON_ASKED.test(said) || (v2AsksPartChange(plan, lastAsk) && v2MoveAnswer(said, lastTutor) === 'go');
+  const asked = v2AsksPartChange(plan, lastAsk) || !!v2EndingPartAsk(lastTutor, languages, langs);
+  const moveOn = MOVE_ON_ASKED.test(langs ? v2WithoutFillers(said, languages) : said) || (asked && v2MoveAnswer(said, lastTutor, languages, langs) === 'go');
   if (moveOn) { if (!(state.moveOnAsked ?? []).includes(id)) state.moveOnAsked = [...(state.moveOnAsked ?? []), id].slice(-20); return; }
-  if (v2MoveAnswer(said, lastTutor) === 'question' || !v2LearnerSentence(said)) return;
+  if (v2MoveAnswer(said, lastTutor, languages, langs) === 'question' || !v2LearnerSentence(said)) return;
   state.practiceSaid = { ...(state.practiceSaid ?? {}), [id]: Math.min(99, (state.practiceSaid?.[id] ?? 0) + 1) };
 }
 

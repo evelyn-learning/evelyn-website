@@ -27,7 +27,7 @@ import { speaksMaths, unwrittenEquations } from './spoken-maths';
 import { cardQuestion, saidCovers, sentenceCardToSay, unsaidAsk, unsaidBoardItem, asksAnywhere, noteSentencesToSay, pointsBackAtBoard, v2SpokenWords } from './board-timing';
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, v2AskEveryOn, v2SummaryBegun, V2_NO_ASK_RECHECK_S, V2_TIME_UP_MIN, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
-import { v2CloseOpen, v2LeftToStopMin, v2OverrunMin, v2TimeFlags, v2WrapDue, type V2TimeFlags } from './time-box';
+import { v2CloseOpen, v2LeftToStopMin, v2LessonNowMs, v2OverrunMin, v2TimeFlags, v2WrapDue, type V2TimeFlags } from './time-box';
 import { V2_MIN_PRACTICE, V2_MORE_PRACTICE_MIN_LEFT, v2ArrivalDrops, v2AsksMorePractice, v2CountPractice, v2PartPracticeAsked, v2DroppedMentioned, v2TakeEnteredDropped, v2PartsToDrop, v2PracticeMoreLine, v2PracticeShort, v2TimeFitAfterReply, v2TimeFitDue, v2TimeFitUpFront } from './time-fit';
 import { planGoalIds, renderPlanMap, v2NextTimeAllLine, v2PagePartLabel, v2NextTimeLine, v2PartIsOptional, v2PartNamedIn, v2PartOf, v2UnreachedOffer } from './plan-map';
 import { stripToolTalk } from './tool-talk';
@@ -35,7 +35,7 @@ import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
 import { V2_CLOSING_PAGE, endsAsking, leftOpen, mayOpenPart, namesPart, partOffer, v2FrameDue } from './part-close';
 import { ReplyGate, isGoodbye, isPartFrame } from './reply-gate';
-import { v2AnswerAsksOrDeclines, v2AskRepeats, v2AsksPartChange, v2HeldPageOwed, v2HeldPartWaiting, v2IsPartAsk, v2MoveAnswer, v2NextPart, v2PageForPart, v2PartAskLine, v2PartChangeAsked, v2PartInHand, v2PartNamedLate, v2PartOfPage, v2PartViewed, v2PageTurnNote, v2PositionPage, v2PendingPart, v2PlanLabelled, v2TutorReplies } from './part-flow';
+import { v2AnswerAsksOrDeclines, v2AskRepeats, v2AsksPartChange, v2EndingPartAsk, v2HeldPageOwed, v2HeldPartWaiting, v2IsPartAsk, v2MoveAnswer, v2NextPart, v2PageForPart, v2PartAskLine, v2PartChangeAsked, v2PartInHand, v2PartNamedLate, v2PartOfPage, v2PartViewed, v2PageTurnNote, v2PositionPage, v2PendingPart, v2PlanLabelled, v2TutorReplies } from './part-flow';
 import { heardAsWords } from './heard';
 import { v2IsPracticeAsk, v2LanguagesSection } from './languages';
 import { v2HandsOver, v2ReplyAsks, v2ReplyHandsOver, v2ReplySentences } from './one-question';
@@ -357,7 +357,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Spoken words come through a recogniser that writes "this one" as "this 1" (heard.ts).
   const input: V2TurnInput = given.session.mode === 'voice' && given.studentSaid ? { ...given, studentSaid: heardAsWords(given.studentSaid) } : given;
   const { session } = input;
-  const nowMs = input.nowMs ?? Date.now();
+  // Task 7n (FLAG_CLOCK_PAUSE): the lesson clock, less the time the tester's flag panel held it (time-box.ts v2LessonNowMs).
+  const nowMs = v2LessonNowMs(input.nowMs ?? Date.now(), input.state);
   const callModel = input.callModel ?? defaultModelCall;
   const applyBoard = input.applyBoard ?? applyToModelBoard;
   // The turn works on a copy: a failed model call leaves the caller's state as it was.
@@ -378,6 +379,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // Lessons only: the wrap fact is the lesson's time line, and homework and a discussion are paced by their own (review 5a M2).
     || (!discussion && !session.homework && !session.homeworkSheet && v2WrapDue(session, (nowMs - state.startedAtMs) / 60000, undefined, tf.closeByContent));
   let inviteRefused = false; let inviteWait = false;
+  // Task 7n (PART_ASK_LANGS): the lesson's teaching languages, whose language packs read its part asks and answers.
+  const askLangs: readonly string[] = session.languages?.length ? session.languages : ['en'];
   const lastTutorText = (() => { const m = [...state.history].reverse().find((h) => h.role === 'assistant' && (typeof h.content === 'string' || h.content.some((c) => c.type === 'text'))); return !m ? '' : typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '); })();
   // Task 7a (PART_PAGE_CHIP, PART_ASK_EVERY): spoken teaching lessons whose plan parts all have names. Chip, page and part
   // move together (part-flow.ts), and every part change after the level check is asked first.
@@ -394,7 +397,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // later" line for the part the last reply asked about, nor for the next part ("Shall we go on to pronunciation?" → "Yes,
   // let's try some pronunciation." was told it "comes later" beside the page 7a opened).
   if (partAsk?.ahead && session.plan) {
-    const pending = v2PendingPart(session.plan, state, lastTutorText, input.studentSaid);
+    const pending = v2PendingPart(session.plan, state, lastTutorText, input.studentSaid, undefined, askLangs);
     if (partAsk.index === pending?.index || partAsk.index === v2NextPart(session.plan, state, v2PartInHand(session.plan, state))) partAsk = null;
   }
   const visitAsk = partAsk && !partAsk.ahead ? partAsk.index : -1;
@@ -418,7 +421,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const inviteOwed = v2CloseInviteOwed(session, state, { nowMs, stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun });
   // Task 7f C (PART_MIN_PRACTICE): the learner's words count for the part in hand, before any page opens on their yes. Task 7k:
   // not their request for practice of another part.
-  if (tf.minPractice && partFlow && session.plan && !partAsk) v2CountPractice(session.plan, state, input.studentSaid, lastTutorText);
+  if (tf.minPractice && partFlow && session.plan && !partAsk) v2CountPractice(session.plan, state, input.studentSaid, lastTutorText, undefined, askLangs);
   // Task 7i (OPTIONAL_AT_ARRIVAL): an optional part is decided as the lesson arrives at it (time-fit.ts v2ArrivalDrops), measured
   // against the box plus the margin from the real elapsed time. Before any page opens on their yes: a yes to a part left out
   // opens nothing. Labelled plans only (fix round 1, I2): a plan without part names keeps the 7f up-front drop.
@@ -433,7 +436,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const named = v2DroppedMentioned(session.plan, state, input.studentSaid, usedMin, session.timeBoxMinutes, marginMin);
     if (named) { const seg = session.plan.segments[named.index]!; droppedAsked = { label: v2PartOf(seg).label ?? seg.id, minutes: named.minutes, left: named.left, fits: named.fits }; }
     // Fix round 1 (minor 2): the part the last reply asked about keeps the decision made at the ask.
-    const asked = v2PendingPart(session.plan, state, lastTutorText, null); const lastAsked = asked ? session.plan.segments[asked.index]!.id : null;
+    const asked = v2PendingPart(session.plan, state, lastTutorText, null, undefined, askLangs); const lastAsked = asked ? session.plan.segments[asked.index]!.id : null;
     const more = v2ArrivalDrops(session.plan, state, usedMin, session.timeBoxMinutes, marginMin, lastAsked);
     // Fix round 1 (minor 1): `toldIds` and the rest kept (a part already told is not told again); only `told`, "every part left
     // out has been told", clears, as the new one has not been.
@@ -446,8 +449,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // pronunciation, taken up after the offer, ran on the conversation's page (mic test 1, embed-1794882458629). Opened before
   // the facts, so the board they show is the board the reply speaks over.
   let released: V2ToolCall | null = null; let releasedFrom = -1;
-  if (partFlow && session.plan && input.studentSaid !== null && !state.closed && !closingTurn && v2MoveAnswer(input.studentSaid, lastTutorText) === 'go') {
-    const pending = v2PendingPart(session.plan, state, lastTutorText, input.studentSaid);
+  if (partFlow && session.plan && input.studentSaid !== null && !state.closed && !closingTurn && v2MoveAnswer(input.studentSaid, lastTutorText, askLangs) === 'go') {
+    const pending = v2PendingPart(session.plan, state, lastTutorText, input.studentSaid, undefined, askLangs);
     if (pending && !(arrivalOn && state.timeFit?.dropped.includes(session.plan.segments[pending.index]!.id))) {
       const id = `inl_${nowMs.toString(36)}_0`; const args = { title: pending.title }; releasedFrom = state.board.current;
       const o = applyBoard(state.board, id, 'new_page', args);
@@ -1482,7 +1485,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const said = stripBoardBlocks(spoken.join(' '));
     const last = v2ReplySentences(said).pop() ?? '';
     const plan = session.plan;
-    const q = last && v2IsPartAsk(last) ? v2PendingPart(plan, { ...state, heldPage: undefined }, said, null) : null;
+    // Task 7n (PART_ASK_LANGS): an ask it ends on by position in the lesson's languages holds its part as well.
+    const q = last && (v2IsPartAsk(last) || !!v2EndingPartAsk(said, askLangs)) ? v2PendingPart(plan, { ...state, heldPage: undefined }, said, null, undefined, askLangs) : null;
     if (q) ownAsk = { id: plan.segments[q.index]!.id, title: q.title };
   }
 

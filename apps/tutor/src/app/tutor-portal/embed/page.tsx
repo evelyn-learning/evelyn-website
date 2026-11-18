@@ -36,7 +36,7 @@ import { parseEmbedConfig } from '@/lib/tutor/portal/parse-embed-config';
 import { parseLessonContext, parseEntry, clampTitle } from '@/lib/tutor/embed/lesson-context';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
 import { unloadSaveStatus } from '@/lib/tutor/voice/lesson-close';
-import { TUTOR_CLOSED_LESSON_COMPLETES, TUTOR_BRAIN_V2_CLAIM, TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT, TUTOR_HOST_START, TUTOR_HOST_LESSON, TUTOR_HOST_QUESTION_READ, TUTOR_EXTRA_LANGUAGES, TUTOR_THINKING_CUE, TUTOR_V2_TIME_OVERRUN } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_CLOSED_LESSON_COMPLETES, TUTOR_BRAIN_V2_CLAIM, TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT, TUTOR_HOST_START, TUTOR_HOST_LESSON, TUTOR_HOST_QUESTION_READ, TUTOR_EXTRA_LANGUAGES, TUTOR_THINKING_CUE, TUTOR_V2_TIME_OVERRUN, TUTOR_V2_FLAG_CLOCK_PAUSE } from '@/lib/tutor/orchestrator/flags';
 import { v2OverrunMin } from '@/lib/tutor/v2/time-box';
 import { parseTutorLanguages } from '@/lib/tutor/voice/tts-language';
 import { shouldFlushEarly } from '@/lib/tutor/orchestrator/flush-policy';
@@ -2171,12 +2171,16 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // header (and hides ours with `features.session_timer: false`). Posted when
   // the session starts, whenever it starts or stops advancing (standby,
   // end), and every CLOCK_POST_MS while it runs. Additive; other hosts ignore it.
+  // Task 7n (FLAG_CLOCK_PAUSE): time the tester's debug flag panel held the lesson clock (TutorVoiceV2's window event,
+  // development only). Left out of this message only: every recorded / billed duration below reads the inactive clock alone.
+  const flagPauseRef = useRef<{ totalMs: number; sinceMs: number | null }>({ totalMs: 0, sinceMs: null });
   const postClock = useCallback((ended?: boolean) => {
     if (!TUTOR_HOST_LESSON || sessionEngagedAtRef.current === null) return;
     const now = Date.now();
+    const fp = flagPauseRef.current; const pausedSec = (fp.totalMs + (fp.sinceMs !== null ? now - fp.sinceMs : 0)) / 1000;
     window.parent.postMessage(clockMessage({
-      activeSeconds: activeSeconds((now - sessionStartRef.current.getTime()) / 1000, inactiveClockRef.current, now),
-      running: !ended && !isStandingBy(lessonHostRef.current),
+      activeSeconds: Math.max(0, activeSeconds((now - sessionStartRef.current.getTime()) / 1000, inactiveClockRef.current, now) - pausedSec),
+      running: !ended && !isStandingBy(lessonHostRef.current) && fp.sinceMs === null,
       // Partner minute pool: the effective cap for THIS sitting, so a host's
       // countdown matches what will actually end it; plus the pool gauge.
       maxSeconds: poolCapSecRef.current ?? (maxDurationExplicit ? maxDuration * 60 : undefined),
@@ -2189,8 +2193,16 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     postClock();
     const onStarted = () => postClock();
     window.addEventListener('evelyn:session-started', onStarted);
+    const onFlagPause = (e: Event) => {
+      if (!TUTOR_V2_FLAG_CLOCK_PAUSE) return;
+      const fp = flagPauseRef.current; const paused = !!(e as CustomEvent<{ paused?: boolean }>).detail?.paused; const now = Date.now();
+      if (paused && fp.sinceMs === null) fp.sinceMs = now;
+      else if (!paused && fp.sinceMs !== null) { fp.totalMs += now - fp.sinceMs; fp.sinceMs = null; }
+      postClock();
+    };
+    window.addEventListener('evelyn:lesson-clock-paused', onFlagPause);
     const t = setInterval(() => postClock(), CLOCK_POST_MS);
-    return () => { clearInterval(t); window.removeEventListener('evelyn:session-started', onStarted); };
+    return () => { clearInterval(t); window.removeEventListener('evelyn:session-started', onStarted); window.removeEventListener('evelyn:lesson-clock-paused', onFlagPause); };
   }, [standby, sessionEnded, postClock]);
 
   // evelyn:activity (GreenApple spec 2026-10-02 §1): additive message on a
