@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { calcCheck, statedNumbers } from "./calc";
+import { calcCheck, statedNumbers, toPlainDecimal } from "./calc";
 import type { CalcFinding } from "./calc";
 import type { Answer } from "./answers";
 import type { ItemDoc } from "../db";
@@ -26,6 +26,23 @@ assert.deepEqual(statedNumbers("The answer is $0.998$."), ["0.998"]);
 assert.deepEqual(statedNumbers("It is $$1\\,250 \\text{ m}$$ and \\text{3 apples} then 2"), ["1250", "2"]);
 assert.deepEqual(statedNumbers("Costs 1,250.5 dollars, or -4 and 3 000"), ["1250.5", "-4", "3000"]);
 assert.deepEqual(statedNumbers("no numbers here"), []);
+assert.deepEqual(statedNumbers("$2.50 \\times 10^{3}$ J"), ["2500"]);
+assert.deepEqual(statedNumbers("$x_1 = 5$"), ["5"]);
+assert.deepEqual(statedNumbers("$v_{1} = 4.0$"), ["4.0"]);
+assert.deepEqual(statedNumbers("half is $\\frac{1}{2}$ of 8"), ["1/2", "8"]);
+assert.deepEqual(statedNumbers("6.02 x 10^23 and 1.5e-3"), ["602000000000000000000000", "0.0015"]);
+// toPlainDecimal
+assert.equal(toPlainDecimal("2.50e3"), "2500");
+assert.equal(toPlainDecimal("2.50E+3"), "2500");
+assert.equal(toPlainDecimal("2.50 × 10^3"), "2500");
+assert.equal(toPlainDecimal("2.50 \\times 10^{3}"), "2500");
+assert.equal(toPlainDecimal("2.50*10^3"), "2500");
+assert.equal(toPlainDecimal("2.50 x 10^-3"), "0.00250");
+assert.equal(toPlainDecimal("2.5 × 10^\u22123"), "0.0025");
+assert.equal(toPlainDecimal("-3.01 × 10^23"), "-301000000000000000000000");
+assert.equal(toPlainDecimal("0.998"), "0.998");
+assert.equal(toPlainDecimal("12 m"), null);
+assert.equal(toPlainDecimal("abc"), null);
 
 const python = spawnSync("python3", ["-I", "-c", "import sys; sys.path.append(__import__('site').getusersitepackages()); import sympy"], { encoding: "utf8" });
 const havePython = python.status === 0;
@@ -55,7 +72,7 @@ async function main() {
   assert.deepEqual(codes(await calcCheck(letterDraft("Energy is conserved. (A)"), A, item())), []);
 
   // units
-  const stem = "<p>Calculate the speed in <b>m/s</b>.</p>";
+  const stem = "<p>Calculate the speed. Give your answer in <b>m/s</b>.</p>";
   const ms: Answer = { kind: "number", value: "12" };
   const d = (short: string) => draft({ short, diploma: "Work. So the speed is 12 m/s." });
   assert.deepEqual(codes(await calcCheck(d("The speed is 12 m/s."), ms, item(stem))), []);
@@ -63,6 +80,31 @@ async function main() {
   assert.deepEqual(codes(await calcCheck(d("The speed is 12."), ms, item(stem))), ["unit_missing"]);
   assert.deepEqual(codes(await calcCheck(d("The speed is 12."), ms, item("<p>Calculate the speed.</p>"))), []); // stem names no unit
   assert.deepEqual(codes(await calcCheck(d("The result is the answer."), ms, item(stem))), ["answer_inconsistent"]); // sentence not found: only the number check fires
+  // degree sign in LaTeX, and a unit word only counts after a lead-in
+  const deg = "<p>What is the temperature? Express your answer in &deg;C.</p>";
+  const t25: Answer = { kind: "number", value: "25" };
+  const dt = (short: string) => draft({ short, diploma: "Work. So it is 25 °C." });
+  assert.deepEqual(codes(await calcCheck(dt("It is $25^{\\circ}\\text{C}$."), t25, item(deg))), []);
+  assert.deepEqual(codes(await calcCheck(dt("It is $25^\\circ \\mathrm{C}$."), t25, item(deg))), []);
+  assert.deepEqual(codes(await calcCheck(dt("It is 25 °C."), t25, item("<p>Give the temperature in °C.</p>"))), []);
+  assert.deepEqual(codes(await calcCheck(dt("It is 25."), t25, item(deg))), ["unit_missing"]);
+  assert.deepEqual(codes(await calcCheck(dt("It is 25."), t25, item("<p>Which value in A is largest?</p>"))), []);
+  // scientific notation in both sections
+  {
+    const sci: Answer = { kind: "number", value: "2500" };
+    const f = await calcCheck(draft({ short: "The energy is $2.50 \\times 10^{3}$ J.", diploma: "Work. So E = $2.50 \\times 10^{3}$ J." }), sci, item("<p>Energy in J?</p>"));
+    assert.deepEqual(codes(f), []);
+  }
+  // the Diploma's last sentence must state the answer
+  {
+    const f = await calcCheck(draft({ diploma: "We compute it. Therefore the sample is large enough." }), NUM, item());
+    assert.deepEqual(f.map((x) => x.detail), ["the Diploma answer's last sentence does not state the answer"]);
+  }
+  // lists of letters, ruled-out options
+  assert.deepEqual(codes(await calcCheck(letterDraft("The answer is A and C."), A, item())), ["letter_mismatch"]);
+  assert.deepEqual(codes(await calcCheck(letterDraft("The answers are A, C and D."), A, item())), ["letter_mismatch"]);
+  assert.deepEqual(codes(await calcCheck(letterDraft("The answer is A, not option B."), A, item())), []);
+  assert.deepEqual(codes(await calcCheck(letterDraft("It is option A rather than C."), A, item())), []);
 
   // python missing -> one finding, never a throw
   {
@@ -116,6 +158,58 @@ async function main() {
   assert.deepEqual(codes(await calcCheck(
     draft({ calc: [{ expr: "0.5*0.5", expect: "0.25" }, { expr: "1 - 0.25", expect: "0.75" }] }), { kind: "number", value: "0.998" }, item(),
   )), []);
+
+  // E-notation can hang inside C code: never let it through
+  for (const bad of ["1E+5", "1e5", "1E-5", "1.5E+3", "2 E 3", "E5", "E.5", "1E+10000000"]) {
+    const t0 = Date.now();
+    const f = await run(bad, "1");
+    assert.deepEqual(codes(f), ["calc_unparseable"], bad);
+    assert.match(f[0].detail, /exponent notation is not allowed/, bad);
+    assert.ok(Date.now() - t0 < 1500, `${bad} took ${Date.now() - t0} ms`);
+  }
+  await ok("E^2", "7.389", "3dp");
+  await ok("2*E", "5.437", "3dp");
+  await ok("E", "2.718", "3dp");
+  // plain decimals for any magnitude, never exponent form
+  await ok("1.5*10^20", "150000000000000000000");
+  await ok("1.5*10^-20", "0.000000000000000000015");
+  await ok("10^100", "1" + "0".repeat(100) + ".00", "2dp");
+  await ok("6.02*10^23", "602000000000000000000000", "3sf");
+  await ok("6.02*10^23", "6.02 × 10^23", "3sf");
+  await ok("3.01*10^23", "3.01 × 10^{23}", "3sf");
+  await ok("2.5*10^3", "2.50e3");
+  assert.deepEqual(codes(await run("10^301", "1")), ["calc_unparseable"]);
+  assert.deepEqual(codes(await run("10^-301", "1")), ["calc_unparseable"]);
+  assert.deepEqual(codes(await run("Rational(1.5, 2)", "1")), ["calc_unparseable"]);
+  assert.deepEqual(codes(await run("Rational(1, 2, 3)", "1")), ["calc_unparseable"]);
+  assert.deepEqual(codes(await run("7 // 2", "3")), ["calc_unparseable"]);
+  assert.deepEqual(codes(await run("1\t+ 1", "2")), ["calc_unparseable"]);
+  assert.deepEqual(codes(await run("1\u000c+ 1", "2")), ["calc_unparseable"]);
+
+  // early rounding: the three false positives from review stay quiet
+  {
+    const quiet = async (calc: Draft["calc"], stem?: string) => codes(await calcCheck(draft({ calc }), NUM, item(stem)));
+    assert.deepEqual(await quiet([{ expr: "1.6", expect: "2", rounding: "0dp" }, { expr: "0.5*3^2", expect: "4.5" }]), []);
+    assert.deepEqual(await quiet([{ expr: "1.6", expect: "2", rounding: "0dp" }, { expr: "Rational(1, 2)", expect: "0.5" }]), []);
+    assert.deepEqual(await quiet([{ expr: "1.234", expect: "1.23", rounding: "2dp" }, { expr: "1.23*2", expect: "2.46", rounding: "2dp" }], "<p>A rod is 1.23 m long.</p>"), []);
+    assert.deepEqual(await quiet([{ expr: "1.234", expect: "1.23", rounding: "2dp" }, { expr: "10^1.23", expect: "16.98", rounding: "2dp" }]), []);
+  }
+
+  // slow test (up to ~9 s): the batch returns every result before the TS timeout and exits 0
+  {
+    const t0 = Date.now();
+    const f = await calcCheck(draft({ calc: [{ expr: "exp(10^9999)", expect: "1" }, { expr: "exp(10^9999)", expect: "1" }, { expr: "1+1", expect: "2" }] }), NUM, item());
+    const took = Date.now() - t0;
+    assert.deepEqual(codes(f), ["calc_unparseable", "calc_unparseable", "calc_unparseable"]);
+    assert.ok(f.every((x) => /took too long/.test(x.detail)), JSON.stringify(f));
+    assert.ok(took < 10_500, `slow batch took ${took} ms`);
+  }
+  {
+    const many = Array.from({ length: 201 }, () => ({ expr: "1+1", expect: "2" }));
+    const f = await calcCheck(draft({ calc: many }), NUM, item());
+    assert.deepEqual(f.map((x) => x.code), ["calc_unparseable"]);
+    assert.match(f[0].detail, /too many expressions/);
+  }
 
   // every allowed name once
   await ok("sqrt(16)", "4");

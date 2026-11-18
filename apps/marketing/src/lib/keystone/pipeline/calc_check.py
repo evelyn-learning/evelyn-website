@@ -11,11 +11,18 @@ import json
 import re
 import signal
 import sys
-from decimal import Decimal, ROUND_HALF_UP, getcontext
+import time
+import warnings
+from decimal import Decimal, ROUND_HALF_UP, getcontext, localcontext
+
+warnings.simplefilter("ignore")
+START = time.monotonic()
 
 MAX_LEN = 500
 MAX_ARG = 10000
 SECONDS = 5
+DEADLINE = 8
+MAX_ENTRIES = 200
 
 
 class Reject(Exception):
@@ -63,8 +70,9 @@ def build_allowed():
 
 NAMES = {"sqrt", "sin", "cos", "tan", "asin", "acos", "atan", "log", "ln", "log10", "exp", "pi", "E",
          "Rational", "binomial", "factorial", "Abs", "sind", "cosd", "tand", "asind", "acosd", "atand"}
-CHARS = re.compile(r"^[0-9A-Za-z_.\s+\-*/^(),]*$")
+CHARS = re.compile(r"^[0-9A-Za-z_. +\-*/^(),]*$")  # a plain space only: no tab, form feed or other control characters
 TOKEN = re.compile(r"\d+\.?\d*|\.\d+|[A-Za-z_][A-Za-z0-9_]*|\S")
+RANGE = Decimal("1e300")
 
 
 def validate(text):
@@ -72,8 +80,11 @@ def validate(text):
         raise Reject("empty expression")
     if len(text) > MAX_LEN:
         raise Reject("expression too long")
-    if "__" in text or not CHARS.match(text):
+    if "__" in text or "//" in text or not CHARS.match(text):
         raise Reject("character not allowed")
+    # 1E+5, 1e5, 2 E 3, E5, E.5: Python would read one float literal. The constant E stays usable as E, E^2, 2*E.
+    if re.search(r"[\d.]\s*[Ee]", text) or re.search(r"[Ee][\d.]", text):
+        raise Reject("exponent notation is not allowed; write a*10^n")
     for tok in TOKEN.findall(text):
         if re.match(r"[A-Za-z_]", tok) and tok not in NAMES:
             raise Reject("name not allowed: " + tok[:20])
@@ -83,6 +94,8 @@ def validate(text):
         after = text[i + 1] if i + 1 < len(text) else ""
         if before.isalpha() or before == "_" or not (before.isdigit() or after.isdigit()):
             raise Reject("misplaced decimal point")
+    if len(re.findall(r"Rational", text)) != len(re.findall(r"Rational\s*\(\s*\d+\s*(?:,\s*\d+\s*)?\)", text)):
+        raise Reject("Rational takes one or two whole numbers")
     # resource guard (literals only; the alarm covers the rest)
     for m in re.finditer(r"(?:\*\*|\^)\s*\(*\s*[+-]?\s*(\d+)\s*(\*\*|\^)?", text):
         if int(m.group(1)) > MAX_ARG or m.group(2):
@@ -119,13 +132,14 @@ def evaluate(text, allowed):
     return Decimal(str(val))
 
 
+def int_digits(d):
+    return max(d.adjusted() + 1, 1)
+
+
 def plain(d):
-    """Plain decimal string; exponent form only outside 1e-12 .. 1e15."""
+    """Plain decimal string for any magnitude: never exponent form."""
     if d == 0:
         return "0"
-    mag = abs(d)
-    if mag < Decimal("1e-12") or mag >= Decimal("1e15"):
-        return format(d.normalize(), "E").replace("E+", "e").replace("E", "e")
     return format(d, "f")
 
 
@@ -140,28 +154,24 @@ def strip_zeros(s):
 
 
 def apply_rounding(d, rounding):
+    if d != 0 and (abs(d) > RANGE or abs(d) < 1 / RANGE):
+        raise Reject("out of range")
     rounding = (rounding or "").strip().lower()
-    if rounding == "":
-        return strip_zeros(plain(to_sf(d, 15)))
     m = re.match(r"^(\d{1,2})\s*(dp|sf)$", rounding)
-    if not m or int(m.group(1)) > 30 or (m.group(2) == "sf" and int(m.group(1)) < 1):
+    if rounding and (not m or int(m.group(1)) > 30 or (m.group(2) == "sf" and int(m.group(1)) < 1)):
         raise Reject("rounding not understood")
-    n = int(m.group(1))
-    if m.group(2) == "dp":
-        q = d.quantize(Decimal(1).scaleb(-n), rounding=ROUND_HALF_UP)
-        if q == 0:
-            q = abs(q)
-        return format(q, "f")
-    q = to_sf(d, n)
-    s = plain(q)
-    if "e" not in s and n > 0 and q != 0:
-        digits = len(s.replace("-", "").replace(".", "").lstrip("0"))
-        if digits < n:  # keep trailing zeros that are significant, e.g. 2.50 at 3 sf
-            s = s + ("." if "." not in s else "") + "0" * (n - digits)
-    return s
+    n = int(m.group(1)) if m else 15
+    with localcontext() as ctx:
+        ctx.prec = int_digits(d) + n + 10 + (300 if d != 0 and abs(d) < 1 else 0)
+        if not rounding:
+            return strip_zeros(plain(to_sf(d, 15)))
+        if m.group(2) == "dp":
+            q = d.quantize(Decimal(1).scaleb(-n), rounding=ROUND_HALF_UP)
+            return format(abs(q) if q == 0 else q, "f")
+        return plain(to_sf(d, n))
 
 
-class Timeout(Exception):
+class Timeout(BaseException):  # not an Exception: a broad `except Exception` inside sympy must not swallow it
     pass
 
 
@@ -176,10 +186,12 @@ def run_one(entry, allowed):
         d = evaluate(entry.get("expr"), allowed)
         rounding = entry.get("rounding") or ""
         return {"ok": True, "value": apply_rounding(d, rounding), "raw": apply_rounding(d, ""), "error": ""}
-    except Reject as e:
-        return fail(str(e))
     except Timeout:
         return fail("took too long")
+    except Reject as e:
+        return fail(str(e))
+    except ArithmeticError:
+        return fail("out of range")
     except RecursionError:
         return fail("expression too deep")
     except MemoryError:
@@ -206,11 +218,20 @@ def main():
     if have_alarm:
         signal.signal(signal.SIGALRM, on_alarm)
     out = []
-    for entry in entries:
+    for i, entry in enumerate(entries):
+        if i >= MAX_ENTRIES:
+            out.append(fail("too many expressions"))
+            continue
+        left = DEADLINE - (time.monotonic() - START)
+        if left <= 0:
+            out.append(fail("took too long"))
+            continue
         if have_alarm:
-            signal.setitimer(signal.ITIMER_REAL, SECONDS)
+            signal.setitimer(signal.ITIMER_REAL, min(SECONDS, left))
         try:
             out.append(run_one(entry, allowed))
+        except Timeout:
+            out.append(fail("took too long"))
         except BaseException:
             out.append(fail("check failed"))
         finally:

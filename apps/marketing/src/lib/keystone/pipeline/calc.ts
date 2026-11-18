@@ -15,8 +15,10 @@ export type CalcFinding = {
 
 type PyResult = { ok: boolean; value: string; raw?: string; error: string };
 
+// This module runs under tsx (scripts and tests), never inside the Next bundle: import.meta.url is the real file URL there.
 const SCRIPT = fileURLToPath(new URL("./calc_check.py", import.meta.url));
-const TIMEOUT_MS = 10_000;
+// calc_check.py gives up on its own after 8 s, so its answer (with per-entry errors) always arrives before this kill.
+const TIMEOUT_MS = 12_000;
 
 const num = (value: string): Answer => ({ kind: "number", value });
 
@@ -33,7 +35,7 @@ function runPython(entries: { expr: string; expect: string; rounding: string }[]
       reject(new Error(`could not start ${python}`));
       return;
     }
-    const timer = setTimeout(() => { child.kill("SIGKILL"); finish(() => reject(new Error("timed out after 10 s"))); }, TIMEOUT_MS);
+    const timer = setTimeout(() => { child.kill("SIGKILL"); finish(() => reject(new Error("timed out after 12 s"))); }, TIMEOUT_MS);
     child.on("error", (e) => finish(() => reject(new Error(`could not start ${python}: ${(e as NodeJS.ErrnoException).code ?? e.message}`))));
     child.stdout.on("data", (d) => { out += d; if (out.length > 1_000_000) child.kill("SIGKILL"); });
     child.stdin.on("error", () => { /* surfaced through close/error */ });
@@ -53,13 +55,47 @@ function runPython(entries: { expr: string; expect: string; rounding: string }[]
 
 // --- number extraction ----------------------------------------------------------------------------
 
-const THIN = "   ";
-const NUMBER_TOKEN = new RegExp(`(?<![\\w.])[+\\-\\u2212]?(?:\\d{1,3}(?:[,${THIN}]\\d{3})+(?:\\.\\d+)?|\\d+(?:\\.\\d+)?|\\.\\d+)`, "g");
+const THIN = "\u2009\u202f\u00a0";
+const NUMBER_TOKEN = new RegExp(`(?<![\\w.])[+\\-\\u2212]?(?:\\d+\\/\\d+(?![\\d.])|\\d{1,3}(?:[,${THIN}]\\d{3})+(?:\\.\\d+)?|\\d+(?:\\.\\d+)?|\\.\\d+)`, "g");
 
-/** Strip the LaTeX wrapping so the bare numbers are left. */
+const PLAIN = /^[+-]?(?:\d+\.?\d*|\.\d+)$/;
+const SCI = /^([+-]?(?:\d+\.?\d*|\.\d+))\s*(?:[eE]\s*([+-]?\d+)|(?:\\times|\\cdot|×|·|x|X|\*)\s*10\s*\^\s*\{?\s*([+-]?\d+)\s*\}?)$/;
+
+/** Exact plain decimal for "2.50e3", "2.50 × 10^3", "2.50 \\times 10^{3}", "2.50*10^3", "2.50 x 10^-3" (Unicode minus allowed).
+ *  A number with no exponent comes back as written; anything else is null. String arithmetic only, no floats. */
+export function toPlainDecimal(text: string): string | null {
+  const t = text.trim().replace(/[\u2212\u2013]/g, "-");
+  if (PLAIN.test(t)) return t;
+  const m = SCI.exec(t);
+  if (!m) return null;
+  const exp = Number(m[2] ?? m[3]);
+  if (!Number.isInteger(exp) || Math.abs(exp) > 1000) return null;
+  const sign = m[1].startsWith("-") ? "-" : "";
+  const [whole, frac = ""] = m[1].replace(/^[+-]/, "").split(".");
+  const digits = whole + frac;
+  const point = whole.length + exp;
+  let out: string;
+  if (point <= 0) out = "0." + "0".repeat(-point) + digits;
+  else if (point >= digits.length) out = digits + "0".repeat(point - digits.length);
+  else out = digits.slice(0, point) + "." + digits.slice(point);
+  const [ip, fp] = out.split(".");
+  const clean = (ip.replace(/^0+(?=\d)/, "") || "0") + (fp !== undefined ? "." + fp : "");
+  return /^0(\.0*)?$/.test(clean) ? clean : sign + clean;
+}
+
+const SCI_IN_TEXT = /(?<![\w.])([+\-\u2212]?(?:\d+\.?\d*|\.\d+))\s*(?:\\times|\\cdot|×|·|x|\*)\s*10\s*\^\s*\{?\s*([+\-\u2212]?\d+)\s*\}?/g;
+const E_IN_TEXT = /(?<![\w.])([+\-\u2212]?\d+\.?\d*)[eE]([+\-\u2212]?\d+)(?![\w.])/g;
+
+/** Strip the LaTeX wrapping so the bare numbers are left. A × 10^n group becomes one plain number, a \frac of two integers one "a/b". */
 function plainText(md: string, keepText = false): string {
-  let t = md.replace(/\\(?:text|mathrm|textbf|mathbf)\{([^{}]*)\}/g, keepText ? " $1 " : " ");
-  t = t.replace(/\\[,;:!]|\\ |~/g, "").replace(/\\circ/g, "°").replace(/\\(?:left|right|times|approx|cdot)\b/g, " ");
+  let t = md.replace(/\^\s*\{?\s*(?:\\circ|°)\s*\}?|\\degree|\\textdegree/g, "°");
+  t = t.replace(/\\(?:text|mathrm|textbf|mathbf)\{([^{}]*)\}/g, keepText ? " $1 " : " ");
+  t = t.replace(/\\[,;:!]|\\ |~/g, "").replace(/\\circ/g, "°");
+  t = t.replace(/_\{[^{}]*\}|_[A-Za-z0-9]/g, ""); // subscripts: v_{1}, x_1
+  t = t.replace(/\\d?frac\s*\{\s*(\d+)\s*\}\s*\{\s*(\d+)\s*\}/g, " $1/$2 ");
+  const sci = (_: string, a: string, n: string) => ` ${toPlainDecimal(`${a}e${n}`) ?? `${a}e${n}`} `;
+  t = t.replace(SCI_IN_TEXT, sci).replace(E_IN_TEXT, sci);
+  t = t.replace(/\\(?:left|right|times|approx|cdot)\b/g, " ");
   t = t.replace(/\\[a-zA-Z]+/g, " ").replace(/\$+/g, " ").replace(/[{}]/g, " ").replace(/\*\*|__/g, "");
   return t;
 }
@@ -68,7 +104,7 @@ function plainText(md: string, keepText = false): string {
 export function statedNumbers(md: string): string[] {
   const out: string[] = [];
   for (const m of plainText(md).matchAll(NUMBER_TOKEN)) {
-    out.push(m[0].replace(/−/g, "-").replace(new RegExp(`[,${THIN}]`, "g"), "").replace(/^\+/, ""));
+    out.push(m[0].replace(/\u2212/g, "-").replace(new RegExp(`[,${THIN}]`, "g"), "").replace(/^\+/, ""));
   }
   return out;
 }
@@ -84,26 +120,31 @@ function answerInconsistent(draft: Draft, answer: Extract<Answer, { kind: "numbe
   const short = draft.sections.find((s) => s.kind === "short")?.md ?? "";
   const diploma = draft.sections.find((s) => s.kind === "diploma")?.md ?? "";
   const lastSentence = sentences(diploma).slice(-1)[0] ?? "";
-  const check = (name: string, text: string, needNumber: boolean) => {
-    const nums = statedNumbers(text);
-    if (needNumber && !nums.length) return; // a closing sentence with no number says nothing about the value
-    if (!nums.some((n) => sameAnswer(num(n), answer))) {
-      out.push({
-        code: "answer_inconsistent",
-        detail: `the ${name} states ${nums.length ? nums.join(", ") : "no number"} but the agreed answer is ${answer.value}`,
-      });
-    }
-  };
-  check("short section", short, false);
-  check("last sentence of the diploma section", lastSentence, true);
+  const nums = statedNumbers(short);
+  if (!nums.some((n) => sameAnswer(num(n), answer))) {
+    out.push({ code: "answer_inconsistent", detail: `the short section states ${nums.length ? nums.join(", ") : "no number"} but the agreed answer is ${answer.value}` });
+  }
+  const dn = statedNumbers(lastSentence);
+  if (!dn.length) {
+    out.push({ code: "answer_inconsistent", detail: "the Diploma answer's last sentence does not state the answer" });
+  } else if (!dn.some((n) => sameAnswer(num(n), answer))) {
+    out.push({ code: "answer_inconsistent", detail: `the last sentence of the diploma section states ${dn.join(", ")} but the agreed answer is ${answer.value}` });
+  }
   return out;
 }
 
+const LIST = String.raw`[A-Z](?:\s*(?:,|and|&)\s*[A-Z])*`;
+
 function letterMismatch(draft: Draft, answer: Extract<Answer, { kind: "choice" }>): CalcFinding[] {
-  const short = plainText(draft.sections.find((s) => s.kind === "short")?.md ?? "", true);
-  const patterns = [/\boption\s+([A-Z])\b/gi, /\banswer\s+is\s+([A-Z])\b/gi, /\(([A-Z])\)\s*\.?\s*$/gim, /\b([A-Z])\s+is\s+correct\b/gi];
+  let short = plainText(draft.sections.find((s) => s.kind === "short")?.md ?? "", true);
+  short = short.replace(/\b(?:not|rather\s+than)\s+(?:option\s+)?\(?[A-Z]\b\)?/gi, " "); // a ruled-out option is not named
+  const patterns = [
+    /\boption\s+([A-Z])\b/gi, /\banswer\s+is\s+([A-Z])\b/gi, /\(([A-Z])\)\s*\.?\s*$/gim, /\b([A-Z])\s+is\s+correct\b/gi,
+    new RegExp(String.raw`\banswers?\s+(?:is|are)\s+(${LIST})\b`, "gi"), new RegExp(String.raw`\boptions\s+(${LIST})\b`, "gi"),
+  ];
   const found = new Set<string>();
-  for (const p of patterns) for (const m of short.matchAll(p)) if (m[1] === m[1].toUpperCase()) found.add(m[1]); // lower case is the article "a"
+  // Lower case is the article "a" (or "and"): only upper-case letters count.
+  for (const p of patterns) for (const m of short.matchAll(p)) for (const l of m[1].match(/[A-Z]/g) ?? []) found.add(l);
   const agreed = answer.letters.map((l) => l.trim().toUpperCase());
   const wrong = [...found].filter((l) => !agreed.includes(l));
   if (wrong.length || !agreed.some((l) => found.has(l))) {
@@ -116,14 +157,20 @@ function letterMismatch(draft: Draft, answer: Extract<Answer, { kind: "choice" }
 }
 
 const UNITS = "m\\/s\\^?2?|m\\/s|km\\/h|kg|g|mol\\/L|mol|J|kJ|N|Pa|kPa|V|A|Ω|W|Hz|m|cm|mm|km|s|min|h|°C|K|L|mL";
-const STEM_UNIT = new RegExp(`\\bin\\s+(${UNITS})(?![A-Za-z0-9])`);
+const IN = String.raw`\s+(${UNITS})(?![A-Za-z0-9])`;
+// The stem must ask for the answer in a unit: "answer in", "give … in", "express … in", "in units of", "measured in", "to the nearest …".
+const STEM_UNIT = new RegExp(
+  String.raw`(?:\banswer\s+in|\bgive\b[^.?!]*?\bin|\bexpress\b[^.?!]*?\bin|\bin\s+units\s+of|\bmeasured\s+in)` + IN + "|" +
+  String.raw`\bto\s+the\s+nearest\b[^.?!]*?` + IN,
+);
 const AFTER_NUMBER = new RegExp(
-  `^\\s*(?:\\^\\s*\\d+\\s*)?(?:(?:${UNITS})(?![A-Za-z0-9])|(?:metres?|meters?|seconds?|minutes?|hours?|grams?|kilograms?|moles?|joules?|newtons?|pascals?|volts?|amps?|amperes?|watts?|litres?|liters?|degrees?|kelvin)\\b)`,
+  `^\\s*(?:\\^\\s*\\d+\\s*)?(?:(?:${UNITS.replace("°C", "°\\s*C")})(?![A-Za-z0-9])|(?:metres?|meters?|seconds?|minutes?|hours?|grams?|kilograms?|moles?|joules?|newtons?|pascals?|volts?|amps?|amperes?|watts?|litres?|liters?|degrees?|kelvin)\\b)`,
 );
 
 function unitMissing(draft: Draft, answer: Extract<Answer, { kind: "number" }>, item: ItemDoc): CalcFinding[] {
-  const stem = (item.questionHtml ?? "").replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ");
-  const unit = STEM_UNIT.exec(stem)?.[1];
+  const stem = (item.questionHtml ?? "").replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/&deg;/g, "°");
+  const sm = STEM_UNIT.exec(stem);
+  const unit = sm?.[1] ?? sm?.[2];
   if (!unit) return [];
   const short = draft.sections.find((s) => s.kind === "short")?.md ?? "";
   const sentence = sentences(short).find((s) => statedNumbers(s).some((n) => sameAnswer(num(n), answer)));
@@ -135,6 +182,55 @@ function unitMissing(draft: Draft, answer: Extract<Answer, { kind: "number" }>, 
     if (AFTER_NUMBER.test(text.slice((m.index ?? 0) + m[0].length))) return [];
   }
   return [{ code: "unit_missing", detail: `the question asks for the answer in ${unit} but the short section gives ${answer.value} without a unit` }];
+}
+
+// --- early rounding -------------------------------------------------------------------------------------
+
+const LITERAL = /(?<![\w.])(?:\d+\.\d*|\.\d+|\d+)/g;
+const decimalPlaces = (n: string) => (n.split(".")[1] ?? "").length;
+const sigDigits = (n: string) => n.replace(/\./, "").replace(/^[-+]?0+/, "").length;
+
+/** True when the literal at `at` is not a plain quantity: an exponent, or an argument of Rational / binomial / factorial / a log base. */
+function notAQuantity(expr: string, at: number, len: number): boolean {
+  if (/(?:\^|\*\*)\s*[+-]?\s*\(?\s*$/.test(expr.slice(0, at))) return true;
+  let depth = 0;
+  for (let k = at - 1; k >= 0; k--) {
+    const c = expr[k];
+    if (c === ")") depth++;
+    else if (c === "(") {
+      if (depth === 0) {
+        const fn = /([A-Za-z_]\w*)\s*$/.exec(expr.slice(0, k))?.[1];
+        if (fn === "Rational" || fn === "binomial" || fn === "factorial") return true;
+        if (fn === "log" && /,/.test(expr.slice(k, at))) return true;
+        return false;
+      }
+      depth--;
+    }
+  }
+  void len;
+  return false;
+}
+
+function earlyRounding(entries: { expr: string; expect: string; rounding: string }[], results: PyResult[], item: ItemDoc): CalcFinding[] {
+  const out: CalcFinding[] = [];
+  const given = statedNumbers((item.questionHtml ?? "").replace(/<[^>]*>/g, " "));
+  for (let j = 0; j < entries.length; j++) {
+    const rj = results[j];
+    const expect = entries[j].expect.trim();
+    if (!entries[j].rounding.trim() || !rj?.ok || rj.raw === undefined || sameAnswer(num(rj.raw), num(expect))) continue;
+    if (!PLAIN.test(expect) || (decimalPlaces(expect) < 2 && sigDigits(expect) < 2)) continue; // too generic to recognise
+    if (given.some((g) => sameAnswer(num(g), num(expect)))) continue; // a quantity the question gives
+    for (let i = j + 1; i < entries.length; i++) {
+      const expr = entries[i].expr;
+      const hit = [...expr.matchAll(LITERAL)].some(
+        (m) => decimalPlaces(m[0]) === decimalPlaces(expect) && sameAnswer(num(m[0]), num(expect)) && !notAQuantity(expr, m.index ?? 0, m[0].length),
+      );
+      if (hit) {
+        out.push({ code: "early_rounding", detail: `calculation ${i + 1} reuses ${expect}, the rounded result of calculation ${j + 1}, whose unrounded value is ${rj.raw}` });
+      }
+    }
+  }
+  return out;
 }
 
 // --- the check ------------------------------------------------------------------------------------
@@ -159,24 +255,12 @@ export async function calcCheck(draft: Draft, answer: Answer, item: ItemDoc, opt
           return;
         }
         const dp = /^(\d+)\s*dp$/i.exec(e.rounding.trim());
-        if (!sameAnswer(num(r.value), num(e.expect), dp ? Number(dp[1]) : undefined)) {
+        const expected = toPlainDecimal(e.expect) ?? e.expect;
+        if (!sameAnswer(num(r.value), num(expected), dp ? Number(dp[1]) : undefined)) {
           findings.push({ code: "calc_mismatch", detail: `calculation ${i + 1} "${e.expr.slice(0, 80)}" computes ${r.value} but the solution states ${e.expect}` });
         }
       });
-      // A rounded intermediate value written back in as a literal.
-      for (let j = 0; j < entries.length; j++) {
-        const rj = results[j];
-        if (!entries[j].rounding.trim() || !rj?.ok || rj.raw === undefined || sameAnswer(num(rj.raw), num(entries[j].expect))) continue;
-        for (let i = j + 1; i < entries.length; i++) {
-          const literals = [...entries[i].expr.matchAll(NUMBER_TOKEN)].map((m) => m[0]);
-          if (literals.some((l) => sameAnswer(num(l), num(entries[j].expect)))) {
-            findings.push({
-              code: "early_rounding",
-              detail: `calculation ${i + 1} reuses ${entries[j].expect}, the rounded result of calculation ${j + 1}, whose unrounded value is ${rj.raw}`,
-            });
-          }
-        }
-      }
+      findings.push(...earlyRounding(entries, results, item));
     }
   }
 
