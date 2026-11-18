@@ -86,3 +86,11 @@ ok(/say has 1 sentence\(s\), speak has 2/.test(ear("One. Two.", "Just one.")), "
 ok(/say \(no speak given\) has symbols/.test(earCheck(edit((s) => (s.steps[1].lines[0] = { say: "F = 12 N." }))).map((f) => f.detail).join(" ")), "say is the voice text when there is no speak");
 
 console.log("animated/checks.test.ts: ok");
+
+// A bare "<" in the written solution (an inequality inside a table row) is text, not the start of a tag.
+{
+  const rows = "| x < -2/5 | 88 | 17 | positive |\n| x > 1/2 | 7 |";
+  const strays = spokenNumbersCheck(edit((s) => (s.steps[1].lines[0].say = "The values are 88 and 17.")), `${WRITTEN}\n${rows}`, "").filter((f) => f.detail === "88" || f.detail === "17");
+  assert.deepEqual(strays, [], "numbers after a bare < are still read from the written solution");
+}
+console.log("checks.test.ts: inequality rows ok");

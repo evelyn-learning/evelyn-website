@@ -22,7 +22,7 @@ export function plainForNumbers(text: string): string {
     .replace(/<sub\b[^>]*>[\s\S]*?<\/sub>/gi, " ")
     .replace(/<sup\b[^>]*>([\s\S]*?)<\/sup>/gi, "^{$1}")
     .replace(/<(?:br|\/p|\/div|\/li|\/h\d|\/span|\/text|\/tspan)\b[^>]*>/gi, " | ")
-    .replace(/<[^>]*>/g, " ")
+    .replace(/<\/?[A-Za-z!][^<>]*>/g, " ")
     .replace(/&#(\d+);/g, (_, d: string) => String.fromCodePoint(Number(d)))
     .replace(/&#x([0-9a-f]+);/gi, (_, h: string) => String.fromCodePoint(parseInt(h, 16)))
     .replace(/&([a-z0-9]+);/gi, (_, n: string) => ENTITIES[n.toLowerCase()] ?? " ")
@@ -137,7 +137,7 @@ function visibleText(html: string): string {
   return html
     .replace(/<style\b[\s\S]*?<\/style>/gi, " ")
     .replace(/<script\b(?![^>]*application\/json)[\s\S]*?<\/script>/gi, " ")
-    .replace(/<[^>]*>/g, " ")
+    .replace(/<\/?[A-Za-z!][^<>]*>/g, " ")
     .replace(/&[a-z0-9#]+;/gi, " ");
 }
 
