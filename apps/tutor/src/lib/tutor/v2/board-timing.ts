@@ -118,22 +118,13 @@ export function asksAnywhere(sentences: string[]): boolean {
 const YOU_SAY = /\b(?:now )?you (?:say|try|repeat)\b|\bsay it (?:again|back|once more|with me|after me)\b|\brepeat after me\b|\bsay the (?:whole )?sentence\b|言ってみて|言ってください/i;
 /** Task 7m (NO_FALSE_SILENCE): a starter offered anywhere in the sentence hands over ("Now, another sentence about you, with
  *  "I have…" Try starting with "I have worked with…""; DO_THIS is anchored at a clause's start). Not "start with" alone: "Let's
- *  start with the past simple." is the tutor's own plan. */
-const TRY_STARTING = /\btry (?:starting|beginning)\b/i;
+ *  start with the past simple." is the tutor's own plan, and so is "Let's try starting with the chain rule." (fix round 1, M3). */
+const TRY_STARTING = /(?<!\b(?:let'?s|let us|we(?:'ll| will| can)?|i(?:'ll| will)?)\s)\btry (?:starting|beginning)\b/i;
 /** Task 7m (QUESTION_ONCE, mic test 4 flag 5a): a Japanese request to answer, say, write or use hands over (「まず、一文で答えて
  *  みてください。」 was taken for a statement, and the card was read out after it). */
 const JA_HAND_OVER = /(?:答え|話し|書い|言っ|読ん|使っ|作っ|続け)てみて|(?:答え|話し|書い|続け)てください/;
 export function asksAloud(sentences: string[]): boolean {
   return sentences.slice(-2).some((x) => /[?？]/.test(x) || TO_THE_STUDENT.test(x) || (TUTOR_V2_PRACTICE_ASK_CAP && YOU_SAY.test(x)) || (TUTOR_V2_NO_FALSE_SILENCE && TRY_STARTING.test(x)) || (TUTOR_V2_QUESTION_ONCE && JA_HAND_OVER.test(x)) || x.split(/[,;:]\s+|\s+and\s+/).some((clause) => DO_THIS.test(clause.trim())));
-}
-
-/** Task 7m (CORRECTION_CARD_NOW): how long a spoken reply is, in words: a run of Japanese or Chinese script (written without
- *  spaces) counts one word per two characters; anything else by its spaces. A Japanese correction of 70 characters was
- *  "4 words" to the board check's length trigger (mic test 4 flag 6). */
-export function v2SpokenWords(text: string): number {
-  const cjk = (text.match(/[\u3040-\u30ff\u3400-\u9fff]/g) ?? []).length;
-  const rest = text.replace(/[\u3040-\u30ff\u3400-\u9fff\u3000-\u303f\uff00-\uffef]+/g, ' ').split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
-  return rest + Math.ceil(cjk / 2);
 }
 
 /** In a spoken lesson, what a problem card asks must also be heard: a tutor who tells the scenario and stops,
@@ -166,8 +157,10 @@ export function unsaidAsk(statement: string, sentences: string[], opts: { questi
   // Task 7m (QUESTION_ONCE, mic test 4 flag 5a): the card's question already heard (said where the card stands, or by the
   // model) is not said again after the reply's own lead-in and hint.
   if (opts.questionOnce ?? TUTOR_V2_QUESTION_ONCE) {
-    const q = cardQuestion(card);
-    if (q && sentences.some((y) => ` ${norm(y).join(' ')} `.includes(` ${norm(q).join(' ')} `))) return null;
+    // Fix round 1 (M10): a short question ("Why?", "True or false?") counts as said only as a whole sentence of its own: "That's
+    // why we test it." does not say "Why?".
+    const q = cardQuestion(card); const qw = q ? norm(q).join(' ') : '';
+    if (q && sentences.some((y) => (norm(q).length >= 3 ? ` ${norm(y).join(' ')} `.includes(` ${qw} `) : norm(y).join(' ') === qw && /[?？]\s*$/.test(y)))) return null;
   }
   // A bare instruction is not the question: "Here is a new one. Say yes or no, and say why." was taken as asked, and
   // a nine-year-old heard no question while "Does the bulb light up?" sat on the card (demo check, 2026-11-13).

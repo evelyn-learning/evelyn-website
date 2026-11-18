@@ -11,7 +11,10 @@
  *  3 QUESTION_ONCE          no "Question:" label in the card; the card's question said where it stands, never again after the hint
  *  4 CORRECTION_CARD_NOW    an owed corrected-sentence card written by the same turn's board check; no "…" fragment card; no
  *                           owed card for a sentence a card already holds
- *  5 WAVE_DASH              〜 between words is not spoken (the voice read it "kara"); kept between two numbers or times
+ *  5 WAVE_DASH              a decorative 〜 is not spoken (the voice read it "kara"); a range (words, days, numbers, times) keeps it
+ *  fix round 1             I1 a non-language voice lesson keeps the base ask; M1 no stress in an unrelated starter; M3 "Let's try
+ *                           starting…" is no ask; M5 ranges; M6 an owed card a board card holds is not asked again; M10 short
+ *                           questions; (e) a Japanese reply with nothing owed runs no board check
  *  each switch off alone (a child process per switch): the behaviour at the base commit for that item.
  */
 import { readFileSync } from 'node:fs';
@@ -26,7 +29,7 @@ import { v2SpeechParts } from '../src/lib/tutor/v2/languages';
 import { v2SpeakSounds, v2SpeakWaveDash } from '../src/lib/tutor/v2/spoken-sounds';
 import { rewriteForTTS, speakDataRuns, speakLessonNotation, speakNumberPlurals, speakSlashes } from '../src/lib/tutor/voice/tts-pronunciation';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
-import { asksAloud, asksAnywhere, v2SpokenWords } from '../src/lib/tutor/v2/board-timing';
+import { asksAloud, asksAnywhere, unsaidAsk } from '../src/lib/tutor/v2/board-timing';
 import { v2SentencesNotCarded } from '../src/lib/tutor/v2/learner-card';
 import { runV2Turn, type V2ModelCall } from '../src/lib/tutor/v2/turn';
 import { newV2State, type V2BoardPage, type V2Session, type V2State } from '../src/lib/tutor/v2/types';
@@ -99,17 +102,27 @@ async function probe() {
   const aStress = [{ sentence: A_CARD, stress: ['the'] }];
   const dStress = [{ sentence: D_NUDGE_CARD, stress: ['at', 'for'] }];
   // 2b: the silence turn 2 s after the 9.57 reply, with the card it left owed.
-  const silenceState = base([TODAY, JOB, PP], { history: [u(D_SAID), a(D_REPLY)], cardsOwed: ['I have worked, Nagoya Corporation, for 6 year.'] });
+  // (The corrected card of page 3 left out: with it, fix round 1 M6 drops the owed line whatever this switch says.)
+  const silenceState = base([TODAY, { ...JOB, items: JOB.items.slice(0, 1) }, PP], { history: [u(D_SAID), a(D_REPLY)], cardsOwed: ['I have worked, Nagoya Corporation, for 6 year.'] });
   const silence = await run(silenceState, null, [{ text: 'Take your time.' }], 9.9, { silence: 2 });
   // 3: the 14.93 reply.
-  const eState = base([TODAY, JOB, PP, PS], { history: [u('x'), a('That\'s right, and it\'s clear. Past simple is done. Next is Conversation. Do you have a question before we go on, or are you ready?')], practiceSaid: { 'topic-intro': 3, 'present-perfect': 3, 'past-simple': 2 }, goals: { ...goalsAt, 'present-perfect': { status: 'demonstrated', at: 0 } } });
-  const e = await run(eState, E_SAID, [{ text: E_REPLY }], 14.93);
+  const eMake = () => base([TODAY, JOB, PP, PS], { history: [u('x'), a('That\'s right, and it\'s clear. Past simple is done. Next is Conversation. Do you have a question before we go on, or are you ready?')], practiceSaid: { 'topic-intro': 3, 'present-perfect': 3, 'past-simple': 2 }, goals: { ...goalsAt, 'present-perfect': { status: 'demonstrated', at: 0 } } });
+  const e = await run(eMake(), E_SAID, [{ text: E_REPLY }], 14.93);
   const problem = e.r.toolCalls.find((c) => c.name === 'show_problem');
   // 4: the 17.31 reply, after the 14.93 ask for one sentence.
   const fState = base([TODAY, JOB, PP, PS], { history: [u(E_SAID), a(E_REPLY)], practiceSaid: { 'topic-intro': 3, 'present-perfect': 3, 'past-simple': 3 }, goals: { ...goalsAt, 'present-perfect': { status: 'demonstrated', at: 0 } } });
   const f = await run(fState, F_SAID, [{ text: F_REPLY }, { text: F_CHECK }], 17.31, { boardPass: true });
   const fCard = f.r.toolCalls.find((c) => c.name === 'show_sentence');
   // 4: the 11.31 fragment card.
+  // Fix round 1 (e): the same Japanese reply when its sentence is already on the board, corrected: nothing owed, no check call.
+  const fHeld = base([TODAY, JOB, PP, { ...PS, items: [...PS.items, card('s2', F_SAID)] }], { history: [u(E_SAID), a(E_REPLY)], practiceSaid: { 'topic-intro': 3, 'present-perfect': 3, 'past-simple': 3 }, goals: { ...goalsAt, 'present-perfect': { status: 'demonstrated', at: 0 } } });
+  const fh = await run(fHeld, F_SAID, [{ text: F_REPLY }, { text: F_CHECK }], 17.31, { boardPass: true });
+  // Fix round 1 (I1): a science voice demo (no languages, no plan): the reviewer's card and reply.
+  const sci = await runV2Turn({ session: { studentName: 'Sam', subject: 'Science', level: 'Grade 4', mode: 'voice' }, state: newV2State(0), studentSaid: 'Okay.', callModel: scripted([{ text: 'Does the bulb light up? <board problem>Does the bulb light up? Say yes or no, and say why.</board> Here is the circuit. It has one cell. It has a switch. Look at it.' }]).call, boardPass: false, mathsCheck: false, nowMs: 3 * MIN });
+  // M8: the model says the card's question straight after the card: heard once.
+  const eSaid = await run(eMake(), E_SAID, [{ text: `わかりました。 <board problem>${E_Q}</board> ${E_Q} Try starting with "I went…"` }], 14.93);
+  // M6: an owed card kept across a silence turn, now held by a board card: not asked for again.
+  const owedHeld = await run(base([TODAY, JOB, PP], { history: [u(D_SAID), a(D_REPLY)], cardsOwed: ['I have worked, Nagoya Corporation, for 6 year.'] }), 'I have worked with many customers.', [{ text: 'Good.' }], 10.5);
   const frag = await run(base([TODAY, JOB, PP]), null, [{ text: 'Now try one more. <board sentence>I have worked with…</board> Start with that.' }], 11.31);
   return {
     // 1
@@ -123,9 +136,15 @@ async function probe() {
     fCalls: f.calls, fCheck: f.prompts.find((p) => p.startsWith('[board check')) ?? '', fCard: fCard ? { s: fCard.args.sentence, o: fCard.outcome, e: fCard.args.emphasis } : null, fOwed: f.r.state.cardsOwed ?? null,
     fragOutcome: frag.r.toolCalls.find((c) => c.name === 'show_sentence')?.outcome ?? '',
     dupOwed: v2SentencesNotCarded(['I have worked, Nagoya Corporation, for 6 year.'], [], base([TODAY, JOB, PP]).board),
-    jaWords: v2SpokenWords(F_REPLY),
     // 5
     wave: v2SpeakWaveDash(WAVE),
+    waveRanges: ['月曜日〜金曜日', '三〜五人', '〜5人', '9:00〜10:00', '「〜で」は at'].map((x) => v2SpeakWaveDash(x)),
+    fHeldCalls: fh.calls, sciSpoken: sci.spoken, eSaidCount: eSaid.heard.split(E_Q).length - 1,
+    owedHeldFacts: /not carded in your last reply/.test(owedHeld.facts),
+    shortQ: unsaidAsk('Ice floats on water. Why?', ['That\'s why we test it.']),
+    letsTry: asksAnywhere(['Good.', 'Let\'s try starting with the chain rule.']),
+    starter: speak('Try starting with "I have a meeting…"', [{ sentence: 'I sold 35 washing machines to a customer from Canada.', stress: ['a'] }]),
+    jaLed: speak('英語では「in the home appliance division」と言います。', aStress),
   };
 }
 
@@ -148,8 +167,8 @@ async function main() {
     check('a long quote without a stress word is unchanged', other === 'We say "at the office."', other);
     const plain = markStressed('I work at home.', [{ sentence: A_CARD, stress: ['the'] }]);
     check('a sentence that is not the card and has no quote is unchanged', plain === 'I work at home.', plain);
-    const ja = v2SpeechParts('「the」を入れると自然です。', ['en', 'ja']).map((p) => withTargetPauses(p, restOfPath, true, true, [{ sentence: A_CARD, stress: ['the'] }]));
-    check('a Japanese-led part keeps the 7l commas (the short quote is a 7l target already)', ja.join('').includes('、the、') || ja.join('').includes('the'), ja);
+    check('a Japanese-led sentence quoting a piece of the card: the stress word set apart in the English part it becomes (fix round 1, M8)', JSON.stringify(on.jaLed) === JSON.stringify(['英語では', `in ${D} the ${D} home appliance division.`, 'と言います。']), on.jaLed);
+    check('a quoted starter unrelated to the correction is not marked (fix round 1, M1)', !on.starter.join('').includes(D), on.starter);
     const noStress = withTargetPauses(A_CARD, restOfPath, true, true);
     check('no stress list: the card is spoken as before (no marks)', noStress === restOfPath(A_CARD), noStress);
   }
@@ -176,6 +195,15 @@ async function main() {
   check('heard in order: the question, then the hint ("Try starting with…")', on.eHeard.indexOf(E_Q) >= 0 && on.eHeard.indexOf(E_Q) < on.eHeard.indexOf('Try starting with'), on.eHeard);
   check('the whole card (its instruction) is not appended after the hint', !/Answer with one sentence/.test(on.eHeard) && !/Question:/.test(on.eHeard), on.eHeard);
   check('「答えてみてください」 hands the turn over', on.eJaAsk === true);
+  check('the model saying the question straight after its card: heard once (the gate drops the runtime\'s)', on.eSaidCount === 1, on.eSaidCount);
+  check('fix round 1 (I1): a science voice lesson keeps the base ask: the card\'s ask with its instruction is said at the end', /Look at it\.\s+Does the bulb light up\? Say yes or no, and say why\.$/.test(on.sciSpoken), on.sciSpoken);
+  {
+    const sciSaid = ['Does the bulb light up?', 'Here is the circuit.', 'It has one cell.', 'It has a switch.', 'Look at it.'];
+    const card = 'Does the bulb light up? Say yes or no, and say why.';
+    check('… which the question-once rule alone would have dropped (why it is gated to language lessons)', unsaidAsk(card, sciSaid, { questionOnce: true }) === null && unsaidAsk(card, sciSaid, { questionOnce: false }) === card);
+  }
+  check('fix round 1 (M10): "That\'s why we test it." does not say the card\'s "Why?"', on.shortQ !== null, on.shortQ);
+  check('fix round 1 (M3): "Let\'s try starting with the chain rule." is the tutor\'s plan, not an ask', on.letsTry === false);
 
   console.log('4  flag 6 (17.5 min): every correction on the board in the same reply');
   check('the Japanese correction with no card runs the board check in the same turn', on.fCalls === 2, on.fCalls);
@@ -188,11 +216,12 @@ async function main() {
     const fresh = v2SentencesNotCarded(['I have worked at Toyota for three years.'], [], base([TODAY, JOB, PP]).board);
     check('a new practice sentence like the card is still owed', fresh.length === 1, fresh);
   }
-  check('a Japanese reply is counted by its characters, not its spaces', on.jaWords >= 30, on.jaWords);
+  check('fix round 1 (e): a Japanese reply that leaves nothing owed runs no board check (one model call)', on.fHeldCalls === 1, on.fHeldCalls);
+  check('fix round 1 (M6): an owed card a board card now holds is not asked for again', on.owedHeldFacts === false);
 
   console.log('5  Other 1 (6.76 min): 〜 not read "kara"');
-  check('〜 between words is not spoken', !on.wave.includes('〜') && on.wave.includes('「今、しています」'), on.wave);
-  check('〜 between two numbers or times is kept', v2SpeakWaveDash('3〜5人') === '3〜5人' && v2SpeakWaveDash('9:00〜10:00') === '9:00〜10:00' && v2SpeakWaveDash('9時〜10時') === '9時〜10時');
+  check('a decorative 〜 (after 、 or 「) is not spoken', !on.wave.includes('〜') && on.wave.includes('「今、しています」'), on.wave);
+  check('a range keeps it (read "から"): days, kanji numbers, "up to 5", times; 「〜で」 loses it (fix round 1, M5)', JSON.stringify(on.waveRanges) === JSON.stringify(['月曜日〜金曜日', '三〜五人', '〜5人', '9:00〜10:00', '「で」は at']), on.waveRanges);
   {
     const voice = readFileSync(join(__dirname, '..', 'src', 'app', 'tutor', 'components', 'v2', 'TutorVoiceV2.tsx'), 'utf8');
     check('the plain-speech chain applies it under WAVE_DASH', /TUTOR_V2_WAVE_DASH \? v2SpeakWaveDash\(/.test(voice));
@@ -220,6 +249,7 @@ async function main() {
     const off = child('QUESTION_ONCE');
     check('QUESTION_ONCE off: the label stays and the whole card is appended after the hint (as before)', off.eStatement.startsWith('Question:') && /Answer with one sentence/.test(off.eHeard) && off.eJaAsk === false, [off.eStatement, off.eHeard]);
     check('… the other items as on', off.dAsks === true && off.fCalls === 2);
+    check('… and the science lesson\'s reply is the same with the switch on or off (I1)', off.sciSpoken === on.sciSpoken, [off.sciSpoken, on.sciSpoken]);
   }
   {
     const off = child('CORRECTION_CARD_NOW');
@@ -229,7 +259,7 @@ async function main() {
   }
   {
     const off = child('WAVE_DASH');
-    check('WAVE_DASH off: 〜 left in the speech (as before)', off.wave === WAVE, off.wave);
+    check('WAVE_DASH off: 〜 left in the speech (as before)', off.wave === WAVE && off.waveRanges[4] === '「〜で」は at', off.wave);
   }
 
   console.log(`\n${passed} passed, ${failed} failed`);

@@ -80,17 +80,22 @@ export function v2SpeakSounds(text: string): string {
   }).replace(/\u0001 ?/g, '');
 }
 
-/** A number or a time either side of a wave dash: "3〜5", "9:00〜10:00", "9時〜10時", "1月〜3月". */
-const RANGE_END_BEFORE = /[0-9０-９][0-9０-９:：.]*[時分秒月日年歳円人回個本枚点%％]?$/;
-const RANGE_END_AFTER = /^[0-9０-９]/;
+/** Fix round 1 (M5): a wave dash is decorative (a gap standing for "something") when nothing it could join stands before it (the
+ *  start, punctuation, an opening bracket or quote) and no number follows ("〜5人", up to five, keeps it), or when nothing follows
+ *  it (the end, punctuation, a closing bracket or quote). Between two words, days, times or numbers (月曜日〜金曜日, 三〜五人,
+ *  9:00〜10:00) it is a range: kept, and read "から" as before. */
+const OPENS_OR_PAUSES = /[\s、。，,.:：;；!?！？「『（(“"'‘]/;
+const CLOSES_OR_PAUSES = /[」』）)”"'’、。，,.:：;；!?！？]/;
+const NUMBER_START = /[0-9０-９一二三四五六七八九十百千万]/;
 /** Task 7m (WAVE_DASH, mic test 4, embed-1795028886172 6.76 min): 「今、〜しています」 was heard as 「今、からしています」: the voice
- *  reads a wave dash (〜 U+301C, ～ U+FF5E) as "kara" ("from … to"). Standing for "something" (a gap in a pattern, 「〜で」), it is
- *  not spoken at all; joining two numbers or times ("3〜5人", "9:00〜10:00") it is kept, a range, read as before. For the voice
- *  only: the board and the transcript keep it. Pure. */
+ *  reads a wave dash (〜 U+301C, ～ U+FF5E) as "kara" ("from … to"). A decorative one (a gap in a pattern: 「〜で」, 「今、〜して
+ *  います」) is not spoken at all; a range keeps it. For the voice only: the board and the transcript keep it. Pure. */
 export function v2SpeakWaveDash(text: string, enabled: boolean = TUTOR_V2_WAVE_DASH): string {
   if (!enabled || !/[〜～]/.test(text)) return text;
   return text.replace(/\s*[〜～]\s*/g, (m, at: number) => {
-    const before = text.slice(0, at); const after = text.slice(at + m.length);
-    return RANGE_END_BEFORE.test(before) && RANGE_END_AFTER.test(after) ? m : /\s/.test(m) ? ' ' : '';
+    const before = text.slice(0, at).replace(/\s+$/, ''); const after = text.slice(at + m.length);
+    const prev = before.slice(-1); const next = after.slice(0, 1);
+    const decorative = (!prev || OPENS_OR_PAUSES.test(prev)) ? !NUMBER_START.test(next) : (!next || CLOSES_OR_PAUSES.test(next));
+    return !decorative ? m : /\s/.test(m) ? ' ' : '';
   });
 }

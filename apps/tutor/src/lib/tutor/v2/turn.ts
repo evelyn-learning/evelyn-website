@@ -24,7 +24,7 @@ import { catalogueSubjects, figureCatalogueFor, tutorFigureLines } from './figur
 import { applyToModelBoard, boardMisfit, renderBoard, summariseBoardCall, taskOnly, spacedRoman, wordsAsText } from './board';
 import { BoardInlineStream, boardBlocksIn, inlineToolCall, insertBlock, stripBoardBlocks, type InlineBlock, type InlinePart } from './board-inline';
 import { speaksMaths, unwrittenEquations } from './spoken-maths';
-import { cardQuestion, saidCovers, sentenceCardToSay, unsaidAsk, unsaidBoardItem, asksAnywhere, noteSentencesToSay, pointsBackAtBoard, v2SpokenWords } from './board-timing';
+import { cardQuestion, saidCovers, sentenceCardToSay, unsaidAsk, unsaidBoardItem, asksAnywhere, noteSentencesToSay, pointsBackAtBoard } from './board-timing';
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, v2AskEveryOn, v2SummaryBegun, V2_NO_ASK_RECHECK_S, V2_TIME_UP_MIN, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
 import { v2CloseOpen, v2LeftToStopMin, v2LessonNowMs, v2OverrunMin, v2TimeFlags, v2WrapDue, type V2TimeFlags } from './time-box';
@@ -651,7 +651,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       const guarded = input.boardGuard?.(block.name, args) ?? null;
       // Task 7m (CORRECTION_CARD_NOW, mic test 4, 11.31 min): a sentence card of a language lesson holds a whole sentence; "I have
       // worked with…" is a starter for them to finish, said aloud, not a card.
-      const fragment = TUTOR_V2_CORRECTION_CARD_NOW && block.name === 'show_sentence' && ((session.languages?.length ?? 0) >= 2 || !!session.pronunciation) && /(?:…|\.\.\.)["'”’)]*\s*$/.test(String(args.sentence ?? ''));
+      const fragment = TUTOR_V2_CORRECTION_CARD_NOW && block.name === 'show_sentence' && (session.languages?.length ?? 0) >= 2 && /(?:…|\.\.\.)["'”’)]*\s*$/.test(String(args.sentence ?? ''));
       if (guarded) outcome = `not painted: ${guarded}`;
       else if (fragment) outcome = 'not painted: a sentence card holds a whole sentence; one ending in "…" is a starter for them to finish: say it aloud instead';
       else if (!valid.ok) outcome = `not painted: ${valid.reason}`;
@@ -1176,7 +1176,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const card = [...toolCalls].reverse().find((c) => c.name === 'show_problem' && !/^not /.test(c.outcome));
     const sentencesSaid = spoken.join(' ').split(/(?<=[.!?])\s+|(?<=[？。])/).filter((x) => x.trim());
     // Task 7m (QUESTION_ONCE): the sentences cut at 。 too (sentencesSaid): a Japanese reply was one "sentence" here.
-    const more = card ? unsaidAsk(String(card.args.statement ?? ''), TUTOR_V2_QUESTION_ONCE ? sentencesSaid : spoken.join(' ').split(/(?<=[.!?？])\s+/).filter(Boolean))
+    // Fix round 1 (I1): spoken language lessons only (questionCards); any other voice lesson keeps the base split and ask.
+    const questionOnce = TUTOR_V2_QUESTION_ONCE && questionCards;
+    const more = card ? unsaidAsk(String(card.args.statement ?? ''), questionOnce ? sentencesSaid : spoken.join(' ').split(/(?<=[.!?？])\s+/).filter(Boolean), { questionOnce })
       : TUTOR_V2_SPEAK_BOARD_ITEM ? unsaidBoardItem(toolCalls, sentencesSaid, { sentences: !TUTOR_V2_SAY_SENTENCE_CARD }) : null;
     if (more) {
       input.onText?.(`\n\n${more}`);
@@ -1235,17 +1237,16 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const endedOnOffer = !!(heldAt as { raw: string } | null);
   // Task 7g: the sentences of their answer this reply put on no card (owed). Task 7m (CORRECTION_CARD_NOW, mic test 4 flag 6): known
   // before the board check, which then writes their card in this reply ("「sell」の過去形は「sold」です…" wrote none, and the card came
-  // a reply later); a Japanese reply's length is counted by its characters.
+  // a reply later). Fix round 1 (e): an owed card is the only new trigger: a Japanese reply's length does not run the check.
   const owedCards = () => {
     if (!answerSentences.length || state.closed || input.signal?.aborted || V2_REPLY_MISHEARD.test(stripBoardBlocks(spoken.join(' ')))) return [];
     const cards = toolCalls.filter((c) => c.name === 'show_sentence' && (!/^not /.test(c.outcome) || !!c.pointsAt) && typeof c.args.sentence === 'string').map((c) => String(c.args.sentence));
     return v2SentencesNotCarded(answerSentences, cards, state.board, state.correctedSentences ?? []);
   };
   const owedBefore = TUTOR_V2_CORRECTION_CARD_NOW ? owedCards() : [];
-  const saidWords = TUTOR_V2_CORRECTION_CARD_NOW && /[\u3040-\u30ff\u3400-\u9fff]/.test(said) ? v2SpokenWords(said) : said.split(/\s+/).length;
   // Typed lessons are checked as spoken ones are: a typed session opened and ran two replies on an empty board
   // (Praveen, 2026-11-12).
-  if (!state.closed && !input.signal?.aborted && said && (!endedOnOffer || speaksMaths(said)) && (speaksMaths(said) || inlinePainted.some((x) => !x.label.startsWith('problem')) || ((!paintedSoFar() || !drewFigure()) && saidWords >= V2_UNWRITTEN_WORDS) || (opening && !paintedSoFar()) || owedBefore.length > 0
+  if (!state.closed && !input.signal?.aborted && said && (!endedOnOffer || speaksMaths(said)) && (speaksMaths(said) || inlinePainted.some((x) => !x.label.startsWith('problem')) || ((!paintedSoFar() || !drewFigure()) && said.split(/\s+/).length >= V2_UNWRITTEN_WORDS) || (opening && !paintedSoFar()) || owedBefore.length > 0
     // Values said and nothing written: a student's set-up was confirmed aloud ("A⁻ is 0.05, HA is 0.1, pKa is 4.74")
     // and never put on the board (chemistry, embed-1794447993778).
     || (!paintedSoFar() && new Set(said.match(/\d+(?:\.\d+)?/g) ?? []).size >= 3)

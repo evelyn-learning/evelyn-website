@@ -301,8 +301,9 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       p.current.onDebugEvent?.('v2_board_withdrawn', held ? `${held.what ?? id}: withdrawn before it was shown` : `${shown?.summary.slice(0, 80) ?? id}: withdrawn after it was shown, left up unless it is rewritten`);
     },
     // Task 7m (CARD_STRESS_SPOKEN): this reply's sentence cards and their stressed words, for the voice (plainSpeech). Told as the
-    // call arrives, before the sentence kept for it (useV2Turns) is spoken.
-    onBoardCallArrived: (call) => { if (call.name === 'show_sentence' && typeof call.args.sentence === 'string' && Array.isArray(call.args.emphasis)) cardStressRef.current.push({ sentence: call.args.sentence, stress: (call.args.emphasis as unknown[]).map(String) }); },
+    // call arrives, before the sentence kept for it (useV2Turns) is spoken. Fix round 1 (M1): only a card the server put up (or
+    // pointed back at), never one it refused.
+    onBoardCallArrived: (call) => { if (call.name === 'show_sentence' && (!/^not /.test(call.outcome) || !!call.pointsAt) && typeof call.args.sentence === 'string' && Array.isArray(call.args.emphasis)) cardStressRef.current.push({ sentence: call.args.sentence, stress: (call.args.emphasis as unknown[]).map(String) }); },
     holdBoard: (call, paintNow) => {
       const paint = () => {
         const old = shownThenWithdrawnRef.current.find((x) => x.tool === call.name);

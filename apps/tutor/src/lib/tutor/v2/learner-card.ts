@@ -400,9 +400,9 @@ function cardIsOf(card: string, sentence: string): boolean {
 /** Card words beyond the learner's that a card of their sentence may add (the corrected words: "at", "a", "the"). */
 const COVER_EXTRA_MAX = 3;
 /** Task 7m (CORRECTION_CARD_NOW): a sentence card on the board already holds this sentence of theirs, corrected: every word they
- *  said is on it (a plural or "-es" form counts) and it adds at most COVER_EXTRA_MAX words. "I have worked, Nagoya Corporation,
- *  for 6 year." against the card "I have worked at Nagoya Corporation for six years." on page 3 was owed again and carded twice
- *  (mic test 4, 9.94); a new practice sentence ("I have worked at Toyota for three years.") is not held by it. */
+ *  said is on it (a plural or "-es" form counts) and it adds at most COVER_EXTRA_MAX words. Their sentence of how long they had
+ *  worked at their company, said without "at" and with "year", was owed again although its corrected card stood on page 3, and
+ *  was carded twice (embed-1795028886172, 9.94); a new practice sentence naming another company is not held by it. */
 export function v2BoardCardHolds(board: V2Board, sentence: string): boolean {
   const said = v2SentenceWords(sentence);
   if (said.length < 3) return false;
@@ -441,7 +441,8 @@ export const V2_REPLY_MISHEARD = /\b(?:didn'?t (?:quite )?(?:catch|hear|get)|did
 /** Task 7g: the facts line for the sentences of their last answer the last reply left off the board (once; those up since
  *  are dropped). */
 export function v2CardsOwedFacts(state: V2State, enabled: boolean = TUTOR_V2_CARD_EVERY_SENTENCE): string[] {
-  const owed = enabled ? (state.cardsOwed ?? []).filter((x) => !v2SentenceCarded(state.board, x, state.correctedSentences ?? [])) : [];
+  // Task 7m fix round 1 (M6): nor one a card on the board now holds corrected (an owed card kept across a silence turn).
+  const owed = enabled ? (state.cardsOwed ?? []).filter((x) => !v2SentenceCarded(state.board, x, state.correctedSentences ?? []) && !(TUTOR_V2_CORRECTION_CARD_NOW && v2BoardCardHolds(state.board, x))) : [];
   if (!owed.length) return [];
   return [`not carded in your last reply: ${owed.length === 1 ? 'this sentence' : 'these sentences'} of their last answer (as heard): ${owed.map((x) => JSON.stringify(x)).join('; ')}. Put ${owed.length === 1 ? 'it' : 'each'} on the board in this reply, as it should be said, one sentence card each (the changed words stressed, a short gloss), where you mention it`];
 }

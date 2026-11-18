@@ -130,20 +130,26 @@ function markWords(text: string, words: readonly string[], max: number): { text:
  *  only, and the reply's quoted correction "in the home appliance division." is four words (more than a 7h target): "the" was
  *  heard nowhere apart. Marks (as markTargets makes) go around a card's stressed words (a Latin word or phrase of at most
  *  V2_TARGET_MAX_WORDS words) in a piece of speech that IS the card's sentence, and around them inside a longer quoted span that
- *  holds one (the stress word only, never the whole quote). At most V2_TARGET_MAX_PER_PART marks a piece. Pure. */
+ *  is a piece of that card's sentence (the stress word only, never the whole quote). At most V2_TARGET_MAX_PER_PART marks a
+ *  piece. Only the first occurrence of each stress word is marked (a card adding a second "the" marks the first). Pure. */
 export function markStressed(text: string, cards: readonly V2CardStress[] = [], enabled: boolean = TUTOR_V2_CARD_STRESS_SPOKEN): string {
   if (!enabled || !cards.length) return text;
   const stressOf = (c: V2CardStress) => c.stress.map((w) => w.trim()).filter((w) => TARGET.test(w));
   const me = wordsOf(text);
-  const own = cards.find((c) => me && wordsOf(c.sentence) === me && stressOf(c).length);
+  // Fix round 1: or a piece of it of three words or more standing as its own part of speech: a quote in a Japanese-led sentence
+  // (「in the home appliance division」と言います。) reaches the voice as an English part without its brackets.
+  const own = cards.find((c) => me && stressOf(c).length && (wordsOf(c.sentence) === me || (me.split(' ').length >= 3 && ` ${wordsOf(c.sentence)} `.includes(` ${me} `))));
   if (own) return markWords(text, stressOf(own), V2_TARGET_MAX_PER_PART).text;
-  const all = [...new Set(cards.flatMap(stressOf))];
-  if (!all.length) return text;
+  // Fix round 1 (M1): a quote is marked only with the stress of the card it is a piece of (its words run on in the card's
+  // sentence), never a starter ending in "…": "Try starting with "I have a meeting…"" under a card stressing "a" stays plain.
   let n = 0;
   return text.replace(QUOTED, (whole, a?: string, b?: string, c?: string) => {
     const inner = (a ?? b ?? c ?? '').trim();
-    if (n >= V2_TARGET_MAX_PER_PART || TARGET.test(inner)) return whole;
-    const marked = markWords(whole, all, V2_TARGET_MAX_PER_PART - n);
+    if (n >= V2_TARGET_MAX_PER_PART || TARGET.test(inner) || /(?:…|\.\.\.)[.,;:!?]?$/.test(inner)) return whole;
+    const piece = wordsOf(inner);
+    const of = cards.find((k) => piece && ` ${wordsOf(k.sentence)} `.includes(` ${piece} `) && stressOf(k).length);
+    if (!of) return whole;
+    const marked = markWords(whole, stressOf(of), V2_TARGET_MAX_PER_PART - n);
     n += marked.n;
     return marked.text;
   });
