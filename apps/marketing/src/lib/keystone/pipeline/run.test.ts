@@ -682,6 +682,152 @@ const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", co
     equal((a[0].detail as { cause: string }).cause, "format", "with its cause");
   }
 
+  // --- a lesson that cannot be recorded never holds the item ---
+  {
+    const store = new FakeStore([changes()]);
+    store.verdicts.set("100", { verdict: "changes", body: "Use Canadian spelling.", createdAt: T0 });
+    store.sections.set("100", draft("old").sections);
+    process.env.OPENAI_API_KEY = "sk-test-SECRET-123456789";
+    store.saveLesson = async () => { throw new Error("connection reset with sk-test-SECRET-123456789"); };
+    const { steps: s } = steps();
+    const run = await processItem("100", "r1", deps(store, s));
+    delete process.env.OPENAI_API_KEY;
+    equal(run.result, "ready", `the correction goes through (${run.error ?? ""})`);
+    deepEqual(run.flags, [], "no step_failed");
+    equal(run.warnings?.length, 1, "one warning on the run record");
+    ok(/^lesson not recorded: connection reset/.test(run.warnings![0]) && !run.warnings![0].includes("SECRET"), `scrubbed (${run.warnings![0]})`);
+    equal(store.runs.get("100|r1")?.warnings?.length, 1, "saved on the run record");
+  }
+
+  // --- owner rewrite: a held solution Praveen sent back with a note ---
+  const T1 = new Date("2026-11-17T12:00:00Z");
+  const ownerItem = (p: Partial<ItemDoc> = {}) => item({
+    stage: "ready", version: 1, releasedVersion: 0, evelynAnswer: "B", updatedAt: T1,
+    pipeline: { flags: ["sample", "owner_sent_back"], heldFor: "praveen", fixNote: "Show the units.", fixRequestedAt: T1, sentBackBy: "praveen", runId: "old", seenAt: T0 },
+    ...p,
+  });
+  {
+    const items = [
+      ownerItem(),
+      item({ itemId: "101", stage: "ready", version: 1, pipeline: { flags: ["sample"], heldFor: "praveen" } }),
+      ownerItem({ itemId: "102", stage: "approved" }),
+      item({ itemId: "103", stage: "ready", version: 1, pipeline: { flags: [] } }),
+    ];
+    const sel = selectItems(items, new Map(), {});
+    deepEqual(sel.take.map((i) => i.itemId), ["100"], "only the ready item with owner_sent_back is taken");
+    ok(sel.skipped.some((x) => x.itemId === "101" && /not sent back/.test(x.why)), "a held ready item without the flag is not");
+    ok(sel.skipped.some((x) => x.itemId === "103"), "nor a clean ready one");
+    ok(sel.refused.some((x) => x.itemId === "102"), "approved is refused even with the flag");
+    deepEqual(selectItems(items, new Map(), { only: ["101"] }).take, [], "naming a ready item without the flag does not take it");
+  }
+  {
+    // other cause: write with the note and the current solution, checks, saved held for him
+    const store = new FakeStore([ownerItem()]);
+    store.sections.set("100", draft("old").sections);
+    const notes: string[] = [];
+    const { steps: s, calls } = steps({ classifyCause: async (_i, note) => { notes.push(note); return okReply({ cause: "format" as const, why: "" }, 0.01, "m-audit"); } });
+    const run = await processItem("100", "r1", deps(store, s));
+    equal(run.mode, "owner", "mode owner");
+    equal(run.result, "held", `always held (${run.error ?? ""})`);
+    deepEqual(notes, ["Show the units."], "the cause step classifies Praveen's note");
+    equal(calls.intakeModel, 0, "no intake");
+    equal(calls.agreeOnAnswer, 0, "not about the answer: no re-solve");
+    const opts = calls.writeOpts[0] as { fixNote?: string; previous?: Draft };
+    equal(opts.fixNote, "Show the units.", "the note is the author's instruction");
+    ok(opts.previous?.sections[0].md.includes("old"), "the current solution as previous");
+    equal(calls.workingCheck + calls.rulesAudit, 2, "the checks ran");
+    const it = store.items.get("100")!;
+    equal(it.stage, "ready", "stays ready");
+    equal(it.version, 2, "new version");
+    equal(it.releasedVersion, 0, "unreleased");
+    deepEqual([...it.pipeline!.flags].sort(), ["owner_rewrite", "sample"], "owner_sent_back gone, owner_rewrite added, sample kept");
+    equal(it.pipeline!.heldFor, "praveen", "held for him");
+    equal(it.pipeline!.releaseAt, undefined, "never a release time");
+    ok(it.pipeline!.passedAt instanceof Date, "it passed the checks");
+    for (const k of ["fixNote", "fixRequestedAt", "sentBackBy", "seenAt"] as const) equal(it.pipeline![k], undefined, `${k} cleared in the same update`);
+    equal(it.evelynAnswer, "B", "same answer");
+    equal(store.lessons.length + store.lessonCalls, 0, "no lesson: Praveen's note is not the client's send-back");
+    equal(store.itemWrites, 1, "one item write");
+  }
+  {
+    // answer cause: back to the blind solves
+    const store = new FakeStore([ownerItem()]);
+    store.sections.set("100", draft("old").sections);
+    const { steps: s, calls } = steps({ classifyCause: async () => okReply({ cause: "answer" as const, why: "" }, 0.01, "m-audit") });
+    const run = await processItem("100", "r1", deps(store, s));
+    equal(calls.agreeOnAnswer, 1, "answer: restarts at solve");
+    equal((calls.writeOpts[0] as { fixNote?: string; previous?: Draft }).fixNote, "Show the units.", "with the note");
+    equal((calls.writeOpts[0] as { previous?: Draft }).previous, undefined, "and no previous solution");
+    equal(run.result, "held", "held for him");
+    ok(store.items.get("100")!.pipeline!.flags.includes("owner_rewrite"), "owner_rewrite");
+  }
+  {
+    // a second failure is still saved, held, with both flags
+    const store = new FakeStore([ownerItem()]);
+    store.sections.set("100", draft("old").sections);
+    const { steps: s } = steps({ rulesAudit: async () => auditFail(1) });
+    const run = await processItem("100", "r1", deps(store, s));
+    equal(run.result, "held", "second failure held");
+    const it = store.items.get("100")!;
+    deepEqual([...it.pipeline!.flags].sort(), ["owner_rewrite", "sample", "second_failure"], "flags after a second failure");
+    equal(it.pipeline!.passedAt, undefined, "did not pass");
+    equal(it.pipeline!.releaseAt, undefined, "no release time");
+  }
+  {
+    // the rewrite cannot complete: item as it was + step_failed; the next run retries
+    const store = new FakeStore([ownerItem()]);
+    store.sections.set("100", draft("old").sections);
+    const { steps: s } = steps({ writeSolution: async () => ({ ok: false, reason: "shape", detail: "bad", cost: 0.1, model: "m-author" }) });
+    const run = await processItem("100", "r1", deps(store, s));
+    equal(run.result, "held", "held");
+    const it = store.items.get("100")!;
+    equal(it.version, 1, "no new version");
+    deepEqual([...it.pipeline!.flags].sort(), ["owner_sent_back", "sample", "step_failed"], "flag kept, step_failed added");
+    equal(it.pipeline!.fixNote, "Show the units.", "note kept");
+    equal(it.pipeline!.heldFor, "praveen", "held");
+    const again = selectItems([it], new Map([["100", store.runs.get("100|r1")!]]), {});
+    deepEqual(again.take.map((i) => i.itemId), ["100"], "the next run retries it");
+    // a thrown step: the same through the run's failure path
+    const store2 = new FakeStore([ownerItem()]);
+    store2.sections.set("100", draft("old").sections);
+    const { steps: s2 } = steps({ writeSolution: async () => { throw new Error("killed"); } });
+    const r2 = await processItem("100", "r1", deps(store2, s2));
+    equal(r2.result, "failed", "failed");
+    const it2 = store2.items.get("100")!;
+    deepEqual([...it2.pipeline!.flags].sort(), ["owner_sent_back", "sample", "step_failed"], "thrown: flag kept, step_failed added");
+    equal(it2.pipeline!.fixNote, "Show the units.", "thrown: note kept");
+  }
+  {
+    // dry run writes nothing
+    const store = new FakeStore([ownerItem()]);
+    store.sections.set("100", draft("old").sections);
+    const { steps: s } = steps();
+    const out = await runPipeline({ dryRun: true }, { reader: store, makeRealWriter: () => { throw new Error("no real writer"); }, deps: deps(store, s), log: () => {} });
+    equal(store.itemWrites, 0, "dry run: no item write");
+    equal(store.solutions.length, 0, "dry run: no solution");
+    const save = out.dry!.actions.find((x) => x.action === "saveSolution");
+    ok(save && (save.detail as { pipeline: PipelineDoc }).pipeline.flags.includes("owner_rewrite"), "dry run says what it would save");
+  }
+  {
+    // resume after a crash just after the save: no second write
+    const store = new FakeStore([ownerItem()]);
+    store.sections.set("100", draft("old").sections);
+    const realSave = store.saveRun.bind(store);
+    let crashed = false;
+    store.saveRun = async (r: RunDoc) => {
+      if (!crashed && r.result === "held") { crashed = true; throw new Error("crash after the save"); }
+      return realSave(r);
+    };
+    const { steps: s, calls } = steps();
+    await processItem("100", "r1", deps(store, s)).catch(() => undefined);
+    equal(store.solutions.length, 1, "the save landed before the crash");
+    const run = await processItem("100", "r1", deps(store, s));
+    equal(run.result, "held", `resume finishes as held (${run.error ?? ""})`);
+    equal(store.solutions.length, 1, "no second solution");
+    equal(store.itemWrites, 1, "no second item write");
+    equal(calls.writeSolution, 1, "the author was not called again");
+  }
+
   // --- release time: a clean pass gets releaseAt in the same write; a flagged one does not ---
   {
     const RECEIVED = new Date("2026-11-16T17:00:00Z"); // Mon 10:00 MT

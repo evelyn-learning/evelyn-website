@@ -17,7 +17,7 @@ delete process.env.KEYSTONE_PIPELINE_LIVE;
 
 const ok = (value: unknown, message: string) => assert.ok(value, message);
 const equal = (a: unknown, b: unknown, message: string) => assert.equal(a, b, message);
-const ids = ["991301", "991302", "991303", "991304", "991305", "991306", "991307", "991308", "991309", "991310", "991311", "991312"];
+const ids = ["991301", "991302", "991303", "991304", "991305", "991306", "991307", "991308", "991309", "991310", "991311", "991312", "991313", "991314"];
 const BATCH = "dbtest-run-1";
 
 (async () => {
@@ -209,6 +209,35 @@ const BATCH = "dbtest-run-1";
     ok(c.cause === "item" && c.ruleId === "R-units" && c.confirmed === true && c.proposedBy === "session", "confirmed by a session, cause item, rule named");
     await assert.rejects(() => confirmLesson("991312", 1, { confirmed: true, proposedBy: "session" }), /no lesson/, "no lesson: refused");
     equal(await Lesson.countDocuments({ itemId: "991312" }), 0, "confirmLesson created nothing");
+
+    // owner rewrite on the real store: the queue's pipeline fields are schema fields now (kept, then cleared)
+    const T1 = new Date("2026-11-17T12:00:00Z");
+    const ownerPipe = { flags: ["sample", "owner_sent_back"], heldFor: "praveen", fixNote: "Show the units.", fixRequestedAt: T1, sentBackBy: "praveen", seenAt: T0, runId: "old" };
+    for (const id of ["991313", "991314"]) {
+      await mk(id, { stage: "ready", version: 1, releasedVersion: 0, evelynAnswer: "B", updatedAt: T1, pipeline: ownerPipe });
+      await Solution.create({ itemId: id, version: 1, sections: [{ kind: "short", md: "Old. So the answer is B." }], author: "pipeline", runId: "old" });
+    }
+    const stored = (await Item.findOne({ itemId: "991313" }).lean())!;
+    ok(stored.pipeline?.fixNote === "Show the units." && stored.pipeline?.sentBackBy === "praveen" && stored.pipeline?.seenAt, "the queue's fields are kept by the schema");
+    const o1 = await processItem("991313", "run-o1", deps());
+    equal(o1.mode, "owner", "owner mode");
+    equal(o1.result, "held", `owner rewrite held (${o1.error ?? ""})`);
+    const it13 = (await Item.findOne({ itemId: "991313" }).lean())!;
+    ok(it13.stage === "ready" && it13.version === 2 && it13.releasedVersion === 0, "v2, still ready and unreleased");
+    equal([...it13.pipeline!.flags].sort().join(), "owner_rewrite,sample", "flags after the rewrite");
+    ok(it13.pipeline!.heldFor === "praveen" && !it13.pipeline!.releaseAt, "held, no release time");
+    ok(!it13.pipeline!.fixNote && !it13.pipeline!.fixRequestedAt && !it13.pipeline!.sentBackBy && !it13.pipeline!.seenAt, "note fields cleared in the same update");
+    equal(await Lesson.countDocuments({ itemId: "991313" }), 0, "no lesson for the owner's note");
+    throwInWrite = true;
+    const o2 = await processItem("991314", "run-o2", deps());
+    throwInWrite = false;
+    equal(o2.result, "failed", "a rewrite that cannot complete");
+    const it14 = (await Item.findOne({ itemId: "991314" }).lean())!;
+    equal(it14.version, 1, "no new version");
+    equal([...it14.pipeline!.flags].sort().join(), "owner_sent_back,sample,step_failed", "flag kept, step_failed added");
+    ok(it14.pipeline!.fixNote === "Show the units." && it14.pipeline!.sentBackBy === "praveen", "the note is kept for the retry");
+    const cands = await mongoReader().candidates({});
+    ok(cands.some((c) => c.itemId === "991314") && !cands.some((c) => c.itemId === "991313"), "candidates: a ready item with owner_sent_back, not one without");
 
     console.log("run.dbtest ok");
   } finally {

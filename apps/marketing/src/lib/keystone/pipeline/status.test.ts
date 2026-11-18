@@ -46,8 +46,10 @@ const HOUR = 3_600_000;
       sample: "Random sample",
       unverified_type: "Question type not yet verified end to end",
       answer_to_confirm: "No key supplied: answer to confirm",
+      owner_sent_back: "Sent back by you",
+      owner_rewrite: "Rewritten after your note",
     },
-    "FLAG_WORDS holds the agreed plain words for all eleven flags",
+    "FLAG_WORDS holds the agreed plain words for all thirteen flags",
   );
   equal(whyHeld(["sample"]), "Random sample", "one flag: its words");
   equal(whyHeld(["solvers_split", "unverified_type"]), "The two solvers disagreed; a third settled it. Question type not yet verified end to end", "two flags: both, in order");

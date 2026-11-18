@@ -39,6 +39,8 @@ export const FLAG_WORDS: Record<Flag, string> = {
   sample: "Random sample",
   unverified_type: "Question type not yet verified end to end",
   answer_to_confirm: "No key supplied: answer to confirm",
+  owner_sent_back: "Sent back by you",
+  owner_rewrite: "Rewritten after your note",
 };
 
 export const KEYSTONE_URL = "https://keystone.evelynlearning.com";

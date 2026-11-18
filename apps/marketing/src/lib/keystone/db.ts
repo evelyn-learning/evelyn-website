@@ -41,7 +41,11 @@ export type Flag =
   /** match, gapMatch, order or inlineChoice: no real sample of these kinds verified end to end yet. */
   | "unverified_type"
   /** The solvers agree but the client supplied no key: the answer is ours alone. */
-  | "answer_to_confirm";
+  | "answer_to_confirm"
+  /** Praveen sent the held solution back with a note (pipeline.fixNote): the next run rewrites it. */
+  | "owner_sent_back"
+  /** The solution was rewritten after Praveen's note: always held for him again. */
+  | "owner_rewrite";
 
 /** What the solutions pipeline last decided about an item. heldFor is set whenever flags is not empty. */
 export type PipelineDoc = {
@@ -64,6 +68,12 @@ export type PipelineDoc = {
   timerReleasedAt?: Date;
   /** Why the item is held when no flag says it (e.g. "no release time"). Internal: never shown to the client. */
   heldWhy?: string;
+  /** Praveen's send-back (flag owner_sent_back): what the author must change, when, by whom. Cleared by the rewrite. */
+  fixNote?: string;
+  fixRequestedAt?: Date;
+  sentBackBy?: string;
+  /** When Praveen last looked at the held item ("Keep holding"). */
+  seenAt?: Date;
 };
 
 export type Step = "intake" | "course" | "cause" | "solve" | "write" | "calc" | "working" | "audit" | "render";
@@ -85,7 +95,8 @@ export type RunDoc = {
   runId: string;
   startedAt: Date;
   finishedAt?: Date;
-  mode: "fresh" | "key_right" | "changes";
+  /** owner: a held solution Praveen sent back with a note (flag owner_sent_back). */
+  mode: "fresh" | "key_right" | "changes" | "owner";
   startedFrom: { stage: Stage; version: number; updatedAt: Date };
   steps: RunStep[];
   corrections: number;
@@ -108,6 +119,8 @@ export type RunDoc = {
   filesNotSent?: string[];
   /** Resume found this run's own final write had landed, and the item changed after it (result superseded). */
   ownWriteLanded?: boolean;
+  /** Bookkeeping that failed without failing the item (e.g. the lesson row); scrubbed, at most 5. */
+  warnings?: string[];
 };
 
 export type ItemDoc = {
@@ -382,6 +395,7 @@ function defineModels(conn: Connection): Models {
           flags: [String], passedAt: Date, releaseAt: Date, heldFor: String, answerToConfirm: Boolean, runId: String, wroteStage: String,
           releaseClaim: { type: new Schema({ owner: String, at: Date, releasedAt: Date }, { _id: false }), required: false },
           timerReleasedAt: Date, heldWhy: String,
+          fixNote: String, fixRequestedAt: Date, sentBackBy: String, seenAt: Date,
         },
         { _id: false },
       ),
@@ -480,6 +494,8 @@ function defineModels(conn: Connection): Models {
     intent: { type: Schema.Types.Mixed },
     suggested: Boolean,
     filesNotSent: [String],
+    ownWriteLanded: Boolean,
+    warnings: [String],
   });
   Run.index({ itemId: 1, runId: 1 }, { unique: true });
   Run.index({ itemId: 1, startedAt: -1 });

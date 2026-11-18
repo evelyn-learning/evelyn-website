@@ -40,6 +40,7 @@ import { intakeCode, intakeModel, intakeNote, type IntakeFinding } from "./intak
 import { callModel, redact } from "./models";
 import { suggestFor } from "./outbox";
 import { releaseAt, sampleAfterRun } from "./release";
+import { answerFromText } from "./retro";
 import { agreeOnAnswer, type Solves } from "./solve";
 import type { ModelDeps, ModelImage, ModelReply } from "./types";
 import type { ImageType } from "./vendors/common";
@@ -112,6 +113,16 @@ export type Deps = {
 };
 
 const UNVERIFIED_KINDS = ["match", "gapMatch", "order", "inlineChoice"];
+/** The flag the queue page sets when Praveen sends a held solution back with a note (store.ts OWNER_SENT_BACK). */
+export const OWNER_SENT_BACK: Flag = "owner_sent_back";
+/** Set on the version rewritten after his note: it is always held for him again. */
+export const OWNER_REWRITE: Flag = "owner_rewrite";
+/** Flags of the item's earlier version an owner rewrite keeps (the batch's sample count reads `sample`). */
+const OWNER_KEEPS: Flag[] = ["sample"];
+const MAX_WARNINGS = 5;
+
+/** A held solution Praveen sent back with a note: taken by the run as an owner rewrite. */
+export const ownerSentBack = (i: Pick<ItemDoc, "stage" | "pipeline">) => i.stage === "ready" && !!i.pipeline?.flags?.includes(OWNER_SENT_BACK);
 const NEVER_TOUCH = ["approved", "delivered"];
 const CHECKS = ["calc", "working", "audit", "render"] as const;
 type CheckStep = (typeof CHECKS)[number];
@@ -142,6 +153,7 @@ const fromOf = (i: ItemDoc): Expect => ({ stage: i.stage, version: i.version || 
 
 function modeOf(item: ItemDoc, verdict: { verdict?: string; createdAt: Date } | null): RunDoc["mode"] {
   if (item.stage === "changes_requested") return "changes";
+  if (ownerSentBack(item)) return "owner";
   const kq = item.keyQuery;
   if (item.stage === "drafting" && kq?.answeredAt && verdict?.verdict === "key_right" && new Date(verdict.createdAt) >= new Date(kq.raisedAt)) return "key_right";
   return "fresh";
@@ -213,7 +225,9 @@ export async function processItem(itemId: string, runId: string, deps: Deps): Pr
         if (cur && !NEVER_TOUCH.includes(cur.stage) && sameFrom(run.startedFrom, cur)) {
           const { wroteStage: _stale, ...kept } = cur.pipeline ?? { flags: [] };
           void _stale; // a stage marker belongs to the write that made it, never carried over
-          await deps.writer.setPipeline(itemId, { ...kept, flags: run.flags, heldFor: "praveen", runId }, run.startedFrom);
+          // An owner rewrite that could not complete keeps the item as it was (note, owner_sent_back, sample) so the next run retries.
+          const flagsNow = run.mode === "owner" ? [...new Set<Flag>([...(cur.pipeline?.flags ?? []), ...run.flags])] : run.flags;
+          await deps.writer.setPipeline(itemId, { ...kept, flags: flagsNow, heldFor: "praveen", runId }, run.startedFrom);
         }
       } catch {
         // superseded or unreachable: the run record still says failed
@@ -285,6 +299,8 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
   delete run.intent;
   delete run.suggested;
   delete run.filesNotSent;
+  delete run.warnings;
+  const owner = run.mode === "owner";
   let answerToConfirm = false;
   const counters = new Map<Step, number>();
 
@@ -312,17 +328,27 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
     run.flags = [...flags];
     throw new Done();
   };
-  /** Held before a solution exists: only the item's pipeline record is written. */
+  /**
+   * Held before a solution exists: only the item's pipeline record is written. An owner rewrite keeps the
+   * item's record as it was (its version, note and flags, owner_sent_back included) and adds the hold.
+   */
   async function hold(add: Flag[], wouldBe?: string): Promise<never> {
     for (const f of add) flags.add(f);
     if (wouldBe) run.wouldBe = wouldBe;
     run.flags = [...flags];
     await guard();
-    await writer.setPipeline(itemId, { flags: [...flags], heldFor: "praveen", runId: run.runId }, expect);
+    if (owner) {
+      const { wroteStage: _w, releaseClaim: _c, ...kept } = item.pipeline ?? { flags: [] };
+      void _w; void _c;
+      const all = [...new Set<Flag>([...(item.pipeline?.flags ?? []), ...flags])];
+      await writer.setPipeline(itemId, { ...kept, flags: all, heldFor: "praveen", runId: run.runId }, expect);
+    } else {
+      await writer.setPipeline(itemId, { flags: [...flags], heldFor: "praveen", runId: run.runId }, expect);
+    }
     return finish("held");
   }
   async function toItemData(findings: IntakeFinding[]): Promise<never> {
-    if (flags.has("unverified_type")) return hold([], "item_data");
+    if (flags.has("unverified_type") || owner) return hold([], "item_data");
     // A model-worded "missing" line that names a model or vendor is not shown to the client as it is.
     const safe = findings.map((f) => (f.code === "model_missing" && namesMaker(f.detail) ? { ...f, detail: "part of the question" } : f));
     await guard();
@@ -334,6 +360,8 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
   }
   async function toKeyQuery(answer: Answer, solves: Solves): Promise<never> {
     if (flags.has("unverified_type")) return hold([], "key_query");
+    // An owner rewrite never raises a key query on a solution already agreed: back to Praveen.
+    if (owner) return hold(["no_agreement"], "key_query");
     const working = [solves.solver1, solves.solver2].map((r) => (r?.ok ? r.value.working : "")).find((w) => w.trim() && !namesMaker(w));
     if (!working) return hold(["step_failed"], "key_query");
     await guard();
@@ -347,6 +375,11 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
   async function intend(writing: NonNullable<RunDoc["result"]>, stage: ItemDoc["stage"], toVersion: number) {
     run.intent = { writing, stage, toVersion, flags: [...flags], at: now() };
     await writer.saveRun(run);
+  }
+
+  function warn(text: string) {
+    const list = run.warnings ?? [];
+    if (list.length < MAX_WARNINGS) run.warnings = [...list, redact(text).slice(0, 300)];
   }
 
   if ((item.interactions ?? []).some((i) => UNVERIFIED_KINDS.includes(i.kind))) flags.add("unverified_type");
@@ -429,10 +462,15 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
   let answer: Answer | undefined;
   /** When the solution came back to us with "Fix solution" (a correction waits 1 day from then). */
   let sentBackAt: Date | undefined;
-  if (run.mode === "changes") {
-    const v = await deps.reader.lastVerdict(itemId);
-    if (v?.verdict === "changes") sentBackAt = new Date(v.createdAt);
-    const note = v?.verdict === "changes" ? (v.body ?? "").trim() : "";
+  if (run.mode === "changes" || owner) {
+    // changes: the reviewer's note (the client's send-back); owner: Praveen's note on the held version.
+    let note = "";
+    if (owner) note = (item.pipeline?.fixNote ?? "").trim();
+    else {
+      const v = await deps.reader.lastVerdict(itemId);
+      if (v?.verdict === "changes") sentBackAt = new Date(v.createdAt);
+      note = v?.verdict === "changes" ? (v.body ?? "").trim() : "";
+    }
     type CauseOut = { cause: Cause; why: string; note: string } | { failed: string; note: string };
     const c = await step<CauseOut>("cause", async () => {
       if (!note) return { ok: true, output: { cause: "other" as Cause, why: "no note", note } };
@@ -440,23 +478,36 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
       if (!r.ok) return { ok: false, output: { failed: `${r.reason}: ${r.detail}`, note }, cost: r.cost, model: r.model };
       return { ok: true, output: { cause: r.value.cause, why: r.value.why, note }, cost: r.cost, model: r.model };
     });
-    // The send-back happened whatever the cause step said: recorded once per item and version.
+    // The client's send-back happened whatever the cause step said: recorded once per item and version.
     // A record about the past, not an item write: written before (and regardless of) any supersede check.
-    const proposed: Cause = c.ok ? (c.output as { cause: Cause }).cause : "other";
-    await writer.saveLesson({
-      itemId, version: expect.version, note: splitNote(c.output.note).plain, cause: proposed, proposedBy: "model", confirmed: false, createdAt: now(),
-    });
+    // Bookkeeping: a failure to record it never holds the item (the next run's upsert fills the gap).
+    // Praveen's own note is not a lesson.
+    if (!owner) {
+      const proposed: Cause = c.ok ? (c.output as { cause: Cause }).cause : "other";
+      try {
+        await writer.saveLesson({
+          itemId, version: expect.version, note: splitNote(c.output.note).plain, cause: proposed, proposedBy: "model", confirmed: false, createdAt: now(),
+        });
+      } catch (e) {
+        warn(`lesson not recorded: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
     if (!c.ok) return hold(["step_failed"]);
     const out = c.output as { cause: Cause; note: string };
     run.cause = out.cause;
     fixNote = note || undefined;
     if (out.cause !== "answer") {
-      // Not about the answer: correct the current solution, to the key (the pipeline never writes to another answer).
+      // Not about the answer: correct the current solution, to the agreed answer (owner: the version he
+      // sent back was written to it) or the key; the pipeline never writes to another answer.
       const key = readKey(item);
       const sections = await deps.reader.latestSections(itemId);
-      if (key.exact && key.answer && sections?.length) {
-        answer = key.answer;
+      const agreed = owner ? answerFromText(item, item.evelynAnswer) : null;
+      const to = agreed ?? (key.exact && key.answer ? key.answer : null);
+      if (to && sections?.length) {
+        answer = to;
         previous = { topic: item.topic, sections };
+        // The agreed answer is reused as it was: so is whether the reviewer must confirm it.
+        if (agreed && item.pipeline?.answerToConfirm) { flags.add("answer_to_confirm"); answerToConfirm = true; }
       }
     }
   }
@@ -555,6 +606,12 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
   }
 
   async function saveDraft(draft: Draft, a: Answer, passed: boolean): Promise<never> {
+    if (owner) {
+      // Praveen asked for the change: he sees the result. Always held, never a release time; the note and
+      // owner_sent_back go (the new pipeline record replaces the old one in the same update), sample stays.
+      flags.add(OWNER_REWRITE);
+      for (const f of item.pipeline?.flags ?? []) if (OWNER_KEEPS.includes(f)) flags.add(f);
+    }
     run.flags = [...flags];
     const passedAt = now();
     // A clean pass (no flag, so no hold) gets its release time in the same write; a held one never does.
@@ -564,7 +621,7 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
     const from = corrected && sentBackAt && sentBackAt.getTime() > arrived.getTime() ? sentBackAt : arrived;
     const pipeline: PipelineDoc = {
       flags: [...flags], runId: run.runId, ...(flags.size ? { heldFor: "praveen" as const } : {}), ...(passed ? { passedAt } : {}), ...(answerToConfirm ? { answerToConfirm: true } : {}),
-      ...(passed && !flags.size ? { releaseAt: releaseAt(from, passedAt, corrected, itemId) } : {}),
+      ...(passed && !flags.size && !owner ? { releaseAt: releaseAt(from, passedAt, corrected, itemId) } : {}),
     };
     await guard();
     await intend(flags.size ? "held" : "ready", "ready", expect.version + 1);
@@ -610,16 +667,19 @@ export function selectItems(items: ItemDoc[], latestRuns: Map<string, RunDoc>, o
     const answeredAt = it.keyQuery?.answeredAt;
     // An answered key query is taken until a run started after the answer reached a decision.
     const keyAnswered = it.stage === "drafting" && !!answeredAt && !(decided(last) && new Date(last!.startedAt) >= new Date(answeredAt));
-    const eligible = it.stage === "received" || it.stage === "changes_requested" || keyAnswered;
+    const eligible = it.stage === "received" || it.stage === "changes_requested" || keyAnswered || ownerSentBack(it);
     if (!eligible) {
       const why =
         it.stage === "drafting" && answeredAt ? "its answered key query was already run" :
-        it.stage === "drafting" ? "drafting with no answered key query (with Evelyn)" : `stage ${it.stage} is not one the run takes`;
+        it.stage === "drafting" ? "drafting with no answered key query (with Evelyn)" :
+        it.stage === "ready" ? "ready and not sent back by Praveen" : `stage ${it.stage} is not one the run takes`;
       (named ? out.refused : out.skipped).push({ itemId: it.itemId, why });
       continue;
     }
     if (!named && last?.startedFrom && sameFrom(last.startedFrom, it)) {
-      if (last.result === "held") { out.skipped.push({ itemId: it.itemId, why: "held at its last run, unchanged since" }); continue; }
+      // An owner rewrite that could not complete (step_failed) is retried; any other hold waits for a change.
+      const retry = ownerSentBack(it) && last.flags?.includes("step_failed");
+      if (last.result === "held" && !retry) { out.skipped.push({ itemId: it.itemId, why: "held at its last run, unchanged since" }); continue; }
       if (last.result === "course_missing" && it.courseSource !== "sheet") { out.skipped.push({ itemId: it.itemId, why: "still no course from the spreadsheet" }); continue; }
     }
     out.take.push(it);
@@ -737,7 +797,9 @@ export function mongoReader(): Reader {
     solutionRunId: (itemId, version) => solutionRunId(itemId, version),
     candidates: async ({ only, batch }) => {
       const { Item } = await ks();
-      const filter: Record<string, unknown> = only ? { itemId: { $in: only } } : { stage: { $in: ["received", "drafting", "changes_requested"] } };
+      const filter: Record<string, unknown> = only
+        ? { itemId: { $in: only } }
+        : { $or: [{ stage: { $in: ["received", "drafting", "changes_requested"] } }, { stage: "ready", "pipeline.flags": OWNER_SENT_BACK }] };
       if (batch) filter.batchId = batch;
       return Item.find(filter).sort({ order: 1 }).lean<ItemDoc[]>();
     },
