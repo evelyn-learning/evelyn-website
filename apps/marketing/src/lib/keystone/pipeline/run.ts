@@ -35,7 +35,7 @@ import {
 } from "../store";
 import { readKey, type Answer, type Decision } from "./answers";
 import { calcCheck, type CalcFinding } from "./calc";
-import { BANNED_WORDS, proseOf, renderCheck, rulesAudit, workingCheck, type CheckResult, type Finding, type RenderCheckOpts } from "./checks";
+import { bannedWordsIn, renderCheck, rulesAudit, workingCheck, type CheckResult, type Finding, type RenderCheckOpts } from "./checks";
 import { intakeCode, intakeModel, intakeNote, lastSegment, type IntakeFinding } from "./intake";
 import { callModel, redact } from "./models";
 import { suggestFor } from "./outbox";
@@ -166,8 +166,24 @@ const findingText = (f: Finding) => `${f.check}${f.ruleId ? ` ${f.ruleId}` : ""}
 
 /** Whether text a model wrote names a model, vendor or tool (BANNED_WORDS, the render check's list). */
 function namesMaker(text: string): boolean {
-  const prose = proseOf(text);
-  return BANNED_WORDS.some((b) => (prose.match(b.re) ?? []).length > 0);
+  return bannedWordsIn(text).length > 0;
+}
+
+/** The longest topic a model may set on an item (clients read it). */
+export const TOPIC_MAX = 80;
+
+/**
+ * A model-written topic, only when it is safe to show the client: at most TOPIC_MAX characters after trimming, one
+ * line, no HTML or markup characters, and naming no model, vendor or tool (the render check's banned words).
+ * Otherwise undefined: the item's topic stays unset.
+ */
+export function acceptTopic(raw: string | undefined | null): string | undefined {
+  const t = (raw ?? "").trim();
+  if (!t || [...t].length > TOPIC_MAX) return undefined;
+  if (/[\r\n\u2028\u2029\u0000-\u001f\u007f]/.test(t)) return undefined;
+  if (/[<>&`$\\{}[\]*#|]/.test(t)) return undefined;
+  if (bannedWordsIn(t).length) return undefined;
+  return t;
 }
 
 const sameFrom = (a: Expect, i: ItemDoc) =>
@@ -703,7 +719,7 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
       {
         sections: draft.sections,
         evelynAnswer: answerText(a),
-        ...(item.topic?.trim() || !draft.topic?.trim() ? {} : { topic: draft.topic.trim() }),
+        ...(item.topic?.trim() || !acceptTopic(draft.topic) ? {} : { topic: acceptTopic(draft.topic) }),
         pipeline,
         ...(run.mode === "changes" ? { note: "Revised after review." } : {}),
         runId: run.runId,

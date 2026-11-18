@@ -322,6 +322,12 @@ export const BANNED_WORDS: readonly { name: string; re: RegExp }[] = [
   { name: "A.I.", re: new RegExp(`(?<![A-Za-z0-9_])A\\.I\\.`, "g") },
 ];
 
+/** The banned words (BANNED_WORDS) a text names, by name; empty when it names none. Scanned over proseOf(text). */
+export function bannedWordsIn(text: string): string[] {
+  const prose = proseOf(text);
+  return [...new Set(BANNED_WORDS.filter((b) => (prose.match(b.re) ?? []).length > 0).map((b) => b.name))];
+}
+
 /** Text of a figure's SVG <text>/<tspan> elements. */
 function svgText(svg: string): string {
   const out: string[] = [];
