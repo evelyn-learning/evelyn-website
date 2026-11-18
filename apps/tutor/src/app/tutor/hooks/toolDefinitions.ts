@@ -7,6 +7,7 @@
  */
 
 import { drawFigure } from '@/lib/tutor/v2/drawn-figures';
+import { TUTOR_V2_CARD_GLOSS_SHOW } from '@/lib/tutor/orchestrator/flags';
 import type { WhiteboardCommand, ShadedRegion } from '@core/knowledge/types';
 import { getGeometryStepKindsDescriptionTail } from '@/lib/tutor/diagrams/geometry-solver';
 import { GEOMETRY_STEP_DOCS } from '@/lib/tutor/diagrams/geometry-step-docs';
@@ -2676,6 +2677,8 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       // Task 7o (tutor brain v2, spoken language lessons): the note's targets are marked on the board (NoteTargetText).
       ...(funcArgs.targets === true ? { targets: true } : {}),
       ...(Array.isArray(funcArgs.stress) && funcArgs.stress.some((w: unknown) => typeof w === 'string' && w.trim()) ? { stress: (funcArgs.stress as unknown[]).filter((w): w is string => typeof w === 'string' && w.trim().length > 0) } : {}),
+      // Task 7p (tutor brain v2, a beginner's language lesson): a line in the learner's language under the note (CardGloss).
+      ...(TUTOR_V2_CARD_GLOSS_SHOW && typeof funcArgs.gloss === 'string' && funcArgs.gloss.trim() ? { gloss: funcArgs.gloss.trim() } : {}),
     } as unknown as WhiteboardCommand;
   }
   if (funcName === 'show_sentence') {
@@ -2744,6 +2747,8 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
         difficultyLabel: funcArgs.difficulty,
         givenValues,
         ...(funcArgs.rich === true ? { rich: true } : {}),
+        // Task 7p (tutor brain v2, a beginner's language lesson): the question in the learner's language, under it (CardGloss).
+        ...(TUTOR_V2_CARD_GLOSS_SHOW && typeof funcArgs.gloss === 'string' && funcArgs.gloss.trim() ? { gloss: funcArgs.gloss.trim() } : {}),
       },
     } as unknown as WhiteboardCommand;
   }

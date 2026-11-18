@@ -20,7 +20,7 @@
  */
 import { isCodeBody, typesetMaths, unfoldCode } from './rich-text';
 import { toolFigureCall } from './figure-catalogue';
-import { TUTOR_V2_SENTENCE_CARDS } from '../orchestrator/flags';
+import { TUTOR_V2_CARD_GLOSS_SHOW, TUTOR_V2_SENTENCE_CARDS } from '../orchestrator/flags';
 
 export type InlineKind = 'equation' | 'note' | 'problem' | 'table' | 'timeline' | 'compare' | 'steps' | 'quote' | 'forces' | 'numberline' | 'graph' | 'cycle' | 'web' | 'map' | 'chart' | 'ranks' | 'code' | 'sketch' | 'figure' | 'page' | 'sentence';
 export interface InlineBlock { kind: InlineKind; attrs: Record<string, string>; body: string; raw: string }
@@ -136,7 +136,7 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
   }
   if (b.kind === 'equation') return { name: 'show_equation', args: { latex: b.body, ...(b.attrs.label ? { label: b.attrs.label } : {}) } };
   // One point per line; a tutor who has just written a table sometimes separates the points with "|" instead.
-  if (b.kind === 'note') return { name: 'annotate', args: { text: b.body.includes('\n') || b.body.includes('$') || !pipedPoints(b.body) ? b.body : b.body.split(/(?<=[^|\s])\s*\|\s*(?=[^|\s])/).filter(Boolean).join('\n'), ...(b.attrs.style ? { style: b.attrs.style } : {}), rich: true } };
+  if (b.kind === 'note') return { name: 'annotate', args: { text: b.body.includes('\n') || b.body.includes('$') || !pipedPoints(b.body) ? b.body : b.body.split(/(?<=[^|\s])\s*\|\s*(?=[^|\s])/).filter(Boolean).join('\n'), ...(b.attrs.style ? { style: b.attrs.style } : {}), rich: true , ...glossOf(b) } };
   // The structured kinds are written as plain lines, cells separated by "|", so that a table or a timeline
   // costs the tutor no more than a note: a lesson in words was otherwise a stack of text cards
   // (Praveen, AP US Government, embed-1794355900794).
@@ -288,8 +288,12 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
     } };
   }
   if (b.kind === 'quote') return { name: 'show_passage', args: { text: b.body, ...(b.attrs.source ? { source: b.attrs.source } : {}), ...(b.attrs.title ? { title: b.attrs.title } : {}) } };
-  return { name: 'show_problem', args: { statement: b.body, format: 'free-response', rich: true, ...(b.attrs.title ? { title: b.attrs.title } : {}), ...(b.attrs.difficulty ? { difficulty: b.attrs.difficulty } : {}) } };
+  return { name: 'show_problem', args: { statement: b.body, format: 'free-response', rich: true, ...(b.attrs.title ? { title: b.attrs.title } : {}), ...(b.attrs.difficulty ? { difficulty: b.attrs.difficulty } : {}), ...glossOf(b) } };
 }
+
+/** Task 7p (CARD_GLOSS_SHOW): a problem or note block's gloss attribute (a line in the learner's language), carried to the card.
+ *  The turn keeps it only for a beginner in a lesson taught through their language (card-gloss.ts) and drops it otherwise. */
+const glossOf = (b: InlineBlock) => (TUTOR_V2_CARD_GLOSS_SHOW && b.attrs.gloss?.trim() ? { gloss: b.attrs.gloss.trim() } : {});
 
 /** A straight segment between two points: "(0, 0) to (3, 0) | horizontal leg". */
 /** "shade between <one bound> and <the other> from a to b". */

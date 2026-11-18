@@ -2142,3 +2142,22 @@ export const TUTOR_V2_NOTE_STRESS_MARK = process.env.NEXT_PUBLIC_TUTOR_V2_NOTE_S
  *  as they stream, so captions and the transcript never show the asterisks (mic test 4, 12.87 min: 「一緒に仕事をする**人**に使います」)
  *  (Task 7o, item 4). Default ON; NEXT_PUBLIC_TUTOR_V2_NO_MARKDOWN_STARS=off ⇒ as before. */
 export const TUTOR_V2_NO_MARKDOWN_STARS = process.env.NEXT_PUBLIC_TUTOR_V2_NO_MARKDOWN_STARS !== 'off';
+
+/** Tutor brain v2 (v2/card-gloss.ts, v2/facts.ts): in a spoken lesson that teaches a language through the learner's own language,
+ *  while the learner's working level is beginner (or not known yet), the facts ask for gloss="…" on question cards (<board
+ *  problem>: the question in the learner's language, one short line) and on rule notes (<board note>: one short line on what the
+ *  rule means). Above beginner, and in every other lesson, no line. Mic test 4 (embed-1795028886172, flag 5c) (Task 7p, item 1).
+ *  Default ON; NEXT_PUBLIC_TUTOR_V2_CARD_GLOSS_ASK=off ⇒ as before. */
+export const TUTOR_V2_CARD_GLOSS_ASK = process.env.NEXT_PUBLIC_TUTOR_V2_CARD_GLOSS_ASK !== 'off';
+
+/** Tutor brain v2 (v2/board-inline.ts, v2/turn.ts, toolDefinitions show_problem / annotate, WhiteboardCanvas / CardGloss): the
+ *  gloss attribute of a problem / note block rides on the card (`gloss`), kept only in such a lesson at the beginner level (or
+ *  not known yet) and dropped otherwise, and the board draws it under the card in the sentence card's small grey gloss style. It
+ *  is never spoken, never the card's ask and not in the board record (Task 7p, items 2 and 3). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_CARD_GLOSS_SHOW=off ⇒ as before. */
+export const TUTOR_V2_CARD_GLOSS_SHOW = process.env.NEXT_PUBLIC_TUTOR_V2_CARD_GLOSS_SHOW !== 'off';
+
+/** Tutor brain v2 (v2/card-gloss.ts, v2/facts.ts): when the last reply put up a question card without a gloss while one was asked
+ *  for, the next turn's facts say so once (no runtime translation) (Task 7p, item 4). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_CARD_GLOSS_REMIND=off ⇒ as before. */
+export const TUTOR_V2_CARD_GLOSS_REMIND = process.env.NEXT_PUBLIC_TUTOR_V2_CARD_GLOSS_REMIND !== 'off';

@@ -16,6 +16,8 @@ import { discussionOf, effectiveMinutes, lastReplyNotes, renderThinking } from '
 import { v2WorkingLevelFacts } from './working-level';
 import { v2PronunciationFacts, v2TextSoundFacts } from './pronunciation';
 import { v2SentenceCardsFacts } from './sentence-cards';
+import { v2CardGlossFacts } from './card-gloss';
+import { TUTOR_V2_CARD_GLOSS_ASK, TUTOR_V2_CARD_GLOSS_REMIND } from '../orchestrator/flags';
 import { v2CardsOwedFacts, v2LearnerSentenceFacts } from './learner-card';
 import { v2PracticeAskFacts, v2RetryFacts } from './languages';
 import { V2_TIME_UP_MIN, v2CloseOpen, v2PlanContentDone, v2LeftToStopMin, v2LessonTimeLine, v2PartDueFact, v2TimeFlags, v2WrapDue, type V2TimeFlags } from './time-box';
@@ -254,6 +256,9 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   if (!session.homework && !session.homeworkSheet && !discussion) lines.push(...v2PracticeAskFacts(session.languages, state.history, f.heard));
   // The learner's corrected sentences, for the summary's sentence cards (sentence-cards.ts).
   lines.push(...v2SentenceCardsFacts(session, state));
+  // Task 7p (CARD_GLOSS_ASK, CARD_GLOSS_REMIND; mic test 4 flag 5c): a beginner's question cards and rule notes carry a line in their
+  // language (card-gloss.ts); by the level at this turn.
+  lines.push(...v2CardGlossFacts(session, state, f.heard, { ask: TUTOR_V2_CARD_GLOSS_ASK, remind: TUTOR_V2_CARD_GLOSS_REMIND }));
   // Task 7b (BOARD_LEARNER_SENTENCE): their words just now were a sentence: it goes on the board as it should be (learner-card.ts).
   if (!summaryBegun || f.partVisit) lines.push(...v2LearnerSentenceFacts(session, state, f.heard, f.learnerCards));
   // Task 7g (CARD_EVERY_SENTENCE): sentences of their last answer the last reply left off the board.
