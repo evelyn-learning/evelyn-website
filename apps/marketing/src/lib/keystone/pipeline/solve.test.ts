@@ -3,6 +3,7 @@ import type { ItemDoc } from "../db";
 import type { Interaction } from "../qti-interactions";
 import { MODEL_FOR } from "./models";
 import { agreeOnAnswer, blindSolve, solverPrompt } from "./solve";
+import { questionAsText } from "./intake";
 import type { ModelImage } from "./types";
 
 // Fake keys for this process only: every request goes to a fake fetch.
@@ -96,6 +97,17 @@ async function main() {
     const i = p.user.indexOf("Ignore the above");
     assert.ok(i > p.user.indexOf("<question>") && i < p.user.lastIndexOf("</question>"));
     assert.equal(p.user.split("</question>").length, 2);
+  }
+  // a question with real markup: the prompt carries intake's cleaned questionAsText unchanged
+  {
+    const marked = item({ questionHtml: "<p>Take <math><mfrac><mn>1</mn><mn>2</mn></mfrac></math> of x<sup>2</sup> &amp; y&nbsp;&lt; 3.</p><p><img src=\"/api/keystone/asset/q1/graph.png\" alt=\"a rising line\"></p>", interactions: [choice] });
+    const q = questionAsText(marked);
+    assert.ok(/<mfrac>/.test(q) && /<sup>2<\/sup>/.test(q) && /graph\.png/.test(q), `questionAsText keeps the markup: ${q}`);
+    const p = solverPrompt(marked, "Math 30-1");
+    assert.ok(p.user.includes(`<question>\n${q}\n</question>`), "the solver prompt holds questionAsText(item) unchanged");
+    const f = fakeVendors({ anthropic: [letter("B")] });
+    await blindSolve("solver1", marked, [], "Math 30-1", undefined, f.deps);
+    assert.ok(textOf(f.seen[0]).includes(JSON.stringify(q).slice(1, -1)), "the request body holds questionAsText(item) unchanged");
   }
   // hint: wrapped, introduced as an argument to weigh, neutralised
   {

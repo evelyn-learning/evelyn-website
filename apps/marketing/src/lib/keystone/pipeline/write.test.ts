@@ -8,6 +8,7 @@ import {
   type Draft, type StatedAnswer,
 } from "./write";
 import { MODEL_FOR } from "./models";
+import { questionAsText } from "./intake";
 
 /** assert.ok with a message always: without one, Node re-parses the transformed source to build it, which stalls under tsx. */
 const ok = (value: unknown, message = "assertion failed") => assert.ok(value, message);
@@ -274,6 +275,16 @@ async function main() {
     assert.match(inside, /<b>own<\/b>/, "markup kept inside the fence");
     assert.match(inside.replace(/<[^<>]*>/g, ""), /Their own working &amp; answer/);
     assert.match(u, /never restate it, never mention it/);
+  }
+
+  // a question with real markup: the author prompt carries intake's cleaned questionAsText unchanged
+  {
+    const marked = item({ questionHtml: "<p>Take <math><mfrac><mn>1</mn><mn>2</mn></mfrac></math> of x<sup>2</sup> &amp; y&nbsp;&lt; 3.</p><p><img src=\"/api/keystone/asset/q1/graph.png\" alt=\"a rising line\"></p>" });
+    const q = questionAsText(marked);
+    ok(/<mfrac>/.test(q) && /<sup>2<\/sup>/.test(q) && /graph\.png/.test(q), `questionAsText keeps the markup: ${q}`);
+    const f = fake(good);
+    await writeSolution(marked, "Math 30-1", A, {}, f.deps);
+    ok(f.seen[0].user.includes(`<question>\n${q}\n</question>`), "the author prompt holds questionAsText(item) unchanged");
   }
 
   // a stray closing tag in the question stays inside the data block
