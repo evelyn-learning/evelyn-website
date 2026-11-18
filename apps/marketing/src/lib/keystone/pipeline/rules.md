@@ -14,8 +14,9 @@
   Mark it "house" when the requirement is ours, not the reviewer's.
   Where no rule here applies, follow Chicago/journal style (reviewer, 2026-11-16);
   that is guidance, not an audited rule.
-  loadRules() throws on a malformed rule line, a duplicate id, or a file with no rules;
-  other lines are ignored.
+  loadRules() throws on a malformed rule line (including a numbered or unbulleted line
+  that names a rule id, and a date that does not exist), a duplicate id, or a file with
+  no rules; other lines are ignored.
 -->
 
 # Solution rules
@@ -43,7 +44,7 @@
 - [R-latex-variables] (all, 2026-11-11, house) Variables are written in LaTeX, e.g. $x$, $v_{AB}$.
 - [R-upright-units] (all, 2026-11-11, house) Units and chemical symbols are upright, e.g. $\text{m/s}$, $\text{Sn}^{2+}$.
 - [R-latex-math] (all, 2026-11-11, house) Mathematics and chemical formulas are written in LaTeX: $…$ inline and $$…$$ for display.
-- [R-compass-caps] (all, 2026-11-17, house) Compass directions in the solution's own text are capitalised (North, South of East); text quoted from the question keeps its own wording.
+- [R-compass-caps] (all, 2026-10-08) Compass directions in the solution's own text are capitalised (North, South of East); text quoted from the question keeps its own wording.
 - [R-zero-o] (all, 2026-11-16) The digit 0 and the letter O are distinguishable wherever both could be read.
 
 ## Short answer
@@ -55,6 +56,7 @@
 - [R-short-no-plan] (short, 2026-11-11) The Short answer contains no plan.
 - [R-short-no-method] (short, 2026-11-11) The Short answer contains no method or working.
 - [R-short-option-letter] (short, 2026-11-11) For a multiple-choice question the Short answer names the option letter of the answer.
+- [R-short-closing] (short, 2026-11-17, house) A multiple-choice Short answer ends with the sentence 'So the answer is X.' (or 'So the answers are X and Y.').
 
 ## Second section (Diploma-style answer)
 
@@ -66,6 +68,8 @@
 - [R-diploma-steps] (diploma, 2026-10-08) Intermediate working is shown: no line combines several steps a student would write separately.
 - [R-diploma-round-last] (diploma, 2026-11-11) Rounding happens only at the final step.
 - [R-diploma-intermediate-digits] (diploma, 2026-11-11, house) Intermediate values that are shown carry at least one more digit than the final answer.
+- [R-diploma-summary] (diploma, 2026-11-11) A long derivation ends with a brief summary of its logic before the final-answer sentence.
+- [R-diploma-closing] (diploma, 2026-11-17, house) A multiple-choice Diploma answer ends with the sentence 'So the answer is X.' (or 'So the answers are X and Y.').
 - [R-diploma-final-sentence] (diploma, 2026-11-11) The second section ends with one clear final-answer sentence.
 - [R-diploma-shortcut] (diploma, 2026-11-11) A Biology or Chemistry Diploma answer may add a one-line thought shortcut; it is at most one line.
 
@@ -87,6 +91,7 @@
 
 ## Common errors
 
+- [R-errors-optional] (errors, 2026-11-11) Common errors is optional and used sparingly: it is omitted when there is no slip worth warning about.
 - [R-errors-max-two] (errors, 2026-11-11) Common errors lists at most two errors.
 - [R-errors-slip-and-fix] (errors, 2026-11-11) Each Common errors bullet names the slip and how to avoid it.
 - [R-errors-corrected] (errors, 2026-10-08) A common error is stated and corrected at once; it is not left as a wrong statement.
@@ -96,17 +101,18 @@
 - [R-figure-width] (figure, 2026-11-11) A figure is at most 240 px wide.
 - [R-figure-primary-line] (figure, 2026-11-11) Primary lines in a figure are 1.33 px (1 pt) wide.
 - [R-figure-secondary-line] (figure, 2026-11-11) Secondary lines in a figure are 0.67 px (0.5 pt) wide.
-- [R-figure-labels] (figure, 2026-11-11) Figure labels are in Arial.
-- [R-figure-label-size] (figure, 2026-11-11) Figure labels are 12 px.
+- [R-figure-labels] (figure, 2026-11-11, house) Figure labels are in Arial.
+- [R-figure-label-size] (figure, 2026-11-11, house) Figure labels are 12 px.
 - [R-figure-text-black] (figure, 2026-11-11) Text in a figure stays black.
 - [R-figure-curve-colour] (figure, 2026-11-11) Curves in a figure may use colour.
 - [R-figure-line-colour] (figure, 2026-11-11, house) Lines and arrows in a figure may also use colour.
 - [R-figure-italic-variables] (figure, 2026-10-08) Variables in figures are italic, the same as in the text.
 - [R-figure-axis-intervals] (figure, 2026-10-08) Axis intervals in a graph are consistent along each axis.
-- [R-figure-alt] (figure, 2026-11-11) Every figure has alt text.
-- [R-figure-alt-linear] (figure, 2026-11-11) Figure alt text is linear, in an order a screen reader can read.
-- [R-figure-alt-unicode] (figure, 2026-11-11) Figure alt text writes every symbol in Unicode.
-- [R-image-alt] (figure, 2026-11-11) Every image in the solution has alt text.
+- [R-figure-glyphs-readable] (figure, 2026-11-16) Every glyph in a figure is available to a screen reader through its alt text.
+- [R-figure-alt] (figure, 2026-11-11, house) Every figure has alt text.
+- [R-figure-alt-linear] (figure, 2026-11-11, house) Figure alt text is linear, in an order a screen reader can read.
+- [R-figure-alt-unicode] (figure, 2026-11-11, house) Figure alt text writes every symbol in Unicode.
+- [R-image-alt] (figure, 2026-11-11, house) Every image in the solution has alt text.
 
 ## Tables
 
