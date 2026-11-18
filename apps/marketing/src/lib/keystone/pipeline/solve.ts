@@ -11,7 +11,7 @@
 import type { ItemDoc } from "../db";
 import { acceptedAnswers, answerForm, canonicalResponse, decide, formUnknown, multiAnswer, readKey, typedAnswer, type Answer, type AnswerForm, type Decision, type ResponseForm } from "./answers";
 import { questionAsText } from "./intake";
-import { callModel } from "./models";
+import { callModel, hasKeyFor } from "./models";
 import type { ModelDeps, ModelImage, ModelReply } from "./types";
 
 export type Solve = { answer: Answer; working: string; confidence: "high" | "medium" | "low" };
@@ -203,6 +203,11 @@ function toAnswer(form: AnswerForm, raw: RawSolve["answer"]): Answer | string {
 // --- calls ---
 
 export async function blindSolve(role: SolverRole, item: ItemDoc, images: Img[], course: string, hint?: string, deps?: ModelDeps): Promise<ModelReply<Solve>> {
+  // The tie-break key is optional for a run (scripts/keystone-pipeline.ts says so at start): without it the call
+  // fails like any failed call, so the item is held for the owner, never crashed and never passed.
+  if ((role === "solver3Text" || role === "solver3Image") && !hasKeyFor(role)) {
+    return { ok: false, reason: "transport", detail: "no API key set for the tie-break solver", cost: 0, model: "" };
+  }
   if (role === "solver3Text" && images.length) return { ok: false, reason: "shape", detail: "this solver cannot read images", cost: 0, model: "" };
   const form = answerForm(item);
   if (!form) return { ok: false, reason: "shape", detail: "the item's answer form cannot be told", cost: 0, model: "" };

@@ -31,7 +31,7 @@ import path from "node:path";
 import { KEYSTONE_DB } from "../src/lib/keystone/config";
 import { closeKs, type RunDoc } from "../src/lib/keystone/db";
 import type { Actor } from "../src/lib/keystone/store";
-import { assertKeys } from "../src/lib/keystone/pipeline/models";
+import { runKeyCheck } from "../src/lib/keystone/pipeline/models";
 import {
   asReceivedReader, defaultRules, folderAssets, mongoReader, mongoWriter, noAssets, parseArgs, realSteps, runPipeline, selectItems, withPipelineLock,
 } from "../src/lib/keystone/pipeline/run";
@@ -56,7 +56,9 @@ async function main() {
   if (!uri) throw new Error("Refusing to run: set KEYSTONE_MONGODB_URI explicitly.");
   console.log(`Database: ${KEYSTONE_DB} on ${hostOf(uri)}${args.dryRun ? " (DRY RUN: read-only connection, nothing is written)" : " (WRITING)"}`);
   if (process.env.KEYSTONE_PIPELINE_LIVE !== "1") throw new Error("Refusing to run: model calls are off (set KEYSTONE_PIPELINE_LIVE=1).");
-  assertKeys(); // names missing variables, never their values
+  // Names missing variables, never their values. A missing key for a role every item uses stops the run; a missing
+  // tie-break key (used only when the first two solvers disagree) is said loudly and the run goes on: such an item is held.
+  for (const line of runKeyCheck()) console.log(`!! ${line}`);
 
   const base = mongoReader();
   const reader = args.asReceived && args.only ? asReceivedReader(base, args.only) : base;

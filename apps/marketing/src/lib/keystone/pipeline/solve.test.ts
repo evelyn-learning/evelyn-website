@@ -247,6 +247,20 @@ async function main() {
     assert.deepEqual(r.decision, { outcome: "hold", why: "no_agreement" });
     assert.ok(r.solves.solver3 && !r.solves.solver3.ok);
   }
+  // no key for the tie-break solver: two solvers disagree → hold (no throw, no third call, never a pass)
+  {
+    const saved = process.env.DEEPSEEK_API_KEY;
+    delete process.env.DEEPSEEK_API_KEY;
+    try {
+      const f = fakeVendors({ anthropic: [letter("B")], openai: [letter("C")], deepseek: [letter("B")] });
+      const r = await agreeOnAnswer(mc, [], "Math 30-1", undefined, f.deps);
+      assert.deepEqual(r.decision, { outcome: "hold", why: "no_agreement" }, "a split with no tie-break key is held");
+      assert.ok(r.solves.solver3 && !r.solves.solver3.ok, "the third solver reports a failed call");
+      assert.ok(!f.seen.some((s) => s.vendor === "deepseek"), "no request went to the vendor with no key");
+    } finally {
+      process.env.DEEPSEEK_API_KEY = saved;
+    }
+  }
   // one solver refuses → hold, failure kept, no third call
   {
     const f = fakeVendors({ anthropic: [{ refusal: true }], openai: [letter("B")] });

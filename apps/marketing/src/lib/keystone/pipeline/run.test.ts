@@ -13,6 +13,7 @@ import type { ModelReply } from "./types";
 import { visibleStage } from "../config";
 import type { ModelImage } from "./types";
 import { releaseAt } from "./release";
+import { agreeOnAnswer } from "./solve";
 import { sniffImage, parseArgs, processItem, runPipeline, selectItems, type Deps, type Reader, type Steps, type Writer } from "./run";
 
 /** assert.ok with a message always: without one, Node re-parses the transformed source to build it, which stalls under tsx. */
@@ -483,6 +484,40 @@ const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", co
     const run = await processItem("100", "r1", deps(store, s));
     deepEqual(run.flags, ["step_failed"], "solver failure → step_failed");
     ok(Math.abs(run.cost - 0.11) < 1e-9, "failed solver cost counted");
+  }
+
+  // --- two solvers disagree and the tie-break key is missing: held for the owner, nothing else written ---
+  {
+    const saved = { a: process.env.ANTHROPIC_API_KEY, o: process.env.OPENAI_API_KEY, d: process.env.DEEPSEEK_API_KEY };
+    process.env.ANTHROPIC_API_KEY = "test-key";
+    process.env.OPENAI_API_KEY = "test-key";
+    delete process.env.DEEPSEEK_API_KEY;
+    try {
+      const answerJson = (l: string) => JSON.stringify({ answer: { kind: "choice", letters: [l], value: "", values: [], responses: [] }, working: "w", confidence: "high" });
+      const urls: string[] = [];
+      const fakeFetch = (async (input: RequestInfo | URL) => {
+        const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+        urls.push(url);
+        const json = (b: unknown) => new Response(JSON.stringify(b), { status: 200, headers: { "content-type": "application/json" } });
+        if (url.includes("anthropic")) {
+          return json({ id: "m", type: "message", role: "assistant", model: "claude-fable-5-2", content: [{ type: "text", text: answerJson("B") }], stop_reason: "end_turn", stop_sequence: null, usage: { input_tokens: 1000, output_tokens: 100 } });
+        }
+        return json({ id: "c", object: "chat.completion", created: 1, model: "gpt-6.2-astra", choices: [{ index: 0, message: { role: "assistant", content: answerJson("C") }, finish_reason: "stop" }], usage: { prompt_tokens: 1000, completion_tokens: 100 } });
+      }) as typeof fetch;
+      const store = new FakeStore([item()]);
+      const { steps: s, calls } = steps({ agreeOnAnswer: (it, images, course, hint) => agreeOnAnswer(it, images, course, hint, { fetch: fakeFetch, backoffMs: 0 }) as never });
+      const run = await processItem("100", "r1", deps(store, s));
+      equal(run.result, "held", "a split with no tie-break key is held");
+      deepEqual(run.flags, ["step_failed"], "held as a check that could not run");
+      equal(store.items.get("100")!.pipeline?.heldFor, "praveen", "held for the owner");
+      equal(store.solutions.length, 0, "no solution written");
+      equal(calls.writeSolution, 0, "nothing authored");
+      equal(store.suggestions.filter((x) => x.kind === "keys_queried").length, 0, "no key query raised");
+      ok(!urls.some((u) => u.includes("deepseek")), "the vendor with no key was never called");
+    } finally {
+      process.env.ANTHROPIC_API_KEY = saved.a; process.env.OPENAI_API_KEY = saved.o;
+      if (saved.d === undefined) delete process.env.DEEPSEEK_API_KEY; else process.env.DEEPSEEK_API_KEY = saved.d;
+    }
   }
 
   // --- crash after the first correction does not grant a second ---
