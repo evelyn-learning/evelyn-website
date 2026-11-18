@@ -283,6 +283,45 @@ export type OutboxDoc = {
   draftedAt?: Date;
 };
 
+/** One published version of an item's animated solution (files under assets/<itemId>/animated/v<version>/). Owner review only until released. */
+export type AnimationStatus = "review" | "fixing" | "accepted" | "released";
+export type AnimationDoc = {
+  itemId: string;
+  version: number;
+  entry: string;
+  height: number;
+  voice?: string;
+  status: AnimationStatus;
+  notes?: string;
+  /** Flags (animflags _id) this version was made to fix. */
+  addresses: string[];
+  createdAt: Date;
+  createdBy: string;
+};
+
+/** A problem the owner flagged while watching one version of an animated solution. */
+export type AnimFlagStatus = "open" | "fixed" | "confirmed" | "reopened";
+export type AnimFlagDoc = {
+  itemId: string;
+  version: number;
+  /** Player position when flagged; null when the page had no esPlayer (legacy prototypes). */
+  step: number | null;
+  line: number | null;
+  timeMs: number | null;
+  comment: string;
+  spoken: boolean;
+  /** File names under DATA_DIR/animflags/<flagId>/ ("1.png", …). */
+  shots: string[];
+  status: AnimFlagStatus;
+  fixedInVersion?: number;
+  reply?: string;
+  /** Set on the open flag created by a Reopen: the earlier flag it continues. */
+  reopenOf?: string;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 type Models = {
   Lesson: Model<LessonDoc>;
   Heartbeat: Model<HeartbeatDoc>;
@@ -296,6 +335,8 @@ type Models = {
   Solution: Model<SolutionDoc>;
   Activity: Model<ActivityDoc>;
   Upload: Model<UploadDoc>;
+  Animation: Model<AnimationDoc>;
+  AnimFlag: Model<AnimFlagDoc>;
 };
 
 type Cache = { conn: Connection | null; promise: Promise<Connection> | null; models: Models | null };
@@ -525,7 +566,39 @@ function defineModels(conn: Connection): Models {
   });
   Lesson.index({ itemId: 1, version: 1 }, { unique: true });
   const Heartbeat = new Schema<HeartbeatDoc>({ _id: { type: String, required: true }, at: { type: Date, required: true } }, { versionKey: false });
-  if (isReadOnly()) for (const schema of [Lesson, Heartbeat, Lock, Run, Outbox, Batch, User, Session, Item, Solution, Activity, Upload]) blockWrites(schema as Schema);
+  const Animation = new Schema<AnimationDoc>({
+    itemId: { type: String, required: true },
+    version: { type: Number, required: true },
+    entry: { type: String, default: "solution.html" },
+    height: Number,
+    voice: String,
+    status: { type: String, required: true, default: "review" },
+    notes: String,
+    addresses: { type: [String], default: [] },
+    createdAt: { type: Date, default: () => new Date() },
+    createdBy: String,
+  });
+  Animation.index({ itemId: 1, version: 1 }, { unique: true });
+  const AnimFlag = new Schema<AnimFlagDoc>({
+    itemId: { type: String, required: true },
+    version: { type: Number, required: true },
+    step: { type: Number, default: null },
+    line: { type: Number, default: null },
+    timeMs: { type: Number, default: null },
+    comment: { type: String, default: "" },
+    spoken: { type: Boolean, default: false },
+    shots: { type: [String], default: [] },
+    status: { type: String, required: true, default: "open" },
+    fixedInVersion: Number,
+    reply: String,
+    reopenOf: String,
+    createdBy: String,
+    createdAt: { type: Date, default: () => new Date() },
+    updatedAt: { type: Date, default: () => new Date() },
+  });
+  AnimFlag.index({ itemId: 1, version: 1 });
+  AnimFlag.index({ status: 1 });
+  if (isReadOnly()) for (const schema of [Lesson, Heartbeat, Lock, Run, Outbox, Batch, User, Session, Item, Solution, Activity, Upload, Animation, AnimFlag]) blockWrites(schema as Schema);
   return {
     Lesson: conn.model<LessonDoc>("Lesson", Lesson, "lessons"),
     Heartbeat: conn.model<HeartbeatDoc>("Heartbeat", Heartbeat, "heartbeats"),
@@ -539,6 +612,8 @@ function defineModels(conn: Connection): Models {
     Solution: conn.model<SolutionDoc>("Solution", Solution, "solutions"),
     Activity: conn.model<ActivityDoc>("Activity", Activity, "activity"),
     Upload: conn.model<UploadDoc>("Upload", Upload, "uploads"),
+    Animation: conn.model<AnimationDoc>("Animation", Animation, "animations"),
+    AnimFlag: conn.model<AnimFlagDoc>("AnimFlag", AnimFlag, "animflags"),
   };
 }
 
