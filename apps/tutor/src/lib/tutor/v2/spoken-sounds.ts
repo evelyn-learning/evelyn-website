@@ -80,22 +80,19 @@ export function v2SpeakSounds(text: string): string {
   }).replace(/\u0001 ?/g, '');
 }
 
-/** Fix round 1 (M5): a wave dash is decorative (a gap standing for "something") when nothing it could join stands before it (the
- *  start, punctuation, an opening bracket or quote) and no number follows ("〜5人", up to five, keeps it), or when nothing follows
- *  it (the end, punctuation, a closing bracket or quote). Between two words, days, times or numbers (月曜日〜金曜日, 三〜五人,
- *  9:00〜10:00) it is a range: kept, and read "から" as before. */
-const OPENS_OR_PAUSES = /[\s、。，,.:：;；!?！？「『（(“"'‘]/;
-const CLOSES_OR_PAUSES = /[」』）)”"'’、。，,.:：;；!?！？]/;
-const NUMBER_START = /[0-9０-９一二三四五六七八九十百千万]/;
+/** Fix round 2 (N1): a wave dash is a range, kept and read "から" as before, only when a number (a digit or a kanji numeral) or a
+ *  day or time word stands beside it on at least one side (三〜五人, 〜5人, 10〜20, 月曜日〜金曜日, 9時〜5時, 午前〜午後). Anywhere
+ *  else it is a gap standing for "something" (「〜で」, 「今、〜しています」, 「私は〜が好きです」, both in 「〜は〜です」) and is
+ *  not spoken. Fix round 1 kept it between any two words, which read the gaps "kara" again. */
+const RANGE_BEFORE = /(?:[0-9０-９一二三四五六七八九十百千万]|曜日?|[時分秒月日年週]|午前|午後|朝|昼|夕方|夜|今日|明日|昨日)$/;
+const RANGE_AFTER = /^(?:[0-9０-９一二三四五六七八九十百千万]|[月火水木金土日]曜|午前|午後|朝|昼|夕方|夜|今日|明日|来週|来月|来年)/;
 /** Task 7m (WAVE_DASH, mic test 4, embed-1795028886172 6.76 min): 「今、〜しています」 was heard as 「今、からしています」: the voice
- *  reads a wave dash (〜 U+301C, ～ U+FF5E) as "kara" ("from … to"). A decorative one (a gap in a pattern: 「〜で」, 「今、〜して
- *  います」) is not spoken at all; a range keeps it. For the voice only: the board and the transcript keep it. Pure. */
+ *  reads a wave dash (〜 U+301C, ～ U+FF5E) as "kara" ("from … to"). A gap in a pattern (「〜で」, 「今、〜して
+ *  います」) is not spoken at all; a range (RANGE_BEFORE / RANGE_AFTER) keeps it. For the voice only: the board and the transcript keep it. Pure. */
 export function v2SpeakWaveDash(text: string, enabled: boolean = TUTOR_V2_WAVE_DASH): string {
   if (!enabled || !/[〜～]/.test(text)) return text;
   return text.replace(/\s*[〜～]\s*/g, (m, at: number) => {
     const before = text.slice(0, at).replace(/\s+$/, ''); const after = text.slice(at + m.length);
-    const prev = before.slice(-1); const next = after.slice(0, 1);
-    const decorative = (!prev || OPENS_OR_PAUSES.test(prev)) ? !NUMBER_START.test(next) : (!next || CLOSES_OR_PAUSES.test(next));
-    return !decorative ? m : /\s/.test(m) ? ' ' : '';
+    return RANGE_BEFORE.test(before) || RANGE_AFTER.test(after) ? m : /\s/.test(m) ? ' ' : '';
   });
 }

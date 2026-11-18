@@ -118,8 +118,8 @@ export function asksAnywhere(sentences: string[]): boolean {
 const YOU_SAY = /\b(?:now )?you (?:say|try|repeat)\b|\bsay it (?:again|back|once more|with me|after me)\b|\brepeat after me\b|\bsay the (?:whole )?sentence\b|言ってみて|言ってください/i;
 /** Task 7m (NO_FALSE_SILENCE): a starter offered anywhere in the sentence hands over ("Now, another sentence about you, with
  *  "I have…" Try starting with "I have worked with…""; DO_THIS is anchored at a clause's start). Not "start with" alone: "Let's
- *  start with the past simple." is the tutor's own plan, and so is "Let's try starting with the chain rule." (fix round 1, M3). */
-const TRY_STARTING = /(?<!\b(?:let'?s|let us|we(?:'ll| will| can)?|i(?:'ll| will)?)\s)\btry (?:starting|beginning)\b/i;
+ *  start with the past simple." is the tutor's own plan, and so is "Let's try starting with the chain rule." (fix round 1, M3), also with "both / just / now…" between (fix round 2, N2). */
+const TRY_STARTING = /(?<!\b(?:let'?s|let us|we(?:'ll| will| can)?|i(?:'ll| will)?)(?:\s+(?:both|all|just|now|first|then|also))*\s)\btry (?:starting|beginning)\b/i;
 /** Task 7m (QUESTION_ONCE, mic test 4 flag 5a): a Japanese request to answer, say, write or use hands over (「まず、一文で答えて
  *  みてください。」 was taken for a statement, and the card was read out after it). */
 const JA_HAND_OVER = /(?:答え|話し|書い|言っ|読ん|使っ|作っ|続け)てみて|(?:答え|話し|書い|続け)てください/;

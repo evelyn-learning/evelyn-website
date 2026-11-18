@@ -139,10 +139,12 @@ async function probe() {
     // 5
     wave: v2SpeakWaveDash(WAVE),
     waveRanges: ['月曜日〜金曜日', '三〜五人', '〜5人', '9:00〜10:00', '「〜で」は at'].map((x) => v2SpeakWaveDash(x)),
+    waveKept: ['三〜五人', '月曜日〜金曜日', '9時〜5時', '10〜20', '〜5人', '午前〜午後'].map((x) => v2SpeakWaveDash(x)),
+    waveGaps: ['私は〜が好きです', '〜は〜です', '「今、〜しています」', 'いいですね〜。', '東京〜大阪'].map((x) => v2SpeakWaveDash(x)),
     fHeldCalls: fh.calls, sciSpoken: sci.spoken, eSaidCount: eSaid.heard.split(E_Q).length - 1,
     owedHeldFacts: /not carded in your last reply/.test(owedHeld.facts),
     shortQ: unsaidAsk('Ice floats on water. Why?', ['That\'s why we test it.']),
-    letsTry: asksAnywhere(['Good.', 'Let\'s try starting with the chain rule.']),
+    letsTry: asksAnywhere(['Good.', 'Let\'s try starting with the chain rule.']) || asksAnywhere(['Good.', 'Let\'s both try starting with the chain rule.']) || asksAnywhere(['Good.', 'Now let\'s just try starting with the chain rule.']),
     starter: speak('Try starting with "I have a meeting…"', [{ sentence: 'I sold 35 washing machines to a customer from Canada.', stress: ['a'] }]),
     jaLed: speak('英語では「in the home appliance division」と言います。', aStress),
   };
@@ -203,7 +205,7 @@ async function main() {
     check('… which the question-once rule alone would have dropped (why it is gated to language lessons)', unsaidAsk(card, sciSaid, { questionOnce: true }) === null && unsaidAsk(card, sciSaid, { questionOnce: false }) === card);
   }
   check('fix round 1 (M10): "That\'s why we test it." does not say the card\'s "Why?"', on.shortQ !== null, on.shortQ);
-  check('fix round 1 (M3): "Let\'s try starting with the chain rule." is the tutor\'s plan, not an ask', on.letsTry === false);
+  check('fix round 1 (M3) / round 2 (N2): "Let\'s (both / just) try starting with the chain rule." is the tutor\'s plan, not an ask', on.letsTry === false);
 
   console.log('4  flag 6 (17.5 min): every correction on the board in the same reply');
   check('the Japanese correction with no card runs the board check in the same turn', on.fCalls === 2, on.fCalls);
@@ -221,6 +223,8 @@ async function main() {
 
   console.log('5  Other 1 (6.76 min): 〜 not read "kara"');
   check('a decorative 〜 (after 、 or 「) is not spoken', !on.wave.includes('〜') && on.wave.includes('「今、しています」'), on.wave);
+  check('fix round 2 (N1): a number, a kanji numeral or a day / time word on at least one side keeps it (a range, read "から")', JSON.stringify(on.waveKept) === JSON.stringify(['三〜五人', '月曜日〜金曜日', '9時〜5時', '10〜20', '〜5人', '午前〜午後']), on.waveKept);
+  check('fix round 2 (N1): anywhere else it is not spoken (a gap between words, both gaps of 「〜は〜です」, a decoration)', JSON.stringify(on.waveGaps) === JSON.stringify(['私はが好きです', 'はです', '「今、しています」', 'いいですね。', '東京大阪']), on.waveGaps);
   check('a range keeps it (read "から"): days, kanji numbers, "up to 5", times; 「〜で」 loses it (fix round 1, M5)', JSON.stringify(on.waveRanges) === JSON.stringify(['月曜日〜金曜日', '三〜五人', '〜5人', '9:00〜10:00', '「で」は at']), on.waveRanges);
   {
     const voice = readFileSync(join(__dirname, '..', 'src', 'app', 'tutor', 'components', 'v2', 'TutorVoiceV2.tsx'), 'utf8');
@@ -259,7 +263,7 @@ async function main() {
   }
   {
     const off = child('WAVE_DASH');
-    check('WAVE_DASH off: 〜 left in the speech (as before)', off.wave === WAVE && off.waveRanges[4] === '「〜で」は at', off.wave);
+    check('WAVE_DASH off: 〜 left in the speech (as before)', off.wave === WAVE && off.waveRanges[4] === '「〜で」は at' && JSON.stringify(off.waveGaps) === JSON.stringify(['私は〜が好きです', '〜は〜です', '「今、〜しています」', 'いいですね〜。', '東京〜大阪']), off.wave);
   }
 
   console.log(`\n${passed} passed, ${failed} failed`);
