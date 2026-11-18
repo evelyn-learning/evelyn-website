@@ -102,6 +102,7 @@ async function main() {
     assert.equal(p.user.split("</reviewer_argument>").length, 2, "hint cannot close its wrapper");
     assert.equal(p.user.split("</question>").length, 2, "hint cannot close the question");
     assert.ok(p.user.indexOf("<reviewer_argument>") > p.user.indexOf("</question>"), "hint comes after the question");
+    assert.ok(p.user.indexOf("<reviewer_argument>") > p.user.indexOf("Answer form"), "hint comes last, after the form instruction");
     assert.ok(!solverPrompt(mc, "Math 30-1").user.includes("reviewer_argument"));
   }
 
@@ -109,9 +110,9 @@ async function main() {
   {
     const form = (i: ItemDoc) => solverPrompt(i, "Math 30-1").user.split("</question>")[1];
     let f = form(mc);
-    assert.match(f, /"choice"/); assert.match(f, /one letter/i); assert.match(f, /A, B, C/);
+    assert.match(f, /"choice"/); assert.match(f, /one correct choice/i); assert.match(f, /A, B, C/);
     f = form(item({ itemType: "MS", interactions: [{ ...choice, maxChoices: 3 }] }));
-    assert.match(f, /"choice"/); assert.match(f, /every correct letter/i);
+    assert.match(f, /"choice"/); assert.match(f, /every correct choice/i);
     f = form(item({ itemType: "MC", interactions: [], options: [opt("A", "x"), opt("B", "y")] }));
     assert.match(f, /"choice"/); assert.match(f, /A, B/);
     f = form(item({ itemType: "NR", interactions: [{ kind: "textEntry", responseId: "RESPONSE" }] }));
@@ -236,17 +237,24 @@ async function main() {
     const f = fakeVendors({ anthropic: [{ refusal: true }], openai: [letter("B")] });
     const r = await agreeOnAnswer(mc, [], "Math 30-1", undefined, f.deps);
     assert.deepEqual(r.decision, { outcome: "hold", why: "no_agreement" });
-    assert.ok(!r.solves.solver1.ok && r.solves.solver1.reason === "refusal");
+    assert.ok(r.solves.solver1 && !r.solves.solver1.ok && r.solves.solver1.reason === "refusal");
     assert.equal(f.seen.length, 2);
     assert.equal(r.solves.solver3, undefined);
   }
   // an alternative accepted answer makes a pass
   {
-    const typed = item({ itemType: "NR", key: "", interactions: [{ kind: "textEntry", responseId: "RESPONSE" }], keys: { RESPONSE: ["0.5", "1/2"] } });
-    const f = fakeVendors({ anthropic: [solve("labels", { values: ["1/2"] })], openai: [solve("number", { value: "1/2" })] });
+    const typed = item({ itemType: "NR", key: "", interactions: [{ kind: "textEntry", responseId: "RESPONSE" }], keys: { RESPONSE: ["0.5", "50%"] } });
+    const f = fakeVendors({ anthropic: [solve("labels", { values: ["50%"] })], openai: [solve("number", { value: "50%" })] });
     const r = await agreeOnAnswer(typed, [], "Math 30-1", undefined, f.deps);
-    assert.deepEqual(r.decision, { outcome: "pass", answer: { kind: "labels", values: ["1/2"] }, confirm: false });
+    assert.deepEqual(r.decision, { outcome: "pass", answer: { kind: "labels", values: ["50%"] }, confirm: false });
     assert.equal(f.seen.length, 2);
+    // a fraction equal to the key passes directly; legacy NR key "1/2" matches "1/2" and "0.5"
+    const g = fakeVendors({ anthropic: [solve("labels", { values: ["1/2"] })], openai: [solve("number", { value: "0.5" })] });
+    assert.equal((await agreeOnAnswer(item({ itemType: "NR", key: "0.5", interactions: [{ kind: "textEntry", responseId: "RESPONSE" }] }), [], "M", undefined, g.deps)).decision.outcome, "pass");
+    for (const v of ["1/2", "0.5"]) {
+      const h = fakeVendors({ anthropic: [solve("number", { value: v })], openai: [solve("number", { value: v })] });
+      assert.equal((await agreeOnAnswer(item({ itemType: "NR", key: "1/2", interactions: [] }), [], "M", undefined, h.deps)).decision.outcome, "pass", v);
+    }
   }
   // the hint reaches both solvers
   {
@@ -277,6 +285,73 @@ async function main() {
     const rh = await agreeOnAnswer(wr, [], "Bio 30", undefined, h.deps);
     assert.deepEqual(rh.decision, { outcome: "hold", why: "no_agreement" });
     assert.equal(h.seen.length, 2);
+  }
+  // --- forms that cannot be told: no model call, hold unreadable_form ---
+  for (const [name, it] of [
+    ["legacy DD key 12.5", item({ itemType: "DD", key: "12.5", interactions: [], options: [] })],
+    ["MS keys, no interactions, no options", item({ itemType: "MS", key: "", keys: { RESPONSE: ["A", "C"] }, interactions: [], options: [] })],
+    ["MC without options", item({ itemType: "MC", key: "B", interactions: [], options: [] })],
+    ["gapMatch key with an unknown identifier", item({ itemType: "DD", key: "", keys: { G: ["G1 W9"] }, interactions: [{ kind: "gapMatch", responseId: "G", gaps: ["G1"], choices: [opt("W1", "sun")] }] })],
+  ] as const) {
+    const f = fakeVendors({});
+    const r = await agreeOnAnswer(it, [], "M", undefined, f.deps);
+    assert.deepEqual(r.decision, { outcome: "hold", why: "unreadable_form" }, name);
+    assert.equal(f.seen.length, 0, name);
+    assert.equal(r.cost, 0);
+    const b = await blindSolve("solver1", item({ itemType: "DD", key: "", interactions: [], options: [] }), [], "M", undefined, f.deps);
+    assert.ok(!b.ok && b.reason === "shape" && f.seen.length === 0);
+  }
+  // legacy MC/MS with options are readable
+  {
+    const f = fakeVendors({ anthropic: [letter("B")], openai: [letter("B")] });
+    const r = await agreeOnAnswer(item({ itemType: "MC", key: "B", interactions: [], options: [opt("A", "3"), opt("B", "4")] }), [], "M", undefined, f.deps);
+    assert.equal(r.decision.outcome, "pass");
+  }
+
+  // --- non-letter choice identifiers ---
+  {
+    const cx = item({ interactions: [{ kind: "choice", responseId: "RESPONSE", maxChoices: 1, options: [opt("ChoiceA", "3"), opt("ChoiceB", "4")] }], key: "", keys: { RESPONSE: ["ChoiceB"] } });
+    assert.match(solverPrompt(cx, "M").user, /choose from: ChoiceA, ChoiceB/);
+    const f = fakeVendors({ anthropic: [solve("choice", { letters: ["choiceb"] })], openai: [solve("choice", { letters: ["ChoiceB"] })] });
+    const r = await agreeOnAnswer(cx, [], "M", undefined, f.deps);
+    assert.deepEqual(r.decision, { outcome: "pass", answer: { kind: "choice", letters: ["CHOICEB"] }, confirm: false });
+    const g = fakeVendors({ anthropic: [letter("B")] });
+    const b = await blindSolve("solver1", cx, [], "M", undefined, g.deps);
+    assert.ok(!b.ok && b.reason === "shape", "a bare letter is not one of this item's identifiers");
+    const h = fakeVendors({ anthropic: [solve("choice", { letters: ["A", "B"] })] });
+    assert.ok(!(await blindSolve("solver1", mc, [], "M", undefined, h.deps)).ok, "two letters on a one-choice item");
+  }
+
+  // --- gapMatch: gap-first key, answers in either direction ---
+  {
+    const gm = item({ itemType: "DD", key: "", keys: { G: ["G1 W2", "G2 W1"] }, interactions: [{ kind: "gapMatch", responseId: "G", gaps: ["G1", "G2"], choices: [opt("W1", "sun"), opt("W2", "moon")] }] });
+    const f = fakeVendors({ anthropic: [solve("labels", { values: ["W2→G1", "W1→G2"] })], openai: [solve("labels", { values: ["g2 - w1", "G1:W2"] })] });
+    const r = await agreeOnAnswer(gm, [], "M", undefined, f.deps);
+    assert.deepEqual(r.decision, { outcome: "pass", answer: { kind: "labels", values: ["W1→G2", "W2→G1"] }, confirm: false });
+    const g = fakeVendors({ anthropic: [solve("labels", { values: ["W1→G1", "W2→G2"] })], openai: [solve("labels", { values: ["W1→G1", "W2→G2"] })] });
+    assert.equal((await agreeOnAnswer(gm, [], "M", undefined, g.deps)).decision.outcome, "key_query", "a wrong pairing does not match");
+    const h = fakeVendors({ anthropic: [solve("labels", { values: ["W3→G1"] })] });
+    const b = await blindSolve("solver1", gm, [], "M", undefined, h.deps);
+    assert.ok(!b.ok && b.reason === "shape", "unknown identifier → failed solve");
+  }
+
+  // --- several responses: match + inlineChoice ---
+  {
+    const multi = item({ itemType: "DDL", key: "", keys: { RESPONSE_1: ["P1 R2", "P2 R1"], RESPONSE_2: ["a"] }, interactions: [
+      { kind: "inlineChoice", responseId: "RESPONSE_2", choices: [opt("a", "up"), opt("b", "down")] },
+      { kind: "match", responseId: "RESPONSE_1", premises: [opt("P1", "Cat"), opt("P2", "Dog")], responses: [opt("R1", "Meow"), opt("R2", "Woof")] },
+    ] });
+    const u = solverPrompt(multi, "M").user;
+    assert.ok(u.indexOf("For RESPONSE_1") < u.indexOf("For RESPONSE_2"));
+    for (const vals of [["P2→R1", "P1→R2", "a"], ["R2→P1", "R1→P2", "a"], ["P1 R2", "P2 R1", "A"]]) {
+      const f = fakeVendors({ anthropic: [solve("labels", { values: vals })], openai: [solve("labels", { values: ["P1→R2", "P2→R1", "a"] })] });
+      const r = await agreeOnAnswer(multi, [], "M", undefined, f.deps);
+      assert.equal(r.decision.outcome, "pass", JSON.stringify(vals));
+    }
+    const g = fakeVendors({ anthropic: [solve("labels", { values: ["P1→R2", "P2→R1", "c"] })] });
+    assert.ok(!(await blindSolve("solver1", multi, [], "M", undefined, g.deps)).ok, "unknown drop-down identifier");
+    const h = fakeVendors({ anthropic: [solve("labels", { values: ["P1→R2", "P2→R1"] })] });
+    assert.ok(!(await blindSolve("solver1", multi, [], "M", undefined, h.deps)).ok, "a response left out");
   }
   console.log("solve tests passed");
 }

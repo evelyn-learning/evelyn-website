@@ -3,18 +3,27 @@
 // solution, our earlier answer or the other's output. Their answers are compared
 // in code (decide in answers.ts); a split calls a third vendor (DeepSeek for text,
 // Gemini when the item has any image). Written responses are compared by the
-// `compare` role and always held for a human.
+// `compare` role and always held for a human. The answer form and the canonical
+// values come from answers.ts (answerForm, canonicalResponse, typedAnswer), the
+// same definitions the key is read with, so the two sides cannot drift.
 // No `next/*` imports: this runs from tsx scripts on a laptop too.
 
 import type { ItemDoc } from "../db";
-import type { Interaction } from "../qti-interactions";
-import { acceptedAnswers, decide, parseKey, sameAnswer, type Answer, type Decision } from "./answers";
+import { acceptedAnswers, answerForm, canonicalResponse, decide, readKey, typedAnswer, type Answer, type AnswerForm, type Decision, type ResponseForm } from "./answers";
 import { questionAsText } from "./intake";
 import { callModel } from "./models";
 import type { ModelDeps, ModelImage, ModelReply } from "./types";
 
 export type Solve = { answer: Answer; working: string; confidence: "high" | "medium" | "low" };
 export type SolverRole = "solver1" | "solver2" | "solver3Text" | "solver3Image";
+export type Comparison = { samePoints: boolean; differences: string[] };
+/** solver1/solver2 are absent only when no call was made (decision hold "unreadable_form"). */
+export type Solves = {
+  solver1?: ModelReply<Solve>;
+  solver2?: ModelReply<Solve>;
+  solver3?: ModelReply<Solve>;
+  compare?: ModelReply<Comparison>;
+};
 type Img = ModelImage;
 
 type RawSolve = {
@@ -23,6 +32,7 @@ type RawSolve = {
   confidence: "high" | "medium" | "low";
 };
 
+// `letters` holds the item's choice identifiers (usually single letters A, B, C…).
 const SOLVE_SCHEMA = {
   type: "object",
   properties: {
@@ -51,74 +61,45 @@ const COMPARE_SCHEMA = {
   additionalProperties: false,
 };
 
-// --- what form the answer takes (built from itemType, interactions and option labels only) ---
+// --- the answer-form instruction (from answerForm only) ---
 
-type Resp = Exclude<Interaction, { kind: "unsupported" }>;
-const WRITTEN = new Set(["WR", "SWR"]);
-const responsesOf = (item: ItemDoc): Resp[] => (item.interactions ?? []).filter((i): i is Resp => i.kind !== "unsupported");
+const list = (xs: string[]) => xs.join(", ");
+const NUMBER_RULE = "the value only: no units, at the precision the question asks; do not round further";
 
-type Form =
-  | { kind: "choice"; multiple: boolean; labels: string[] }
-  | { kind: "number" } // a single typed response: number, or labels [text] when not a plain number (as parseKey)
-  | { kind: "labels"; responses: Resp[] }
-  | { kind: "text" }
-  | { kind: "any" };
-
-function formOf(item: ItemDoc): Form {
-  const rs = responsesOf(item);
-  if (WRITTEN.has(item.itemType) || (rs.length && rs.every((r) => r.kind === "extendedText"))) return { kind: "text" };
-  if (rs.length === 1) {
-    const r = rs[0];
-    if (r.kind === "choice") return { kind: "choice", multiple: r.maxChoices > 1 || item.itemType === "MS", labels: r.options.map((o) => o.label) };
-    if (r.kind === "textEntry") return { kind: "number" };
-    return { kind: "labels", responses: rs };
-  }
-  if (rs.length > 1) return { kind: "labels", responses: [...rs].sort((a, b) => a.responseId.localeCompare(b.responseId)) };
-  if (item.itemType === "NR") return { kind: "number" };
-  if (item.options?.length) return { kind: "choice", multiple: item.itemType === "MS", labels: item.options.map((o) => o.label) };
-  return { kind: "any" };
-}
-
-const ids = (xs: { label: string }[]) => xs.map((o) => o.label).join(", ");
-
-function responseForm(r: Resp, several: boolean): string {
+function responseLine(r: ResponseForm, several: boolean): string {
   const where = several ? `For ${r.responseId}: ` : "";
   switch (r.kind) {
-    case "choice": return `${where}the letter of each correct choice (${ids(r.options)}), in alphabetical order.`;
-    case "textEntry": return `${where}the typed value only (no units, at the precision the question asks; do not round further).`;
-    case "inlineChoice": return `${where}the identifier of the chosen drop-down choice (one of: ${ids(r.choices)}).`;
-    case "order": return `${where}the identifiers of the items in the correct order, first to last, one value each (identifiers: ${ids(r.choices)}).`;
-    case "match": {
-      const ex = `${r.premises[0]?.label ?? "P1"}→${r.responses[0]?.label ?? "R1"}`;
-      return `${where}one value per matched pair, written as first-list identifier→second-list identifier (for example "${ex}"), the values sorted alphabetically. First-list identifiers: ${ids(r.premises)}. Second-list identifiers: ${ids(r.responses)}.`;
-    }
-    case "gapMatch": {
-      const ex = `${r.choices[0]?.label ?? "W1"}→${r.gaps[0] ?? "G1"}`;
-      return `${where}one value per filled gap, written as choice identifier→gap identifier (for example "${ex}"), the values sorted alphabetically. Choice identifiers: ${ids(r.choices)}. Gap identifiers: ${r.gaps.join(", ")}.`;
-    }
+    case "choice": return `${where}the identifier of each correct choice (identifiers: ${list(r.identifiers)}).`;
+    case "textEntry": return `${where}the typed answer, ${NUMBER_RULE}.`;
+    case "inlineChoice": return `${where}the identifier of the chosen drop-down choice (one of: ${list(r.identifiers)}).`;
+    case "order": return `${where}the identifiers of the items in the correct order, first to last, one value each (identifiers: ${list(r.identifiers)}).`;
+    case "match":
+      return `${where}one value per matched pair, written as first-list identifier→second-list identifier (for example "${r.identifiers[0] ?? "P1"}→${r.targets[0] ?? "R1"}"), the values sorted alphabetically. First-list identifiers: ${list(r.identifiers)}. Second-list identifiers: ${list(r.targets)}.`;
+    case "gapMatch":
+      return `${where}one value per filled gap, written as choice identifier→gap identifier (for example "${r.identifiers[0] ?? "W1"}→${r.targets[0] ?? "G1"}"), the values sorted alphabetically. Choice identifiers: ${list(r.identifiers)}. Gap identifiers: ${list(r.targets)}.`;
     case "extendedText": return `${where}your full written answer.`;
   }
 }
 
-function answerForm(item: ItemDoc): string {
-  const f = formOf(item);
+function formInstruction(f: AnswerForm): string {
   const head = "Answer form (fill only the field for your kind; leave the others empty: [] or \"\"):";
-  switch (f.kind) {
-    case "choice":
-      return f.multiple
-        ? `${head} kind "choice", with every correct letter in "letters" (choose from: ${f.labels.join(", ")}).`
-        : `${head} kind "choice", with the one letter of the correct choice in "letters" (choose from: ${f.labels.join(", ")}).`;
+  const ids = f.responses[0]?.identifiers ?? [];
+  switch (f.form) {
+    case "choice-one":
+      return `${head} kind "choice", with the identifier of the one correct choice in "letters" (choose from: ${list(ids)}).`;
+    case "choice-many":
+      return `${head} kind "choice", with the identifier of every correct choice in "letters" (choose from: ${list(ids)}).`;
     case "number":
-      return `${head} kind "number", with the value only in "value": no units, at the precision the question asks; do not round further.`;
+      return `${head} kind "number", with ${NUMBER_RULE}, in "value". If the answer cannot be written as a decimal (for example a fraction the question asks for), give it as kind "labels" with the one value exactly as it would be typed.`;
+    case "typed":
+      return `${head} kind "number" with ${NUMBER_RULE}, in "value", when the answer is a number; otherwise kind "labels" with the one value exactly as it would be typed.`;
     case "text":
       return `${head} kind "text", with your full written answer in "value".`;
     case "labels": {
       const several = f.responses.length > 1;
       const order = several ? ` Give the values for each response in turn, in this order: ${f.responses.map((r) => r.responseId).join(", ")}.` : "";
-      return `${head} kind "labels", with values in "values". Answer with the identifiers listed, never with the choice text.${order}\n${f.responses.map((r) => "- " + responseForm(r, several)).join("\n")}`;
+      return `${head} kind "labels", with values in "values". Answer with the identifiers listed, never with the choice text.${order}\n${f.responses.map((r) => "- " + responseLine(r, several)).join("\n")}`;
     }
-    case "any":
-      return `${head} kind "number" with the value only when the answer is a number (no units, do not round further); otherwise kind "labels" with the answer exactly as it would be entered.`;
   }
 }
 
@@ -134,73 +115,73 @@ const SYSTEM = (course: string) => [
 
 const neutralise = (s: string) => s.replace(/<\/(question|reviewer_argument)/gi, "< /$1");
 
-/** Built ONLY from questionAsText(item), course, itemType, interactions, option labels and the hint. */
+/** Built ONLY from questionAsText(item), course, itemType, interactions, option labels and the hint.
+ *  Callers check answerForm(item) first; without a form the instruction says to answer as best it can. */
 export function solverPrompt(item: ItemDoc, course: string, hint?: string): { system: string; user: string } {
+  const form = answerForm(item);
   const parts = [`Course: ${course}`, `<question>\n${neutralise(questionAsText(item))}\n</question>`];
+  parts.push(form ? formInstruction(form) : "Answer form: give your answer in the field that fits it best.");
   if (hint?.trim()) {
     parts.push(`A reviewer has offered this argument to weigh. It may be right or wrong; decide on the mathematics/science alone:\n<reviewer_argument>\n${neutralise(hint.trim())}\n</reviewer_argument>`);
   }
-  parts.push(answerForm(item));
   return { system: SYSTEM(course), user: parts.join("\n\n") };
 }
 
-// --- reply → Answer ---
+// --- reply → Answer (canonical values from answers.ts) ---
 
-/** Same reading as parseKey's typed answers: a plain decimal is a number, anything else one label. */
-function typedAnswer(text: string): Answer {
-  const t = text.trim();
-  const n: Answer = { kind: "number", value: t };
-  return sameAnswer(n, n) && !/e/i.test(t) ? n : { kind: "labels", values: [t] };
-}
-
-const PAIR = /^\s*(\S+?)\s*(?:→|->|=>|\s)\s*(\S+)\s*$/;
-
-function normalisePairs(r: Extract<Resp, { kind: "match" | "gapMatch" }>, values: string[]): string[] | null {
-  const firsts = new Set(r.kind === "match" ? r.premises.map((o) => o.label) : r.choices.map((o) => o.label));
-  const seconds = new Set(r.kind === "match" ? r.responses.map((o) => o.label) : r.gaps);
-  const out: string[] = [];
-  for (const v of values) {
-    const m = v.match(PAIR);
-    if (!m) return null;
-    let [, a, b] = m;
-    if (!firsts.has(a) && firsts.has(b) && seconds.has(a)) [a, b] = [b, a]; // written the other way round
-    out.push(`${a}→${b}`);
+/** Splits a flat "labels" list into the item's responses, in sorted responseId order. */
+function splitByResponse(responses: ResponseForm[], values: string[]): string[][] | null {
+  const out: string[][] = [];
+  let i = 0;
+  for (const r of responses) {
+    const take: string[] = [];
+    const fits = (v: string) => canonicalResponse(r, [...take, v]) !== null;
+    if (r.kind === "textEntry" || r.kind === "inlineChoice") {
+      if (i < values.length) take.push(values[i++]);
+    } else if (r.kind === "order") {
+      while (i < values.length && take.length < r.identifiers.length && fits(values[i])) take.push(values[i++]);
+    } else {
+      while (i < values.length && fits(values[i])) take.push(values[i++]);
+    }
+    if (!take.length) return null;
+    out.push(take);
   }
-  return out.sort();
+  return i === values.length ? out : null;
 }
 
-function toAnswer(item: ItemDoc, raw: RawSolve["answer"]): Answer | string {
-  const f = formOf(item);
-  const expected = f.kind === "number" ? ["number", "labels"] : f.kind === "any" ? ["choice", "number", "labels"] : [f.kind];
-  if (!expected.includes(raw.kind)) return `answer kind "${raw.kind}" does not fit this item (expected ${expected.join(" or ")})`;
-  switch (raw.kind) {
-    case "choice": {
-      const ls = raw.letters.map((l) => l.trim().toUpperCase());
-      if (!ls.length) return "choice answer with no letter";
-      if (ls.some((l) => !/^[A-Z]$/.test(l))) return `choice letters must be single letters A–Z: ${JSON.stringify(raw.letters)}`;
-      const labels = f.kind === "choice" ? f.labels.map((l) => l.trim().toUpperCase()) : [];
-      if (labels.length && ls.some((l) => !labels.includes(l))) return `letter not among the choices: ${JSON.stringify(raw.letters)}`;
-      return { kind: "choice", letters: [...new Set(ls)].sort() };
+function toAnswer(form: AnswerForm, raw: RawSolve["answer"]): Answer | string {
+  const values = raw.values.map((v) => v.trim()).filter(Boolean);
+  const misfit = (expected: string) => `answer kind "${raw.kind}" does not fit this item (expected ${expected})`;
+  switch (form.form) {
+    case "choice-one": case "choice-many": {
+      if (raw.kind !== "choice") return misfit("choice");
+      if (!raw.letters.some((l) => l.trim())) return "choice answer with no identifier";
+      const c = canonicalResponse(form.responses[0], raw.letters);
+      if (!c) return `choice not among the item's choices: ${JSON.stringify(raw.letters)}`;
+      if (form.form === "choice-one" && c.length !== 1) return `one choice expected: ${JSON.stringify(raw.letters)}`;
+      return { kind: "choice", letters: c };
     }
-    case "number": {
-      if (!raw.value.trim()) return "number answer with no value";
-      return f.kind === "number" ? typedAnswer(raw.value) : { kind: "number", value: raw.value.trim() };
-    }
-    case "labels": {
-      const vs = raw.values.map((v) => v.trim()).filter(Boolean);
-      if (!vs.length) return "labels answer with no values";
-      if (f.kind === "number") return vs.length === 1 ? typedAnswer(vs[0]) : "one typed value expected";
-      if (f.kind === "labels" && f.responses.length === 1) {
-        const r = f.responses[0];
-        if (r.kind === "match" || r.kind === "gapMatch") {
-          const pairs = normalisePairs(r, vs);
-          return pairs ? { kind: "labels", values: pairs } : `pairs must read identifier→identifier: ${JSON.stringify(raw.values)}`;
-        }
-      }
-      return { kind: "labels", values: vs };
+    case "number": case "typed": {
+      if (raw.kind === "number") return raw.value.trim() ? typedAnswer(raw.value) : "number answer with no value";
+      if (raw.kind === "labels") return values.length === 1 ? typedAnswer(values[0]) : "one typed value expected";
+      return misfit("number");
     }
     case "text":
+      if (raw.kind !== "text") return misfit("text");
       return raw.value.trim() ? { kind: "text", value: raw.value.trim() } : "text answer with no value";
+    case "labels": {
+      if (raw.kind !== "labels") return misfit("labels");
+      if (!values.length) return "labels answer with no values";
+      const groups = form.responses.length === 1 ? [values] : splitByResponse(form.responses, values);
+      if (!groups) return `values do not fit the item's responses: ${JSON.stringify(raw.values)}`;
+      const out: string[] = [];
+      for (const [i, g] of groups.entries()) {
+        const c = canonicalResponse(form.responses[i], g);
+        if (!c) return `values for ${form.responses[i].responseId} are not the item's identifiers: ${JSON.stringify(g)}`;
+        out.push(...c);
+      }
+      return { kind: "labels", values: out };
+    }
   }
 }
 
@@ -208,10 +189,12 @@ function toAnswer(item: ItemDoc, raw: RawSolve["answer"]): Answer | string {
 
 export async function blindSolve(role: SolverRole, item: ItemDoc, images: Img[], course: string, hint?: string, deps?: ModelDeps): Promise<ModelReply<Solve>> {
   if (role === "solver3Text" && images.length) return { ok: false, reason: "shape", detail: "this solver cannot read images", cost: 0, model: "" };
+  const form = answerForm(item);
+  if (!form) return { ok: false, reason: "shape", detail: "the item's answer form cannot be told", cost: 0, model: "" };
   const { system, user } = solverPrompt(item, course, hint);
   const reply = await callModel<RawSolve>({ role, system, user, images: images.length ? images : undefined, schema: SOLVE_SCHEMA }, deps);
   if (!reply.ok) return reply;
-  const answer = toAnswer(item, reply.value.answer);
+  const answer = toAnswer(form, reply.value.answer);
   if (typeof answer === "string") return { ok: false, reason: "shape", detail: answer, cost: reply.cost, model: reply.model };
   return { ...reply, value: { answer, working: reply.value.working, confidence: reply.value.confidence } };
 }
@@ -225,23 +208,27 @@ const COMPARE_SYSTEM = [
 
 const neutraliseCompare = (s: string) => s.replace(/<\/(question|answer_1|answer_2)/gi, "< /$1");
 
-function isWritten(item: ItemDoc, s1: Answer, s2: Answer): boolean {
-  if (formOf(item).kind === "text") return true;
-  return parseKey(item) === null && s1.kind === "text" && s2.kind === "text";
-}
-
 export async function agreeOnAnswer(
   item: ItemDoc, images: Img[], course: string, hint?: string, deps?: ModelDeps,
-): Promise<{ decision: Decision; solves: Record<string, ModelReply<unknown>>; cost: number }> {
+): Promise<{ decision: Decision; solves: Solves; cost: number }> {
+  const solves: Solves = {};
+  const done = (decision: Decision) => ({
+    decision, solves, cost: [solves.solver1, solves.solver2, solves.solver3, solves.compare].reduce((s, r) => s + (r?.cost ?? 0), 0),
+  });
+  // A form we cannot tell, or a key we cannot read in it, could only produce a false key query: no calls.
+  const form = answerForm(item);
+  const key = readKey(item);
+  if (!form || !key.exact) return done({ outcome: "hold", why: "unreadable_form" });
+
   const [r1, r2] = await Promise.all([blindSolve("solver1", item, images, course, hint, deps), blindSolve("solver2", item, images, course, hint, deps)]);
-  const solves: Record<string, ModelReply<unknown>> = { solver1: r1, solver2: r2 };
-  const done = (decision: Decision) => ({ decision, solves, cost: Object.values(solves).reduce((s, r) => s + r.cost, 0) });
+  solves.solver1 = r1;
+  solves.solver2 = r2;
   if (!r1.ok || !r2.ok) return done({ outcome: "hold", why: "no_agreement" });
 
   const s1 = r1.value.answer, s2 = r2.value.answer;
-  if (isWritten(item, s1, s2)) {
+  if (form.form === "text") {
     const text = (a: Answer) => (a.kind === "text" ? a.value : JSON.stringify(a));
-    solves.compare = await callModel<{ samePoints: boolean; differences: string[] }>({
+    solves.compare = await callModel<Comparison>({
       role: "compare",
       system: COMPARE_SYSTEM,
       user: [
@@ -256,12 +243,11 @@ export async function agreeOnAnswer(
     return done({ outcome: "hold", why: "written_response" });
   }
 
-  const key = parseKey(item);
   const alsoAccepted = acceptedAnswers(item).slice(1);
-  const first = decide(s1, s2, key, undefined, alsoAccepted);
+  const first = decide(s1, s2, key.answer, undefined, alsoAccepted);
   if (first.outcome !== "need_third") return done(first);
   const r3 = await blindSolve(images.length ? "solver3Image" : "solver3Text", item, images, course, hint, deps);
   solves.solver3 = r3;
   if (!r3.ok) return done({ outcome: "hold", why: "no_agreement" });
-  return done(decide(s1, s2, key, r3.value.answer, alsoAccepted));
+  return done(decide(s1, s2, key.answer, r3.value.answer, alsoAccepted));
 }
