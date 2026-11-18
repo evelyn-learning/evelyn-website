@@ -150,7 +150,8 @@ export async function createFlag(input: NewFlag, shots: Uint8Array[], who: Who):
     updatedAt: now,
   };
   await AnimFlag.create({ _id, ...doc });
-  if (a.status === "review") await Animation.updateOne({ itemId: a.itemId, version: a.version, status: "review" }, { $set: { status: "fixing" } });
+  // A flag on a version that was already accepted reopens it too: "Accepted" never sits beside an open flag.
+  if (a.status === "review" || a.status === "accepted") await Animation.updateOne({ itemId: a.itemId, version: a.version, status: a.status }, { $set: { status: "fixing" } });
   return { ok: { ...doc, id: String(_id) } };
 }
 

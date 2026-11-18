@@ -22,7 +22,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ item
   const { itemId, version, path } = await params;
   const v = parseVersion(version);
   if (v === null) return notFound();
-  const file = animatedFile(itemId, v, path.map(decodeURIComponent).join("/"));
+  let rel: string;
+  try {
+    rel = path.map(decodeURIComponent).join("/");
+  } catch {
+    return new NextResponse("Not found", { status: 404 }); // a malformed % sequence
+  }
+  const file = animatedFile(itemId, v, rel);
   if (!file) return notFound();
   if (!canSeeAnimation(user.role, await animationStatus(itemId, v))) return notFound();
   let size: number;

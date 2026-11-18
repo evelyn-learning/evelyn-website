@@ -44,12 +44,17 @@ async function main() {
   const { replies, errors } = parseReplies(all("reply"));
   if (errors.length) throw new Error(errors.join("\n"));
   const addresses = (arg("addresses") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-  let voice = arg("voice");
-  if (!voice) {
-    try {
-      voice = JSON.parse(await readFile(path.join(outDir, "spec.json"), "utf8")).voice;
-    } catch {}
+  // The build being published must be this item's: the folder is named after the item, and its spec (when the
+  // build left one beside the page) names the same item. A typo in --item must not publish under another item.
+  let builtSpec: { voice?: string; itemId?: string } = {};
+  try {
+    builtSpec = JSON.parse(await readFile(path.join(outDir, "spec.json"), "utf8"));
+  } catch {}
+  const folder = path.basename(path.resolve(outDir));
+  if (folder !== itemId || (builtSpec.itemId !== undefined && String(builtSpec.itemId) !== itemId)) {
+    throw new Error(`Refusing to publish: --item ${itemId} but the build folder is "${folder}"${builtSpec.itemId !== undefined ? ` and its spec says item ${builtSpec.itemId}` : ""}`);
   }
+  const voice = arg("voice") ?? builtSpec.voice;
   const height = Number(arg("height") ?? "1100");
   if (!Number.isFinite(height) || height < 200 || height > 6000) throw new Error("--height must be a number of pixels (200–6000)");
 
@@ -79,11 +84,20 @@ async function main() {
       const root = path.resolve(outDir);
       await cp(root, dest, { recursive: true, filter: (src) => !["shots", "spec.json"].includes(path.relative(root, src).split(path.sep)[0]) });
     } else {
-      execFileSync("ssh", [host, `test ! -e ${BOX_DATA}/${destRel} && mkdir -p ${BOX_DATA}/${destRel}`], { stdio: "inherit" });
-      execFileSync("rsync", ["-a", "--exclude", "spec.json", "--exclude", "shots/", `${path.resolve(outDir)}/`, dest], { stdio: "inherit" });
+      // Copied beside the final folder first (vN.tmp, reused and brought up to date by a retry), and moved into
+      // place only after the row is written: a copy that fails part-way never leaves a vN that blocks the next try.
+      execFileSync("ssh", [host, `test ! -e ${BOX_DATA}/${destRel} && mkdir -p ${BOX_DATA}/${destRel}.tmp`], { stdio: "inherit" });
+      execFileSync("rsync", ["-a", "--no-links", "--delete", "--exclude", "spec.json", "--exclude", "shots/", `${path.resolve(outDir)}/`, `${host}:${BOX_DATA}/${destRel}.tmp/`], { stdio: "inherit" });
     }
     const r = await store.recordPublish({ itemId, entry, height, voice, notes: arg("notes"), addresses, replies, createdBy: arg("by") ?? "evelyn" }, v);
-    if ("error" in r) throw new Error(`Files copied but the row was not written: ${r.error}`);
+    if ("error" in r) throw new Error(`Files copied${local ? "" : ` to ${destRel}.tmp`} but the row was not written: ${r.error}`);
+    if (!local) {
+      try {
+        execFileSync("ssh", [host, `test ! -e ${BOX_DATA}/${destRel} && mv ${BOX_DATA}/${destRel}.tmp ${BOX_DATA}/${destRel}`], { stdio: "inherit" });
+      } catch {
+        throw new Error(`The row for v${v} is written but the files are still at ${BOX_DATA}/${destRel}.tmp on ${host}. Move them into place:\n  ssh ${host} 'mv ${BOX_DATA}/${destRel}.tmp ${BOX_DATA}/${destRel}'`);
+      }
+    }
     console.log(`Published item ${itemId} v${r.ok.version}; ${r.ok.fixed} flag(s) marked fixed.`);
   } finally {
     await closeKs();
