@@ -8,7 +8,7 @@ import { renderBoard } from './board';
 import { v2HomeworkFacts, v2HomeworkGuardFacts, v2SheetFacts } from './homework-facts';
 import { renderGoalStatus } from './plan-map';
 import type { V2Session, V2State } from './types';
-import { discussionOf, effectiveMinutes, lastReplyNotes, renderThinking } from './discussion';
+import { discussionOf, effectiveMinutes, lastReplyNotes, renderThinking, untoldCases } from './discussion';
 
 /** After the tutor chose to keep listening: how long the student stays silent before it is told so (TutorVoiceV2).
  *  At that point silence is no longer open to it: it kept listening twice and the student sat with a blank
@@ -61,6 +61,9 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   lines.push(`your note: ${state.note.trim() || '(empty — nothing written yet)'}`);
   const thinking = discussion ? renderThinking(state.thinking) : '';
   if (thinking) lines.push(thinking);
+  const meta = state.history.length ? discussionOf(session.plan) : null;
+  const untold = meta ? untoldCases(meta, state.history) : [];
+  if (untold.length) lines.push(`not yet told to them: ${untold.map((c) => c.title).join('; ')}. They know nothing of ${untold.length === 1 ? 'it' : 'these'}: no name or detail from ${untold.length === 1 ? 'it' : 'them'} until the reply that tells it in full`);
   const lastNotes = discussion ? lastReplyNotes(state.history, session.mode === 'voice', f.heard) : [];
   if (lastNotes.length) lines.push(`your last reply: ${lastNotes.join('; ')}`);
   // Said once in the prompt, the length and the opener drift back within a few turns (live test 2, 2026-11-15: replies of

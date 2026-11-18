@@ -285,6 +285,34 @@ export const DISCUSSION_JUDGING_OPENER = /^\s*(?:that'?s|that is|this is|you'?re
 export function directionAsked(history: V2State['history']): boolean {
   return history.some((m) => m.role === 'assistant' && (typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' ')).match(DIRECTION_QUESTION));
 }
+/** Whether they have said anything since that question was put. A close gave "your direction is…" for a question
+ *  that was announced, never answered, and followed by 20 seconds of silence (local test embed-1794971130343). */
+export function directionAnswered(history: V2State['history'], saidNow: string | null): boolean {
+  const text = (m: V2State['history'][number]) => (typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '));
+  let asked = -1;
+  history.forEach((m, i) => { if (m.role === 'assistant' && DIRECTION_QUESTION.test(text(m))) asked = i; });
+  if (asked < 0) return false;
+  if (saidNow && saidNow.trim()) return true;
+  return history.slice(asked + 1).some((m) => {
+    if (m.role !== 'user') return false;
+    const first = typeof m.content === 'string' ? m.content : (m.content.find((c) => c.type === 'text') as { text?: string } | undefined)?.text ?? '';
+    return !!first.trim() && !/^\s*\[/.test(first);
+  });
+}
+
+/** The cases the person has not been told yet. A case counts as told once a reply carried most of its spoken
+ *  version; its name alone does not count ("Would you say the same about Diego's case?" was asked of a person
+ *  who had never heard of Diego, local test embed-1794971130343). */
+export function untoldCases(d: DiscussionMeta, history: V2State['history']): DiscussionCase[] {
+  const said = history.filter((m) => m.role === 'assistant').map((m) => (typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' ')).toLowerCase());
+  const words = (x: string) => [...new Set((x.toLowerCase().match(/[a-z']{5,}/g) ?? []))];
+  return d.cases.filter((c) => {
+    const key = words(c.spoken ?? c.scenario);
+    if (!key.length) return false;
+    return !said.some((reply) => key.filter((w) => reply.includes(w)).length >= Math.ceil(key.length * 0.5));
+  });
+}
+
 const DIRECTION_QUESTION = /\b(?:explore|look into|think about|dig into|take|work on|go) (?:next|further|from here)\b|\bmost (?:valuable|useful|helpful)\b[^?]*\?|\bwhere (?:would you like|do you want) to (?:go|take)\b|\bnext direction\b/i;
 
 /** The person's stated time, when it is shorter than the session's. */

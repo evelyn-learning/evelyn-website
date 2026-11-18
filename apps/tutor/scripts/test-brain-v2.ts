@@ -17,7 +17,7 @@ import { renderFacts, V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S } from '../src/li
 import type Anthropic from '@anthropic-ai/sdk';
 import { SEED_AP_CALCBC_U4_LHOPITAL } from '../src/lib/tutor/lesson-plan/seeds/ap-calcbc-u4-lhopital';
 import { V2_CONSTITUTION } from '../src/lib/tutor/v2/constitution';
-import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, DISCUSSION_VERDICT_WORDS, V2_DISCUSSION_CONSTITUTION, discussionOf, renderDiscussionMap } from '../src/lib/tutor/v2/discussion';
+import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, DISCUSSION_VERDICT_WORDS, V2_DISCUSSION_CONSTITUTION, directionAnswered, discussionOf, renderDiscussionMap, untoldCases } from '../src/lib/tutor/v2/discussion';
 import { PRIVATE_ECS_AI_LITERACY_CH2 } from '../src/lib/tutor/lesson-plan/private/ecs-ai-literacy-ch2';
 import { SEED_PLANS, getLessonPlan, isPrivatePlan } from '../src/lib/tutor/lesson-plan/store';
 import { renderPlanMap } from '../src/lib/tutor/v2/plan-map';
@@ -823,6 +823,17 @@ async function main() {
     const selfOrder = stub([msg([{ type: 'text', text: 'Record the direction, then close.' }, { type: 'tool_use', id: 'e4', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's', next_direction: 'a talk with my department.' } }], 'tool_use')]);
     const rso = await runV2Turn({ session: dSession, state: asked, studentSaid: 'My department, I think.', nowMs: 1_000_000 + 9 * 60000, callModel: selfOrder.call });
     check('an order to itself is never said, and a close with nothing left to say still closes in words', rso.state.closed && !/Record the direction/.test(rso.spoken) && rso.spoken === `Thank you for thinking this through with me. The direction you chose: a talk with my department.\n\n${closingWords}`, rso.spoken);
+    // Asked but unanswered: silence after the question is no direction (local test embed-1794971130343).
+    const silentEnd = stub([msg([{ type: 'text', text: 'Thank you, Jo.' }, { type: 'tool_use', id: 'e5', name: 'end_lesson', input: { because: 'conversation_complete', summary: 's', next_direction: 'start with the ones who worry you' } }], 'tool_use'), msg([{ type: 'text', text: 'What would you like to explore next?' }], 'end_turn')]);
+    const rsil = await runV2Turn({ session: dSession, state: asked, studentSaid: null, facts: { silenceSeconds: 20 }, nowMs: 1_000_000 + 9 * 60000, callModel: silentEnd.call });
+    check('a direction question met with silence does not close with a direction', !rsil.state.closed && !rsil.state.nextDirection && !directionAnswered(asked.history, null) && directionAnswered(asked.history, 'My department.'), String(rsil.state.nextDirection));
+    const dMeta = discussionOf(PRIVATE_ECS_AI_LITERACY_CH2)!;
+    const hist = (texts: string[]) => texts.map((t) => ({ role: 'assistant' as const, content: [{ type: 'text' as const, text: t }] }));
+    const untoldAll = untoldCases(dMeta, hist(['Welcome. What is your first reaction?']));
+    const namedOnly = untoldCases(dMeta, hist([`${dMeta.cases[0].spoken} What do you make of it?`, "Would you say the same about Diego's case, where the AI rewrites the whole story?"]));
+    check('a case is untold until its spoken version has been said; its name alone does not tell it', untoldAll.length === dMeta.cases.length && namedOnly.length === dMeta.cases.length - 1 && !namedOnly.includes(dMeta.cases[0]), `${untoldAll.length} ${namedOnly.length}`);
+    const fu = renderFacts({ ...dSession, plan: PRIVATE_ECS_AI_LITERACY_CH2 }, { ...r1.state, history: hist([`${dMeta.cases[0].spoken}`]) }, { nowMs: 1_000_000 + 3 * 60000 });
+    check('the facts list the cases not yet told', /not yet told to them: /.test(fu) && !fu.includes(`not yet told to them: ${dMeta.cases[0].title}`), fu);
     check('the verdict-word scan catches praise and passes a plain acknowledgement', DISCUSSION_VERDICT_WORDS.test('Excellent point.') && DISCUSSION_VERDICT_WORDS.test("That's right, Jo.") && !DISCUSSION_VERDICT_WORDS.test('Tying it to what the student decides is a useful test.'));
   }
   console.log(`\n${passed} passed, ${failed} failed`);

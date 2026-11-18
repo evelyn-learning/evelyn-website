@@ -33,7 +33,7 @@ import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
 import { leftOpen, mayOpenPart, namesPart, partOffer } from './part-close';
 import { heardAsWords } from './heard';
-import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, DISCUSSION_STEERED, V2_DISCUSSION_CONSTITUTION, directionAsked, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap, scriptedWelcome } from './discussion';
+import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, DISCUSSION_STEERED, V2_DISCUSSION_CONSTITUTION, directionAnswered, directionAsked, discussionOf, effectiveMinutes, recordThinking, renderDiscussionMap, scriptedWelcome } from './discussion';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, V2_NOTE_OWN_ANSWER_TOOL, V2_SET_CURRENT_PROBLEM_TOOL, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
 
@@ -192,11 +192,15 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     const left = box ? box - (nowMs - state.startedAtMs) / 60000 : 0;
     // A direction is one they named after being asked. When the time ran out in a long silence the close gave
     // "the direction you chose" for a question that had never been put (embed-1794953503551).
-    const direction = !directionAsked(state.history) ? '' : (typeof args.next_direction === 'string' ? args.next_direction.trim().slice(0, 300) : '') || state.thinking?.direction || '';
+    const direction = !directionAnswered(state.history, studentSaid) ? '' : (typeof args.next_direction === 'string' ? args.next_direction.trim().slice(0, 300) : '') || state.thinking?.direction || '';
     // The direction is theirs to name: a direction the tutor wrote itself closed the live test without the
     // question ever being asked (embed-1794694217385). Until it has been asked, only their request or the clock ends it.
     if (args.because !== 'student_asked' && box && left > 1.5 && !directionAsked(state.history)) {
-      return 'not ended: you have not asked them yet what they would like to explore next. Say nothing of this message. Ask them that now, in a sentence of your own, and close after they answer.';
+      return 'not ended: you have not asked them yet what they would like to explore next. Say nothing of this message. Ask them that now as one short question, and close after they answer.';
+    }
+    // Asked, and no word from them since: the question was announced or went unheard.
+    if (args.because !== 'student_asked' && box && left > 1.5 && !directionAnswered(state.history, studentSaid)) {
+      return 'not ended: they have not answered yet. Say nothing of this message. Ask them once more, as one short plain question, what they would like to explore next, and wait for their answer.';
     }
     if (args.because !== 'student_asked' && !direction && box && left > 1.5) {
       return 'not ended: they have not chosen a direction yet. Say nothing of this message. Ask them, in a sentence of your own, what would be most valuable for them to explore further.';
