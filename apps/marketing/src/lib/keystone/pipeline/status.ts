@@ -10,7 +10,8 @@ import { splitNote } from "../note";
 import { lastBeat } from "./heartbeat";
 import { needsOwner } from "./holds";
 import { ownWriteState } from "./ownwrite";
-import { redact } from "./models";
+import { redact, vendorOfModel } from "./models";
+import type { Vendor } from "./types";
 import { openSuggestions } from "./outbox";
 import { addLocalDays, blockedBatches, inWindow, planRelease, type PlanRow } from "./release";
 
@@ -26,6 +27,22 @@ export type Status = {
   suggestions: { subject: string; to: string[] }[];
   /** Batches nothing of which can be released (release.ts blockedBatches): batch = its file name, else its id. */
   blocked: { batch: string; why: string; since?: Date }[];
+  /** Always four rows (Anthropic, OpenAI, DeepSeek, Gemini). Only DeepSeek can report a live balance; the rest are estimates. */
+  credit: CreditRow[];
+  /** About the section as a whole (e.g. steps whose model id is unknown, left out of every vendor's spend). */
+  creditNote?: string;
+};
+
+export type CreditRow = {
+  vendor: Vendor;
+  label: string;
+  live?: { amount: number; currency: string };
+  start?: { amount: number; since: Date };
+  spentSince: number;
+  estimatedLeft?: number;
+  spentYesterday: number;
+  note?: string;
+  low: boolean;
 };
 
 /** Why an item is held, in plain words (also used by the queue page). */
@@ -218,7 +235,171 @@ export async function afterSent(beatFn: () => Promise<void>, warn: (line: string
   }
 }
 
-export async function buildStatus(now: Date): Promise<Status> {
+// --- API credit ---
+
+export const CREDIT_VENDORS: { vendor: Vendor; label: string; env: string }[] = [
+  { vendor: "anthropic", label: "Anthropic", env: "KEYSTONE_CREDIT_ANTHROPIC" },
+  { vendor: "openai", label: "OpenAI", env: "KEYSTONE_CREDIT_OPENAI" },
+  { vendor: "deepseek", label: "DeepSeek", env: "KEYSTONE_CREDIT_DEEPSEEK" },
+  { vendor: "gemini", label: "Gemini", env: "KEYSTONE_CREDIT_GEMINI" },
+];
+export const DEEPSEEK_BALANCE_URL = "https://api.deepseek.com/user/balance";
+export const DEEPSEEK_TIMEOUT_MS = 10_000;
+export const CREDIT_FOOTNOTE =
+  "Only DeepSeek reports a live balance. The others are estimates: the starting amount you gave minus what Keystone's recorded runs spent. Dry runs and anything else using the same keys are not counted, so the real balance can be lower.";
+const LOW_ABSOLUTE = 2;
+const LOW_FRACTION = 0.2;
+
+/** A starting credit `<amount>@<YYYY-MM-DD>` (the balance reported on that Pacific day). Unset: undefined; malformed: { bad: true }. */
+export function parseCredit(raw: string | undefined | null): { amount: number; since: Date } | { bad: true } | undefined {
+  if (raw === undefined || raw === null || raw.trim() === "") return undefined;
+  const m = /^(\d{1,9}(?:\.\d{1,4})?)@(\d{4})-(\d{2})-(\d{2})$/.exec(raw.trim());
+  if (!m) return { bad: true };
+  const [y, mo, d] = [+m[2], +m[3], +m[4]];
+  const since = fromPacific(y, mo, d);
+  const back = ptParts(since);
+  if (back.y !== y || back.mo !== mo || back.d !== d) return { bad: true }; // a day that does not exist (2026-02-31, month 13)
+  return { amount: Number(m[1]), since };
+}
+
+type StepLike = { at?: Date; cost?: number; model?: string; output?: { solves?: Record<string, { cost?: number; model?: string } | undefined> } | null };
+export type CreditRun = { startedAt?: Date; cost?: number; steps?: StepLike[] };
+
+/**
+ * One step's cost split by vendor. A solve step records several models in one comma-joined `model` and one total
+ * cost: its output keeps each call's own cost and model, which are used when present; without them a multi-model
+ * step is split evenly between its models. A cost with no model, or a model no spec knows, is `undefined`.
+ */
+export function stepShares(step: StepLike): { vendor?: Vendor; cost: number }[] {
+  const total = step.cost || 0;
+  if (!(total > 0)) return [];
+  const calls = Object.values(step.output?.solves ?? {}).filter((c): c is { cost?: number; model?: string } => !!c && typeof c === "object" && (c.cost || 0) > 0);
+  if (calls.length && calls.every((c) => typeof c.model === "string" && c.model)) {
+    return calls.map((c) => ({ vendor: vendorOfModel(c.model!), cost: c.cost || 0 }));
+  }
+  const models = (step.model ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+  if (!models.length) return [{ cost: total }];
+  return models.map((m) => ({ vendor: vendorOfModel(m), cost: total / models.length }));
+}
+
+/** Spend per vendor from the (non-dry) runs: since each vendor's start (all time when none), and in `yesterday`. */
+export function spendByVendor(
+  runs: CreditRun[],
+  since: Partial<Record<Vendor, Date>>,
+  yesterday: { start: Date; end: Date },
+): { spent: Record<Vendor, { since: number; yesterday: number }>; unknownSteps: number } {
+  const spent = Object.fromEntries(CREDIT_VENDORS.map((v) => [v.vendor, { since: 0, yesterday: 0 }])) as Record<Vendor, { since: number; yesterday: number }>;
+  let unknownSteps = 0;
+  for (const r of runs) {
+    const steps: StepLike[] = Array.isArray(r.steps) && r.steps.length ? r.steps : [{ at: r.startedAt, cost: r.cost }];
+    for (const st of steps) {
+      const at = st.at ? new Date(st.at) : r.startedAt ? new Date(r.startedAt) : undefined;
+      const shares = stepShares(st);
+      if (shares.some((x) => !x.vendor)) unknownSteps++;
+      for (const x of shares) {
+        if (!x.vendor) continue;
+        const from = since[x.vendor];
+        if (!from || (at && at >= from)) spent[x.vendor].since += x.cost;
+        if (at && at >= yesterday.start && at < yesterday.end) spent[x.vendor].yesterday += x.cost;
+      }
+    }
+  }
+  return { spent, unknownSteps };
+}
+
+/**
+ * Whether a vendor's credit is low: the live balance (else the estimate) is below 20% of the starting amount or below 2
+ * (units of its currency), or DeepSeek says its account is not available. The 20% test is made only when the figure is
+ * in the starting amount's currency (the start is in dollars). Nothing known: not low.
+ */
+export function creditLow(a: { live?: { amount: number; currency: string }; start?: { amount: number }; estimatedLeft?: number; unavailable?: boolean }): boolean {
+  if (a.unavailable) return true;
+  const left = a.live ? a.live.amount : a.estimatedLeft;
+  if (left === undefined || !Number.isFinite(left)) return false;
+  if (left < LOW_ABSOLUTE) return true;
+  const sameCurrency = !a.live || a.live.currency.toUpperCase() === "USD";
+  return !!a.start && sameCurrency && left < LOW_FRACTION * a.start.amount;
+}
+
+/** DeepSeek's balance reply as a live amount: the USD entry if present, else the first. Throws when the body is not the documented shape. */
+export function parseDeepseekBalance(body: unknown): { live?: { amount: number; currency: string }; available: boolean } {
+  const b = body as { is_available?: unknown; balance_infos?: unknown } | null;
+  if (!b || typeof b !== "object" || typeof b.is_available !== "boolean" || !Array.isArray(b.balance_infos)) throw new Error("unreadable reply");
+  const infos = (b.balance_infos as unknown[]).map((x) => {
+    const e = x as { currency?: unknown; total_balance?: unknown } | null;
+    const amount = Number(e?.total_balance);
+    if (!e || typeof e.currency !== "string" || !e.currency || typeof e.total_balance !== "string" || !e.total_balance.trim() || !Number.isFinite(amount)) throw new Error("unreadable reply");
+    return { amount, currency: e.currency };
+  });
+  const pick = infos.find((i) => i.currency.toUpperCase() === "USD") ?? infos[0];
+  if (!pick && b.is_available) throw new Error("unreadable reply");
+  return { ...(pick ? { live: pick } : {}), available: b.is_available };
+}
+
+/** GET the DeepSeek balance (a read) with a 10-second timeout. Throws on any failure; the message never holds the key. */
+export async function fetchDeepseekBalance(key: string, fetchFn: typeof fetch = fetch, timeoutMs = DEEPSEEK_TIMEOUT_MS) {
+  const ctl = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => { ctl.abort(); reject(new Error("timed out")); }, timeoutMs);
+  });
+  try {
+    const work = (async () => {
+      const res = await fetchFn(DEEPSEEK_BALANCE_URL, { method: "GET", headers: { Authorization: `Bearer ${key}`, Accept: "application/json" }, signal: ctl.signal });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      let body: unknown;
+      try { body = JSON.parse(await res.text()); } catch { throw new Error("unreadable reply"); }
+      return parseDeepseekBalance(body);
+    })();
+    work.catch(() => {}); // a late failure after the timeout is not an unhandled rejection
+    return await Promise.race([work, timeout]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+/** The four credit rows (and a note on the whole section) from the runs. Never throws: a failed balance call is a note on its row. */
+export async function buildCredit(
+  runs: CreditRun[],
+  yesterday: { start: Date; end: Date },
+  env: Record<string, string | undefined>,
+  fetchFn: typeof fetch = fetch,
+  timeoutMs: number = DEEPSEEK_TIMEOUT_MS,
+): Promise<{ credit: CreditRow[]; creditNote?: string }> {
+  const parsed = CREDIT_VENDORS.map((v) => ({ v, p: parseCredit(env[v.env]) }));
+  const since: Partial<Record<Vendor, Date>> = {};
+  for (const { v, p } of parsed) if (p && "since" in p) since[v.vendor] = p.since;
+  const { spent, unknownSteps } = spendByVendor(runs, since, yesterday);
+
+  let deepseek: Awaited<ReturnType<typeof fetchDeepseekBalance>> | undefined;
+  let deepseekNote: string | undefined;
+  const dsKey = (env.DEEPSEEK_API_KEY ?? "").trim();
+  if (dsKey) {
+    try {
+      deepseek = await fetchDeepseekBalance(dsKey, fetchFn, timeoutMs);
+    } catch (e) {
+      deepseekNote = `balance check failed (${scrubSecrets(e instanceof Error ? e.message : String(e), [dsKey]).slice(0, 80)})`;
+    }
+  }
+
+  const credit = parsed.map(({ v, p }): CreditRow => {
+    const start = p && "since" in p ? { amount: p.amount, since: p.since } : undefined;
+    const notes: string[] = [];
+    if (p && "bad" in p) notes.push(`${v.env} ignored: it must read <amount>@<YYYY-MM-DD>`);
+    const live = v.vendor === "deepseek" ? deepseek?.live : undefined;
+    if (v.vendor === "deepseek" && deepseekNote) notes.push(deepseekNote);
+    const spentSince = spent[v.vendor].since;
+    const estimatedLeft = start ? start.amount - spentSince : undefined;
+    const low = creditLow({ live, start, estimatedLeft, unavailable: v.vendor === "deepseek" && deepseek?.available === false });
+    return {
+      vendor: v.vendor, label: v.label, ...(live ? { live } : {}), ...(start ? { start } : {}), spentSince, ...(estimatedLeft !== undefined ? { estimatedLeft } : {}),
+      spentYesterday: spent[v.vendor].yesterday, ...(notes.length ? { note: notes.join(". ") } : {}), low,
+    };
+  });
+  return { credit, ...(unknownSteps ? { creditNote: `${plural(unknownSteps, "step")} with an unknown model id not counted` } : {}) };
+}
+
+export async function buildStatus(now: Date, opts: { env?: Record<string, string | undefined>; fetchFn?: typeof fetch; deepseekTimeoutMs?: number } = {}): Promise<Status> {
   const { Item, Solution, Activity, Run, User, Batch } = await ks();
   const items = (await Item.find({}, { itemId: 1, stage: 1, order: 1, batchId: 1, receivedAt: 1, createdAt: 1, pipeline: 1 }).lean()) as unknown as ItemRow[];
 
@@ -282,6 +463,14 @@ export async function buildStatus(now: Date): Promise<Status> {
     if (steps.length) for (const s of steps) costYesterday += inYesterday(s.at) ? s.cost || 0 : 0;
     else if (inYesterday(r.startedAt)) costYesterday += r.cost || 0;
   }
+  const creditRuns = (await Run.find(
+    { dryRun: { $ne: true } },
+    {
+      startedAt: 1, cost: 1, "steps.at": 1, "steps.cost": 1, "steps.model": 1,
+      ...Object.fromEntries(["solver1", "solver2", "solver3", "compare"].flatMap((k) => [[`steps.output.solves.${k}.cost`, 1], [`steps.output.solves.${k}.model`, 1]])),
+    },
+  ).lean()) as unknown as CreditRun[];
+  const { credit, creditNote } = await buildCredit(creditRuns, yesterday, opts.env ?? process.env, opts.fetchFn, opts.deepseekTimeoutMs);
   const runItems = new Set(runs.map((r) => r.itemId)).size;
   const cost = { yesterday: costYesterday, perItem: runItems ? costTotal / runItems : 0 };
 
@@ -338,6 +527,8 @@ export async function buildStatus(now: Date): Promise<Status> {
     failures,
     suggestions,
     blocked,
+    credit,
+    ...(creditNote ? { creditNote } : {}),
   };
 }
 
@@ -348,6 +539,18 @@ const esc = (s: unknown) =>
 const money = (n: number) => `$${(Number.isFinite(n) ? n : 0).toFixed(2)}`;
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 const nameOf = (to: string) => to.charAt(0).toUpperCase() + to.slice(1);
+const pacificDate = (d: Date) => { const p = ptParts(d); return `${MONTHS[p.mo - 1]} ${p.d}`; };
+const amountOf = (n: number, currency: string) => (currency.toUpperCase() === "USD" ? money(n) : `${(Number.isFinite(n) ? n : 0).toFixed(2)} ${currency}`);
+
+/** One vendor's credit line, in plain words (no LOW prefix). */
+export function creditLine(c: CreditRow): string {
+  const since = c.start ? `since ${pacificDate(c.start.since)}` : "in total";
+  let line: string;
+  if (c.live) line = `${c.label}: ${amountOf(c.live.amount, c.live.currency)} balance (live); Keystone spent ${money(c.spentSince)} ${since}; ${money(c.spentYesterday)} yesterday`;
+  else if (c.start) line = `${c.label}: about ${money(Math.max(0, c.estimatedLeft ?? 0))} left (started ${money(c.start.amount)} on ${pacificDate(c.start.since)}; Keystone has spent ${money(c.spentSince)} since; ${money(c.spentYesterday)} yesterday)`;
+  else line = `${c.label}: no starting balance on file; Keystone has spent ${money(c.spentSince)} in total; ${money(c.spentYesterday)} yesterday`;
+  return `${c.low ? "LOW \u2014 " : ""}${line}${c.note ? `. Note: ${c.note}` : ""}`;
+}
 const countOf = (s: Status, stage: Stage) => s.byOwner.flatMap((g) => g.rows).find((r) => r.label === STAGE_LABEL[stage])?.n ?? 0;
 
 export function renderStatusEmail(s: Status, now: Date): { subject: string; html: string; text: string } {
@@ -360,10 +563,13 @@ export function renderStatusEmail(s: Status, now: Date): { subject: string; html
   const link = (itemId: string) => `<a href="${esc(itemUrl(itemId))}" style="color:#1a56db">${esc(itemId)}</a>`;
   const list = (rows: string[], none: string) => (rows.length ? `<ul ${UL}>${rows.map((r) => `<li style="margin:2px 0">${r}</li>`).join("")}</ul>` : `<p style="margin:0;color:#666">${none}</p>`);
 
-  if (s.failures.length) {
-    t.push(`FAILURES (${s.failures.length})`, ...s.failures.map((f) => `- ${f}`), "");
+  const credit = Array.isArray(s.credit) ? s.credit : [];
+  const lowVendors = credit.filter((c) => c.low).map((c) => c.label);
+  const failures = lowVendors.length ? [...s.failures, `API credit is low: ${lowVendors.join(", ")}`] : s.failures;
+  if (failures.length) {
+    t.push(`FAILURES (${failures.length})`, ...failures.map((f) => `- ${f}`), "");
     h.push(
-      `<div style="background:#fdecec;border:1px solid #f3b4b4;padding:8px 12px;margin:0 0 12px"><strong style="color:#a11">Failures (${s.failures.length})</strong>${list(s.failures.map(esc), "")}</div>`,
+      `<div style="background:#fdecec;border:1px solid #f3b4b4;padding:8px 12px;margin:0 0 12px"><strong style="color:#a11">Failures (${failures.length})</strong>${list(failures.map(esc), "")}</div>`,
     );
   }
 
@@ -371,6 +577,15 @@ export function renderStatusEmail(s: Status, now: Date): { subject: string; html
     const line = (b: Status["blocked"][number]) => `${b.batch}: ${b.why}${b.since ? ` (since ${pacificTime(b.since)})` : ""}`;
     t.push(`BLOCKED BATCHES (${s.blocked.length}): nothing of these is released`, ...s.blocked.map((b) => `- ${line(b)}`), "");
     h.push(`<h3 ${H3}>Blocked batches (${s.blocked.length})</h3><p style="margin:0 0 4px;color:#555">Nothing of these is released.</p>`, list(s.blocked.map((b) => esc(line(b))), ""));
+  }
+
+  if (credit.length) {
+    t.push("API CREDIT", ...credit.map((c) => `- ${creditLine(c)}`), ...(s.creditNote ? [`- ${s.creditNote}`] : []), CREDIT_FOOTNOTE, "");
+    h.push(
+      `<h3 ${H3}>API credit</h3>`,
+      list([...credit.map((c) => (c.low ? `<strong style="color:#a11">${esc(creditLine(c))}</strong>` : esc(creditLine(c)))), ...(s.creditNote ? [esc(s.creditNote)] : [])], ""),
+      `<p style="margin:6px 0 0;color:#555">${esc(CREDIT_FOOTNOTE)}</p>`,
+    );
   }
 
   t.push(`WAITING ON YOU (${s.waitingOnPraveen.length})`);

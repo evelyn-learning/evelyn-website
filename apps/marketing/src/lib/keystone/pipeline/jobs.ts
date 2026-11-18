@@ -74,12 +74,14 @@ export async function statusEmailJob(opts: {
   print?: boolean;
   env?: Record<string, string | undefined>;
   fetchFn?: typeof fetch;
+  /** The fetch for the DeepSeek balance read (the status email's API credit section); default the real one. */
+  creditFetch?: typeof fetch;
   onlyAtPacificHour?: number;
 }): Promise<StatusJobResult> {
   const now = opts.now ?? new Date();
   const env = opts.env ?? process.env;
   if (opts.print) {
-    const email = renderStatusEmail(await buildStatus(now), now);
+    const email = renderStatusEmail(await buildStatus(now, { env, fetchFn: opts.creditFetch }), now);
     return { status: "printed", subject: email.subject, text: email.text };
   }
   // Checked before reading anything: a send that cannot happen does not touch the database.
@@ -89,7 +91,7 @@ export async function statusEmailJob(opts: {
     const last = await lastBeat(STATUS_HEARTBEAT);
     if (last && last.getTime() >= pacificDay(now).start.getTime()) return { status: "skipped", why: "already sent today" };
   }
-  const email = renderStatusEmail(await buildStatus(now), now);
+  const email = renderStatusEmail(await buildStatus(now, { env, fetchFn: opts.creditFetch }), now);
   const res = await sendStatusEmail(email, cfg, opts.fetchFn);
   let warning: string | undefined;
   await afterSent(() => beat(STATUS_HEARTBEAT, now), (w) => { warning = w; }, secretsOf(env));

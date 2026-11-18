@@ -17,6 +17,8 @@ const DB = "castle_rock_review_status_test";
 process.env.KEYSTONE_DB_NAME = DB;
 process.env.KEYSTONE_DATA_DIR = path.join(tmpdir(), "ks-test-data");
 delete process.env.KEYSTONE_READONLY;
+// No default buildStatus call may reach the network: the DeepSeek balance read happens only with this key.
+delete process.env.DEEPSEEK_API_KEY;
 
 const ok = (value: unknown, message: string) => assert.ok(value, message);
 const equal = (a: unknown, b: unknown, message: string) => assert.equal(a, b, message);
@@ -248,6 +250,63 @@ const OLD = new Date("2026-11-10T17:00:00Z");
     await assert.rejects(() => beat("keystone-release", NOW), /read-only/, "beat refuses in read-only mode");
     delete process.env.KEYSTONE_READONLY;
     await db.collection("heartbeats").deleteMany({});
+
+    // --- API credit: runs of each vendor before/after the start, a dry run, an unknown model id; DeepSeek faked ---
+    {
+      const { MODEL_FOR } = await import("./models");
+      const mstep = (at: string, cost: number, model?: string) => ({ step: "solve", key: `k${Math.random()}`, at: new Date(at), ok: true, output: null, cost, ...(model ? { model } : {}) });
+      const A = MODEL_FOR.solver1.model, O = MODEL_FOR.solver2.model, D = MODEL_FOR.solver3Text.model, G = MODEL_FOR.compare.model;
+      await Run.insertMany([
+        run("st-rev1", "cr-a", { result: "ready", steps: [mstep("2026-11-15T12:00:00Z", 5, A), mstep("2026-11-16T20:00:00Z", 1.5, A), mstep("2026-11-16T20:00:00Z", 7, "mystery-model")], cost: 13.5 }),
+        run("st-rev2", "cr-b", { result: "ready", steps: [mstep("2026-11-10T12:00:00Z", 1, O), mstep("2026-11-16T18:00:00Z", 2, O), mstep("2026-11-16T19:00:00Z", 0.25, D), mstep("2026-11-17T10:00:00Z", 0.5, G)], cost: 3.75 }),
+        run("st-appr2", "cr-dry", { result: "ready", dryRun: true, steps: [mstep("2026-11-16T18:00:00Z", 100, A)], cost: 100 }),
+      ]);
+      const KEY = "sk-DBTESTdeepseek1234567890";
+      const env = { DEEPSEEK_API_KEY: KEY, KEYSTONE_CREDIT_ANTHROPIC: "20@2026-11-16", KEYSTONE_CREDIT_DEEPSEEK: "6@2026-11-16", KEYSTONE_CREDIT_GEMINI: "10@2026-11-17", KEYSTONE_CREDIT_OPENAI: "nonsense" };
+      const respond = (b: unknown, status = 200) => (async () => new Response(typeof b === "string" ? b : JSON.stringify(b), { status })) as unknown as typeof fetch;
+      const good = await buildStatus(NOW, { env, fetchFn: respond({ is_available: true, balance_infos: [{ currency: "USD", total_balance: "5.61", granted_balance: "0", topped_up_balance: "5.61" }] }) });
+      const by = Object.fromEntries(good.credit.map((c) => [c.vendor, c]));
+      deepEqual(good.credit.map((c) => c.label), ["Anthropic", "OpenAI", "DeepSeek", "Gemini"], "four rows in order");
+      equal(by.anthropic.spentSince, 1.5, "Anthropic: the step before the start date and the dry run are not counted");
+      equal(by.anthropic.estimatedLeft, 18.5, "Anthropic: start minus spent since");
+      equal(by.anthropic.spentYesterday, 1.5, "Anthropic yesterday (Pacific Nov 16)");
+      equal(by.openai.start, undefined, "a malformed start is ignored");
+      ok(by.openai.note?.includes("KEYSTONE_CREDIT_OPENAI ignored"), "and noted");
+      equal(by.openai.spentSince, 3, "OpenAI with no start: all time");
+      equal(by.openai.spentYesterday, 2, "OpenAI yesterday");
+      equal(by.gemini.spentSince, 0.5, "Gemini: after its start");
+      equal(by.gemini.spentYesterday, 0, "Gemini: today's spend is not yesterday's");
+      equal(by.deepseek.spentSince, 0.25, "DeepSeek spend");
+      deepEqual(by.deepseek.live, { amount: 5.61, currency: "USD" }, "DeepSeek live balance");
+      ok(!by.anthropic.low && !by.deepseek.low && !by.gemini.low, "nothing low");
+      equal(good.creditNote, "5 steps with an unknown model id not counted", "the mystery step and the 4 model-less seed steps are listed, not counted");
+      const out = renderStatusEmail(good, NOW);
+      ok(out.text.includes("Anthropic: about $18.50 left (started $20.00 on Nov 16; Keystone has spent $1.50 since; $1.50 yesterday)"), "rendered estimate line");
+      ok(out.text.includes("DeepSeek: $5.61 balance (live); Keystone spent $0.25 since Nov 16; $0.25 yesterday"), "rendered live line");
+      ok(out.text.includes("OpenAI: no starting balance on file; Keystone has spent $3.00 in total; $2.00 yesterday"), "rendered no-start line");
+      // DeepSeek failing in each way: the status still builds, the row says so, the key is nowhere
+      const hang = (async () => new Promise<Response>(() => {})) as unknown as typeof fetch;
+      const failing: [string, typeof fetch][] = [
+        ["HTTP 401", respond({ error: `invalid ${KEY}` }, 401)],
+        ["timeout", hang],
+        ["malformed body", respond("{not json")],
+        ["wrong shape", respond({ balance_infos: "x" })],
+      ];
+      for (const [name, f] of failing) {
+        const st = await buildStatus(NOW, { env, fetchFn: f, deepseekTimeoutMs: 50 });
+        const d = st.credit.find((c) => c.vendor === "deepseek")!;
+        ok(d.note?.startsWith("balance check failed"), `${name}: note set (${d.note})`);
+        equal(d.live, undefined, `${name}: no live figure`);
+        equal(d.estimatedLeft, 5.75, `${name}: the estimate is used (6 - 0.25)`);
+        const mail = renderStatusEmail(st, NOW);
+        ok(mail.subject.startsWith("Keystone:") && mail.text.includes("DeepSeek: about $5.75 left"), `${name}: the email still builds`);
+        ok(!(mail.text + mail.html + JSON.stringify(st)).includes(KEY), `${name}: the key appears nowhere`);
+      }
+      const lowSt = await buildStatus(NOW, { env: { ...env, KEYSTONE_CREDIT_ANTHROPIC: "3@2026-11-16" }, fetchFn: respond({ is_available: true, balance_infos: [{ currency: "USD", total_balance: "5.61" }] }) });
+      ok(lowSt.credit.find((c) => c.vendor === "anthropic")!.low, "3 - 1.5 = 1.5 is below 2: low");
+      ok(renderStatusEmail(lowSt, NOW).text.includes("API credit is low: Anthropic"), "and it is in the failures list");
+      await Run.deleteMany({ runId: { $in: ["cr-a", "cr-b", "cr-dry"] } });
+    }
 
     // --- the script: --print writes nothing and sends nothing; refusals ---
     const snapshot = async () => {

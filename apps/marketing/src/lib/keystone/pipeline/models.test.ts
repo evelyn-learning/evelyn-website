@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { MODEL_FOR, assertKeys, callModel, costOf, redact } from "./models";
+import { ALWAYS_ROLES, MODEL_FOR, assertKeys, callModel, costOf, redact, runKeyCheck, vendorOfModel } from "./models";
 import { assertSchemaSupported, isStrictSchema, parseJsonReply, validate } from "./schema";
 import type { ModelCall, Role } from "./types";
 import { sameModel } from "./vendors/anthropic";
@@ -460,6 +460,31 @@ async function main() {
     assert.ok(!r3.ok && r3.transient, "I7: network error exhausted: transient");
   }
 
+  // --- the run's up-front key check (scripts/keystone-pipeline.ts) ---
+  {
+    const all = { ANTHROPIC_API_KEY: "k1", OPENAI_API_KEY: "k2", DEEPSEEK_API_KEY: "k3", GEMINI_API_KEY: "k4" };
+    assert.deepEqual(runKeyCheck(all), [], "every key set: no warning");
+    const noDeepseek = { ...all, DEEPSEEK_API_KEY: undefined };
+    const warn = runKeyCheck(noDeepseek);
+    assert.deepEqual(
+      warn,
+      ["No key for the tie-break solver (DEEPSEEK_API_KEY): an item whose two solvers disagree will be held for the owner instead of settled"],
+      "a missing tie-break key is one loud line, not an error",
+    );
+    for (const gone of ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY"]) {
+      assert.throws(() => runKeyCheck({ ...all, [gone]: undefined }), new RegExp(gone), `a missing ${gone} blocks the run`);
+    }
+    assert.ok(!ALWAYS_ROLES.includes("solver3Text") && !ALWAYS_ROLES.includes("solver3Image"), "the tie-break roles are not required up front");
+    let msg = "";
+    try { runKeyCheck({ ...all, OPENAI_API_KEY: undefined, ANTHROPIC_API_KEY: undefined }); } catch (e) { msg = (e as Error).message; }
+    assert.ok(!msg.includes("k3") && !msg.includes("k4"), "the error names variables, never values");
+  }
+  // --- model id -> vendor ---
+  {
+    for (const [role, spec] of Object.entries(MODEL_FOR)) assert.equal(vendorOfModel(spec.model), spec.vendor, `${role}: ${spec.model} maps to ${spec.vendor}`);
+    assert.equal(vendorOfModel("claude-opus-5-5"), "anthropic", "a Claude fallback model is Anthropic's");
+    assert.equal(vendorOfModel("mystery-9"), undefined, "an unknown model id belongs to no vendor");
+  }
   console.log("models.test: ok");
 }
 

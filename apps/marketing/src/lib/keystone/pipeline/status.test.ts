@@ -3,9 +3,20 @@
 // Run: npx tsx src/lib/keystone/pipeline/status.test.ts
 import assert from "node:assert/strict";
 import { STAGE_LABEL } from "../config";
+import { MODEL_FOR, vendorOfModel } from "./models";
+import type { CreditRow } from "./status";
 import {
   FLAG_WORDS,
+  CREDIT_FOOTNOTE,
   afterSent,
+  buildCredit,
+  creditLine,
+  creditLow,
+  fetchDeepseekBalance,
+  parseCredit,
+  parseDeepseekBalance,
+  spendByVendor,
+  stepShares,
   countSendBacks,
   goesOutToday,
   goingOutToday,
@@ -119,6 +130,7 @@ const HOUR = 3_600_000;
     failures: [],
     suggestions: [],
     blocked: [],
+    credit: [],
   };
   const e = renderStatusEmail(empty, tue7);
   equal(e.subject, "Keystone: 0 waiting on you, 0 in review, 0 approved", "subject with zeros");
@@ -140,6 +152,13 @@ const HOUR = 3_600_000;
     failures: ["The release timer has not run in the last 2 hours"],
     suggestions: [{ subject: "3 answer keys to check", to: ["julie"] }],
     blocked: [{ batch: "batch-nov-16.xlsx", why: "2 item(s) not yet through the pipeline", since: Z("2026-11-17T01:00:00Z") }, { batch: "b9", why: "no batch record" }],
+    credit: [
+      { vendor: "anthropic", label: "Anthropic", spentSince: 3.1, spentYesterday: 0.8, low: false },
+      { vendor: "openai", label: "OpenAI", start: { amount: 10, since: Z("2026-11-17T08:00:00Z") }, spentSince: 9, estimatedLeft: 1, spentYesterday: 1, low: true },
+      { vendor: "deepseek", label: "DeepSeek", live: { amount: 5.61, currency: "USD" }, start: { amount: 6, since: Z("2026-11-17T08:00:00Z") }, spentSince: 0.39, estimatedLeft: 5.61, spentYesterday: 0, low: false },
+      { vendor: "gemini", label: "Gemini", start: { amount: 20, since: Z("2026-11-17T08:00:00Z") }, spentSince: 1.6, estimatedLeft: 18.4, spentYesterday: 0.42, low: false },
+    ],
+    creditNote: "2 steps with an unknown model id not counted",
   };
   const r = renderStatusEmail(full, tue7);
   equal(r.subject, "Keystone: 2 waiting on you, 4 in review, 5 approved", "subject: numbers first, pattern exact");
@@ -149,7 +168,7 @@ const HOUR = 3_600_000;
   ok(r.html.includes(`href="https://keystone.evelynlearning.com/item/991601"`), "waiting items are linked in HTML");
   ok(r.text.includes("https://keystone.evelynlearning.com/item/991601"), "and in text");
   ok(r.text.includes("Random sample") && r.html.includes("Random sample"), "with their reasons");
-  const order = ["release timer", "BLOCKED BATCHES", "WAITING ON YOU", "GOING OUT TODAY", "NOT SOLVED", "BY OWNER", "CASTLE ROCK", "SEND-BACKS", "SUGGESTED EMAILS", "COST"].map((k) => r.text.indexOf(k));
+  const order = ["release timer", "BLOCKED BATCHES", "API CREDIT", "WAITING ON YOU", "GOING OUT TODAY", "NOT SOLVED", "BY OWNER", "CASTLE ROCK", "SEND-BACKS", "SUGGESTED EMAILS", "COST"].map((k) => r.text.indexOf(k));
   ok(order.every((x) => x >= 0), `every section present (${order})`);
   ok(order.every((x, i) => i === 0 || x > order[i - 1]), `sections in order, failures on top (${order})`);
   ok(r.text.includes("$1.23") && r.text.includes("$0.46"), "cost in dollars");
@@ -159,6 +178,130 @@ const HOUR = 3_600_000;
   ok(r.text.includes("Thu Nov 19, 7:00 am PT"), "not-solved due time in Pacific");
   ok(r.text.includes("To Julie: 3 answer keys to check"), "suggestion with recipients");
   for (const piece of ["991601", "Random sample", "Julie May", "3 answer keys to check", "release timer"]) ok(r.html.includes(piece), `HTML carries ${piece} too`);
+  // --- API credit section ---
+  {
+    const row = (c: Partial<CreditRow> & Pick<CreditRow, "vendor" | "label">): CreditRow => ({ spentSince: 0, spentYesterday: 0, low: false, ...c });
+    const nov17 = Z("2026-11-17T08:00:00Z"); // midnight Pacific
+    equal(creditLine(row({ vendor: "gemini", label: "Gemini", start: { amount: 20, since: nov17 }, spentSince: 1.6, estimatedLeft: 18.4, spentYesterday: 0.42 })),
+      "Gemini: about $18.40 left (started $20.00 on Nov 17; Keystone has spent $1.60 since; $0.42 yesterday)", "estimate line");
+    equal(creditLine(row({ vendor: "deepseek", label: "DeepSeek", live: { amount: 5.61, currency: "USD" }, start: { amount: 6, since: nov17 }, spentSince: 0.39 })),
+      "DeepSeek: $5.61 balance (live); Keystone spent $0.39 since Nov 17; $0.00 yesterday", "live line");
+    equal(creditLine(row({ vendor: "anthropic", label: "Anthropic", spentSince: 3.1, spentYesterday: 0.8 })),
+      "Anthropic: no starting balance on file; Keystone has spent $3.10 in total; $0.80 yesterday", "no-start line");
+    equal(creditLine(row({ vendor: "openai", label: "OpenAI", start: { amount: 10, since: nov17 }, spentSince: 12, estimatedLeft: -2, low: true })).slice(0, 25), "LOW \u2014 OpenAI: about $0.00", "LOW prefix; an overspent estimate shows 0, never negative");
+    ok(creditLine(row({ vendor: "deepseek", label: "DeepSeek", note: "balance check failed (HTTP 401)" })).endsWith("Note: balance check failed (HTTP 401)"), "a note follows the line");
+    ok(r.text.includes("- API credit is low: OpenAI"), "the failures list names the low vendors");
+    ok(r.text.includes("- LOW \u2014 OpenAI: about $1.00 left"), "the low row is prefixed in the text");
+    ok(r.html.includes("API credit</h3>") && r.html.includes("LOW \u2014 OpenAI") && r.html.includes("API credit is low: OpenAI"), "section, LOW row and failure line in the HTML");
+    ok(r.text.includes(CREDIT_FOOTNOTE) && r.html.includes("Only DeepSeek reports a live balance."), "the fixed sentence is under the section");
+    ok(r.text.includes("2 steps with an unknown model id not counted"), "unknown model ids are noted");
+    ok(r.text.includes("Failures") === false && r.text.startsWith("Keystone status") && /FAILURES \(2\)/.test(r.text), "the low line counts in the failures header");
+    const lowOnly = renderStatusEmail({ ...empty, credit: full.credit }, tue7).text;
+    ok(/FAILURES \(1\)\n- API credit is low: OpenAI/.test(lowOnly), "a low row alone raises the failures block");
+    ok(!/API credit is low/.test(renderStatusEmail({ ...empty, credit: [row({ vendor: "gemini", label: "Gemini" })] }, tue7).text), "no low row, no failure line");
+    const evil = renderStatusEmail({ ...empty, credit: [row({ vendor: "gemini", label: "<b>G</b>" })] }, tue7).html;
+    ok(!evil.includes("<b>G</b>"), "the credit section is escaped");
+  }
+  // --- API credit: env parser ---
+  {
+    const p = parseCredit("20@2026-11-17") as { amount: number; since: Date };
+    equal(p.amount, 20, "amount");
+    equal(p.since.toISOString(), "2026-11-17T08:00:00.000Z", "the date is a Pacific calendar day");
+    equal((parseCredit("12.50@2026-07-01") as { amount: number }).amount, 12.5, "decimals");
+    equal((parseCredit("5@2026-07-01") as { since: Date }).since.toISOString(), "2026-07-01T07:00:00.000Z", "PDT in summer");
+    equal(parseCredit(undefined), undefined, "unset");
+    equal(parseCredit("  "), undefined, "blank is unset");
+    for (const bad of ["20", "20@", "@2026-11-17", "abc@2026-11-17", "20@2026-13-01", "20@2026-02-31", "20@11/17/2026", "-5@2026-11-17", "20@2026-11-17x", "$20@2026-11-17", "20 @2026-11-17"]) {
+      deepEqual(parseCredit(bad), { bad: true }, `malformed "${bad}" is flagged, not guessed`);
+    }
+  }
+  // --- API credit: model -> vendor ---
+  {
+    for (const [role, spec] of Object.entries(MODEL_FOR)) equal(vendorOfModel(spec.model), spec.vendor, `${role}'s model ${spec.model} maps to ${spec.vendor}`);
+    equal(vendorOfModel("who-knows"), undefined, "unknown id: no vendor");
+  }
+  // --- API credit: low ---
+  {
+    ok(creditLow({ estimatedLeft: 1.5 }), "below 2 is low even with no start");
+    ok(!creditLow({ estimatedLeft: 2 }), "2 exactly is not low");
+    ok(creditLow({ start: { amount: 20 }, estimatedLeft: 3.9 }), "under 20% of the start is low");
+    ok(!creditLow({ start: { amount: 20 }, estimatedLeft: 4 }), "20% exactly is not low");
+    ok(creditLow({ start: { amount: 20 }, estimatedLeft: -3 }), "an overspent estimate is low (true number kept)");
+    ok(creditLow({ live: { amount: 1, currency: "USD" }, estimatedLeft: 50 }), "the live figure wins over the estimate");
+    ok(!creditLow({ live: { amount: 30, currency: "USD" }, start: { amount: 20 }, estimatedLeft: 0.5 }), "live fine, estimate ignored");
+    ok(!creditLow({ live: { amount: 30, currency: "CNY" }, start: { amount: 1000 } }), "a different currency is not compared with the dollar start");
+    ok(creditLow({ live: { amount: 1.9, currency: "CNY" } }), "below 2 in its own currency is low");
+    ok(creditLow({ live: { amount: 50, currency: "USD" }, unavailable: true }), "is_available false is low");
+    ok(!creditLow({}), "nothing known: not low");
+  }
+  // --- API credit: spend ---
+  {
+    const A = MODEL_FOR.solver1.model, O = MODEL_FOR.solver2.model, D = MODEL_FOR.solver3Text.model, G = MODEL_FOR.compare.model;
+    const yday = { start: Z("2026-11-16T08:00:00Z"), end: Z("2026-11-17T08:00:00Z") };
+    const runs = [
+      { startedAt: Z("2026-11-10T00:00:00Z"), steps: [{ at: Z("2026-11-10T00:00:00Z"), cost: 1, model: A }, { at: Z("2026-11-16T12:00:00Z"), cost: 2, model: A }, { at: Z("2026-11-17T10:00:00Z"), cost: 4, model: O }] },
+      { steps: [{ at: Z("2026-11-16T12:00:00Z"), cost: 0.5, model: "mystery-1" }, { at: Z("2026-11-16T12:00:00Z"), cost: 0.25 }, { at: Z("2026-11-16T12:00:00Z"), cost: 0, model: "mystery-2" }] },
+      // a solve step: one total, two models; the output holds each call's own cost
+      { steps: [{ at: Z("2026-11-16T13:00:00Z"), cost: 0.3, model: `${A},${O}`, output: { solves: { solver1: { cost: 0.1, model: A }, solver2: { cost: 0.2, model: O } } } }] },
+    ];
+    const r = spendByVendor(runs, { anthropic: Z("2026-11-12T08:00:00Z") }, yday);
+    equal(r.spent.anthropic.since, 2.1, "Anthropic since its start: the Nov 10 step is before it, the rest counts");
+    equal(r.spent.anthropic.yesterday, 2.1, "Anthropic yesterday");
+    ok(Math.abs(r.spent.openai.since - 4.2) < 1e-9, "OpenAI: no start, all time, incl. the solve step's own share");
+    equal(r.spent.openai.yesterday, 0.2, "OpenAI yesterday");
+    equal(r.unknownSteps, 2, "a step with an unknown model and one with a cost and no model are counted; a zero-cost one is not");
+    equal(r.spent.deepseek.since + r.spent.gemini.since, 0, "nothing for the vendors with no steps");
+    deepEqual(stepShares({ cost: 0.6, model: `${D},${G}` }).map((x) => [x.vendor, x.cost]), [["deepseek", 0.3], ["gemini", 0.3]], "a multi-model step without a breakdown is split evenly");
+    deepEqual(stepShares({ cost: 0 }), [], "no cost, no share");
+  }
+  // --- API credit: DeepSeek balance (fake fetch, no network) ---
+  {
+    const KEY = "sk-deepseekSECRET1234567890";
+    const yday = { start: Z("2026-11-16T08:00:00Z"), end: Z("2026-11-17T08:00:00Z") };
+    const okBody = { is_available: true, balance_infos: [{ currency: "CNY", total_balance: "40.00", granted_balance: "0", topped_up_balance: "40.00" }, { currency: "USD", total_balance: "5.61", granted_balance: "0.00", topped_up_balance: "5.61" }] };
+    const reply = (b: unknown, status = 200) => (async () => new Response(typeof b === "string" ? b : JSON.stringify(b), { status })) as unknown as typeof fetch;
+    let seen: { url: string; auth: string; method: string } | undefined;
+    const spy = (async (url: string, init: RequestInit) => { seen = { url, auth: String((init.headers as Record<string, string>).Authorization), method: String(init.method) }; return new Response(JSON.stringify(okBody)); }) as unknown as typeof fetch;
+    const env = { DEEPSEEK_API_KEY: KEY, KEYSTONE_CREDIT_DEEPSEEK: "6@2026-11-17" };
+    const good = await buildCredit([], yday, env, spy);
+    deepEqual(good.credit.map((c) => c.label), ["Anthropic", "OpenAI", "DeepSeek", "Gemini"], "always four rows, in order");
+    deepEqual(good.credit[2].live, { amount: 5.61, currency: "USD" }, "the USD entry is preferred");
+    ok(seen && seen.url === "https://api.deepseek.com/user/balance" && seen.method === "GET" && seen.auth === `Bearer ${KEY}`, "the documented endpoint, GET, bearer key");
+    equal(good.credit[2].note, undefined, "no note on success");
+    deepEqual(parseDeepseekBalance({ is_available: true, balance_infos: [okBody.balance_infos[0]] }).live, { amount: 40, currency: "CNY" }, "no USD entry: the first, with its currency");
+    equal(parseDeepseekBalance({ is_available: false, balance_infos: [] }).available, false, "unavailable with no entries is readable");
+    const unavailable = await buildCredit([], yday, env, reply({ is_available: false, balance_infos: okBody.balance_infos }));
+    ok(unavailable.credit[2].low, "is_available false is flagged low even with money");
+    const noKey = await buildCredit([], yday, { KEYSTONE_CREDIT_DEEPSEEK: "6@2026-11-17" }, (async () => { throw new Error("must not be called"); }) as unknown as typeof fetch);
+    equal(noKey.credit[2].note, undefined, "no key: no call, no note");
+    equal(noKey.credit[2].estimatedLeft, 6, "no key: the estimate stands");
+    const never = (async (_u: string, init: RequestInit) => new Promise<Response>((_, rej) => init.signal?.addEventListener("abort", () => rej(new Error(`aborted ${KEY}`))))) as unknown as typeof fetch;
+    const timedOut = await fetchDeepseekBalance(KEY, never, 30).then(() => "", (e) => String(e));
+    ok(/timed out/.test(timedOut), `a hung call ends at the timeout (${timedOut})`);
+    const hangsIgnoringSignal = (async () => new Promise<Response>(() => {})) as unknown as typeof fetch;
+    ok(/timed out/.test(await fetchDeepseekBalance(KEY, hangsIgnoringSignal, 30).then(() => "", (e) => String(e))), "even a fetch that ignores the abort signal is cut off");
+    const fails: [string, typeof fetch][] = [
+      ["HTTP 401", reply({ error: `bad key ${KEY}` }, 401)],
+      ["malformed JSON", reply("<html>nope")],
+      ["wrong shape", reply({ balance: 5 })],
+      ["bad amount", reply({ is_available: true, balance_infos: [{ currency: "USD", total_balance: "lots" }] })],
+      ["empty list while available", reply({ is_available: true, balance_infos: [] })],
+      ["network error", (async () => { throw new TypeError(`fetch failed ${KEY}`); }) as unknown as typeof fetch],
+    ];
+    for (const [name, f] of fails) {
+      const c = await buildCredit([], yday, env, f);
+      const d = c.credit[2];
+      ok(d.note?.startsWith("balance check failed"), `${name}: note set (${d.note})`);
+      equal(d.live, undefined, `${name}: no live figure`);
+      equal(d.estimatedLeft, 6, `${name}: falls back to the estimate`);
+      const out = renderStatusEmail({ ...empty, credit: c.credit }, tue7);
+      ok(!out.text.includes(KEY) && !out.html.includes(KEY) && !JSON.stringify(c).includes(KEY), `${name}: the key appears nowhere`);
+    }
+    const badEnv = await buildCredit([], yday, { KEYSTONE_CREDIT_GEMINI: "twenty@2026-11-17" }, spy);
+    ok(badEnv.credit[3].note?.includes("KEYSTONE_CREDIT_GEMINI ignored") && !badEnv.credit[3].note!.includes("twenty"), "a malformed start is ignored and noted, its value not echoed");
+    equal(badEnv.credit[3].start, undefined, "and not used");
+  }
+
   const bad: Status = { ...full, waitingOnPraveen: [{ itemId: `x"><img src=x>`, why: "a<b" }], suggestions: [{ subject: "<b>s</b>", to: ["julie"] }], failures: ["<i>f</i>"] };
   const rb = renderStatusEmail(bad, tue7).html;
   ok(!rb.includes("<img") && !rb.includes("<b>s</b>") && !rb.includes("<i>f</i>"), "every data piece is escaped (ids, reasons, subjects, failures)");

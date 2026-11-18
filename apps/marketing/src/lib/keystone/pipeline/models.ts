@@ -84,9 +84,9 @@ const KEY_ENV: Record<Vendor, string[]> = {
   gemini: ["GEMINI_API_KEY", "NEXT_PUBLIC_GEMINI_API_KEY"],
 };
 
-function keyFor(vendor: Vendor): string | undefined {
+function keyFor(vendor: Vendor, env: Record<string, string | undefined> = process.env): string | undefined {
   for (const name of KEY_ENV[vendor]) {
-    const v = process.env[name];
+    const v = env[name];
     if (v) return v;
   }
   return undefined;
@@ -94,10 +94,45 @@ function keyFor(vendor: Vendor): string | undefined {
 
 /** Throws, naming the missing variables (never their values), when any key the
  * given roles need is absent. Scripts call this before doing any work. */
-export function assertKeys(roles: Role[] = ALL_ROLES): void {
+export function assertKeys(roles: Role[] = ALL_ROLES, env: Record<string, string | undefined> = process.env): void {
   const vendors = [...new Set(roles.map((r) => MODEL_FOR[r].vendor))];
-  const missing = vendors.filter((v) => !keyFor(v)).map((v) => KEY_ENV[v].join(" or "));
+  const missing = vendors.filter((v) => !keyFor(v, env)).map((v) => KEY_ENV[v].join(" or "));
   if (missing.length) throw new Error(`missing API key env: ${missing.join(", ")}`);
+}
+
+/** The roles every item uses (run.ts realSteps: intake; solver1 + solver2 on every item; author; working; audit; compare on a written response). A key missing for these blocks the run. */
+export const ALWAYS_ROLES: Role[] = ["intake", "solver1", "solver2", "author", "working", "audit", "compare"];
+/** The roles used only when the first two solvers disagree (solve.ts agreeOnAnswer). A key missing for these holds the split item instead. */
+export const TIEBREAK_ROLES: Role[] = ["solver3Text", "solver3Image"];
+
+/** Whether the key the role's vendor needs is set (never reads or returns the value out). */
+export function hasKeyFor(role: Role, env: Record<string, string | undefined> = process.env): boolean {
+  return !!keyFor(MODEL_FOR[role].vendor, env);
+}
+
+/**
+ * The up-front key check of a run: throws (naming variables, never values) when a key an always-used role needs is
+ * missing; returns one warning line per missing tie-break key, for the script to print loudly and carry on.
+ */
+export function runKeyCheck(env: Record<string, string | undefined> = process.env): string[] {
+  assertKeys(ALWAYS_ROLES, env);
+  const lines: string[] = [];
+  const seen = new Set<Vendor>();
+  for (const r of TIEBREAK_ROLES) {
+    const v = MODEL_FOR[r].vendor;
+    if (keyFor(v, env) || seen.has(v)) continue;
+    seen.add(v);
+    lines.push(`No key for the tie-break solver (${KEY_ENV[v].join(" or ")}): an item whose two solvers disagree will be held for the owner instead of settled`);
+  }
+  return lines;
+}
+
+/** The vendor a recorded model id belongs to (the five specs' models and the Claude fallback models), else undefined. */
+export function vendorOfModel(model: string): Vendor | undefined {
+  const id = model.trim();
+  for (const spec of Object.values(MODEL_FOR)) if (spec.model === id) return spec.vendor;
+  if (id in CLAUDE_FALLBACK_PRICES) return "anthropic";
+  return undefined;
 }
 
 /** The spec's prices in force at `now` (the latest priceChanges entry whose day has begun, UTC). */
