@@ -11,7 +11,8 @@ import type { CheckResult, Finding } from "./checks";
 import type { CalcFinding } from "./calc";
 import type { ModelReply } from "./types";
 import { visibleStage } from "../config";
-import { parseArgs, processItem, runPipeline, selectItems, type Deps, type Reader, type Steps, type Writer } from "./run";
+import type { ModelImage } from "./types";
+import { sniffImage, parseArgs, processItem, runPipeline, selectItems, type Deps, type Reader, type Steps, type Writer } from "./run";
 
 /** assert.ok with a message always: without one, Node re-parses the transformed source to build it, which stalls under tsx. */
 const ok = (value: unknown, message: string) => assert.ok(value, message);
@@ -62,18 +63,20 @@ class FakeStore implements Reader, Writer {
     return i;
   }
   async saveRun(run: RunDoc) { this.runs.set(`${run.itemId}|${run.runId}`, structuredClone(run)); }
-  async flagItemData(id: string, note: string, e: Expect) {
+  async flagItemData(id: string, note: string, e: Expect, runId: string) {
     const i = this.unchanged(id, e);
     this.itemWrites++;
     Object.assign(i, { stage: "item_data", updatedAt: new Date(i.updatedAt.getTime() + 1) });
-    if (i.pipeline) delete i.pipeline.heldFor;
+    i.pipeline = { ...(i.pipeline ?? { flags: [] }), runId, wroteStage: "item_data" };
+    delete i.pipeline.heldFor;
     this.activity.push({ itemId: id, type: "verdict", verdict: "item_data", body: note });
   }
-  async raiseKeyQuery(id: string, ourAnswer: string, workingMd: string, e: Expect) {
+  async raiseKeyQuery(id: string, ourAnswer: string, workingMd: string, e: Expect, runId: string) {
     const i = this.unchanged(id, e);
     this.itemWrites++;
     Object.assign(i, { stage: "key_query", keyQuery: { ourAnswer, workingHtml: workingMd, raisedAt: new Date() }, updatedAt: new Date(i.updatedAt.getTime() + 1) });
-    if (i.pipeline) delete i.pipeline.heldFor;
+    i.pipeline = { ...(i.pipeline ?? { flags: [] }), runId, wroteStage: "key_query" };
+    delete i.pipeline.heldFor;
   }
   async saveSolution(id: string, s: { sections: { kind: SectionKind; md: string }[]; evelynAnswer: string; topic?: string; pipeline: PipelineDoc; note?: string; runId: string }, e: Expect) {
     const i = this.unchanged(id, e);
@@ -133,9 +136,10 @@ function steps(over: Partial<Steps> = {}): { steps: Steps; calls: Calls } {
 }
 
 function deps(store: FakeStore, s: Steps, extra: Partial<Deps> = {}): Deps {
-  return { reader: store, writer: store, steps: s, rules: [], images: async () => [], assetExists: () => true, now: () => new Date(), ...extra };
+  return { reader: store, writer: store, steps: s, rules: [], images: async (_i, files) => files.map(() => ({ mime: "image/png", data: PNG })), assetExists: () => true, now: () => new Date(), ...extra };
 }
 
+const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13]);
 const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", code: "rule_broken", ruleId: "R-x", detail: `broken ${n}`, quote: "Short 1" } as Finding], cost: 0.05, model: "m-audit" });
 
 (async () => {
@@ -786,6 +790,110 @@ const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", co
     equal(visibleStage("received", "reviewer"), "received", "held Received item: Castle Rock sees Received (gap noted in the report)");
     equal(visibleStage("drafting", "reviewer"), "drafting", "held Drafting item: Castle Rock sees Drafting");
     equal(visibleStage("ready", "tech"), "drafting", "ready shows as Drafting");
+  }
+
+  // --- round 2, I3b: a person's identical change is never taken for this run's own write ---
+  for (const kind of ["item_data", "key_query"] as const) {
+    const store = new FakeStore([item(kind === "item_data" ? { questionHtml: "" } : {})]);
+    const C: Answer = { kind: "choice", letters: ["C"] };
+    const throwing: Writer = Object.assign(Object.create(store), {
+      saveRun: (r: RunDoc) => store.saveRun(r),
+      flagItemData: async () => { throw new Error("write died"); },
+      raiseKeyQuery: async () => { throw new Error("write died"); },
+    });
+    const { steps: s } = steps({ agreeOnAnswer: async () => ({ decision: { outcome: "key_query", answer: C }, solves: solves(C), cost: 0.2 }) });
+    const r1 = await processItem("100", "r1", { ...deps(store, s), writer: throwing });
+    equal(r1.result, "failed", `${kind}: the write threw`);
+    equal(store.runs.get("100|r1")!.intent?.writing, kind, `${kind}: intent was saved`);
+    // a person makes the same stage change (same version, new updatedAt)
+    Object.assign(store.items.get("100")!, { stage: kind, updatedAt: new Date(T0.getTime() + 500) });
+    const r2 = await processItem("100", "r1", deps(store, s));
+    equal(r2.result, "superseded", `${kind}: a person's identical change → superseded`);
+    equal(store.suggestions.length, 0, `${kind}: zero suggestions`);
+    ok(!r2.ownWriteLanded, `${kind}: not marked as ours`);
+  }
+  {
+    // the genuine case for a key query: the write landed (marker set), the suggestion did not
+    const store = new FakeStore([item()]);
+    const C: Answer = { kind: "choice", letters: ["C"] };
+    let fail = true;
+    const crashing: Writer = Object.assign(Object.create(store), {
+      saveRun: (r: RunDoc) => store.saveRun(r),
+      raiseKeyQuery: (...a: Parameters<Writer["raiseKeyQuery"]>) => store.raiseKeyQuery(...a),
+      suggest: async (...a: Parameters<Writer["suggest"]>) => { if (fail) { fail = false; throw new Error("crash"); } return store.suggest(...a); },
+    });
+    const { steps: s } = steps({ agreeOnAnswer: async () => ({ decision: { outcome: "key_query", answer: C }, solves: solves(C), cost: 0.2 }) });
+    await processItem("100", "r1", { ...deps(store, s), writer: crashing });
+    const r2 = await processItem("100", "r1", { ...deps(store, s), writer: crashing });
+    equal(r2.result, "key_query", "own key query write recognised");
+    deepEqual(store.suggestions.map((x) => x.kind), ["keys_queried"], "suggested once");
+  }
+  // --- round 2, minor 4: our write landed, then a person changed the item → superseded, history truthful ---
+  {
+    const store = new FakeStore([item({ questionHtml: "" })]);
+    const crashing: Writer = Object.assign(Object.create(store), {
+      saveRun: (r: RunDoc) => store.saveRun(r),
+      flagItemData: (...a: Parameters<Writer["flagItemData"]>) => store.flagItemData(...a),
+      suggest: async () => { throw new Error("crash"); },
+    });
+    await processItem("100", "r1", { ...deps(store, steps().steps), writer: crashing });
+    Object.assign(store.items.get("100")!, { stage: "received", updatedAt: new Date(T0.getTime() + 900) }); // re-sent by the client
+    const r2 = await processItem("100", "r1", deps(store, steps().steps));
+    equal(r2.result, "superseded", "superseded");
+    equal(r2.ownWriteLanded, true, "own write recorded as landed");
+    equal(r2.intent?.writing, "item_data", "intent kept");
+    equal(store.suggestions.length, 0, "no suggestion for a changed item");
+  }
+
+  // --- round 2, R7: images by allow list and by content ---
+  {
+    const SVG = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
+    const BYTES: Record<string, Uint8Array> = {
+      png: PNG,
+      jpg: new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 0x10]),
+      gif: new TextEncoder().encode("GIF89a\x01\x00"),
+      webp: new Uint8Array([0x52, 0x49, 0x46, 0x46, 4, 0, 0, 0, 0x57, 0x45, 0x42, 0x50]),
+    };
+    const withFile = (file: string) => item({ questionHtml: `<p>See</p><img src="/api/keystone/asset/100/${file}" alt="f"/>` });
+    const refusedCases: [string, Uint8Array][] = [["fig.avif", PNG], ["fig.jfif", BYTES.jpg], ["fig", PNG], ["fig.svg", SVG], ["fig.png", SVG], ["FIG.PNG", BYTES.gif.slice(0, 2)]];
+    for (const [file, data] of refusedCases) {
+      const store = new FakeStore([withFile(file)]);
+      const { steps: s, calls } = steps();
+      const run = await processItem("100", "r1", deps(store, s, { images: async (_i, files) => files.map(() => ({ mime: "image/png", data })) }));
+      equal(run.result, "held", `${file}: held`);
+      deepEqual(run.flags, ["type_not_supported"], `${file}: type_not_supported`);
+      ok(run.filesNotSent?.includes(file), `${file}: named on the run`);
+      equal(calls.agreeOnAnswer, 0, `${file}: 0 solves`);
+      equal(store.solutions.length, 0, `${file}: nothing written`);
+    }
+    for (const [ext, data] of Object.entries(BYTES)) {
+      const file = `fig.${ext.toUpperCase()}`;
+      const store = new FakeStore([withFile(file)]);
+      let sent: ModelImage[] = [];
+      const { steps: s, calls } = steps({
+        agreeOnAnswer: async (_it, images) => { sent = images; return { decision: { outcome: "pass", answer: B, confirm: false }, solves: solves(B), cost: 0.2 }; },
+      });
+      const run = await processItem("100", "r1", deps(store, s, { images: async (_i, files) => files.map(() => ({ mime: "image/png", data })) }));
+      equal(run.result, "ready", `${file}: solved`);
+      equal(calls.agreeOnAnswer, 1, `${file}: one solve`);
+      equal(sent.length, 1, `${file}: the figure was sent`);
+      equal(sent[0].mime, sniffImage(data), `${file}: sent as what its bytes are`);
+    }
+    equal(sniffImage(BYTES.jpg), "image/jpeg", "jpeg sniffed");
+    equal(sniffImage(BYTES.webp), "image/webp", "webp sniffed");
+    equal(sniffImage(SVG), null, "svg text is no allowed image");
+    // a package resource the question does not show: figure-like holds, audio passes through (recorded)
+    {
+      const store = new FakeStore([item({ qti: { apip: "", metadata: "", resources: ["resources/talk.mp3"] } })]);
+      const { steps: s, calls } = steps();
+      const run = await processItem("100", "r1", deps(store, s));
+      equal(run.result, "ready", "audio resource passes");
+      deepEqual(run.filesNotSent, ["talk.mp3"], "and is recorded");
+      equal(calls.agreeOnAnswer, 1, "solved");
+      const st2 = new FakeStore([item({ qti: { apip: "", metadata: "", resources: ["resources/extra.avif"] } })]);
+      const r2 = await processItem("100", "r1", deps(st2, steps().steps));
+      deepEqual(r2.flags, ["type_not_supported"], "figure-like resource holds");
+    }
   }
 
   // --- selection ---

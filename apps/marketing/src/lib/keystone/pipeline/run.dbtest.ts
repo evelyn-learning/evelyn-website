@@ -17,7 +17,7 @@ delete process.env.KEYSTONE_PIPELINE_LIVE;
 
 const ok = (value: unknown, message: string) => assert.ok(value, message);
 const equal = (a: unknown, b: unknown, message: string) => assert.equal(a, b, message);
-const ids = ["991301", "991302", "991303", "991304", "991305", "991306", "991307", "991308", "991309"];
+const ids = ["991301", "991302", "991303", "991304", "991305", "991306", "991307", "991308", "991309", "991310"];
 const BATCH = "dbtest-run-1";
 
 (async () => {
@@ -119,8 +119,8 @@ const BATCH = "dbtest-run-1";
     const sections = [{ kind: "short" as const, md: "x" }];
     await assert.rejects(() => w.saveSolution("991304", { sections, evelynAnswer: "B", pipeline: { flags: [] }, runId: "run-stale" }, stale), store.SupersededError, "stale save rejected");
     equal(await Solution.countDocuments({ itemId: "991304" }), 0, "no solution row left behind");
-    await assert.rejects(() => w.raiseKeyQuery("991304", "C", "w", stale), store.SupersededError, "stale key query rejected");
-    await assert.rejects(() => w.flagItemData("991304", "n", stale), store.SupersededError, "stale item_data rejected");
+    await assert.rejects(() => w.raiseKeyQuery("991304", "C", "w", stale, "run-stale"), store.SupersededError, "stale key query rejected");
+    await assert.rejects(() => w.flagItemData("991304", "n", stale, "run-stale"), store.SupersededError, "stale item_data rejected");
     await assert.rejects(() => w.setPipeline("991304", { flags: ["step_failed"], heldFor: "praveen" }, stale), store.SupersededError, "stale pipeline rejected");
     const after = (await Item.findOne({ itemId: "991304" }).lean())!;
     ok(after.stage === "received" && after.version === 0 && !after.keyQuery && !after.pipeline, "item untouched");
@@ -141,12 +141,14 @@ const BATCH = "dbtest-run-1";
     // item_data / key query clear a previous hold for Praveen but keep the flag history
     const held = { flags: ["step_failed"], heldFor: "praveen" };
     await mk("991306", { pipeline: held });
-    await w.flagItemData("991306", "note", { stage: "received", version: 0, updatedAt: T0 });
+    await w.flagItemData("991306", "note", { stage: "received", version: 0, updatedAt: T0 }, "run-6");
     const it6 = (await Item.findOne({ itemId: "991306" }).lean())!;
     ok(it6.stage === "item_data" && it6.pipeline?.heldFor === undefined && it6.pipeline?.flags.join() === "step_failed", "item_data clears heldFor, keeps flags");
+    ok(it6.pipeline?.runId === "run-6" && it6.pipeline?.wroteStage === "item_data", "run marker written in the same update");
     await mk("991307", { pipeline: held });
-    await w.raiseKeyQuery("991307", "C", "working", { stage: "received", version: 0, updatedAt: T0 });
+    await w.raiseKeyQuery("991307", "C", "working", { stage: "received", version: 0, updatedAt: T0 }, "run-7");
     const it7 = (await Item.findOne({ itemId: "991307" }).lean())!;
+    ok(it7.pipeline?.runId === "run-7" && it7.pipeline?.wroteStage === "key_query", "key query marker written");
     ok(it7.stage === "key_query" && it7.pipeline?.heldFor === undefined && it7.pipeline?.flags.join() === "step_failed", "key query clears heldFor, keeps flags");
 
     // orphans: a crash between the solution row and the item update
@@ -167,6 +169,12 @@ const BATCH = "dbtest-run-1";
     const s9 = await Solution.find({ itemId: "991309" }).lean();
     ok(s9.length === 1 && s9[0].runId === "run-own" && s9[0].sections.length === 1, "own row reused and filled");
     equal((await Item.findOne({ itemId: "991309" }).lean())!.version, 1, "item moved to v1");
+    // a row with no readable createdAt (NaN age) counts as young: kept, never deleted
+    await mk("991310");
+    await Solution.collection.insertOne({ itemId: "991310", version: 1, sections: [], author: "x" });
+    await assert.rejects(() => store.saveSolution("991310", sections, actor, { submit: false }), /E11000|duplicate/, "kept: the save collides instead of deleting it");
+    await store.clearOrphans("991310", 0);
+    equal(await Solution.countDocuments({ itemId: "991310" }), 1, "row without createdAt kept");
     console.log("run.dbtest ok");
   } finally {
     await clean();

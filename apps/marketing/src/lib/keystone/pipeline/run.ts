@@ -40,6 +40,7 @@ import { callModel, redact } from "./models";
 import { suggestFor } from "./outbox";
 import { agreeOnAnswer, type Solves } from "./solve";
 import type { ModelDeps, ModelImage, ModelReply } from "./types";
+import type { ImageType } from "./vendors/common";
 import { loadRules, writeSolution, type Draft, type Rule, type WriteOpts } from "./write";
 
 export type { Flag, RunDoc, Step } from "../db";
@@ -63,8 +64,9 @@ export interface Reader {
 /** Everything the run writes. Item writes are conditional on `expect` and throw SupersededError on a mismatch. */
 export interface Writer {
   saveRun(run: RunDoc): Promise<void>;
-  flagItemData(itemId: string, note: string, expect: Expect): Promise<void>;
-  raiseKeyQuery(itemId: string, ourAnswer: string, workingMd: string, expect: Expect): Promise<void>;
+  /** `runId` is stored on the item (pipeline.runId / wroteStage) in the same conditional update. */
+  flagItemData(itemId: string, note: string, expect: Expect, runId: string): Promise<void>;
+  raiseKeyQuery(itemId: string, ourAnswer: string, workingMd: string, expect: Expect, runId: string): Promise<void>;
   saveSolution(
     itemId: string,
     s: { sections: { kind: SectionKind; md: string }[]; evelynAnswer: string; topic?: string; pipeline: PipelineDoc; note?: string; runId: string },
@@ -91,8 +93,8 @@ export type Deps = {
   writer: Writer;
   steps: Steps;
   rules: Rule[];
-  /** The question's raster images for the models; `files` are the names the question refers to.
-   *  Throws when a named file cannot be read: an image is never dropped silently. */
+  /** The images for the models, one per name in `files` and in that order (the run checks each file's
+   *  bytes and sends it as the format they show). Throws when a named file cannot be read: never dropped. */
   images(item: ItemDoc, files: string[]): Promise<ModelImage[]>;
   /** Whether an asset file of the item is available locally. Undefined: no local asset folder; the image check is skipped (recorded as assetsChecked false). */
   assetExists?: (itemId: string, file: string) => boolean;
@@ -164,8 +166,13 @@ export async function processItem(itemId: string, runId: string, deps: Deps): Pr
     delete run.result;
     delete run.error;
     try {
-      if (await ownWriteLanded(stored, first, deps)) await finishOwnWrite(run, first, deps);
-      else run.result = "superseded";
+      const own = await ownWrite(stored, first, deps);
+      if (own === "landed") await finishOwnWrite(run, first, deps);
+      else {
+        run.result = "superseded";
+        // Our write did land; a person changed the item after it. Kept truthful in the history.
+        if (own === "landed_then_changed") run.ownWriteLanded = true;
+      }
     } catch (e) {
       run.result = "failed";
       run.error = redact(e instanceof Error ? e.message : String(e)).slice(0, 500);
@@ -195,7 +202,9 @@ export async function processItem(itemId: string, runId: string, deps: Deps): Pr
       try {
         const cur = await deps.reader.item(itemId);
         if (cur && !NEVER_TOUCH.includes(cur.stage) && sameFrom(run.startedFrom, cur)) {
-          await deps.writer.setPipeline(itemId, { ...(cur.pipeline ?? {}), flags: run.flags, heldFor: "praveen" }, run.startedFrom);
+          const { wroteStage: _stale, ...kept } = cur.pipeline ?? { flags: [] };
+          void _stale; // a stage marker belongs to the write that made it, never carried over
+          await deps.writer.setPipeline(itemId, { ...kept, flags: run.flags, heldFor: "praveen", runId }, run.startedFrom);
         }
       } catch {
         // superseded or unreachable: the run record still says failed
@@ -208,12 +217,24 @@ export async function processItem(itemId: string, runId: string, deps: Deps): Pr
   return run;
 }
 
-/** Whether the item now is exactly what this run's recorded final write would have left. */
-async function ownWriteLanded(run: RunDoc, cur: ItemDoc, deps: Deps): Promise<boolean> {
+/**
+ * Whether this run's recorded final write (intent) is the change found on resume. The write's own marker
+ * must be there: the solution row of that version carries this runId, or (item_data / key_query) the item's
+ * pipeline.runId and wroteStage were set by this run in the same update. Stage and version alone never
+ * count: a person making the same change is not this run's write.
+ *   landed               marker present and the item is as the write left it
+ *   landed_then_changed  marker present, but the item changed again after it
+ *   not_ours             no marker from this run
+ */
+async function ownWrite(run: RunDoc, cur: ItemDoc, deps: Deps): Promise<"landed" | "landed_then_changed" | "not_ours"> {
   const i = run.intent;
-  if (!i || cur.stage !== i.stage || (cur.version || 0) !== i.toVersion) return false;
-  if (i.writing === "ready" || i.writing === "held") return (await deps.reader.solutionRunId(run.itemId, i.toVersion))?.runId === run.runId;
-  return true;
+  if (!i) return "not_ours";
+  const marked =
+    i.writing === "ready" || i.writing === "held"
+      ? (await deps.reader.solutionRunId(run.itemId, i.toVersion))?.runId === run.runId
+      : cur.pipeline?.runId === run.runId && cur.pipeline?.wroteStage === i.stage;
+  if (!marked) return "not_ours";
+  return cur.stage === i.stage && (cur.version || 0) === i.toVersion ? "landed" : "landed_then_changed";
 }
 
 /** The bookkeeping after this run's own final write landed (a crash came between the write and its suggestion). */
@@ -227,11 +248,21 @@ async function finishOwnWrite(run: RunDoc, item: ItemDoc, deps: Deps) {
   run.result = i.writing;
 }
 
-/** Raster images the solvers' image input takes. */
-const RASTER = new Set(["png", "jpg", "jpeg", "gif", "webp"]);
-/** Figures the solvers cannot be given: an item that needs one is not solved. */
-const NON_RASTER_FIGURE = new Set(["svg", "svgz", "tif", "tiff", "bmp", "eps", "emf", "wmf", "pdf", "ai", "heic"]);
+/** File names the solvers' image input takes: exactly vendors/common.ts IMAGE_TYPES (png, jpeg, gif, webp). */
+const SENDABLE = new Set(["png", "jpg", "jpeg", "gif", "webp"]);
+/** A package resource the question does not show that still looks like a figure: the item is not solved. */
+const FIGURE_LIKE = new Set(["svg", "svgz", "tif", "tiff", "bmp", "eps", "emf", "wmf", "pdf", "ai", "heic", "heif", "avif", "jfif", "jxl", "ico"]);
 const extOf = (f: string) => path.extname(f).slice(1).toLowerCase();
+
+/** The image format of `data` by its first bytes (PNG, JPEG, GIF, WEBP), or null: a file is sent only as what it is. */
+export function sniffImage(data: Uint8Array): ImageType | null {
+  const at = (i: number, bytes: number[]) => bytes.every((b, k) => data[i + k] === b);
+  if (at(0, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) return "image/png";
+  if (at(0, [0xff, 0xd8, 0xff])) return "image/jpeg";
+  if (at(0, [0x47, 0x49, 0x46, 0x38]) && (data[4] === 0x37 || data[4] === 0x39) && data[5] === 0x61) return "image/gif";
+  if (at(0, [0x52, 0x49, 0x46, 0x46]) && at(8, [0x57, 0x45, 0x42, 0x50])) return "image/webp";
+  return null;
+}
 
 async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Promise<void> {
   const { itemId } = item;
@@ -278,7 +309,7 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
     if (wouldBe) run.wouldBe = wouldBe;
     run.flags = [...flags];
     await guard();
-    await writer.setPipeline(itemId, { flags: [...flags], heldFor: "praveen" }, expect);
+    await writer.setPipeline(itemId, { flags: [...flags], heldFor: "praveen", runId: run.runId }, expect);
     return finish("held");
   }
   async function toItemData(findings: IntakeFinding[]): Promise<never> {
@@ -287,7 +318,7 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
     const safe = findings.map((f) => (f.code === "model_missing" && namesMaker(f.detail) ? { ...f, detail: "part of the question" } : f));
     await guard();
     await intend("item_data", "item_data", expect.version);
-    await writer.flagItemData(itemId, intakeNote(safe), expect);
+    await writer.flagItemData(itemId, intakeNote(safe), expect, run.runId);
     await writer.suggest("items_need_data", [itemId], item.batchId);
     run.suggested = true;
     return finish("item_data");
@@ -298,7 +329,7 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
     if (!working) return hold(["step_failed"], "key_query");
     await guard();
     await intend("key_query", "key_query", expect.version);
-    await writer.raiseKeyQuery(itemId, answerText(answer), working, expect);
+    await writer.raiseKeyQuery(itemId, answerText(answer), working, expect, run.runId);
     await writer.suggest("keys_queried", [itemId], item.batchId);
     run.suggested = true;
     return finish("key_query");
@@ -340,15 +371,35 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
   const course = sheetCourse;
   if (!sectionTitle("diploma", course)) return hold(["section_title_unset"]);
 
-  // Images: never solve an image item blind, and never drop a figure silently.
-  const raster = [...new Set(files.filter((f) => RASTER.has(extOf(f))))];
-  const notSent = [...new Set(files.filter((f) => !RASTER.has(extOf(f))))];
-  if (notSent.length) run.filesNotSent = notSent;
-  if (notSent.some((f) => NON_RASTER_FIGURE.has(extOf(f)))) return hold(["type_not_supported"]);
-  if (raster.length && !deps.assetExists) {
-    throw new Error(`the question refers to ${raster.length} file(s) of images but no local asset folder was given (--assets-dir or --pull-assets); not solved without them`);
+  // Images: never solve an image item blind, and never let a figure go out missing or broken.
+  // The question's own images (stem, passages, options, choices): intakeCode without the package resource list.
+  const shownFiles: string[] = [];
+  intakeCode({ ...item, qti: item.qti ? { ...item.qti, resources: [] } : undefined }, (f) => { shownFiles.push(f); return true; });
+  const shown = [...new Set(shownFiles)];
+  const resourceOnly = [...new Set(files)].filter((f) => !shown.includes(f));
+  // Shown as an image: only the formats the solvers' image input takes (allow list, by name and by content).
+  // Package resources the question does not show: sendable ones are sent, figure-like ones hold, others pass.
+  const refused = [...shown.filter((f) => !SENDABLE.has(extOf(f))), ...resourceOnly.filter((f) => FIGURE_LIKE.has(extOf(f)))];
+  const passThrough = resourceOnly.filter((f) => !SENDABLE.has(extOf(f)) && !FIGURE_LIKE.has(extOf(f)));
+  const toSend = [...shown, ...resourceOnly].filter((f) => SENDABLE.has(extOf(f)));
+  if (refused.length || passThrough.length) run.filesNotSent = [...refused, ...passThrough];
+  if (refused.length) return hold(["type_not_supported"]);
+  if (toSend.length && !deps.assetExists) {
+    throw new Error(`the question refers to ${toSend.length} file(s) of images but no local asset folder was given (--assets-dir or --pull-assets); not solved without them`);
   }
-  const images = raster.length ? await deps.images(item, raster) : [];
+  const loaded = toSend.length ? await deps.images(item, toSend) : [];
+  if (loaded.length !== toSend.length) throw new Error(`images: ${loaded.length} read for ${toSend.length} file(s); an image is never dropped`);
+  const images: ModelImage[] = [];
+  const mislabelled: string[] = [];
+  loaded.forEach((img, k) => {
+    const mime = sniffImage(img.data);
+    if (mime) images.push({ mime, data: img.data });
+    else mislabelled.push(toSend[k]);
+  });
+  if (mislabelled.length) {
+    run.filesNotSent = [...(run.filesNotSent ?? []), ...mislabelled];
+    return hold(["type_not_supported"]);
+  }
 
   // [1] Intake, model part.
   if (run.mode === "fresh") {
@@ -488,7 +539,7 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
   async function saveDraft(draft: Draft, a: Answer, passed: boolean): Promise<never> {
     run.flags = [...flags];
     const pipeline: PipelineDoc = {
-      flags: [...flags], ...(flags.size ? { heldFor: "praveen" as const } : {}), ...(passed ? { passedAt: now() } : {}), ...(answerToConfirm ? { answerToConfirm: true } : {}),
+      flags: [...flags], runId: run.runId, ...(flags.size ? { heldFor: "praveen" as const } : {}), ...(passed ? { passedAt: now() } : {}), ...(answerToConfirm ? { answerToConfirm: true } : {}),
     };
     await guard();
     await intend(flags.size ? "held" : "ready", "ready", expect.version + 1);
@@ -596,8 +647,8 @@ export function mongoWriter(actor: Actor): Writer {
   // Every item write below is conditional and throws SupersededError on a mismatch.
   return {
     saveRun: (run) => storeSaveRun(run),
-    flagItemData: (itemId, note, expect) => flagItemDataIfUnchanged(itemId, note, actor, expect),
-    raiseKeyQuery: async (itemId, ourAnswer, workingMd, expect) => { await storeRaiseKeyQuery(itemId, ourAnswer, workingMd, actor, { expect }); },
+    flagItemData: (itemId, note, expect, runId) => flagItemDataIfUnchanged(itemId, note, actor, expect, runId),
+    raiseKeyQuery: async (itemId, ourAnswer, workingMd, expect, runId) => { await storeRaiseKeyQuery(itemId, ourAnswer, workingMd, actor, { expect, runId }); },
     saveSolution: (itemId, s, expect) =>
       storeSaveSolution(itemId, s.sections, actor, {
         submit: false, stage: "ready", note: s.note, expect, runId: s.runId,

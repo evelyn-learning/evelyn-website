@@ -117,7 +117,9 @@ export async function clearOrphans(itemId: string, itemVersion: number, ownRunId
   for (const row of rows) {
     if (ownRunId && row.runId === ownRunId && row.version === itemVersion + 1) { ownId = row._id; continue; }
     if (await Activity.exists({ itemId, version: row.version, type: "revision" })) continue;
-    if (now.getTime() - new Date(row.createdAt).getTime() < ORPHAN_AGE_MS) continue;
+    // A missing or unreadable createdAt (NaN age) counts as young: kept.
+    const age = now.getTime() - new Date(row.createdAt as Date).getTime();
+    if (!(age >= ORPHAN_AGE_MS)) continue;
     await Solution.deleteOne({ _id: row._id });
   }
   return { ownId };
@@ -189,7 +191,7 @@ export async function releaseSolution(itemId: string, actor: Actor, opts: { log?
  * as a key query instead of writing a solution. The working is stored as HTML.
  * Nothing here releases a solution.
  */
-export async function raiseKeyQuery(itemId: string, ourAnswer: string, workingMd: string, actor: Actor, opts: { expect?: Expect } = {}) {
+export async function raiseKeyQuery(itemId: string, ourAnswer: string, workingMd: string, actor: Actor, opts: { expect?: Expect; runId?: string } = {}) {
   const { Item } = await ks();
   const item = await Item.findOne({ itemId }).select("itemId").lean();
   if (!item) throw new Error(`item ${itemId} not found`);
@@ -197,8 +199,11 @@ export async function raiseKeyQuery(itemId: string, ourAnswer: string, workingMd
   const keyQuery = { ourAnswer: ourAnswer.trim(), workingHtml: renderMarkdown(workingMd, { resolveImage: imageResolver(itemId) }), raisedAt: now };
   // With `expect` (the pipeline): only if the item is still as the run found it.
   // The pipeline's key query: the item now waits on the client, not on Praveen (flags kept as history).
+  // With runId, the same update marks the write as that run's (pipeline.runId / wroteStage), so a resume can
+  // tell its own landed write from a person's identical change.
   const unset = opts.expect ? { $unset: { "pipeline.heldFor": "" } } : {};
-  const r = await Item.updateOne(opts.expect ? unchangedFilter(itemId, opts.expect) : { itemId }, { $set: { stage: "key_query", keyQuery, updatedAt: now }, ...unset });
+  const mark = opts.runId ? { "pipeline.runId": opts.runId, "pipeline.wroteStage": "key_query" } : {};
+  const r = await Item.updateOne(opts.expect ? unchangedFilter(itemId, opts.expect) : { itemId }, { $set: { stage: "key_query", keyQuery, updatedAt: now, ...mark }, ...unset });
   if (opts.expect && r.matchedCount !== 1) throw new SupersededError(itemId);
   await log({ itemId, type: "stage", stage: "key_query", body: "Queried the key.", username: actor.username, name: actor.name, role: actor.role, createdAt: now });
 }
@@ -242,11 +247,14 @@ export async function setVerdict(itemId: string, verdict: Verdict, comment: stri
  * with a verdict row by Evelyn carrying the note for Castle Rock's technical
  * person. Only if the item is still as `expect` found it (else SupersededError).
  */
-export async function flagItemDataIfUnchanged(itemId: string, note: string, actor: Actor, expect: Expect) {
+export async function flagItemDataIfUnchanged(itemId: string, note: string, actor: Actor, expect: Expect, runId?: string) {
   const { Item } = await ks();
   const now = new Date();
   // Now waiting on the client, not on Praveen: heldFor cleared, flags kept as history.
-  const r = await Item.updateOne(unchangedFilter(itemId, expect), { $set: { stage: "item_data", updatedAt: now }, $unset: { "pipeline.heldFor": "" } });
+  const r = await Item.updateOne(unchangedFilter(itemId, expect), {
+    $set: { stage: "item_data", updatedAt: now, ...(runId ? { "pipeline.runId": runId, "pipeline.wroteStage": "item_data" } : {}) },
+    $unset: { "pipeline.heldFor": "" },
+  });
   if (r.matchedCount !== 1) throw new SupersededError(itemId);
   await log({ itemId, version: expect.version || undefined, type: "verdict", verdict: "item_data", body: note, username: actor.username, name: actor.name, role: actor.role, createdAt: now });
 }

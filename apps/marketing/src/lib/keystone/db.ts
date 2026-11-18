@@ -44,7 +44,18 @@ export type Flag =
   | "answer_to_confirm";
 
 /** What the solutions pipeline last decided about an item. heldFor is set whenever flags is not empty. */
-export type PipelineDoc = { flags: Flag[]; passedAt?: Date; releaseAt?: Date; heldFor?: "praveen"; /** no key came with the item: the reviewer confirms our answer */ answerToConfirm?: boolean };
+export type PipelineDoc = {
+  flags: Flag[];
+  passedAt?: Date;
+  releaseAt?: Date;
+  heldFor?: "praveen";
+  /** no key came with the item: the reviewer confirms our answer */
+  answerToConfirm?: boolean;
+  /** The run that made the last pipeline write to the item (set in the same update as that write). */
+  runId?: string;
+  /** item_data / key_query when that write was the pipeline's own stage change; absent otherwise. */
+  wroteStage?: Stage;
+};
 
 export type Step = "intake" | "course" | "cause" | "solve" | "write" | "calc" | "working" | "audit" | "render";
 export type RunResult = "ready" | "held" | "item_data" | "key_query" | "course_missing" | "superseded" | "failed";
@@ -84,8 +95,10 @@ export type RunDoc = {
   intent?: { writing: RunResult; stage: Stage; toVersion: number; flags: Flag[]; at: Date };
   /** The outbox suggestion for this run's result was made. */
   suggested?: boolean;
-  /** Files the question refers to that cannot be sent to the solvers (non-raster figures). */
+  /** Files the question refers to that are not sent to the solvers (with why the item was or was not held). */
   filesNotSent?: string[];
+  /** Resume found this run's own final write had landed, and the item changed after it (result superseded). */
+  ownWriteLanded?: boolean;
 };
 
 export type ItemDoc = {
@@ -317,7 +330,7 @@ function defineModels(conn: Connection): Models {
     batchId: String,
     receivedAt: Date,
     pipeline: {
-      type: new Schema({ flags: [String], passedAt: Date, releaseAt: Date, heldFor: String, answerToConfirm: Boolean }, { _id: false }),
+      type: new Schema({ flags: [String], passedAt: Date, releaseAt: Date, heldFor: String, answerToConfirm: Boolean, runId: String, wroteStage: String }, { _id: false }),
       required: false,
     },
     showcase: { type: Boolean, default: false },
