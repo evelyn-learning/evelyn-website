@@ -39,10 +39,12 @@ export type Flag =
   | "step_failed"
   | "sample"
   /** match, gapMatch, order or inlineChoice: no real sample of these kinds verified end to end yet. */
-  | "unverified_type";
+  | "unverified_type"
+  /** The solvers agree but the client supplied no key: the answer is ours alone. */
+  | "answer_to_confirm";
 
 /** What the solutions pipeline last decided about an item. heldFor is set whenever flags is not empty. */
-export type PipelineDoc = { flags: Flag[]; passedAt?: Date; releaseAt?: Date; heldFor?: "praveen" };
+export type PipelineDoc = { flags: Flag[]; passedAt?: Date; releaseAt?: Date; heldFor?: "praveen"; /** no key came with the item: the reviewer confirms our answer */ answerToConfirm?: boolean };
 
 export type Step = "intake" | "course" | "cause" | "solve" | "write" | "calc" | "working" | "audit" | "render";
 export type RunResult = "ready" | "held" | "item_data" | "key_query" | "course_missing" | "superseded" | "failed";
@@ -78,6 +80,12 @@ export type RunDoc = {
   assetsChecked: boolean;
   dryRun?: boolean;
   error?: string;
+  /** Saved just before the run's final item write: what the item will look like once it lands, so a resume can tell its own write from someone else's change. */
+  intent?: { writing: RunResult; stage: Stage; toVersion: number; flags: Flag[]; at: Date };
+  /** The outbox suggestion for this run's result was made. */
+  suggested?: boolean;
+  /** Files the question refers to that cannot be sent to the solvers (non-raster figures). */
+  filesNotSent?: string[];
 };
 
 export type ItemDoc = {
@@ -141,6 +149,8 @@ export type SolutionDoc = {
   createdAt: Date;
   /** When this version was released to review; unset while it is held (stage `ready`, or a draft). */
   releasedAt?: Date;
+  /** The pipeline run that wrote this version (lets a resumed run finish its own write). */
+  runId?: string;
 };
 
 export type ActivityDoc = {
@@ -213,6 +223,38 @@ declare global {
 const cache: Cache = global.keystoneDb ?? { conn: null, promise: null, models: null };
 global.keystoneDb = cache;
 
+/** KEYSTONE_READONLY=1 (set by the pipeline script for every dry run, before the first connection). */
+export function isReadOnly(): boolean {
+  return process.env.KEYSTONE_READONLY === "1";
+}
+
+/**
+ * The one place the connection options come from. Read-only: mongoose creates no
+ * collection and no index on connect (autoCreate / autoIndex off for every model; no
+ * schema here sets either, so the connection's setting is the one that applies).
+ * Writing runs and the app keep the defaults (indexes built on connect).
+ */
+export function connectOptions(): { dbName: string; bufferCommands: false; autoIndex?: false; autoCreate?: false } {
+  return { dbName: KEYSTONE_DB, bufferCommands: false, ...(isReadOnly() ? { autoIndex: false as const, autoCreate: false as const } : {}) };
+}
+
+export const READ_ONLY_MESSAGE = "read-only run: database writes are disabled (KEYSTONE_READONLY=1)";
+const WRITE_QUERY_OPS = ["updateOne", "updateMany", "deleteOne", "deleteMany", "findOneAndUpdate", "findOneAndDelete", "findOneAndReplace", "replaceOne"];
+
+/** Belt for read-only mode: every write entry point of a model fails loudly instead of landing. */
+function blockWrites(schema: Schema) {
+  const stop = function (next: (err?: Error) => void) {
+    next(new Error(READ_ONLY_MESSAGE));
+  };
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  schema.pre(WRITE_QUERY_OPS as any, stop as any);
+  schema.pre(["updateOne", "deleteOne"] as any, { document: true, query: false }, stop as any);
+  schema.pre("save", stop as any);
+  schema.pre("insertMany", stop as any);
+  schema.pre("bulkWrite" as any, stop as any);
+  /* eslint-enable @typescript-eslint/no-explicit-any */
+}
+
 function defineModels(conn: Connection): Models {
   const User = new Schema<UserDoc>({
     username: { type: String, required: true, unique: true },
@@ -275,7 +317,7 @@ function defineModels(conn: Connection): Models {
     batchId: String,
     receivedAt: Date,
     pipeline: {
-      type: new Schema({ flags: [String], passedAt: Date, releaseAt: Date, heldFor: String }, { _id: false }),
+      type: new Schema({ flags: [String], passedAt: Date, releaseAt: Date, heldFor: String, answerToConfirm: Boolean }, { _id: false }),
       required: false,
     },
     showcase: { type: Boolean, default: false },
@@ -297,6 +339,7 @@ function defineModels(conn: Connection): Models {
     note: String,
     createdAt: { type: Date, default: () => new Date() },
     releasedAt: Date,
+    runId: String,
   });
   Solution.index({ itemId: 1, version: 1 }, { unique: true });
   const Activity = new Schema<ActivityDoc>({
@@ -361,9 +404,13 @@ function defineModels(conn: Connection): Models {
     assetsChecked: Boolean,
     dryRun: Boolean,
     error: String,
+    intent: { type: Schema.Types.Mixed },
+    suggested: Boolean,
+    filesNotSent: [String],
   });
   Run.index({ itemId: 1, runId: 1 }, { unique: true });
   Run.index({ itemId: 1, startedAt: -1 });
+  if (isReadOnly()) for (const schema of [Run, Outbox, Batch, User, Session, Item, Solution, Activity, Upload]) blockWrites(schema as Schema);
   return {
     Run: conn.model<RunDoc>("Run", Run, "runs"),
     Outbox: conn.model<OutboxDoc & { openKey?: string }>("Outbox", Outbox, "outbox"),
@@ -383,7 +430,7 @@ export async function ks(): Promise<Models> {
     const uri = process.env.KEYSTONE_MONGODB_URI || process.env.MONGODB_URI;
     if (!uri) throw new Error("KEYSTONE_MONGODB_URI / MONGODB_URI not configured");
     cache.promise = mongoose
-      .createConnection(uri, { dbName: KEYSTONE_DB, bufferCommands: false })
+      .createConnection(uri, connectOptions())
       .asPromise();
   }
   try {

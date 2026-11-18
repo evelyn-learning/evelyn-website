@@ -66,12 +66,13 @@ export async function saveSolution(
   itemId: string,
   sections: { kind: SectionKind; md: string }[],
   actor: Actor,
-  opts: { note?: string; submit: boolean; stage?: Stage; expect?: Expect; set?: Partial<Pick<ItemDoc, "evelynAnswer" | "pipeline" | "topic">> },
+  opts: { note?: string; submit: boolean; stage?: Stage; expect?: Expect; set?: Partial<Pick<ItemDoc, "evelynAnswer" | "pipeline" | "topic">>; runId?: string },
 ) {
   const { Item, Solution } = await ks();
   const item = await Item.findOne({ itemId }).lean();
   if (!item) throw new Error(`item ${itemId} not found`);
   if (opts.expect) return saveSolutionIfUnchanged(item, sections, actor, { ...opts, expect: opts.expect });
+  await clearOrphans(itemId, item.version || 0);
   const version = (item.version || 0) + 1;
   await Solution.create({
     itemId,
@@ -99,11 +100,34 @@ export async function saveSolution(
   return version;
 }
 
+/** A solution row above the item's version younger than this may be a write in flight; older ones are orphans. */
+export const ORPHAN_AGE_MS = 10 * 60 * 1000;
+
+/**
+ * A crash between creating a solution row and moving the item to its version leaves an
+ * orphan row above item.version, and every later save of that version would die on the
+ * (itemId, version) unique index. Removes such rows when no revision row refers to them
+ * and they are older than ORPHAN_AGE_MS. A row written by `ownRunId` (that run finishing
+ * its own write) is kept and returned instead.
+ */
+export async function clearOrphans(itemId: string, itemVersion: number, ownRunId?: string, now = new Date()): Promise<{ ownId?: unknown }> {
+  const { Solution, Activity } = await ks();
+  const rows = await Solution.find({ itemId, version: { $gt: itemVersion } }).select("_id version runId createdAt").lean();
+  let ownId: unknown;
+  for (const row of rows) {
+    if (ownRunId && row.runId === ownRunId && row.version === itemVersion + 1) { ownId = row._id; continue; }
+    if (await Activity.exists({ itemId, version: row.version, type: "revision" })) continue;
+    if (now.getTime() - new Date(row.createdAt).getTime() < ORPHAN_AGE_MS) continue;
+    await Solution.deleteOne({ _id: row._id });
+  }
+  return { ownId };
+}
+
 async function saveSolutionIfUnchanged(
   item: ItemDoc,
   sections: { kind: SectionKind; md: string }[],
   actor: Actor,
-  opts: { note?: string; submit: boolean; stage?: Stage; expect: Expect; set?: Partial<ItemDoc> },
+  opts: { note?: string; submit: boolean; stage?: Stage; expect: Expect; set?: Partial<ItemDoc>; runId?: string },
 ): Promise<number> {
   if (opts.submit) throw new Error("a conditional save never releases");
   const { Item, Solution } = await ks();
@@ -112,8 +136,15 @@ async function saveSolutionIfUnchanged(
   const same = item.stage === expect.stage && (item.version || 0) === expect.version && item.updatedAt?.getTime() === new Date(expect.updatedAt).getTime();
   if (!same || item.stage === "approved" || item.stage === "delivered") throw new SupersededError(itemId);
   const version = (item.version || 0) + 1;
+  // Idempotent per run: a row this run already created for this version (a crash before the item
+  // update) is completed rather than collided with; another run's old orphan is removed first.
+  const rendered = renderSections(itemId, sections);
+  const { ownId } = await clearOrphans(itemId, item.version || 0, opts.runId);
+  if (ownId) await Solution.updateOne({ _id: ownId }, { $set: { sections: rendered, author: actor.name, note: opts.note } });
   // The (itemId, version) unique index also stops a concurrent save of the same version.
-  const created = await Solution.create({ itemId, version, sections: renderSections(itemId, sections), author: actor.name, note: opts.note });
+  const created = ownId
+    ? { _id: ownId }
+    : await Solution.create({ itemId, version, sections: rendered, author: actor.name, note: opts.note, ...(opts.runId ? { runId: opts.runId } : {}) });
   const legacy = item.releasedVersion === undefined ? { releasedVersion: item.version || 0, releasedAnswer: item.version ? item.evelynAnswer || "" : "" } : {};
   const stage: Stage = opts.stage ?? "drafting";
   const now = new Date();
@@ -165,7 +196,9 @@ export async function raiseKeyQuery(itemId: string, ourAnswer: string, workingMd
   const now = new Date();
   const keyQuery = { ourAnswer: ourAnswer.trim(), workingHtml: renderMarkdown(workingMd, { resolveImage: imageResolver(itemId) }), raisedAt: now };
   // With `expect` (the pipeline): only if the item is still as the run found it.
-  const r = await Item.updateOne(opts.expect ? unchangedFilter(itemId, opts.expect) : { itemId }, { $set: { stage: "key_query", keyQuery, updatedAt: now } });
+  // The pipeline's key query: the item now waits on the client, not on Praveen (flags kept as history).
+  const unset = opts.expect ? { $unset: { "pipeline.heldFor": "" } } : {};
+  const r = await Item.updateOne(opts.expect ? unchangedFilter(itemId, opts.expect) : { itemId }, { $set: { stage: "key_query", keyQuery, updatedAt: now }, ...unset });
   if (opts.expect && r.matchedCount !== 1) throw new SupersededError(itemId);
   await log({ itemId, type: "stage", stage: "key_query", body: "Queried the key.", username: actor.username, name: actor.name, role: actor.role, createdAt: now });
 }
@@ -212,7 +245,8 @@ export async function setVerdict(itemId: string, verdict: Verdict, comment: stri
 export async function flagItemDataIfUnchanged(itemId: string, note: string, actor: Actor, expect: Expect) {
   const { Item } = await ks();
   const now = new Date();
-  const r = await Item.updateOne(unchangedFilter(itemId, expect), { $set: { stage: "item_data", updatedAt: now } });
+  // Now waiting on the client, not on Praveen: heldFor cleared, flags kept as history.
+  const r = await Item.updateOne(unchangedFilter(itemId, expect), { $set: { stage: "item_data", updatedAt: now }, $unset: { "pipeline.heldFor": "" } });
   if (r.matchedCount !== 1) throw new SupersededError(itemId);
   await log({ itemId, version: expect.version || undefined, type: "verdict", verdict: "item_data", body: note, username: actor.username, name: actor.name, role: actor.role, createdAt: now });
 }
@@ -228,6 +262,13 @@ export async function setPipelineIfUnchanged(itemId: string, pipeline: PipelineD
 export async function lastVerdict(itemId: string): Promise<Pick<ActivityDoc, "verdict" | "body" | "createdAt"> | null> {
   const { Activity } = await ks();
   return Activity.findOne({ itemId, type: "verdict" }).sort({ createdAt: -1, _id: -1 }).select("verdict body createdAt").lean();
+}
+
+/** The run that wrote solution `version` of the item (undefined when written by a person), or null when there is no such row. */
+export async function solutionRunId(itemId: string, version: number): Promise<{ runId?: string } | null> {
+  const { Solution } = await ks();
+  const s = await Solution.findOne({ itemId, version }).select("runId").lean();
+  return s ? { runId: s.runId } : null;
 }
 
 /** The sections of the item's latest solution version, or null. */
