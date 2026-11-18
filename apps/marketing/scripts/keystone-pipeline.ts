@@ -12,6 +12,7 @@
  *   --dry-run           no database writes at all; prints what each item would become
  *   --as-received       dry run only, with --only: treat the named items as Received
  *   --run-id <id>       continue / name this run (default: each item's unfinished run, else a new one)
+ *   --max-cost <usd>    stop starting new items once this invocation has spent this much (default 25); prints what was left
  *   --assets-dir <dir>  local asset folder laid out <dir>/<itemId>/<file> (read-only)
  *   --pull-assets       first rsync the selected items' assets from the box into --assets-dir
  *                       (default <tmp>/keystone-pipeline-assets); a read-only pull
@@ -19,6 +20,9 @@
  * and an item whose question has images is not solved.
  *
  * Stops at any time; started again it continues each item's run without redoing finished steps.
+ * A writing run takes the lock "keystone-pipeline" (expires after 2 h; released when the run ends): a second
+ * writing run started meanwhile exits doing nothing. A dry run takes no lock. An item whose last three attempts
+ * failed (since it last changed) is not taken again (held for Praveen) unless named with --only.
  */
 import { spawnSync } from "node:child_process";
 import { mkdirSync } from "node:fs";
@@ -29,8 +33,9 @@ import { closeKs, type RunDoc } from "../src/lib/keystone/db";
 import type { Actor } from "../src/lib/keystone/store";
 import { assertKeys } from "../src/lib/keystone/pipeline/models";
 import {
-  asReceivedReader, defaultRules, folderAssets, mongoReader, mongoWriter, noAssets, parseArgs, realSteps, runPipeline, selectItems,
+  asReceivedReader, defaultRules, folderAssets, mongoReader, mongoWriter, noAssets, parseArgs, realSteps, runPipeline, selectItems, withPipelineLock,
 } from "../src/lib/keystone/pipeline/run";
+import { acquireLock, releaseLock } from "../src/lib/keystone/pipeline/release";
 
 const EVELYN: Actor = { username: "pipeline", name: "Evelyn Learning", role: "evelyn" };
 const BOX_ASSETS = "root@85.239.239.134:/root/keystone-data/assets";
@@ -80,11 +85,21 @@ async function main() {
   else console.log("!! NO LOCAL ASSET FOLDER: the intake image check is SKIPPED (assetsChecked:false on each run, resumed runs included) and every item whose question has images ends \"failed\", unsolved. Use --assets-dir or --pull-assets.");
   const assets = assetsDir ? folderAssets(assetsDir) : noAssets;
 
-  const out = await runPipeline(args, {
-    reader: base,
-    makeRealWriter: () => mongoWriter(EVELYN),
-    deps: { steps: realSteps(), rules: defaultRules(), ...assets },
-  });
+  const locked = await withPipelineLock(
+    args.dryRun,
+    () => runPipeline(args, {
+      reader: base,
+      makeRealWriter: () => mongoWriter(EVELYN),
+      deps: { steps: realSteps(), rules: defaultRules(), ...assets },
+    }),
+    { acquire: acquireLock, release: releaseLock },
+  );
+  if (locked === "busy") {
+    console.log("pipeline: another writing pipeline run holds the lock; nothing done");
+    await closeKs();
+    return;
+  }
+  const out = locked;
 
   if (out.dry) {
     console.log("\n=== What each item would become (dry run) ===");
@@ -114,6 +129,7 @@ async function main() {
   console.log(`flags:   ${[...byFlag].map(([k, v]) => `${k} ${v}`).join(", ") || "none"}`);
   console.log(`refused: ${out.refused.length}, skipped: ${out.skipped.length}`);
   console.log(`total cost: $${total.toFixed(4)} over ${out.runs.length} item(s)`);
+  if (out.leftOver.length) console.log(`spend cap reached: not started: ${out.leftOver.join(", ")}`);
   await closeKs();
 }
 

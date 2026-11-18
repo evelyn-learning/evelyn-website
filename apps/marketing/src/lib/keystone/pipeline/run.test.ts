@@ -53,6 +53,9 @@ class FakeStore implements Reader, Writer {
   }
   async lastVerdict(id: string) { return this.verdicts.get(id) ?? null; }
   async latestSections(id: string) { return this.sections.get(id) ?? null; }
+  async failedAttempts(id: string, from: Expect) {
+    return [...this.runs.values()].filter((r) => r.itemId === id && !r.dryRun && r.startedFrom && r.startedFrom.stage === from.stage && r.startedFrom.version === from.version && new Date(r.startedFrom.updatedAt).getTime() === new Date(from.updatedAt).getTime()).reduce((n, r) => n + (r.failedAttempts ?? 0), 0);
+  }
   async solutionRunId(id: string, version: number) { const r = this.solutions.find((x) => x.itemId === id && x.version === version); return r ? { runId: r.runId } : null; }
   async candidates(q: { only?: string[]; batch?: string }) {
     return [...this.items.values()].filter((i) => (!q.only || q.only.includes(i.itemId)) && (!q.batch || i.batchId === q.batch)).map((i) => structuredClone(i));
@@ -1315,6 +1318,97 @@ const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", co
     ok(store.items.get("100")!.pipeline!.flags.includes("owner_rewrite"), "I3 note: owner_rewrite");
     ok(!store.items.get("100")!.pipeline!.flags.includes("owner_sent_back"), "I3 note: his send-back flag is consumed");
     equal(store.lessons[0]?.note, "Show the unit conversion.", "I3 note: the lesson is the reviewer's note only");
+  }
+
+  // --- I6 / I7: a bound on re-spend; transient step failures are retried within it ---
+  {
+    const quiet = { log: () => {} };
+    const transientWrite = () => steps({ writeSolution: async () => ({ ok: false, reason: "transport", detail: "anthropic HTTP 529: overloaded", cost: 0.01, model: "m-author", transient: true }) as ModelReply<Draft> });
+    // a transient failure holds with step_failed, recorded on the step, and is retried by the next run
+    {
+      const store = new FakeStore([item()]);
+      const { steps: s, calls } = transientWrite();
+      const env = { reader: store, makeRealWriter: () => store, deps: deps(store, s), ...quiet };
+      const one = await runPipeline({ dryRun: false, runId: "inv-1" }, env);
+      equal(one.runs[0].result, "held", "I7: transient write failure holds");
+      ok(one.runs[0].flags.includes("step_failed"), "I7: step_failed");
+      ok(one.runs[0].steps.find((x) => x.step === "write")?.transient, "I7: the step records transient");
+      equal(one.runs[0].failedAttempts, 1, "I6: one failed attempt counted");
+      await runPipeline({ dryRun: false, runId: "inv-2" }, env);
+      await runPipeline({ dryRun: false, runId: "inv-3" }, env);
+      equal(calls.writeSolution, 3, "I7: retried on each of the next runs");
+      const four = await runPipeline({ dryRun: false, runId: "inv-4" }, env);
+      equal(four.runs.length, 0, "I6: the fourth invocation does not take it");
+      ok(four.skipped.some((x) => x.itemId === "100" && x.why === "attempt limit reached"), "I6: listed as attempt limit reached");
+      equal(calls.writeSolution, 3, "I6: nothing more spent");
+      const it = store.items.get("100")!;
+      equal(it.pipeline?.heldFor, "praveen", "I6: plain hold for Praveen");
+      equal(it.pipeline?.heldWhy, "Three attempts failed", "I6: heldWhy");
+      ok(it.pipeline?.flags.includes("step_failed"), "I6: flags kept");
+      // named with --only: retried
+      const named = await runPipeline({ dryRun: false, runId: "inv-5", only: ["100"] }, env);
+      equal(named.runs.length, 1, "I6: --only retries it");
+      // after the item changes: retried
+      store.items.get("100")!.updatedAt = new Date(T0.getTime() + 777);
+      const changed = await runPipeline({ dryRun: false, runId: "inv-6" }, env);
+      equal(changed.runs.length, 1, "I6: a changed item is taken again");
+    }
+    // a non-transient step failure hold is not retried automatically
+    {
+      const store = new FakeStore([item()]);
+      const { steps: s, calls } = steps({ writeSolution: async () => ({ ok: false, reason: "shape", detail: "bad json", cost: 0.01, model: "m-author" }) as ModelReply<Draft> });
+      const env = { reader: store, makeRealWriter: () => store, deps: deps(store, s), ...quiet };
+      await runPipeline({ dryRun: false, runId: "n-1" }, env);
+      const two = await runPipeline({ dryRun: false, runId: "n-2" }, env);
+      equal(calls.writeSolution, 1, "I7: a non-transient failure is not retried by the next run");
+      ok(two.skipped.some((x) => /held at its last run/.test(x.why)), "I7: skipped as held");
+    }
+    // a run that keeps failing (resumed under the same id) is capped too
+    {
+      const store = new FakeStore([item()]);
+      const { steps: s, calls } = steps({ writeSolution: async () => { throw new Error("adapter crashed"); } });
+      const env = { reader: store, makeRealWriter: () => store, deps: deps(store, s), ...quiet };
+      for (let k = 0; k < 5; k++) await runPipeline({ dryRun: false }, env);
+      equal(calls.writeSolution, 3, "I6: a failing run resumed every invocation stops after three");
+      equal(store.items.get("100")!.pipeline?.heldWhy, "Three attempts failed", "I6: and is held for Praveen");
+    }
+    // --max-cost: stops taking new items once reached and says what was left
+    {
+      const store = new FakeStore([item(), item({ itemId: "101", order: 2 }), item({ itemId: "102", order: 3 })]);
+      const { steps: s, calls } = steps();
+      const lines: string[] = [];
+      const out = await runPipeline({ dryRun: false, maxCost: 0.5 }, { reader: store, makeRealWriter: () => store, deps: deps(store, s), concurrency: 1, log: (l) => lines.push(l) });
+      equal(out.runs.length, 2, "I6: two items run (0.40 + 0.40 crosses 0.50)");
+      deepEqual(out.leftOver, ["102"], "I6: the third is not started");
+      equal(calls.agreeOnAnswer, 2, "I6: nothing spent on it");
+      ok(lines.some((l) => /spend cap \$0\.50 reached/.test(l) && /102/.test(l)), "I6: says what was left");
+      ok(out.skipped.some((x) => x.itemId === "102"), "I6: listed as skipped");
+      equal(parseArgs(["--max-cost", "3.5"]).maxCost, 3.5, "I6: --max-cost parsed");
+      assert.throws(() => parseArgs(["--max-cost", "0"]), /positive/, "I6: --max-cost must be positive");
+      equal(parseArgs([]).maxCost, undefined, "I6: default applies inside runPipeline");
+    }
+    // the pipeline's own lock: one writing run at a time, released in finally; a dry run takes none
+    {
+      const { withPipelineLock, PIPELINE_LOCK, PIPELINE_LOCK_TTL_MS } = await import("./run");
+      const held = new Map<string, string>();
+      const calls2: string[] = [];
+      const lock = {
+        acquire: async (name: string, owner: string, _now: Date, ttl: number) => { calls2.push(`acquire ${name} ${ttl}`); if (held.has(name)) return false; held.set(name, owner); return true; },
+        release: async (name: string, owner: string) => { calls2.push(`release ${name}`); if (held.get(name) === owner) held.delete(name); },
+      };
+      equal(String(PIPELINE_LOCK) === "keystone-release", false, "I6: a different lock name from the release job");
+      equal(PIPELINE_LOCK_TTL_MS, 2 * 60 * 60 * 1000, "I6: expiry 2 h");
+      let inner: unknown;
+      const first = withPipelineLock(false, async () => { inner = await withPipelineLock(false, async () => "second ran", lock); return "first ran"; }, lock);
+      equal(await first, "first ran", "I6: the first run runs");
+      equal(inner, "busy", "I6: a second writing run finds the lock held");
+      equal(held.size, 0, "I6: released after the run");
+      await assert.rejects(() => withPipelineLock(false, async () => { throw new Error("boom"); }, lock), /boom/, "I6: an error propagates");
+      equal(held.size, 0, "I6: released in finally after an error");
+      calls2.length = 0;
+      equal(await withPipelineLock(true, async () => "dry", lock), "dry", "I6: a dry run runs");
+      deepEqual(calls2, [], "I6: a dry run takes no lock");
+    }
   }
 
   // --- M4 / C2(b): a changes-mode rewrite keeps sample, timerReleasedAt and an uncleared question_resent hold ---

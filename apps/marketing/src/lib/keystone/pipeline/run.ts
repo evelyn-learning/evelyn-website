@@ -62,6 +62,8 @@ export interface Reader {
   solutionRunId(itemId: string, version: number): Promise<{ runId?: string } | null>;
   /** Items named by `only`, else every item in a stage the run may take; `batch` narrows either. */
   candidates(q: { only?: string[]; batch?: string }): Promise<ItemDoc[]>;
+  /** Failed attempts (RunDoc.failedAttempts) of the item's real runs that started from `from`: since its last change. */
+  failedAttempts(itemId: string, from: Expect): Promise<number>;
 }
 
 /** Everything the run writes. Item writes are conditional on `expect` and throw SupersededError on a mismatch. */
@@ -88,7 +90,7 @@ export interface Writer {
 
 /** The model-backed and code steps, injected so tests call no model. */
 export type Steps = {
-  intakeModel(item: ItemDoc, images: ModelImage[]): Promise<{ complete: boolean; missing: string[]; cost?: number; model?: string } | { failed: string; cost?: number; model?: string }>;
+  intakeModel(item: ItemDoc, images: ModelImage[]): Promise<{ complete: boolean; missing: string[]; cost?: number; model?: string } | { failed: string; cost?: number; model?: string; transient?: boolean }>;
   agreeOnAnswer(item: ItemDoc, images: ModelImage[], course: string, hint?: string): Promise<{ decision: Decision; solves: Solves; cost: number }>;
   writeSolution(item: ItemDoc, course: string, answer: Answer, opts: WriteOpts): Promise<ModelReply<Draft>>;
   calcCheck(draft: Draft, answer: Answer, item: ItemDoc): Promise<CalcFinding[]>;
@@ -264,6 +266,9 @@ export async function processItem(itemId: string, runId: string, deps: Deps, opt
   }
   run.finishedAt = now();
   run.cost = run.steps.reduce((s, x) => s + (x.cost || 0), 0);
+  // The attempt cap (selectItems) counts these: a failed run resumed again and again adds one each time.
+  const ended = run.result as RunDoc["result"];
+  if (ended === "failed" || (ended === "held" && run.flags.includes("step_failed"))) run.failedAttempts = (run.failedAttempts ?? 0) + 1;
   await deps.writer.saveRun(run);
   return run;
 }
@@ -357,14 +362,14 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
   let answerToConfirm = false;
   const counters = new Map<Step, number>();
 
-  async function step<T>(name: Step, fn: () => Promise<{ ok: boolean; output: T; cost?: number; model?: string }>): Promise<{ ok: boolean; output: T }> {
+  async function step<T>(name: Step, fn: () => Promise<{ ok: boolean; output: T; cost?: number; model?: string; transient?: boolean }>): Promise<{ ok: boolean; output: T }> {
     const n = counters.get(name) ?? 0;
     counters.set(name, n + 1);
     const key = `${name}#${n}`;
     const done = run.steps.find((s) => s.key === key);
     if (done) return { ok: done.ok, output: done.output as T };
     const r = await fn();
-    const entry: RunStep = { step: name, key, at: now(), ok: r.ok, output: r.output, cost: r.cost ?? 0, ...(r.model ? { model: r.model } : {}) };
+    const entry: RunStep = { step: name, key, at: now(), ok: r.ok, output: r.output, cost: r.cost ?? 0, ...(r.model ? { model: r.model } : {}), ...(!r.ok && r.transient ? { transient: true } : {}) };
     run.steps.push(entry);
     run.cost = run.steps.reduce((s, x) => s + (x.cost || 0), 0);
     await writer.saveRun(run);
@@ -505,7 +510,7 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
     type IntakeOut = { complete: boolean; missing: string[] } | { failed: string };
     const m = await step<IntakeOut>("intake", async () => {
       const r = await steps.intakeModel(item, images);
-      if ("failed" in r) return { ok: false, output: { failed: r.failed }, cost: r.cost, model: r.model };
+      if ("failed" in r) return { ok: false, output: { failed: r.failed }, cost: r.cost, model: r.model, transient: r.transient };
       return { ok: true, output: { complete: r.complete, missing: r.missing }, cost: r.cost, model: r.model };
     });
     if (!m.ok) return hold(["step_failed"]);
@@ -537,7 +542,7 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
     const c = await step<CauseOut>("cause", async () => {
       if (!note) return { ok: true, output: { cause: "other" as Cause, why: "no note", note } };
       const r = await steps.classifyCause(item, note);
-      if (!r.ok) return { ok: false, output: { failed: `${r.reason}: ${r.detail}`, note }, cost: r.cost, model: r.model };
+      if (!r.ok) return { ok: false, output: { failed: `${r.reason}: ${r.detail}`, note }, cost: r.cost, model: r.model, transient: r.transient };
       return { ok: true, output: { cause: r.value.cause, why: r.value.why, note }, cost: r.cost, model: r.model };
     });
     // The client's send-back happened whatever the cause step said: recorded once per item and version.
@@ -583,9 +588,11 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
       const s = await step("solve", async () => {
         const r = await steps.agreeOnAnswer(item, images, course, hint);
         const replies = [r.solves.solver1, r.solves.solver2, r.solves.solver3, r.solves.compare];
-        const failedCall = replies.some((x) => x && !x.ok);
+        const failedCalls = replies.filter((x) => x && !x.ok);
+        const failedCall = failedCalls.length > 0;
         const models = [...new Set(replies.flatMap((x) => (x?.model ? [x.model] : [])))].join(",");
-        return { ok: !failedCall, output: { decision: r.decision, solves: r.solves }, cost: r.cost, model: models || undefined };
+        const transient = failedCall && failedCalls.every((x) => !!x && !x.ok && !!x.transient);
+        return { ok: !failedCall, output: { decision: r.decision, solves: r.solves }, cost: r.cost, model: models || undefined, transient };
       });
       if (!s.ok) return hold(["step_failed"]);
       const { decision: d, solves } = s.output;
@@ -610,7 +617,7 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
     const write = (opts: WriteOpts) =>
       step("write", async () => {
         const r = await steps.writeSolution(item, course, answer!, { theirSolutionHtml: item.castleRockSolutionHtml, ...opts });
-        return r.ok ? { ok: true, output: r.value as Draft | { failed: string }, cost: r.cost, model: r.model } : { ok: false, output: { failed: `${r.reason}: ${r.detail}` }, cost: r.cost, model: r.model };
+        return r.ok ? { ok: true, output: r.value as Draft | { failed: string }, cost: r.cost, model: r.model } : { ok: false, output: { failed: `${r.reason}: ${r.detail}` }, cost: r.cost, model: r.model, transient: r.transient };
       });
     const w = await write({ fixNote, previous });
     if (!w.ok) return hold(["step_failed"]);
@@ -629,7 +636,7 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
           return { ok: true, output: { findings: await steps.renderCheck(item, d, { assetExists, answer: theAnswer }) } };
         }
         const r = name === "working" ? await steps.workingCheck(item, d, theAnswer) : await steps.rulesAudit(item, course, d, deps.rules);
-        if ("failed" in r) return { ok: false, output: { failed: r.failed }, cost: r.cost, model: r.model || undefined };
+        if ("failed" in r) return { ok: false, output: { failed: r.failed }, cost: r.cost, model: r.model || undefined, transient: r.transient };
         return { ok: true, output: { findings: r.findings }, cost: r.cost, model: r.model || undefined };
       });
 
@@ -709,7 +716,24 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
 
 // --- selection ---------------------------------------------------------------------------------
 
-export type Selection = { take: ItemDoc[]; refused: { itemId: string; why: string }[]; skipped: { itemId: string; why: string }[] };
+export type Selection = {
+  take: ItemDoc[];
+  refused: { itemId: string; why: string }[];
+  skipped: { itemId: string; why: string }[];
+  /** Skipped because ATTEMPT_LIMIT failed attempts were made since the item last changed: held for Praveen by runPipeline. */
+  limited: ItemDoc[];
+};
+
+/** Failed attempts (a run that ended failed, or held with step_failed) since the item last changed, after which the run stops taking it. */
+export const ATTEMPT_LIMIT = 3;
+export const ATTEMPT_LIMIT_WHY = "Three attempts failed";
+
+/** The last run was held on a step that failed for a transient reason (network, 429 / 5xx after every retry): retried. */
+export function heldOnTransient(last: RunDoc | undefined): boolean {
+  if (!last || last.result !== "held" || !last.flags?.includes("step_failed")) return false;
+  const failed = [...(Array.isArray(last.steps) ? last.steps : [])].reverse().find((s) => s && !s.ok);
+  return !!failed?.transient;
+}
 
 /**
  * Which items a run takes: Received; Drafting with an answered key query and no run since;
@@ -717,8 +741,12 @@ export type Selection = { take: ItemDoc[]; refused: { itemId: string; why: strin
  * nothing changed since is skipped unless named with --only. `asReceived` (dry run only)
  * treats the named items as Received.
  */
-export function selectItems(items: ItemDoc[], latestRuns: Map<string, RunDoc>, opts: { only?: string[]; limit?: number; asReceived?: boolean }): Selection {
-  const out: Selection = { take: [], refused: [], skipped: [] };
+export function selectItems(
+  items: ItemDoc[],
+  latestRuns: Map<string, RunDoc>,
+  opts: { only?: string[]; limit?: number; asReceived?: boolean; attempts?: Map<string, number> },
+): Selection {
+  const out: Selection = { take: [], refused: [], skipped: [], limited: [] };
   // A run that ended in a decision; "failed" and "superseded" ones (and unfinished ones) do not count as done.
   const decided = (r?: RunDoc) => !!r?.result && r.result !== "failed" && r.result !== "superseded";
   for (const raw of items) {
@@ -742,9 +770,16 @@ export function selectItems(items: ItemDoc[], latestRuns: Map<string, RunDoc>, o
       (named ? out.refused : out.skipped).push({ itemId: it.itemId, why });
       continue;
     }
+    // A bound on re-spend: after ATTEMPT_LIMIT failed attempts since the item last changed, only a change or --only retries it.
+    if (!named && (opts.attempts?.get(it.itemId) ?? 0) >= ATTEMPT_LIMIT) {
+      out.skipped.push({ itemId: it.itemId, why: "attempt limit reached" });
+      out.limited.push(it);
+      continue;
+    }
     if (!named && last?.startedFrom && sameFrom(last.startedFrom, it)) {
-      // An owner rewrite that could not complete (step_failed) is retried; any other hold waits for a change.
-      const retry = ownerSentBack(it) && last.flags?.includes("step_failed");
+      // An owner rewrite that could not complete (step_failed), or a step that failed for a transient reason, is
+      // retried (within the attempt limit); any other hold waits for a change.
+      const retry = (ownerSentBack(it) && last.flags?.includes("step_failed")) || heldOnTransient(last);
       if (last.result === "held" && !retry) { out.skipped.push({ itemId: it.itemId, why: "held at its last run, unchanged since" }); continue; }
       if (last.result === "course_missing" && it.courseSource !== "sheet") { out.skipped.push({ itemId: it.itemId, why: "still no course from the spreadsheet" }); continue; }
     }
@@ -765,6 +800,7 @@ export function asReceivedReader(reader: Reader, ids: string[]): Reader {
     item: async (id) => over(await reader.item(id)),
     candidates: async (q) => (await reader.candidates(q)).map((i) => over(i)!),
     run: (a, b) => reader.run(a, b),
+    failedAttempts: (a, f) => reader.failedAttempts(a, f),
     latestRun: (a) => reader.latestRun(a),
     lastVerdict: (a) => reader.lastVerdict(a),
     latestSections: (a) => reader.latestSections(a),
@@ -861,6 +897,14 @@ export function mongoReader(): Reader {
     },
     latestSections: (itemId) => latestSections(itemId),
     solutionRunId: (itemId, version) => solutionRunId(itemId, version),
+    failedAttempts: async (itemId, from) => {
+      const { Run } = await ks();
+      const rows = await Run.aggregate<{ n: number }>([
+        { $match: { itemId, dryRun: { $ne: true }, "startedFrom.stage": from.stage, "startedFrom.version": from.version, "startedFrom.updatedAt": new Date(from.updatedAt) } },
+        { $group: { _id: null, n: { $sum: { $ifNull: ["$failedAttempts", 0] } } } },
+      ]);
+      return rows[0]?.n ?? 0;
+    },
     candidates: async ({ only, batch }) => {
       const { Item } = await ks();
       const filter: Record<string, unknown> = only
@@ -956,7 +1000,11 @@ export type RunArgs = {
   runId?: string;
   pullAssets?: boolean;
   assetsDir?: string;
+  /** Stop taking new items once this invocation has spent this much (USD). Default DEFAULT_MAX_COST. */
+  maxCost?: number;
 };
+
+export const DEFAULT_MAX_COST = 25;
 
 /** Command-line options of scripts/keystone-pipeline.ts. Throws on anything unknown or unsafe. */
 export function parseArgs(argv: string[]): RunArgs {
@@ -981,6 +1029,12 @@ export function parseArgs(argv: string[]): RunArgs {
         break;
       }
       case "--run-id": a.runId = value(i++, o); break;
+      case "--max-cost": {
+        const n = Number(value(i++, o));
+        if (!Number.isFinite(n) || n <= 0) throw new Error("--max-cost needs a positive amount in USD");
+        a.maxCost = n;
+        break;
+      }
       case "--assets-dir": a.assetsDir = value(i++, o); break;
       case "--dry-run": a.dryRun = true; break;
       case "--as-received": a.asReceived = true; break;
@@ -1004,9 +1058,9 @@ export type RunEnv = {
 
 /** Selects the items and runs them, four at a time. One item's failure never stops the others. */
 export async function runPipeline(
-  opts: Pick<RunArgs, "only" | "batch" | "limit" | "dryRun" | "asReceived" | "runId">,
+  opts: Pick<RunArgs, "only" | "batch" | "limit" | "dryRun" | "asReceived" | "runId" | "maxCost">,
   env: RunEnv,
-): Promise<{ runs: RunDoc[]; refused: Selection["refused"]; skipped: Selection["skipped"]; dry?: DryRunWriter }> {
+): Promise<{ runs: RunDoc[]; refused: Selection["refused"]; skipped: Selection["skipped"]; dry?: DryRunWriter; spent: number; leftOver: string[] }> {
   if (opts.asReceived && !opts.dryRun) throw new Error("--as-received is allowed only together with --dry-run");
   const log = env.log ?? ((l: string) => console.log(l));
   const dry = opts.dryRun ? new DryRunWriter() : undefined;
@@ -1015,20 +1069,44 @@ export async function runPipeline(
 
   const candidates = await reader.candidates({ only: opts.only, batch: opts.batch });
   const latest = new Map<string, RunDoc>();
+  const attempts = new Map<string, number>();
   for (const c of candidates) {
     const r = await reader.latestRun(c.itemId);
     if (r) latest.set(c.itemId, r);
+    const n = await reader.failedAttempts(c.itemId, fromOf(c));
+    if (n) attempts.set(c.itemId, n);
   }
-  const sel = selectItems(candidates, latest, opts);
+  const sel = selectItems(candidates, latest, { ...opts, attempts });
   for (const r of sel.refused) log(`${r.itemId}: refused (${r.why})`);
   for (const r of sel.skipped) log(`${r.itemId}: skipped (${r.why})`);
+  // Over the attempt limit: a plain hold for Praveen, only if the item is still as it was read (guarded write).
+  if (!opts.dryRun) {
+    for (const it of sel.limited) {
+      if (it.pipeline?.heldFor === "praveen" && it.pipeline?.heldWhy === ATTEMPT_LIMIT_WHY) continue;
+      const { wroteStage: _w, releaseClaim: _c, ...kept } = it.pipeline ?? { flags: [] };
+      void _w; void _c;
+      try {
+        await writer.setPipeline(it.itemId, { ...kept, flags: Array.isArray(kept.flags) ? kept.flags : [], heldFor: "praveen", heldWhy: ATTEMPT_LIMIT_WHY }, fromOf(it));
+      } catch (e) {
+        if (!(e instanceof SupersededError)) log(`${it.itemId}: !! the attempt-limit hold could not be written: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
+  }
 
   const freshId = `run-${new Date().toISOString().replace(/[:.]/g, "-")}`;
   const deps: Deps = { ...env.deps, reader, writer, ...(opts.dryRun ? { dryRun: true } : {}) };
   const runs: RunDoc[] = [];
   const queue = [...sel.take];
+  const maxCost = opts.maxCost ?? DEFAULT_MAX_COST;
+  let spent = 0;
+  const leftOver: string[] = [];
   const worker = async () => {
     for (let it = queue.shift(); it; it = queue.shift()) {
+      // Spend cap for this invocation: once reached, no new item is started (items already running finish).
+      if (spent >= maxCost) {
+        leftOver.push(it.itemId);
+        continue;
+      }
       const last = latest.get(it.itemId);
       // Default: continue the item's unfinished (or failed) run; a dry run never continues a real one.
       const runId = opts.runId ?? (!opts.dryRun && last && (!last.result || last.result === "failed") ? last.runId : freshId);
@@ -1042,10 +1120,15 @@ export async function runPipeline(
         };
       }
       runs.push(run);
+      spent += run.cost || 0;
       log(`${run.itemId}: ${run.result}${run.flags.length ? ` [${run.flags.join(", ")}]` : ""}${run.error ? ` — ${run.error}` : ""} · $${run.cost.toFixed(4)}`);
     }
   };
   await Promise.all(Array.from({ length: Math.max(1, env.concurrency ?? 4) }, worker));
+  if (leftOver.length) {
+    log(`!! spend cap $${maxCost.toFixed(2)} reached ($${spent.toFixed(4)} spent): ${leftOver.length} item(s) not started: ${leftOver.join(", ")}`);
+    for (const id of leftOver) sel.skipped.push({ itemId: id, why: `spend cap $${maxCost.toFixed(2)} reached` });
+  }
   // The sample is taken after the whole run, never by the order items finish inside it.
   if (!opts.dryRun && writer.sample && sel.take.length) {
     const batchIds = [...new Set(sel.take.map((i) => i.batchId).filter((b): b is string => !!b))];
@@ -1056,5 +1139,28 @@ export async function runPipeline(
       log(`!! sample step failed (nothing is released before a batch is sampled; the release job retries): ${e instanceof Error ? e.message : String(e)}`);
     }
   }
-  return { runs, refused: sel.refused, skipped: sel.skipped, dry };
+  return { runs, refused: sel.refused, skipped: sel.skipped, dry, spent, leftOver };
+}
+
+/** The writing pipeline's own lock (not the release job's): one writing run at a time; a dead holder's lock expires after 2 h. */
+export const PIPELINE_LOCK = "keystone-pipeline";
+export const PIPELINE_LOCK_TTL_MS = 2 * 60 * 60 * 1000;
+
+/**
+ * Runs `fn` holding the pipeline lock, released in `finally`. "busy" when another writing run holds it.
+ * A dry run takes no lock (it writes nothing) and runs `fn` at once.
+ */
+export async function withPipelineLock<T>(
+  dryRun: boolean,
+  fn: () => Promise<T>,
+  lock: { acquire: (name: string, owner: string, now: Date, ttl: number) => Promise<boolean>; release: (name: string, owner: string) => Promise<void> },
+): Promise<T | "busy"> {
+  if (dryRun) return fn();
+  const owner = `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  if (!(await lock.acquire(PIPELINE_LOCK, owner, new Date(), PIPELINE_LOCK_TTL_MS))) return "busy";
+  try {
+    return await fn();
+  } finally {
+    await lock.release(PIPELINE_LOCK, owner);
+  }
 }
