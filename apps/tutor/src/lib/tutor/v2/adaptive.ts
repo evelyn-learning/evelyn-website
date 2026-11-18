@@ -76,10 +76,21 @@ export function v2SupportLine(step: V2SupportStep): string | null {
 }
 
 const words = (s: string) => v2SentenceWords(s);
-const targetKey = (t: readonly string[]) => t.map((x) => words(x).join(' ')).filter(Boolean).sort().join(' | ');
+/** Fix round 1 (M2): the same target = any target word in common ("sold, machines" then "sold" is one entry). */
+const sameTarget = (a: readonly string[], b: readonly string[]) => { const x = new Set(a.flatMap(words)); return b.flatMap(words).some((w) => x.has(w)); };
 const quoteTarget = (t: readonly string[]) => t.map((x) => `"${x}"`).join(', ');
-/** Their sentence holds every target word, whole words (numbers in words and digits alike). */
-const usesTarget = (sentence: string, target: readonly string[]) => { const have = ` ${words(sentence).join(' ')} `; return target.every((x) => { const w = words(x).join(' '); return !!w && have.includes(` ${w} `); }); };
+/** Their sentence holds a target word (a target phrase whole), whole words (numbers in words and digits alike). Fix round 1 (M1):
+ *  any of them, not all: "sold, machines" is used by a sentence with "sold". */
+const usesTarget = (sentence: string, target: readonly string[]) => { const have = ` ${words(sentence).join(' ')} `; return target.some((x) => { const w = words(x).join(' '); return !!w && have.includes(` ${w} `); }); };
+/** Fix round 1 (M1): words that are rarely the point of a correction on their own. Dropped from a target when a content word stays. */
+const FUNCTION_WORDS = new Set(['a', 'an', 'the', 'to', 'of', 'in', 'on', 'at', 'for', 'from', 'with', 'by', 'and', 'or', 'but', 'is', 'are', 'am', 'was', 'were', 'be', 'it', 'this', 'that', 'my', 'your', 'his', 'her', 'its', 'our', 'their', 'i', 'you', 'he', 'she', 'we', 'they']);
+const DERIVED_MAX = 2;
+/** The target as kept: function words out when a content word stays (an article or a preposition alone stays the point). */
+export function v2RetestTarget(stress: readonly string[], max: number = MAX_TARGET_WORDS): string[] {
+  const xs = stress.map((x) => x.trim()).filter(Boolean);
+  const content = xs.filter((x) => !words(x).every((w) => FUNCTION_WORDS.has(w)));
+  return (content.length ? content : xs).slice(0, max);
+}
 const touches = (stress: readonly string[], target: readonly string[]) => { const t = new Set(target.flatMap(words)); return stress.flatMap(words).some((w) => t.has(w)); };
 
 /** Whether the part is behind its plan minutes (the time used is past the minutes of the parts before it plus its own). No box,
@@ -115,8 +126,16 @@ export function v2AdaptBefore(session: V2Session, state: V2State, heard: string 
   if (flags.support && part && state.support && said) { const l = v2SupportLine(state.support.step); if (l) lines.push(l); }
   if (!flags.retest) return { lines, events };
   const list = state.retests ?? [];
-  // An open retest whose part is no longer in hand (the lesson moved on, or reached the summary) was not asked.
-  for (const r of list) if (r.offered && !r.outcome && r.in !== part?.id) { r.outcome = 'not_asked'; events.push(ev('v2_retest_outcome', `target=${quoteTarget(r.target)} outcome=not_asked part=${r.in} turn=${turn}`)); }
+  // An open retest is not asked when: the lesson is in another practice part, or at its summary or close (fix round 1, M3: not on
+  // a turn on the pronunciation page or a 7k visit, from which the part comes back); or its last send's answer has gone by
+  // with no outcome (M4: that answer carried no practice sentence, so v2AdaptAfter did not run on it).
+  const ended = state.closed || typeof state.summaryBegunAt === 'number';
+  for (const r of list) {
+    if (!r.offered || r.outcome) continue;
+    const left = part ? part.id !== r.in : ended;
+    const spent = (r.offered ?? 0) >= V2_RETEST_TURNS && typeof r.lastAt === 'number' && turn > r.lastAt + 1;
+    if (left || spent) { r.outcome = 'not_asked'; events.push(ev('v2_retest_outcome', `target=${quoteTarget(r.target)} outcome=not_asked part=${r.in} turn=${turn}`)); }
+  }
   if (!part || !said) return { lines, events };
   const open = list.find((r) => r.offered && !r.outcome);
   // Their answer just now uses the target of the open retest: one word of praise is allowed, once, if it is right.
@@ -129,7 +148,9 @@ export function v2AdaptBefore(session: V2Session, state: V2State, heard: string 
   if (open && (open.offered ?? 0) < V2_RETEST_TURNS) ask = open;
   else if (!open && list.filter((r) => r.offered).length < V2_RETEST_MAX_ASKED && !v2PartBehind(session, state, part.index, nowMs)) ask = list.find((r) => !r.offered && !r.outcome && r.part !== part.id);
   if (ask) {
-    ask.offered = (ask.offered ?? 0) + 1; ask.in = part.id;
+    // Fix round 1 (I1, I2): the turn of each send: only answers after the first send are scored, and not asked only after the
+    // answer to the last send.
+    ask.offered = (ask.offered ?? 0) + 1; ask.in = part.id; if (ask.offered === 1) ask.askedAt = turn; ask.lastAt = turn;
     events.push(ev('v2_retest_offered', `target=${quoteTarget(ask.target)} part=${part.id} from=${ask.part} send=${ask.offered}/${V2_RETEST_TURNS} turn=${turn}`));
     lines.push(`retest of an earlier mistake: in the ${label(plan, ask.part)} part they said "${ask.said}" where "${ask.right}" was right (the point: ${quoteTarget(ask.target)}). If it fits this part's own topic, shape ONE of your questions in this part so that a natural answer needs ${quoteTarget(ask.target)}; do not mention the earlier mistake before they answer. If it does not fit, leave it`);
   }
@@ -148,9 +169,10 @@ export function v2PracticePairs(sentences: readonly string[], cards: ReadonlyArr
     if (at < 0) continue;
     const c = left.splice(at, 1)[0]!;
     const corrected = v2IsCorrectionOf(c.sentence, s);
-    let stress = corrected ? c.stress.filter((x) => !!x.trim()).slice(0, MAX_TARGET_WORDS) : [];
-    // A correction card with no stress: the card's words that are not theirs (learner-card.ts computes a runtime card's alike).
-    if (corrected && !stress.length) { const have = new Set(words(s)); stress = [...new Set(c.sentence.match(/[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*/gu) ?? [])].filter((w) => !words(w).every((x) => have.has(x))).slice(0, MAX_TARGET_WORDS); }
+    let stress = corrected ? v2RetestTarget(c.stress) : [];
+    // A correction card with no stress: the card's words that are not theirs (learner-card.ts computes a runtime card's alike),
+    // fix round 1 (M1): function words out when a content word stays, at most two.
+    if (corrected && !stress.length) { const have = new Set(words(s)); stress = v2RetestTarget([...new Set(c.sentence.match(/[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*/gu) ?? [])].filter((w) => !words(w).every((x) => have.has(x))), DERIVED_MAX); }
     out.push({ said: s.slice(0, MAX_CHARS), card: c.sentence.slice(0, MAX_CHARS), corrected, stress });
   }
   return out;
@@ -179,17 +201,19 @@ export function v2AdaptAfter(session: V2Session, state: V2State, part: { index: 
   const list = [...(state.retests ?? [])];
   // The open retest of this part: corrected again on its target = missed; its target used and not corrected on it = passed;
   // neither once its turns are spent = not asked.
-  const open = list.find((r) => r.offered && !r.outcome && r.in === part.id);
+  // Fix round 1 (I1, I2): only an answer given after the first send (the turn after it, or later) is scored: the answer heard
+  // on the turn of the first send replies to a question that was not shaped. Not asked only once the answer to the last send
+  // (the turn after it) has been read with neither outcome.
+  const open = list.find((r) => r.offered && !r.outcome && r.in === part.id && typeof r.askedAt === 'number' && turn > r.askedAt);
   if (open) {
     const missed = pairs.some((p) => p.corrected && (touches(p.stress, open.target) || (!usesTarget(p.said, open.target) && usesTarget(p.card, open.target))));
     const passedNow = !missed && pairs.some((p) => usesTarget(p.said, open.target));
-    const outcome = missed ? 'missed' : passedNow ? 'passed' : (open.offered ?? 0) >= V2_RETEST_TURNS ? 'not_asked' : null;
+    const outcome = missed ? 'missed' : passedNow ? 'passed' : (open.offered ?? 0) >= V2_RETEST_TURNS && typeof open.lastAt === 'number' && turn > open.lastAt ? 'not_asked' : null;
     if (outcome) { open.outcome = outcome; events.push(ev('v2_retest_outcome', `target=${quoteTarget(open.target)} outcome=${outcome} part=${part.id} turn=${turn}`)); }
   }
   for (const p of pairs) {
     if (!p.corrected || !p.stress.length || list.length >= V2_RETEST_MAX_KEPT) continue;
-    const k = targetKey(p.stress);
-    if (!k || list.some((r) => targetKey(r.target) === k)) continue;
+    if (list.some((r) => sameTarget(r.target, p.stress))) continue;
     list.push({ part: part.id, said: p.said, right: p.card, target: p.stress, turn });
     events.push(ev('v2_retest_recorded', `target=${quoteTarget(p.stress)} part=${part.id} turn=${turn}`));
   }
@@ -223,6 +247,8 @@ export function v2ReadAdaptive(raw: Partial<Record<keyof V2State, unknown>>): Pi
       list.push({ part: r.part, said, right, target, turn: count(r.turn, 10000),
         ...(count(r.offered, V2_RETEST_TURNS) ? { offered: count(r.offered, V2_RETEST_TURNS) } : {}),
         ...(typeof r.in === 'string' && ID.test(r.in) ? { in: r.in } : {}),
+        ...(typeof r.askedAt === 'number' && Number.isFinite(r.askedAt) && r.askedAt >= 0 ? { askedAt: count(r.askedAt, 10000) } : {}),
+        ...(typeof r.lastAt === 'number' && Number.isFinite(r.lastAt) && r.lastAt >= 0 ? { lastAt: count(r.lastAt, 10000) } : {}),
         ...(r.outcome === 'passed' || r.outcome === 'missed' || r.outcome === 'not_asked' ? { outcome: r.outcome } : {}),
         ...(r.praised === true ? { praised: true as const } : {}) });
     }

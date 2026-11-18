@@ -19,7 +19,7 @@ import type Anthropic from '@anthropic-ai/sdk';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import { TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_SUPPORT_STEPS } from '../src/lib/tutor/orchestrator/flags';
-import { V2_RETEST_MAX_KEPT, v2AdaptAfter, v2AdaptBefore, v2AdaptOn, v2AdaptPart, v2PartBehind, v2PracticePairs, v2RetestGaps, v2SupportLine, type V2PracticePair } from '../src/lib/tutor/v2/adaptive';
+import { V2_RETEST_MAX_KEPT, v2RetestTarget, v2AdaptAfter, v2AdaptBefore, v2AdaptOn, v2AdaptPart, v2PartBehind, v2PracticePairs, v2RetestGaps, v2SupportLine, type V2PracticePair } from '../src/lib/tutor/v2/adaptive';
 import { v2PracticePart } from '../src/lib/tutor/v2/time-fit';
 import { v2ReadClientState } from '../src/lib/tutor/v2/client-state';
 import { v2ScopeCarried } from '../src/lib/tutor/v2/state-carry';
@@ -86,6 +86,13 @@ const types = (evs: V2TurnEvent[]) => evs.map((e) => e.type);
 /** JSON with sorted keys: the reading may order keys differently. */
 const canon = (x: unknown): string => JSON.stringify(x, (_k, v) => (v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, (v as Record<string, unknown>)[k]])) : v));
 
+/** One turn as runV2Turn runs it: Before on their words, the reply into the history, After on the reply's cards. */
+const turnOf = (st: V2State, heard: string, sentences: string[], pairs: V2PracticePair[], part = PSPART) => {
+  const b = v2AdaptBefore(lang, st, heard, 10 * MIN);
+  st.history = [...st.history, u(heard), a('Reply.')];
+  return { b, a: v2AdaptAfter(lang, st, part, sentences, pairs) };
+};
+const retestLines = (r: { lines: string[] }) => r.lines.filter((l) => /^retest/.test(l));
 const pair = (corrected: boolean, stress: string[] = [], said = WRONG1, card = 'I sold 35 washing machines to a customer from Canada last week.'): V2PracticePair => ({ said, card, corrected, stress });
 const PSPART = { index: 4, id: 'past-simple' }; const PPPART = { index: 3, id: 'present-perfect' };
 const entry = (target: string[], part = 'present-perfect', extra: Partial<V2Retest> = {}): V2Retest => ({ part, said: 'I have work here since five years.', right: 'I have worked here for five years.', target, turn: 3, ...extra });
@@ -208,14 +215,47 @@ async function main() {
     check('the part is behind its plan minutes (past simple ends at 15 of 20): not asked', v2PartBehind(lang, at(2), 4, 16 * MIN) && !v2PartBehind(lang, at(2), 4, 10 * MIN) && !v2AdaptBefore(lang, at(2, { retests: [entry(['worked'])] }), 'Okay.', 16 * MIN).lines.length);
   }
   {
-    // Two turns at most, then not asked; one open at a time.
+    // Two sends at most, then not asked after the answer to the second; one open at a time (fix round 1, I2: the window).
     const st = at(2, { retests: [entry(['worked']), entry(['since'], 'topic-intro')] });
-    const b1 = v2AdaptBefore(lang, st, 'Okay.', 10 * MIN); const a1 = v2AdaptAfter(lang, st, PSPART, [RIGHT1], [pair(false, [], RIGHT1, RIGHT1)]);
-    const b2 = v2AdaptBefore(lang, st, RIGHT1, 10 * MIN); const a2 = v2AdaptAfter(lang, st, PSPART, [RIGHT2], [pair(false, [], RIGHT2, RIGHT2)]);
-    check('sent on two turns, the second still the first entry (one open at a time)', b1.lines.length === 1 && b2.lines.length === 1 && /"worked"/.test(b2.lines[0]!) && st.retests![1]!.offered === undefined, [b1.lines, b2.lines]);
-    check('after its 2 turns with the target not used: outcome not_asked (event)', st.retests![0]!.outcome === 'not_asked' && !types(a1).includes('v2_retest_outcome') && a2.some((e) => e.type === 'v2_retest_outcome' && /target="worked" outcome=not_asked/.test(e.message)), [st.retests, a2]);
-    const b3 = v2AdaptBefore(lang, st, RIGHT2, 10 * MIN);
-    check('then the next entry may be asked', b3.lines.filter((l) => /^retest/.test(l)).length === 1 && b3.lines.some((l) => /^retest/.test(l) && /"since"/.test(l)), b3.lines);
+    const t1 = turnOf(st, 'Okay.', [RIGHT1], [pair(false, [], RIGHT1, RIGHT1)]);
+    const t2 = turnOf(st, RIGHT1, [RIGHT2], [pair(false, [], RIGHT2, RIGHT2)]);
+    check('sent on two turns, the second still the first entry (one open at a time); askedAt / lastAt kept', retestLines(t1.b).length === 1 && retestLines(t2.b).length === 1 && /"worked"/.test(retestLines(t2.b)[0]!) && st.retests![1]!.offered === undefined && st.retests![0]!.askedAt === 2 && st.retests![0]!.lastAt === 3, [t1.b.lines, t2.b.lines, st.retests]);
+    check('fix round 1 (I2): on the turn of the second send the entry stays open (its answer is still to come)', !st.retests![0]!.outcome && !types(t1.a).includes('v2_retest_outcome') && !types(t2.a).includes('v2_retest_outcome'), [st.retests, t2.a]);
+    const t3 = turnOf(st, RIGHT2, [RIGHT2], [pair(false, [], RIGHT2, RIGHT2)]);
+    check('the answer to the second send without the target: not_asked then (event)', st.retests![0]!.outcome === 'not_asked' && t3.a.some((e) => e.type === 'v2_retest_outcome' && /target="worked" outcome=not_asked/.test(e.message)), [st.retests, t3.a]);
+    const t4 = turnOf(st, RIGHT2, [], []);
+    check('then the next entry may be asked', retestLines(t4.b).length === 1 && /"since"/.test(retestLines(t4.b)[0]!), t4.b.lines);
+  }
+  {
+    // Fix round 1 (I2), the review's input: send 1 not used, send 2 asks "How long have you worked there?", the answer passes.
+    const st = at(2, { retests: [entry(['worked'])] });
+    turnOf(st, 'Okay.', [RIGHT1], [pair(false, [], RIGHT1, RIGHT1)]);
+    turnOf(st, RIGHT1, [RIGHT2], [pair(false, [], RIGHT2, RIGHT2)]);
+    const ANS = 'I have worked there for ten years.';
+    const t3 = turnOf(st, ANS, [ANS], [pair(false, [], ANS, ANS)]);
+    check('fix round 1 (I2): the answer to the second send is read: passed, with the praise line', st.retests![0]!.outcome === 'passed' && t3.a.some((e) => /outcome=passed/.test(e.message)) && t3.b.lines.some((l) => /^retest: their answer just now uses "worked"/.test(l)), [st.retests, t3]);
+  }
+  {
+    // Fix round 1 (I1), the review's input: the answer heard on the turn of the first send replies to an unshaped question.
+    const SAID = 'I have worked on a project with my team last month.'; const CARD = 'I worked on a project with my team last month.';
+    const st = at(2, { retests: [entry(['worked'])] });
+    const t1 = turnOf(st, SAID, [SAID], [pair(true, ['worked'], SAID, CARD)]);
+    check('fix round 1 (I1): a correction on the target in the answer of the send turn is not scored: still open, no gap', retestLines(t1.b).length === 1 && !st.retests![0]!.outcome && !types(t1.a).includes('v2_retest_outcome') && !v2RetestGaps(st).length, [st.retests, t1.a]);
+    const st2 = at(2, { retests: [entry(['worked'])] });
+    const t2 = turnOf(st2, SAID, [SAID], [pair(false, [], SAID, SAID)]);
+    check('fix round 1 (I1): the same answer carded as said is not a pass either', !st2.retests![0]!.outcome && !types(t2.a).includes('v2_retest_outcome'), st2.retests);
+    const ANS = 'I have worked at my company for ten years.';
+    const t3 = turnOf(st2, ANS, [ANS], [pair(false, [], ANS, ANS)]);
+    check('… the answer on the next turn is scored (passed, praise once)', st2.retests![0]!.outcome === 'passed' && t3.b.lines.some((l) => /you said "worked" this time/.test(l)), [st2.retests, t3.b.lines]);
+  }
+  {
+    // Fix round 1 (M4): the answer to the second send carried no practice sentence (v2AdaptAfter did not run): closed next turn.
+    const st = at(2, { retests: [entry(['worked']), entry(['since'], 'topic-intro')] });
+    turnOf(st, 'Okay.', [RIGHT1], [pair(false, [], RIGHT1, RIGHT1)]);
+    turnOf(st, RIGHT1, [RIGHT2], [pair(false, [], RIGHT2, RIGHT2)]);
+    v2AdaptBefore(lang, st, 'Yes.', 10 * MIN); st.history = [...st.history, u('Yes.'), a('Reply.')];
+    const next = v2AdaptBefore(lang, st, 'Okay.', 10 * MIN);
+    check('fix round 1 (M4): a spent retest whose answer had no practice sentence closes not_asked, and the next may be asked', st.retests![0]!.outcome === 'not_asked' && next.events.some((e) => /target="worked" outcome=not_asked/.test(e.message)) && retestLines(next).some((l) => /"since"/.test(l)), [st.retests, next]);
   }
   {
     // At most three a lesson.
@@ -223,7 +263,8 @@ async function main() {
     check('at most 3 a lesson: a 4th is never asked', !v2AdaptBefore(lang, st, 'Okay.', 10 * MIN).lines.length && !st.retests![3]!.offered);
   }
   {
-    const mk = () => at(2, { retests: [entry(['worked'], 'present-perfect', { offered: 1, in: 'past-simple' })] });
+    // An entry sent at turn 0 (askedAt 0): the answer at turn 1 is after it.
+    const mk = () => at(2, { retests: [entry(['worked'], 'present-perfect', { offered: 1, in: 'past-simple', askedAt: 0, lastAt: 0 })] });
     const p = mk(); const ep = v2AdaptAfter(lang, p, PSPART, ['I have worked at my company for ten years.'], [pair(false, [], 'I have worked at my company for ten years.', 'I have worked at my company for ten years.')]);
     check('target used and not corrected again: passed (event)', p.retests![0]!.outcome === 'passed' && ep.some((e) => e.type === 'v2_retest_outcome' && /outcome=passed part=past-simple/.test(e.message)), [p.retests, ep]);
     const p2 = mk(); v2AdaptAfter(lang, p2, PSPART, ['I have worked at my company since ten years.'], [pair(true, ['for'], 'I have worked at my company since ten years.', 'I have worked at my company for ten years.')]);
@@ -234,8 +275,27 @@ async function main() {
     check('a miss goes to the profile\'s gaps (memory.ts); a pass does not', gaps.length === 1 && commit.gaps.some((g) => /worked/.test(g.conceptLabel)) && !v2RetestGaps(p).length, commit.gaps);
     const pr = mk(); const b = v2AdaptBefore(lang, pr, 'I have worked here for ten years.', 10 * MIN); const b2 = v2AdaptBefore(lang, pr, 'I have worked here for ten years.', 10 * MIN);
     check('their answer uses the open target: the praise line, once', b.lines.length === 1 && /^retest: their answer just now uses "worked"/.test(b.lines[0]!) && /you said "worked" this time/.test(b.lines[0]!) && /once only/.test(b.lines[0]!) && !b2.lines.some((l) => /praise/.test(l)), [b.lines, b2.lines]);
-    const left = at(3, { retests: [entry(['worked'], 'present-perfect', { offered: 1, in: 'past-simple' })] }); const el = v2AdaptBefore(lang, left, 'Okay.', 10 * MIN);
-    check('an open retest whose part is left: not_asked (event)', el.events.some((e) => e.type === 'v2_retest_outcome' && /outcome=not_asked part=past-simple/.test(e.message)), el.events);
+    // Fix round 1 (M3): left for another practice part, or the summary: not asked; a turn on the pronunciation page keeps it open.
+    const openIn = (page: number, extra: Partial<V2State> = {}) => at(page, { ...extra, retests: [entry(['worked'], 'topic-intro', { offered: 1, in: 'past-simple', askedAt: 0, lastAt: 0 })] });
+    const other = openIn(1); const eo = v2AdaptBefore(lang, other, 'Okay.', 10 * MIN);
+    check('an open retest whose part is left for another practice part: not_asked (event)', other.retests![0]!.outcome === 'not_asked' && eo.events.some((e) => e.type === 'v2_retest_outcome' && /outcome=not_asked part=past-simple/.test(e.message)), eo.events);
+    const sum = openIn(2, { summaryBegunAt: 1 }); v2AdaptBefore(lang, sum, 'Okay.', 10 * MIN);
+    const pron = openIn(3); const epr = v2AdaptBefore(lang, pron, 'Okay.', 10 * MIN);
+    check('fix round 1 (M3): at the summary: not_asked; one turn on the pronunciation page: still open', sum.retests![0]!.outcome === 'not_asked' && !pron.retests![0]!.outcome && !epr.events.length, [sum.retests, pron.retests]);
+  }
+  {
+    // Fix round 1 (M1): a derived target keeps content words (the review's input); M2: any target word in common is one entry.
+    const SAID = 'I sell 35 washing machine to customer from Canada.'; const CARD = 'I sold 35 washing machines to a customer from Canada.';
+    const pp = v2PracticePairs([SAID], [{ sentence: CARD, stress: [] }]);
+    check('fix round 1 (M1): no stress → target "sold", "machines" (no "a")', JSON.stringify(pp[0]?.stress) === '["sold","machines"]', pp);
+    check('fix round 1 (M1): function words dropped only beside a content word; alone they stay the point', JSON.stringify(v2RetestTarget(['a', 'sold'])) === '["sold"]' && JSON.stringify(v2RetestTarget(['for'])) === '["for"]' && JSON.stringify(v2RetestTarget(['at', 'the'])) === '["at","the"]');
+    const st = at(1);
+    v2AdaptAfter(lang, st, PPPART, [SAID], [pair(true, ['sold', 'machines'], SAID, CARD)]);
+    v2AdaptAfter(lang, st, PPPART, [SAID], [pair(true, ['sold'], SAID, CARD)]);
+    check('fix round 1 (M2): ["sold","machines"] then ["sold"] = one entry', st.retests?.length === 1, st.retests);
+    const later = at(2, { retests: [entry(['sold', 'machines'], 'present-perfect', { offered: 1, in: 'past-simple', askedAt: 0, lastAt: 0 })] });
+    v2AdaptAfter(lang, later, PSPART, ['I sold a car last year.'], [pair(false, [], 'I sold a car last year.', 'I sold a car last year.')]);
+    check('fix round 1 (M1): a sentence with one of the target words passes ("sold" without "machines")', later.retests![0]!.outcome === 'passed', later.retests);
   }
 
   console.log('both: events, round trip, other lessons');
@@ -246,7 +306,7 @@ async function main() {
     check('an answer the reply carded none of: v2_practice_signal none (the signal never fired), nothing counted', en.length === 1 && /^none part=past-simple .*none carded/.test(en[0]!.message) && !none.support);
   }
   {
-    const st = at(2, { support: { step: 'gap', wrong: 1, clean: 0, part: 'past-simple' }, retests: [entry(['worked'], 'present-perfect', { offered: 1, in: 'past-simple', praised: true }), entry(['sold'], 'past-simple', { outcome: 'missed', offered: 2 })] });
+    const st = at(2, { support: { step: 'gap', wrong: 1, clean: 0, part: 'past-simple' }, retests: [entry(['worked'], 'present-perfect', { offered: 1, in: 'past-simple', askedAt: 2, lastAt: 2, praised: true }), entry(['sold'], 'past-simple', { outcome: 'missed', offered: 2 })] });
     const back = trip(lang, st);
     check('round trip (JSON → v2ReadClientState → v2ScopeCarried): support and retests kept', canon(back.support) === canon(st.support) && canon(back.retests) === canon(st.retests), [back.support, back.retests]);
     const bad = v2ReadClientState(JSON.parse(JSON.stringify({ ...st, support: { step: 'huge', wrong: 1 }, retests: [{ part: 'x y', said: 'a', right: 'b', target: ['c'] }, { part: 'ok', said: 'a', right: 'b', target: [] }, 'z'] })))!;
