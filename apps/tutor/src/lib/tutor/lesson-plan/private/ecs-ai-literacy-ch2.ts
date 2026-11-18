@@ -98,7 +98,7 @@ const discussion: DiscussionMeta = {
   welcome: 'Welcome to the ECS Voice Tutors, powered by Evelyn Learning. I\'m {tutor}. EdConsult Solutions builds professional learning for educators, and this is a short demo of one conversation from it. For about ten minutes we\'ll talk through two short classroom cases about students writing with AI. Nothing here is graded and there are no right answers: I\'m interested in your own thinking. Talk to me as you would to a colleague, and stop me or ask me to repeat anything at any time. To begin, {name}: when you hear about students writing with AI, what\'s your first reaction?',
   welcomeBoard: ['ECS Voice Tutors, powered by Evelyn Learning', 'Demo: AI as a Helper – But You\'re Still the Author', 'About 10 minutes · two short cases · no right answers', 'Stop me or say "say that again" at any time'],
   casesLeadIn: 'I\'m going to tell you about two students who each used AI on a piece of writing, in two different ways. After each one I\'ll ask what you make of it.',
-  closing: 'That\'s the end of this demo conversation. Thank you for taking part. You can close this window now, or start again from the same link whenever you like.',
+  closing: 'That\'s the end of this demo conversation. You can close this window now, or start again from the same link whenever you like.',
 };
 
 export const PRIVATE_ECS_AI_LITERACY_CH2: LessonPlan = {
