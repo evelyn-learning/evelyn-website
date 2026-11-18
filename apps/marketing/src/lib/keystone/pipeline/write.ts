@@ -207,18 +207,26 @@ const SPACED: [RegExp, string][] = [
 ];
 /** Hyphens, dashes and minus signs that read as "-". */
 const DASHES = /[\u2010-\u2014\u2212\ufe63\uff0d]/g;
+/** Marks a LaTeX function command (\log → FN_MARK + "log"); plain text never contains it after normalisation. */
+const FN_MARK = "\u0192";
 /** Zero-width characters and the soft hyphen: deleted. */
 const INVISIBLE = /[\u200b-\u200d\u2060\ufeff\u00ad]/g;
 
 /** LaTeX and Unicode normalised for reading numbers: dashes and minus signs → "-", invisible characters deleted,
  * $ removed, \text{…} → content, \frac{p}{q} → p/q, \sqrt → √, function commands → their names, "{,}" and a "\,"
  * between digit groups → ",", thin-space commands removed between a sign and a digit, otherwise a space;
- * \times → ×, \cdot → ·, \% → %, ^{…} → ^…, "-(0.5)" → "-0.5". */
+ * \times → ×, \cdot → ·, \% → %, ^{…} → ^…, "-(0.5)" → "-0.5". Degrees and primes ("^\circ", "^{\circ}", "\degree",
+ * "^\prime", "^{\prime\prime}") become °, ′, ″ (a unit, never a power). The LaTeX function commands \log \ln \sin
+ * \cos \tan \exp become a marked name (FN_MARK + name) so that they stay distinct from English words. */
 function normaliseLatex(s: string): string {
   let t = nfkc(s)
     .replace(DASHES, "-")
     .replace(INVISIBLE, "")
+    .replace(/\u0192/g, " ")
     .replace(/\$/g, " ")
+    .replace(/\^\s*\{\s*(?:\\[,;: ]\s*)*\\circ\s*\}|\^\s*\\circ(?![A-Za-z])|\\degree(?![A-Za-z])/g, "\u00b0")
+    .replace(/\^\s*\{\s*\\prime\s*\\prime\s*\}/g, "\u2033")
+    .replace(/\^\s*\{\s*\\prime\s*\}|\^\s*\\prime(?![A-Za-z])/g, "\u2032")
     .replace(/\\-/g, "-")
     .replace(/(\d)\{,\}(?=\d{3}(?!\d))/g, "$1,")
     .replace(/\\%/g, "%")
@@ -226,7 +234,7 @@ function normaliseLatex(s: string): string {
     .replace(/\\cdot(?![A-Za-z])/g, "\u00b7")
     .replace(/\\[dt]?frac\s*\{\s*([+-]?\d+)\s*\}\s*\{\s*(\d+)\s*\}/g, "$1/$2")
     .replace(/\\sqrt(?![A-Za-z])/g, " \u221a")
-    .replace(/\\(sin|cos|tan|log|ln|exp)(?![A-Za-z])/g, " $1 ");
+    .replace(/\\(sin|cos|tan|log|ln|exp)(?![A-Za-z])/g, ` ${FN_MARK}$1`);
   t = t.replace(SIGN_GAP, (m: string, offset: number, whole: string) => {
     const before = tailOf(whole, offset);
     const after = whole.slice(offset + m.length, offset + m.length + 8);
@@ -271,6 +279,7 @@ const PERCENT = /\s*%/y;
 const stickyAt = (re: RegExp, s: string, at: number) => { re.lastIndex = at; return re.exec(s); };
 
 /** A numeric literal; `taint` names why it can never be the agreed value ("±", a function argument, a power). */
+const FN_ARG = /\u221a\s*[([]?\s*$|\u0192(?:log|ln|sin|cos|tan|exp)\s*[([]?\s*$|(?:^|[^A-Za-z\u0192])(?:sqrt|log|ln|sin|cos|tan|exp)[([]\s*$/i;
 type Lit = { lit: string; taint?: string };
 
 function scanLiterals(text: string): Lit[] {
@@ -302,7 +311,9 @@ function scanLiterals(text: string): Lit[] {
     }
     let taint: string | undefined;
     if (/[\u00b1\u2213]\s*$/.test(head)) taint = "\u00b1";
-    else if (/\u221a\s*[([]?\s*$/.test(head) || /(?:^|[^A-Za-z])(?:sqrt|log|ln|sin|cos|tan|exp)\s*[([]?\s*$/i.test(head)) taint = "a function argument";
+    // a function argument only on real function syntax: "\u221a" or a LaTeX function command before it, or a function
+    // name DIRECTLY followed by a bracket the literal opens ("log(0.5)"; the English "log (1)" is not a call)
+    else if (FN_ARG.test(head)) taint = "a function argument";
     const sci = stickyAt(SCI_TIMES, s, end) ?? stickyAt(SCI_E, s, end);
     const frac = sci ? null : /^[0-9]+$/.test(m[0]) ? stickyAt(FRAC, s, end) : null;
     if (sci) {
@@ -366,20 +377,33 @@ const PRONOUN_I_NEXT = /^\s+(?:am|think|would|have|had|will|can|could|should|do|
 type LabelEq = (a: string, b: string) => boolean;
 
 /** Text with LaTeX math removed, for scanning prose. A math span that is a single token naming a label of the item
- * ("$B$", "$\text{(2)}$") stays as that token; "$60$" is a number in math; a "$" right before a digit and after a
- * space or the start is currency, never a delimiter. null when the remaining delimiters are unbalanced. */
+ * ("$B$", "$\text{(2)}$") stays as that token. "\$" is a dollar; with an odd count of "$", a "$" right before a digit
+ * and after a space or the start is currency. null when the remaining delimiters are unbalanced. */
 function proseOnly(md: string, labels: string[], eq: LabelEq): string | null {
   const span = (inner: string) => {
     const tok = /^[([]?\s*([\p{L}\p{N}_]+)\s*[)\]]?$/u.exec(normaliseLatex(inner).trim())?.[1];
     return tok !== undefined && labels.some((l) => eq(l, tok)) ? ` ${tok} ` : " ";
   };
+  const dollars = (x: string) => (x.match(/\$/g) ?? []).length;
   let t = md
-    .replace(/\$\$([\s\S]*?)\$\$/g, (_m: string, inner: string) => span(inner))
-    .replace(/\$(\d[\d.,]*)\$/g, " $1 ")
-    .replace(/(^|\s)\$(?=\d)/g, "$1\u00a4");
-  if (((t.match(/\$/g) ?? []).length) % 2) return null;
-  t = t.replace(/\$([^$]*)\$/g, (_m: string, inner: string) => span(inner));
-  return t;
+    .replace(/\\\$/g, CURRENCY) // an escaped dollar is a dollar, never a delimiter
+    .replace(/\$\$([\s\S]*?)\$\$/g, (_m: string, inner: string) => span(inner));
+  // An even count: every "$" is a math delimiter. Only an odd count makes a "$" before a digit (after a space or the
+  // start) currency; still odd \u2192 unbalanced.
+  if (dollars(t) % 2) {
+    t = t.replace(/(^|\s)\$(?=\d)/g, `$1${CURRENCY}`);
+    if (dollars(t) % 2) return null;
+  }
+  // a "span" that reads as prose is two currency dollars around text, not math
+  return t.replace(/\$([^$]*)\$/g, (_m: string, inner: string) => (proseLike(inner) ? `${CURRENCY}${inner}${CURRENCY}` : span(inner)));
+}
+
+const CURRENCY = "\u00a4";
+/** Text between two dollars that is prose, not math: a sentence-internal "; " or ". " before a capital, or more than
+ * 12 words of plain prose (outside LaTeX commands and their arguments). */
+function proseLike(inner: string): boolean {
+  if (/[;.]\s+[A-Z]/.test(inner)) return true;
+  return (inner.replace(/\\[A-Za-z]+\s*(?:\{[^{}]*\})?/g, " ").match(/[A-Za-z]{2,}/g) ?? []).length > 12;
 }
 
 /** Other option labels of the item a Short answer names (closing removed, math handled by proseOnly). A word token
@@ -565,6 +589,7 @@ function howToState(answer: Answer, item: ItemDoc): string {
       `State the final value exactly as ${answer.value} (followed by its unit, if any) in the last sentence of the Short answer and of the Diploma answer.`,
       `Write the minus sign directly against the number; do not write the value as a fraction or in any other form in those sentences; give no alternative value.`,
       `Those last sentences contain no other number, except a quantity given in the question.`,
+      `For a coded numerical answer, explain what each digit stands for BEFORE the last sentence; the last sentence gives only the final value.`,
     ].join("\n");
   }
   return `State the agreed answer plainly in the Short answer and at the end of the Diploma answer.`;

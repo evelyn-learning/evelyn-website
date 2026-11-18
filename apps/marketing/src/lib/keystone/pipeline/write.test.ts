@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { ItemDoc } from "../db";
 import type { Answer } from "./answers";
 import {
@@ -604,7 +606,109 @@ async function main() {
     }
   }
 
+  // round 5: currency dollars only when the count is odd; a prose "span" between two dollars is currency
+  {
+    for (const s of [
+      "Balance with $2\\text{MnO}_4^- + 5\\text{H}_2\\text{O}_2$ first, so the answer is A.",
+      "The cell potential is $1.26 \\times 10^{3}\\ \\text{V}$, so the answer is A.",
+      "It costs \\$5 now, so the answer is A.",
+    ]) ok((await run(withShort(s))).ok, `round 5 currency: "${s}" passes`);
+    ok(!(await run(withShort("It costs $5 now; B is right; it costs $6 later. So the answer is A."))).ok, "two currency dollars around prose: B is still seen");
+    ok(!(await run(withShort("It costs $5 and then $6 later when the shop finally opens again after the long holiday weekend B ends. So the answer is A."))).ok, "a long prose span is currency");
+    ok(!(await run(withShort("The value $x = 3 is odd. So the answer is A."))).ok, "odd count, no digit: unbalanced");
+  }
+
+  // round 5: degrees and primes are units, never powers; function taint only on real function syntax
+  {
+    const stem60 = "<p>A ball is thrown at 60\u00b0 with a speed of 18 m/s. Find the range.</p>";
+    const nd = (value: string, s: string, q: string) =>
+      run({ topic: "t", statedAnswer: num(value), calc: [], sections: [{ kind: "short", md: s }, { kind: "diploma", md: s }] }, { kind: "number", value }, item({ itemType: "NR", options: [], questionHtml: q }));
+    for (const s of ["The range at $60^\\circ$ is 15.59 m.", "The range at $60^{\\circ}$ is 15.59 m.", "The range at $60^{\\,\\circ}$ is 15.59 m.", "The range at $60\\degree$ is 15.59 m."]) {
+      const r = await nd("15.59", s, stem60);
+      ok(r.ok, `degree with 60 in the stem: "${s}": ${JSON.stringify(r)}`);
+      const r2 = await nd("15.59", s, "<p>Find the range.</p>");
+      ok(!r2.ok && r2.detail === "the last sentence of the Short answer gives another value: 60", `degree without 60 in the stem: "${s}": ${JSON.stringify(r2)}`);
+    }
+    assert.deepEqual(numericLiterals("$42^{\\circ}$"), numericLiterals("42\u00b0"), "$42^{\\circ}$ reads like 42\u00b0");
+    assert.deepEqual(numericLiterals("$5^{\\prime}$ and $5^{\\prime\\prime}$"), ["5", "5"], "primes are units");
+    const nItem = "<p>Find the value.</p>";
+    ok(!(await nd("0.5", "It is 0.5^2.", nItem)).ok, "0.5^2 still fails");
+    for (const s of ["It is sqrt(0.5).", "It is $\\sqrt{0.5}$.", "It is \u221a0.5.", "It is $\\log 0.5$.", "It is log(0.5).", "It is $\\ln(0.5)$.", "It is $\\sin\\left(0.5\\right)$."]) {
+      ok(!(await nd("0.5", s, nItem)).ok, `function argument fails: "${s}"`);
+    }
+    const phases = "<p>Match the phases lag, log, stationary and death to the numbers 1, 2, 3 and 4.</p>";
+    const code = await nd("4132", "The phases are lag (4), log (1), stationary (3) and death (2), so the code is 4132.", phases);
+    ok(code.ok, `the English word "log (1)" is not a function call: ${JSON.stringify(code)}`);
+    const f = fake({ topic: "t", statedAnswer: num("4132"), calc: [], sections: [{ kind: "short", md: "It is 4132." }, { kind: "diploma", md: "It is 4132." }] });
+    await writeSolution(item({ itemType: "NR", options: [] }), "Math 30-1", { kind: "number", value: "4132" }, {}, f.deps);
+    ok(f.seen[0].user.includes("For a coded numerical answer, explain what each digit stands for BEFORE the last sentence; the last sentence gives only the final value."), "coded-answer prompt line");
+  }
+
+  // round 5: precision over the client's known-good solutions (laptop-only files; read-only; text never printed)
+  await corpus(run);
+
   console.log("write.test.ts: all passed");
+}
+
+const CORPUS = "/Users/luke/Dev/evelynlearning/docs/whitelabel/castle-rock/keystone/items";
+const HEADING_KIND: Record<string, Draft["sections"][number]["kind"]> = {
+  "short answer": "short", "diploma answer": "diploma", "extended answer": "extended", "alternate answer": "alternate", "common errors": "errors",
+};
+const ORDER = ["short", "diploma", "extended", "alternate", "errors"];
+const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+type Run = (reply: unknown, answer?: Answer, it?: ItemDoc, course?: string) => ReturnType<typeof writeSolution>;
+
+/** Every eligible client solution (MC, MS, NR with a letter, letter list or plain number) through the real
+ * post-validation, after the minimal closing edit. Prints verdicts and failure details only. */
+async function corpus(run: Run) {
+  if (!existsSync(CORPUS)) { console.log("corpus test skipped: client files not on this machine"); return; }
+  const dirs = [CORPUS, join(CORPUS, "..", "qti-solutions")].filter((d) => existsSync(d));
+  const files = dirs.flatMap((d) => readdirSync(d).filter((f) => f.endsWith(".md")).map((f) => join(d, f))).sort();
+  const results: { id: string; type: string; pass: boolean; detail: string; noStem: boolean }[] = [];
+  for (const file of files) {
+    const text = readFileSync(file, "utf8");
+    const fm = /^---\n([\s\S]*?)\n---/.exec(text)?.[1] ?? "";
+    const field = (k: string) => new RegExp(`^${k}:\\s*"?([^"\\n]*)"?\\s*$`, "m").exec(fm)?.[1].trim() ?? "";
+    const id = field("itemId");
+    const ans = field("evelynAnswer");
+    let type = field("itemType");
+    const letters = /^[A-Z](?:\s*,\s*[A-Z])*$/.test(ans) ? ans.split(/\s*,\s*/) : null;
+    const isNumber = /^-?\d+(?:\.\d+)?$/.test(ans);
+    if (!type) type = letters ? (letters.length > 1 ? "MS" : "MC") : isNumber ? "NR" : "";
+    if (!["MC", "MS", "NR"].includes(type) || !(letters || isNumber)) continue;
+    const body = text.slice(text.indexOf("\n---", 3) + 4);
+    const parts = body.split(/^## /m).slice(1).map((p) => { const nl = p.indexOf("\n"); return { head: p.slice(0, nl).trim().toLowerCase(), md: p.slice(nl + 1).trim() }; });
+    const question = parts.find((p) => p.head === "question");
+    const optionPart = parts.find((p) => p.head === "options")?.md ?? "";
+    const options = [...optionPart.matchAll(/^- ([A-Z])\) (.*)$/gm)].map((m) => ({ label: m[1], html: escapeHtml(m[2]) }));
+    const labels = question ? options : [..."ABCDE"].map((label) => ({ label, html: label }));
+    const questionHtml = question ? question.md.split(/\n\s*\n/).map((p) => `<p>${escapeHtml(p.trim())}</p>`).join("") : "";
+    const answer: Answer = letters ? { kind: "choice", letters } : { kind: "number", value: ans };
+    const it = item({ itemId: id, itemType: type as never, options: letters ? labels : [], questionHtml });
+    const closing = closingSentence(answer, it);
+    const close = (md: string) => {
+      if (!closing) return md;
+      const clause = `, s${closing.slice(1)}`;
+      const trailing = /,\s*(?:which is options? |options? |so the answers? (?:is|are) )[A-Z](?:(?:\s*,\s*|\s*,?\s+and\s+)[A-Z])*\.?\s*$/i;
+      return trailing.test(md) ? md.replace(trailing, clause) : `${md} ${closing}`;
+    };
+    const sections = parts.filter((p) => HEADING_KIND[p.head]).map((p) => {
+      const kind = HEADING_KIND[p.head];
+      return { kind, md: kind === "short" || kind === "diploma" ? close(p.md) : p.md };
+    }).sort((a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind));
+    const stated: StatedAnswer = letters ? choice(...letters) : num(ans);
+    const r = await run({ topic: "t", statedAnswer: stated, calc: [], sections }, answer, it, "Math 30-1");
+    results.push({ id, type, pass: r.ok, detail: r.ok ? "" : r.detail, noStem: !question });
+  }
+  for (const x of results) console.log(`  corpus ${x.id.padEnd(7)} ${x.type.padEnd(3)} ${x.pass ? "PASS" : "FAIL"}${x.detail ? `  ${x.detail}` : ""}`);
+  const counted = results.filter((x) => !(x.id === "146799" && x.noStem));
+  const passed = counted.filter((x) => x.pass).length;
+  console.log(`  corpus precision: ${passed}/${counted.length} (${counted.length ? Math.round((100 * passed) / counted.length) : 0}%)`);
+  ok(results.length > 0, "corpus: at least one eligible file");
+  ok(passed >= 0.9 * counted.length, `corpus: at least 90% of known-good solutions pass (${passed}/${counted.length})`);
+  const coded = results.find((x) => x.id === "135676");
+  ok(coded !== undefined && !coded.pass && /gives another value/.test(coded.detail), `corpus: 135676 fails with "gives another value" (${JSON.stringify(coded)})`);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
