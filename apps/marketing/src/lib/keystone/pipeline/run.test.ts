@@ -1265,6 +1265,42 @@ const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", co
     }
   }
 
+  // --- I2: a new run re-checks that the item is in a state the run takes, and as it was selected ---
+  {
+    const cases: [string, Partial<ItemDoc>][] = [
+      ["in_review", { stage: "in_review", version: 1, releasedVersion: 1 }],
+      ["approved", { stage: "approved", version: 1, releasedVersion: 1 }],
+      ["delivered", { stage: "delivered", version: 1, releasedVersion: 1 }],
+      ["rejected", { stage: "rejected" }],
+      ["item_data", { stage: "item_data" }],
+      ["key_query", { stage: "key_query", keyQuery: { ourAnswer: "C", workingHtml: "", raisedAt: T0 } }],
+      ["ready without the flag", { stage: "ready", version: 1, pipeline: { flags: ["no_agreement"], heldFor: "praveen" } }],
+      ["drafting, key query unanswered", { stage: "drafting", keyQuery: { ourAnswer: "C", workingHtml: "", raisedAt: T0 } }],
+    ];
+    for (const [name, p] of cases) {
+      const store = new FakeStore([item(p)]);
+      const { steps: s, calls } = steps();
+      const before = structuredClone(store.items.get("100"));
+      const run = await processItem("100", "r1", deps(store, s));
+      equal(run.result, "superseded", `I2 ${name}: superseded`);
+      equal(run.cost, 0, `I2 ${name}: nothing paid`);
+      equal(Object.values(calls).filter((v) => typeof v === "number").reduce((a, b) => a + (b as number), 0), 0, `I2 ${name}: no step called`);
+      equal(store.itemWrites, 0, `I2 ${name}: no item write`);
+      equal(store.runs.size, 0, `I2 ${name}: no run record`);
+      deepEqual(store.items.get("100"), before, `I2 ${name}: item untouched`);
+    }
+    // startedFrom from selection must match on a new run
+    {
+      const store = new FakeStore([item()]);
+      const { steps: s, calls } = steps();
+      const run = await processItem("100", "r1", deps(store, s), { startedFrom: { stage: "received", version: 0, updatedAt: new Date(T0.getTime() - 1) } });
+      equal(run.result, "superseded", "I2: changed since selection → superseded");
+      equal(calls.intakeModel + calls.agreeOnAnswer, 0, "I2: nothing run");
+      const again = await processItem("100", "r1", deps(store, s), { startedFrom: { stage: "received", version: 0, updatedAt: T0 } });
+      equal(again.result, "ready", "I2: as selected → runs");
+    }
+  }
+
   // --- M4 / C2(b): a changes-mode rewrite keeps sample, timerReleasedAt and an uncleared question_resent hold ---
   {
     const released = new Date(T0.getTime() - 1000);

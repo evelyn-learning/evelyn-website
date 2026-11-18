@@ -143,6 +143,9 @@ export function carriedOver(item: Pick<ItemDoc, "pipeline">, mode: RunDoc["mode"
 /** A held solution Praveen sent back with a note: taken by the run as an owner rewrite. */
 export const ownerSentBack = (i: Pick<ItemDoc, "stage" | "pipeline">) => i.stage === "ready" && !!i.pipeline?.flags?.includes(OWNER_SENT_BACK);
 const NEVER_TOUCH = ["approved", "delivered"];
+/** The states a new run takes: received; changes_requested; drafting with an answered key query; ready sent back by Praveen. */
+export const takenState = (i: Pick<ItemDoc, "stage" | "pipeline" | "keyQuery">) =>
+  i.stage === "received" || i.stage === "changes_requested" || (i.stage === "drafting" && !!i.keyQuery?.answeredAt) || ownerSentBack(i);
 const CHECKS = ["calc", "working", "audit", "render"] as const;
 type CheckStep = (typeof CHECKS)[number];
 type CheckOutput = { findings: Finding[] } | { failed: string };
@@ -185,7 +188,7 @@ class Done extends Error {}
  * Takes one item through the pipeline under `runId`. A finished run with that id is returned
  * as it is; an unfinished one (or one that ended "failed") continues, reusing finished steps.
  */
-export async function processItem(itemId: string, runId: string, deps: Deps): Promise<RunDoc> {
+export async function processItem(itemId: string, runId: string, deps: Deps, opts: { startedFrom?: Expect } = {}): Promise<RunDoc> {
   const now = () => (deps.now ? deps.now() : new Date());
   const first = await deps.reader.item(itemId);
   const blank = (result: RunDoc["result"], error: string): RunDoc => ({
@@ -199,6 +202,12 @@ export async function processItem(itemId: string, runId: string, deps: Deps): Pr
 
   const stored = await deps.reader.run(itemId, runId);
   if (stored?.result && stored.result !== "failed") return stored;
+  // A new run takes only an item in a state the run takes (re-checked here: the item may have moved since it was
+  // selected), and only as it was when selected. Nothing is run or paid for otherwise. A resume keeps its own rule below.
+  if (!stored) {
+    if (!takenState(first)) return blank("superseded", `item is ${first.stage}${first.stage === "ready" ? " and not sent back by Praveen" : first.stage === "drafting" ? " with no answered key query" : ""}: not a state the run takes`);
+    if (opts.startedFrom && !sameFrom(opts.startedFrom, first)) return blank("superseded", "item changed since it was selected");
+  }
   if (stored && !sameFrom(stored.startedFrom, first)) {
     // Changed since this run started: nothing more is run or paid for, unless the change is this
     // run's own final write (recorded as `intent` just before it), whose bookkeeping is finished here.
@@ -1017,7 +1026,7 @@ export async function runPipeline(
       const runId = opts.runId ?? (!opts.dryRun && last && (!last.result || last.result === "failed") ? last.runId : freshId);
       let run: RunDoc;
       try {
-        run = await processItem(it.itemId, runId, deps);
+        run = await processItem(it.itemId, runId, deps, { startedFrom: fromOf(it) });
       } catch (e) {
         run = {
           itemId: it.itemId, runId, startedAt: new Date(), finishedAt: new Date(), mode: "fresh", startedFrom: fromOf(it), steps: [], corrections: 0,
