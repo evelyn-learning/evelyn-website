@@ -21,7 +21,7 @@ import { stripBoardBlocks } from './board-inline';
 import { v2LearnerSentence } from './learner-card';
 import { v2AsksPartChange, v2EndingPartAsk, v2MoveAnswer, v2NextPart, v2OpenPagePart, v2PartInHand, v2PartViewed, v2PlanLabelled } from './part-flow';
 import { v2IsPageOfPart, v2OfferedOut, v2PartEntered, v2PartIsOptional, v2PartNamedIn, v2PartOf } from './plan-map';
-import { v2OverrunMin, v2Taught } from './time-box';
+import { v2OverrunMin, v2Taught, v2WrapMin } from './time-box';
 import { v2WithoutFillers } from './language-pack';
 import { TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_PART_ASK_LANGS, TUTOR_V2_PART_CLOCK, TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART, TUTOR_V2_TIME_NO_SQUEEZE } from '../orchestrator/flags';
 import type { V2Session, V2State } from './types';
@@ -178,8 +178,9 @@ export function v2StayInPartLine(session: V2Session, state: V2State, nowMs: numb
   if (pace) {
     if (!pace.stay) return null;
     const left = Math.max(1, Math.round(pace.left));
+    const howLong = pace.left < 1 ? 'less than a minute' : `about ${left} minute${left === 1 ? '' : 's'}`;
     return pace.core
-      ? `this part (${pace.label}) is the lesson's main practice and has about ${left} minutes left (its own ${pace.own}, and the time the earlier parts saved): there is time, so go on with it (another question, or a follow-up on their answer) rather than offering the next part`
+      ? `this part (${pace.label}) is the lesson's main practice and has ${howLong} left${pace.saved ? ` (its own ${pace.own}, and the time the earlier parts saved)` : ''}: there is time, so go on with it (another question, or a follow-up on their answer) rather than offering the next part`
       : `this part (${pace.label}) has about ${Math.min(left, pace.own)} of its ${pace.own} minutes left by the plan: there is time, so go on with it (another question, or a follow-up on their answer) rather than offering the next part`;
   }
   const before = plan.segments.slice(0, cur).filter((x) => counts(x, state));
@@ -228,13 +229,13 @@ export function v2PartTimeUpLine(session: V2Session, state: V2State, nowMs: numb
   return `this part (${c.label}) has had its ${c.core ? 'time' : `${c.own} planned minutes`} (about ${Math.round(c.used)} used in it): once its practice is done, close it and offer the next part`;
 }
 
-/** Fix round 1 (I1, the controller's ruling): the lesson's main practice part, which keeps the time earlier parts saved: the required
- *  practice part the plan gives the most minutes (the later one on a tie). 7i's stay line was written for it (mic test 3,
- *  embed-1794967959470: the five-minute conversation); the plan names no such part, so it is found by its minutes. -1: none. */
+/** Fix round 1 (I1), fix round 2 (the controller's ruling): the part that keeps the time earlier parts saved: the LAST required teaching
+ *  part of the plan (not optional, not the overview, the level check or the summary), so saved time flows to the end of the lesson. GDI:
+ *  Conversation; teach / practice / summary: Practice. The plan names no main part. -1: none. */
 export function v2CorePart(plan: LessonPlan): number {
-  let best = -1; let most = 0;
-  plan.segments.forEach((seg, i) => { const m = v2PartOf(seg).minutes ?? 0; if (v2PracticePart(plan, i) && !v2PartIsOptional(seg) && m > 0 && m >= most) { best = i; most = m; } });
-  return best;
+  let last = -1;
+  plan.segments.forEach((seg, i) => { if (v2TeachingPart(plan, i) && !v2PartIsOptional(seg) && (v2PartOf(seg).minutes ?? 0) > 0) last = i; });
+  return last;
 }
 
 /** Fix round 1 (I1): how a part in hand stands on the part clock (facts only).
@@ -246,7 +247,7 @@ export function v2CorePart(plan: LessonPlan): number {
  *     its two practice sentences are said (7f): no go-on line, its time is up now (`late`).
  *  Null where the part clock does not run (v2PartClock). */
 export const V2_BEHIND_SLACK_MIN = 1;
-export function v2PartPace(session: V2Session, state: V2State, nowMs: number, on: boolean = TUTOR_V2_PART_CLOCK): { index: number; id: string; label: string; own: number; used: number; lessonUsed: number; planThrough: number; core: boolean; stay: boolean; up: boolean; late: boolean; left: number } | null {
+export function v2PartPace(session: V2Session, state: V2State, nowMs: number, on: boolean = TUTOR_V2_PART_CLOCK): { index: number; id: string; label: string; own: number; used: number; lessonUsed: number; planThrough: number; core: boolean; stay: boolean; up: boolean; late: boolean; left: number; saved: boolean } | null {
   const c = v2PartClock(session, state, nowMs, on);
   if (!c) return null;
   const plan = session.plan!; const box = session.timeBoxMinutes!;
@@ -265,14 +266,17 @@ export function v2PartPace(session: V2Session, state: V2State, nowMs: number, on
       if (!v2PartIsOptional(seg)) { rest += m; return; }
       if (v2OfferedOut(plan, state).has(seg.id) || state.goals[seg.id]?.status === 'skipped') return;
       const need = minutesFrom(plan, j, state);
-      if (need !== null && lessonUsed + need <= box + margin + 1e-9) rest += m;
+      if (need !== null && lessonUsed + need <= box + margin - V2_HOLD_SLACK_MIN + 1e-9) rest += m;
     });
-    const until = Math.max(c.own - c.used, box - rest - lessonUsed);
+    // Fix round 2 (N2): never past the minute the wrap comes this turn (the held wrap where one is held: the turn passes its session).
+    const wrap = v2WrapMin(session) ?? Infinity;
+    const saved = box - rest - lessonUsed > c.own - c.used;
+    const until = Math.min(Math.max(c.own - c.used, box - rest - lessonUsed), wrap - lessonUsed);
     const stay = !late && until > 0;
-    return { ...c, lessonUsed, planThrough, core, stay, up: !stay, late, left: until };
+    return { ...c, lessonUsed, planThrough, core, stay, up: !stay, late, left: until, saved };
   }
   const stay = !late && c.used < c.own / 2;
-  return { ...c, lessonUsed, planThrough, core, stay, up: late || c.used >= c.own, late, left: c.own - c.used };
+  return { ...c, lessonUsed, planThrough, core, stay, up: late || c.used >= c.own, late, left: c.own - c.used, saved: false };
 }
 
 /** Task 7v (OPTIONAL_FIT): the 7i fit for optional part `i` now: its minutes and those of the required parts after it (the summary's,
@@ -281,7 +285,8 @@ export function v2OptionalFits(plan: LessonPlan, state: V2State, i: number, used
   const seg = plan.segments[i];
   if (!seg || !v2PartIsOptional(seg)) return false;
   const need = typeof state.summaryBegunAt === 'number' ? v2PartOf(seg).minutes ?? null : minutesFrom(plan, i, state);
-  return need !== null && usedMin + need <= boxMin + marginMin + 1e-9;
+  // Fix round 2 (N5): the same half-minute of slack as the hold.
+  return need !== null && usedMin + need <= boxMin + marginMin - V2_HOLD_SLACK_MIN + 1e-9;
 }
 
 /** Task 7v (OPTIONAL_FIT): the wrap minute for this turn while an optional part fits (mic test 6, embed-1795067373124: the yes at

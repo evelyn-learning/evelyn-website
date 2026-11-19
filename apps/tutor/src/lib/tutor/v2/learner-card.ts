@@ -370,7 +370,7 @@ function askedForSentence(history: Anthropic.MessageParam[], wide: boolean = TUT
  *  and kept in state.unheard). Mic test 6 (embed-1795067373124): turns 35 and 44 answered a gap ask, turn 30 an ask cut from the
  *  record by his barge-in, and none gave a practice signal or an owed card. */
 // Fix round 1 (m5): in Japanese only an ask to fill it (「空欄を埋めて」, 「空欄に…を入れてください」), never an explanation of it.
-const GAP_ASK = /\bfill (?:in )?(?:the|this|each|a|that) (?:gap|blank)s?\b|空欄を埋めて|空欄に[^。！？]{0,30}?入れて(?:ください|みて)/i;
+const GAP_ASK = /\bfill (?:in )?(?:the|this|each|a|that) (?:gap|blank)s?\b|空欄を埋めて|空欄に[^。！？]{0,30}?入れて[、,]?[^。！？]{0,20}?(?:ください|みて)/i;
 const GAP_CARD = /<board\s+problem\b[^>]*>[^<]*_{2,}/i;
 const textOf = (m: Anthropic.MessageParam) => (typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '));
 function askedForAnswer(state: Pick<V2State, 'history' | 'unheard'>, wide: boolean = TUTOR_V2_PRACTISED_SENTENCE, signal: boolean = TUTOR_V2_ANSWER_SIGNAL): boolean {

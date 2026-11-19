@@ -102,8 +102,9 @@ function simulate(policy: 'quick' | 'plan' | 'slow') {
     const own = (GDI.segments[k]!.estimatedMinutes ?? 0) as number;
     let x = t;
     for (; x < 30; x += 0.05) {
-      const pace = v2PartPace(lang, st, x * MIN, true)!;
+      // The turn's session carries the wrap held for this turn (as runV2Turn passes it to the facts).
       const wrap = v2OptionalWrapMin(lang, st, x * MIN, 18, 5, null)?.wrap ?? 18;
+      const pace = v2PartPace({ ...lang, wrapMinutes: wrap }, st, x * MIN, true)!;
       if (x >= wrap) { summaryAt = x; break; }
       if (policy === 'quick' && !pace.stay) break;
       if (policy === 'plan' && x - t >= own - 1e-9 && !pace.stay) break;
@@ -124,6 +125,29 @@ function simulate(policy: 'quick' | 'plan' | 'slow') {
     } else summaryAt = t;
   }
   out.push({ part: 'summary', from: summaryAt, to: summaryAt + 2 });
+  return out.map((p) => ({ part: p.part, from: Math.round(p.from * 100) / 100, to: Math.round(p.to * 100) / 100 }));
+}
+
+/** Fix round 2: two other labelled plan shapes, run fast (each part left as soon as its go-on line lifts; the summary at the wrap). */
+const shape = (box: number, parts: Array<[string, string, number]>): { session: V2Session; plan: LessonPlan } => {
+  const base: Record<string, Segment> = { hook: GDI.segments[0]!, concept: GDI.segments[2]!, try_yourself: GDI.segments[3]!, recap: GDI.segments[7]! };
+  const plan: LessonPlan = { ...GDI, subject: 'Maths', segments: parts.map(([label, kind, m]) => ({ ...base[kind]!, id: label.toLowerCase().replace(/\s+/g, '-'), kind, teacherNote: `${label}.`, metadata: { label }, estimatedMinutes: m }) as Segment) };
+  return { plan, session: { studentName: 'Sam', subject: 'Maths', level: 'Grade 8', mode: 'voice', timeBoxMinutes: box, plan } };
+};
+const TEACH_PRACTICE = shape(12, [['Overview', 'hook', 1], ['Teach', 'concept', 5], ['Practice', 'try_yourself', 4], ['Summary', 'recap', 2]]);
+const CONCEPT_TWO = shape(15, [['Overview', 'hook', 1], ['Concept', 'concept', 5], ['First practice', 'try_yourself', 3], ['Second practice', 'try_yourself', 3], ['Summary', 'recap', 2]]);
+function simulateFast(sh: { session: V2Session; plan: LessonPlan }) {
+  const { session, plan } = sh; const last = plan.segments.length - 1;
+  const out: Array<{ part: string; from: number; to: number }> = []; let t = 1; let summaryAt = -1;
+  for (let k = 1; k < last && summaryAt < 0; k++) {
+    const id = plan.segments[k]!.id;
+    const st: V2State = { ...newV2State(0), board: { pages: plan.segments.slice(0, k + 1).map((x, i) => ({ title: String((x.metadata as { label?: string }).label), items: [{ id: `p${i}`, tool: 'annotate', summary: 'x' }] })), current: k }, goals: Object.fromEntries(plan.segments.slice(0, k).map((x) => [x.id, { status: 'shown' as const, at: 0 }])), practiceSaid: { [id]: 3 }, timeFit: { dropped: [], byArrival: true }, partStart: { part: id, at: t * MIN }, history: [u('x'), a('Go on.')] };
+    let x = t;
+    for (; x < 40; x += 0.05) { if (x >= session.timeBoxMinutes! - 2) { summaryAt = x; break; } if (!v2PartPace(session, st, x * MIN, true)!.stay) break; }
+    out.push({ part: String((plan.segments[k]!.metadata as { label?: string }).label), from: t, to: x }); t = x + (summaryAt < 0 ? 0.3 : 0);
+  }
+  if (summaryAt < 0) summaryAt = t;
+  out.push({ part: 'Summary', from: summaryAt, to: summaryAt + 2 });
   return out.map((p) => ({ part: p.part, from: Math.round(p.from * 100) / 100, to: Math.round(p.to * 100) / 100 }));
 }
 
@@ -224,6 +248,10 @@ async function probe() {
     psLateShort: v2PartTimeUpLine(lang, inPart(4, { partStart: { part: 'past-simple', at: 11.85 * MIN }, practiceSaid: { 'past-simple': 1 } }), 16.2 * MIN),
     psLateStay: v2StayInPartLine(lang, inPart(4, { partStart: { part: 'past-simple', at: 15.0 * MIN } }), 16.2 * MIN) };
   const sims = { quick: simulate('quick'), plan: simulate('plan'), slow: simulate('slow') };
+  // Fix round 2: the core part is the last required teaching part; two other plan shapes, fast; N2 the slow case's line at 19.3.
+  const cores = { teach: v2CorePart(TEACH_PRACTICE.plan), concept: v2CorePart(CONCEPT_TWO.plan) };
+  const fast = { teach: simulateFast(TEACH_PRACTICE), concept: simulateFast(CONCEPT_TWO) };
+  const slow193 = v2StayInPartLine({ ...lang, wrapMinutes: 19.5 }, inPart(5, { partStart: { part: 'open-conversation', at: 16.3 * MIN } }), 19.3 * MIN);
   // ── 2 OPTIONAL_FIT: Conversation entered at 13.8; Pronunciation offered at 17.85 (T99); "Uh, yes, let's go." at 18.1 ──
   const conv = (extra: Partial<V2State> = {}) => inPart(5, { partStart: { part: 'open-conversation', at: 13.8 * MIN }, history: [u('x'), a(T99)], ...extra });
   const wrapAtOffer = v2OptionalWrapMin(lang, inPart(5, { partStart: { part: 'open-conversation', at: 13.8 * MIN } }), 17.85 * MIN, 18, 5, null);
@@ -328,7 +356,8 @@ async function probe() {
   // ── 7 ──
   const self = v2SelfCorrection('My team is working on um uh presentation for senior staff.\nfor senior bosses.');
   const selfLines = v2PracticeFactLines(lang, inPart(2, { history: [u('x'), a('Now a question about your team\'s current work. Start your answer with: My team is working on…')] }), 'My team is working on um uh presentation for senior staff.\nfor senior bosses.');
-  const selfNot = ['Yes, I think so.', 'I work in sales.\nYes.', 'I work in sales.\nWhat about you?', 'I work in sales. I sell washing machines.', 'I work in sales.\nAnd you', 'I visited the office.\nIn Tokyo.'].map((x) => v2SelfCorrection(x));
+  const selfNot = ['Yes, I think so.', 'I work in sales.\nYes.', 'I work in sales.\nWhat about you?', 'I work in sales. I sell washing machines.', 'I work in sales.\nI sell washing machines.', 'I visited Tokyo last year.\nI went there.'].map((x) => v2SelfCorrection(x));
+  const selfYes = ['I have work here for five years.\nWorked.', 'I goed to Tokyo.\nWent.'].map((x) => v2SelfCorrection(x)?.phrase ?? null);
   const carried = v2CutWordsCarried('My team is working on um uh presentation for senior staff.', '', 0, 'for senior bosses.');
   const carriedNot = [v2CutWordsCarried('My team is working on a report.', 'That\'s', 0, 'for senior bosses.'), v2CutWordsCarried('My team is working on a report.', '', 1, 'for senior bosses.'), v2CutWordsCarried('My team is working on a report.', '', 0, null)];
   const joined = v2WithCarried(carried, 'for senior bosses.');
@@ -345,13 +374,13 @@ async function probe() {
     return { own: own.own, score: own.score, timing: own.timing, echo: echo.own };
   };
   return {
-    spokenClosing, core, sims, declineTurnFacts: declineTurn.facts, noStart, endOnce: { results: endOnce.results, closed: endOnce.r.state.closed }, endAfter: { results: endAfter.results, closed: endAfter.r.state.closed }, endStop: endStop.r.state.closed, typedFacts, cov, gapExplained,
+    spokenClosing, core, sims, cores, fast, slow193, declineTurnFacts: declineTurn.facts, noStart, endOnce: { results: endOnce.results, closed: endOnce.r.state.closed }, endAfter: { results: endAfter.results, closed: endAfter.r.state.closed }, endStop: endStop.r.state.closed, typedFacts, cov, gapExplained,
     clock, facts30, facts52: t52.facts, first, kept, moved, freshStart: fresh.r.state.partStart ?? null, roundTrip, mathsClock, mathsFacts, mathsPlainFacts,
     wrapAtOffer, yesPage: yesPage ? String(yesPage.args.title) : null, yesFacts: yes.facts, yesStart: yes.r.state.partStart ?? null, wrapIn, pron19Facts: pron19.facts, pron212Facts: pron212.facts,
     askedIndex, laterFacts: later.facts, laterPage: laterPage ? String(laterPage.args.title) : null, tooLateFacts: tooLate.facts, notAsk, noFit, declined,
     targets, praiseNo, praiseYes, walk, sentences, signals, digits, lines, convGapFacts: convGap.facts, convAfterStep: convAfter.support?.step ?? null, intoConvStep: intoConv.support?.step ?? null, psGapStep: psGap.support?.step ?? null,
     freeConv: GDI.segments.map((s) => v2FreeConversationPart(s)), planMap,
-    self, selfLines, selfNot, carried, carriedNot, joined, repeatOn: repeat(), repeatOff: repeat(false),
+    self, selfLines, selfNot, selfYes, carried, carriedNot, joined, repeatOn: repeat(), repeatOff: repeat(false),
   };
 }
 
@@ -368,7 +397,11 @@ async function main() {
   check('not when they asked to move on (theirs to close)', on.clock.upMovedOn === null);
   check('through runV2Turn: 3.0 has the stay line; 5.2 the part-time line and no lesson-clock "would be running now"', /has about 2 of its 3 minutes left/.test(on.facts30) && /has had its 3 planned minutes/.test(on.facts52) && !/would be running now/.test(on.facts52), on.facts52.split('\n').filter((l) => /^time:|would be running/.test(l)));
   console.log('1  fix round 1 (I1): the core part keeps the time saved; a cumulative behind check');
-  check('the core part is the required practice part with the most minutes: Conversation (maths: Practice)', on.core.index === 5 && on.core.mathsIndex === 1, on.core);
+  check('the core part is the last required teaching part: Conversation (maths demo: Practice; teach 5 / practice 4: Practice; concept 5 / practice 3 / practice 3: the last practice)', on.core.index === 5 && on.core.mathsIndex === 1 && on.cores.teach === 2 && on.cores.concept === 3, [on.core, on.cores]);
+  const fseq = (k: 'teach' | 'concept') => on.fast[k].map((p) => `${p.part} ${p.from}–${p.to}`).join(' · ');
+  console.log(`    teach 5 / practice 4 (target 12), fast:  ${fseq('teach')}\n    concept 5 / practice 3 / practice 3 (target 15), fast:  ${fseq('concept')}`);
+  check('a fast lesson on either shape closes no more than 2 minutes before its target (the saved time goes to the last practice part)', (on.fast.teach.at(-1)?.to ?? 0) >= 12 - 2 && (on.fast.concept.at(-1)?.to ?? 0) >= 15 - 2, on.fast);
+  check('fix round 2 (N2): the slow case at 19.3 (wrap held to 19.5): "less than a minute left", nothing about time saved', /main practice and has less than a minute left: there is time/.test(on.slow193 ?? '') && !/saved/.test(on.slow193 ?? ''), on.slow193);
   check('Conversation entered early (8.0): still "go on" at 13.5 (lesson clock under 20 − 3 − 2 = 15), its time up only from 15', /is the lesson's main practice and has about 2 minutes left/.test(on.core.convEarly ?? '') && /has had its time/.test(on.core.convEarlyUp ?? ''), [on.core.convEarly, on.core.convEarlyUp]);
   check('behind (16.2 > Past simple\'s plan end 15 + 1) with its two sentences said: time up now, and no go-on line', /the lesson is behind its plan/.test(on.core.psLate ?? '') && on.core.psLateStay === null, [on.core.psLate, on.core.psLateStay]);
   check('…not before its two practice sentences (7f): only the ordinary part-time line', !/behind its plan/.test(on.core.psLateShort ?? ''), on.core.psLateShort);
@@ -447,7 +480,8 @@ async function main() {
   console.log('7  SELF_CORRECTION, REPEAT_NOT_ECHO');
   check('"…for senior staff." then "for senior bosses.": one sentence and its correction', on.self?.phrase === 'for senior bosses.' && /senior staff/.test(on.self?.sentence ?? ''));
   check('the practice facts say to read the two together and never correct the phrase as a fragment', on.selfLines.some((l) => /^self-correction: .*read the two together as the one sentence they meant .*never treat or correct the phrase as a sentence of its own or a fragment/.test(l)));
-  check('not for a yes, a question, two full sentences, or an addition with no word in common ("And you", "In Tokyo.")', on.selfNot.every((x) => x === null), on.selfNot);
+  check('fix round 2 (N1): a one-word replacement after the sentence is a self-correction: "…\\nWorked.", "I goed to Tokyo.\\nWent."', JSON.stringify(on.selfYes) === JSON.stringify(['Worked.', 'Went.']), on.selfYes);
+  check('not for a yes, a question, or a second full sentence (more than 4 words, or its own subject and verb: "I went there.")', on.selfNot.every((x) => x === null), on.selfNot);
   check('the cut turn (nothing reached him) carries his words to the next turn, joined before the words that cut it', on.carried === 'My team is working on um uh presentation for senior staff.' && on.joined === 'My team is working on um uh presentation for senior staff.\nfor senior bosses.' && on.carriedNot.every((x) => x === null));
   check('13:38: his repeat, said with the model sentence and two words ahead of the voice, is not its echo', on.repeatOn.own === false && /2 word\(s\) ahead of the voice/.test(on.repeatOn.timing), on.repeatOn);
   check('…the same words with the switch off are dropped as before (score 0.75); a true echo inside the played words still is', on.repeatOff.own === true && on.repeatOff.score === 0.75 && on.repeatOn.echo === true, on.repeatOff);
@@ -468,7 +502,7 @@ async function main() {
   {
     const off = child('OPTIONAL_FIT');
     check('OPTIONAL_FIT off: "Uh, yes, let\'s go." at 18.1 opens nothing and the facts say no time; the later request is not recognised', off.yesPage === null && /no time for it now/.test(off.yesFacts) && off.askedIndex === -1 && off.laterPage === null && off.wrapAtOffer === null, [off.yesPage, off.askedIndex]);
-    check('OPTIONAL_FIT off: no end_lesson deferral (the moved wrap is gone)', !on.endOnce.results.length || !off.endOnce.results.some((r) => /^not ended yet/.test(r)));
+    check('OPTIONAL_FIT off: no end_lesson deferral (the moved wrap is gone; ON it was deferred)', on.endOnce.results.some((r) => /^not ended yet/.test(r)) && !off.endOnce.results.some((r) => /^not ended yet/.test(r)), off.endOnce);
   }
   {
     const off = child('RETEST_TARGET_CHANGED');

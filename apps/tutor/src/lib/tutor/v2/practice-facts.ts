@@ -58,6 +58,10 @@ export function v2PracticeFactLines(session: V2Session, state: V2State, heard: s
  *  said right after a full sentence (four words or more, v2LearnerSentence): the sentence and the phrase, else null. Mic test 6
  *  (embed-1795067373124, 6.1 min): "My team is working on um uh presentation for senior staff." then "for senior bosses." was
  *  corrected as a fragment. */
+export const V2_SELF_CORRECTION_MAX_WORDS = 4;
+/** A phrase with its own subject and a verb after it is a sentence of its own, not a correction ("I went there.", "She likes it."):
+ *  a personal pronoun and any word after it, or another subject and a verb form. */
+const OWN_SUBJECT = /^(?:(?:and|but|so|then)\s+)?(?:(?:i|you|he|she|we|they)\s+[a-z']+|(?:it|this|that|there|my \w+|our \w+|the \w+)\s+(?:am|is|are|was|were|have|has|had|do|does|did|will|would|can|could|\w+(?:ed|s)))\b/i;
 const NOT_A_PHRASE = /^(?:yes|yeah|yep|no|nope|ok(?:ay)?|sure|thanks?|thank you|sorry|right|i see|uh|um|はい|いいえ|ええ)\b/i;
 export function v2SelfCorrection(heard: string | null | undefined): { sentence: string; phrase: string } | null {
   if (!heard) return null;
@@ -65,10 +69,10 @@ export function v2SelfCorrection(heard: string | null | undefined): { sentence: 
   if (parts.length < 2) return null;
   const phrase = parts[parts.length - 1]!; const before = parts[parts.length - 2]!;
   const n = v2SentenceTokens(phrase).filter((w) => !/^(?:u+h+|u+m+|e+r+m*)$/.test(w)).length;
-  if (n < 1 || n > 3 || /[?？]\s*$/.test(phrase) || NOT_A_PHRASE.test(phrase)) return null;
-  // Fix round 1 (m11): it says part of the sentence again (a word in common): "And you" or "In Tokyo." after another sentence adds.
-  const had = new Set(v2SentenceTokens(before));
-  if (!v2SentenceTokens(phrase).some((w) => had.has(w))) return null;
+  // Fix round 2 (N1, the controller's ruling): the shape alone decides: at most V2_SELF_CORRECTION_MAX_WORDS words that are not a
+  // sentence of their own (a subject and a verb: "I went there."). "I have work here for five years." then "Worked." is a correction
+  // that shares no word with it.
+  if (n < 1 || n > V2_SELF_CORRECTION_MAX_WORDS || /[?？]\s*$/.test(phrase) || NOT_A_PHRASE.test(phrase) || OWN_SUBJECT.test(phrase.trim())) return null;
   const sentence = v2LearnerSentence(before);
   return sentence ? { sentence: before.replace(/\s+/g, ' ').slice(0, 200), phrase: phrase.slice(0, 80) } : null;
 }
