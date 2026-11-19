@@ -36,7 +36,7 @@
  * session): maths and science, one-language lessons, typed lessons, homework and a discussion are unchanged.
  */
 import type Anthropic from '@anthropic-ai/sdk';
-import { TUTOR_V2_BOARD_LEARNER_SENTENCE, TUTOR_V2_CARD_EVERY_SENTENCE, TUTOR_V2_CORRECTION_CARD_NOW } from '../orchestrator/flags';
+import { TUTOR_V2_BOARD_LEARNER_SENTENCE, TUTOR_V2_CARD_EVERY_SENTENCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_PRACTISED_SENTENCE } from '../orchestrator/flags';
 import { languageNameOf } from '../voice/language-request';
 import { stripBoardBlocks, type InlineBlock, type InlinePart } from './board-inline';
 import { v2IsPracticeAsk } from './languages';
@@ -318,7 +318,13 @@ export class LearnerCardWatch {
  *  sentence", "start with …"), or a question about them (fix round 1, M3: not every answer of four words or more). */
 const SENTENCE_REQUEST = /\b(?:tell me|answer with|in (?:one|a|two|full|a full|one or two) (?:or two )?sentences?|start(?:ing)? with|begin(?:ning)? with|make a sentence|describe)\b|文で|言ってみて/i;
 const QUESTION_ABOUT_THEM = /^(?:what|how|where|when|why|which|who|have you|has your|did you|do you|are you|were you|can you|could you|would you)\b[^?]*\?["'”’]*$/i;
-function askedForSentence(history: Anthropic.MessageParam[]): boolean {
+/** Task 7s (PRACTISED_SENTENCE, `wide`): an ask to answer in given words or to say one after the tutor, in Japanese: 「"Did you
+ *  enjoy..." で答えてみてください。」, 「考えて答えてみてください。」, 「私の後に繰り返してください。」 (mic test 5, embed-1795050656326: the
+ *  asks before n2 and n5 were read as no ask for a sentence). */
+const SENTENCE_REQUEST_JA = /で答えて|答えてみて|繰り返して/;
+/** Task 7s: exported for the practised-sentence facts (practice-facts.ts): the same structural test. */
+export function v2AskedForSentence(history: Anthropic.MessageParam[], wide: boolean = TUTOR_V2_PRACTISED_SENTENCE): boolean { return askedForSentence(history, wide); }
+function askedForSentence(history: Anthropic.MessageParam[], wide: boolean = TUTOR_V2_PRACTISED_SENTENCE): boolean {
   const last = [...history].reverse().find((h) => h.role === 'assistant');
   if (!last) return false;
   const text = stripBoardBlocks(typeof last.content === 'string' ? last.content : last.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '));
@@ -327,7 +333,7 @@ function askedForSentence(history: Anthropic.MessageParam[]): boolean {
   // not for a sentence ("Yes, let's go on to the present perfect." got the card line).
   const end = sentences[sentences.length - 1] ?? '';
   if (end && (v2IsPartAsk(end) || v2ReplyInvites(end))) return false;
-  return sentences.some((x) => v2IsPracticeAsk(x) || SENTENCE_REQUEST.test(x)) || QUESTION_ABOUT_THEM.test(sentences[sentences.length - 1] ?? '');
+  return sentences.some((x) => v2IsPracticeAsk(x) || SENTENCE_REQUEST.test(x) || (wide && SENTENCE_REQUEST_JA.test(x))) || QUESTION_ABOUT_THEM.test(sentences[sentences.length - 1] ?? '');
 }
 
 /** Task 7g (CARD_EVERY_SENTENCE), fix round 1 (I1): a sentence that is no practice sentence of theirs is one whose WHOLE shape
@@ -463,4 +469,19 @@ export function v2LearnerSentenceFacts(session: V2Session, state: V2State, heard
   const s = v2LearnerSentence(heard);
   if (!s || !askedForSentence(state.history) || v2SentenceOnBoard(state.board, s, state.correctedSentences ?? [])) return [];
   return [`their words just now answered your ask with a sentence of theirs: put it on the board as one sentence card as it should be, where you answer it: as they said it (without fillers) when it is right; your corrected sentence, the changed words stressed, with a short ${support} gloss, when you correct it. One card in this reply at most; none of their mistake, none for small talk, none when the sentence is up already`];
+}
+
+/** Task 7s (FRAGMENT_CARD): words that never end a whole sentence card here: a preposition or an article. */
+const OPEN_END = new Set(['of', 'to', 'for', 'with', 'at', 'in', 'on', 'from', 'about', 'by', 'into', 'as', 'a', 'an', 'the']);
+const FILLER_WORDS = new Set(['uh', 'um', 'er', 'erm', 'ah', 'eh', 'hmm', 'mm']);
+/** Task 7s (FRAGMENT_CARD, mic test 5, embed-1795050656326 at 13 min): a card that ends on a preposition or an article ("I am proud
+ *  of.") where the learner's sentence just now goes on past that word ("I proud of uh donations project…"): the head of their
+ *  sentence, which the reply completes, not a sentence of its own. "Where are you from?" said as a whole stays a sentence. */
+export function v2CardIsFragment(card: string, heard: string | null | undefined): boolean {
+  const words = (t: string) => (t.toLowerCase().match(/[a-z]+(?:['’][a-z]+)?/g) ?? []).filter((w) => !FILLER_WORDS.has(w));
+  const c = words(card);
+  const last = c[c.length - 1]; const prev = c[c.length - 2];
+  if (!last || !OPEN_END.has(last) || !heard) return false;
+  const h = words(heard);
+  return h.some((w, i) => w === last && i < h.length - 1 && (!prev || h[i - 1] === prev));
 }

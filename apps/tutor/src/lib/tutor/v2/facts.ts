@@ -20,6 +20,7 @@ import { v2CardGlossFacts } from './card-gloss';
 import { TUTOR_V2_CARD_GLOSS_ASK, TUTOR_V2_CARD_GLOSS_REMIND } from '../orchestrator/flags';
 import { v2CardsOwedFacts, v2LearnerSentenceFacts } from './learner-card';
 import { v2PracticeAskFacts, v2RetryFacts } from './languages';
+import { v2PracticeFactLines } from './practice-facts';
 import { V2_TIME_UP_MIN, v2CloseOpen, v2PlanContentDone, v2LeftToStopMin, v2LessonTimeLine, v2PartDueFact, v2TimeFlags, v2WrapDue, type V2TimeFlags } from './time-box';
 import { V2_MORE_PRACTICE_MIN_LEFT, v2MorePracticeFacts, v2PracticeFacts, v2StayInPartLine, v2TimeFitFacts } from './time-fit';
 import { TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART } from '../orchestrator/flags';
@@ -258,6 +259,9 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   if (!session.homework && !session.homeworkSheet && !discussion) lines.push(...v2RetryFacts(session.languages, state.history, f.heard));
   // Asks for one practice sentence, counted; a bare yes is no try (Task 6e fix round 1, F2).
   if (!session.homework && !session.homeworkSheet && !discussion) lines.push(...v2PracticeAskFacts(session.languages, state.history, f.heard));
+  // Task 7s (PRACTISED_SENTENCE, STARTER_IS_ANSWER, QUESTION_NOT_NOTE): their asked-for sentence is practice, a starter opens the
+  // answer, a question goes on a question card (practice-facts.ts; spoken lessons that teach a language only).
+  lines.push(...v2PracticeFactLines(session, state, f.heard));
   // The learner's corrected sentences, for the summary's sentence cards (sentence-cards.ts).
   lines.push(...v2SentenceCardsFacts(session, state));
   // Task 7p (CARD_GLOSS_ASK, CARD_GLOSS_REMIND; mic test 4 flag 5c): a beginner's question cards and rule notes carry a line in their

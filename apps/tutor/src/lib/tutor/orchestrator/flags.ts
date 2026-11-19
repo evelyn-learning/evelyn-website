@@ -2204,3 +2204,42 @@ export const TUTOR_V2_PART_ASK_CLAUSES = process.env.NEXT_PUBLIC_TUTOR_V2_PART_A
  *  held for another ask, and no runtime part ask is added to that reply. Mic test 5 (embed-1795050656326, 11.9 and 18 min)
  *  (Task 7r, item 4). Default ON; NEXT_PUBLIC_TUTOR_V2_PART_GO_NAMED=off ⇒ as before. */
 export const TUTOR_V2_PART_GO_NAMED = process.env.NEXT_PUBLIC_TUTOR_V2_PART_GO_NAMED !== 'off';
+
+/** Tutor brain v2 (v2/practice-facts.ts, v2/facts.ts): the turn after the tutor asked the learner for a sentence (to make one, a
+ *  question included, or to say a given one: learner-card.ts v2AskedForSentence, the structural record), the facts say their words
+ *  are their practice: feedback and a card, never an answer from the persona card. Mic test 5 (embed-1795050656326, 10.2 min:
+ *  "Did you enjoy the robotics exhibition…?" was answered as the tutor's own weekend) (Task 7s, item 2). Spoken lessons that teach a
+ *  language only. Default ON; NEXT_PUBLIC_TUTOR_V2_PRACTISED_SENTENCE=off ⇒ as before. */
+export const TUTOR_V2_PRACTISED_SENTENCE = process.env.NEXT_PUBLIC_TUTOR_V2_PRACTISED_SENTENCE !== 'off';
+
+/** Tutor brain v2 (v2/practice-facts.ts, v2/adaptive.ts): a starter given for an answer is the opening of the answer itself, a
+ *  statement ("Yes, I enjoyed…"), never the question form ("Did you enjoy…", "Has the project…"); asking them to make a question
+ *  is said plainly. The 7q `starter` step says the same. Mic test 5 (embed-1795050656326, 10.2 and 14.1 min) (Task 7s, item 3).
+ *  Spoken lessons that teach a language only. Default ON; NEXT_PUBLIC_TUTOR_V2_STARTER_IS_ANSWER=off ⇒ as before. */
+export const TUTOR_V2_STARTER_IS_ANSWER = process.env.NEXT_PUBLIC_TUTOR_V2_STARTER_IS_ANSWER !== 'off';
+
+/** Tutor brain v2 (v2/pronunciation.ts, v2/turn.ts): pronunciation practice shows on its page and counts. Each item armed by
+ *  practise_pronunciation while the pronunciation part's page is in view is written on it as a card by the runtime; a measured
+ *  attempt there counts as practice of that part (so the part is entered and the close does not say it was not reached); the
+ *  facts say the measured score is the only number to say; no check-in is added to a reply that asks them to repeat or say
+ *  something, or that armed a recording. Mic test 5 (embed-1795050656326, 16–19 min) (Task 7s, item 4). Spoken lessons that teach
+ *  a language only. Default ON; NEXT_PUBLIC_TUTOR_V2_PRONUNCIATION_PAGE=off ⇒ as before. */
+export const TUTOR_V2_PRONUNCIATION_PAGE = process.env.NEXT_PUBLIC_TUTOR_V2_PRONUNCIATION_PAGE !== 'off';
+
+/** Tutor brain v2 (v2/practice-facts.ts, whiteboard/WhiteboardCanvas.tsx): a question the learner must answer goes in a question
+ *  card (<board problem>), never a note; and a plain note with a gloss line is drawn as a note (white, slate edge), not in the
+ *  grey of a learner's sentence card. Mic test 5 (embed-1795050656326, 18.4 min: the summary's check question looked like the
+ *  four sentence cards above it) (Task 7s, item 5). Spoken lessons that teach a language only. Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_QUESTION_NOT_NOTE=off ⇒ as before. */
+export const TUTOR_V2_QUESTION_NOT_NOTE = process.env.NEXT_PUBLIC_TUTOR_V2_QUESTION_NOT_NOTE !== 'off';
+
+/** Tutor v2 session header (session/HeaderClock.tsx, SessionControls.tsx): the header timer leaves out the time the tester's
+ *  debug flag panel was open (development only), as the lesson clock does (7n FLAG_CLOCK_PAUSE). Mic test 5
+ *  (embed-1795050656326: 22:35 / 20:00 with about 5 min of flags) (Task 7s, item 6). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_HEADER_CLOCK_PAUSE=off ⇒ as before. */
+export const TUTOR_V2_HEADER_CLOCK_PAUSE = process.env.NEXT_PUBLIC_TUTOR_V2_HEADER_CLOCK_PAUSE !== 'off';
+
+/** Tutor brain v2 (v2/turn.ts): a sentence card of a two-language lesson that ends on a preposition or an article ("I am proud
+ *  of.") where the learner's own sentence goes on past that word is a fragment, not a sentence: refused like a "…" starter (7m).
+ *  Mic test 5 (embed-1795050656326, 13 min) (Task 7s, item 6). Default ON; NEXT_PUBLIC_TUTOR_V2_FRAGMENT_CARD=off ⇒ as before. */
+export const TUTOR_V2_FRAGMENT_CARD = process.env.NEXT_PUBLIC_TUTOR_V2_FRAGMENT_CARD !== 'off';

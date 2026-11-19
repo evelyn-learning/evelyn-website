@@ -264,6 +264,7 @@
     "test:brain-v2-adaptive-7q": "npx tsx scripts/test-brain-v2-adaptive-7q.ts",
     "test:brain-v2-mic4-7n": "npx tsx scripts/test-brain-v2-mic4-7n.ts",
     "test:brain-v2-mic5-7r": "npx tsx scripts/test-brain-v2-mic5-7r.ts",
+    "test:brain-v2-mic5-7s": "npx tsx scripts/test-brain-v2-mic5-7s.ts",
     "test:brain-v2-time-box": "NEXT_PUBLIC_TUTOR_V2_TIME_NO_SQUEEZE=off NEXT_PUBLIC_TUTOR_V2_PART_MIN_PRACTICE=off NEXT_PUBLIC_TUTOR_V2_CLOSE_BY_CONTENT=off NEXT_PUBLIC_TUTOR_V2_TIME_OVERRUN=off npx tsx scripts/test-brain-v2-time-box.ts",
     "test:replay-harness": "npx tsx scripts/tutor/replay-harness/replay-harness.test.ts",
     "live:replay": "npx tsx scripts/tutor/replay-harness/run-replay.ts",

@@ -19,7 +19,7 @@ import { PRONUNCIATION_LOW_SCORE, pronunciationLowScore } from '../pronunciation
 import { MAX_REFERENCE_CHARS } from '../pronunciation/assess-request';
 import { WORD_FLAG_SCORE } from '../pronunciation/normalize';
 import { discussionOf } from './discussion';
-import { TUTOR_V2_PRONUNCIATION_FALLBACK, TUTOR_V2_TEXT_NO_SOUND } from '../orchestrator/flags';
+import { TUTOR_V2_PRONUNCIATION_FALLBACK, TUTOR_V2_PRONUNCIATION_PAGE, TUTOR_V2_TEXT_NO_SOUND } from '../orchestrator/flags';
 import type { V2Session, V2State } from './types';
 
 export { PRONUNCIATION_LOW_SCORE };
@@ -183,7 +183,7 @@ const ANSWER_FIRST = 'If what they said was not a try at it (a question, a compl
 /** The facts lines for pronunciation practice (only in a session that has it). `studentSaid` is this turn's words.
  *  `fallback` (TUTOR_V2_PRONUNCIATION_FALLBACK): with no measurement to be had, the learner is told once and offered
  *  practice without a score, instead of the lines that moved the learner to the summary (gdi-real-james) after one word (Task 6f). */
-export function v2PronunciationFacts(session: V2Session, state: V2State, studentSaid: string | null | undefined, fallback: boolean = TUTOR_V2_PRONUNCIATION_FALLBACK): string[] {
+export function v2PronunciationFacts(session: V2Session, state: V2State, studentSaid: string | null | undefined, fallback: boolean = TUTOR_V2_PRONUNCIATION_FALLBACK, onlyScore: boolean = TUTOR_V2_PRONUNCIATION_PAGE): string[] {
   if (!v2PronunciationOn(session)) return [];
   const p = state.pronunciation;
   // A session the route will not measure: offered practice would only ever come back unmeasured.
@@ -221,6 +221,9 @@ export function v2PronunciationFacts(session: V2Session, state: V2State, student
   if (cut) lines.push(`the recording ended before "${cut.word}": that is not their mistake, and it is not counted against them`);
   // v1 Task 25 §E: "was it graded?": the number was never said. v1: sounds the measurement did not name were invented.
   lines.push(`tell them the score as "${heard.overall ?? '?'} out of 100", and speak only of the items and sounds measured here`);
+  // Task 7s (PRONUNCIATION_PAGE, mic test 5, embed-1795050656326): the tutor said "responsibilities は90点" beside the measured 93,
+  // and "international は98点" beside 96: a second number of its own.
+  if (onlyScore && typeof heard.overall === 'number') lines.push(`the score of this attempt is ${heard.overall} out of 100, and it is the only number you may say about it: no other score, no score for a word of your own, no number the measurement did not give as the attempt's score`);
   const weak = (heard.words ?? []).filter((w) => w !== cut && !w.omitted && w.score < PRONUNCIATION_LOW_SCORE).map((w) => w.word);
   if (isLow(heard)) {
     // v1 W11-A (run 7): "developed" scored 16/100, the tutor named the sound and moved on: no repeat in five items.

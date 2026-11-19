@@ -25,6 +25,7 @@
 
 import { Clock } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { flagFreeElapsedSec, useFlagClockPause } from './useFlagClockPause';
 
 export function HeaderClock({
   startedAtMs,
@@ -52,6 +53,8 @@ export function HeaderClock({
   className?: string;
 }) {
   const [elapsedSec, setElapsedSec] = useState(0);
+  // Task 7s (HEADER_CLOCK_PAUSE): the tester's flag time left out (development only; zero otherwise).
+  const flagPause = useFlagClockPause();
 
   // Derive from a fixed start timestamp rather than incrementing a counter, so
   // the clock stays accurate across a backgrounded tab (setInterval throttles
@@ -61,12 +64,13 @@ export function HeaderClock({
       setElapsedSec(0);
       return;
     }
-    const tick = () => setElapsedSec(Math.max(0, Math.floor(((frozenAtMs ?? Date.now()) - startedAtMs) / 1000)));
+    const tick = () => setElapsedSec(flagFreeElapsedSec(startedAtMs, frozenAtMs ?? Date.now(), flagPause));
     tick();
     if (frozenAtMs) return;
+    if (flagPause.sinceMs !== null) return;
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [startedAtMs, frozenAtMs]);
+  }, [startedAtMs, frozenAtMs, flagPause]);
 
   const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 

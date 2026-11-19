@@ -16,6 +16,7 @@ import { Clock, LogOut, Camera, Upload, X, Download, GripVertical } from 'lucide
 import { normaliseUploadedImage } from '@/lib/tutor/whiteboard/image-upload-normalise';
 import { HeaderFullscreenButton, type FullscreenApi } from '@/app/tutor/components/session/HeaderFullscreenButton';
 import { TUTOR_HEADER_FULLSCREEN } from '@/lib/tutor/orchestrator/flags';
+import { flagFreeElapsedSec, useFlagClockPause } from '@/app/tutor/components/session/useFlagClockPause';
 
 interface WhiteboardCommandData {
   action: string;
@@ -175,6 +176,8 @@ export function SessionControls({
   level,
 }: SessionControlsProps) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  // Task 7s (HEADER_CLOCK_PAUSE): the tester's flag time left out (development only; zero otherwise).
+  const flagPause = useFlagClockPause();
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadPreview, setUploadPreview] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -191,13 +194,14 @@ export function SessionControls({
     }
 
     const tick = () =>
-      setElapsedSeconds(Math.max(0, Math.floor(((frozenAtMs ?? Date.now()) - startedAtMs) / 1000)));
+      setElapsedSeconds(flagFreeElapsedSec(startedAtMs, frozenAtMs ?? Date.now(), flagPause));
     tick();
     if (frozenAtMs) return;
+    if (flagPause.sinceMs !== null) return;
     const interval = setInterval(tick, 1000);
 
     return () => clearInterval(interval);
-  }, [startedAtMs, frozenAtMs]);
+  }, [startedAtMs, frozenAtMs, flagPause]);
 
   // Format time
   const formatTime = (seconds: number): string => {

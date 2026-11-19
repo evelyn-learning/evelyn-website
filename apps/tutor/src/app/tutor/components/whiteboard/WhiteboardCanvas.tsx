@@ -97,7 +97,7 @@ import FoodWebRenderer from './FoodWebRenderer';
 import { InlineMathText } from './InlineMathText';
 import { RichBoardText } from './RichBoardText';
 import { NoteTargetText } from './NoteTargetText';
-import { CardGloss } from './CardGloss';
+import { CardGloss, cardGlossOf } from './CardGloss';
 import { isProseNotLatex } from '@/lib/tutor/whiteboard/inline-math';
 import { CellContent } from './CellContent';
 import { stripRedundantChoiceLabel, stripEmbeddedChoiceBlock } from './choiceLabel';
@@ -108,7 +108,7 @@ import { strokeOutline, tickSpine, highlightBand } from '@/lib/tutor/whiteboard/
 import { InkNotesOverlay, AMBER } from './InkNotesOverlay';
 import { inkNotesEnabled, linksEnabled } from '../../hooks/toolDefinitions';
 import { shouldFollowNewRender, trailingNavSuppressesFollow, pageTargetedCardHoldsView, isPageTargetedSentence } from '@/lib/tutor/whiteboard/view-follow';
-import { INK_NOTE_DRAG } from '@/lib/tutor/orchestrator/flags';
+import { INK_NOTE_DRAG, TUTOR_V2_QUESTION_NOT_NOTE } from '@/lib/tutor/orchestrator/flags';
 import { stripLatexForTitle } from '@/lib/tutor/whiteboard/board-title';
 
 /** Actions that don't paint a teaching render — shared by the scrollTo
@@ -3099,9 +3099,14 @@ function CommandRendererInner({ command }: CommandRendererProps) {
       // stress words it carries, as a sentence card draws a stress word (NoteTargetText). Every other note renders as before.
       const noteMarks = { quoted: (command as { targets?: boolean }).targets === true || undefined, stress: (command as { stress?: string[] }).stress };
       const marked = !!noteMarks.quoted || !!noteMarks.stress?.length;
+      // Task 7s (QUESTION_NOT_NOTE, mic test 5, embed-1795050656326 flag 11): a plain note with a line in the learner's language
+      // (7p gloss) was drawn in the grey of a learner's sentence card, gloss line and all, and read as one more of their sentences.
+      // It is drawn as a note: white, with a slate edge. Every other note renders as before.
+      const glossNote = TUTOR_V2_QUESTION_NOT_NOTE && !!cardGlossOf(command) && command.style !== 'highlight' && command.style !== 'warning';
       return (
         <div
           className={`p-4 rounded-lg ${
+            glossNote ? 'bg-white border border-slate-200 border-l-4 border-l-slate-400' :
             // rich (tutor brain v2): a key note is a white card with an amber edge. The yellow fill was the colour of
             // the question pin that floats over the board, and the two ran together (chemistry, 2026-11-11).
             command.style === 'highlight' && (command as { rich?: boolean }).rich

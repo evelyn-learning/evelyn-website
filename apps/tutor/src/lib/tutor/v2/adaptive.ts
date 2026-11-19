@@ -23,7 +23,7 @@
  * visit). Keyed on the session, never on a partner. Pure, client-safe.
  */
 import type { LessonPlan } from '../lesson-plan/types';
-import { TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_SUPPORT_STEPS } from '../orchestrator/flags';
+import { TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_STARTER_IS_ANSWER, TUTOR_V2_SUPPORT_STEPS } from '../orchestrator/flags';
 import { v2CardIsOf, v2SentenceWords } from './learner-card';
 import { v2NoteTargetsOn } from './note-targets';
 import { v2PartInHand, v2PartViewed, v2PlanLabelled, v2TutorReplies } from './part-flow';
@@ -64,10 +64,13 @@ const label = (plan: LessonPlan, id: string) => { const seg = plan.segments.find
 const ev = (type: string, message: string): V2TurnEvent => ({ type, message });
 
 /** The facts line for a support step (none at normal). */
-export function v2SupportLine(step: V2SupportStep): string | null {
+export function v2SupportLine(step: V2SupportStep, starterIsAnswer: boolean = TUTOR_V2_STARTER_IS_ANSWER): string | null {
   const tail = 'This shapes only your next new question: a correction, a retry it asks for, one question a reply and the cards stay as they are';
   switch (step) {
-    case 'starter': return `support for the next question: starter (their recent answers in this part needed corrections). Give them the first words of the answer to build on ("Start with: I have worked…"); they finish the sentence. ${tail}`;
+    // Task 7s (STARTER_IS_ANSWER): the starter is the opening of their answer, a statement, never the question form.
+    case 'starter': return starterIsAnswer
+      ? `support for the next question: starter (their recent answers in this part needed corrections). Give them the first words of their answer, as a statement, to build on ("Start with: I have worked…"), never the question form; they finish the sentence. ${tail}`
+      : `support for the next question: starter (their recent answers in this part needed corrections). Give them the first words of the answer to build on ("Start with: I have worked…"); they finish the sentence. ${tail}`;
     case 'gap': return `support for the next question: gap (their recent answers needed corrections even with a start). Ask them to fill one gap in a sentence: say the sentence aloud with the gap, and put it on the question card with the gap as ___. ${tail}`;
     case 'repeat': return `support for the next question: repeat (their recent answers needed corrections even with a gap to fill). Say one model sentence of this part's form and ask them to say it after you; once they have, ask one easy question that takes the same form. ${tail}`;
     case 'stretch': return `support for the next question: stretch (their last answers in this part were right with no correction). Give no starter: ask a more open question that needs a longer answer or a reason, still on this part's point (never a new grammar point outside the part). ${tail}`;

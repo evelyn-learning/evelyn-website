@@ -38,15 +38,15 @@ import { ReplyGate, isGoodbye, isPartFrame } from './reply-gate';
 import { v2AnswerAsksOrDeclines, v2GoForPart, v2AskRepeats, v2AsksPartChange, v2EndingPartAsk, v2HeldPageOwed, v2HeldPartWaiting, v2IsPartAsk, v2MoveAnswer, v2NextPart, v2PageForPart, v2PartAskLine, v2PartChangeAsked, v2PartInHand, v2PartNamedLate, v2PartOfPage, v2PartViewed, v2PageTurnNote, v2PositionPage, v2PendingPart, v2PlanLabelled, v2TutorReplies } from './part-flow';
 import { heardAsWords } from './heard';
 import { v2IsPracticeAsk, v2LanguagesSection } from './languages';
-import { v2HandsOver, v2ReplyAsks, v2ReplyHandsOver, v2ReplySentences } from './one-question';
+import { v2AsksTheLearner, v2HandsOver, v2ReplyAsks, v2ReplyHandsOver, v2ReplySentences } from './one-question';
 import { V2_LEVEL_WAIT, V2_LEVEL_WAIT_OVER, V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2MarkLevelKnownParts, v2ReopenLevelCheck, v2WorkingLevelSection } from './working-level';
 import { V2_PRACTISE_PRONUNCIATION_TOOL, v2ApplyPractisePronunciation, v2ConsumePronunciation, v2PronunciationOn, v2PronunciationSection } from './pronunciation';
 import { v2NoteCorrectedSentence, v2SentenceCardsOn, v2SentenceCardsSection } from './sentence-cards';
 import { v2AdaptAfter, v2AdaptBefore, v2AdaptPart, v2PracticePairs } from './adaptive';
-import { LearnerCardWatch, V2_REPLY_MISHEARD, v2LearnerCardsOn, v2OwedCardCheckLine, v2PracticeAnswerSentences, v2SentenceOnBoard, v2SentencesNotCarded } from './learner-card';
+import { LearnerCardWatch, V2_REPLY_MISHEARD, v2CardIsFragment, v2LearnerCardsOn, v2OwedCardCheckLine, v2PracticeAnswerSentences, v2SentenceOnBoard, v2SentencesNotCarded } from './learner-card';
 import { v2StopAsked } from './stop-signal';
 import { V2_CLOSE_INVITE_LINE, V2_CLOSE_INVITE_REFUSAL, V2_CLOSE_INVITE_WAIT, V2_CLOSE_MORE_LINE, V2_CLOSE_REOPEN_REFUSAL, v2CloseInviteOn, v2CloseInviteOwed, v2CloseReopened, v2ReplyAsksMoreOrFinish, v2ReplyInvites } from './close-invite';
-import { TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_NOTE_TARGET_QUOTES, TUTOR_V2_NOTE_TARGET_MARK, TUTOR_V2_NOTE_STRESS_MARK, TUTOR_V2_NO_MARKDOWN_STARS, TUTOR_V2_CARD_GLOSS_SHOW, TUTOR_V2_SUPPORT_STEPS, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_PART_GO_NAMED } from '../orchestrator/flags';
+import { TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_NOTE_TARGET_QUOTES, TUTOR_V2_NOTE_TARGET_MARK, TUTOR_V2_NOTE_STRESS_MARK, TUTOR_V2_NO_MARKDOWN_STARS, TUTOR_V2_CARD_GLOSS_SHOW, TUTOR_V2_SUPPORT_STEPS, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_PART_GO_NAMED, TUTOR_V2_PRONUNCIATION_PAGE, TUTOR_V2_FRAGMENT_CARD } from '../orchestrator/flags';
 import { v2CardGlossOn, v2CleanGloss, v2GlossLevelOn } from './card-gloss';
 import { v2NoteTargetsOn, v2NoteTargetsSection, v2NoteHasTarget, v2NoteStressWords } from './note-targets';
 import { V2StarStrip, v2StripStars } from './markdown-stars';
@@ -484,6 +484,16 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     if (o.painted && name === 'new_page') state.visitPages = [...(state.visitPages ?? []), state.board.current].slice(-20);
     if (o.painted) visit = { id, name, args, outcome: v2PageTurnNote(plan, state) ?? o.detail, inline: true, ...(name === 'new_page' ? { agreed: true, visit: true as const } : {}) };
   }
+  // Task 7s (PRONUNCIATION_PAGE): spoken lessons that teach a language with measured pronunciation and a plan part for it. Its page
+  // in view: each item armed is written on it as a card (settle, below), and a measured attempt counts as practice of the part,
+  // so the part is entered and the close names it as done (mic test 5, embed-1795050656326: "We didn't get to the pronunciation
+  // part today" after two scored words on an empty, hidden page).
+  const pronPart = TUTOR_V2_PRONUNCIATION_PAGE && noteTargets && v2PronunciationOn(session) && session.plan ? session.plan.segments.findIndex((seg) => !!v2PartOf(seg).pronunciation) : -1;
+  const onPronPage = () => pronPart >= 0 && !!session.plan && state.board.current >= 0 && !!state.board.pages[state.board.current] && v2PartOfPage(session.plan, state.board.pages[state.board.current]!.title) === pronPart;
+  if (pronPart >= 0 && !state.closed && state.pronunciation?.heard?.status === 'measured' && state.pronunciation.armed?.seq === state.pronunciation.heard.seq && onPronPage()) {
+    const id = session.plan!.segments[pronPart]!.id;
+    state.practiceSaid = { ...(state.practiceSaid ?? {}), [id]: Math.min(99, (state.practiceSaid?.[id] ?? 0) + 1) };
+  }
   // Task 7f B (TIME_NO_SQUEEZE): the parts left out for time, decided once, when the first teaching part has opened.
   // Task 7i (OPTIONAL_AT_ARRIVAL): nothing left out up front unless the required parts alone exceed the box plus the margin.
   if (v2TimeFitDue(session, state, tf.noSqueeze) && session.plan) state.timeFit = arrivalOn ? v2TimeFitUpFront(session.plan, state, session.timeBoxMinutes, marginMin) : { dropped: v2PartsToDrop(session.plan, state, session.timeBoxMinutes) };
@@ -681,8 +691,12 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       // Task 7m (CORRECTION_CARD_NOW, mic test 4, 11.31 min): a sentence card of a language lesson holds a whole sentence; "I have
       // worked with…" is a starter for them to finish, said aloud, not a card.
       const fragment = TUTOR_V2_CORRECTION_CARD_NOW && block.name === 'show_sentence' && (session.languages?.length ?? 0) >= 2 && /(?:…|\.\.\.)["'”’)]*\s*$/.test(String(args.sentence ?? ''));
+      // Task 7s (FRAGMENT_CARD, mic test 5, embed-1795050656326 at 13 min): "I am proud of." is the head of the sentence the reply
+      // completes, not a sentence: one ending on a preposition or an article where their own sentence goes on past that word.
+      const cutShort = TUTOR_V2_FRAGMENT_CARD && !fragment && block.name === 'show_sentence' && (session.languages?.length ?? 0) >= 2 && v2CardIsFragment(String(args.sentence ?? ''), input.studentSaid);
       if (guarded) outcome = `not painted: ${guarded}`;
       else if (fragment) outcome = 'not painted: a sentence card holds a whole sentence; one ending in "…" is a starter for them to finish: say it aloud instead';
+      else if (cutShort) outcome = 'not painted: a sentence card holds a whole sentence, and this one stops before the end of theirs; card the whole sentence';
       else if (!valid.ok) outcome = `not painted: ${valid.reason}`;
       else if (misfit) outcome = `not painted: ${misfit}`;
       else {
@@ -702,6 +716,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     }
     if (outcome === V2_CLOSE_INVITE_REFUSAL || outcome === V2_CLOSE_REOPEN_REFUSAL) inviteRefused = true;
     if (outcome === V2_CLOSE_INVITE_WAIT) inviteWait = true;
+    // Task 7s (PRONUNCIATION_PAGE): each item they are to say goes on the pronunciation page in view as a card (by the runtime, from
+    // the arm it already has: the model wrote nothing there and the board hides an empty page).
+    if (block.name === 'practise_pronunciation' && /^armed/.test(outcome) && onPronPage()) writePronCards(state.pronunciation?.armed?.items ?? []);
     const result: Anthropic.ToolResultBlockParam = { type: 'tool_result', tool_use_id: block.id, content: outcome };
     // The board pass often offers again what the reply already put up; a call of its that did nothing leaves no trace.
     if (boardOnly && /^not /.test(outcome)) return result;
@@ -709,6 +726,20 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     toolCalls.push(call);
     input.onToolCall?.(call);
     return result;
+  };
+  // Task 7s (PRONUNCIATION_PAGE): the runtime's cards of an arm, one per item not on the page in view yet.
+  let pronCardN = 0;
+  const writePronCards = (items: readonly string[]) => {
+    for (const item of items) {
+      const sentence = item.replace(/[<>]/g, '').trim();
+      if (!sentence) continue;
+      pronCardN += 1;
+      const id = `inl_${nowMs.toString(36)}_pron${pronCardN}`; const args = { sentence };
+      const o = applyBoard(state.board, id, 'show_sentence', args);
+      if (!o.painted) continue;
+      const call: V2ToolCall = { id, name: 'show_sentence', args, outcome: o.detail, inline: true };
+      toolCalls.push(call); input.onToolCall?.(call);
+    }
   };
   // Board blocks written inline in the reply (board-inline.ts): each becomes a board call where it stands.
   let inlineN = 0;
@@ -756,6 +787,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   let nextTimeAt: { raw: string; line: string } | null = null;
   // Sentence cards spoken where they stand (raw block → the words said for it).
   const saidCards = new Map<string, string>();
+  // Task 7s (QUESTION_ONCE fix, item 1): the question cards whose question the runtime spoke where they stand (raw block → the
+  // question), for the stored reply.
+  const questionSaid = new Map<string, string>();
   // A page that would be held, and what followed it, while it is not yet known whether the reply ends the lesson (D1).
   let pendingHold: InlinePart[] | null = null; let releasing = false;
   // The tutor may end the lesson by itself (the end_lesson rule in applyControlTool): Task 7f D, the plan's parts done or the wrap
@@ -1013,7 +1047,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           if (part.block.kind === 'problem' && gated && questionCards && TUTOR_V2_QUESTION_ONCE) {
             const shown = toolCalls[toolCalls.length - 1];
             const q = shown?.name === 'show_problem' && !/^not /.test(shown.outcome) ? cardQuestion(String(shown.args.statement ?? '')) : null;
-            if (q && !saidCovers(q, `${saidNow}${gate.heldAsk}`)) { saidCards.set(part.block.raw, q); sinceWords = []; gate.speakCard(q); }
+            if (q && !saidCovers(q, `${saidNow}${gate.heldAsk}`)) { saidCards.set(part.block.raw, q); questionSaid.set(part.block.raw, q); sinceWords = []; gate.speakCard(q); }
           }
           // Task 6f: a note or a table of example sentences a lead-in points at is spoken there too (board-timing.ts
           // noteSentencesToSay): announced before it, at once; otherwise only if the next sentence points back at it.
@@ -1156,6 +1190,21 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // ([text "", tool_use end_lesson] after a refused close), the API refuses it.
     if (gate.removed.length) response.content = response.content.filter((b) => b.type !== 'text' || !!b.text.trim());
     const keep = storable(response.content);
+    // Task 7s (QUESTION_ONCE fix, item 1): a card's question the runtime spoke is part of the reply as stored, once, after its card
+    // (where it was said): only the raw block was kept, so the next turn's "were they asked for a sentence?" (learner-card.ts) read
+    // a Japanese lead-in with no question, and 7g's card line and 7q's counting were skipped for 5 of 6 corrected answers (mic
+    // test 5, embed-1795050656326). Before 7m the same question was appended to the stored text by unsaidAsk.
+    for (const [raw, q] of questionSaid) {
+      if (!gate.saidCards.includes(q)) continue;
+      for (const b of keep) {
+        if (b.type !== 'text') continue;
+        const at = b.text.indexOf(raw);
+        if (at < 0) continue;
+        if (!saidCovers(q, stripBoardBlocks(b.text))) { const end = at + raw.length; b.text = `${b.text.slice(0, end)}\n${q}${b.text.slice(end)}`; }
+        break;
+      }
+    }
+    questionSaid.clear();
     if (keep.length) stored.push({ role: 'assistant', content: keep });
     // Every stored tool call is followed by its result, whatever the stop reason was
     // (a reply cut at the token limit can carry finished tool calls): the API refuses
@@ -1543,7 +1592,12 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Task 7i (NO_CHECKIN_AFTER_GOODBYE): never after a goodbye in the reply's last two sentences ("…Goodbye! Does that make sense
   // so far?", mic test 3, embed-1794967959470 at 14.99).
   const saysGoodbye = TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE && v2ReplySentences(stripBoardBlocks(spoken.join(' '))).slice(-2).some((x) => isGoodbye(x));
-  if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && spoken.length && !framesDropped && !toolCalls.some((c) => c.name === 'keep_listening' || c.name === 'end_lesson') && !replyAsks && !saysGoodbye) {
+  // Task 7s (PRONUNCIATION_PAGE): in a spoken lesson that teaches a language, never after a reply that armed a recording ("Yes, that
+  // makes sense." was scored as the attempt), nor, in one taught through a second language, after a reply that asks them to repeat
+  // or say something (one-question.ts v2AsksTheLearner: 「私の後に繰り返してください。 international」 got "Does that make sense?", mic
+  // test 5, embed-1795050656326), widening 7c's ASK_NO_CHECKIN test (off with it). An English-only lesson keeps its rule (v2ReplyAsks).
+  const pronAsks = TUTOR_V2_PRONUNCIATION_PAGE && noteTargets && spoken.length > 0 && (toolCalls.some((c) => c.name === 'practise_pronunciation' && /^armed/.test(c.outcome)) || (TUTOR_V2_ASK_NO_CHECKIN && (session.languages?.length ?? 0) >= 2 && v2AsksTheLearner(stripBoardBlocks(spoken.join(' ')))));
+  if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && spoken.length && !framesDropped && !toolCalls.some((c) => c.name === 'keep_listening' || c.name === 'end_lesson') && !replyAsks && !pronAsks && !saysGoodbye) {
     const ins = discussion ? DISCUSSION_CHECK_INS : V2_CHECK_INS;
     const words = ins[state.history.length % ins.length];
     input.onText?.(`\n\n${words}`);
