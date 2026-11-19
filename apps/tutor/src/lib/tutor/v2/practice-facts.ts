@@ -16,14 +16,17 @@
  * every other lesson gets none, so its facts are byte-identical. Pure, client-safe.
  */
 import { TUTOR_V2_PRACTISED_SENTENCE, TUTOR_V2_QUESTION_NOT_NOTE, TUTOR_V2_STARTER_IS_ANSWER } from '../orchestrator/flags';
-import { v2AskedForSentence } from './learner-card';
+import { v2AskedToProduce, v2HeardIsQuestion } from './learner-card';
+import { v2ScoredTurn } from './pronunciation';
 import { v2NoteTargetsOn } from './note-targets';
+import { v2PartInHand, v2PlanLabelled } from './part-flow';
+import { v2PracticePart } from './time-fit';
 import type { V2Session, V2State } from './types';
 
 export interface V2PracticeFactFlags { practised: boolean; starter: boolean; questionCard: boolean }
 const FLAGS = (): V2PracticeFactFlags => ({ practised: TUTOR_V2_PRACTISED_SENTENCE, starter: TUTOR_V2_STARTER_IS_ANSWER, questionCard: TUTOR_V2_QUESTION_NOT_NOTE });
 
-export const V2_PRACTISED_SENTENCE_LINE = 'practised sentence: their words just now answer your ask to make a sentence or to say one you gave: whatever its form, a question included ("Did you enjoy…?"), it is their practice sentence. Give feedback on it as practice (right as said, or corrected) and card it as you card their sentences; do not answer it as if they had asked you, and nothing from your own persona card. A question they ask you when you have not asked them for a sentence is answered as usual';
+export const V2_PRACTISED_SENTENCE_LINE = 'practised sentence: your last reply asked them to make a question or to say a sentence you gave, and their words just now are a question ("Did you enjoy…?"): it is their practice sentence. Give feedback on it as practice (right as said, or corrected) and card it as you card their sentences; do not answer it as if they had asked you, and nothing from your own persona card. A question they ask you outside such an ask is answered as usual';
 export const V2_STARTER_LINE = 'starters: a starter you give for their answer is the first words of the answer itself, a statement ("Yes, I enjoyed…", "The project has…"), never the question form ("Did you enjoy…", "Has the project…"). Only when the task is to make a question, say so plainly ("Ask me a question starting with…")';
 export const V2_QUESTION_CARD_LINE = 'board: a question the learner must answer, on any page and in the summary too, goes on a question card (a <board problem> block), never in a note; a note holds a rule, an example or a point to remember';
 
@@ -31,8 +34,12 @@ export const V2_QUESTION_CARD_LINE = 'board: a question the learner must answer,
 export function v2PracticeFactLines(session: V2Session, state: V2State, heard: string | null | undefined, flags: V2PracticeFactFlags = FLAGS()): string[] {
   if (!v2NoteTargetsOn(session) || state.closed) return [];
   const lines: string[] = [];
-  if (flags.practised && typeof heard === 'string' && heard.trim() && v2AskedForSentence(state.history, true)) lines.push(V2_PRACTISED_SENTENCE_LINE);
-  if (flags.starter && typeof state.summaryBegunAt !== 'number') lines.push(V2_STARTER_LINE);
+  // Fix round 1 (I1): only after an ask to make a question or say a given sentence, and only when their turn is a question (the
+  // case the persona card would answer); (I3) never on a turn whose words answer an armed pronunciation recording.
+  if (flags.practised && typeof heard === 'string' && heard.trim() && v2AskedToProduce(state.history) && v2HeardIsQuestion(heard) && !v2ScoredTurn(session, state, heard)) lines.push(V2_PRACTISED_SENTENCE_LINE);
+  // Fix round 1 (M5): in a practice part only (a labelled plan; any part of a plan without names).
+  const practice = !v2PlanLabelled(session.plan) || v2PracticePart(session.plan, v2PartInHand(session.plan, state));
+  if (flags.starter && typeof state.summaryBegunAt !== 'number' && practice) lines.push(V2_STARTER_LINE);
   if (flags.questionCard) lines.push(V2_QUESTION_CARD_LINE);
   return lines;
 }

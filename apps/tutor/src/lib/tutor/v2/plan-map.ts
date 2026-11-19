@@ -6,7 +6,7 @@
  * guidance on how to teach each part: a guide, never a cutoff, and never a say in when the session ends.
  */
 import type { LessonPlan, Segment } from '../lesson-plan/types';
-import { TUTOR_V2_PART_ENTERED, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PASSED_PART_FACT, TUTOR_V2_PLAN_AS_WRITTEN } from '../orchestrator/flags';
+import { TUTOR_V2_PART_ENTERED, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PASSED_PART_FACT, TUTOR_V2_PLAN_AS_WRITTEN, TUTOR_V2_PRONUNCIATION_PAGE } from '../orchestrator/flags';
 import { V2_CLOSING_PAGE, headingWords } from './part-close';
 import { stripBoardBlocks } from './board-inline';
 import type { GoalStatus, V2State } from './types';
@@ -290,10 +290,16 @@ export function v2PartNamedIn(seg: Segment, text: string): boolean {
   return headingWords(label).every((w) => text.toLowerCase().includes(w.slice(0, 5))) || Object.values(p.labelLocalized ?? {}).some((n) => text.includes(n));
 }
 
+/** Task 7s fix round 1 (M1, controller ruling): the runtime's pronunciation cards (turn.ts writePronCards, ids `…_pronN`) show the
+ *  word to say at the arm, but enter nothing: a scored attempt is what enters the pronunciation part (practiceSaid). */
+export const V2_PRON_CARD_ID = /_pron\d+$/;
+export function v2PageHoldsWork(items: ReadonlyArray<{ id: string }>, enabled: boolean = TUTOR_V2_PRONUNCIATION_PAGE): boolean {
+  return enabled ? items.some((it) => !V2_PRON_CARD_ID.test(it.id)) : items.length > 0;
+}
 /** Task 7i (PART_ENTERED): a page of the part that holds something (a card, a note, a question). */
 /** Task 7k fix round 1 (I1, `skip`): pages opened by a practice visit (state.visitPages) are not the lesson entering the part. */
 export function v2PartPageHolds(seg: Segment, board: V2State['board'], skip: readonly number[] = []): boolean {
-  return board.pages.some((pg, i) => pg.items.length > 0 && !skip.includes(i) && pageOfPart(seg, pg.title));
+  return board.pages.some((pg, i) => v2PageHoldsWork(pg.items) && !skip.includes(i) && pageOfPart(seg, pg.title));
 }
 
 /** Task 7i (PART_ENTERED): the lesson entered the part: a goal of it shown or demonstrated, its page holds something, or practice

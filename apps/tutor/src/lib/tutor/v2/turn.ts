@@ -40,7 +40,7 @@ import { heardAsWords } from './heard';
 import { v2IsPracticeAsk, v2LanguagesSection } from './languages';
 import { v2AsksTheLearner, v2HandsOver, v2ReplyAsks, v2ReplyHandsOver, v2ReplySentences } from './one-question';
 import { V2_LEVEL_WAIT, V2_LEVEL_WAIT_OVER, V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2MarkLevelKnownParts, v2ReopenLevelCheck, v2WorkingLevelSection } from './working-level';
-import { V2_PRACTISE_PRONUNCIATION_TOOL, v2ApplyPractisePronunciation, v2ConsumePronunciation, v2PronunciationOn, v2PronunciationSection } from './pronunciation';
+import { V2_PRACTISE_PRONUNCIATION_TOOL, v2ApplyPractisePronunciation, v2ConsumePronunciation, v2PronunciationOn, v2PronunciationSection, v2ScoredTurn } from './pronunciation';
 import { v2NoteCorrectedSentence, v2SentenceCardsOn, v2SentenceCardsSection } from './sentence-cards';
 import { v2AdaptAfter, v2AdaptBefore, v2AdaptPart, v2PracticePairs } from './adaptive';
 import { LearnerCardWatch, V2_REPLY_MISHEARD, v2CardIsFragment, v2LearnerCardsOn, v2OwedCardCheckLine, v2PracticeAnswerSentences, v2SentenceOnBoard, v2SentencesNotCarded } from './learner-card';
@@ -531,6 +531,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // then say "finish this exchange, then summary" (time-box.ts), and a summary page held for "shall we go on?" would
   // spend one of the last two minutes on the offer.
   // A score is said once, in this turn's facts; the reply that answered it uses the arm up (pronunciation.ts).
+  // Task 7s fix round 1 (I3): read before the arm is used up: this turn's words answer an armed recording (no 7b runtime card on it).
+  const scoredTurn = v2ScoredTurn(session, state, input.studentSaid);
   v2ConsumePronunciation(session, state, input.studentSaid);
   // "Your last reply brought in a complication" is said once, in this turn's facts; a new one sets it again.
   if (state.thinking?.justComplicated) state.thinking = { ...state.thinking, justComplicated: false };
@@ -885,7 +887,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const languageLesson = (session.languages?.length ?? 0) >= 2 || !!session.pronunciation;
   // Task 7b (BOARD_LEARNER_SENTENCE): the learner's sentence as it should be, carded where the reply quotes it and writes no
   // card (learner-card.ts). Two corrections and a praised sentence were only spoken (mic test 1, embed-1794882458629).
-  const learnerWatch = gated && input.studentSaid && v2LearnerCardsOn(session, state, input.studentSaid)
+  const learnerWatch = gated && input.studentSaid && !scoredTurn && v2LearnerCardsOn(session, state, input.studentSaid)
     ? new LearnerCardWatch(input.studentSaid, (s) => v2SentenceOnBoard(state.board, s, state.correctedSentences ?? [])) : null;
   const cardsIn = (parts: InlinePart[]) => (learnerWatch ? learnerWatch.feed(parts) : parts);
   let learnerStored = 0;

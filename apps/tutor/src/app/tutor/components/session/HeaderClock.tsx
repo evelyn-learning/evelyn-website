@@ -54,7 +54,7 @@ export function HeaderClock({
 }) {
   const [elapsedSec, setElapsedSec] = useState(0);
   // Task 7s (HEADER_CLOCK_PAUSE): the tester's flag time left out (development only; zero otherwise).
-  const flagPause = useFlagClockPause();
+  const flagPause = useFlagClockPause(startedAtMs);
 
   // Derive from a fixed start timestamp rather than incrementing a counter, so
   // the clock stays accurate across a backgrounded tab (setInterval throttles

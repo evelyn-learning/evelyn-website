@@ -11,8 +11,10 @@ import { TUTOR_V2_HEADER_CLOCK_PAUSE } from '@/lib/tutor/orchestrator/flags';
 
 export interface FlagClockPause { totalMs: number; sinceMs: number | null }
 
-export function useFlagClockPause(): FlagClockPause {
+export function useFlagClockPause(startedAtMs?: number | null): FlagClockPause {
   const [pause, setPause] = useState<FlagClockPause>({ totalMs: 0, sinceMs: null });
+  // Fix round 1 (M4): a new session start begins with no flag time (a panel open across it counts from the start).
+  useEffect(() => { setPause((p) => ({ totalMs: 0, sinceMs: p.sinceMs !== null && startedAtMs ? Math.max(p.sinceMs, startedAtMs) : null })); }, [startedAtMs]);
   useEffect(() => {
     if (!TUTOR_V2_HEADER_CLOCK_PAUSE || process.env.NODE_ENV === 'production' || typeof window === 'undefined') return;
     const on = (e: Event) => {

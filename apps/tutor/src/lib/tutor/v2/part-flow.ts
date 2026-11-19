@@ -15,7 +15,7 @@
 import type { LessonPlan } from '../lesson-plan/types';
 import { stripBoardBlocks } from './board-inline';
 import { PART_OFFERS, V2_CLOSING_PAGE, endsAsking } from './part-close';
-import { V2_OFFER_SHAPE, v2IsPageOfPart, v2PartEntered, v2PartNamedIn, v2PartOf } from './plan-map';
+import { V2_OFFER_SHAPE, v2IsPageOfPart, v2PartEntered, v2PartNamedIn, v2PartOf, v2PageHoldsWork } from './plan-map';
 import { V2_PART_FRAME_JA, isPartFrame } from './reply-gate';
 import type { V2Board, V2State } from './types';
 import { TUTOR_V2_LEVEL_CHECK_CHIP, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PART_ASK_LANGS, TUTOR_V2_PART_ASK_NAMED, TUTOR_V2_PART_GO_NAMED, TUTOR_V2_PART_ASK_CLAUSES, TUTOR_V2_PART_ENTERED, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PRACTICE_ON_PART_PAGE } from '../orchestrator/flags';
@@ -52,7 +52,7 @@ const paged = (plan: LessonPlan, board: V2Board, i: number) => board.pages.some(
 const entered = (plan: LessonPlan, state: View, i: number, on: boolean = TUTOR_V2_PART_ENTERED) => {
   if (!on) return paged(plan, state.board, i);
   if (v2PartEntered(plan.segments[i]!, state)) return true;
-  return !state.timeFit?.dropped.includes(plan.segments[i]!.id) && state.board.pages.some((pg, at) => pg.items.length > 0 && !(state.visitPages ?? []).includes(at) && partOfPageAt(plan, state.board, at) === i);
+  return !state.timeFit?.dropped.includes(plan.segments[i]!.id) && state.board.pages.some((pg, at) => v2PageHoldsWork(pg.items) && !(state.visitPages ?? []).includes(at) && partOfPageAt(plan, state.board, at) === i);
 };
 
 /** The part of the page in view, or of the nearest page before it that is a part's; -1: none.

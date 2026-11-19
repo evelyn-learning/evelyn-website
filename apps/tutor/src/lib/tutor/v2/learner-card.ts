@@ -46,6 +46,7 @@ import { v2ReplyInvites } from './close-invite';
 import { v2IsCorrectionOf, v2SentenceCardsOn, v2SentenceTokens as tokens } from './sentence-cards';
 import type { V2Board, V2Session, V2State } from './types';
 import { v2LevelCheckOn, v2LevelCheckOver } from './working-level';
+import { v2ScoredTurn } from './pronunciation';
 
 /** Numbers said or written alike ("5" and "five", "25" and "twenty-five"), so one sentence is one key (fix round 1, M5). */
 const UNITS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
@@ -92,7 +93,8 @@ function levelCheckRunning(session: V2Session, state: V2State, heard: string | n
 /** The rule runs: the flag, a spoken lesson taught in two languages (the sentence cards' gate), the level check not running,
  *  the lesson not closed. `enabled` is the flag (tests pass it). */
 export function v2LearnerCardsOn(session: V2Session, state: V2State, heard: string | null | undefined, enabled: boolean = TUTOR_V2_BOARD_LEARNER_SENTENCE): boolean {
-  return enabled && session.mode === 'voice' && v2SentenceCardsOn(session) && !state.closed && !levelCheckRunning(session, state, heard);
+  // Task 7s fix round 1 (I3): not on a turn whose words answer an armed pronunciation recording (pronunciation.ts v2ScoredTurn).
+  return enabled && session.mode === 'voice' && v2SentenceCardsOn(session) && !state.closed && !levelCheckRunning(session, state, heard) && !v2ScoredTurn(session, state, heard);
 }
 
 const key = (s: string) => v2SentenceWords(s).join(' ');
@@ -322,6 +324,33 @@ const QUESTION_ABOUT_THEM = /^(?:what|how|where|when|why|which|who|have you|has 
  *  enjoy..." で答えてみてください。」, 「考えて答えてみてください。」, 「私の後に繰り返してください。」 (mic test 5, embed-1795050656326: the
  *  asks before n2 and n5 were read as no ask for a sentence). */
 const SENTENCE_REQUEST_JA = /で答えて|答えてみて|繰り返して/;
+/** Task 7s fix round 1 (I1): the last reply asked them to PRODUCE a question, or to say / repeat a given sentence (a quoted model
+ *  with an instruction to say it or answer with it), not any question about them: "What is one project you are proud of?" then
+ *  "What about you? What project are you proud of?" is a question back, answered from the persona card as before. Structural:
+ *  what the reply asked for. */
+const MAKE_QUESTION = /\b(?:ask me|make (?:a|your own|one) question|ask (?:a|the|your own|one) question|form a question|turn (?:it|this|that) into a question)\b|質問を作って|質問して|聞いてみて|尋ねてみて/i;
+const SAY_GIVEN = /と言って|言ってみて|繰り返して|\brepeat\b|\bsay after me\b|\bsay (?:it|this|that|the sentence)\b/i;
+/** A quoted model in question form ("Did you enjoy...", 「Has the project…」): a statement starter given for an answer is not an
+ *  ask to produce a question, and a question back after it is a real question. */
+const QUOTED_QUESTION = /[「"“]\s*(?:what|how|where|when|why|which|who|did|do|does|have|has|is|are|was|were|can|could|would|will)\b[^」"”]*[」"”]/i;
+const ANSWER_WITH = /で答えて|で始めて|答えてみて|\b(?:answer|start|begin)(?:ing)? with\b/i;
+export function v2AskedToProduce(history: Anthropic.MessageParam[]): boolean {
+  const last = [...history].reverse().find((h) => h.role === 'assistant');
+  if (!last) return false;
+  const text = stripBoardBlocks(typeof last.content === 'string' ? last.content : last.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '));
+  const sentences = text.split(/(?<=[.!?。！？]["'”’」)]*)\s+|(?<=[。！？])/).map((x) => x.trim()).filter(Boolean);
+  const end = sentences[sentences.length - 1] ?? '';
+  if (end && (v2IsPartAsk(end) || v2ReplyInvites(end))) return false;
+  // A quote ending in "..." is cut from the instruction after it (「"Did you enjoy..." で答えてみてください。」): read in pairs.
+  const tail = sentences.slice(-3);
+  const pairs = tail.map((x, i) => (i + 1 < tail.length ? `${x} ${tail[i + 1]}` : x));
+  return tail.some((x) => MAKE_QUESTION.test(x) || SAY_GIVEN.test(x)) || pairs.some((x) => QUOTED_QUESTION.test(x) && ANSWER_WITH.test(x));
+}
+/** Their turn is a question (the "do not answer it" half of the practised-sentence line needs one). */
+export function v2HeardIsQuestion(heard: string | null | undefined): boolean {
+  const t = (heard ?? '').trim();
+  return /[?？]["'”’]*$/.test(t) || /(?:^|[.!?]\s+)(?:(?:uh|um|er|so|and|oh|okay|ok)[,.]?\s+)*(?:what|how|where|when|why|which|who|did|do|does|have|has|is|are|was|were|can|could|would|will|shall)\b[^.!?]*$/i.test(t);
+}
 /** Task 7s: exported for the practised-sentence facts (practice-facts.ts): the same structural test. */
 export function v2AskedForSentence(history: Anthropic.MessageParam[], wide: boolean = TUTOR_V2_PRACTISED_SENTENCE): boolean { return askedForSentence(history, wide); }
 function askedForSentence(history: Anthropic.MessageParam[], wide: boolean = TUTOR_V2_PRACTISED_SENTENCE): boolean {
@@ -475,13 +504,22 @@ export function v2LearnerSentenceFacts(session: V2Session, state: V2State, heard
 const OPEN_END = new Set(['of', 'to', 'for', 'with', 'at', 'in', 'on', 'from', 'about', 'by', 'into', 'as', 'a', 'an', 'the']);
 const FILLER_WORDS = new Set(['uh', 'um', 'er', 'erm', 'ah', 'eh', 'hmm', 'mm']);
 /** Task 7s (FRAGMENT_CARD, mic test 5, embed-1795050656326 at 13 min): a card that ends on a preposition or an article ("I am proud
- *  of.") where the learner's sentence just now goes on past that word ("I proud of uh donations project…"): the head of their
- *  sentence, which the reply completes, not a sentence of its own. "Where are you from?" said as a whole stays a sentence. */
+ *  of.") that is the head of ONE sentence of the learner's turn, which goes on past that word ("I proud of uh donations project…"):
+ *  not a sentence of its own. Fix round 1 (I2): read within each sentence of their turn, never across the turn; the card's words
+ *  before that word stand in that sentence before it (at most one missing, two in a long card: the corrected words), so their whole
+ *  question "What city do you live in?" after "I live in Nagoya." and the tutor's own "This is the team I work with." are cards. */
 export function v2CardIsFragment(card: string, heard: string | null | undefined): boolean {
   const words = (t: string) => (t.toLowerCase().match(/[a-z]+(?:['’][a-z]+)?/g) ?? []).filter((w) => !FILLER_WORDS.has(w));
   const c = words(card);
   const last = c[c.length - 1]; const prev = c[c.length - 2];
   if (!last || !OPEN_END.has(last) || !heard) return false;
-  const h = words(heard);
-  return h.some((w, i) => w === last && i < h.length - 1 && (!prev || h[i - 1] === prev));
+  const head = c.slice(0, -1); const allowed = head.length >= 6 ? 2 : 1;
+  return heard.split(SPLIT).some((sentence) => {
+    const h = words(sentence);
+    return h.some((w, i) => {
+      if (w !== last || i >= h.length - 1 || (prev && h[i - 1] !== prev)) return false;
+      const before = new Set(h.slice(0, i));
+      return head.filter((x) => !before.has(x)).length <= allowed;
+    });
+  });
 }

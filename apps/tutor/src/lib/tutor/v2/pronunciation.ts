@@ -223,7 +223,8 @@ export function v2PronunciationFacts(session: V2Session, state: V2State, student
   lines.push(`tell them the score as "${heard.overall ?? '?'} out of 100", and speak only of the items and sounds measured here`);
   // Task 7s (PRONUNCIATION_PAGE, mic test 5, embed-1795050656326): the tutor said "responsibilities は90点" beside the measured 93,
   // and "international は98点" beside 96: a second number of its own.
-  if (onlyScore && typeof heard.overall === 'number') lines.push(`the score of this attempt is ${heard.overall} out of 100, and it is the only number you may say about it: no other score, no score for a word of your own, no number the measurement did not give as the attempt's score`);
+  // Fix round 1 (M2): the word numbers above are for the tutor; the overall is the one number said.
+  if (onlyScore && typeof heard.overall === 'number') lines.push(`the score of this attempt is ${heard.overall} out of 100, and it is the only number you may say about it: the word numbers above are for you, not to be said, and no other score or number of your own`);
   const weak = (heard.words ?? []).filter((w) => w !== cut && !w.omitted && w.score < PRONUNCIATION_LOW_SCORE).map((w) => w.word);
   if (isLow(heard)) {
     // v1 W11-A (run 7): "developed" scored 16/100, the tutor named the sound and moved on: no repeat in five items.
@@ -275,4 +276,11 @@ export function v2PronunciationSection(): string {
     // The bilingual section has them build sentences rather than repeat yours; a drill of sounds needs a model to say after.
     'One sentence, or a few single words, at a time. Say it once yourself, ask them to say it after you (this practice is the one place where they repeat a model), and stop: their reply is the recording.',
   ].join('\n');
+}
+
+/** Task 7s fix round 1 (I3, PRONUNCIATION_PAGE): this turn's words answer an armed recording (sent for scoring, or meant to be):
+ *  the pronunciation facts own the turn, and no practised-sentence line or 7b/7g card line is added beside the measured score
+ *  (「私の後に繰り返してください。」 then "responsibilities." got both, mic test 5, embed-1795050656326). Read before the arm is used up. */
+export function v2ScoredTurn(session: V2Session, state: Pick<V2State, 'pronunciation'>, heard: string | null | undefined, enabled: boolean = TUTOR_V2_PRONUNCIATION_PAGE): boolean {
+  return enabled && v2PronunciationOn(session) && !!state.pronunciation?.armed && heard !== null && heard !== undefined;
 }

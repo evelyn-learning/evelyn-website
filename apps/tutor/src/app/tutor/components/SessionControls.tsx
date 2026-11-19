@@ -177,7 +177,7 @@ export function SessionControls({
 }: SessionControlsProps) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   // Task 7s (HEADER_CLOCK_PAUSE): the tester's flag time left out (development only; zero otherwise).
-  const flagPause = useFlagClockPause();
+  const flagPause = useFlagClockPause(startedAtMs);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadPreview, setUploadPreview] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
