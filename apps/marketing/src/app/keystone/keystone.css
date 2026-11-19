@@ -251,6 +251,7 @@
 .ks-chip.a-review { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
 .ks-chip.a-fixing, .ks-chip.f-open { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
 .ks-chip.a-accepted, .ks-chip.a-released, .ks-chip.f-confirmed { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
+.ks-chip.f-theirs { background: var(--card); color: var(--warn); border-color: var(--warn); }
 .ks-chip.f-fixed { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
 .ks-chip.f-reopened { background: var(--bad-soft); color: var(--bad); border-color: transparent; }
 .ks-ar-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 10px 16px; margin-bottom: 12px; }
