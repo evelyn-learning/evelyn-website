@@ -152,6 +152,24 @@ const NEVER_TOUCH = ["approved", "delivered"];
 export const takenState = (i: Pick<ItemDoc, "stage" | "pipeline" | "keyQuery">) =>
   i.stage === "received" || i.stage === "changes_requested" || (i.stage === "drafting" && !!i.keyQuery?.answeredAt) || ownerSentBack(i);
 const CHECKS = ["calc", "working", "audit", "render"] as const;
+
+/** KEYSTONE_STYLE_CORRECTION=off: back to one correction of any kind (read at call time). */
+const styleCorrectionOn = () => process.env.KEYSTONE_STYLE_CORRECTION !== "off";
+/** Audited rules that are about content or integrity, not style: breaking one is never "style only". */
+export const CONTENT_RULES: readonly string[] = ["R-answer-agreed", "R-answer-first", "R-question-untouched", "R-no-making-of", "R-no-other-solution", "R-short-present", "R-diploma-present"];
+/** Findings from code that are about form only (wording, closing sentence, maths markup, alt text). */
+const STYLE_CODES: readonly string[] = ["banned_word", "closing_missing", "katex", "unbalanced_math", "image_alt_missing"];
+/**
+ * True when every finding is about style: an audited rule outside CONTENT_RULES, or a form-only code. One
+ * finding about the answer, the working, a missing picture or section, or how the solution was made, and the
+ * item is held for the owner as before. An empty list is not "style only". Pure.
+ */
+export function styleOnly(findings: readonly { check: string; code: string; ruleId?: string }[]): boolean {
+  return (
+    findings.length > 0 &&
+    findings.every((f) => (f.check === "audit" && f.code === "rule_broken" ? !!f.ruleId && !CONTENT_RULES.includes(f.ruleId) : (f.check === "audit" || f.check === "render") && STYLE_CODES.includes(f.code)))
+  );
+}
 type CheckStep = (typeof CHECKS)[number];
 type CheckOutput = { findings: Finding[] } | { failed: string };
 
@@ -653,7 +671,7 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
     let draft = w.output as Draft;
     const theAnswer: Answer = answer;
 
-    // [5]–[8] Checks, with one automatic correction.
+    // [5]–[8] Checks, with one automatic correction, and a second one for style only.
     const runCheck = (name: CheckStep, d: Draft) =>
       step<CheckOutput>(name, async () => {
         if (name === "calc") {
@@ -686,7 +704,11 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
         break;
       }
       if (findings.length) {
-        if (run.corrections >= 1) {
+        // One correction for anything. A second one only for style: the draft has just passed the calculation
+        // and working checks, and every finding left is a formatting or wording rule (styleOnly). After it
+        // ALL four checks run again on the new draft, from the first, so nothing a rewrite touched goes unchecked.
+        const styleAgain = run.corrections === 1 && styleCorrectionOn() && i >= CHECKS.indexOf("audit") && styleOnly(findings);
+        if (run.corrections >= 1 && !styleAgain) {
           flags.add("second_failure");
           return saveDraft(draft, theAnswer, false);
         }
@@ -694,7 +716,8 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
         const w2 = await write({ fixNote, findings: findings.map(findingText), previous: draft });
         if (!w2.ok) return hold(["step_failed"]);
         draft = w2.output as Draft;
-        continue; // the failed check and everything after it run again
+        if (styleAgain) i = 0;
+        continue; // the failed check and everything after it run again (every check, after a style correction)
       }
       i++;
     }

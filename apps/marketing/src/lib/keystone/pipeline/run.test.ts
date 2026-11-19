@@ -14,7 +14,7 @@ import { visibleStage } from "../config";
 import type { ModelImage } from "./types";
 import { releaseAt } from "./release";
 import { agreeOnAnswer } from "./solve";
-import { sniffImage, parseArgs, processItem, runPipeline, selectItems, type Deps, type Reader, type Steps, type Writer } from "./run";
+import { sniffImage, parseArgs, processItem, runPipeline, selectItems, styleOnly, type Deps, type Reader, type Steps, type Writer } from "./run";
 
 /** assert.ok with a message always: without one, Node re-parses the transformed source to build it, which stalls under tsx. */
 const ok = (value: unknown, message: string) => assert.ok(value, message);
@@ -154,7 +154,8 @@ function deps(store: FakeStore, s: Steps, extra: Partial<Deps> = {}): Deps {
 }
 
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13]);
-const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", code: "rule_broken", ruleId: "R-x", detail: `broken ${n}`, quote: "Short 1" } as Finding], cost: 0.05, model: "m-audit" });
+// A content rule: never "style only", so a second failure on it is held (the one-correction rule).
+const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", code: "rule_broken", ruleId: "R-answer-agreed", detail: `broken ${n}`, quote: "Short 1" } as Finding], cost: 0.05, model: "m-audit" });
 
 (async () => {
   // --- happy path ---
@@ -233,6 +234,55 @@ const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", co
     equal(calls.workingCheck, 1, "working not re-run");
     equal(calls.rulesAudit, 2, "audit re-run");
     equal(calls.renderCheck, 1, "render ran once after");
+  }
+
+  // --- a second correction for style only ---
+  {
+    const styleFail = (n: number): CheckResult => ({ findings: [{ check: "audit", code: "rule_broken", ruleId: "R-canadian-spelling", detail: `spelling ${n}`, quote: "Short 1" } as Finding], cost: 0.05, model: "m-audit" });
+    const found = (r: CheckResult): Finding[] => ("findings" in r ? r.findings : []);
+    ok(styleOnly(found(styleFail(1))) && !styleOnly(found(auditFail(1))) && !styleOnly([]), "styleOnly: a style rule yes, a content rule no, nothing no");
+    ok(!styleOnly([...found(styleFail(1)), { check: "working", code: "line_does_not_follow", detail: "x" }]), "one content finding among style ones: not style only");
+    ok(styleOnly([{ check: "render", code: "katex", detail: "x" }]) && !styleOnly([{ check: "render", code: "missing_image", detail: "x" }]) && !styleOnly([{ check: "audit", code: "rule_broken", detail: "no rule id" }]), "form codes yes; a missing picture or an unnamed rule no");
+
+    // style fails twice, then passes: two corrections, every check re-run on the last draft, ready with no flag
+    let n = 0;
+    const a = steps({ rulesAudit: async () => (n++ < 2 ? styleFail(n) : { findings: [], cost: 0.05, model: "m-audit" }) });
+    const store = new FakeStore([item()]);
+    const run = await processItem("100", "r1", deps(store, a.steps));
+    equal(run.result, "ready", "style corrected twice → ready");
+    equal(run.corrections, 2, "two corrections");
+    deepEqual(run.flags, [], "no flag");
+    equal(a.calls.writeSolution, 3, "author called three times");
+    equal(a.calls.calcCheck, 2, "calc re-run after the style correction");
+    equal(a.calls.workingCheck, 2, "working re-run after the style correction");
+    equal(a.calls.rulesAudit, 3, "audit ran three times");
+
+    // style fails a third time: held, as before
+    const b = steps({ rulesAudit: async () => styleFail(9) });
+    const store2 = new FakeStore([item()]);
+    const run2 = await processItem("100", "r1", deps(store2, b.steps));
+    equal(run2.result, "held", "style fails three times → held");
+    deepEqual(run2.flags, ["second_failure"], "second_failure");
+    equal(b.calls.writeSolution, 3, "no third correction");
+
+    // the working check fails on the style-corrected draft: held, no further correction
+    let w = 0, au = 0;
+    const c = steps({
+      rulesAudit: async () => (au++ < 2 ? styleFail(au) : { findings: [], cost: 0.05, model: "m-audit" }),
+      workingCheck: async () => (w++ === 0 ? { findings: [], cost: 0.05, model: "m-work" } : { findings: [{ check: "working", code: "line_does_not_follow", detail: "broken by the rewrite" } as Finding], cost: 0.05, model: "m-work" }),
+    });
+    const run3 = await processItem("100", "r1", deps(new FakeStore([item()]), c.steps));
+    equal(run3.result, "held", "a rewrite that breaks the working is caught and held");
+    deepEqual(run3.flags, ["second_failure"], "second_failure");
+    equal(c.calls.writeSolution, 3, "and not corrected again");
+
+    // the switch: off = one correction of any kind
+    process.env.KEYSTONE_STYLE_CORRECTION = "off";
+    const d = steps({ rulesAudit: async () => styleFail(2) });
+    const run4 = await processItem("100", "r1", deps(new FakeStore([item()]), d.steps));
+    delete process.env.KEYSTONE_STYLE_CORRECTION;
+    equal(run4.result, "held", "switched off → held after one correction");
+    equal(d.calls.writeSolution, 2, "one correction only");
   }
 
   // --- audit fails twice → held second_failure, stage ready ---
