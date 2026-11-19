@@ -7,12 +7,22 @@
  *
  * Options:
  *   --only id,id        just these items (an approved / delivered one is refused)
- *   --batch <batchId>   just this batch
+ *   --batch <batchId>   just this batch (the client's batch of items; nothing to do with --bulk)
+ *   --bulk              bulk-priced mode (src/lib/keystone/pipeline/bulk.ts): the same run, with the solver, author,
+ *                       working-check and audit calls sent through the vendors' batch endpoints at half price. One
+ *                       invocation collects the batches that finished, continues each item as far as it goes and
+ *                       submits the next requests, then exits; run the same command again later (batches usually
+ *                       take minutes to an hour, 24 h at most) until every item is finished. Running it again with
+ *                       nothing finished changes nothing. State: collections bulkjobs / bulkcalls and each item's run.
+ *   --state <file>      with --bulk --dry-run only: the local JSON file that keeps the bulk state between
+ *                       invocations (a dry run writes nothing to the database; the vendor batches are real and paid)
  *   --limit <n>         at most n items
  *   --dry-run           no database writes at all; prints what each item would become
  *   --as-received       dry run only, with --only: treat the named items as Received
  *   --run-id <id>       continue / name this run (default: each item's unfinished run, else a new one)
  *   --max-cost <usd>    stop starting new items once this invocation has spent this much (default 25); prints what was left
+ *                       (with --bulk: counted over everything the selected items' runs have cost so far, earlier
+ *                       invocations included; once reached nothing new is sent and the items wait, said loudly)
  *   --assets-dir <dir>  local asset folder laid out <dir>/<itemId>/<file> (read-only)
  *   --pull-assets       first rsync the selected items' assets from the box into --assets-dir
  *                       (default <tmp>/keystone-pipeline-assets); a read-only pull
@@ -32,6 +42,7 @@ import { KEYSTONE_DB } from "../src/lib/keystone/config";
 import { closeKs, type RunDoc } from "../src/lib/keystone/db";
 import type { Actor } from "../src/lib/keystone/store";
 import { runKeyCheck } from "../src/lib/keystone/pipeline/models";
+import { bulkReportLines, fileBulkStore, mongoBulkStore, runBulk } from "../src/lib/keystone/pipeline/bulk";
 import {
   asReceivedReader, defaultRules, folderAssets, mongoReader, mongoWriter, noAssets, parseArgs, realSteps, runPipeline, selectItems, withPipelineLock,
 } from "../src/lib/keystone/pipeline/run";
@@ -89,11 +100,27 @@ async function main() {
 
   const locked = await withPipelineLock(
     args.dryRun,
-    () => runPipeline(args, {
-      reader: base,
-      makeRealWriter: () => mongoWriter(EVELYN),
-      deps: { steps: realSteps(), rules: defaultRules(), ...assets },
-    }),
+    async () => {
+      if (!args.bulk) {
+        return runPipeline(args, {
+          reader: base,
+          makeRealWriter: () => mongoWriter(EVELYN),
+          deps: { steps: realSteps(), rules: defaultRules(), ...assets },
+        });
+      }
+      // Bulk mode: one invocation = collect what finished, continue, submit what is next.
+      if (args.state) console.log(`Bulk state: ${path.resolve(args.state)} (dry run: the vendor batches are real and paid; nothing is written to the database)`);
+      const report = await runBulk(args, {
+        reader: base,
+        makeRealWriter: () => mongoWriter(EVELYN),
+        deps: { rules: defaultRules(), ...assets },
+        makeSteps: (modelDeps) => realSteps(modelDeps),
+        store: args.dryRun ? fileBulkStore(path.resolve(args.state!)) : mongoBulkStore(),
+      });
+      console.log("");
+      for (const line of bulkReportLines(report)) console.log(line);
+      return { runs: report.runs, refused: report.refused, skipped: report.skipped, dry: report.dry, spent: report.paid, leftOver: [] as string[] };
+    },
     { acquire: acquireLock, release: releaseLock },
   );
   if (locked === "busy") {
@@ -104,7 +131,7 @@ async function main() {
   const out = locked;
 
   if (out.dry) {
-    console.log("\n=== What each item would become (dry run) ===");
+    console.log(`\n=== What each item would become (dry run${args.bulk ? "; items finished so far" : ""}) ===`);
     for (const a of out.dry.actions) {
       if (a.action === "saveSolution") {
         const d = a.detail as { evelynAnswer: string; version: number; pipeline: { flags: string[] }; sections: { kind: string; md: string }[] };
@@ -124,7 +151,7 @@ async function main() {
     for (const f of r.flags) byFlag.set(f, (byFlag.get(f) ?? 0) + 1);
   }
   const total = out.runs.reduce((s, r) => s + r.cost, 0);
-  console.log("\n=== Summary ===");
+  console.log(`\n=== Summary${args.bulk ? " (items that reached a result in this invocation; costs as paid, batch replies at the batch rate)" : ""} ===`);
   console.log("item       result          cost      flags");
   for (const r of out.runs) console.log(`${r.itemId.padEnd(10)} ${(r.result ?? "").padEnd(15)} $${r.cost.toFixed(4).padStart(8)} ${r.flags.join(", ")}${r.error ? `  (${r.error})` : ""}`);
   // Why each held or failed item stopped: every step that did not pass, with its findings (internal, for the owner).
@@ -143,17 +170,19 @@ async function main() {
     }
   }
   // Where the money went: cost per step kind and per model, over every run of this invocation.
-  const byStep = new Map<string, { n: number; cost: number }>();
+  const byStep = new Map<string, { n: number; cost: number; batch: number; live: number; saved: number }>();
   const byModel = new Map<string, number>();
   for (const r of out.runs) for (const st of r.steps) {
-    const e = byStep.get(st.step) ?? { n: 0, cost: 0 };
+    const e = byStep.get(st.step) ?? { n: 0, cost: 0, batch: 0, live: 0, saved: 0 };
     e.n += 1; e.cost += st.cost ?? 0; byStep.set(st.step, e);
+    // Bulk mode: how many of the step's model calls came from a vendor batch (half price), and what that saved.
+    e.batch += st.batch?.calls ?? 0; e.live += st.batch?.live ?? 0; e.saved += st.batch?.saved ?? 0;
     const solves = st.output && typeof st.output === "object" ? (st.output as { solves?: { model?: string; cost?: number }[] }).solves : undefined;
     if (Array.isArray(solves) && solves.length) for (const sv of solves) byModel.set(sv.model ?? "?", (byModel.get(sv.model ?? "?") ?? 0) + (sv.cost ?? 0));
     else byModel.set(st.model ?? "(none)", (byModel.get(st.model ?? "(none)") ?? 0) + (st.cost ?? 0));
   }
   console.log("\n=== Cost by step ===");
-  for (const [k, e] of [...byStep].sort((x, y) => y[1].cost - x[1].cost)) console.log(`${k.padEnd(10)} calls ${String(e.n).padStart(3)}  $${e.cost.toFixed(4)}  (${total ? Math.round((100 * e.cost) / total) : 0}%)`);
+  for (const [k, e] of [...byStep].sort((x, y) => y[1].cost - x[1].cost)) console.log(`${k.padEnd(10)} calls ${String(e.n).padStart(3)}  $${e.cost.toFixed(4)}  (${total ? Math.round((100 * e.cost) / total) : 0}%)${e.batch || e.live ? `  · via batch: ${e.batch} call(s) at half price, saved $${e.saved.toFixed(4)}${e.live ? `; ${e.live} made live instead` : ""}` : ""}`);
   console.log("=== Cost by model ===");
   for (const [k, c] of [...byModel].sort((x, y) => y[1] - x[1])) console.log(`${k.padEnd(22)} $${c.toFixed(4)}  (${total ? Math.round((100 * c) / total) : 0}%)`);
   console.log(`\nresults: ${[...byResult].map(([k, v]) => `${k} ${v}`).join(", ") || "none"}`);
