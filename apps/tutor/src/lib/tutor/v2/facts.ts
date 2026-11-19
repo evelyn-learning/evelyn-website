@@ -160,6 +160,13 @@ export function v2SummaryBegun(state: V2State, enabled: boolean = TUTOR_V2_CLOSE
 /** Task 7m (NO_FALSE_SILENCE): whether the tutor's last reply asked them something (a question, an instruction, a starter to
  *  try), cut into sentences as the voice client cuts it. */
 /** Task 7r (ASK_ONE_TEST, `one`): or by the client's test (one-question.ts v2AsksTheLearner) on the whole reply. */
+/** Task 7r fix round 1 (I2): the last reply asked by the one test alone (its guards for offers, homework and taught phrases), for
+ *  the silence-after-ask line; with ASK_ONE_TEST off, v2LastReplyAsked. */
+export function v2LastReplyAskedGuarded(history: V2State['history'], one: boolean = TUTOR_V2_ASK_ONE_TEST): boolean {
+  if (!one) return v2LastReplyAsked(history, one);
+  const m = tutorReplies(history).pop();
+  return !!m && v2AsksTheLearner(replyText(m));
+}
 export function v2LastReplyAsked(history: V2State['history'], one: boolean = TUTOR_V2_ASK_ONE_TEST): boolean {
   const m = tutorReplies(history).pop();
   if (!m) return false;
@@ -306,7 +313,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // embed-1795050656326: the tutor answered its own summary question at 18.9 min, and re-asked its part asks).
   const notAnswer = TUTOR_V2_SILENCE_AFTER_ASK ? '. Do not give the answer yourself, and do not repeat your question or a part-change ask word for word' : '';
   // Task 7r (SILENCE_AFTER_ASK): the ordinary long wait after a reply that asked them something: the question in hand stands.
-  const longAfterAsk = TUTOR_V2_SILENCE_AFTER_ASK && !askedThem && !!f.silenceSeconds && !f.heard && ![V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S].includes(Math.round(f.silenceSeconds)) && v2LastReplyAsked(state.history);
+  const longAfterAsk = TUTOR_V2_SILENCE_AFTER_ASK && !askedThem && !!f.silenceSeconds && !f.heard && ![V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S].includes(Math.round(f.silenceSeconds)) && v2LastReplyAskedGuarded(state.history);
   if (askedThem) lines.push(`your last reply asked them for something, and they have been silent for ${Math.round(f.silenceSeconds!)} seconds since it finished: they may be thinking. Say one short line only: that they can take their time, or an offer of a hint or the first words. No claim about what they said, no new question, no card or other board item${notAnswer}`);
   else if (longAfterAsk) lines.push(`the student has said nothing for ${Math.round(f.silenceSeconds!)} seconds since your last reply, which asked them something: they have not answered the question in hand yet. Give one short encouragement or a smaller hint towards it, and stop. Do not give the answer, do not ask a new question, and do not repeat your question or a part-change ask word for word`);
   else if (f.silenceSeconds) lines.push(Math.round(f.silenceSeconds) === V2_NO_ASK_RECHECK_S

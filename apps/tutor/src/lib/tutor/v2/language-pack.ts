@@ -24,6 +24,11 @@ export interface V2LanguagePack {
    *  進んでよろしいでしょうか); `questions`: the "questions?" clause (質問がありますか); `or`: a sentence that opens as the other half
    *  of a choice (それとも…). Absent: askGoOn / askQuestionFirst as before. */
   askClauses?: { asks: RegExp; goOn: RegExp; questions: RegExp; or: RegExp };
+  /** Task 7r (ASK_ONE_TEST): asks to speak or try the pack's wording carries with no question mark (Japanese: 〜てみましょう on a
+   *  learner's verb, 繰り返して, 教えて / 言って… ください, a sentence ending どうぞ). `not`: what makes such a sentence no ask now (a
+   *  condition, later, homework: 「わからない単語があれば、いつでも教えてください。」, 「次回までに…書いてみてください。」). A request quoted
+   *  as a phrase being taught (「"Please tell me" は「教えてください」です。」) never counts: quoted spans are left out first. */
+  invites?: { ask: RegExp; not: RegExp };
   /** A filler leading a learner's answer ("Uh,", "Um", 「えっと、」): taken off before the answer is read. */
   answerFiller: RegExp;
 }
@@ -41,6 +46,9 @@ const JA_CLAUSE_GO = /(?:進み|行き|移り|続け|始め|入り)(?:ますか|
 const JA_CLAUSE_QUESTIONS = /(?:ご?質問|聞きたいこと)(?:は|が)(?:何か|なにか)?\s*(?:あります|ございます|ありません)か/u;
 const JA_CLAUSE_ASKS = /(?:[?？]|か[。．]?)["'」』）)]*\s*$/u;
 const JA_CLAUSE_OR = /^(?:それとも|または|あるいは)/u;
+// Task 7r fix round 1 (I2): not 考え / 練習し / 始め + てみましょう (「一緒に考えてみましょう。」 is the tutor's set-up, as 「一語ずつ練習しましょう。」).
+const JA_INVITE_ASK = /(?:言っ|話し|答え|書い|読ん|使っ|作っ|続け|繰り返し|発音し)てみましょう|繰り返して(?:ください|みて|ね|[。．！!]|$)|(?:教えて|始めて|聞かせて|言って|話して|答えて|書いて|読んで|使って|作って|続けて|発音して|練習して|選んで)(?:みて)?(?:ください|くださいね|ちょうだい|もらえますか)|どうぞ[。．！!]?["'」』）)]*$/u;
+const JA_INVITE_NOT = /(?:があれば|あれば|あったら|たら[、,]|なら[、,]|ときは|時は|ときに|時に|いつでも|次回|次の機会|までに|宿題|あとで|後で|今度)/u;
 const JA_LEAD = /^(?:(?:では|じゃあ|それでは|さて)[、,]?\s*)?次は[、,]?\s*\S/u;
 
 export const V2_LANGUAGE_PACKS: Record<string, V2LanguagePack> = {
@@ -54,6 +62,7 @@ export const V2_LANGUAGE_PACKS: Record<string, V2LanguagePack> = {
     askGoOn: JA_GO_ON,
     askQuestionFirst: JA_QUESTION_FIRST,
     askClauses: { asks: JA_CLAUSE_ASKS, goOn: JA_CLAUSE_GO, questions: JA_CLAUSE_QUESTIONS, or: JA_CLAUSE_OR },
+    invites: { ask: JA_INVITE_ASK, not: JA_INVITE_NOT },
     answerFiller: /^(?:(?:えっと|ええと|えーと|えーっと|あの|あのう|あのー|うーん|まあ|えー)[、,…]?\s*)+/u,
   },
 };
@@ -76,8 +85,7 @@ export function v2IsAskLead(sentence: string, languages?: readonly string[]): bo
 /** Task 7r (PART_ASK_CLAUSES, `clauses`): in a pack with askClauses, by clauses: the last sentence asks; the sentence before it is
  *  part of the ask when it asks too and the last holds no go-on or questions clause of its own or opens as the other half of a
  *  choice (「最後にまとめに進みましょうか。」「それとも、もう一語練習しますか。」); the ask holds a go-on verb or the questions clause; `lead` is
- *  the sentence before the ask (the part may be named there: 「次は会話の練習です。」), for an ask with a questions clause or a choice,
- *  else only a "次は…" lead. Whether it names a plan part
+ *  the sentence before the ask only when it is a "次は…" / "Next is…" lead (fix round 1, C1: 「次は会話の練習です。」). Whether it names a plan part
  *  is the caller's test (part-flow.ts v2EndingPartAsk). */
 export function v2EndingAsk(sentences: readonly string[], languages?: readonly string[], clauses: boolean = TUTOR_V2_PART_ASK_CLAUSES): { ask: string; lead: string } | null {
   const xs = sentences.map((x) => x.trim()).filter(Boolean);
@@ -93,11 +101,10 @@ export function v2EndingAsk(sentences: readonly string[], languages?: readonly s
       if (prev && c.asks.test(prev) && (holds(prev) || c.or.test(last)) && (!holds(last) || c.or.test(last))) i -= 1;
       const askXs = xs.slice(i);
       if (!askXs.some(holds)) continue;
-      // The sentence before names the part only for an ask in the part ask's shape (a questions clause or a choice), or as a
-      // "次は…" lead: 「現在完了で答えてください。仕事は順調に進みますか？」 is a question about their work.
-      const shaped = askXs.some((x) => c.questions.test(x) || /それとも/u.test(x));
+      // Fix round 1 (C1): the sentence before is the lead only as a "次は…" / "Next is…" lead (a lead pointing forward), in any of
+      // the languages: 「過去形とは違って、今も続いていることを表します。何か質問はありますか。」 is the lesson's contrast and a check-in.
       const before = i >= 1 ? xs[i - 1]! : '';
-      return { ask: askXs.join(' '), lead: before && (shaped || p.askLead.test(before)) ? before : '' };
+      return { ask: askXs.join(' '), lead: before && v2IsAskLead(before, languages) ? before : '' };
     }
     if (!p.askGoOn?.test(last)) continue;
     let i = xs.length - 1;
@@ -107,6 +114,22 @@ export function v2EndingAsk(sentences: readonly string[], languages?: readonly s
     return { ask, lead };
   }
   return null;
+}
+
+/** A quoted span used as a phrase ("…", 「…」 followed by は / と / という / です / の / を…): a phrase being taught, not said to them. */
+const QUOTED_PHRASE = /(?:「[^」]*」|『[^』]*』|"[^"]*"|“[^”]*”)(?=\s*(?:は|と|って|という|です|でした|の|を|で|に|も|が|より))/gu;
+
+/** Task 7r (ASK_ONE_TEST): whether a sentence asks them to speak or try something in the wording of one of the packs (none
+ *  given: every pack), its quoted phrases left out, and not under a condition or for later (fix round 1, I2). */
+export function v2InvitesToSpeak(sentence: string, languages?: readonly string[]): boolean {
+  const s = v2WithoutQuotedPhrases(sentence);
+  return !!s && !v2InviteHeldBack(s, languages) && v2LanguagePacks(languages).some((p) => !!p.invites && p.invites.ask.test(s));
+}
+/** A sentence with its quoted phrases left out (QUOTED_PHRASE). */
+export const v2WithoutQuotedPhrases = (sentence: string) => sentence.replace(QUOTED_PHRASE, ' ').trim();
+/** Task 7r fix round 1 (I2): a request under a condition or for later in one of the packs (「…があれば、いつでも教えてください。」). */
+export function v2InviteHeldBack(sentence: string, languages?: readonly string[]): boolean {
+  return v2LanguagePacks(languages).some((p) => !!p.invites && p.invites.not.test(sentence));
 }
 
 /** A learner's answer with its leading fillers taken off ("Uh, move on." → "move on.", 「えっと、はい」 → 「はい」), in the lesson's

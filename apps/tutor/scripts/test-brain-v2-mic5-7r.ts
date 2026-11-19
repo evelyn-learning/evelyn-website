@@ -22,10 +22,11 @@ import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import { TUTOR_V2_ASK_ONE_TEST, TUTOR_V2_PART_ASK_CLAUSES, TUTOR_V2_PART_GO_NAMED, TUTOR_V2_SILENCE_AFTER_ASK } from '../src/lib/tutor/orchestrator/flags';
 import { asksAnywhere } from '../src/lib/tutor/v2/board-timing';
 import { v2AsksTheLearner, v2ReplyAsks } from '../src/lib/tutor/v2/one-question';
-import { v2LastReplyAsked } from '../src/lib/tutor/v2/facts';
+import { v2LastReplyAsked, v2LastReplyAskedGuarded } from '../src/lib/tutor/v2/facts';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { v2SpeechParts } from '../src/lib/tutor/v2/languages';
-import { v2AskedParts, v2EndingPartAsk, v2MoveAnswer, v2PendingPart } from '../src/lib/tutor/v2/part-flow';
+import { v2AskedParts, v2EndingPartAsk, v2GoForPart, v2MoveAnswer, v2PendingPart } from '../src/lib/tutor/v2/part-flow';
+import { v2InvitesToSpeak } from '../src/lib/tutor/v2/language-pack';
 import { runV2Turn, type V2ModelCall } from '../src/lib/tutor/v2/turn';
 import { newV2State, type V2BoardPage, type V2Session, type V2State } from '../src/lib/tutor/v2/types';
 
@@ -66,8 +67,8 @@ const goalsAt = { overview: { status: 'shown' as const, at: 0 }, 'level-check': 
 const base = (pages: V2BoardPage[], extra: Partial<V2State> = {}): V2State => ({ ...newV2State(0), workingLevel: { level: 'beginner', from: 'this_lesson' }, board: { pages: structuredClone(pages), current: pages.length - 1 }, goals: goalsAt, timeFit: { dropped: [], byArrival: true }, practiceSaid: { 'topic-intro': 3, 'present-perfect': 3, 'past-simple': 3, 'open-conversation': 3 }, ...extra });
 
 // ── The session's replies (transcript index), word for word ──
-const T0 = 'こんにちは、Praveenさん。Ryotaです。前回のNagoya Corporationのお話の続きで、今日は仕事や最近のプロジェクトについて英語で話します。文法は「present perfect」と「past simple」の二つを練習します。前回は初級のレベルで進めましたが、今日もそのままでよろしいでしょうか。';
-const T7 = 'いいですね。"at Nagoya Corporation"（ナゴヤ・コーポレーションで）と会社の名前の前に"at"を使えています。\n\n次は、お客様についての文をもう一つ言ってみてください。例えば「I sell washing machines.」のように、何を売っているかを言ってみましょう。';
+const T0 = 'こんにちは、Kenさん。Taroです。前回のAcme Corporationのお話の続きで、今日は仕事や最近のプロジェクトについて英語で話します。文法は「present perfect」と「past simple」の二つを練習します。前回は初級のレベルで進めましたが、今日もそのままでよろしいでしょうか。';
+const T7 = 'いいですね。"at Acme Corporation"（アクメ・コーポレーションで）と会社の名前の前に"at"を使えています。\n\n次は、お客様についての文をもう一つ言ってみてください。例えば「I sell washing machines.」のように、何を売っているかを言ってみましょう。';
 const T12 = 'テレビを売っている、というのは良い説明です。一つだけ直すと、"to customers" と複数形にします。\n\n仕事について話す練習はここまでです。次は「present perfect」に進みます。質問がありますか、それとも続けますか。';
 const T13 = '次は「present perfect」に進みましょうか。それとも、先に何か質問がありますか。';
 const T27 = 'その文は正しいです。ずっと続いている大変さを「I have found」で言えています。\n\n現在完了はここまでにします。次は past simple（過去形）です。質問がありますか。それとも、そのまま進みましょうか。';
@@ -80,15 +81,30 @@ const T66 = '発音の練習ですね。では、一つずつ言ってみまし�
 const T69 = 'わかりました、一語ずつ練習しましょう。最初の単語は responsibilities です。私の後に繰り返してください。';
 const T80 = '発音は96点でした。international は98点で、とてもよくできています。\n\n時間が少し残っています。最後にまとめに進みましょうか。それとも、もう一語練習しますか。';
 const T82_EN = 'Next is summary. Shall we go on, or do you have a question first?';
-const T84 = '今日はよく頑張りました。仕事の内容、責任、そしてプロジェクトについて話せました。よくできたのは、「I have worked at Nagoya Corporation for five years.」と言えたことです。五年前から今も続いている経験なので、have worked を正しく使えています。\n\n直すところは一つです。「I work at Nagoya Corporation for five years.」は、今の動作になるので、「have worked」にします。\nでは、確認の質問です。日本語で説明できますか。二つの文の違いを教えてください。\n We didn\'t get to the pronunciation part today, so that\'s for next time.';
+const T84 = '今日はよく頑張りました。仕事の内容、責任、そしてプロジェクトについて話せました。よくできたのは、「I have worked at Acme Corporation for five years.」と言えたことです。五年前から今も続いている経験なので、have worked を正しく使えています。\n\n直すところは一つです。「I work at Acme Corporation for five years.」は、今の動作になるので、「have worked」にします。\nでは、確認の質問です。日本語で説明できますか。二つの文の違いを教えてください。\n We didn\'t get to the pronunciation part today, so that\'s for next time.';
 // The replies a 2 s silence turn followed (investigation A), and #76 (繰り返して, then the runtime check-in).
 const SILENCE_BEFORE: Array<[string, string]> = [['#0', T0], ['#7', T7], ['#12', T12], ['#27', T27], ['#42', T42], ['#63', T63], ['#66', T66], ['#69', T69], ['#84', T84]];
 const T76 = '「international」です。私の後に繰り返してください。 international';
 // Task 7m's pinned asks (test-brain-v2-mic4-7m.ts): kept.
-const M7_D = 'Yes, "I have worked" is right. One small thing: we say "at Nagoya Corporation" and "for six years."\n\nNow, another sentence about you, with "I have…" Try starting with "I have worked with…" or "I have sold…".';
+const M7_D = 'Yes, "I have worked" is right. One small thing: we say "at Acme Corporation" and "for six years."\n\nNow, another sentence about you, with "I have…" Try starting with "I have worked with…" or "I have sold…".';
 const M7_E = 'わかりました。もう一問、過去形の練習をしましょう。まず、一文で答えてみてください。Try starting with: "I visited…" or "I met…"';
 // Statements: no ask, before or after.
 const STATEMENTS = ['Good. Let\'s start with the past simple.', 'The derivative of x squared is 2x. So the slope at x = 3 is 6.', 'わかりました、一語ずつ練習しましょう。', 'では、例を見てみましょう。現在完了は have と過去分詞です。', 'Good. Let\'s try starting with the chain rule.'];
+// ── Fix round 1: the review's failing inputs ──
+// C1: check-ins and practice questions that name a part (not forward) are no part asks.
+const C1_NOT_PART: Array<[string, string, V2BoardPage[]]> = [
+  ['contrast line in Present perfect', '過去形とは違って、今も続いていることを表します。何か質問はありますか。', [TODAY, JOB, PP]],
+  ['a later use named in Present perfect', 'この表現は、あとの会話の練習でも使います。何か質問はありますか。', [TODAY, JOB, PP]],
+  ['the overview naming the optional part', '最後に、希望があれば発音の練習もします。何か質問はありますか。', [TODAY]],
+  ['continue the role-play in Past simple', 'この会話、もう少し続けますか。', [TODAY, JOB, PP, PS]],
+];
+// I1: a content answer, a no-name ask with a part named before it, a choice offer.
+const I1_EN = 'Next we\'ll do conversation, but first: did you enjoy the exhibition?';
+const I1_JA = '会話の練習で使える表現です。次の問題に進みましょうか？';
+const I1_OFFER = 'Before the summary, there is still pronunciation. Would you like to do it now, or go straight to the summary?';
+// I2: offers, homework and taught phrases are no ask.
+const I2_NOT_ASK = ['わからない単語があれば、いつでも教えてください。', '次回までに、この文を三回書いてみてください。', '"Please tell me" は「教えてください」です。', '一緒に考えてみましょう。'];
+const I2_QUOTED_Q = '"Could you tell me…?" は「教えてもらえますか」という意味です。';
 const MATHS_ASK = 'Nice work on the product rule. Now differentiate x cubed times sine x. What do you get?';
 
 /** The client's decision at HEAD (TutorVoiceV2: asksAnywhere on the voice parts) and with the switch (or the one test on the
@@ -150,17 +166,42 @@ async function probe() {
   };
   // 4: the 11.4 min turn: #43, "Uh, no, let's go.", and the model's #45 with its own page.
   const heard43: string[] = [];
-  const t43 = await runV2Turn({ session: lang, state: base([TODAY, JOB, PP, PS], { history: [u('I enjoyed the exhibition a lot.'), a(T42), a(T43)] }), studentSaid: 'Uh, no, let\'s go.', callModel: scripted([`<board page>会話</board>${T45}`]).call, onText: (d) => heard43.push(d), boardPass: false, mathsCheck: false, nowMs: 11.4 * MIN });
+  const beforeConv = { 'topic-intro': 3, 'present-perfect': 3, 'past-simple': 3 };
+  const t43 = await runV2Turn({ session: lang, state: base([TODAY, JOB, PP, PS], { practiceSaid: beforeConv, history: [u('I enjoyed the exhibition a lot.'), a(T42), a(T43)] }), studentSaid: 'Uh, no, let\'s go.', callModel: scripted([`<board page>会話</board>${T45}`]).call, onText: (d) => heard43.push(d), boardPass: false, mathsCheck: false, nowMs: 11.4 * MIN });
   // The unreadable ask (fallback): the same reply in words the clause reading does not know, naming 会話.
   const ODD = '過去形の練習は、ここまでです。会話の練習はどうでしょうか。';
   const heardOdd: string[] = [];
-  const tOdd = await runV2Turn({ session: lang, state: base([TODAY, JOB, PP, PS], { history: [u('I enjoyed the exhibition a lot.'), a(ODD)] }), studentSaid: 'Yes, let\'s go.', callModel: scripted([`<board page>会話</board>${T45}`]).call, onText: (d) => heardOdd.push(d), boardPass: false, mathsCheck: false, nowMs: 11.4 * MIN });
+  const tOdd = await runV2Turn({ session: lang, state: base([TODAY, JOB, PP, PS], { practiceSaid: beforeConv, history: [u('I enjoyed the exhibition a lot.'), a(ODD)] }), studentSaid: 'Yes, let\'s go.', callModel: scripted([`<board page>会話</board>${T45}`]).call, onText: (d) => heardOdd.push(d), boardPass: false, mathsCheck: false, nowMs: 11.4 * MIN });
   // The 18 min turn (lesson clock ≈14.5 min: 224 s of flag time paused it): #80, "Uh, wrap up.", and the model's summary page.
   const heard80: string[] = [];
   const t80 = await runV2Turn({ session: lang, state: base([TODAY, JOB, PP, PS, CONV, PRON], { history: [u('International.'), a(T80)] }), studentSaid: 'Uh, wrap up.', callModel: scripted(['<board page>まとめ</board>まとめに入ります。今日は仕事の話を、現在完了と過去形を使って話せました。']).call, onText: (d) => heard80.push(d), boardPass: false, mathsCheck: false, nowMs: 14.5 * MIN });
   const pageTitles = (s: V2State) => s.board.pages.map((p) => p.title);
+  // Fix round 1 (C1): pure, the reply's own hold (7e ownAsk), and the answer that would open the held part.
+  const c1 = [];
+  for (const [k, t, pages] of C1_NOT_PART) {
+    const st = base(pages, { practiceSaid: { 'topic-intro': 3, 'present-perfect': 1 }, history: [u('x'), a(t)] });
+    const asking = await runV2Turn({ session: lang, state: base(pages, { practiceSaid: { 'topic-intro': 3, 'present-perfect': 1 }, history: [u('x'), a('y')] }), studentSaid: 'I have worked here for six years.', callModel: scripted([t]).call, onText: () => {}, boardPass: false, mathsCheck: false, nowMs: 9 * MIN });
+    const answered = await runV2Turn({ session: lang, state: asking.state, studentSaid: 'いいえ、大丈夫です。', callModel: scripted(['では、もう一文作ってみましょう。']).call, onText: () => {}, boardPass: false, mathsCheck: false, nowMs: 9.5 * MIN });
+    c1.push({ k, ending: !!v2EndingPartAsk(t, GDI, LANGS), pending: v2PendingPart(GDI, st, t, 'はい', undefined, LANGS)?.title ?? null, held: asking.state.heldPage?.title ?? null, pagesAfter: pageTitles(answered.state).length - pages.length });
+  }
+  // Fix round 1 (I1): the model turns to the Conversation page after a content answer / a 「はい」 to a no-name ask.
+  const i1 = [];
+  for (const [k, reply, said] of [['en content answer', I1_EN, 'Yes, I enjoyed it.'], ['ja no-name ask', I1_JA, 'はい']] as const) {
+    const heard: string[] = [];
+    const t = await runV2Turn({ session: lang, state: base([TODAY, JOB, PP, PS], { practiceSaid: beforeConv, history: [u('I enjoyed the exhibition a lot.'), a(reply)] }), studentSaid: said, callModel: scripted([`<board page>会話</board>${T45}`]).call, onText: (d) => heard.push(d), boardPass: false, mathsCheck: false, nowMs: 11.4 * MIN });
+    i1.push({ k, go: v2GoForPart(said, reply, GDI, base([TODAY, JOB, PP, PS], { practiceSaid: beforeConv }), 5, LANGS), opened: pageTitles(t.state).some((p) => /会話|Conversation/.test(p)) });
+  }
+  const offerSt = base([TODAY, JOB, PP, PS, CONV], { practiceSaid: { ...beforeConv, 'open-conversation': 3 } });
+  const i1Offer = { summary: v2GoForPart('Yes.', I1_OFFER, GDI, offerSt, GDI.segments.length - 1, LANGS), pron: v2GoForPart('Yes.', I1_OFFER, GDI, offerSt, 6, LANGS) };
+  // Fix round 1 (I2) and the maths long silence (m6).
+  const i2 = { notAsk: I2_NOT_ASK.map((t) => ({ t, asks: v2AsksTheLearner(`いいですね。${t}`), server: v2LastReplyAskedGuarded([u('x'), a(`いいですね。${t}`)]) })), quotedInvite: v2InvitesToSpeak(I2_QUOTED_Q), quotedAsks: v2AsksTheLearner(I2_QUOTED_Q), stillAsks: ['ゆっくりどうぞ。', '私の後に繰り返してください。', 'では、言ってみましょう。'].map((t) => v2AsksTheLearner(t)) };
+  const maths: V2Session = { studentName: 'Sam', subject: 'Calculus', level: 'AP', mode: 'voice' };
+  const mf = scripted(['Take your time.']);
+  await runV2Turn({ session: maths, state: { ...newV2State(0), history: [u('ok'), a(MATHS_ASK)] }, studentSaid: null, callModel: mf.call, onText: () => {}, boardPass: false, mathsCheck: false, nowMs: 5 * MIN, facts: { silenceSeconds: 12 } });
+  const mathsSilence = mf.facts.join('\n');
+  const m1 = { conversationQ: v2MoveAnswer('Conversation?', T42, LANGS, undefined, GDI) };
   return {
-    item1, f84, f42, f2s, fStatement, item3, t66, n7, go,
+    item1, f84, f42, f2s, fStatement, item3, t66, n7, go, c1, i1, i1Offer, i2, mathsSilence, m1,
     t43: { pages: pageTitles(t43.state), heard: heard43.join(''), held: t43.state.heldPage?.title ?? null },
     tOdd: { pages: pageTitles(tOdd.state), heard: heardOdd.join(''), held: tOdd.state.heldPage?.title ?? null },
     t80: { pages: pageTitles(t80.state), heard: heard80.join(''), held: t80.state.heldPage?.title ?? null },
@@ -215,6 +256,16 @@ async function main() {
   check('an ask the runtime cannot read (「会話の練習はどうでしょうか。」) + "Yes, let\'s go.": the model\'s Conversation page is not held', on.tOdd.pages.some((p) => /会話|Conversation/.test(p)) && on.tOdd.held === null && !ENGLISH_ASK.test(on.tOdd.heard), on.tOdd);
   check('18 min: #80 + "Uh, wrap up." opens the summary page, no English ask or offer after it', on.t80.pages.includes('まとめ') && on.t80.held === null && !ENGLISH_ASK.test(on.t80.heard), on.t80);
 
+  console.log('6  fix round 1');
+  for (const c of on.c1) check(`C1 ${c.k}: no part ask, nothing pends, the reply holds no part, 「いいえ、大丈夫です。」 opens no page`, !c.ending && c.pending === null && c.held === null && c.pagesAfter === 0, c);
+  for (const x of on.i1) check(`I1 ${x.k}: not a go for Conversation; the model's Conversation page is held`, !x.go && !x.opened, x);
+  check('I1 the runtime\'s choice offer ("…now, or go straight to the summary?") + "Yes.": a go for neither part', !on.i1Offer.summary && !on.i1Offer.pron, on.i1Offer);
+  for (const x of on.i2.notAsk) check(`I2 no ask by the one test (and no silence-after-ask line): 「${x.t}」`, !x.asks && !x.server, x);
+  check('I2 a request quoted as a phrase (「"Could you tell me…?" は「教えてもらえますか」という意味です。」) is no ask by the one test', !on.i2.quotedInvite && !on.i2.quotedAsks, on.i2);
+  check('I2 the session\'s asks stay asks (どうぞ, 繰り返してください, 言ってみましょう)', on.i2.stillAsks.every(Boolean), on.i2.stillAsks);
+  check('m1 "Conversation?" (asking what it is) is not a go', on.m1.conversationQ !== 'go', on.m1);
+  check('m6 a maths voice reply that asked: the long silence says the question in hand stands', /not answered the question in hand yet/.test(on.mathsSilence), on.mathsSilence.match(/the student has said nothing[^\n]*/)?.[0]);
+
   console.log('5  each switch off alone (a child process per switch): as at 7ce31282 for that item, the others on');
   const child = (flag: string) => {
     const res = spawnSync(process.execPath, [...process.execArgv, __filename], { env: { ...process.env, [`NEXT_PUBLIC_TUTOR_V2_${flag}`]: 'off', MIC5_7R_CHILD: '1' }, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
@@ -225,7 +276,7 @@ async function main() {
   {
     const off = child('ASK_ONE_TEST');
     const missed = off.item1.silence.filter((s) => !s.client).map((s) => s.k);
-    check('ASK_ONE_TEST off: the client takes the session\'s asks for statements again (as at HEAD)', missed.length >= 7, missed);
+    check('ASK_ONE_TEST off: the client takes exactly the 9 for statements again (as at HEAD)', JSON.stringify(missed) === JSON.stringify(['#0', '#7', '#12', '#27', '#42', '#63', '#66', '#69', '#84']), missed);
     check('ASK_ONE_TEST off: the server reads them as before (asksAnywhere on its cut)', off.item1.silence.every((s) => s.server === s.was), off.item1.silence);
     check('ASK_ONE_TEST off: the other items unchanged', off.item3.every((x) => x.ending) && off.go.wrap80 === 'go');
   }
