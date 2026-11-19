@@ -19,6 +19,7 @@ import type { LessonPlan } from '../lesson-plan/types';
 import { TUTOR_V2_CLOCK_FROM_START, TUTOR_V2_CLOSE_BY_CONTENT, TUTOR_V2_FLAG_CLOCK_PAUSE, TUTOR_V2_MORE_PRACTICE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_OVERRUN_MIN, TUTOR_V2_PART_ENTERED, TUTOR_V2_PART_MIN_PRACTICE, TUTOR_V2_TIME_BOX, TUTOR_V2_TIME_NO_SQUEEZE, TUTOR_V2_TIME_OVERRUN } from '../orchestrator/flags';
 import { discussionOf } from './discussion';
 import { v2IsPageOfPart, v2OfferedOut, v2PartEntered, v2PartIsOptional, v2PartOf } from './plan-map';
+import { v2SummaryOpensClose } from './summary-close';
 import type { V2Session, V2State } from './types';
 
 /** Task 7g (CLOCK_FROM_START): the engine's clock starts with the session (the tap that opens it, or the first typed message:
@@ -131,7 +132,9 @@ export function v2PlanContentDone(plan: LessonPlan | undefined, state: Pick<V2St
  *  plan's content done (v2PlanContentDone). Homework keeps the last fifth (its own time line). `on` off: the last fifth, as
  *  before (v2CloseOpenByClock). Read by turn.ts (applyControlTool's end_lesson rule, the summary detection, the held summary
  *  page), close-invite.ts and facts.ts. */
-export function v2CloseOpen(session: V2Session, state: Pick<V2State, 'startedAtMs' | 'goals' | 'board' | 'workingLevel' | 'history' | 'timeFit'> & Partial<Pick<V2State, 'practiceSaid'>>, nowMs: number, on: boolean = TUTOR_V2_CLOSE_BY_CONTENT): boolean {
+export function v2CloseOpen(session: V2Session, state: Pick<V2State, 'startedAtMs' | 'goals' | 'board' | 'workingLevel' | 'history' | 'timeFit'> & Partial<Pick<V2State, 'practiceSaid' | 'summaryBegunAt' | 'closed'>>, nowMs: number, on: boolean = TUTOR_V2_CLOSE_BY_CONTENT): boolean {
+  // Task 7w (SUMMARY_OPENS_CLOSE): once the tutor has begun the summary, the close is open, whatever the wrap minute (summary-close.ts).
+  if (v2SummaryOpensClose(session, state)) return true;
   if (!on || session.homework || session.homeworkSheet) return v2CloseOpenByClock(session, state, nowMs);
   if (!session.timeBoxMinutes) return true;
   if (v2WrapDue(session, (nowMs - state.startedAtMs) / 60000, true, true)) return true;

@@ -23,7 +23,7 @@ import { v2AsksPartChange, v2EndingPartAsk, v2MoveAnswer, v2NextPart, v2OpenPage
 import { v2IsPageOfPart, v2OfferedOut, v2PartEntered, v2PartIsOptional, v2PartNamedIn, v2PartOf } from './plan-map';
 import { v2OverrunMin, v2Taught, v2WrapMin } from './time-box';
 import { v2WithoutFillers } from './language-pack';
-import { TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_PART_ASK_LANGS, TUTOR_V2_PART_CLOCK, TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART, TUTOR_V2_TIME_NO_SQUEEZE } from '../orchestrator/flags';
+import { TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_PART_ASK_LANGS, TUTOR_V2_PART_CLOCK, TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART, TUTOR_V2_TIME_NO_SQUEEZE, TUTOR_V2_OVERLONG_QUIET } from '../orchestrator/flags';
 import type { V2Session, V2State } from './types';
 
 /** The practice sentences of their own a practice part needs before it closes (Task 7f C). */
@@ -195,6 +195,13 @@ export function v2StayInPartLine(session: V2Session, state: V2State, nowMs: numb
 /** Task 7v (PART_CLOCK): the lessons the part clock runs in: spoken, timed, taught, with a labelled plan, not closed. */
 export function v2PartClockOn(session: V2Session, state: Pick<V2State, 'closed'>, on: boolean = TUTOR_V2_PART_CLOCK): boolean {
   return on && !!session.plan && !!session.timeBoxMinutes && session.mode === 'voice' && v2Taught(session) && v2PlanLabelled(session.plan) && !state.closed;
+}
+
+/** Task 7w (OVERLONG_QUIET): the session's old `segment_overlong` warning (TutorSession.tsx, six tutor turns in one segment) is not
+ *  raised where the 7v part clock governs the part: a spoken, timed, taught v2 lesson with a labelled plan (v2PartClockOn's lessons).
+ *  Mic test 7 (embed-1795100797999: three warnings beside the part clock). */
+export function v2OverlongQuiet(v2: boolean, session: Pick<V2Session, 'mode' | 'plan' | 'timeBoxMinutes'>, enabled: boolean = TUTOR_V2_OVERLONG_QUIET, clock: boolean = TUTOR_V2_PART_CLOCK): boolean {
+  return enabled && v2 && v2PartClockOn({ subject: '', level: '', ...session }, { closed: false }, clock);
 }
 
 /** Task 7v (PART_CLOCK): the part in hand is a new part: it began now (state.partStart, mutates). Called as the turn begins (a page

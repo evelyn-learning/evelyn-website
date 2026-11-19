@@ -22,6 +22,7 @@ import type { LessonPlan } from '../lesson-plan/types';
 import { v2CloseInviteOn, v2CloseInviteOwed } from './close-invite';
 import { v2NoteTargetsOn } from './note-targets';
 import { v2PlanLabelled } from './part-flow';
+import { v2SummaryOpensCloseOn } from './summary-close';
 import { V2_TIME_UP_MIN, v2LeftToStopMin } from './time-box';
 import type { V2Session, V2State } from './types';
 
@@ -43,12 +44,15 @@ export function v2CloseCheckOn(session: V2Session, enabled: boolean = TUTOR_V2_C
   return enabled && v2CloseInviteOn(session) && v2NoteTargetsOn(session) && v2PlanLabelled(session.plan) && !!v2PlanCheckQuestion(session.plan);
 }
 
-type Ctx = { nowMs: number; stopAsked: boolean; closeByContent?: boolean; overrun?: boolean; enabled?: boolean };
+/** `summaryNow`: Task 7w (SUMMARY_OPENS_CLOSE), the summary began in this very reply (turn.ts). `opensClose`: that switch (tests). */
+type Ctx = { nowMs: number; stopAsked: boolean; closeByContent?: boolean; overrun?: boolean; enabled?: boolean; summaryNow?: boolean; opensClose?: boolean };
 
 /** The check is owed now: the invitation is owed (7d), the check was never asked, and there is time for it. */
 export function v2CloseCheckOwed(session: V2Session, state: V2State, ctx: Ctx): boolean {
   // Only before the summary has begun, and never once the close was reopened (7k): the check belongs to the summary reply.
-  if (!v2CloseCheckOn(session, ctx.enabled) || state.closeCheck || typeof state.summaryBegunAt === 'number' || typeof state.closeReopened === 'number') return false;
+  // Task 7w (SUMMARY_OPENS_CLOSE): the summary reply itself (begun in this reply), and the reply after one that skipped it, once.
+  const late = v2SummaryOpensCloseOn(session, ctx.opensClose) && (ctx.summaryNow === true || typeof state.closeCheckLate === 'number');
+  if (!v2CloseCheckOn(session, ctx.enabled) || state.closeCheck || (typeof state.summaryBegunAt === 'number' && !late) || typeof state.closeReopened === 'number') return false;
   if (!v2CloseInviteOwed(session, state, { nowMs: ctx.nowMs, stopAsked: ctx.stopAsked, closeByContent: ctx.closeByContent, overrun: ctx.overrun })) return false;
   return v2LeftToStopMin(session, state, ctx.nowMs, ctx.overrun) > V2_TIME_UP_MIN + V2_CLOSE_CHECK_MIN;
 }
@@ -80,4 +84,17 @@ export function v2ReadCloseCheck(raw: unknown): V2State['closeCheck'] | undefine
   const c = raw as { askedAt?: unknown; answeredAt?: unknown } | null | undefined;
   if (!c || typeof c !== 'object' || typeof c.askedAt !== 'number' || !Number.isFinite(c.askedAt) || c.askedAt <= 0) return undefined;
   return { askedAt: c.askedAt, ...(typeof c.answeredAt === 'number' && Number.isFinite(c.answeredAt) && c.answeredAt > 0 ? { answeredAt: c.answeredAt } : {}) };
+}
+
+/** Task 7w (SUMMARY_OPENS_CLOSE): the line beside the summary page's layout line, before the close is open by the clock: the reply that
+ *  gives the summary ends on the check question (the 7u ask line). Null where the check does not apply, was asked, or there is no time. */
+export function v2CloseCheckSummaryLine(session: V2Session, state: V2State, ctx: Ctx): string | null {
+  if (!v2SummaryOpensCloseOn(session, ctx.opensClose) || !v2CloseCheckOn(session, ctx.enabled) || state.closed || ctx.stopAsked || state.closeCheck || typeof state.closeInvitedAt === 'number' || typeof state.closeReopened === 'number' || typeof state.summaryBegunAt === 'number' || !session.timeBoxMinutes) return null;
+  if (v2LeftToStopMin(session, state, ctx.nowMs, ctx.overrun) <= V2_TIME_UP_MIN + V2_CLOSE_CHECK_MIN) return null;
+  return v2CloseCheckAskLine(v2PlanCheckQuestion(session.plan)!);
+}
+
+/** Task 7w: the route's reading of closeCheckLate. */
+export function v2ReadCloseCheckLate(raw: unknown): number | undefined {
+  return typeof raw === 'number' && Number.isFinite(raw) && raw > 0 ? raw : undefined;
 }

@@ -2334,3 +2334,37 @@ export const TUTOR_V2_SELF_CORRECTION = process.env.NEXT_PUBLIC_TUTOR_V2_SELF_CO
  *  (embed-1795067373124, 13:38: his repeat-after-me said with the model sentence was dropped as the tutor's own voice) (Task 7v,
  *  item 7b). Default ON; NEXT_PUBLIC_TUTOR_V2_REPEAT_NOT_ECHO=off ⇒ as before. */
 export const TUTOR_V2_REPEAT_NOT_ECHO = process.env.NEXT_PUBLIC_TUTOR_V2_REPEAT_NOT_ECHO !== 'off';
+
+/** Tutor brain v2 (v2/summary-marks.ts, v2/turn.ts, v2/facts.ts): each correction made in the lesson is recorded with what the learner
+ *  said and the words it changed (state.corrections); on the Summary page a sentence card that is one of them gets those marks when the
+ *  model wrote none (or words not in the sentence), a recorded correction is not painted under "What went well", and the summary facts
+ *  list the corrections as "said → correct (changed: …)". Spoken lessons that teach a language with a labelled plan. Mic test 7
+ *  (embed-1795100797999: the four summary cards carried no marks, and a corrected sentence stood under "What went well") (Task 7w,
+ *  item 1). Default ON; NEXT_PUBLIC_TUTOR_V2_SUMMARY_MARKS=off ⇒ as before. */
+export const TUTOR_V2_SUMMARY_MARKS = process.env.NEXT_PUBLIC_TUTOR_V2_SUMMARY_MARKS !== 'off';
+
+/** Tutor brain v2 (v2/summary-layout.ts): the summary page's facts say each group is said aloud, one or two sentences before its
+ *  cards. Mic test 7 (embed-1795100797999, 16.9 min: the Summary page went up with nothing said for it) (Task 7w, item 2). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_SUMMARY_SPOKEN=off ⇒ as before. */
+export const TUTOR_V2_SUMMARY_SPOKEN = process.env.NEXT_PUBLIC_TUTOR_V2_SUMMARY_SPOKEN !== 'off';
+
+/** Tutor brain v2 (v2/summary-close.ts, v2/time-box.ts, v2/close-check.ts, v2/turn.ts, v2/facts.ts): once the tutor begins the summary
+ *  (its page written), the close is open from that reply on, whatever the wrap minute or a held wrap says; the summary is marked begun
+ *  as the page is written (an end_lesson in that reply meets the check / invitation deferral, never the generic menu); the check
+ *  question's line stands beside the summary page's; a summary reply that skipped the check owes it on the next reply, once. Spoken
+ *  lessons that teach a language with a labelled plan. Mic test 7 (embed-1795100797999, 16.9 min: summary given before the close
+ *  opened, no check, no invitation, "something harder, more practice…" after it) (Task 7w, item 3). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_SUMMARY_OPENS_CLOSE=off ⇒ as before. */
+export const TUTOR_V2_SUMMARY_OPENS_CLOSE = process.env.NEXT_PUBLIC_TUTOR_V2_SUMMARY_OPENS_CLOSE !== 'off';
+
+/** Tutor brain v2 (v2/turn.ts): the blank-board fallback of the opening reply, in a spoken lesson that teaches a language with a
+ *  labelled plan that opens on an overview part, opens that part's page with the lesson's title as its heading: never the plan's
+ *  learning objectives, and the overview's own page block then stays on it. Mic test 7 (embed-1795100797999: an untitled page 1 of
+ *  the title and three objectives, then an "Overview" page saying the same) (Task 7w, item 4). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_OPENING_PAGE_TITLE=off ⇒ as before. */
+export const TUTOR_V2_OPENING_PAGE_TITLE = process.env.NEXT_PUBLIC_TUTOR_V2_OPENING_PAGE_TITLE !== 'off';
+
+/** Tutor session (TutorSession.tsx, v2/time-fit.ts v2OverlongQuiet): the old `segment_overlong` warning is not raised where the 7v part
+ *  clock governs the part (spoken timed v2 lessons with a labelled plan). Mic test 7 (embed-1795100797999: it fired three times beside
+ *  the part clock) (Task 7w, item 5). Default ON; NEXT_PUBLIC_TUTOR_V2_OVERLONG_QUIET=off ⇒ as before. */
+export const TUTOR_V2_OVERLONG_QUIET = process.env.NEXT_PUBLIC_TUTOR_V2_OVERLONG_QUIET !== 'off';

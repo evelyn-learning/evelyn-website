@@ -70,6 +70,7 @@ import { latestSubstantiveTutorEntry, shouldClearQpinOnSegmentChange } from '@/l
 import { preStartDockCaption } from './prestart-affordances';
 import { HeaderClock } from './HeaderClock';
 import { v2OverrunMin } from '@/lib/tutor/v2/time-box';
+import { v2OverlongQuiet } from '@/lib/tutor/v2/time-fit';
 import {
   buildStudentMediaBrainInput, buildUploadedProblemCard, classifyExtraction, studentMediaNotice,
   extractionUsage, runWithAbortTimeout, EXTRACTION_TIMEOUT_MS, extractionRequestBody, studentMediaDebugDetail,
@@ -1264,6 +1265,8 @@ export default function TutorSession(props: TutorSessionProps) {
       return;
     }
     if (st.fired) return;
+    // Task 7w (OVERLONG_QUIET): where the v2 part clock governs the part, its own lines pace it; no warning beside them.
+    if (v2OverlongQuiet(brainVersion === 'v2', { mode: sessionMode === 'text' ? 'text' : 'voice', plan: lessonProgress.plan ?? undefined, timeBoxMinutes: sessionMaxMinutes ?? undefined })) return;
     const within = tutorTurns - st.baseline;
     if (within >= OVERLONG_SEGMENT_TURNS) {
       st.fired = true;   // once per segment, never a per-turn stream
@@ -1272,7 +1275,7 @@ export default function TutorSession(props: TutorSessionProps) {
         `segment "${segId || '(none)'}" has run ${within} substantive tutor turns without advancing`,
       );
     }
-  }, [transcript, lessonProgress.currentSegmentId, onDebugEvent]);
+  }, [transcript, lessonProgress.currentSegmentId, lessonProgress.plan, brainVersion, sessionMode, sessionMaxMinutes, onDebugEvent]);
 
   // R50 T2: turn-distance staleness bound. R38 made the pin survive later
   // tutor turns (an idle nudge must not kill a live question) and R47 bounded

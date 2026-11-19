@@ -25,7 +25,8 @@ import { V2_TIME_UP_MIN, v2CloseOpen, v2PlanContentDone, v2LeftToStopMin, v2Less
 import { V2_MORE_PRACTICE_MIN_LEFT, v2MorePracticeFacts, v2OptionalFits, v2OptionalHeldLine, v2PartClock, v2PartTimeUpLine, v2PracticeFacts, v2StayInPartLine, v2TimeFitFacts } from './time-fit';
 import { TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART, TUTOR_V2_SUPPORT_FOLLOWED } from '../orchestrator/flags';
 import { v2CloseInviteFacts, v2CloseReopened, v2MoreAskAnswered } from './close-invite';
-import { v2CloseCheckFacts } from './close-check';
+import { v2CloseCheckFacts, v2CloseCheckSummaryLine } from './close-check';
+import { v2SummaryCorrectionsLine } from './summary-marks';
 import { v2SummaryGroupsOn, v2SummaryLayoutLine } from './summary-layout';
 import { TUTOR_V2_ASK_ONE_TEST, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_SILENCE_AFTER_ASK } from '../orchestrator/flags';
 import { v2AsksTheLearner } from './one-question';
@@ -258,7 +259,16 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     if (!discussion && !check.replacesInvite && !(morePracticeAllowed && typeof state.closeInvitedAt === 'number')) lines.push(...v2CloseInviteFacts(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun, moreTime: leftStop > V2_MORE_PRACTICE_MIN_LEFT }));
     lines.push(...check.lines);
     // Task 7u (SUMMARY_GROUPS): near or at the close, before the summary has begun, the summary page's order (summary-layout.ts).
-    if (!discussion && (closing || near) && !summaryBegun && !state.closed && v2SummaryGroupsOn(session)) lines.push(v2SummaryLayoutLine(session, state, f.heard));
+    if (!discussion && (closing || near) && !summaryBegun && !state.closed && v2SummaryGroupsOn(session)) {
+      lines.push(v2SummaryLayoutLine(session, state, f.heard));
+      // Task 7w (SUMMARY_MARKS): the corrections the "To improve" cards come from, with what they said and the words changed.
+      const corrections = v2SummaryCorrectionsLine(session, state);
+      if (corrections) lines.push(corrections);
+      // Task 7w (SUMMARY_OPENS_CLOSE): the reply that gives the summary ends on the check question even before the close is open by the
+      // clock (the summary opens it); where the 7u line is already in these facts, nothing more.
+      const checkBeside = check.lines.length || check.replacesInvite ? null : v2CloseCheckSummaryLine(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun });
+      if (checkBeside) lines.push(checkBeside);
+    }
     // Task 7f B: the parts left out for time; C: the practice the part in hand still needs; E: more practice asked for at the close.
     if (!discussion) lines.push(...v2TimeFitFacts(session, state, tf.noSqueeze, f.nowMs));
     // Task 7i (OPTIONAL_AT_ARRIVAL), fix round 1: their words name a part left out for time. Permissive: the model reads their meaning.

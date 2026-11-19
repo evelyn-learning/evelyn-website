@@ -9,7 +9,8 @@ import { discussionOf } from './discussion';
 import { v2CloseInviteOn } from './close-invite';
 import { V2_CLOCK_PAUSE_HONOURED } from './time-box';
 import { v2AdaptOn } from './adaptive';
-import { v2ReadCloseCheck } from './close-check';
+import { v2ReadCloseCheck, v2ReadCloseCheckLate } from './close-check';
+import { v2SummaryMarksOn } from './summary-marks';
 
 export const V2_MAX_BOARD_PROBLEMS = 12;
 /** Task 7g: at most this many sentences owed a card are carried. */
@@ -23,7 +24,7 @@ export const V2_MAX_UNHEARD = 4;
  *  the close; final review I6: read whatever STATE_CARRY says, as the held page is (its own switch, CLOSE_INVITES_QUESTIONS,
  *  and its scope are applied in v2ScopeCarried): with STATE_CARRY off it was dropped every turn, and every close after the
  *  invitation was refused and the invitation asked again. */
-type Carried = Pick<V2State, 'heldPage' | 'summaryBegunAt' | 'repliesSinceBoard' | 'boardProblems' | 'closeInvitedAt' | 'closeReopened' | 'closeAsk' | 'closeCheck' | 'visitPages' | 'clockPausedMs' | 'timeFit' | 'practiceSaid' | 'moveOnAsked' | 'cardsOwed' | 'unheard' | 'partStart'>;
+type Carried = Pick<V2State, 'heldPage' | 'summaryBegunAt' | 'repliesSinceBoard' | 'boardProblems' | 'closeInvitedAt' | 'closeReopened' | 'closeAsk' | 'closeCheck' | 'closeCheckLate' | 'visitPages' | 'clockPausedMs' | 'timeFit' | 'practiceSaid' | 'moveOnAsked' | 'cardsOwed' | 'unheard' | 'partStart'>;
 const ID = /^[\w.:-]{1,80}$/;
 export function v2ReadCarried(raw: unknown, enabled: boolean = TUTOR_V2_STATE_CARRY): Carried {
   const s = (raw && typeof raw === 'object' ? raw : {}) as Partial<Record<keyof V2State, unknown>>;
@@ -52,6 +53,9 @@ export function v2ReadCarried(raw: unknown, enabled: boolean = TUTOR_V2_STATE_CA
   // Task 7u (CLOSE_CHECK): the closing check asked / answered, read as closeInvitedAt is (its switch and scope in v2ScopeCarried).
   const check = v2ReadCloseCheck(s.closeCheck);
   if (check) out.closeCheck = check;
+  // Task 7w (SUMMARY_OPENS_CLOSE): the check owed on the reply after a summary that skipped it, read as closeCheck is.
+  const late = v2ReadCloseCheckLate(s.closeCheckLate);
+  if (late) out.closeCheckLate = late;
   // Task 7v (PART_CLOCK): the part in hand and when the lesson entered it, whatever STATE_CARRY says (its own switch, read in
   // time-fit.ts; scope in v2ScopeCarried).
   const ps = s.partStart as Partial<NonNullable<V2State['partStart']>> | undefined;
@@ -82,12 +86,14 @@ export function v2CarryApplies(session: Pick<V2Session, 'mode' | 'plan' | 'homew
  *  `closeInvitedAt` is kept only for the lessons Task 7d applies to (close-invite.ts v2CloseInviteOn, its switch included);
  *  Task 7k's `closeReopened` likewise. */
 export function v2ScopeCarried(state: V2State, session: Pick<V2Session, 'mode' | 'plan' | 'homework' | 'homeworkSheet'> & Partial<Pick<V2Session, 'languages' | 'pronunciation'>>, closeInviteOn: boolean = v2CloseInviteOn(session)): V2State {
-  if (!v2CarryApplies(session)) { delete state.summaryBegunAt; delete state.repliesSinceBoard; delete state.boardProblems; delete state.closeInvitedAt; delete state.closeReopened; delete state.closeAsk; delete state.closeCheck; }
-  if (!closeInviteOn) { delete state.closeInvitedAt; delete state.closeReopened; delete state.closeAsk; delete state.closeCheck; }
+  if (!v2CarryApplies(session)) { delete state.summaryBegunAt; delete state.repliesSinceBoard; delete state.boardProblems; delete state.closeInvitedAt; delete state.closeReopened; delete state.closeAsk; delete state.closeCheck; delete state.closeCheckLate; }
+  if (!closeInviteOn) { delete state.closeInvitedAt; delete state.closeReopened; delete state.closeAsk; delete state.closeCheck; delete state.closeCheckLate; }
   // Task 7f: the practice count is the part flow's (spoken plan-led lessons); the time fit any timed taught lesson's with a plan.
   if (!v2CarryApplies(session)) { delete state.practiceSaid; delete state.moveOnAsked; delete state.cardsOwed; delete state.unheard; delete state.visitPages; delete state.partStart; }
   if (!session.plan || session.homework || session.homeworkSheet || discussionOf(session.plan)) delete state.timeFit;
   // Task 7q: the support step and the recorded corrections only for the lessons they run in (adaptive.ts v2AdaptOn).
   if (!v2AdaptOn(session as V2Session)) { delete state.support; delete state.retests; }
+  // Task 7w (SUMMARY_MARKS): the corrections with their marks only for the lessons they are recorded in.
+  if (!v2SummaryMarksOn(session as V2Session)) delete state.corrections;
   return state;
 }

@@ -208,7 +208,16 @@ export interface V2State {
   /** Task 7v (PART_CLOCK), spoken lessons with a labelled plan: the part in hand and when (lesson clock, ms) the lesson entered it.
    *  A part's own time is measured from here (time-fit.ts). */
   partStart?: { part: string; at: number };
+  /** Task 7w (SUMMARY_MARKS), spoken language lessons with a labelled plan: each correction made in the lesson, the most recent last
+   *  (summary-marks.ts): what they said, the corrected sentence, and the words it changed (the marks its summary card carries). */
+  corrections?: V2Correction[];
+  /** Task 7w (SUMMARY_OPENS_CLOSE): the summary reply did not end on the plan's check question: the next reply owes it, once
+   *  (close-check.ts). When it was found missing (lesson clock ms). */
+  closeCheckLate?: number;
 }
+
+/** Task 7w: one correction of the lesson. `said`: their sentence; `sentence`: the card's; `stress`: the words the card changed. */
+export interface V2Correction { said: string; sentence: string; stress: string[] }
 
 /** Task 7q: the five support steps, least help first. */
 export type V2SupportStep = 'stretch' | 'normal' | 'starter' | 'gap' | 'repeat';
