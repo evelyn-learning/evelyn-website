@@ -24,7 +24,8 @@ import { V2_TIME_UP_MIN, v2CloseOpen, v2PlanContentDone, v2LeftToStopMin, v2Less
 import { V2_MORE_PRACTICE_MIN_LEFT, v2MorePracticeFacts, v2PracticeFacts, v2StayInPartLine, v2TimeFitFacts } from './time-fit';
 import { TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART } from '../orchestrator/flags';
 import { v2CloseInviteFacts, v2CloseReopened, v2MoreAskAnswered } from './close-invite';
-import { TUTOR_V2_NO_FALSE_SILENCE } from '../orchestrator/flags';
+import { TUTOR_V2_ASK_ONE_TEST, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_SILENCE_AFTER_ASK } from '../orchestrator/flags';
+import { v2AsksTheLearner } from './one-question';
 import { SentenceStream } from './sentences';
 import { asksAnywhere } from './board-timing';
 
@@ -157,12 +158,13 @@ export function v2SummaryBegun(state: V2State, enabled: boolean = TUTOR_V2_CLOSE
 
 /** Task 7m (NO_FALSE_SILENCE): whether the tutor's last reply asked them something (a question, an instruction, a starter to
  *  try), cut into sentences as the voice client cuts it. */
-export function v2LastReplyAsked(history: V2State['history']): boolean {
+/** Task 7r (ASK_ONE_TEST, `one`): or by the client's test (one-question.ts v2AsksTheLearner) on the whole reply. */
+export function v2LastReplyAsked(history: V2State['history'], one: boolean = TUTOR_V2_ASK_ONE_TEST): boolean {
   const m = tutorReplies(history).pop();
   if (!m) return false;
   const cut = new SentenceStream();
   const sentences = [...cut.push(replyText(m)), ...cut.flush()];
-  return sentences.length > 0 && asksAnywhere(sentences);
+  return sentences.length > 0 && (asksAnywhere(sentences) || (one && v2AsksTheLearner(replyText(m))));
 }
 
 export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts): string {
@@ -296,7 +298,13 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // Task 7m (NO_FALSE_SILENCE): the early recheck after a reply that did ask (the client took it for one that asked nothing:
   // mic test 4, 9.94): not "nothing for them to do"; one short line, nothing new.
   const askedThem = silenceTurn && Math.round(f.silenceSeconds ?? 0) === V2_NO_ASK_RECHECK_S && v2LastReplyAsked(state.history);
-  if (askedThem) lines.push(`your last reply asked them for something, and they have been silent for ${Math.round(f.silenceSeconds!)} seconds since it finished: they may be thinking. Say one short line only: that they can take their time, or an offer of a hint or the first words. No claim about what they said, no new question, no card or other board item`);
+  // Task 7r (SILENCE_AFTER_ASK): never the answer, nor the question or the part-change ask again word for word (mic test 5,
+  // embed-1795050656326: the tutor answered its own summary question at 18.9 min, and re-asked its part asks).
+  const notAnswer = TUTOR_V2_SILENCE_AFTER_ASK ? '. Do not give the answer yourself, and do not repeat your question or a part-change ask word for word' : '';
+  // Task 7r (SILENCE_AFTER_ASK): the ordinary long wait after a reply that asked them something: the question in hand stands.
+  const longAfterAsk = TUTOR_V2_SILENCE_AFTER_ASK && !askedThem && !!f.silenceSeconds && !f.heard && ![V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S].includes(Math.round(f.silenceSeconds)) && v2LastReplyAsked(state.history);
+  if (askedThem) lines.push(`your last reply asked them for something, and they have been silent for ${Math.round(f.silenceSeconds!)} seconds since it finished: they may be thinking. Say one short line only: that they can take their time, or an offer of a hint or the first words. No claim about what they said, no new question, no card or other board item${notAnswer}`);
+  else if (longAfterAsk) lines.push(`the student has said nothing for ${Math.round(f.silenceSeconds!)} seconds since your last reply, which asked them something: they have not answered the question in hand yet. Give one short encouragement or a smaller hint towards it, and stop. Do not give the answer, do not ask a new question, and do not repeat your question or a part-change ask word for word`);
   else if (f.silenceSeconds) lines.push(Math.round(f.silenceSeconds) === V2_NO_ASK_RECHECK_S
     ? `your last reply has finished and it ended on a statement: no question, and nothing for them to do. They are waiting for you to go on`
     : Math.round(f.silenceSeconds) === V2_WAITED_RECHECK_S

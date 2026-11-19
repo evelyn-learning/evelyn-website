@@ -35,7 +35,7 @@ import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
 import { V2_CLOSING_PAGE, endsAsking, leftOpen, mayOpenPart, namesPart, partOffer, v2FrameDue } from './part-close';
 import { ReplyGate, isGoodbye, isPartFrame } from './reply-gate';
-import { v2AnswerAsksOrDeclines, v2AskRepeats, v2AsksPartChange, v2EndingPartAsk, v2HeldPageOwed, v2HeldPartWaiting, v2IsPartAsk, v2MoveAnswer, v2NextPart, v2PageForPart, v2PartAskLine, v2PartChangeAsked, v2PartInHand, v2PartNamedLate, v2PartOfPage, v2PartViewed, v2PageTurnNote, v2PositionPage, v2PendingPart, v2PlanLabelled, v2TutorReplies } from './part-flow';
+import { v2AnswerAsksOrDeclines, v2GoForPart, v2AskRepeats, v2AsksPartChange, v2EndingPartAsk, v2HeldPageOwed, v2HeldPartWaiting, v2IsPartAsk, v2MoveAnswer, v2NextPart, v2PageForPart, v2PartAskLine, v2PartChangeAsked, v2PartInHand, v2PartNamedLate, v2PartOfPage, v2PartViewed, v2PageTurnNote, v2PositionPage, v2PendingPart, v2PlanLabelled, v2TutorReplies } from './part-flow';
 import { heardAsWords } from './heard';
 import { v2IsPracticeAsk, v2LanguagesSection } from './languages';
 import { v2HandsOver, v2ReplyAsks, v2ReplyHandsOver, v2ReplySentences } from './one-question';
@@ -46,7 +46,7 @@ import { v2AdaptAfter, v2AdaptBefore, v2AdaptPart, v2PracticePairs } from './ada
 import { LearnerCardWatch, V2_REPLY_MISHEARD, v2LearnerCardsOn, v2OwedCardCheckLine, v2PracticeAnswerSentences, v2SentenceOnBoard, v2SentencesNotCarded } from './learner-card';
 import { v2StopAsked } from './stop-signal';
 import { V2_CLOSE_INVITE_LINE, V2_CLOSE_INVITE_REFUSAL, V2_CLOSE_INVITE_WAIT, V2_CLOSE_MORE_LINE, V2_CLOSE_REOPEN_REFUSAL, v2CloseInviteOn, v2CloseInviteOwed, v2CloseReopened, v2ReplyAsksMoreOrFinish, v2ReplyInvites } from './close-invite';
-import { TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_NOTE_TARGET_QUOTES, TUTOR_V2_NOTE_TARGET_MARK, TUTOR_V2_NOTE_STRESS_MARK, TUTOR_V2_NO_MARKDOWN_STARS, TUTOR_V2_CARD_GLOSS_SHOW, TUTOR_V2_SUPPORT_STEPS, TUTOR_V2_RETEST_MISTAKE } from '../orchestrator/flags';
+import { TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_NOTE_TARGET_QUOTES, TUTOR_V2_NOTE_TARGET_MARK, TUTOR_V2_NOTE_STRESS_MARK, TUTOR_V2_NO_MARKDOWN_STARS, TUTOR_V2_CARD_GLOSS_SHOW, TUTOR_V2_SUPPORT_STEPS, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_PART_GO_NAMED } from '../orchestrator/flags';
 import { v2CardGlossOn, v2CleanGloss, v2GlossLevelOn } from './card-gloss';
 import { v2NoteTargetsOn, v2NoteTargetsSection, v2NoteHasTarget, v2NoteStressWords } from './note-targets';
 import { V2StarStrip, v2StripStars } from './markdown-stars';
@@ -968,7 +968,11 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           // Task 7a (PART_ASK_EVERY): a page of the part in hand, or the first teaching part after the level check, is no part
           // change and goes straight on; a check-in does not leave the way open (mayOpenPart strict).
           const partChange = !askEvery || closingPage || !pagePart || !session.plan || v2PartChangeAsked(session.plan, state, pagePart.index);
-          const holdIt = part.block.kind === 'page' && !discussion && !summaryBegun && !(summaryBefore && closingPage) && ((closingPage ? frameDueOld : frameDue) || (closesLesson(part.block.body) && !!v2UnreachedOffer(session.plan, state))) && partChange && !boardHasPage(part.block.body) && !state.closed && !closingTurn && !releasing && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length, strict: askEvery, ...(askEvery && TUTOR_V2_PAGE_NEEDS_GO ? { go: v2MoveAnswer(input.studentSaid, lastTutorText, askLangs, undefined, session.plan) === 'go' } : {}) });
+          // Task 7r (PART_GO_NAMED): a page of the part their go answered (the ask named it, or the summary) opens: the ask the
+          // runtime could not read left "Conversation" held with no ask after "Uh, no, let's go." (mic test 5, embed-1795050656326).
+          const goIndex = part.block.kind === 'page' && session.plan ? (closingPage ? session.plan.segments.length - 1 : pagePart?.index ?? -1) : -1;
+          const goForPage = TUTOR_V2_PART_GO_NAMED && askEvery && !!session.plan && goIndex >= 0 && v2GoForPart(input.studentSaid, lastTutorText, session.plan, state, goIndex, askLangs);
+          const holdIt = !goForPage && part.block.kind === 'page' && !discussion && !summaryBegun && !(summaryBefore && closingPage) && ((closingPage ? frameDueOld : frameDue) || (closesLesson(part.block.body) && !!v2UnreachedOffer(session.plan, state))) && partChange && !boardHasPage(part.block.body) && !state.closed && !closingTurn && !releasing && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length, strict: askEvery, ...(askEvery && TUTOR_V2_PAGE_NEEDS_GO ? { go: v2MoveAnswer(input.studentSaid, lastTutorText, askLangs, undefined, session.plan) === 'go' } : {}) });
           // Task 6g: the summary begins here, so a practice ask waiting before it is dropped; any other page lets it go.
           if (part.block.kind === 'page' && !holdIt) { if (closingPage) { gate.summaryBegins(); closingOpened = true; } else gate.releaseAsk(); }
           if (summaryLine) { nextTimeAt = { raw: part.block.raw, line: summaryLine }; nextTimeSaid = true; gate.push(` ${summaryLine} `); gate.flush(); }
@@ -1469,7 +1473,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   if (askEvery && askDrops && !practiceShort && session.plan && !heldAt && !inviteWait && !state.closed && !input.signal?.aborted && spoken.length && !(oneQuestion && v2ReplyHandsOver(spoken.join(' '))) && !carriesPartAsk()) {
     const plan = session.plan;
     const cur = v2PartInHand(plan, state); const nx = v2NextPart(plan, state, cur);
-    if (nx >= 0 && nx < plan.segments.length - 1) {
+    // Task 7r (PART_GO_NAMED): never an ask about the part they just said go to (mic test 5, 11.9 min).
+    if (nx >= 0 && nx < plan.segments.length - 1 && !(TUTOR_V2_PART_GO_NAMED && v2GoForPart(input.studentSaid, lastTutorText, plan, state, nx, askLangs))) {
       const next = v2PartOf(plan.segments[nx]!).label!;
       const words = v2PartAskLine({ next, named: v2PartNamedLate(plan.segments[nx]!, spoken.join(' ')), history: [...state.history, ...stored], done: undefined });
       // Task 7a re-review: the part asked about waits as a held page, as at a page held for the ask.
@@ -1485,7 +1490,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Task 7c fix round 1 (review I2): a page held unasked at an earlier reply is owed its ask. A reply that asks nothing (and
   // turns no page, holds none) ends with the part ask, and the page then waits for their yes as any held page does.
   let owedPartAsked = false;
-  const owed = oneQuestion && askEvery && partFlow && session.plan && state.heldPage?.unasked && v2HeldPageOwed(session.plan, state) ? state.heldPage : null;
+  const owedHeld = oneQuestion && askEvery && partFlow && session.plan && state.heldPage?.unasked && v2HeldPageOwed(session.plan, state) ? state.heldPage : null;
+  // Task 7r (PART_GO_NAMED): not owed to a reply to their go for that same part.
+  const owed = owedHeld && session.plan && TUTOR_V2_PART_GO_NAMED && v2GoForPart(input.studentSaid, lastTutorText, session.plan, state, session.plan.segments.findIndex((seg) => seg.id === owedHeld.part), askLangs) ? null : owedHeld;
   if (owed && !practiceShort && session.plan && !heldAt && !askedPart && !state.closed && !input.signal?.aborted && spoken.length && !toolCalls.some((c) => (c.name === 'new_page' && !/^not /.test(c.outcome)) || c.name === 'keep_listening' || c.name === 'end_lesson')) {
     const said = spoken.join(' ');
     const last = v2ReplySentences(stripBoardBlocks(said)).pop() ?? '';

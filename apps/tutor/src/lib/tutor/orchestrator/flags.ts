@@ -2177,3 +2177,30 @@ export const TUTOR_V2_SUPPORT_STEPS = process.env.NEXT_PUBLIC_TUTOR_V2_SUPPORT_S
  *  miss goes to the profile's gaps. Facts only. Mic test 4 (embed-1795028886172) (Task 7q, item 2). Default ON;
  *  NEXT_PUBLIC_TUTOR_V2_RETEST_MISTAKE=off ⇒ as before. */
 export const TUTOR_V2_RETEST_MISTAKE = process.env.NEXT_PUBLIC_TUTOR_V2_RETEST_MISTAKE !== 'off';
+
+/** Tutor brain v2 (v2/one-question.ts v2AsksTheLearner, components/v2/TutorVoiceV2.tsx, v2/facts.ts): one test for "this reply
+ *  asked the learner something", on the reply's whole sentences, used by the client's 2 s "ended on a statement" recheck and by
+ *  the facts of a silence turn. It knows a Japanese question ending 「…か。」 with no ？, 〜てみましょう, 繰り返して(ください),
+ *  教えて / 始めて (ください), どうぞ, and an instruction to speak in either of the last two sentences. Mic test 5
+ *  (embed-1795050656326): 9 asks in 「か。」 got the 2 s recheck and the tutor asked again or answered itself (Task 7r, item 1).
+ *  Default ON; NEXT_PUBLIC_TUTOR_V2_ASK_ONE_TEST=off ⇒ as before. */
+export const TUTOR_V2_ASK_ONE_TEST = process.env.NEXT_PUBLIC_TUTOR_V2_ASK_ONE_TEST !== 'off';
+
+/** Tutor brain v2 (v2/facts.ts): a silence turn after a reply that asked them something says the question in hand is not answered
+ *  yet: one short encouragement or a smaller hint; never the answer, no new question, the question or the part-change ask not
+ *  repeated word for word (the tutor answered its own summary question, mic test 5, embed-1795050656326) (Task 7r, item 2).
+ *  Default ON; NEXT_PUBLIC_TUTOR_V2_SILENCE_AFTER_ASK=off ⇒ as before. */
+export const TUTOR_V2_SILENCE_AFTER_ASK = process.env.NEXT_PUBLIC_TUTOR_V2_SILENCE_AFTER_ASK !== 'off';
+
+/** Tutor brain v2 (v2/language-pack.ts v2EndingAsk): a part ask in a language whose pack words it by clauses (Japanese) is read by
+ *  its clauses: the reply's last one or two asking sentences hold a go-on verb or a "questions?" clause, and the part is named
+ *  there or in the sentence before (「次は会話の練習です。質問がありますか、それとも進みましょうか。」). Mic test 5
+ *  (embed-1795050656326): none of 9 Japanese part asks was read (Task 7r, item 3). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_PART_ASK_CLAUSES=off ⇒ as before. */
+export const TUTOR_V2_PART_ASK_CLAUSES = process.env.NEXT_PUBLIC_TUTOR_V2_PART_ASK_CLAUSES !== 'off';
+
+/** Tutor brain v2 (v2/part-flow.ts v2MoveAnswer / v2GoForPart, v2/turn.ts): naming the part the ask named ("pronunciation.",
+ *  "Uh, summary.", まとめ, "wrap up" to an ask naming the summary) is a go; a page of the part a go answered (or the summary) is not
+ *  held for another ask, and no runtime part ask is added to that reply. Mic test 5 (embed-1795050656326, 11.9 and 18 min)
+ *  (Task 7r, item 4). Default ON; NEXT_PUBLIC_TUTOR_V2_PART_GO_NAMED=off ⇒ as before. */
+export const TUTOR_V2_PART_GO_NAMED = process.env.NEXT_PUBLIC_TUTOR_V2_PART_GO_NAMED !== 'off';

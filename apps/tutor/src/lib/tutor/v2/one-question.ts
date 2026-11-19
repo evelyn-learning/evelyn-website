@@ -71,6 +71,24 @@ export function v2AsksInJapanese(sentence: string): boolean {
   return JA_ASKS.test(s) && !JA_I_SEE.test(s);
 }
 
+/** Task 7r (ASK_ONE_TEST): Japanese asks with no question mark the old tests miss: a try-it invitation (「…を言ってみましょう。」),
+ *  繰り返して, a request to tell / begin / say (教えてください, 始めてみてください), どうぞ ending a sentence (「ゆっくりどうぞ。」).
+ *  Mic test 5 (embed-1795050656326): 「私の後に繰り返してください。」, 「二つの文の違いを教えてください。」 got the 2 s recheck. Not a plain
+ *  〜ましょう: 「一語ずつ練習しましょう。」 is the tutor's plan. */
+const JA_INVITES = /(?:言っ|話し|答え|書い|読ん|使っ|作っ|続け|繰り返し|発音し|練習し|始め|考え)てみましょう|繰り返して(?:ください|みて|ね|[。．！!]|$)|(?:教えて|始めて|聞かせて|言って|話して|答えて|書いて|読んで|使って|作って|続けて|発音して|練習して|選んで)(?:みて)?(?:ください|くださいね|ちょうだい|もらえますか)|どうぞ[。．！!]?["'」』）)]*$/u;
+
+/** Task 7r (ASK_ONE_TEST): the one test for "this reply asked the learner something", for the client's early silence recheck
+ *  (TutorVoiceV2) and the silence turn's facts (facts.ts v2LastReplyAsked), on the reply's whole sentences (not the voice's
+ *  language parts: 「例えば「I sell washing machines.」のように…言ってみましょう。」 split in three, and the hand-over fell out of the
+ *  last two). Everything v2ReplyAsks counts (a 「…か。」 question anywhere, a hand-over ending it), and in either of the last two
+ *  sentences a hand-over (v2HandsOver: "Repeat after me.", "Please say…", 繰り返してください) or a Japanese invitation (JA_INVITES).
+ *  Only ever more replies than asksAnywhere alone. */
+export function v2AsksTheLearner(text: string): boolean {
+  if (v2ReplyAsks(text)) return true;
+  const now = v2ReplySentences(stripBoardBlocks(text));
+  return now.slice(-2).some((s) => v2HandsOver(s) || JA_INVITES.test(s));
+}
+
 /** Whether a reply hands the turn over for an ask the runtime would add after it (a part ask, an offer): its last sentence is a
  *  question or hands over. A question further back may be rhetorical ("Why? Because the slope is 2."), and the offer after
  *  such a reply is the only question in it. */

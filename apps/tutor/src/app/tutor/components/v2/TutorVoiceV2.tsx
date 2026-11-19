@@ -32,7 +32,8 @@ import { useOpenAIRealtime, type OpenAIVoice } from '@/app/tutor/hooks/useOpenAI
 import { usePerceptionWS, type PerceptionTranscript } from '@/app/tutor/hooks/usePerceptionWS';
 import { useCartesiaInkWS } from '@/app/tutor/hooks/useCartesiaInkWS';
 import { useAudioRecorder } from '@/app/tutor/hooks/useAudioRecorder';
-import { BARGEIN_GATE_POLL_MS, TUTOR_MIC_REACQUIRE, TUTOR_PRONUNCIATION_ASSESS, TUTOR_STT_ENGINE_INK2, TUTOR_V2_BARGEIN_ENERGY_GATE, TUTOR_V2_HEARD_NOISE, TUTOR_V2_NO_WORDS_RECOVER, TUTOR_V2_SPOKEN_SOUNDS, TUTOR_V2_TARGET_PAUSE, TUTOR_V2_TARGET_PUNCT, TUTOR_V2_CARD_STRESS_SPOKEN, TUTOR_V2_WAVE_DASH, TUTOR_V2_FLAG_CLOCK_PAUSE } from '@/lib/tutor/orchestrator/flags';
+import { BARGEIN_GATE_POLL_MS, TUTOR_MIC_REACQUIRE, TUTOR_PRONUNCIATION_ASSESS, TUTOR_STT_ENGINE_INK2, TUTOR_V2_BARGEIN_ENERGY_GATE, TUTOR_V2_HEARD_NOISE, TUTOR_V2_NO_WORDS_RECOVER, TUTOR_V2_SPOKEN_SOUNDS, TUTOR_V2_TARGET_PAUSE, TUTOR_V2_TARGET_PUNCT, TUTOR_V2_CARD_STRESS_SPOKEN, TUTOR_V2_WAVE_DASH, TUTOR_V2_FLAG_CLOCK_PAUSE, TUTOR_V2_ASK_ONE_TEST } from '@/lib/tutor/orchestrator/flags';
+import { v2AsksTheLearner } from '@/lib/tutor/v2/one-question';
 import type { BargeInFrame } from '@/lib/tutor/voice/bargein-gate';
 import { armV2SoundGate, stepV2SoundGate } from '@/lib/tutor/v2/sound-gate';
 import { V2MicWatch } from '@/lib/tutor/v2/mic-watch';
@@ -144,6 +145,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const paintedThisTurnRef = useRef<Array<{ id: string; tool: string; summary: string }>>([]);
   const shownThenWithdrawnRef = useRef<Array<{ id: string; tool: string; summary: string }>>([]);
   const turnSentencesRef = useRef<string[]>([]);
+  /** Task 7r (ASK_ONE_TEST): this reply's whole sentences as written (turnSentencesRef holds the voice's language parts). */
+  const turnWholeRef = useRef<string[]>([]);
   /** Task 7m (CARD_STRESS_SPOKEN): this reply's sentence cards and their stressed words. */
   const cardStressRef = useRef<V2CardStress[]>([]);
   const startedCountRef = useRef(0);
@@ -286,7 +289,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     // A sentence that quotes a long span of the other teaching language goes to the voice in parts, each in its own
     // voice language (v2/languages.ts). Each part is a sentence here too: the voice reports each part as it starts,
     // and the board is timed by that count.
-    onSentence: (sentence, startsParagraph) => { if (startsParagraph || !turnSentencesRef.current.length) paraStartRef.current = turnSentencesRef.current.length; const parts = v2SpeechParts(sentence, p.current.tutorLanguages); captionsRef.current.sentence(sentence, parts); if (parts.length > 1) p.current.onDebugEvent?.('tts_sentence_split', `${parts.length} parts: ${parts.map((x) => `"${x.slice(0, 30)}"`).join(' | ')}`); turnSentencesRef.current.push(...parts); placeBoard(); waitingRef.current = false; cueRef.current = cueStop(); spokenRef.current = [...spokenRef.current.slice(-7), sentence]; for (const part of parts) { if (openingSpeechRef.current) openingSpeechRef.current.push(part); else realtimeRef.current?.speakText(part); } },
+    onSentence: (sentence, startsParagraph) => { if (startsParagraph || !turnSentencesRef.current.length) paraStartRef.current = turnSentencesRef.current.length; const parts = v2SpeechParts(sentence, p.current.tutorLanguages); captionsRef.current.sentence(sentence, parts); turnWholeRef.current.push(sentence); if (parts.length > 1) p.current.onDebugEvent?.('tts_sentence_split', `${parts.length} parts: ${parts.map((x) => `"${x.slice(0, 30)}"`).join(' | ')}`); turnSentencesRef.current.push(...parts); placeBoard(); waitingRef.current = false; cueRef.current = cueStop(); spokenRef.current = [...spokenRef.current.slice(-7), sentence]; for (const part of parts) { if (openingSpeechRef.current) openingSpeechRef.current.push(part); else realtimeRef.current?.speakText(part); } },
     onCut: () => { echoRef.current.stopped(Date.now()); void realtimeRef.current?.clearSpeechQueue(); captionsRef.current.cut(); dropBoard(); },
     heardSoFar: () => cutHeardRef.current,
     onBoardWithdraw: (id) => {
@@ -372,7 +375,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     onTutorBusy: (busy) => {
       props.onTutorBusy?.(busy);
       turnBusyRef.current = busy;
-      if (busy) { cardStressRef.current = []; captionsRef.current.begin(); cutHeardRef.current = null; releaseBoard(); paintedThisTurnRef.current = []; paintFnsRef.current.clear(); turnSentencesRef.current = []; startedCountRef.current = 0; segStartRef.current = 0; paraStartRef.current = 0; pageTurnAtRef.current = 0; lastBlockAtRef.current = -1; clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); showState('thinking'); }
+      if (busy) { cardStressRef.current = []; captionsRef.current.begin(); cutHeardRef.current = null; releaseBoard(); paintedThisTurnRef.current = []; paintFnsRef.current.clear(); turnSentencesRef.current = []; turnWholeRef.current = []; startedCountRef.current = 0; segStartRef.current = 0; paraStartRef.current = 0; pageTurnAtRef.current = 0; lastBlockAtRef.current = -1; clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); showState('thinking'); }
       else { captionsRef.current.streamEnd(); waitingRef.current = false; cueRef.current = cueStop(); realtimeRef.current?.signalBrainThinking(false); placeBoard(true); if (!realtimeRef.current?.isSpeechPending()) releaseBoard(); else releaseBoard(startedCountRef.current);
         // The tutor chose to say nothing and wait (keep_listening). If the student was in fact finished, it finds out soon.
         const silentReply = turnSentencesRef.current.length === 0 && !turnsRef.current?.isEnding();
@@ -384,7 +387,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
         // A reply that asked the student nothing leaves them not knowing whose move it is (the tutor made a
         // statement and waited 44 s, embed-1794355900794). It learns of the silence early, once, and can go on.
         const said = turnSentencesRef.current;
-        const noAsk = !silentReply && (lastTurnWasStudentRef.current || openingTurnRef.current) && said.length > 0 && !asksAnywhere(said) && !turnsRef.current?.isEnding() && !turnsRef.current?.closed && !turnsRef.current?.isClosing();
+        const noAsk = !silentReply && (lastTurnWasStudentRef.current || openingTurnRef.current) && said.length > 0 && !asksAnywhere(said) && !(TUTOR_V2_ASK_ONE_TEST && v2AsksTheLearner(turnWholeRef.current.join(' '))) && !turnsRef.current?.isEnding() && !turnsRef.current?.closed && !turnsRef.current?.isClosing();
         lastTurnWasStudentRef.current = false;
         // The opening is the first reply only. Left on until the student spoke, a second reply before that put its
         // whole page up at once, a note, a formula and a problem together (AP Calc BC, embed-1794446765164).

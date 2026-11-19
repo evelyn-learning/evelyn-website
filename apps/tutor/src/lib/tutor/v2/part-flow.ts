@@ -18,7 +18,7 @@ import { PART_OFFERS, V2_CLOSING_PAGE, endsAsking } from './part-close';
 import { V2_OFFER_SHAPE, v2IsPageOfPart, v2PartEntered, v2PartNamedIn, v2PartOf } from './plan-map';
 import { V2_PART_FRAME_JA, isPartFrame } from './reply-gate';
 import type { V2Board, V2State } from './types';
-import { TUTOR_V2_LEVEL_CHECK_CHIP, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PART_ASK_LANGS, TUTOR_V2_PART_ASK_NAMED, TUTOR_V2_PART_ENTERED, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PRACTICE_ON_PART_PAGE } from '../orchestrator/flags';
+import { TUTOR_V2_LEVEL_CHECK_CHIP, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PART_ASK_LANGS, TUTOR_V2_PART_ASK_NAMED, TUTOR_V2_PART_GO_NAMED, TUTOR_V2_PART_ENTERED, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PRACTICE_ON_PART_PAGE } from '../orchestrator/flags';
 import { v2LevelCheckBegun } from './level-check-count';
 import { V2_LANGUAGE_PACKS, v2EndingAsk, v2IsAskLead, v2WithoutFillers } from './language-pack';
 
@@ -256,9 +256,13 @@ export function v2AnswerAsksOrDeclines(said: string | null, lastTutor: string = 
 /** Task 7n (PART_ASK_LANGS, `langs`): a leading filler of the lesson's `languages` (language-pack.ts) is taken off first
  *  (「えっと、はい」 is a go), and a part ask the reply ends on by position (v2EndingPartAsk) offers a question first as an English
  *  frame does. Fix round 1 (I1): that ask is read only with the `plan`, as a part ask naming a plan part (v2EndingPartAsk). */
-export function v2MoveAnswer(said: string | null, lastTutor: string = '', languages?: readonly string[], langs: boolean = TUTOR_V2_PART_ASK_LANGS, plan?: LessonPlan): 'go' | 'question' | 'other' {
+/** Task 7r (PART_GO_NAMED, `goNamed`): an answer that only names a part the ask named ("pronunciation.", "Uh, summary.", まとめ,
+ *  まとめましょう, "let's wrap up" to an ask naming the summary) is a go, ahead of the decline words (summary / まとめ are a redirect
+ *  only to an ask about another part). */
+export function v2MoveAnswer(said: string | null, lastTutor: string = '', languages?: readonly string[], langs: boolean = TUTOR_V2_PART_ASK_LANGS, plan?: LessonPlan, goNamed: boolean = TUTOR_V2_PART_GO_NAMED): 'go' | 'question' | 'other' {
   const s = langs ? v2WithoutFillers((said ?? '').trim(), languages) : (said ?? '').trim();
   if (!s) return 'other';
+  if (goNamed && plan && v2NamesAskedPart(s, v2AskedParts(lastTutor, plan, languages, langs), plan) >= 0) return 'go';
   const last = stripBoardBlocks(lastTutor).split(SENTENCES).map((x) => x.trim()).filter(Boolean).pop() ?? '';
   const ending = langs && plan && !(last && v2IsPartAsk(last)) ? v2EndingPartAsk(lastTutor, plan, languages) : null;
   const offersQuestion = (!!last && v2IsPartAsk(last) && QUESTIONS_FIRST.test(last)) || (!!ending && QUESTIONS_FIRST.test(ending.ask));
@@ -271,6 +275,56 @@ export function v2MoveAnswer(said: string | null, lastTutor: string = '', langua
   if (QUESTION.test(s)) return 'question';
   return GO.test(s) || GO_JA.test(s) ? 'go' : 'other';
 }
+/** Task 7r (PART_GO_NAMED): the plan parts a reply's part ask names (indices, plan order): an ask it ends on by position in the
+ *  lesson's languages (v2EndingPartAsk: the ask and its lead), else an English part ask ending it (v2IsPartAsk) with the sentence
+ *  before it. []: it ends on no part ask, or the ask names no part. */
+export function v2AskedParts(lastTutor: string, plan: LessonPlan, languages?: readonly string[], langs: boolean = TUTOR_V2_PART_ASK_LANGS): number[] {
+  const sentences = stripBoardBlocks(lastTutor).split(SENTENCES).map((x) => x.trim()).filter(Boolean);
+  const last = sentences[sentences.length - 1] ?? '';
+  if (!last) return [];
+  const ending = v2IsPartAsk(last) ? null : v2EndingPartAsk(lastTutor, plan, languages, langs);
+  const text = ending ? [ending.lead, ending.ask].filter(Boolean).join(' ') : v2IsPartAsk(last) ? sentences.slice(-2).join(' ') : '';
+  if (!text) return [];
+  return plan.segments.map((seg, i) => (!!v2PartOf(seg).label && v2PartNamedIn(seg, text) ? i : -1)).filter((i) => i >= 0);
+}
+
+/** Words around a part's name in an answer that only names it: "let's do pronunciation, please", 「まとめにしましょう」. */
+const NAME_ONLY_HEAD = /^(?:(?:yes|yeah|ok(?:ay)?|sure|let'?s|let us|please|i'?d like|go(?: on)? to|move on to|do|the|はい|じゃあ|では)[,、\s]+)*/iu;
+const NAME_ONLY_TAIL = /(?:[,、\s]+(?:please|now|part|practice|thanks?|thank you))*(?:の練習)?(?:に(?:しましょう|します|進みましょう|進みます|行きましょう|入りましょう)|をお願いします|でお願いします|お願いします|しましょう|ましょう|です|で|へ)?$/iu;
+/** Words for the summary when the ask named it ("wrap up", まとめ). */
+const WRAP_WORDS = /^(?:wrap(?: it)? up|wrap-up|the summary|summary|summari[sz]e|sum up|まとめ|まとめて(?:ください)?)$/iu;
+/** Task 7r (PART_GO_NAMED): which of the `asked` parts an answer only names (its label, its name in another language, or, for the
+ *  closing part, a word for the summary); -1: none, or the answer says more than that. */
+export function v2NamesAskedPart(answer: string, asked: readonly number[], plan: LessonPlan): number {
+  if (!asked.length) return -1;
+  const bare = answer.trim().replace(/[.!?。！？…]+$/u, '').trim().replace(NAME_ONLY_HEAD, '').replace(NAME_ONLY_TAIL, '').trim().toLowerCase();
+  if (!bare) return -1;
+  for (const i of asked) {
+    const p = v2PartOf(plan.segments[i]!);
+    const names = [p.label ?? '', ...Object.values(p.labelLocalized ?? {})].map((x) => x.trim().toLowerCase()).filter(Boolean);
+    if (names.some((n) => bare === n || bare === `the ${n}`)) return i;
+    if (i === plan.segments.length - 1 && WRAP_WORDS.test(bare)) return i;
+  }
+  return -1;
+}
+
+/** Task 7r (PART_GO_NAMED): whether their answer is a go to the last reply's ask about part `index`: the ask named it (by the
+ *  clause reading or the English frames; of two parts named, the one their words name); or, an ask the runtime could not read,
+ *  the last reply ends asking and names the part in its last three sentences (never the part in hand). The page of that part
+ *  is then not held for another ask, and no runtime part ask goes on that reply. */
+export function v2GoForPart(said: string | null, lastTutor: string, plan: LessonPlan, state: View, index: number, languages?: readonly string[]): boolean {
+  if (index < 0 || !said || v2MoveAnswer(said, lastTutor, languages, undefined, plan) !== 'go') return false;
+  const asked = v2AskedParts(lastTutor, plan, languages);
+  if (asked.length) {
+    const theirs = asked.filter((i) => v2PartNamedIn(plan.segments[i]!, said));
+    return (theirs.length ? theirs : asked).includes(index) && (asked.length === 1 || theirs.length > 0 || v2NamesAskedPart(v2WithoutFillers(said, languages), asked, plan) === index);
+  }
+  if (index === v2PartInHand(plan, state)) return false;
+  const sentences = stripBoardBlocks(lastTutor).split(SENTENCES).map((x) => x.trim()).filter(Boolean);
+  const last = sentences[sentences.length - 1] ?? '';
+  return !!last && endsAsking(last, true) && v2PartNamedIn(plan.segments[index]!, sentences.slice(-3).join(' '));
+}
+
 /** An unambiguous yes on its own ("Yes.", "Sure, please."): the only go-ahead to a choice offer that does not name the part. */
 const BARE_YES = new RegExp(`^${FILLER}(?:yes|yeah|yep|sure|ok(?:ay)?|alright|all right|of course|はい|ええ)(?:,?\\s*(?:please|let'?s do (?:it|that)|i'?d like (?:that|to)|お願いします))?[.!。！]*$`, 'i');
 /** A choice offer: the part, or something else ("…, or skip it and go to the summary?"). */
