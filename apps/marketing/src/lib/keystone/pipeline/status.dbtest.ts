@@ -191,7 +191,7 @@ const OLD = new Date("2026-11-10T17:00:00Z");
     equal(s.failures.length, 2, `exactly two failures (${s.failures})`);
 
     const email = renderStatusEmail(s, NOW);
-    equal(email.subject, "Keystone: 3 waiting on you, 2 in review, 3 approved", "subject from the seed");
+    equal(email.subject, "Keystone: 3 waiting on you, 0 animations to review, 10 to decide, 2 in review, 3 approved", "subject from the seed");
     ok(/^Keystone: \d+ waiting on you, \d+ in review, \d+ approved$/.test(email.subject), "subject matches the pattern");
     ok(!email.html.includes("<table><tr><td>x &amp; y"), "the pasted markup is not in the HTML as markup");
 
@@ -325,7 +325,7 @@ const OLD = new Date("2026-11-10T17:00:00Z");
     });
     if (process.env.STATUS_DBTEST_SHOW === "1") console.log(printed.stdout);
     equal(printed.status, 0, `--print exits 0 (${printed.stderr})`);
-    ok(printed.stdout.includes("Keystone: 3 waiting on you, 2 in review, 3 approved"), "--print prints the subject");
+    ok(printed.stdout.includes("Keystone: 3 waiting on you, 0 animations to review, 10 to decide, 2 in review, 3 approved"), "--print prints the subject");
     ok(printed.stdout.includes("WAITING ON YOU"), "--print prints the text body");
     ok(printed.stdout.includes(`Database: ${DB} on 127.0.0.1:27017`), `--print names the database and host (${printed.stdout.split("\n")[0]})`);
     ok(/not sent/i.test(printed.stdout), "--print says nothing was sent");
