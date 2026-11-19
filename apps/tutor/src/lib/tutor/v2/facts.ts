@@ -9,6 +9,7 @@ import { renderBoard } from './board';
 import { v2HomeworkFacts, v2HomeworkGuardFacts, v2SheetFacts } from './homework-facts';
 import { renderGoalStatus } from './plan-map';
 import type { V2Session, V2State } from './types';
+import { roomVoicesFact } from './room-voices';
 import { discussionOf, effectiveMinutes, lastReplyNotes, reflectAsked, reflectAtMinutes, renderThinking, stagePace, untoldCases } from './discussion';
 
 /** After the tutor chose to keep listening: how long the student stays silent before it is told so (TutorVoiceV2).
@@ -34,6 +35,9 @@ export interface V2TurnFacts {
   notSent?: string;
   /** What the person has just said, for the notes on how the last reply landed. */
   heard?: string | null;
+  /** Other voices in the room have been picked up this many times and left out; the student is to be told, once
+   *  (room-voices.ts). */
+  roomVoices?: number;
 }
 
 export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts): string {
@@ -87,6 +91,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     const label: Record<string, string> = { found: 'found, not yet worked on', explained: 'explained to them, not yet done by them', done_with_help: 'they did one with help, not yet alone', done_alone: 'they did one alone' };
     lines.push(`gaps you have recorded:\n${state.gaps.map((g) => `  - ${g.what}: ${label[g.status] ?? g.status}`).join('\n')}`);
   }
+  if (f.roomVoices && session.mode === 'voice') lines.push(roomVoicesFact(f.roomVoices));
   if (f.answerCheck) lines.push(`answer check: ${f.answerCheck}`);
   if (f.notSent) lines.push(`your first draft of this reply was not sent (the student never saw it: do not mention it): ${f.notSent}`);
   if (f.silenceSeconds) lines.push(Math.round(f.silenceSeconds) === V2_NO_ASK_RECHECK_S

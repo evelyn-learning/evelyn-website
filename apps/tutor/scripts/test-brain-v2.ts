@@ -44,6 +44,7 @@ import { speakGroups } from '../src/lib/tutor/voice/tts-pronunciation';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { mentionsTool, stripToolTalk } from '../src/lib/tutor/v2/tool-talk';
 import { isOwnVoice } from '../src/lib/tutor/v2/own-voice';
+import { ROOM_NOISY_AFTER, partialIsJudged, plainlyTheStudent, repliedBackground, roomCheckMessage, roomVoicesFact, waitsForCheck } from '../src/lib/tutor/v2/room-voices';
 import { foldInterruptedTurn, trimToSpoken, V2_CUT_MARK } from '../src/lib/tutor/v2/interrupted';
 import { brainVersionOverrides, resolvePartnerSessionOptions, v2CanRunSession } from '../src/lib/tutor/portal/partner-session-options';
 
@@ -1048,6 +1049,31 @@ async function main() {
       check('a question with no mathematics about it costs no call', rp2.modelCalls === 1 && plain.seen.length === 1, plain.seen.length);
     }
     check('the endpoint keeps the worked answers between turns', /ownKeys \? \{ ownKeys \}/.test(fs.readFileSync(path.join(__dirname, '../src/app/api/tutor/brain-v2/turn/route.ts'), 'utf8')) && /askedKey \? \{ askedKey \}/.test(fs.readFileSync(path.join(__dirname, '../src/app/api/tutor/brain-v2/turn/route.ts'), 'utf8')));
+  }
+  // ── Other voices in the room (room-voices.ts; ECS, embed-1795049380206) ──
+  {
+    const tv = 'increase inflammation and gallbladder, severe stomach problems, to bring people with diabetes';
+    check('speech over the tutor waits for the check', waitsForCheck({ text: tv, speaking: true, suspect: false }));
+    check('with the tutor silent in a quiet room, words go straight through', !waitsForCheck({ text: 'I think Kelly did the right thing', speaking: false, suspect: false }));
+    check('with the tutor silent in a room where other voices were heard, they wait', waitsForCheck({ text: 'eligible patients', speaking: false, suspect: true }));
+    check('typed words never wait', !waitsForCheck({ text: tv, typed: true, speaking: true, suspect: true }));
+    for (const said of ['Stop.', 'wait', 'Hold on', 'Sorry, can you say that again?', 'Could you repeat that please', 'excuse me', 'I didn\'t catch that', 'slow down', 'yes', 'Yeah, okay.', 'no', 'I don\'t know', 'Go on']) check(`"${said}" is the student's without being asked about`, plainlyTheStudent(said) && !waitsForCheck({ text: said, speaking: true, suspect: true }), said);
+    for (const said of ['eligible patients', 'the urine sinks a bit before.', 'Here comes the big guy with the big deal', 'Call your prescribers', 'no purchase necessary see stores for details today', tv]) check(`"${said.slice(0, 30)}" is not taken on trust`, !plainlyTheStudent(said), said);
+    check('a stretch is judged early at five words', !partialIsJudged('increase inflammation and gallbladder', false) && partialIsJudged('increase inflammation and gallbladder severe', false));
+    check('and at three in a noisy room', partialIsJudged('here comes the', true) && !partialIsJudged('here comes', true));
+    check('a reply that opens with BACKGROUND is another voice, with or without a reason after it', repliedBackground('BACKGROUND') && repliedBackground(' Background.') && repliedBackground('BACKGROUND\n\nThis is clearly a pharmaceutical') && !repliedBackground('STUDENT') && !repliedBackground('') && !repliedBackground('It might be BACKGROUND or STUDENT'));
+    const m = roomCheckMessage({ tutorSaid: 'What do you make of Kelly?', heard: tv, earlier: ['a', 'b', 'c'] });
+    check('the check is given what the tutor said, what was heard and the last two left out', /What do you make of Kelly\?/.test(m) && m.includes(tv) && /- b\n- c/.test(m) && !/- a\n/.test(m), m);
+    const voiceS: V2Session = { subject: 'math', level: 'Grade 8', mode: 'voice' };
+    const told = renderFacts(voiceS, newV2State(1_000_000), { nowMs: 1_060_000, roomVoices: ROOM_NOISY_AFTER });
+    check('the tutor is told of the other voices, and to say so once', told.includes(roomVoicesFact(ROOM_NOISY_AFTER)) && /headphones or a quieter place/.test(told));
+    check('not otherwise', !/other voices/.test(renderFacts(voiceS, newV2State(1_000_000), { nowMs: 1_060_000 })));
+    check('never in a typed session', !/other voices/.test(renderFacts({ ...voiceS, mode: 'text' }, newV2State(1_000_000), { nowMs: 1_060_000, roomVoices: 2 })));
+    const body = { n: 0 as unknown };
+    await streamV2Turn({ session: voiceS, state: newV2State(1), studentSaid: 'hi', roomVoices: 2, fetchImpl: (async (_u: unknown, init?: { body?: string }) => { body.n = JSON.parse(init?.body ?? '{}').roomVoices; throw new Error('stop'); }) as unknown as typeof fetch }).catch(() => undefined);
+    check('the count travels with the turn', body.n === 2, body.n);
+    const fs = require('fs') as typeof import('fs'); const path = require('path') as typeof import('path');
+    check('the endpoint reads it', /body\.roomVoices/.test(fs.readFileSync(path.join(__dirname, '../src/app/api/tutor/brain-v2/turn/route.ts'), 'utf8')));
   }
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);
