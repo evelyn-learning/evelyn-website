@@ -11,14 +11,8 @@ const DEEPSEEK_MAX_TOKENS = 384_000;
 // OpenAI (Chat Completions, json_schema structured output, reasoning effort high)
 // and DeepSeek (OpenAI-compatible API; text only; JSON via json_object, which
 // needs the word "json" in the prompt, so the schema is put in the system text).
-export async function callOpenAICompatible(
-  spec: ModelSpec, call: ModelCall, apiKey: string, f: typeof fetch | undefined, flavour: "openai" | "deepseek",
-): Promise<VendorReply> {
-  const client = new OpenAI({
-    apiKey, fetch: f, maxRetries: 0, timeout: REQUEST_TIMEOUT_MS,
-    ...(flavour === "deepseek" ? { baseURL: DEEPSEEK_BASE_URL } : {}),
-  });
-
+/** The Chat Completions request for one call. The live call and a Batch API line send exactly this body. */
+export function openaiBody(spec: ModelSpec, call: ModelCall, flavour: "openai" | "deepseek"): OpenAI.Chat.ChatCompletionCreateParamsNonStreaming {
   const userContent: OpenAI.Chat.ChatCompletionContentPart[] | string = call.images?.length
     ? [
         { type: "text", text: call.user },
@@ -45,6 +39,18 @@ export async function callOpenAICompatible(
           max_tokens: DEEPSEEK_MAX_TOKENS,
         };
 
+  return body;
+}
+
+export async function callOpenAICompatible(
+  spec: ModelSpec, call: ModelCall, apiKey: string, f: typeof fetch | undefined, flavour: "openai" | "deepseek",
+): Promise<VendorReply> {
+  const client = new OpenAI({
+    apiKey, fetch: f, maxRetries: 0, timeout: REQUEST_TIMEOUT_MS,
+    ...(flavour === "deepseek" ? { baseURL: DEEPSEEK_BASE_URL } : {}),
+  });
+  const body = openaiBody(spec, call, flavour);
+
   let res: OpenAI.Chat.ChatCompletion;
   try {
     res = await client.chat.completions.create(body);
@@ -56,6 +62,12 @@ export async function callOpenAICompatible(
     throw e;
   }
 
+  return readOpenAICompletion(res, flavour);
+}
+
+/** A Chat Completions response (live, or the `response.body` of a batch output line) as a VendorReply. Throws on an unreadable one. */
+export function readOpenAICompletion(raw: unknown, flavour: "openai" | "deepseek"): VendorReply {
+  const res = raw as OpenAI.Chat.ChatCompletion;
   const usage = res && typeof res === "object" ? (res as { usage?: { prompt_tokens?: unknown; completion_tokens?: unknown } }).usage : undefined;
   const billed = usage && typeof usage.prompt_tokens === "number" && typeof usage.completion_tokens === "number" ? usage as { prompt_tokens: number; completion_tokens: number } : null;
   if (!res || typeof res !== "object" || !Array.isArray(res.choices) || !res.usage) {

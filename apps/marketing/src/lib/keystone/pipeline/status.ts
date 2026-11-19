@@ -73,6 +73,9 @@ const FINISHED_GROUP = "Nobody (finished)";
 const CASTLE_ROCK_ROLES: Role[] = ["reviewer", "tech"];
 const NOTE_MAX = 200;
 const HOUR = 3_600_000;
+/** A bulk run that has waited on its batch this long is reported: the batch is over by then (24 h at the vendors) and nobody collected it. */
+export const BULK_LATE_HOURS = 26;
+export const bulkLateLine = (n: number) => `${n} item(s) have waited more than ${BULK_LATE_HOURS} hours on a bulk run: run the pipeline with --bulk to collect and continue them`;
 const DAY = 24 * HOUR;
 
 export const itemUrl = (itemId: string) => `${KEYSTONE_URL}/item/${encodeURIComponent(itemId)}`;
@@ -489,11 +492,15 @@ export async function buildStatus(now: Date, opts: { env?: Record<string, string
     failures.push(`Run failed on item ${r.itemId}${at ? ` (${pacificTime(new Date(at))})` : ""}: ${(r.error || "no error recorded").slice(0, NOTE_MAX)}`);
   }
   const stopped = await Run.find(
-    { dryRun: { $ne: true }, result: { $exists: false }, finishedAt: { $exists: false }, startedAt: { $gt: dayAgo, $lte: new Date(now.getTime() - 2 * HOUR) } },
+    // A bulk run waiting on a vendor batch (waitingOnBatch) is unfinished by design, not stopped: reported below only when it has waited too long.
+    { dryRun: { $ne: true }, result: { $exists: false }, finishedAt: { $exists: false }, waitingOnBatch: { $exists: false }, startedAt: { $gt: dayAgo, $lte: new Date(now.getTime() - 2 * HOUR) } },
     { itemId: 1, runId: 1, startedAt: 1, intent: 1 },
   )
     .sort({ startedAt: 1 })
     .lean();
+  // Bulk runs whose batch should long be back (the vendors end a batch within 24 h): someone has to run the pipeline with --bulk again.
+  const bulkLate = await Run.countDocuments({ dryRun: { $ne: true }, result: { $exists: false }, waitingOnBatch: { $lte: new Date(now.getTime() - BULK_LATE_HOURS * HOUR) } });
+  if (bulkLate) failures.push(bulkLateLine(bulkLate));
   // An unfinished run whose own final write landed (its intent is what the item shows now, by the run's own test)
   // only missed its bookkeeping (the next run finishes it): not a failure.
   const stoppedItems = stopped.length

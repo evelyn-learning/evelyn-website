@@ -95,6 +95,14 @@ export type RunStep = {
   model?: string;
   /** ok false and the cause was transient (network error, 429 / 5xx after every retry): the next run retries it. */
   transient?: boolean;
+  /**
+   * Bulk mode only (pipeline/bulk.ts): this step's model calls that went through a vendor batch. `ids`: their
+   * request ids (BulkCallDoc.customId); `calls`: how many were answered by the batch and so are in `cost` at the
+   * batch rate (half price); `live`: how many were made as live calls instead (the batch gave nothing usable), at the
+   * standard price; `saved`: standard price minus batch price over the batch-answered calls (cost + saved = what a
+   * live run would have paid for this step).
+   */
+  batch?: { ids: string[]; calls: number; live: number; saved: number };
 };
 
 /** One pipeline run of one item. Internal record (may carry model ids); never shown to the client. */
@@ -131,6 +139,62 @@ export type RunDoc = {
   warnings?: string[];
   /** Times this run ended "failed" or held with step_failed (a resumed run adds to it): the attempt cap counts these. */
   failedAttempts?: number;
+  /** Bulk mode: the run stopped, unfinished, at a model call that is out in a vendor batch; since when. Removed when the run ends. */
+  waitingOnBatch?: Date;
+};
+
+/** A reply as a vendor adapter returned it (pipeline/types.ts StoredReply). */
+type BulkReply = { text: string; refusal?: string; truncated?: boolean; tokensIn: number; cacheWriteTokens?: number; cacheReadTokens?: number; tokensOut: number; model?: string; fellBack?: boolean };
+
+/**
+ * Bulk mode (pipeline/bulk.ts): one submission to a vendor's batch endpoint. Internal; never shown to the client.
+ * status: submitting (saved just before the vendor call; found again later it means the call's outcome is unknown,
+ * and the job is marked lost) → submitted → ended | expired | failed | canceled (the vendor's outcome, collected) | lost.
+ */
+export type BulkJobDoc = {
+  jobId: string;
+  vendor: "anthropic" | "openai";
+  model: string;
+  vendorBatchId?: string;
+  status: "submitting" | "submitted" | "ended" | "expired" | "failed" | "canceled" | "lost";
+  /** The waves its requests belong to: 1 the two blind solves, 2 the write, 3 working check + audit, 4 the correction and its re-check (0: the cause of a send-back). */
+  waves: number[];
+  itemIds: string[];
+  /** The exact custom ids sent, one per request (each is a BulkCallDoc). */
+  customIds: string[];
+  createdAt: Date;
+  submittedAt?: Date;
+  /** When the vendor finished it (the vendor's own time when given). */
+  finishedAt?: Date;
+  collectedAt?: Date;
+  detail?: string;
+  dryRun?: boolean;
+};
+
+/** Bulk mode: one model request sent in a batch, and what came back for it. Internal. */
+export type BulkCallDoc = {
+  /** The request's id at the vendor: "ks-<48 hex of sha256(item, run, vendor, model, request body)>-<n>". */
+  customId: string;
+  jobId: string;
+  itemId: string;
+  runId: string;
+  role: string;
+  vendor: "anthropic" | "openai";
+  model: string;
+  wave: number;
+  hash: string;
+  state: "pending" | "succeeded" | "errored" | "expired" | "canceled" | "lost";
+  detail?: string;
+  /** The batch's reply (state succeeded). */
+  reply?: BulkReply;
+  /** What the batch charged for it (batch rate), and the same tokens at the standard price. 0 when not billed. */
+  cost: number;
+  listCost: number;
+  /** The live call made in its place (errored, expired, canceled, lost, or refused in the batch), made once and kept. */
+  live?: { why: string; reply: BulkReply; cost: number; at: Date };
+  createdAt: Date;
+  collectedAt?: Date;
+  dryRun?: boolean;
 };
 
 export type ItemDoc = {
@@ -329,6 +393,8 @@ type Models = {
   Heartbeat: Model<HeartbeatDoc>;
   Lock: Model<LockDoc>;
   Run: Model<RunDoc>;
+  BulkJob: Model<BulkJobDoc>;
+  BulkCall: Model<BulkCallDoc>;
   Outbox: Model<OutboxDoc & { openKey?: string }>;
   Batch: Model<BatchDoc>;
   User: Model<UserDoc>;
@@ -557,9 +623,51 @@ function defineModels(conn: Connection): Models {
     ownWriteLanded: Boolean,
     warnings: [String],
     failedAttempts: Number,
+    waitingOnBatch: Date,
   });
   Run.index({ itemId: 1, runId: 1 }, { unique: true });
   Run.index({ itemId: 1, startedAt: -1 });
+  const BulkJob = new Schema<BulkJobDoc>({
+    jobId: { type: String, required: true },
+    vendor: { type: String, required: true },
+    model: String,
+    vendorBatchId: String,
+    status: { type: String, required: true },
+    waves: [Number],
+    itemIds: [String],
+    customIds: [String],
+    createdAt: Date,
+    submittedAt: Date,
+    finishedAt: Date,
+    collectedAt: Date,
+    detail: String,
+    dryRun: Boolean,
+  });
+  BulkJob.index({ jobId: 1 }, { unique: true });
+  BulkJob.index({ status: 1 });
+  const BulkCall = new Schema<BulkCallDoc>({
+    customId: { type: String, required: true },
+    jobId: { type: String, required: true },
+    itemId: { type: String, required: true },
+    runId: { type: String, required: true },
+    role: String,
+    vendor: String,
+    model: String,
+    wave: Number,
+    hash: String,
+    state: { type: String, required: true },
+    detail: String,
+    reply: { type: Schema.Types.Mixed },
+    cost: { type: Number, default: 0 },
+    listCost: { type: Number, default: 0 },
+    live: { type: Schema.Types.Mixed },
+    createdAt: Date,
+    collectedAt: Date,
+    dryRun: Boolean,
+  });
+  BulkCall.index({ customId: 1 }, { unique: true });
+  BulkCall.index({ itemId: 1, runId: 1 });
+  BulkCall.index({ jobId: 1 });
   const Lesson = new Schema<LessonDoc>({
     itemId: { type: String, required: true },
     version: { type: Number, required: true },
@@ -604,12 +712,14 @@ function defineModels(conn: Connection): Models {
   });
   AnimFlag.index({ itemId: 1, version: 1 });
   AnimFlag.index({ status: 1 });
-  if (isReadOnly()) for (const schema of [Lesson, Heartbeat, Lock, Run, Outbox, Batch, User, Session, Item, Solution, Activity, Upload, Animation, AnimFlag]) blockWrites(schema as Schema);
+  if (isReadOnly()) for (const schema of [Lesson, Heartbeat, Lock, Run, BulkJob, BulkCall, Outbox, Batch, User, Session, Item, Solution, Activity, Upload, Animation, AnimFlag]) blockWrites(schema as Schema);
   return {
     Lesson: conn.model<LessonDoc>("Lesson", Lesson, "lessons"),
     Heartbeat: conn.model<HeartbeatDoc>("Heartbeat", Heartbeat, "heartbeats"),
     Lock: conn.model<LockDoc>("Lock", Lock, "locks"),
     Run: conn.model<RunDoc>("Run", Run, "runs"),
+    BulkJob: conn.model<BulkJobDoc>("BulkJob", BulkJob, "bulkjobs"),
+    BulkCall: conn.model<BulkCallDoc>("BulkCall", BulkCall, "bulkcalls"),
     Outbox: conn.model<OutboxDoc & { openKey?: string }>("Outbox", Outbox, "outbox"),
     Batch: conn.model<BatchDoc>("Batch", Batch, "batches"),
     User: conn.model<UserDoc>("User", User, "users"),

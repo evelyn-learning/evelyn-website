@@ -43,7 +43,7 @@ import { releaseAt, sampleAfterRun } from "./release";
 import { answerFromText } from "./retro";
 import { ownWriteState, type OwnWrite } from "./ownwrite";
 import { agreeOnAnswer, type Solves } from "./solve";
-import type { ModelDeps, ModelImage, ModelReply } from "./types";
+import { BatchPending, type ModelDeps, type ModelImage, type ModelReply } from "./types";
 import type { ImageType } from "./vendors/common";
 import { loadRules, writeSolution, type Draft, type Rule, type WriteOpts } from "./write";
 
@@ -113,6 +113,8 @@ export type Deps = {
   assetExists?: (itemId: string, file: string) => boolean;
   now?: () => Date;
   dryRun?: boolean;
+  /** Bulk mode (bulk.ts), one per item: told when a step starts, and asked afterwards which of its model calls went through a vendor batch (recorded on the step). */
+  bulk?: { begin(): void; end(): RunStep["batch"] | undefined };
 };
 
 const UNVERIFIED_KINDS = ["match", "gapMatch", "order", "inlineChoice"];
@@ -190,7 +192,7 @@ export function acceptTopic(raw: string | undefined | null): string | undefined 
 const sameFrom = (a: Expect, i: ItemDoc) =>
   a.stage === i.stage && a.version === (i.version || 0) && new Date(a.updatedAt).getTime() === new Date(i.updatedAt).getTime();
 
-const fromOf = (i: ItemDoc): Expect => ({ stage: i.stage, version: i.version || 0, updatedAt: new Date(i.updatedAt) });
+export const fromOf = (i: ItemDoc): Expect => ({ stage: i.stage, version: i.version || 0, updatedAt: new Date(i.updatedAt) });
 
 function modeOf(item: ItemDoc, verdict: { verdict?: string; createdAt: Date } | null): RunDoc["mode"] {
   if (item.stage === "changes_requested") return "changes";
@@ -261,6 +263,18 @@ export async function processItem(itemId: string, runId: string, deps: Deps, opt
   try {
     await flow(first, run, deps, now);
   } catch (e) {
+    if (e instanceof BatchPending) {
+      // Bulk mode: a model call is out in a vendor batch. Not a failure and not a decision: the run is saved as it
+      // stands, unfinished, with every finished step on it; a later invocation continues it (nothing is redone).
+      delete run.result;
+      delete run.error;
+      delete run.finishedAt;
+      run.flags = [];
+      run.waitingOnBatch = run.waitingOnBatch ?? now();
+      run.cost = run.steps.reduce((s, x) => s + (x.cost || 0), 0);
+      await deps.writer.saveRun(run);
+      return run;
+    }
     if (e instanceof SupersededError) run.result = "superseded";
     else if (!(e instanceof Done)) {
       run.result = "failed";
@@ -282,6 +296,7 @@ export async function processItem(itemId: string, runId: string, deps: Deps, opt
     }
   }
   run.finishedAt = now();
+  delete run.waitingOnBatch;
   run.cost = run.steps.reduce((s, x) => s + (x.cost || 0), 0);
   // The attempt cap (selectItems) counts these: a failed run resumed again and again adds one each time.
   const ended = run.result as RunDoc["result"];
@@ -381,8 +396,13 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
     const key = `${name}#${n}`;
     const done = run.steps.find((s) => s.key === key);
     if (done) return { ok: done.ok, output: done.output as T };
+    deps.bulk?.begin();
     const r = await fn();
-    const entry: RunStep = { step: name, key, at: now(), ok: r.ok, output: r.output, cost: r.cost ?? 0, ...(r.model ? { model: r.model } : {}), ...(!r.ok && r.transient ? { transient: true } : {}) };
+    const viaBatch = deps.bulk?.end();
+    const entry: RunStep = {
+      step: name, key, at: now(), ok: r.ok, output: r.output, cost: r.cost ?? 0, ...(r.model ? { model: r.model } : {}), ...(!r.ok && r.transient ? { transient: true } : {}),
+      ...(viaBatch ? { batch: viaBatch } : {}),
+    };
     run.steps.push(entry);
     run.cost = run.steps.reduce((s, x) => s + (x.cost || 0), 0);
     await writer.saveRun(run);
@@ -471,7 +491,9 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
     });
     const output = { findings: r.findings, assetsChecked: !!deps.assetExists };
     const entry: RunStep = { step: "intake", key: "intake#code", at: now(), ok: true, output, cost: 0 };
-    run.steps = [...run.steps.filter((x) => x.key !== "intake#code"), entry];
+    // Replaced where it stands (first, on a new run), so a run continued over several invocations keeps its step order.
+    const at = run.steps.findIndex((x) => x.key === "intake#code");
+    run.steps = at < 0 ? [...run.steps, entry] : run.steps.map((x, k) => (k === at ? entry : x));
     if (r.findings.length) return toItemData(r.findings);
   }
 
@@ -1021,6 +1043,10 @@ export type RunArgs = {
   assetsDir?: string;
   /** Stop taking new items once this invocation has spent this much (USD). Default DEFAULT_MAX_COST. */
   maxCost?: number;
+  /** Bulk mode (bulk.ts): the model calls that can go through the vendors' batch endpoints do (half price, hours later). */
+  bulk?: boolean;
+  /** Bulk mode with --dry-run: the local JSON file that keeps the bulk state between invocations (nothing goes to the database). */
+  state?: string;
 };
 
 export const DEFAULT_MAX_COST = 25;
@@ -1040,7 +1066,14 @@ export function parseArgs(argv: string[]): RunArgs {
         a.only = value(i++, o).split(",").map((s) => s.trim()).filter(Boolean);
         if (!a.only.length) throw new Error("--only names no item");
         break;
-      case "--batch": a.batch = value(i++, o); break;
+      case "--batch": {
+        const v = argv[i + 1];
+        if (v === undefined || v.startsWith("--")) throw new Error("--batch needs a batch id (the client's batch). For the bulk-priced mode use --bulk");
+        a.batch = value(i++, o);
+        break;
+      }
+      case "--bulk": a.bulk = true; break;
+      case "--state": a.state = value(i++, o); break;
       case "--limit": {
         const n = Number(value(i++, o));
         if (!Number.isInteger(n) || n < 1) throw new Error("--limit needs a whole number of at least 1");
@@ -1063,6 +1096,9 @@ export function parseArgs(argv: string[]): RunArgs {
   }
   if (a.asReceived && !a.dryRun) throw new Error("--as-received is allowed only together with --dry-run");
   if (a.asReceived && !a.only?.length) throw new Error("--as-received needs --only <ids>");
+  if (a.state && !(a.bulk && a.dryRun)) throw new Error("--state is for --bulk together with --dry-run (a writing bulk run keeps its state in the database)");
+  if (a.bulk && a.dryRun && !a.state) throw new Error("--bulk with --dry-run needs --state <file>: a dry run writes nothing to the database, so the bulk state is kept in that file between invocations");
+  if (a.bulk && a.runId) throw new Error("--run-id is not used with --bulk (each item continues its own unfinished run)");
   return a;
 }
 

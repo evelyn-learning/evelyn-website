@@ -17,25 +17,34 @@ export function sameModel(a: string, b: string): boolean {
   return a === b || alias(a, b) || alias(b, a);
 }
 
-export async function callAnthropic(spec: ModelSpec, call: ModelCall, apiKey: string, f?: typeof fetch): Promise<VendorReply> {
-  const client = new Anthropic({ apiKey, fetch: f, maxRetries: 0, timeout: REQUEST_TIMEOUT_MS });
+/**
+ * The Messages request for one call: model, prompt, images, output schema, effort. The live call and a Message
+ * Batches request send exactly this (the live call adds the server-side refusal fallback, which a batch cannot carry).
+ */
+export function anthropicParams(spec: ModelSpec, call: ModelCall) {
   const content: Anthropic.Beta.BetaContentBlockParam[] = (call.images ?? []).map((img) => ({
     type: "image",
     source: { type: "base64", media_type: img.mime as ImageType, data: toBase64(img.data) }, // mime checked in callModel
   }));
   content.push({ type: "text", text: call.user });
+  return {
+    model: spec.model,
+    max_tokens: call.maxTokens ?? 16000,
+    // Parts: each one ends a cached prefix (a later call with the same leading parts reads them from the cache).
+    system: call.systemParts?.length
+      ? call.systemParts.slice(0, 4).map((text) => ({ type: "text" as const, text, cache_control: { type: "ephemeral" as const } }))
+      : call.system,
+    messages: [{ role: "user" as const, content }],
+    output_config: { effort: "high" as const, format: { type: "json_schema" as const, schema: call.schema as Record<string, unknown> } },
+  };
+}
 
+export async function callAnthropic(spec: ModelSpec, call: ModelCall, apiKey: string, f?: typeof fetch): Promise<VendorReply> {
+  const client = new Anthropic({ apiKey, fetch: f, maxRetries: 0, timeout: REQUEST_TIMEOUT_MS });
   let res: Anthropic.Beta.BetaMessage;
   try {
     res = await client.beta.messages.create({
-      model: spec.model,
-      max_tokens: call.maxTokens ?? 16000,
-      // Parts: each one ends a cached prefix (a later call with the same leading parts reads them from the cache).
-      system: call.systemParts?.length
-        ? call.systemParts.slice(0, 4).map((text) => ({ type: "text" as const, text, cache_control: { type: "ephemeral" as const } }))
-        : call.system,
-      messages: [{ role: "user", content }],
-      output_config: { effort: "high", format: { type: "json_schema", schema: call.schema as Record<string, unknown> } },
+      ...anthropicParams(spec, call),
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
     });
@@ -46,6 +55,12 @@ export async function callAnthropic(spec: ModelSpec, call: ModelCall, apiKey: st
     }
     throw e;
   }
+  return readAnthropicMessage(res, spec);
+}
+
+/** A Messages response (live, or the `message` of a succeeded batch result) as a VendorReply. Throws on an unreadable one. */
+export function readAnthropicMessage(raw: unknown, spec: ModelSpec): VendorReply {
+  const res = raw as Anthropic.Beta.BetaMessage;
   if (!res || typeof res !== "object" || !Array.isArray(res.content) || !res.usage) {
     const u = res && typeof res === "object" ? (res as { usage?: { input_tokens?: unknown; output_tokens?: unknown } }).usage : undefined;
     if (u && typeof u.input_tokens === "number" && typeof u.output_tokens === "number") {
