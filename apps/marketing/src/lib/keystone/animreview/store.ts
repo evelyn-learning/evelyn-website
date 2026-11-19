@@ -497,3 +497,47 @@ export async function queuedFor(route: "api" | "hand"): Promise<string[]> {
   return (await Item.find({ "animate.route": route, itemId: { $nin: have } }).select("itemId").sort({ "animate.requestedAt": 1 }).lean()).map((i) => i.itemId);
 }
 export const queuedForApi = () => queuedFor("api");
+
+
+// ---------- the daily status email ----------
+
+export type AnimationDigest = {
+  /** Latest version published and not looked at yet (a new animation, or a fix to confirm). */
+  toReview: { itemId: string; version: number; fixes: number }[];
+  /** Latest version with open flags: with Evelyn's session to fix. */
+  beingFixed: { itemId: string; version: number; openFlags: number }[];
+  /** On the To animate list with no route chosen; askedBy = the Castle Rock user who asked for it. */
+  undecided: { itemId: string; askedBy?: string }[];
+  /** Route chosen, not built yet: built when a session is told to. */
+  queuedApi: string[];
+  queuedHand: string[];
+  /** Sorted out as "No animation needed" since `since`, with who decided and the reason Castle Rock reads. */
+  newlySkipped: { itemId: string; by: string; reason: string }[];
+};
+
+/** What the owner needs to know about animations today. `since`: start of the "new" window (the last 24 hours). */
+export async function animationDigest(since: Date): Promise<AnimationDigest> {
+  const { Animation, AnimFlag, Item } = await ks();
+  const all = await Animation.find({}).sort({ itemId: 1, version: -1 }).lean();
+  const latest = new Map<string, (typeof all)[number]>();
+  for (const a of all) if (!latest.has(a.itemId)) latest.set(a.itemId, a);
+  const open = await AnimFlag.aggregate<{ _id: string; n: number }>([{ $match: { status: "open" } }, { $group: { _id: "$itemId", n: { $sum: 1 } } }]);
+  const openBy = new Map(open.map((o) => [o._id, o.n]));
+  const toReview: AnimationDigest["toReview"] = [];
+  const beingFixed: AnimationDigest["beingFixed"] = [];
+  for (const a of latest.values()) {
+    const n = openBy.get(a.itemId) ?? 0;
+    if (n) beingFixed.push({ itemId: a.itemId, version: a.version, openFlags: n });
+    else if (a.status === "review" || a.status === "fixing") toReview.push({ itemId: a.itemId, version: a.version, fixes: (a.addresses ?? []).length });
+  }
+  const todo = (await toAnimate("evelyn")) ?? [];
+  const skipped = await Item.find({ "animate.route": "none", "animate.requestedAt": { $gte: since }, player: { $exists: false } }).select("itemId animate").sort({ itemId: 1 }).lean();
+  return {
+    toReview,
+    beingFixed,
+    undecided: todo.filter((t) => t.route === "undecided").map((t) => ({ itemId: t.itemId, ...(t.askedBy ? { askedBy: t.askedBy } : {}) })),
+    queuedApi: todo.filter((t) => t.route === "api").map((t) => t.itemId),
+    queuedHand: todo.filter((t) => t.route === "hand").map((t) => t.itemId),
+    newlySkipped: skipped.map((i) => ({ itemId: i.itemId, by: i.animate?.requestedBy === AUTO ? "automatically" : `by ${i.animate?.requestedBy ?? "?"}`, reason: i.animate?.reason || NO_ANIMATION_DEFAULT })),
+  };
+}

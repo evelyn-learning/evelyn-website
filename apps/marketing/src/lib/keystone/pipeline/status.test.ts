@@ -424,6 +424,26 @@ const HOUR = 3_600_000;
   const down = await sendStatusEmail({ subject: "s", html: "h", text: "t" }, cfg, fakeDown).then(() => "", (err) => String(err));
   ok(/could not be reached/.test(down) && !down.includes("re_TESTKEY_secret"), `a network error is thrown scrubbed (${down})`);
 
+  // --- animations: what needs the owner ---
+  {
+    const an = {
+      toReview: [{ itemId: "991701", version: 1, fixes: 0 }, { itemId: "991702", version: 2, fixes: 1 }],
+      beingFixed: [{ itemId: "991703", version: 1, openFlags: 2 }],
+      undecided: [{ itemId: "991704" }, { itemId: "991705", askedBy: "julie<b>" }],
+      queuedApi: ["991706"],
+      queuedHand: [],
+      newlySkipped: [{ itemId: "991707", by: "automatically", reason: "Only algebra <steps>." }],
+    };
+    const out = renderStatusEmail({ ...empty, animations: an }, tue7);
+    ok(out.subject.includes("2 animations to review, 2 to decide"), `subject counts animations: ${out.subject}`);
+    for (const piece of ["ANIMATIONS (4 need you)", "- 991701 v1: new", "- 991702 v2: 1 fix to confirm", "/item/991701#animated", "- 991705: asked for by Castle Rock (julie<b>)", "API credits (1): 991706", "- 991703 v1: 2 open flags", "- 991707 (automatically): Only algebra <steps>.", "/queue#animate"])
+      ok(out.text.includes(piece), `text has: ${piece}`);
+    ok(!out.text.includes("By hand ("), "an empty route is left out");
+    ok(!out.html.includes("julie<b>") && !out.html.includes("<steps>") && out.html.includes("Animations (4 need you)"), "html is escaped and has the section");
+    const none = renderStatusEmail({ ...empty, animations: { toReview: [], beingFixed: [], undecided: [], queuedApi: [], queuedHand: [], newlySkipped: [] } }, tue7);
+    ok(none.text.includes("ANIMATIONS (0 need you)") && !none.text.includes("Chosen, not built yet") && !none.text.includes("Being fixed"), "empty groups are left out");
+    ok(!renderStatusEmail(empty, tue7).text.includes("ANIMATIONS"), "no section without the data");
+  }
   console.log("status.test ok");
 })().catch((e) => {
   console.error(e);
