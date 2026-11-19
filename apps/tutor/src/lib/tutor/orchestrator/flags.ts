@@ -2243,3 +2243,35 @@ export const TUTOR_V2_HEADER_CLOCK_PAUSE = process.env.NEXT_PUBLIC_TUTOR_V2_HEAD
  *  of.") where the learner's own sentence goes on past that word is a fragment, not a sentence: refused like a "…" starter (7m).
  *  Mic test 5 (embed-1795050656326, 13 min) (Task 7s, item 6). Default ON; NEXT_PUBLIC_TUTOR_V2_FRAGMENT_CARD=off ⇒ as before. */
 export const TUTOR_V2_FRAGMENT_CARD = process.env.NEXT_PUBLIC_TUTOR_V2_FRAGMENT_CARD !== 'off';
+
+/** Tutor brain v2 (v2/turn.ts, v2/board-timing.ts, components/v2/TutorVoiceV2.tsx): in a spoken lesson that teaches a language, a
+ *  sentence card or note whose words are spoken in the reply appears as that sentence starts (the runtime's own spoken line for
+ *  it, or the sentence that quotes it), not at the start of its paragraph; and no board item of a reply appears before one the
+ *  reply wrote earlier. Mic test 6 (embed-1795067373124, 18.4 min: each summary card went up one sentence early) (Task 7u,
+ *  item 1). Default ON; NEXT_PUBLIC_TUTOR_V2_CARD_AT_SENTENCE=off ⇒ as before. */
+export const TUTOR_V2_CARD_AT_SENTENCE = process.env.NEXT_PUBLIC_TUTOR_V2_CARD_AT_SENTENCE !== 'off';
+
+/** Tutor brain v2 (v2/summary-layout.ts, v2/sentence-cards.ts, v2/turn.ts, whiteboard/WhiteboardCanvas.tsx): the summary page of a
+ *  spoken language lesson with a labelled plan is laid out in groups: the rule notes, a "What went well" heading and 1–2 right
+ *  sentences, a "To improve" heading and 1–2 corrected sentences (the changed words marked), at most 4 sentence cards (the runtime
+ *  refuses a fifth on the summary page); a heading note is drawn as a bold line with no box. Mic test 6 (embed-1795067373124)
+ *  (Task 7u, item 2). Default ON; NEXT_PUBLIC_TUTOR_V2_SUMMARY_GROUPS=off ⇒ as before. */
+export const TUTOR_V2_SUMMARY_GROUPS = process.env.NEXT_PUBLIC_TUTOR_V2_SUMMARY_GROUPS !== 'off';
+
+/** Tutor brain v2 (v2/close-check.ts, v2/facts.ts, v2/turn.ts): the plan's closing check question is its own step: the summary
+ *  reply ends on it as a question card and does not answer it; the next reply gives feedback on their answer, then the questions
+ *  invitation (7d) deferred by that one reply. Skipped with about a minute or less to the hard stop. Mic test 6
+ *  (embed-1795067373124, 18.8 min: the tutor answered the check itself) (Task 7u, item 3). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_CLOSE_CHECK=off ⇒ as before. */
+export const TUTOR_V2_CLOSE_CHECK = process.env.NEXT_PUBLIC_TUTOR_V2_CLOSE_CHECK !== 'off';
+
+/** Tutor brain v2 (v2/working-level.ts): the level check's facts say not to number its questions aloud ("Now the second
+ *  question" was said under the third question card, the follow-up having a card too). Mic test 6 (embed-1795067373124, 1.3 min)
+ *  (Task 7u, item 4). Default ON; NEXT_PUBLIC_TUTOR_V2_LEVEL_NO_NUMBER=off ⇒ as before. */
+export const TUTOR_V2_LEVEL_NO_NUMBER = process.env.NEXT_PUBLIC_TUTOR_V2_LEVEL_NO_NUMBER !== 'off';
+
+/** Tutor brain v2 (v2/sentence-cards.ts v2IsCorrectionOf, used by the corrected-sentence list, the learner cards and 7q): a number
+ *  written as a digit and a filler ("uh") are no correction: "I have led uh my team for 2 years" → "…for two years." is their
+ *  sentence right. Mic test 6 (embed-1795067373124, 5.0 and 9.7 min: two false "wrong" signals) (Task 7u, item 5). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_NUMBER_NOT_CORRECTION=off ⇒ as before. */
+export const TUTOR_V2_NUMBER_NOT_CORRECTION = process.env.NEXT_PUBLIC_TUTOR_V2_NUMBER_NOT_CORRECTION !== 'off';

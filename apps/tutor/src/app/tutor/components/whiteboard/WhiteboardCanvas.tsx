@@ -108,7 +108,7 @@ import { strokeOutline, tickSpine, highlightBand } from '@/lib/tutor/whiteboard/
 import { InkNotesOverlay, AMBER } from './InkNotesOverlay';
 import { inkNotesEnabled, linksEnabled } from '../../hooks/toolDefinitions';
 import { shouldFollowNewRender, trailingNavSuppressesFollow, pageTargetedCardHoldsView, isPageTargetedSentence } from '@/lib/tutor/whiteboard/view-follow';
-import { INK_NOTE_DRAG, TUTOR_V2_QUESTION_NOT_NOTE } from '@/lib/tutor/orchestrator/flags';
+import { INK_NOTE_DRAG, TUTOR_V2_QUESTION_NOT_NOTE, TUTOR_V2_SUMMARY_GROUPS } from '@/lib/tutor/orchestrator/flags';
 import { stripLatexForTitle } from '@/lib/tutor/whiteboard/board-title';
 
 /** Actions that don't paint a teaching render — shared by the scrollTo
@@ -3103,6 +3103,16 @@ function CommandRendererInner({ command }: CommandRendererProps) {
       // (7p gloss) was drawn in the grey of a learner's sentence card, gloss line and all, and read as one more of their sentences.
       // It is drawn as a note: white, with a slate edge. Every other note renders as before.
       const glossNote = TUTOR_V2_QUESTION_NOT_NOTE && !!cardGlossOf(command) && command.style !== 'highlight' && command.style !== 'warning';
+      // Task 7u (SUMMARY_GROUPS, tutor brain v2): a heading note ("What went well", "To improve" on a summary page) is a bold line
+      // with no box, its gloss line under it. Every other note renders as before.
+      if (TUTOR_V2_SUMMARY_GROUPS && (command.style as string | undefined) === 'heading') {
+        return (
+          <div className="pt-3 pb-1">
+            <p className="text-xl font-bold text-slate-800">{String(command.text ?? '').replace(/\s+/g, ' ').trim()}</p>
+            <CardGloss of={command} />
+          </div>
+        );
+      }
       return (
         <div
           className={`p-4 rounded-lg ${

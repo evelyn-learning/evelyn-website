@@ -32,7 +32,7 @@ import { useOpenAIRealtime, type OpenAIVoice } from '@/app/tutor/hooks/useOpenAI
 import { usePerceptionWS, type PerceptionTranscript } from '@/app/tutor/hooks/usePerceptionWS';
 import { useCartesiaInkWS } from '@/app/tutor/hooks/useCartesiaInkWS';
 import { useAudioRecorder } from '@/app/tutor/hooks/useAudioRecorder';
-import { BARGEIN_GATE_POLL_MS, TUTOR_MIC_REACQUIRE, TUTOR_PRONUNCIATION_ASSESS, TUTOR_STT_ENGINE_INK2, TUTOR_V2_BARGEIN_ENERGY_GATE, TUTOR_V2_HEARD_NOISE, TUTOR_V2_NO_WORDS_RECOVER, TUTOR_V2_SPOKEN_SOUNDS, TUTOR_V2_TARGET_PAUSE, TUTOR_V2_TARGET_PUNCT, TUTOR_V2_CARD_STRESS_SPOKEN, TUTOR_V2_WAVE_DASH, TUTOR_V2_FLAG_CLOCK_PAUSE, TUTOR_V2_ASK_ONE_TEST } from '@/lib/tutor/orchestrator/flags';
+import { BARGEIN_GATE_POLL_MS, TUTOR_MIC_REACQUIRE, TUTOR_PRONUNCIATION_ASSESS, TUTOR_STT_ENGINE_INK2, TUTOR_V2_BARGEIN_ENERGY_GATE, TUTOR_V2_HEARD_NOISE, TUTOR_V2_NO_WORDS_RECOVER, TUTOR_V2_SPOKEN_SOUNDS, TUTOR_V2_TARGET_PAUSE, TUTOR_V2_TARGET_PUNCT, TUTOR_V2_CARD_STRESS_SPOKEN, TUTOR_V2_WAVE_DASH, TUTOR_V2_FLAG_CLOCK_PAUSE, TUTOR_V2_ASK_ONE_TEST, TUTOR_V2_CARD_AT_SENTENCE } from '@/lib/tutor/orchestrator/flags';
 import { v2AsksTheLearner } from '@/lib/tutor/v2/one-question';
 import type { BargeInFrame } from '@/lib/tutor/voice/bargein-gate';
 import { armV2SoundGate, stepV2SoundGate } from '@/lib/tutor/v2/sound-gate';
@@ -59,7 +59,7 @@ import { v2SpeechParts } from '@/lib/tutor/v2/languages';
 import { v2SpeakSounds, v2SpeakWaveDash } from '@/lib/tutor/v2/spoken-sounds';
 import { trimToSpoken } from '@/lib/tutor/v2/interrupted';
 import { isMathsSubject, isScienceSubject } from '@/lib/tutor/v2/session-kind';
-import { anchorSentenceIndex, asksAnywhere, inlineSentenceIndex } from '@/lib/tutor/v2/board-timing';
+import { anchorSentenceIndex, asksAnywhere, inlineSentenceIndex, v2TimedItemIndex } from '@/lib/tutor/v2/board-timing';
 import { summariseBoardCall } from '@/lib/tutor/v2/board';
 import { V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S } from '@/lib/tutor/v2/facts';
 import { outsideMathSpans, speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakLessonNotation, speakLetterUnits, speakGroups, speakNumberPlurals, speakSlashes } from '@/lib/tutor/voice/tts-pronunciation';
@@ -153,7 +153,10 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const heldBoardRef = useRef<Array<{ idx: number; id?: string; what?: string; untilDone?: boolean; isPage?: boolean; paint: () => void; timer: ReturnType<typeof setTimeout> }>>([]);
   const turnBusyRef = useRef(false);
   const paintFnsRef = useRef(new Map<string, () => void>());
-  const unplacedBoardRef = useRef<Array<{ call: { id?: string; name: string; sayWith?: string; beforeTurn?: boolean; args?: Record<string, unknown> }; paint: () => void }>>([]);
+  const unplacedBoardRef = useRef<Array<{ call: { id?: string; name: string; sayWith?: string; beforeTurn?: boolean; args?: Record<string, unknown>; timed?: 'next' | 'text' }; paint: () => void }>>([]);
+  /** Task 7u (CARD_AT_SENTENCE): the latest sentence an item of this reply marked `timed` was placed with: none after goes earlier. */
+  const timedFloorRef = useRef(0); const floorIsCardLineRef = useRef(false);
+  const isPageCall = (name: string) => name === 'new_page' || name === 'go_to_page';
   // Inline items: where the current stretch of speech began (the sentence count at the previous block).
   const segStartRef = useRef(0); const lastBlockAtRef = useRef(-1);
   // Where the paragraph being spoken began: working, a figure or a table goes with the paragraph it is written after.
@@ -172,6 +175,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       // page, and its note on the next, conic sections 2026-11-11).
       const pageHeld = heldBoardRef.current.some((h) => h.isPage);
       if (idx >= 0) idx = Math.max(idx, pageTurnAtRef.current);
+      // Task 7u (CARD_AT_SENTENCE): an anchored item of a language lesson is never placed before one the reply wrote earlier.
+      if (idx >= 0 && TUTOR_V2_CARD_AT_SENTENCE && u.call.timed && !isPageCall(u.call.name)) { idx = Math.max(idx, timedFloorRef.current); if (idx > timedFloorRef.current) floorIsCardLineRef.current = false; timedFloorRef.current = idx; }
       const hold = ((idx > 0 && startedCountRef.current <= idx) || pageHeld) && !openingTurnRef.current;
       p.current.onDebugEvent?.('v2_board_timing', `${u.call.name}: ${idx < 0 ? 'its sentence was not found' : `sentence ${idx + 1} of ${turnSentencesRef.current.length}`}, ${startedCountRef.current} started — ${hold ? 'held' : 'now'}`);
       if (!hold) { u.paint(); continue; }
@@ -345,7 +350,12 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
         const found = inlineSentenceIndex(call.name, summariseBoardCall(call.name, call.args), turnSentencesRef.current, from);
         // A page the student has just agreed to turns as the reply begins, unless the tutor names it further in.
         const agreedPage = call.name === 'new_page' && !!(call as { agreed?: boolean }).agreed;
-        const idx = Math.max(call.name === 'new_page' ? 0 : pageTurnAtRef.current, agreedPage && found >= n ? 0 : found);
+        // Task 7u (CARD_AT_SENTENCE): a card or note of a language lesson goes with the sentence that speaks it, never before an item
+        // the reply wrote earlier (board-timing.ts v2TimedItemIndex).
+        const timed = TUTOR_V2_CARD_AT_SENTENCE && call.timed && !isPageCall(call.name) ? call.timed : undefined;
+        const placed = timed ? v2TimedItemIndex({ name: call.name, timed, ...(typeof call.args.sentence === 'string' ? { text: call.args.sentence } : {}) }, turnSentencesRef.current, found, timedFloorRef.current, pageTurnAtRef.current, floorIsCardLineRef.current) : found;
+        const idx = Math.max(call.name === 'new_page' ? 0 : pageTurnAtRef.current, agreedPage && found >= n ? 0 : placed);
+        if (timed) { const line = timed === 'next' && idx === n; if (idx > timedFloorRef.current || line) floorIsCardLineRef.current = line; timedFloorRef.current = Math.max(timedFloorRef.current, idx); }
         if (call.name === 'new_page') pageTurnAtRef.current = idx;
         // The opening reply: nothing waits. A session must not begin on a bare board (embed-1794362141944).
         // The next problem is not shown until the whole reply is in, the check's additions included: the note
@@ -375,7 +385,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     onTutorBusy: (busy) => {
       props.onTutorBusy?.(busy);
       turnBusyRef.current = busy;
-      if (busy) { cardStressRef.current = []; captionsRef.current.begin(); cutHeardRef.current = null; releaseBoard(); paintedThisTurnRef.current = []; paintFnsRef.current.clear(); turnSentencesRef.current = []; turnWholeRef.current = []; startedCountRef.current = 0; segStartRef.current = 0; paraStartRef.current = 0; pageTurnAtRef.current = 0; lastBlockAtRef.current = -1; clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); showState('thinking'); }
+      if (busy) { cardStressRef.current = []; captionsRef.current.begin(); cutHeardRef.current = null; releaseBoard(); paintedThisTurnRef.current = []; paintFnsRef.current.clear(); turnSentencesRef.current = []; turnWholeRef.current = []; startedCountRef.current = 0; segStartRef.current = 0; paraStartRef.current = 0; pageTurnAtRef.current = 0; timedFloorRef.current = 0; floorIsCardLineRef.current = false; lastBlockAtRef.current = -1; clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); showState('thinking'); }
       else { captionsRef.current.streamEnd(); waitingRef.current = false; cueRef.current = cueStop(); realtimeRef.current?.signalBrainThinking(false); placeBoard(true); if (!realtimeRef.current?.isSpeechPending()) releaseBoard(); else releaseBoard(startedCountRef.current);
         // The tutor chose to say nothing and wait (keep_listening). If the student was in fact finished, it finds out soon.
         const silentReply = turnSentencesRef.current.length === 0 && !turnsRef.current?.isEnding();

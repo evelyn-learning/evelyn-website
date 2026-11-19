@@ -170,6 +170,9 @@ export interface V2State {
   /** Task 7k fix round 1 (I2, CLOSE_REOPENED): the recorded ask (closeInvitedAt) was "more, or finish?": the turn that answers
    *  it presses no goodbye, and a reply that gives more practice (not ending the lesson) reopens the close. */
   closeAsk?: 'more';
+  /** Task 7u (CLOSE_CHECK): the plan's closing check question was asked (the reply that ended on it), and answered (the turn of
+   *  their next words). close-check.ts. */
+  closeCheck?: { askedAt: number; answeredAt?: number };
   /** Task 7k fix round 1 (I1, PRACTICE_ON_PART_PAGE): indices of the board pages a practice visit opened. They never count for
    *  the position, done / green, a part reached or entered. */
   visitPages?: number[];
@@ -236,6 +239,10 @@ export interface V2ToolCall {
   pointsAt?: string;
   /** Task 7k fix round 2 (m1): a page a practice visit opened (state.visitPages): kept marked when the reply is cut. */
   visit?: true;
+  /** Task 7u (CARD_AT_SENTENCE): a board item of a spoken lesson that teaches a language. 'next': its words are the next sentence
+   *  spoken (the runtime's line for a card or note); 'text': placed at the sentence that quotes it (a sentence card), else as
+   *  before. Either way never before an item the reply wrote earlier (board-timing.ts v2TimedItemIndex). */
+  timed?: 'next' | 'text';
 }
 
 export interface V2TurnResult {

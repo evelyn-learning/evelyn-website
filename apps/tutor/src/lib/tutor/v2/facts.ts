@@ -25,6 +25,8 @@ import { V2_TIME_UP_MIN, v2CloseOpen, v2PlanContentDone, v2LeftToStopMin, v2Less
 import { V2_MORE_PRACTICE_MIN_LEFT, v2MorePracticeFacts, v2PracticeFacts, v2StayInPartLine, v2TimeFitFacts } from './time-fit';
 import { TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART } from '../orchestrator/flags';
 import { v2CloseInviteFacts, v2CloseReopened, v2MoreAskAnswered } from './close-invite';
+import { v2CloseCheckFacts } from './close-check';
+import { v2SummaryGroupsOn, v2SummaryLayoutLine } from './summary-layout';
 import { TUTOR_V2_ASK_ONE_TEST, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_SILENCE_AFTER_ASK } from '../orchestrator/flags';
 import { v2AsksTheLearner } from './one-question';
 import { SentenceStream } from './sentences';
@@ -239,7 +241,13 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     // Task 6e fix round 1 (F4): tester B was asked about a question or the summary in two turns running.
     if (!discussion && TUTOR_V2_CLOSE_ONE_QUESTION && (closing || near) && !state.closed) lines.push('at the close: at most one question in a reply, never one you asked in your last reply, and nothing after a goodbye');
     // Task 7d (CLOSE_INVITES_QUESTIONS): the summary reply ends by inviting their questions, and the lesson ends on their answer.
-    if (!discussion && !(morePracticeAllowed && typeof state.closeInvitedAt === 'number')) lines.push(...v2CloseInviteFacts(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun, moreTime: leftStop > V2_MORE_PRACTICE_MIN_LEFT }));
+    // Task 7u (CLOSE_CHECK): the plan's check question is its own step before the invitation: while it is owed or waits for their
+    // answer, its line stands in place of the invitation's (close-check.ts).
+    const check = discussion ? { lines: [], replacesInvite: false } : v2CloseCheckFacts(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun, heard: f.heard });
+    if (!discussion && !check.replacesInvite && !(morePracticeAllowed && typeof state.closeInvitedAt === 'number')) lines.push(...v2CloseInviteFacts(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun, moreTime: leftStop > V2_MORE_PRACTICE_MIN_LEFT }));
+    lines.push(...check.lines);
+    // Task 7u (SUMMARY_GROUPS): near or at the close, before the summary has begun, the summary page's order (summary-layout.ts).
+    if (!discussion && (closing || near) && !summaryBegun && !state.closed && v2SummaryGroupsOn(session)) lines.push(v2SummaryLayoutLine(session, state, f.heard));
     // Task 7f B: the parts left out for time; C: the practice the part in hand still needs; E: more practice asked for at the close.
     if (!discussion) lines.push(...v2TimeFitFacts(session, state, tf.noSqueeze, f.nowMs));
     // Task 7i (OPTIONAL_AT_ARRIVAL), fix round 1: their words name a part left out for time. Permissive: the model reads their meaning.

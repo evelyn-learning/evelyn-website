@@ -18,7 +18,7 @@
  * language, and a lesson without one has nothing to gloss in. Under the TUTOR_V2_SENTENCE_CARDS kill switch. A session
  * without it gets a byte-identical session part and facts. Pure, client-safe.
  */
-import { TUTOR_V2_SENTENCE_CARDS } from '../orchestrator/flags';
+import { TUTOR_V2_NUMBER_NOT_CORRECTION, TUTOR_V2_SENTENCE_CARDS, TUTOR_V2_SUMMARY_GROUPS } from '../orchestrator/flags';
 import { languageNameOf } from '../voice/language-request';
 import { discussionOf } from './discussion';
 import type { V2Session, V2State } from './types';
@@ -37,7 +37,9 @@ export function v2SentenceCardsOn(session: V2Session, enabled: boolean = TUTOR_V
 }
 
 /** The session part's section (sentence-card sessions only). Stable for the whole session. */
-export function v2SentenceCardsSection(languages: readonly string[]): string {
+/** `grouped`: Task 7u (SUMMARY_GROUPS): the summary page is laid out in labelled groups (summary-layout.ts); its line says so in place
+ *  of "up to 4 of their corrected sentences". */
+export function v2SentenceCardsSection(languages: readonly string[], grouped: boolean = false): string {
   const T = languageNameOf(languages[0]!);
   const S = languageNameOf(languages[1]!.toLowerCase().split(/[-_]/)[0]!);
   return [
@@ -50,7 +52,9 @@ export function v2SentenceCardsSection(languages: readonly string[]): string {
     // Each listed sentence is already a card on the page it was corrected on, and the board does not write a thing twice
     // on one page (board.ts): written there, the summary's cards only scrolled back to the old ones. On a new page they are
     // written again, and the recap stands as its own page (review 4c I1).
-    `When you sum the lesson up, including a close they asked for, open a page for the summary with a page block first, then put up to ${V2_SUMMARY_SENTENCE_CARDS} of their corrected sentences from the facts on it as sentence cards, the ones most worth keeping. On the page they were corrected on they are already up and are not written again.`,
+    grouped
+      ? `When you sum the lesson up, including a close they asked for, open a page for the summary with a page block first, then lay it out in the order the facts give for the summary page (what went well, then what to improve), with at most ${V2_SUMMARY_SENTENCE_CARDS} sentence cards in all. On the page they were corrected on they are already up and are not written again.`
+      : `When you sum the lesson up, including a close they asked for, open a page for the summary with a page block first, then put up to ${V2_SUMMARY_SENTENCE_CARDS} of their corrected sentences from the facts on it as sentence cards, the ones most worth keeping. On the page they were corrected on they are already up and are not written again.`,
   ].join('\n');
 }
 
@@ -58,10 +62,30 @@ export function v2SentenceCardsSection(languages: readonly string[]): string {
 export const v2SentenceTokens = (text: string) => (text.toLowerCase().replace(/’/g, "'").match(/[\p{L}\p{N}]+(?:'[\p{L}\p{N}]+)*/gu) ?? []);
 const tokens = v2SentenceTokens;
 
-/** Whether a card's sentence reworks what the student said: most of its words are theirs, and it is not their words as they said them. */
-export function v2IsCorrectionOf(sentence: string, studentSaid: string | null | undefined): boolean {
-  const card = tokens(sentence);
-  const theirs = tokens(studentSaid ?? '');
+/** Task 7u (NUMBER_NOT_CORRECTION): number words 0–100, cardinal and ordinal, as words ("21" → "twenty one", "3rd" → "third"). */
+const UNITS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+const TENS = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+const UNIT_ORD = ['zeroth', 'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth', 'eleventh', 'twelfth', 'thirteenth', 'fourteenth', 'fifteenth', 'sixteenth', 'seventeenth', 'eighteenth', 'nineteenth'];
+const cardinal = (n: number): string[] => (n === 100 ? ['one', 'hundred'] : n < 20 ? [UNITS[n]!] : n % 10 ? [TENS[Math.floor(n / 10)]!, UNITS[n % 10]!] : [TENS[n / 10]!]);
+const ordinal = (n: number): string[] => (n === 100 ? ['one', 'hundredth'] : n < 20 ? [UNIT_ORD[n]!] : n % 10 ? [TENS[Math.floor(n / 10)]!, UNIT_ORD[n % 10]!] : [`${TENS[n / 10]!.slice(0, -1)}ieth`]);
+/** A filler of speech ("uh", "um", "erm"): learner-card.ts FILLER. */
+const FILLER = /^(?:u+h+|u+m+|u+hm+|e+r+m*|a+h+|h+m+|m{2,}|eh)$/;
+/** Words compared for a correction: a number written as a digit as its words, fillers out (case and punctuation are already out). */
+export function v2CorrectionWords(text: string): string[] {
+  return tokens(text).flatMap((w) => {
+    if (FILLER.test(w)) return [];
+    const m = /^(\d{1,3})(st|nd|rd|th)?$/.exec(w);
+    const n = m ? Number(m[1]) : NaN;
+    if (!m || n > 100) return [w];
+    return m[2] ? ordinal(n) : cardinal(n);
+  });
+}
+
+/** Whether a card's sentence reworks what the student said: most of its words are theirs, and it is not their words as they said them.
+ *  Task 7u (NUMBER_NOT_CORRECTION): compared with numbers as words and fillers out ("for 2 years" → "for two years" is no correction). */
+export function v2IsCorrectionOf(sentence: string, studentSaid: string | null | undefined, numbers: boolean = TUTOR_V2_NUMBER_NOT_CORRECTION): boolean {
+  const card = numbers ? v2CorrectionWords(sentence) : tokens(sentence);
+  const theirs = numbers ? v2CorrectionWords(studentSaid ?? '') : tokens(studentSaid ?? '');
   if (card.length < MIN_WORDS || !theirs.length) return false;
   const have = new Set(theirs);
   if (card.filter((w) => have.has(w)).length / card.length < CORRECTION_OVERLAP) return false;

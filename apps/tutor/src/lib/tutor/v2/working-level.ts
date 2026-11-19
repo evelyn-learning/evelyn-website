@@ -20,7 +20,7 @@ import { discussionOf } from './discussion';
 import { v2PartOf } from './plan-map';
 import { v2Progress } from './progress';
 import type { V2Session, V2State, V2WorkingLevel } from './types';
-import { TUTOR_V2_LEVEL_CHECK_CAP, TUTOR_V2_LEVEL_CHECK_MIN_ANSWERS, TUTOR_V2_LEVEL_RECONFIRM, TUTOR_V2_LEVEL_WITH_WORDS } from '../orchestrator/flags';
+import { TUTOR_V2_LEVEL_CHECK_CAP, TUTOR_V2_LEVEL_CHECK_MIN_ANSWERS, TUTOR_V2_LEVEL_NO_NUMBER, TUTOR_V2_LEVEL_RECONFIRM, TUTOR_V2_LEVEL_WITH_WORDS } from '../orchestrator/flags';
 import { v2CountLevelCheck, v2LevelCheckCountLine, v2LevelCheckPart } from './level-check-count';
 
 const SKIPPED_FOR_LEVEL = 'working level known from an earlier lesson';
@@ -142,9 +142,17 @@ export function v2LevelCheckOver(session: V2Session, state: V2State, heard: stri
   return studentReplies(state) + (heard ? 1 : 0) > V2_LEVEL_CHECK_MAX_REPLIES;
 }
 
+/** Task 7u (LEVEL_NO_NUMBER): the line, in a spoken lesson that teaches a language with a labelled plan (summary-layout.ts's gate,
+ *  read here without its imports). `enabled` is the kill switch. */
+export const V2_LEVEL_NO_NUMBER_LINE = 'level check: do not number its questions aloud: never "first / second / third / last question" or any number; say "next question" or nothing';
+export function v2LevelNoNumberOn(session: V2Session, enabled: boolean = TUTOR_V2_LEVEL_NO_NUMBER): boolean {
+  return enabled && session.mode === 'voice' && !discussionOf(session.plan) && !session.homework && !session.homeworkSheet && ((session.languages?.length ?? 0) >= 2 || !!session.pronunciation)
+    && !!session.plan && session.plan.segments.length >= 2 && session.plan.segments.every((seg) => !!v2PartOf(seg).label);
+}
+
 /** The facts lines for the working level (levelCheck sessions only). `heard` is the student's words this turn;
  *  `reopened`: their words just now said the remembered level does not fit (v2ReopenLevelCheck). */
-export function v2WorkingLevelFacts(session: V2Session, state: V2State, heard: string | null | undefined, opts: { reopened?: boolean; reconfirm?: boolean; cap?: boolean } = {}): string[] {
+export function v2WorkingLevelFacts(session: V2Session, state: V2State, heard: string | null | undefined, opts: { reopened?: boolean; reconfirm?: boolean; cap?: boolean; noNumber?: boolean } = {}): string[] {
   if (!v2LevelCheckOn(session)) return [];
   const wl = state.workingLevel;
   const reconfirm = opts.reconfirm ?? TUTOR_V2_LEVEL_RECONFIRM;
@@ -162,6 +170,9 @@ export function v2WorkingLevelFacts(session: V2Session, state: V2State, heard: s
       ...reopened,
       'working level: not known yet. Find it with three short conversational questions, one at a time (the plan\'s level-check part), then call set_working_level',
       ...(count ? [v2LevelCheckCountLine(count)] : []),
+      // Task 7u (LEVEL_NO_NUMBER, mic test 6, embed-1795067373124 at 1.3 min): "Now the second question" was said under the third
+      // question card (the one follow-up had a card too).
+      ...(count && v2LevelNoNumberOn(session, opts.noNumber) ? [V2_LEVEL_NO_NUMBER_LINE] : []),
       // Findings case 1: "Could you please rephrase that?" / "Sorry, I don't understand" got the NEXT question on v1.
       `when they ask you to rephrase or say they did not understand, that is not an answer: ask the same question again, more simply (first in simpler English, then with ${support}); go to the next question only once they have answered this one`,
     ];

@@ -334,3 +334,24 @@ export function noteSentencesToSay(kind: string, body: string, saidSoFar: string
   const announced = !asking && (LEAD_IN_COLON.test(saidSoFar) || CARD_LEAD_IN.test(last) || BOARD_POINTER.test(last));
   return { say: picked.join(' '), announced };
 }
+
+/** Task 7u (CARD_AT_SENTENCE, mic test 6, embed-1795067373124 at 18.4 min): where a board item of a spoken language lesson goes
+ *  (V2ToolCall.timed), given `today`, the sentence it would go with before. A card or note the runtime speaks next ('next') goes
+ *  with that sentence, the one about to be sent (`sentences.length`): the summary's cards went up with the paragraph before them,
+ *  a sentence early, and each next card's stretch began at the last card's spoken line. A sentence card ('text') goes with the
+ *  last sentence since the page turn that quotes it whole. Anything else keeps `today`. Never before `floor`, the latest sentence
+ *  an item the reply wrote earlier goes with: the board's order is the order the reply wrote. Pure. */
+export function v2TimedItemIndex(item: { name: string; timed?: 'next' | 'text'; text?: string }, sentences: readonly string[], today: number, floor: number, pageTurnAt = 0, floorIsCardLine = false): number {
+  if (!item.timed) return today;
+  const card = item.name === 'show_sentence' || item.name === 'annotate' || item.name === 'show_table';
+  let idx = today;
+  if (card && item.timed === 'next') idx = sentences.length;
+  // A question card is never placed with the spoken line of the card before it (`floorIsCardLine`): taken for the question's short
+  // lead-in, the line "I work in sales." put the check question up a sentence early.
+  else if (item.name === 'show_problem' && floorIsCardLine && idx <= floor && floor + 1 < sentences.length) idx = floor + 1;
+  else if (item.name === 'show_sentence' && item.text) {
+    const want = norm(item.text).join(' ');
+    for (let i = sentences.length - 1; want && i >= Math.max(0, pageTurnAt); i--) if (` ${norm(sentences[i]!).join(' ')} `.includes(` ${want} `)) { idx = i; break; }
+  }
+  return Math.max(idx, floor);
+}
