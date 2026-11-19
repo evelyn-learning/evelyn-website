@@ -65,23 +65,40 @@ export function repliedBackground(raw: string): boolean {
   return /^\W*background\b/i.test(raw.trim());
 }
 
-export const ROOM_CHECK_SYSTEM = `A tutor and one student are in a spoken lesson. The student's microphone also picks up other voices in the room: a television or radio, a video playing, other people talking to each other. You are given what the tutor has just been saying and a stretch of speech the microphone picked up. Decide who the speech belongs to.
-
-STUDENT: one person speaking to the tutor, about anything at all.
+const WHO = `STUDENT: one person speaking to the tutor, about anything at all.
 - An answer or an attempt at one, however short, wrong or hesitant. A question about the lesson.
 - The recogniser mishears. Speech that picks up the tutor's own words or numbers, even turned into soundalikes that make no sense as written, is the student answering.
 - Anything a person says to whoever they are talking with: a request (stop, wait, repeat, slower, something else), a remark about themselves or what is happening around them ("I need a minute", "my dog just got sick", "the TV is on"), small talk or a question on another subject ("do you know who won last night?"), saying they are distracted, tired or done.
 - Speech in any language.
-Being off the lesson's topic never makes speech BACKGROUND by itself: students change the subject, and the tutor must hear them when they do.
+Being off the lesson's topic never makes speech BACKGROUND by itself: students change the subject, and the tutor must hear them when they do. A short question put straight to a listener ("do you…", "can you…", "have you…", "what do you think…") is the student whatever it is about, sport and the news included: a broadcast reports, it does not stop to ask the listener.
 
 BACKGROUND: speech that is not a person talking to their tutor.
 - Broadcast or recorded speech: an advertisement, a list of warnings or side effects, news, weather, sports commentary, a narrator, a programme's dialogue, an announcement.
 - People in the room talking to each other, or the student plainly talking to someone else ("Mom, close the door").
-- A stray fragment in the manner of the above: it answers nothing the tutor said, and it is not something a person would say to the one they are talking with.
+- A stray fragment in the manner of the above: it answers nothing the tutor said, and it is not something a person would say to the one they are talking with.`;
+
+export const ROOM_CHECK_SYSTEM = `A tutor and one student are in a spoken lesson. The student's microphone also picks up other voices in the room: a television or radio, a video playing, other people talking to each other. You are given what the tutor has just been saying and a stretch of speech the microphone picked up. Decide who the speech belongs to.
+
+${WHO}
 
 When you cannot tell, answer STUDENT.
 
 Reply with one word: STUDENT or BACKGROUND.`;
+
+/** The student's words out of a stretch that may hold other voices too. A television does not stop for the
+ *  student, so the recogniser hands over their answer and the news in one run of words; judged whole, the run
+ *  was another voice and the student was never heard (local test, embed-1795054401972: 90 seconds without a
+ *  reply). */
+export const ROOM_EXTRACT_SYSTEM = `A tutor and one student are in a spoken lesson. The student's microphone also picks up other voices in the room: a television or radio, a video playing, other people talking to each other. The recogniser writes everything it hears as one run of words, so the student's words may sit in among the others'. You are given what the tutor has just been saying and the run of words. Give back the student's words, and nothing else.
+
+${WHO}
+
+Reply in one of three ways:
+- ALL, when the whole run is the student.
+- NONE, when none of it is.
+- Otherwise the student's words only: copied exactly as they appear in the run, in the same order, with the rest left out. Never add, correct or complete a word. No quotation marks and no comment.
+
+A part you cannot place is kept as the student's.`;
 
 export function roomCheckMessage(i: { tutorSaid: string; heard: string; earlier?: string[] }): string {
   const earlier = (i.earlier ?? []).filter(Boolean).slice(-2);
@@ -92,7 +109,48 @@ export function roomCheckMessage(i: { tutorSaid: string; heard: string; earlier?
   ].join('\n\n');
 }
 
-/** The line in the turn's facts, once, when the room has become noisy (facts.ts). */
+const norm = (x: string) => x.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean);
+
+/** The run with its first `n` words gone: what has not been looked at yet. */
+export function afterWords(text: string, n: number): string {
+  return n > 0 ? text.trim().split(/\s+/).slice(n).join(' ') : text.trim();
+}
+export const sameWords = (a: string, b: string) => norm(a).join(' ') === norm(b).join(' ');
+
+/** What the extraction returned, as the student's words. Null: none of the run was the student's.
+ *  The run is handed back whole when the reply says ALL, when it kept nearly all of it, and when it is not made
+ *  of the run's own words (the model wrote something of its own): the doubt goes to the student. */
+export function studentWordsIn(raw: string, run: string): string | null {
+  const reply = raw.trim().replace(/^["'“]+|["'”]+$/g, '').trim();
+  if (!reply || /^\W*all\W*$/i.test(reply)) return run.trim();
+  if (/^\W*none\b/i.test(reply)) return null;
+  const have = new Set(norm(run)); const got = norm(reply); const all = norm(run);
+  if (!got.length) return run.trim();
+  if (got.filter((w) => have.has(w)).length / got.length < 0.8) return run.trim();
+  if (all.length && got.length / all.length >= 0.8) return run.trim();
+  return reply;
+}
+
+/** The two readings of a stretch put together: whose it is as a whole, and which of its words are the student's.
+ *  Either alone lost a student now and then (an off-topic question read as a broadcast by one, kept by the
+ *  other), so the student is left out only when both say so:
+ *  - read as the student's: their words as picked out, or all of it when nothing was picked out;
+ *  - read as another voice: only words picked out from among the rest. The whole stretch handed back, against
+ *    that reading, is another voice. */
+export function studentPart(background: boolean, words: string | null, run: string): string | null {
+  if (!background) return words ?? run.trim();
+  if (words === null || sameWords(words, run)) return null;
+  return words;
+}
+
+/** In a noisy room a stretch still being spoken is looked at this often for words of the student's. */
+export const ROOM_LOOK_EVERY_MS = 2500;
+export const ROOM_LOOK_MIN_WORDS = 3;
+/** Unmuting, speaking and muting again within this long is the student taking a turn by hand: what was heard
+ *  in between is theirs without being asked about. */
+export const ROOM_HAND_TURN_MS = 60000;
+
+/** The line in the turn's facts, until it has been said, when the room has become noisy (facts.ts). */
 export function roomVoicesFact(times: number): string {
-  return `the room: other voices near the student (a television, a radio or people talking to each other) have been picked up ${times} times and were left out; the student has not been told. Tell them now, once, in one short sentence at the start of this reply: you can hear other voices near them, headphones or a quieter place will help, and they can type if they prefer. Then go on from where the lesson is, and do not bring it up again`;
+  return `the room: other voices near the student (a television, a radio or people talking to each other) have been picked up ${times} times and were left out; the student has not been told. Tell them now, once, in one or two short sentences at the start of this reply: you can hear other voices near them, so you may miss some of what they say; headphones or a quieter place will help, and they can turn their microphone off with the mic button while they listen and on again to speak, or type. Then go on from where the lesson is (a question you had asked and they have not answered is asked again, in a few words), and do not bring it up again`;
 }

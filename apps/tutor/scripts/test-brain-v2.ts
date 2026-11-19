@@ -44,7 +44,7 @@ import { speakGroups } from '../src/lib/tutor/voice/tts-pronunciation';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { mentionsTool, stripToolTalk } from '../src/lib/tutor/v2/tool-talk';
 import { isOwnVoice } from '../src/lib/tutor/v2/own-voice';
-import { ROOM_NOISY_AFTER, partialIsJudged, plainlyTheStudent, repliedBackground, roomCheckMessage, roomVoicesFact, waitsForCheck } from '../src/lib/tutor/v2/room-voices';
+import { ROOM_NOISY_AFTER, afterWords, partialIsJudged, plainlyTheStudent, repliedBackground, roomCheckMessage, roomVoicesFact, sameWords, studentPart, studentWordsIn, waitsForCheck } from '../src/lib/tutor/v2/room-voices';
 import { foldInterruptedTurn, trimToSpoken, V2_CUT_MARK } from '../src/lib/tutor/v2/interrupted';
 import { brainVersionOverrides, resolvePartnerSessionOptions, v2CanRunSession } from '../src/lib/tutor/portal/partner-session-options';
 
@@ -1068,6 +1068,20 @@ async function main() {
     const told = renderFacts(voiceS, newV2State(1_000_000), { nowMs: 1_060_000, roomVoices: ROOM_NOISY_AFTER });
     check('the tutor is told of the other voices, and to say so once', told.includes(roomVoicesFact(ROOM_NOISY_AFTER)) && /headphones or a quieter place/.test(told));
     check('not otherwise', !/other voices/.test(renderFacts(voiceS, newV2State(1_000_000), { nowMs: 1_060_000 })));
+    // The student's words out of a mixed stretch (local test, embed-1795054401972).
+    const run = 'tonight exclusive here in China I think students should write the first draft themselves how advanced the trifold phones';
+    check('the student\'s words are taken out of a mixed stretch', studentWordsIn('I think students should write the first draft themselves', run) === 'I think students should write the first draft themselves');
+    check('ALL hands the stretch back whole', studentWordsIn('ALL', run) === run && studentWordsIn(' all. ', run) === run);
+    check('NONE finds nothing', studentWordsIn('NONE', run) === null && studentWordsIn('None.', run) === null);
+    check('words that are not in the stretch are not trusted: the stretch goes whole', studentWordsIn('The student believes drafting matters for learning', run) === run);
+    check('nearly all of it kept is all of it', studentWordsIn(run.split(' ').slice(1).join(' '), run) === run);
+    check('an empty reply is the student', studentWordsIn('', run) === run);
+    check('read as the student\'s: the words picked out, or all of it', studentPart(false, 'I think so', run) === 'I think so' && studentPart(false, null, run) === run);
+    check('read as another voice: only words picked out from among the rest', studentPart(true, 'I think so', run) === 'I think so' && studentPart(true, null, run) === null && studentPart(true, run, run) === null);
+    check('words already taken are skipped', afterWords('a b c d e', 3) === 'd e' && afterWords('a b', 5) === '' && afterWords(' a b ', 0) === 'a b');
+    check('the same words, whatever the punctuation', sameWords('I think so.', 'i think so') && !sameWords('I think so', 'I think so too'));
+    check('a turn taken to speak of the other voices is not called a silence', !/has said nothing for/.test(renderFacts(voiceS, newV2State(1_000_000), { nowMs: 1_060_000, roomVoices: 2, silenceSeconds: 6 })) && /turn their microphone off with the mic button/.test(told));
+    check('and its opening line says why the tutor has the floor', /other voices in their room/.test(v2StudentBlock(null, { ...newV2State(0), history: [{ role: 'user', content: 'x' }] } as never, 6, undefined, undefined, undefined, 2)) && v2StudentBlock('hello', newV2State(0), undefined, undefined, undefined, undefined, 2) === 'hello');
     check('never in a typed session', !/other voices/.test(renderFacts({ ...voiceS, mode: 'text' }, newV2State(1_000_000), { nowMs: 1_060_000, roomVoices: 2 })));
     const body = { n: 0 as unknown };
     await streamV2Turn({ session: voiceS, state: newV2State(1), studentSaid: 'hi', roomVoices: 2, fetchImpl: (async (_u: unknown, init?: { body?: string }) => { body.n = JSON.parse(init?.body ?? '{}').roomVoices; throw new Error('stop'); }) as unknown as typeof fetch }).catch(() => undefined);

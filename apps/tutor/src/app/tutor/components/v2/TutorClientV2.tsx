@@ -9,6 +9,7 @@
  *
  * Not here yet: resume from a checkpoint, the agenda rail, the hard time stop.
  */
+import { Mic, MicOff } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, type MutableRefObject, type ReactNode } from 'react';
 import { V2FlagBar, V2_FLAGS_ON, type V2FlagState } from './V2FlagBar';
 import type { RealtimeHandle } from '@/lib/tutor/orchestrator/types';
@@ -69,7 +70,7 @@ export default function TutorClientV2(props: TutorClientV2Props) {
 }
 
 /** What the tutor is doing right now, for the composer's status chip. `heard`: the student's words so far. */
-export interface V2ComposerStatus { state: 'listening' | 'hearing' | 'processing' | 'thinking' | 'speaking' | 'error' | 'idle'; heard?: string; level?: number; /** No sound has come from the microphone yet. */ quiet?: boolean; /** The input device changed and the new one is being opened. */ micChanged?: boolean; /** Other voices have been heard in the room (room-voices.ts). */ room?: boolean }
+export interface V2ComposerStatus { state: 'listening' | 'hearing' | 'processing' | 'thinking' | 'speaking' | 'error' | 'idle'; heard?: string; level?: number; /** No sound has come from the microphone yet. */ quiet?: boolean; /** The input device changed and the new one is being opened. */ micChanged?: boolean; /** Other voices have been heard in the room (room-voices.ts). */ room?: boolean; /** The student has switched their microphone off. */ muted?: boolean }
 const STATUS_LOOK: Record<V2ComposerStatus['state'], { label: string; hint: string; dot: string; chip: string }> = {
   listening: { label: 'Listening', hint: 'Speak, or type here', dot: 'bg-emerald-500', chip: 'border-emerald-200 bg-emerald-50 text-emerald-800' },
   hearing: { label: 'Hearing you', hint: 'Keep going…', dot: 'bg-emerald-500', chip: 'border-emerald-300 bg-emerald-100 text-emerald-900' },
@@ -80,12 +81,16 @@ const STATUS_LOOK: Record<V2ComposerStatus['state'], { label: string; hint: stri
   idle: { label: 'Ready', hint: 'Type here', dot: 'bg-slate-400', chip: 'border-slate-200 bg-slate-50 text-slate-600' },
 };
 
+const MUTED_LOOK = { label: 'Mic off', hint: 'Your microphone is off. Tap the mic to talk, or type here', dot: 'bg-rose-500', chip: 'border-rose-200 bg-rose-50 text-rose-800' };
+
 /** The line the student types on, with what the tutor is doing beside it. v1's composer showed "Listening",
  *  "Hearing…" and the rest next to the box and the first v2 one showed nothing: a student could not tell
  *  whether they had been heard (Praveen, 2026-11-12). The chip names the state; while the student speaks, the
  *  box shows their words as they are recognised, so they can see what was heard before the tutor answers. */
-export function V2Composer({ composerSlot, closed, busy, onSend, placeholder, autoFocus, status }: { composerSlot?: ReactNode; closed: boolean; busy: boolean; onSend: (text: string) => void; placeholder: string; autoFocus?: boolean; status?: V2ComposerStatus }) {
-  const look = status && !closed ? STATUS_LOOK[status.state] : null;
+export function V2Composer({ composerSlot, closed, busy, onSend, placeholder, autoFocus, status, mic }: { composerSlot?: ReactNode; closed: boolean; busy: boolean; onSend: (text: string) => void; placeholder: string; autoFocus?: boolean; status?: V2ComposerStatus; /** Voice: the student's switch for their microphone. */ mic?: { muted: boolean; onToggle: () => void } }) {
+  // Switched off, the microphone is neither listening nor hearing, whatever the tutor is doing.
+  const micOff = !!status?.muted && (status.state === 'listening' || status.state === 'hearing' || status.state === 'processing');
+  const look = status && !closed ? (micOff ? MUTED_LOOK : STATUS_LOOK[status.state]) : null;
   const heard = status?.state === 'hearing' || status?.state === 'processing' ? (status.heard ?? '').trim() : '';
   const bars = [0.45, 0.8, 1, 0.7, 0.4];
   const level = Math.max(0, Math.min(1, status?.level ?? 0));
@@ -101,9 +106,15 @@ export function V2Composer({ composerSlot, closed, busy, onSend, placeholder, au
       }}
     >
       {composerSlot}
+      {mic && !closed && (
+        <button type="button" onClick={mic.onToggle} aria-pressed={mic.muted} data-v2-mic={mic.muted ? 'off' : 'on'} title={mic.muted ? 'Turn your microphone on' : 'Turn your microphone off'} aria-label={mic.muted ? 'Turn your microphone on' : 'Turn your microphone off'}
+          className={`shrink-0 rounded-lg p-2 ${mic.muted ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+          {mic.muted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+        </button>
+      )}
       {look && (
         <span role="status" aria-live="polite" data-v2-status={status?.state} className={`shrink-0 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${look.chip}`}>
-          {status?.state === 'listening' || status?.state === 'hearing' ? (
+          {!micOff && (status?.state === 'listening' || status?.state === 'hearing') ? (
             <span className="flex items-end gap-[2px] h-3.5" aria-hidden>
               {bars.map((b, i) => <span key={i} className={`w-[3px] rounded-full ${look.dot}`} style={{ height: `${Math.max(18, Math.round(100 * b * (status.state === 'hearing' ? Math.max(0.45, level) : Math.max(0.12, level))))}%`, transition: 'height 120ms ease-out' }} />)}
             </span>
@@ -124,7 +135,7 @@ export function V2Composer({ composerSlot, closed, busy, onSend, placeholder, au
         data-lpignore="true"
         autoFocus={autoFocus}
         disabled={closed}
-        placeholder={closed ? 'This session has ended' : heard ? `“${heard.slice(-90)}”` : look ? (status?.micChanged ? 'Your microphone changed. Switching to the new one… you can also type here' : status?.quiet && status.state === 'listening' ? 'No sound from your microphone yet. Speak, or type here' : status?.room && status.state === 'speaking' ? 'Other voices nearby: say "stop" or type to interrupt' : status?.room && status.state === 'listening' ? 'Other voices nearby: speak up, or type here' : look.hint) : placeholder}
+        placeholder={closed ? 'This session has ended' : micOff ? MUTED_LOOK.hint : status?.muted && status.state === 'speaking' ? 'Your microphone is off. Tap the mic or type to interrupt' : heard ? `“${heard.slice(-90)}”` : look ? (status?.micChanged ? 'Your microphone changed. Switching to the new one… you can also type here' : status?.quiet && status.state === 'listening' ? 'No sound from your microphone yet. Speak, or type here' : status?.room && status.state === 'speaking' ? 'Other voices nearby: say "stop" or type to interrupt' : status?.room && status.state === 'listening' ? 'Other voices nearby: speak up, or type here' : look.hint) : placeholder}
         className="flex-1 min-w-0 text-base sm:text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
       />
       <button type="submit" disabled={closed} className="shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50">

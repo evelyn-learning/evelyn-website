@@ -149,7 +149,7 @@ export function v2SessionPart(session: V2Session): string {
 }
 
 /** What goes in the user turn in place of the student's words when they have not spoken. */
-export function v2StudentBlock(studentSaid: string | null, state: V2State, silenceSeconds?: number, resumed?: boolean, session?: V2Session, timeCheck?: boolean): string {
+export function v2StudentBlock(studentSaid: string | null, state: V2State, silenceSeconds?: number, resumed?: boolean, session?: V2Session, timeCheck?: boolean, roomVoices?: number): string {
   if (studentSaid !== null) return studentSaid;
   if (!!discussionOf(session?.plan) && !resumed && state.history.length === 0) return DISCUSSION_OPENING;
   if (state.history.length === 0 && !resumed && session?.homework) return v2HomeworkOpener(session.homework);
@@ -159,6 +159,7 @@ export function v2StudentBlock(studentSaid: string | null, state: V2State, silen
   // After the tutor chose to wait and nothing more came: read as "has not replied", the tutor answered a student
   // it had kept waiting with "I'm here." (algebra, portal-02fd8638).
   if (timeCheck && state.history.length > 0) return '[No one has spoken. The session is nearly out of time: see the time below.]';
+  if (roomVoices && state.history.length > 0) return '[The student has not spoken to you. The microphone has been picking up other voices in their room: see below.]';
   if (Math.round(silenceSeconds ?? 0) === V2_WAITED_RECHECK_S) return '[The student has said nothing more: they had finished.]';
   return silenceSeconds ? '[The student has not replied.]' : '[The student sent nothing.]';
 }
@@ -320,7 +321,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   /** The first reply of the session: nothing has been said by either side. */
   const opening = !state.history.length && input.studentSaid === null;
   const discussion = !!discussionOf(session.plan);
-  const studentText = v2StudentBlock(input.studentSaid, state, input.facts?.silenceSeconds, input.facts?.resumed, session, input.facts?.timeCheck);
+  const studentText = v2StudentBlock(input.studentSaid, state, input.facts?.silenceSeconds, input.facts?.resumed, session, input.facts?.timeCheck, input.facts?.roomVoices);
   const dMeta = discussionOf(session.plan);
   if (dMeta && session.plan) syncDiscussionStages(state, session.plan, dMeta, nowMs);
   const untoldBefore = dMeta ? untoldCases(dMeta, state.history) : [];
@@ -353,7 +354,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   let firstTextMs: number | null = null;
   let modelCalls = 0;
 
-  const waitingOnTutor = session.mode === 'voice' && input.studentSaid === null && (input.facts?.timeCheck === true || [V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S].includes(Math.round(input.facts?.silenceSeconds ?? 0)));
+  const waitingOnTutor = session.mode === 'voice' && input.studentSaid === null && (input.facts?.timeCheck === true || !!input.facts?.roomVoices || [V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S].includes(Math.round(input.facts?.silenceSeconds ?? 0)));
   // A typed message is sent whole: there is nothing more to listen for. A tutor that kept listening to one sat
   // silent for four minutes (demo check, 2026-11-13; the voice client rechecks a silence, the typed one does not).
   const typedAndSent = session.mode === 'text' && input.studentSaid !== null;

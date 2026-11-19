@@ -94,7 +94,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   if (f.roomVoices && session.mode === 'voice') lines.push(roomVoicesFact(f.roomVoices));
   if (f.answerCheck) lines.push(`answer check: ${f.answerCheck}`);
   if (f.notSent) lines.push(`your first draft of this reply was not sent (the student never saw it: do not mention it): ${f.notSent}`);
-  if (f.silenceSeconds) lines.push(Math.round(f.silenceSeconds) === V2_NO_ASK_RECHECK_S
+  // A turn the tutor takes only to speak of the other voices is not a silence of the student's.
+  if (f.silenceSeconds && !f.roomVoices) lines.push(Math.round(f.silenceSeconds) === V2_NO_ASK_RECHECK_S
     ? `your last reply has finished and it ended on a statement: no question, and nothing for them to do. They are waiting for you to go on`
     : Math.round(f.silenceSeconds) === V2_WAITED_RECHECK_S
     ? `you kept listening after the student's last words, and they have said nothing more for ${V2_WAITED_RECHECK_S} seconds: they had finished. Take what they said as their answer and reply to it now, as you would have straight away: no remark about the wait, and no telling them you are here`

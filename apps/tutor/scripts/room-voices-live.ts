@@ -38,6 +38,52 @@ const CASES: Array<{ said: string; tutor: string; want: 'BACKGROUND' | 'STUDENT'
   { tutor: MATHS, want: 'STUDENT', said: 'why do we divide', earlier: ['tonight at eleven, a winter storm warning'] },
 ];
 
+const FIRST = "Talk to me as you would to a colleague, and stop me or ask me to repeat anything at any time. To begin: when you hear about students writing with AI, what's your first reaction?";
+/** Mixed stretches: `must` are words of the student's that have to come through; `mustNot` are the television's. */
+const MIXED: Array<{ tutor: string; run: string; must: string[]; mustNot: string[] }> = [
+  { tutor: FIRST, run: "tonight. exclusive here in China AI dominance. How advanced President Trump works that Chinese spy scandal and honestly my first reaction is worry because they stop thinking for themselves they just don't have fully phones like this", must: ['first reaction is worry', 'stop thinking for themselves'], mustNot: ['spy scandal', 'President Trump'] },
+  { tutor: FIRST, run: "They have trifold phones and cars with screens in the back seats I think it depends on how they use it the city filled with robots and food deliveries", must: ['depends on how they use it'], mustNot: ['trifold', 'robots'] },
+  { tutor: MATHS, run: "and back at home tonight dangerous floods battering both coasts is it two Florida underwater cars trapped", must: ['two'], mustNot: ['floods', 'Florida'] },
+  { tutor: MATHS, run: "the slope is four over two which is two", must: ['four over two', 'is two'], mustNot: [] },
+  { tutor: FIRST, run: "wait can you say the question again a winter storm warning for the whole county tonight at eleven", must: ['say the question again'], mustNot: ['winter storm'] },
+];
+const NOTHING: Array<{ tutor: string; run: string }> = [
+  { tutor: FIRST, run: "They have trifold phones and cars with screen items in the back seats. The city filled with robots and food deliveries" },
+  { tutor: FIRST, run: "And back at home tonight, dangerous floods battering both coasts, Florida underwater, cars trapped. First responders rescuing" },
+  { tutor: KELLY, run: "increase inflammation and gallbladder, severe stomach problems. Call your prescribers" },
+];
+
+async function extraction(): Promise<number> {
+  const { getModelClient } = await import('../src/lib/tutor/ai/model-registry');
+  const { ROOM_CHECK_SYSTEM, ROOM_EXTRACT_SYSTEM, repliedBackground, roomCheckMessage, studentPart, studentWordsIn } = await import('../src/lib/tutor/v2/room-voices');
+  const { client, model } = getModelClient('room-voices');
+  const text = (m: { content: Array<{ type: string; text?: string }> }) => (m.content[0]?.type === 'text' ? m.content[0].text ?? '' : '');
+  // As the endpoint does it: both readings at once, put together by studentPart.
+  const ask = async (tutor: string, run: string) => { const t0 = Date.now(); const content = roomCheckMessage({ tutorSaid: tutor, heard: run }); const [whole, picked] = await Promise.all([client.messages.create({ model, max_tokens: 8, temperature: 0, system: ROOM_CHECK_SYSTEM, messages: [{ role: 'user', content }] }), client.messages.create({ model, max_tokens: 300, temperature: 0, system: ROOM_EXTRACT_SYSTEM, messages: [{ role: 'user', content }] })]); return { got: studentPart(repliedBackground(text(whole)), studentWordsIn(text(picked), run), run), ms: Date.now() - t0 }; };
+  let lost = 0; let leaked = 0;
+  console.log('\nthe student\'s words out of a mixed stretch');
+  for (const c of MIXED) {
+    const { got, ms } = await ask(c.tutor, c.run);
+    const has = (w: string) => (got ?? '').toLowerCase().includes(w.toLowerCase());
+    const missing = c.must.filter((w) => !has(w)); const extra = c.mustNot.filter(has);
+    if (missing.length) lost += 1; if (extra.length) leaked += 1;
+    console.log(`${missing.length ? '✗' : extra.length ? '~' : '✓'} ${String(ms).padStart(5)} ms  ${JSON.stringify(got)}${missing.length ? `   MISSING ${JSON.stringify(missing)}` : ''}${extra.length ? `   television kept: ${JSON.stringify(extra)}` : ''}`);
+  }
+  for (const c of NOTHING) {
+    const { got, ms } = await ask(c.tutor, c.run);
+    if (got !== null) leaked += 1;
+    console.log(`${got === null ? '✓' : '~'} ${String(ms).padStart(5)} ms  nothing of the student's in: ${c.run.slice(0, 50)}${got === null ? '' : `   kept: ${JSON.stringify(got)}`}`);
+  }
+  // A stretch that is the student's alone must come through, whole or nearly so: this is what decides a turn.
+  for (const c of CASES) {
+    const { got } = await ask(c.tutor, c.said);
+    if (c.want === 'STUDENT' && got === null) { lost += 1; console.log(`✗ the student's own line found nothing: ${c.said}`); }
+    if (c.want === 'BACKGROUND' && got !== null) { leaked += 1; console.log(`~ another voice kept: ${c.said.slice(0, 60)}`); }
+  }
+  console.log(`\nextraction: ${lost} stretch(es) lost words of the student's; ${leaked} kept some of the television`);
+  return lost;
+}
+
 async function main() {
   if (process.env.TUTOR_TEST_LIVE !== '1') { console.log('skipped: set TUTOR_TEST_LIVE=1 to call the model'); return; }
   const { getModelClient } = await import('../src/lib/tutor/ai/model-registry');
@@ -56,6 +102,7 @@ async function main() {
   times.sort((a, b) => a - b);
   console.log(`\n${model}: ${CASES.length - wrong}/${CASES.length} right; ${lostStudent} student line(s) taken for background; median ${times[Math.floor(times.length / 2)]} ms, slowest ${times[times.length - 1]} ms`);
   // A student who is ignored is the costly mistake.
-  if (lostStudent) process.exit(1);
+  const lostWords = await extraction();
+  if (lostStudent || lostWords) process.exit(1);
 }
 main();
