@@ -157,8 +157,10 @@ async function main() {
     check('RichBoardText without the marker renders exactly as before (a maths note with a quoted word)', html(<RichBoardText text={mathsNote} titled />) === html(<RichBoardText text={mathsNote} titled quoted={undefined} stress={undefined} />) && !/text-decoration:underline/.test(html(<RichBoardText text={mathsNote} titled />)));
     const canvas = readFileSync(join(__dirname, '..', 'src', 'app', 'tutor', 'components', 'whiteboard', 'WhiteboardCanvas.tsx'), 'utf8');
     const at = canvas.indexOf("case 'annotate': {");
-    const body = canvas.slice(at, at + 3200);
-    check('WhiteboardCanvas passes the note\'s marker and stress to both note paths (rich and plain)', /quoted=\{noteMarks\.quoted\}/.test(body) && /<NoteTargetText /.test(body), body.slice(0, 400));
+    // The whole annotate case (to the next case label), not a fixed window: 7u's heading note grew the case above the two paths.
+    const end = canvas.indexOf("\n    case '", at + 1);
+    const body = canvas.slice(at, end > at ? end : undefined);
+    check('WhiteboardCanvas passes the note\'s marker and stress to both note paths (rich and plain)', /<RichBoardText [^\n]*quoted: noteMarks\.quoted, stress: noteMarks\.stress/.test(body) && /<NoteTargetText [^\n]*quoted=\{noteMarks\.quoted\} stress=\{noteMarks\.stress\}/.test(body), body.slice(0, 400));
     const cmd = mapFunctionCallToCommand('annotate', { text: B_NOTE_QUOTED, style: 'highlight', targets: true, stress: ['for'] }) as unknown as Record<string, unknown>;
     const plain = mapFunctionCallToCommand('annotate', { text: 'x', style: 'highlight', rich: true }) as unknown as Record<string, unknown>;
     check('the annotate command carries targets and stress; without them its keys are as before', cmd.targets === true && JSON.stringify(cmd.stress) === '["for"]' && JSON.stringify(Object.keys(plain)) === '["action","text","style","rich"]', [cmd, plain]);
