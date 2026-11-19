@@ -132,12 +132,12 @@ const capped = (plan: LessonPlan, index: number, step: V2SupportStep, on: boolea
 const words = (s: string) => v2SentenceWords(s);
 /** Fix round 1 (M2): the same target = any target word in common ("sold, machines" then "sold" is one entry). */
 const sameTarget = (a: readonly string[], b: readonly string[]) => { const x = new Set(a.flatMap(words)); return b.flatMap(words).some((w) => x.has(w)); };
-/** Task 7x fix round 1 (RETEST_ASKED, ruling): their sentence passes a retest when it holds every run of words the correction changed
- *  (v2ChangedWords of their sentence → the card's, each run whole: "machines to customers"), where those are known; else, and with the
- *  switch off, any target phrase as before. "I talk to customers" does not pass "I sell washing machines to customers". */
+/** Task 7x fix rounds 1–2 (RETEST_ASKED, ruling): their sentence passes a retest when it holds every target phrase whole ("washing
+ *  machines" and "to customers"); with the switch off, any one target phrase as before. "I talk to customers" does not pass. */
+// Fix round 2 (N2, ruling): every target phrase whole (each a changed run with its neighbour under RETEST_TARGET_CHANGED): a bare changed
+// word ("in" of "at Tokyo → in Tokyo") passed "I was in a meeting all day."
 function passesRetest(sentence: string, r: Pick<V2Retest, 'said' | 'right' | 'target'>, f: V2AdaptFlags): boolean {
-  const changed = askedOn(f) && changedOn(f) ? v2ChangedWords(r.said, r.right) : [];
-  return changed.length ? changed.every((x) => usesTarget(sentence, [x])) : usesTarget(sentence, r.target);
+  return askedOn(f) && r.target.length ? r.target.every((x) => usesTarget(sentence, [x])) : usesTarget(sentence, r.target);
 }
 const quoteTarget = (t: readonly string[]) => t.map((x) => `"${x}"`).join(', ');
 /** Their sentence holds a target word (a target phrase whole), whole words (numbers in words and digits alike). Fix round 1 (M1):

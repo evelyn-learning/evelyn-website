@@ -113,14 +113,13 @@ export function v2IsCheckIn(sentence: string): boolean {
 }
 
 /** Task 7x (REPEAT_THEN_WAIT): a sentence that asks THEM to say a sentence again: "Can you say the sentence once more?", "Please try that
- *  sentence again.", "Can you say the complete sentence?", "Say it after me.", 「もう一度言ってみてください」, 「繰り返してください」. Never
- *  advice for later ("Try to say it this way next time."). Fix round 1 (ruling): an ask directed at the learner only: an imperative, or a
- *  question to "you"; never the tutor saying it again ("Let me say it once more", 「もう一度言いますね」) or moving on ("Let's try again with
- *  a new question"). */
-const REPEAT_WHAT = String.raw`[^.?!]*?\b(?:again|once more|one more time|(?:the|that|this|your) (?:complete|whole|full|correct|corrected|new) sentence|after me)\b`;
-const REPEAT_EN = new RegExp(String.raw`^(?:(?:okay|ok|so|now|then|good|great|alright|all right|right|and)[,!.:]?\s+)*(?:please[,]?\s+)?(?:say|repeat|try|read)\b${REPEAT_WHAT}|\b(?:can|could|would|will) you\s+(?:please\s+)?(?:say|repeat|try|read)\b${REPEAT_WHAT}|\b(?:can|could|would|will) you\s+(?:please\s+)?repeat (?:it|that|this|the sentence)\b|^(?:(?:okay|ok|so|now|please)[,!.:]?\s+)*repeat (?:it|that|this|the sentence|that sentence|the whole sentence)\b|\byou (?:say|try|repeat)\b${REPEAT_WHAT}`, 'i');
-const NOT_THEIRS = /\b(?:let me|let'?s|let us|i'?ll|i will|i'?m going to|i am going to|i can)\b/i;
-const REPEAT_JA = /もう一度[^。！？?]*(?:言ってみて|言って(?:ください|もらえ|くれ)|言えますか|繰り返して|発音して(?:みて)?ください|読んでみて)|繰り返して(?:ください|みて)/;
+ *  sentence again.", "Almost, say it again.", "Let's say it together once more.", 「もう一度言ってみてください」, 「もう一度言ってみましょう」,
+ *  「一緒に言ってみましょう」, 「繰り返してください」. Never advice for later ("Try to say it this way next time."). Fix round 1 (ruling): never
+ *  the tutor saying it again itself ("Let me say it once more", 「もう一度言いますね」) or moving on ("Let's try again with a new question").
+ *  Fix round 2 (ruling): it only keeps the runtime from appending its own lines after the ask (turn.ts), so it is read wide. */
+const REPEAT_EN = /\b(?:say|repeat|try|read)\b[^.?!]*?\b(?:again|once more|one more time|(?:the|that|this|your) (?:complete|whole|full|correct|corrected|new) sentence|after me)\b|\brepeat (?:it|that|this|the sentence|that sentence|the whole sentence)\b/i;
+const NOT_THEIRS = /\b(?:let me|i'?ll|i will|i'?m going to|i am going to|i can)\b|\blet'?s\b[^.?!]*\b(?:new|next|another|different) (?:question|sentence|one|topic|word)\b/i;
+const REPEAT_JA = /もう一度[^。！？?]*(?:言って(?!います|いる|いた)|言いましょう|言えますか|繰り返し(?:て|ましょう)|発音し(?:て|ましょう)|読ん(?:で(?!います))|読みましょう)|一緒に[^。！？?]*(?:言って|言いましょう|繰り返|読みましょう|読んで)|繰り返して(?:ください|みて)|繰り返しましょう/;
 export function v2AsksRepeat(sentence: string): boolean {
   const s = sentence.trim();
   if (!s || LATER.test(s)) return false;

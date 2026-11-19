@@ -39,7 +39,7 @@ import { V2_JA_SCRIPT, v2AnswerAsksOrDeclines, v2GoForPart, v2AskedParts, v2Opti
 import { heardAsWords } from './heard';
 import { v2IsPracticeAsk, v2LanguagesSection } from './languages';
 import { v2ReadsByClauses } from './language-pack';
-import { v2AsksTheLearner, v2HandsOver, v2ReplyAsks, v2ReplyHandsOver, v2ReplySentences } from './one-question';
+import { v2AsksRepeat, v2AsksTheLearner, v2HandsOver, v2ReplyAsks, v2ReplyHandsOver, v2ReplySentences } from './one-question';
 import { V2_LEVEL_WAIT, V2_LEVEL_WAIT_OVER, V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2MarkLevelKnownParts, v2ReopenLevelCheck, v2WorkingLevelSection } from './working-level';
 import { V2_PRACTISE_PRONUNCIATION_TOOL, v2ArmClosesOnOtherAsk, v2ApplyPractisePronunciation, v2ConsumePronunciation, v2PronunciationOn, v2PronunciationSection, v2ScoredTurn } from './pronunciation';
 import { v2NoteCorrectedSentence, v2SentenceCardsOn, v2SentenceCardsSection } from './sentence-cards';
@@ -926,11 +926,13 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Task 7c (ASK_NO_CHECKIN): one question per reply, in spoken teaching lessons (the check-in's own guard reaches every
   // spoken lesson, below).
   const oneQuestion = gated && TUTOR_V2_ASK_NO_CHECKIN;
-  // Task 7x (REPEAT_THEN_WAIT): in a spoken language lesson, a reply to their practice answer that asks them to say a sentence again
-  // ends on that ask: a later question (spoken, or a question card) is left out (mic test 7, embed-1795100797999: five barge-ins, each
-  // his repeat over the next question). `repeatAsked`: an earlier model call of this reply asked for it.
-  const repeatWait = gated && repeatWaitOn;
-  let repeatAsked = false;
+  // Task 7x (REPEAT_THEN_WAIT), fix round 2 (ruling): the runtime appends none of its own lines (its check-in, a part-change ask, the
+  // "one more sentence" ask) to a reply whose last sentence asks the learner to say a sentence again; what the model wrote is never cut
+  // for it (7c's rules as before). A part ask then comes in the next reply (the page stays held, unasked). Spoken language lessons with a
+  // labelled plan (mic test 7, embed-1795100797999: five barge-ins, each his repeat over the next question).
+  // It refines 7c's one-question rule, so it runs only where that rule does (ASK_NO_CHECKIN off: the appends as before 7c).
+  const repeatGuard = oneQuestion && TUTOR_V2_REPEAT_THEN_WAIT && v2AdaptOn(session);
+  const endsOnRepeat = (text: string) => repeatGuard && v2AsksRepeat(v2ReplySentences(stripBoardBlocks(text)).pop() ?? '');
   // The part the runtime's replacement ask (after a dropped repeat) asked about, for the held page.
   let askedPart: { id: string; title: string } | null = null;
   // Task 7e fix round 1 (HELD_PART_RELEASE, review I2): the held part's page opens when the lesson moves INTO that part: a
@@ -1042,7 +1044,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       if (firstTextMs === null && t.trim()) firstTextMs = Date.now() - t0;
       saidChars += t.length; saidNow += t;
       input.onText?.(t);
-    }, { dropFrame: gated && TUTOR_V2_PART_OFFER_ONCE && !frameDue && !!session.plan, dropFrameIf, holdGoodbye, closeAsk, holdAsk: summaryDue, summaryBegun: V2_SUMMARY_BEGUN, dropCheckIn: oneQuestion, handedOver: oneQuestion && v2HandsOver(v2ReplySentences(saidNow).pop() ?? ''), ...(repeatWait ? { repeatWait: true, repeatAsked } : {}) });
+    }, { dropFrame: gated && TUTOR_V2_PART_OFFER_ONCE && !frameDue && !!session.plan, dropFrameIf, holdGoodbye, closeAsk, holdAsk: summaryDue, summaryBegun: V2_SUMMARY_BEGUN, dropCheckIn: oneQuestion, handedOver: oneQuestion && v2HandsOver(v2ReplySentences(saidNow).pop() ?? '') });
     const hold = (block: InlineBlock, part?: { index: number; title: string } | null) => {
       gate.flush(); gate.releaseAsk(); gate.dropTrailingCheckIn();
       // A held summary page with plan parts not reached: the offer names them and lets the student choose (Task 6e).
@@ -1064,7 +1066,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       // Task 7c (ASK_NO_CHECKIN): a reply that already asks something else gets no ask or offer after it (6e minor M1: the offer
       // of a part not reached; the 7a part ask after the model's own question): the page stays held, unasked, and the ask
       // comes on a later reply.
-      const unasked = oneQuestion && (!!missed || !askedNow) && v2ReplyHandsOver(saidNow);
+      const unasked = (oneQuestion && (!!missed || !askedNow) && v2ReplyHandsOver(saidNow)) || (!askedNow && endsOnRepeat(saidNow));
       const offer = unasked ? '' : missed ?? (askedNow ? '' : nextPart && plan ? v2PartAskLine({ next: nextPart.title, done: doneLabel, named: v2PartNamedLate(plan.segments[nextPart.index]!, saidNow), history: state.history }) : partOffer(named, namesPart(block.body, saidNow) || namesPart(named, saidNow)));
       heldAt = { raw: block.raw, offer, ...(plan && part && partFlow ? { part: { id: plan.segments[part.index]!.id, title: partLabel } } : {}), ...(unasked ? { unasked } : {}) };
       if (offer) { input.onText?.(`\n\n${unstar(offer)}`); saidChars += unstar(offer).length + 2; }
@@ -1174,7 +1176,6 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
             const noteAhead = (part.block.kind === 'note' || part.block.kind === 'table') && gated && languageLesson && TUTOR_V2_SAY_NOTE_SENTENCES ? noteSentencesToSay(part.block.kind, part.block.body, `${saidNow}${gate.heldAsk}`) : null;
             inlineTimed = TUTOR_V2_CARD_AT_SENTENCE && gated && languageLesson ? (sayAhead || noteAhead?.announced ? 'next' : 'text') : undefined;
             // Task 7x (REPEAT_THEN_WAIT): a question card after the repeat ask is not painted (out of the stored reply too).
-            if (repeatWait && part.block.kind === 'problem' && gate.waitsForRepeat) { inlineTimed = undefined; retitles.push([part.block.raw, '']); continue; }
             const before = inlineN;
             try { if (settleInline(part.block)) sinceWords.push(`inl_${nowMs.toString(36)}_${before + 1}`); } finally { inlineTimed = undefined; }
           }
@@ -1230,7 +1231,6 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     if (!gate.holdsGoodbye) gate.releaseAsk();
     // Task 7c fix round 1: this call's words are complete; a check-in straight after a hand-over ended them, and is dropped.
     gate.dropTrailingCheckIn();
-    if (gate.waitsForRepeat) repeatAsked = true;
     askDrops += gate.framesDroppedIf;
     for (const [from, to] of retitles.splice(0)) for (const b of response.content) if (b.type === 'text' && b.text.includes(from)) { b.text = b.text.replace(from, to); break; }
     // Task 7b: the runtime's card is stored where it was written, after the sentence that quotes it.
@@ -1659,7 +1659,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Fix round 1 (review I1): a part ask by v2PendingPart's tests (a part named, or a strict move-on frame), not any "ready?".
   const carriesPartAsk = () => TUTOR_V2_PART_POSITION_KEPT && !!session.plan && v2ReplySentences(stripBoardBlocks(spoken.join(' '))).some((x) => v2AsksPartChange(session.plan!, x));
   // Task 7f C: while the practice part is short, a dropped part ask is replaced by the ask for another sentence of theirs.
-  if (practiceShort && askDrops && !heldAt && !inviteWait && !state.closed && !input.signal?.aborted && spoken.length && !v2ReplyHandsOver(spoken.join(' ')) && !endsAsking(lastSentences(stripBoardBlocks(spoken.join(' ')), 1))) {
+  if (practiceShort && askDrops && !heldAt && !inviteWait && !state.closed && !input.signal?.aborted && spoken.length && !v2ReplyHandsOver(spoken.join(' ')) && !endsOnRepeat(spoken.join(' ')) && !endsAsking(lastSentences(stripBoardBlocks(spoken.join(' ')), 1))) {
     const words = v2PracticeMoreLine(state.history);
     input.onText?.(`\n\n${words}`);
     spoken.push(words);
@@ -1667,7 +1667,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const textBlock = [...((holder?.content as Anthropic.ContentBlockParam[] | undefined) ?? [])].reverse().find((c): c is Anthropic.TextBlockParam => c.type === 'text');
     if (textBlock) textBlock.text = `${textBlock.text}\n\n${words}`; else stored.push({ role: 'assistant', content: [{ type: 'text', text: words }] });
   }
-  if (askEvery && askDrops && !practiceShort && session.plan && !heldAt && !inviteWait && !state.closed && !input.signal?.aborted && spoken.length && !(oneQuestion && v2ReplyHandsOver(spoken.join(' '))) && !carriesPartAsk()) {
+  if (askEvery && askDrops && !practiceShort && session.plan && !heldAt && !inviteWait && !state.closed && !input.signal?.aborted && spoken.length && !(oneQuestion && v2ReplyHandsOver(spoken.join(' '))) && !endsOnRepeat(spoken.join(' ')) && !carriesPartAsk()) {
     const plan = session.plan;
     const cur = v2PartInHand(plan, state); const nx = v2NextPart(plan, state, cur);
     // Task 7r (PART_GO_NAMED): never an ask about the part they just said go to (mic test 5, 11.9 min).
@@ -1703,7 +1703,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // bare go opens it for as long as it waits.
     if (v2IsPartAsk(last)) owedPartAsked = true;
     else if (input.studentSaid !== null && v2ReadsByClauses(askLangs) && endsAsking(last, true) && V2_JA_SCRIPT.test(last)) { owedPartAsked = true; owedByPosition = !v2AskedParts(said, session.plan, askLangs).length; }
-    else if (!v2ReplyHandsOver(said) && !carriesPartAsk()) {
+    else if (!v2ReplyHandsOver(said) && !endsOnRepeat(said) && !carriesPartAsk()) {
       const plan = session.plan; const inHand = v2PartInHand(plan, state);
       const done = inHand >= 0 && plan.segments[inHand]!.kind !== 'hook' && !v2PartOf(plan.segments[inHand]!).skipWhenLevelKnown ? v2PartOf(plan.segments[inHand]!).label : undefined;
       const owedSeg = plan.segments.find((seg) => seg.id === owed.part);
@@ -1757,7 +1757,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // or say something (one-question.ts v2AsksTheLearner: 「私の後に繰り返してください。 international」 got "Does that make sense?", mic
   // test 5, embed-1795050656326), widening 7c's ASK_NO_CHECKIN test (off with it). An English-only lesson keeps its rule (v2ReplyAsks).
   const pronAsks = TUTOR_V2_PRONUNCIATION_PAGE && noteTargets && spoken.length > 0 && (toolCalls.some((c) => c.name === 'practise_pronunciation' && /^armed/.test(c.outcome)) || (TUTOR_V2_ASK_NO_CHECKIN && (session.languages?.length ?? 0) >= 2 && v2AsksTheLearner(stripBoardBlocks(spoken.join(' ')))));
-  if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && spoken.length && !framesDropped && !toolCalls.some((c) => c.name === 'keep_listening' || c.name === 'end_lesson') && !replyAsks && !pronAsks && !saysGoodbye) {
+  if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && spoken.length && !framesDropped && !toolCalls.some((c) => c.name === 'keep_listening' || c.name === 'end_lesson') && !replyAsks && !pronAsks && !saysGoodbye && !endsOnRepeat(spoken.join(' '))) {
     const ins = discussion ? DISCUSSION_CHECK_INS : V2_CHECK_INS;
     const words = ins[state.history.length % ins.length];
     input.onText?.(`\n\n${words}`);

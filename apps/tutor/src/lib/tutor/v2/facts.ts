@@ -318,14 +318,16 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // A typed language lesson: nothing is heard, so nothing is said about how it sounded (pronunciation.ts).
   lines.push(...v2TextSoundFacts(session));
   // Tries at one sentence, counted: at the second the correct sentence comes next (languages.ts).
-  if (!session.homework && !session.homeworkSheet && !discussion) lines.push(...v2RetryFacts(session.languages, state.history, f.heard));
+  const retryLines = !session.homework && !session.homeworkSheet && !discussion ? v2RetryFacts(session.languages, state.history, f.heard) : [];
+  lines.push(...retryLines);
   // Asks for one practice sentence, counted; a bare yes is no try (Task 6e fix round 1, F2).
   if (!session.homework && !session.homeworkSheet && !discussion) lines.push(...v2PracticeAskFacts(session.languages, state.history, f.heard));
   // Task 7s (PRACTISED_SENTENCE, STARTER_IS_ANSWER, QUESTION_NOT_NOTE): their asked-for sentence is practice, a starter opens the
   // answer, a question goes on a question card (practice-facts.ts; spoken lessons that teach a language only).
   lines.push(...v2PracticeFactLines(session, state, f.heard));
-  // Task 7x (REPEAT_THEN_WAIT): a correction's repeat ask ends the reply.
-  if (f.repeatWait) lines.push(V2_CORRECT_THEN_REPEAT_LINE);
+  // Task 7x (REPEAT_THEN_WAIT): a correction's repeat ask ends the reply. Fix round 2 (N3, ruling): not on a second try at one sentence:
+  // the tries line (the correct sentence said, no further try) wins.
+  if (f.repeatWait && !retryLines.length) lines.push(V2_CORRECT_THEN_REPEAT_LINE);
   // Task 7v (SUPPORT_FOLLOWED): the support step (the next question's form) and a retest stand beside the practice facts for the next
   // question, not at the end of the facts (mic test 6, embed-1795067373124: a third of new questions ignored the step).
   if (TUTOR_V2_SUPPORT_FOLLOWED && f.adaptive?.length) lines.push(...f.adaptive);

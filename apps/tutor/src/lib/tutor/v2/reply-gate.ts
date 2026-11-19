@@ -20,8 +20,7 @@
  * goodbye does not also ask for a retry no one can give (tester B's last reply).
  */
 import { TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PASSED_PART_CLOSE } from '../orchestrator/flags';
-import { asksAnywhere } from './board-timing';
-import { v2AsksInJapanese, v2AsksRepeat, v2HandsOver, v2IsCheckIn } from './one-question';
+import { v2HandsOver, v2IsCheckIn } from './one-question';
 
 /** The part-change frame: asking whether to go on, alone or with the question check. Matched on a whole sentence. */
 export const V2_PART_FRAME = /^(?:(?:so|okay|ok|now|then|great|good|alright|all right)[,!.]?\s+)*(?:shall we (?:go on|move on|continue|start)|are you ready (?:for (?:that|it|the next part|this)|to (?:go on|move on|start))|ready to (?:go on|move on))\b[^.?!]*\?["'”’]*$|^[^.?!]*\bor do you have (?:a|any) questions? (?:first|before we (?:go on|move on|start))\?["'”’]*$/i;
@@ -120,11 +119,6 @@ export interface ReplyGateOptions {
   dropCheckIn?: boolean;
   /** Task 7c: the reply's last sentence before this gate's words (an earlier model call of the same reply) handed over. */
   handedOver?: boolean;
-  /** Task 7x (REPEAT_THEN_WAIT): once a sentence asks them to say a sentence again (one-question.ts v2AsksRepeat), a later sentence
-   *  that asks anything (a question, a hand-over) is left out: the reply ends on the repeat ask, and the next question comes after it. */
-  repeatWait?: boolean;
-  /** Task 7x: an earlier model call of the same reply asked for the repeat. */
-  repeatAsked?: boolean;
 }
 
 export class ReplyGate {
@@ -157,19 +151,11 @@ export class ReplyGate {
    *  dropTrailingCheckIn) or goes on (then said, before what follows). */
   private checkIn: string | null = null;
 
-  /** Task 7x (REPEAT_THEN_WAIT): a sentence of this reply asked them to say a sentence again. */
-  private repeated: boolean;
-  /** Task 7x: questions left out after the repeat ask (for the stored reply, as `removed`). */
-  repeatDropped = 0;
-
-  constructor(private readonly out: (text: string) => void, private readonly opts: ReplyGateOptions) { this.handedOver = !!opts.handedOver; this.repeated = !!opts.repeatWait && !!opts.repeatAsked; }
-
-  /** Task 7x (REPEAT_THEN_WAIT): the reply has asked for the repeat (a question card after it is not painted, turn.ts). */
-  get waitsForRepeat(): boolean { return this.repeated; }
+  constructor(private readonly out: (text: string) => void, private readonly opts: ReplyGateOptions) { this.handedOver = !!opts.handedOver; }
 
   /** Nothing to drop or hold: words go out as they come, cut nowhere (fix round 2, N4: with the gate's work off, the
    *  stream is the stream as before it existed). A card waiting for the next sentence still holds them until then. */
-  private get passThrough(): boolean { return !this.opts.dropFrame && !this.opts.dropFrameIf && !this.opts.holdGoodbye && !this.opts.closeAsk && !this.opts.repeatWait && this.card === null && this.checkIn === null && !this.echoes.size; }
+  private get passThrough(): boolean { return !this.opts.dropFrame && !this.opts.dropFrameIf && !this.opts.holdGoodbye && !this.opts.closeAsk && this.card === null && this.checkIn === null && !this.echoes.size; }
 
   push(text: string): void {
     if (this.passThrough && !this.buf) { this.emit(text); return; }
@@ -224,7 +210,7 @@ export class ReplyGate {
    *  summary the reply asked twice. */
   dropAsk(): void {
     const a = this.ask; this.ask = null; if (a?.trim()) this.removed.push(a.trim());
-    if (a !== null) { const c = this.checkIn; this.checkIn = null; this.handedOver = false; if (c?.trim()) this.removed.push(c.trim()); this.repeated = !!this.opts.repeatWait && !!this.opts.repeatAsked; }
+    if (a !== null) { const c = this.checkIn; this.checkIn = null; this.handedOver = false; if (c?.trim()) this.removed.push(c.trim()); }
   }
   /** The summary begins here (a closing page opens): a waiting practice ask is dropped, and so is any later one. */
   summaryBegins(): void { if (!this.opts.closeAsk) return; this.drain(true); this.dropAsk(); this.summaryStarted = true; }
@@ -285,17 +271,13 @@ export class ReplyGate {
     if (this.opts.dropFrameIf && !this.holding && this.opts.dropFrameIf(core)) { this.removed.push(core); this.framesDroppedIf += 1; return; }
     if (this.holding || (this.opts.holdGoodbye && isGoodbye(core.replace(QUOTED_SPANS, ' ')))) { this.holding = true; this.heldParts.push(s); return; }
     if (this.opts.dropCheckIn) this.handedOver = v2HandsOver(core);
-    // Task 7x (REPEAT_THEN_WAIT): after the repeat ask, nothing more is asked in this reply.
-    // Fix round 1 (I1): the same ask in the other teaching language is no later question: it stays.
-    if (this.opts.repeatWait && this.repeated && !v2AsksRepeat(core) && (asksAnywhere([core]) || v2AsksInJapanese(core) || v2HandsOver(core))) { this.removed.push(core); this.repeatDropped += 1; return; }
-    if (this.opts.repeatWait && v2AsksRepeat(core)) this.repeated = true;
     if (this.opts.closeAsk && this.opts.holdAsk !== false && this.ask === null && this.opts.closeAsk(core)) { this.ask = s; return; }
     this.emit(s);
   }
 
   /** Words going out; a check-in waiting before them was not the reply's end, so it goes first. */
   private emit(text: string): void {
-    if (this.checkIn !== null && text.trim()) { const c = this.checkIn; this.checkIn = null; this.handedOver = false; if (this.opts.repeatWait && this.repeated) { if (c.trim()) this.removed.push(c.trim()); } else this.out(c); }
+    if (this.checkIn !== null && text.trim()) { const c = this.checkIn; this.checkIn = null; this.handedOver = false; this.out(c); }
     if (text) this.out(text);
   }
 }

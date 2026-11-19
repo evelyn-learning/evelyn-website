@@ -139,17 +139,26 @@ async function probe() {
   const live44 = await turn(lang, inPast(), T43, [{ text: T44_LIVE }], 9.0);
   const rep44 = await turn(lang, inPast(), T43, [{ text: T44_REPEAT }], 9.0);
   const repeated = await turn(lang, rep44.r.state, 'When I first joined my company, I filled in the joining form.', [{ text: 'Yes, that\'s right. What did you do on your first day at the company?' }], 9.3);
-  // Fix round 1 (I1): the repeat ask in both teaching languages: both stay, the question after them goes (either order).
-  const T44_BI = T44_REPEAT.replace('Can you say the sentence once more?', 'Can you say the sentence once more? もう一度言ってみてください。');
-  const T44_BI_REV = T44_REPEAT.replace('Can you say the sentence once more?', 'もう一度言ってみてください。 Can you say the sentence once more?');
+  // Fix round 2 (ruling): nothing the model wrote is cut after a repeat ask. The repeat ask in both languages (both orders, ましょう form).
+  const T44_BI = T44_REPEAT.replace('Can you say the sentence once more?', 'Can you say the sentence once more? もう一度言ってみましょう。');
+  const T44_BI_REV = T44_REPEAT.replace('Can you say the sentence once more?', 'もう一度言ってみましょう。 Can you say the sentence once more?');
   const bi = await turn(lang, inPast(), T43, [{ text: T44_BI }], 9.0);
   const biRev = await turn(lang, inPast(), T43, [{ text: T44_BI_REV }], 9.0);
-  // Fix round 1 (ruling): the tutor's own "once more" / a new question is no repeat ask: the question stays.
-  const ownAgain = await turn(lang, inPast(), T43, [{ text: 'We say "filled in the joining form." Let me say it once more: When I first joined my company, I filled in the joining form. What did you do on your first day?' }], 9.0);
-  const ownAgainJa = await turn(lang, inPast(), T43, [{ text: 'We say "filled in the joining form." もう一度言いますね。 When I first joined my company, I filled in the joining form. What did you do on your first day?' }], 9.0);
-  const newQ = await turn(lang, inPast(), T43, [{ text: 'Let\'s try again with a new question. What did you do on your first day?' }], 9.0);
-  // m6: a model-written check-in or part ask after the repeat ask is left out.
+  // Re-review m2: a quoted model sentence to repeat (a question) after "Repeat after me." / 繰り返して, and "Say it once more: "…"".
+  const m2a = await turn(lang, inPast(), T43, [{ text: 'Good. Repeat after me. "Have you ever worked abroad?" <board sentence>Have you ever worked abroad?</board>' }], 9.0);
+  const m2b = await turn(lang, inPast(), T43, [{ text: 'いいですね。私の後に繰り返してください。「Have you finished the report?」 <board sentence>Have you finished the report?</board>' }], 9.0);
+  const m2c = await turn(lang, inPast(), T43, [{ text: 'Good. Say it once more: "When I first joined my company, I filled in the joining form." <board sentence>When I first joined my company, I filled in the joining form.</board>' }], 9.0);
+  // A model-written check-in and part ask after the repeat ask: 7c's rules exactly (compared with the switch off in the child).
   const checkIn = await turn(lang, inPast(), T43, [{ text: T44_REPEAT.replace(/\n\nNext, tell me[\s\S]*$/, ' Does that make sense? Shall we go on to the conversation?') }], 9.0);
+  // The runtime's own check-in: "Almost, say it again." is no hand-over for 7c, so the check-in was appended; not after a repeat ask.
+  const ALMOST = 'Almost. We say "filled in". <board sentence stress="filled | in">When I first joined my company, I filled in the joining form.</board> Almost, say it again.';
+  const appendCheck = await turn(lang, inPast(), T43, [{ text: ALMOST }], 9.0);
+  // The runtime's owed part ask (a page held unasked): not appended after the repeat ask; made in the next reply.
+  const owedState = inPast({ practiceSaid: { 'past-simple': 3 }, heldPage: { title: 'Conversation', part: 'open-conversation', at: 1, unasked: true } });
+  const owed1 = await turn(lang, owedState, T43, [{ text: ALMOST }], 9.0);
+  const owed2 = await turn(lang, owed1.r.state, 'When I first joined my company, I filled in the joining form.', [{ text: 'Yes, that\'s right.' }], 9.3);
+  // Re-review N3: his repeat still wrong (try 2): the tries line, not the correct-then-repeat line.
+  const try2 = await turn(lang, rep44.r.state, 'When I first joined my company, I filled the joining form.', [{ text: 'We say "filled in": When I first joined my company, I filled in the joining form. What did you do next?' }], 9.3);
   // Fix round 1 (ruling): the quiet card in a free-conversation part with its corrections spent: no correct-then-repeat line.
   // First step for a grammar part with an opening question (Present perfect, opened on "Yes." to the Your job ask).
   const ppOpen = await turn(lang, base({ board: { pages: structuredClone(PAGES.slice(0, 2)), current: 1 }, goals: goalsThrough(2), partStart: { part: 'topic-intro', at: 2.8 * MIN }, practiceSaid: { 'topic-intro': 2 },
@@ -172,6 +181,11 @@ async function probe() {
   // A new correction on the target after the send: missed.
   // Fix round 1 (ruling, review e): a sentence with only a common phrase of the target ("to customers") does not pass.
   const falsePass = await turn(lang, p2.r.state, 'I have talked to customers every day.', [{ text: PP_CLEAN('I have talked to customers every day.', 'What do you talk about?') }], 6.0);
+  // Re-review N2: a one-word correction ("at Tokyo" → "in Tokyo", the mic6-7v psGap record): "in" alone does not pass; "in Tokyo" does.
+  const TOKYO: V2Retest = { part: 'topic-intro', said: 'I visited our field office at Tokyo last year.', right: 'I visited our field office in Tokyo last year.', target: ['in Tokyo'], turn: 10 };
+  const t1 = await turn(lang, inPP({ retests: [structuredClone(TOKYO)] }), 'I have worked there for three years.', [{ text: PP_CLEAN('I have worked there for three years.', 'Where have you travelled for work?') }], 5.2);
+  const tIn = await turn(lang, t1.r.state, 'I have been in a meeting all day.', [{ text: PP_CLEAN('I have been in a meeting all day.', 'Where have you travelled for work?') }], 5.6);
+  const tTokyo = await turn(lang, t1.r.state, 'I have worked in Tokyo for two years.', [{ text: PP_CLEAN('I have worked in Tokyo for two years.', 'What do you like there?') }], 5.6);
   const missed = await turn(lang, p2.r.state, 'I have sold washing machine for customers.', [{ text: 'We say: <board sentence stress="washing machines | to customers">I have sold washing machines to customers.</board> Can you say it once more?' }], 6.0);
 
   // Round trip of the new state.
@@ -195,8 +209,12 @@ async function probe() {
     live44: { spoken: live44.r.spoken, q: q(live44.r), facts: live44.facts }, rep44: { spoken: rep44.r.spoken, q: q(rep44.r), stored: stored(rep44.r) }, repeatedQ: q(repeated.r), repeatedSpoken: repeated.r.spoken,
     mathsRepeat: { spoken: mathsRepeat.r.spoken, facts: mathsRepeat.facts },
     p: [p1, p2, p3, p4, p5].map((x) => ({ facts: x.facts, retest: retest(x.r.state), events: (x.r.events ?? []).map((e) => `${e.type} ${e.message}`) })),
+    tokyoIn: (tIn.r.state.retests ?? [])[0] ?? null, tokyoInFacts: tIn.facts, tokyoTokyo: (tTokyo.r.state.retests ?? [])[0] ?? null,
     falsePass: retest(falsePass.r.state), falsePassFacts: falsePass.facts,
-    bi: { spoken: bi.r.spoken, q: q(bi.r) }, biRev: { spoken: biRev.r.spoken, q: q(biRev.r) }, ownAgain: ownAgain.r.spoken, ownAgainJa: ownAgainJa.r.spoken, newQ: newQ.r.spoken, checkIn: checkIn.r.spoken,
+    bi: { spoken: bi.r.spoken, q: q(bi.r) }, biRev: { spoken: biRev.r.spoken, q: q(biRev.r) }, checkIn: checkIn.r.spoken,
+    m2: [m2a, m2b, m2c].map((x) => ({ spoken: x.r.spoken, stored: stored(x.r), cards: x.r.toolCalls.filter((c) => c.name === 'show_sentence' && /^painted/.test(c.outcome)).map((c) => String(c.args.sentence)) })),
+    appendCheck: appendCheck.r.spoken, owed1: owed1.r.spoken, owed1Held: owed1.r.state.heldPage ?? null, owed2: owed2.r.spoken, try2Facts: try2.facts,
+    rep44Stored: stored(rep44.r),
     ppOpenFacts: ppOpen.facts, inv: [inv1.facts, inv2.facts, inv3.facts],
     optLeftRead: v2ScopeCarried(structuredClone(v2ReadClientState(JSON.parse(JSON.stringify(leave.r.state)))!), lang).optionalLeft?.[0] ?? null,
     optLeftMaths: v2ScopeCarried(structuredClone(v2ReadClientState(JSON.parse(JSON.stringify(leave.r.state)))!), maths).optionalLeft ?? null,
@@ -243,16 +261,17 @@ async function main() {
 
   console.log('3  REPEAT_THEN_WAIT: after a correction the tutor waits for the repeat');
   check('the facts of a reply to his practice answer carry the repeat-then-wait line', REPEAT_LINE.test(on.live44.facts));
-  check('T44 with a repeat ask: the reply ends on it; the next question and its card are left out (spoken and stored)', /Can you say the sentence once more\?\s*$/.test(on.rep44.spoken) && !/first day/.test(on.rep44.spoken) && on.rep44.q.length === 0 && !/first day/.test(on.rep44.stored), on.rep44);
+  check('fix round 2 (ruling): T44 with a repeat ask then a question: nothing cut (the question and its card stay, spoken and stored), as at 8f334150', /once more\?/.test(on.rep44.spoken) && /first day\?/.test(on.rep44.spoken) && on.rep44.q.length === 1 && /first day/.test(on.rep44Stored), on.rep44);
   check('T44 as live (no repeat ask): the next question and its card stay', /tell me about your first day/.test(on.live44.spoken) && on.live44.q.length === 1, on.live44);
-  check('after his repeat, the next question comes (its card painted)', /first day/.test(on.repeatedSpoken), on.repeatedSpoken);
-  check('fix round 1 (I1): the repeat ask said in English then Japanese: both stay; the next question and its card go', /once more\? もう一度言ってみてください。\s*$/.test(on.bi.spoken) && on.bi.q.length === 0, on.bi);
-  check('…and in the reverse order', /もう一度言ってみてください。\s*Can you say the sentence once more\?\s*$/.test(on.biRev.spoken) && on.biRev.q.length === 0, on.biRev);
-  check('fix round 1 (ruling): "Let me say it once more", 「もう一度言いますね」 and "Let\'s try again with a new question" are no repeat ask: the question stays', [on.ownAgain, on.ownAgainJa, on.newQ].every((x) => /What did you do on your first day\?/.test(x)), [on.ownAgain, on.ownAgainJa, on.newQ]);
-  check('m6: a check-in and a part ask the model wrote after the repeat ask are left out; the reply hands over (the runtime appends nothing after it)', /once more\?\s*$/.test(on.checkIn) && !/make sense|go on/.test(on.checkIn) && v2ReplyHandsOver(on.rep44.spoken), on.checkIn);
+  check('after his repeat, the next question comes', /first day/.test(on.repeatedSpoken), on.repeatedSpoken);
+  check('fix round 2: the repeat ask in English then 「もう一度言ってみましょう。」, and the reverse: both said, nothing cut', /once more\? もう一度言ってみましょう。/.test(on.bi.spoken) && /もう一度言ってみましょう。\s*Can you say the sentence once more\?/.test(on.biRev.spoken) && on.bi.q.length === 1 && on.biRev.q.length === 1, [on.bi, on.biRev]);
+  check('re-review m2: "Repeat after me. "Have you ever worked abroad?"", 「私の後に繰り返してください。「Have you finished the report?」」 and "Say it once more: "…"": the quote spoken, stored and carded', on.m2.every((x, i) => { const qt = ['Have you ever worked abroad?', 'Have you finished the report?', 'When I first joined my company, I filled in the joining form.'][i]!; return x.spoken.includes(qt) && x.stored.includes(qt) && x.cards.includes(qt); }), on.m2);
+  check('the runtime\'s check-in is not appended after a repeat ask ("Almost, say it again.")', /say it again\.\s*$/.test(on.appendCheck) && !/make sense|with me|clear/.test(on.appendCheck), on.appendCheck);
+  check('the runtime\'s owed part ask is not appended after the repeat ask (the page stays held, unasked); it is made in the next reply', /say it again\.\s*$/.test(on.owed1) && on.owed1Held?.unasked === true && /next is conversation/i.test(on.owed2), [on.owed1, on.owed1Held, on.owed2]);
+  check('re-review N3: his repeat still wrong (try 2): the tries line wins; no correct-then-repeat line', /tries: their words just now are try 2/.test(on.try2Facts) && !REPEAT_LINE.test(on.try2Facts), on.try2Facts.split('\n').filter((l) => /tries|after a correction/.test(l)));
   check('fix round 1 (ruling): the correct-then-repeat line is in a reply to a practice answer; not in the free-conversation part once its corrections aloud are spent', REPEAT_LINE.test(on.live44.facts) && REPEAT_LINE.test(on.convSecond) && !REPEAT_LINE.test(on.convThird));
-  check('a maths voice lesson: nothing dropped, no line', /What is 6 times 7\?/.test(on.mathsRepeat.spoken) && !REPEAT_LINE.test(on.mathsRepeat.facts));
-  check('v2AsksRepeat: asks directed at the learner, not advice for later, never the tutor saying it again', ['Can you say the sentence once more?', 'Can you say the complete sentence?', 'Can you try that sentence again?', 'Please say this after me: I have worked here.', 'Say it again, please.', 'Try again.', 'もう一度言ってみてください。', '繰り返してください。'].every(v2AsksRepeat) && !['Try to say it this way next time.', 'What did you do next?', 'Tell me about your first day.', 'Let me say it once more.', 'Let\'s try again with a new question.', 'I\'ll say it once more.', 'もう一度言いますね。'].some(v2AsksRepeat));
+  check('a maths voice lesson: nothing changed, no line', /What is 6 times 7\?/.test(on.mathsRepeat.spoken) && !REPEAT_LINE.test(on.mathsRepeat.facts));
+  check('v2AsksRepeat: asks directed at the learner, not advice for later, never the tutor saying it again', ['Can you say the sentence once more?', 'Can you say the complete sentence?', 'Can you try that sentence again?', 'Please say this after me: I have worked here.', 'Say it again, please.', 'Try again.', 'もう一度言ってみてください。', '繰り返してください。', 'Almost, say it again.', 'Let\'s say it together once more.', 'もう一度言ってみましょう。', '一緒に言ってみましょう。'].every(v2AsksRepeat) && !['Try to say it this way next time.', 'What did you do next?', 'Tell me about your first day.', 'Let me say it once more.', 'Let\'s try again with a new question.', 'I\'ll say it once more.', 'もう一度言いますね。'].some(v2AsksRepeat));
 
   console.log('4  RETEST_ASKED: re-tests get asked, and a late pass counts');
   const [p1, p2, p3, p4, p5] = on.p;
@@ -264,6 +283,7 @@ async function main() {
   check('…and still open after it (no "not asked" by turns)', !p4!.retest?.outcome && !p4!.events.some((e) => /outcome=not_asked/.test(e)), p4!.retest);
   check('T33: "I have sold more washing machines to customers." in that part = passed', p5!.retest?.outcome === 'passed' && p5!.events.some((e) => /v2_retest_outcome target="washing machines", "to customers" outcome=passed/.test(e)), [p5!.retest, p5!.events]);
   check('fix round 1 (ruling): "I have talked to customers every day." (only "to customers") does not pass; still open, no praise line', !on.falsePass?.outcome && !/retest: their answer just now uses/.test(on.falsePassFacts), on.falsePass);
+  check('re-review N2: "at Tokyo → in Tokyo": "I have been in a meeting all day." does not pass (no praise of "in Tokyo"); "I have worked in Tokyo…" does', !on.tokyoIn?.outcome && !/retest: their answer just now uses/.test(on.tokyoInFacts) && on.tokyoTokyo?.outcome === 'passed', [on.tokyoIn, on.tokyoTokyo]);
   check('the part left with it open: not asked', on.left.retest?.outcome === 'not_asked', on.left);
   check('a new correction on the target: missed', on.missed?.outcome === 'missed', on.missed);
 
@@ -281,22 +301,23 @@ async function main() {
   {
     const off = child('PART_FIRST_STEP');
     check('PART_FIRST_STEP off: the bare "begin that part" line; at 16.9 the summary page\'s line, no hold', /begin that part in this reply, and do not open its page again/.test(off.openedFacts) && !HOLD.test(off.heldOneFacts) && /summary page: lay the Summary page out/.test(off.heldOneFacts));
-    check('PART_FIRST_STEP off: the other items unchanged', NO_ALOUD.test(off.convThird) && off.rep44.q.length === 0 && off.p[4]!.retest?.outcome === 'passed');
+    check('PART_FIRST_STEP off: the other items unchanged', NO_ALOUD.test(off.convThird) && off.rep44.q.length === 1 && off.p[4]!.retest?.outcome === 'passed');
   }
   {
     const off = child('FREE_CONVERSATION');
     check('FREE_CONVERSATION off: the starter line as before, no corrections cap, no invitation', STARTER.test(off.convPlain) && !NO_ALOUD.test(off.convThird) && !INVITE.test(off.halfFacts) && off.thirdCount?.corrected === 2 && off.halfState === null, [off.thirdCount, off.halfState]);
-    check('FREE_CONVERSATION off: the other items unchanged', HOLD.test(off.heldOneFacts) && off.rep44.q.length === 0);
+    check('FREE_CONVERSATION off: the other items unchanged', HOLD.test(off.heldOneFacts) && REPEAT_LINE.test(off.live44.facts));
   }
   {
     const off = child('REPEAT_THEN_WAIT');
-    check('REPEAT_THEN_WAIT off: T44 with a repeat ask keeps its next question and card; no line', /first day/.test(off.rep44.spoken) && off.rep44.q.length === 1 && !REPEAT_LINE.test(off.live44.facts));
+    check('REPEAT_THEN_WAIT off: no line; the model\'s words after a repeat ask exactly as on (T44, the bilingual ask, the check-in case)', !REPEAT_LINE.test(off.live44.facts) && off.rep44.spoken === on.rep44.spoken && off.bi.spoken === on.bi.spoken && off.checkIn === on.checkIn && JSON.stringify(off.m2) === JSON.stringify(on.m2));
+    check('REPEAT_THEN_WAIT off: the runtime\'s owed part ask after "Almost, say it again." as before 7x (appended in that reply)', /say it again\.\s*\S/.test(off.owed1) && /next is conversation/i.test(off.owed1), off.owed1);
     check('REPEAT_THEN_WAIT off: the other items unchanged', HOLD.test(off.heldOneFacts) && INVITE.test(off.halfFacts));
   }
   {
     const off = child('RETEST_ASKED');
     check('RETEST_ASKED off: the old retest line, two sends, not asked after them; the late use is not scored', !RETEST.test(off.p[0]!.facts) && /retest of an earlier mistake: in the Your job part/.test(off.p[0]!.facts) && !/retest of an earlier mistake/.test(off.p[2]!.facts) && off.p[3]!.retest?.outcome === 'not_asked' && off.p[4]!.retest?.outcome === 'not_asked', off.p.map((x) => x.retest));
-    check('RETEST_ASKED off: the other items unchanged', HOLD.test(off.heldOneFacts) && off.rep44.q.length === 0);
+    check('RETEST_ASKED off: the other items unchanged', HOLD.test(off.heldOneFacts) && REPEAT_LINE.test(off.live44.facts));
   }
 
   console.log(`\n${passed} passed, ${failed} failed`);
