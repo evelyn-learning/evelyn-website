@@ -111,3 +111,17 @@ export function v2IsCheckIn(sentence: string): boolean {
   const s = sentence.trim();
   return CHECK_IN.test(s) || CHECK_IN_JA.test(s);
 }
+
+/** Task 7x (REPEAT_THEN_WAIT): a sentence that asks them to say a sentence again: "Can you say the sentence once more?", "Please try that
+ *  sentence again.", "Can you say the complete sentence?", "Say it after me.", 「もう一度言ってみてください」, 「繰り返してください」. Never
+ *  advice for later ("Try to say it this way next time."). */
+const REPEAT_EN = /\b(?:say|repeat|try|read)\b[^.?!]*?\b(?:again|once more|one more time|(?:the|that|this|your) (?:complete|whole|full|correct|corrected|new) sentence|after me)\b|\brepeat (?:it|that|this|the sentence|that sentence|the whole sentence)\b/i;
+const REPEAT_JA = /もう一度[^。！？?]*(?:言って|言い|言え|繰り返|発音|読ん)|繰り返して(?:ください|みて)/;
+export function v2AsksRepeat(sentence: string): boolean {
+  const s = sentence.trim();
+  if (!s || LATER.test(s)) return false;
+  return REPEAT_EN.test(s) || REPEAT_JA.test(s);
+}
+
+/** Task 7x (REPEAT_THEN_WAIT): the facts line of a reply to their practice answer in a spoken language lesson. */
+export const V2_REPEAT_WAIT_LINE = 'after a correction: if you ask them to say the corrected sentence again, that ask ENDS this reply (it is its one question): no next question, question card or offer after it; your next question comes in the reply after their repeat. Without such an ask you may go on to your next question';

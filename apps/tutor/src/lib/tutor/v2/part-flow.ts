@@ -20,6 +20,7 @@ import { V2_PART_FRAME_JA, isPartFrame } from './reply-gate';
 import type { V2Board, V2State } from './types';
 import { TUTOR_V2_LEVEL_CHECK_CHIP, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PART_ASK_LANGS, TUTOR_V2_PART_ASK_NAMED, TUTOR_V2_PART_GO_NAMED, TUTOR_V2_PART_ASK_CLAUSES, TUTOR_V2_PART_ENTERED, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PRACTICE_ON_PART_PAGE } from '../orchestrator/flags';
 import { v2LevelCheckBegun } from './level-check-count';
+import { v2PartFirstStepLine } from './optional-hold';
 import { V2_LANGUAGE_PACKS, v2EndingAsk, v2IsAskLead, v2WithoutFillers } from './language-pack';
 
 /** `history` (Task 7g, LEVEL_CHECK_CHIP): when present, a level check under way lights its chip before any goal is marked. */
@@ -736,9 +737,11 @@ export function v2HeldPageOwed(plan: LessonPlan, state: View & Pick<V2State, 'he
 
 /** The facts lines for part changes in a spoken lesson whose parts all have names (PART_ASK_EVERY). `opened`: the part whose
  *  page opened as this reply begins, on their yes. */
-export function v2PartAskFacts(plan: LessonPlan, state: View & Pick<V2State, 'heldPage' | 'history'>, opened?: string): string[] {
+/** Task 7x (PART_FIRST_STEP): `firstStep`, the plan's opening question of the part opened (optional-hold.ts): its line says to ask it. */
+export function v2PartAskFacts(plan: LessonPlan, state: View & Pick<V2State, 'heldPage' | 'history'>, opened?: string, firstStep?: string | null): string[] {
   const lines = ['part changes: at every change to the next plan part after the level check, close the part just done in one short line that says what was done, name the next part by its plan name in the ask itself ("Next is <its name>. …"), and ask whether they have a question first or would like to go on; never in the same words as an earlier ask in this lesson. Begin the next part only after they answer: its page opens then. Not before the summary or the close: going into the summary is not asked this way'];
-  if (opened) lines.push(`they said yes to going on: the "${opened}" page is open now, headed by the part's name; begin that part in this reply, and do not open its page again`);
+  if (opened && firstStep) lines.push(v2PartFirstStepLine(opened, firstStep));
+  else if (opened) lines.push(`they said yes to going on: the "${opened}" page is open now, headed by the part's name; begin that part in this reply, and do not open its page again`);
   else if (state.heldPage?.unasked && v2HeldPageOwed(plan, state)) lines.push(`part change owed: the "${state.heldPage.title}" page is waiting, and they have not been asked yet. Answer what they said first, then, in this reply, ask in one short line whether they have a question or would like to go on to ${v2PartNameSaid(state.heldPage.title)}, naming it`);
   else if (state.heldPage && v2TutorReplies(state.history) - state.heldPage.at <= V2_HELD_PAGE_REPLIES && !paged(plan, state.board, plan.segments.findIndex((s) => s.id === state.heldPage!.part))) lines.push(`part change waiting: they were asked whether to go on to the ${state.heldPage.title} part. If they asked something, answer it first and then ask again, in one short line in new words, whether to go on`);
   return lines;

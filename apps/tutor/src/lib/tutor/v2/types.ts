@@ -205,6 +205,9 @@ export interface V2State {
   support?: V2Support;
   /** Task 7q (RETEST_MISTAKE): corrections recorded for a retest in a later part (at most 5), and how each went. */
   retests?: V2Retest[];
+  /** Task 7x (FREE_CONVERSATION): in the free-conversation part in hand, the answers corrected (aloud or not) and whether a reply has
+   *  invited the learner to ask a question of their own (adaptive.ts). Reset when the part changes. */
+  freeConv?: { part: string; corrected: number; invited?: true };
   /** Task 7v (PART_CLOCK), spoken lessons with a labelled plan: the part in hand and when (lesson clock, ms) the lesson entered it.
    *  A part's own time is measured from here (time-fit.ts). */
   partStart?: { part: string; at: number };

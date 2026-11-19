@@ -351,6 +351,14 @@ export function v2AskedToProduce(history: Anthropic.MessageParam[]): boolean {
   const pairs = tail.map((x, i) => (i + 1 < tail.length ? `${x} ${tail[i + 1]}` : x));
   return tail.some((x) => MAKE_QUESTION.test(x) || SAY_GIVEN.test(x)) || pairs.some((x) => QUOTED_QUESTION_ASK.test(x));
 }
+/** Task 7x (FREE_CONVERSATION): the part of v2AskedToProduce that asks them to make a question of their own (not to say a given
+ *  sentence): "Now it's your turn to ask me a question…", 「質問をしてみてください」. On the reply `text` (board blocks are taken out). */
+export function v2AskedForQuestion(text: string): boolean {
+  const sentences = stripBoardBlocks(text).split(/(?<=[.!?。！？]["'”’」)]*)\s+|(?<=[。！？])/).map((x) => x.trim()).filter(Boolean);
+  const tail = sentences.slice(-3);
+  const pairs = tail.map((x, i) => (i + 1 < tail.length ? `${x} ${tail[i + 1]}` : x));
+  return tail.some((x) => MAKE_QUESTION.test(x)) || pairs.some((x) => QUOTED_QUESTION_ASK.test(x));
+}
 /** Task 7s: exported for the practised-sentence facts (practice-facts.ts): the same structural test. */
 export function v2AskedForSentence(history: Anthropic.MessageParam[], wide: boolean = TUTOR_V2_PRACTISED_SENTENCE): boolean { return askedForSentence(history, wide); }
 function askedForSentence(history: Anthropic.MessageParam[], wide: boolean = TUTOR_V2_PRACTISED_SENTENCE): boolean {

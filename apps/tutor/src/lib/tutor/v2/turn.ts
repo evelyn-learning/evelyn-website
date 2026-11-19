@@ -47,11 +47,12 @@ import { V2_SUMMARY_CARDS_FULL, v2SummaryCardsFull, v2SummaryGroupsOn } from './
 import { v2NoteCorrection, v2SummaryCardCheck } from './summary-marks';
 import { v2SummaryOpensCloseOn } from './summary-close';
 import { V2_CLOSE_CHECK_REFUSAL, v2CloseCheckOwed, v2CloseCheckPending } from './close-check';
-import { v2AdaptAfter, v2AdaptBefore, v2AdaptPart, v2PracticePairs } from './adaptive';
+import { v2NoteOptionalLeave, v2OptionalHold } from './optional-hold';
+import { v2AdaptAfter, v2AdaptBefore, v2AdaptOn, v2AdaptPart, v2FreeConvAfter, v2PracticePairs } from './adaptive';
 import { LearnerCardWatch, V2_REPLY_MISHEARD, v2CardIsFragment, v2LearnerCardsOn, v2OwedCardCheckLine, v2PracticeAnswerSentences, v2SentenceOnBoard, v2SentencesNotCarded } from './learner-card';
 import { v2StopAsked } from './stop-signal';
 import { V2_CLOSE_INVITE_LINE, V2_CLOSE_INVITE_REFUSAL, V2_CLOSE_INVITE_WAIT, V2_CLOSE_MORE_LINE, V2_CLOSE_REOPEN_REFUSAL, v2CloseInviteOn, v2CloseInviteOwed, v2CloseReopened, v2ReplyAsksMoreOrFinish, v2ReplyInvites } from './close-invite';
-import { TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_NOTE_TARGET_QUOTES, TUTOR_V2_NOTE_TARGET_MARK, TUTOR_V2_NOTE_STRESS_MARK, TUTOR_V2_NO_MARKDOWN_STARS, TUTOR_V2_CARD_GLOSS_SHOW, TUTOR_V2_SUPPORT_STEPS, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_PART_GO_NAMED, TUTOR_V2_PRONUNCIATION_PAGE, TUTOR_V2_FRAGMENT_CARD, TUTOR_V2_CARD_AT_SENTENCE, TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_RETEST_TARGET_CHANGED, TUTOR_V2_OPENING_PAGE_TITLE } from '../orchestrator/flags';
+import { TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_NOTE_TARGET_QUOTES, TUTOR_V2_NOTE_TARGET_MARK, TUTOR_V2_NOTE_STRESS_MARK, TUTOR_V2_NO_MARKDOWN_STARS, TUTOR_V2_CARD_GLOSS_SHOW, TUTOR_V2_SUPPORT_STEPS, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_PART_GO_NAMED, TUTOR_V2_PRONUNCIATION_PAGE, TUTOR_V2_FRAGMENT_CARD, TUTOR_V2_CARD_AT_SENTENCE, TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_RETEST_TARGET_CHANGED, TUTOR_V2_OPENING_PAGE_TITLE, TUTOR_V2_FREE_CONVERSATION, TUTOR_V2_REPEAT_THEN_WAIT } from '../orchestrator/flags';
 import { v2CardGlossOn, v2CleanGloss, v2GlossLevelOn } from './card-gloss';
 import { v2NoteTargetsOn, v2NoteTargetsSection, v2NoteHasTarget, v2NoteStressWords } from './note-targets';
 import { V2StarStrip, v2StripStars } from './markdown-stars';
@@ -132,7 +133,7 @@ export interface V2TurnInput {
   /** Task 7a fix round 1 (review M5), tests only: the PART_PAGE_CHIP / PART_ASK_EVERY switches for this turn (default: the flags). */
   partFlags?: { pageChip?: boolean; askEvery?: boolean };
   /** Task 7q, tests only: SUPPORT_STEPS / RETEST_MISTAKE for this turn (default: the flags). */
-  adaptFlags?: { support?: boolean; retest?: boolean; changed?: boolean; spread?: boolean; followed?: boolean };
+  adaptFlags?: { support?: boolean; retest?: boolean; changed?: boolean; spread?: boolean; followed?: boolean; free?: boolean; asked?: boolean };
   /** Task 7f, tests only: the time switches B–F for this turn (default: the flags; time-box.ts v2TimeFlags). */
   timeFlags?: Partial<V2TimeFlags>;
 }
@@ -588,8 +589,14 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Task 7q (SUPPORT_STEPS, RETEST_MISTAKE): the practice part their answer belongs to, and this turn's lines (adaptive.ts). Facts only.
   const adaptFlags = { ...input.adaptFlags, support: input.adaptFlags?.support ?? TUTOR_V2_SUPPORT_STEPS, retest: input.adaptFlags?.retest ?? TUTOR_V2_RETEST_MISTAKE };
   const adaptPart = v2AdaptPart(session, state);
+  // Task 7x (REPEAT_THEN_WAIT): a reply to their practice answer in a spoken language lesson with a labelled plan.
+  const repeatWaitOn = TUTOR_V2_REPEAT_THEN_WAIT && v2AdaptOn(session) && answerSentences.length > 0 && !state.closed;
   const adaptBefore = v2AdaptBefore(session, state, input.studentSaid, nowMs, adaptFlags);
-  const facts = renderFacts(session, state, { ...input.facts, nowMs, ...(adaptBefore.lines.length ? { adaptive: adaptBefore.lines } : {}), heard: input.studentSaid, time: tf, ...(practiceShort ? { practiceShort } : {}), ...(morePractice !== undefined ? { morePractice } : {}), ...(stopAsked ? { stopAsked: true } : {}), ...(levelReopened ? { levelReopened: true } : {}), ...(released ? { partOpened: String(released.args.title) } : {}), ...(input.partFlags?.askEvery !== undefined ? { partAskEvery: input.partFlags.askEvery } : {}), ...(droppedAsked ? { droppedAsked } : {}), ...(partVisit ? { partVisit } : {}), ...(partAhead ? { partAhead } : {}), ...(reopenAsked ? { reopenAsked: true } : {}), ...(optionalHeld && !closingTurn ? { optionalHeld } : {}) });
+  // Task 7x (PART_FIRST_STEP): their words in the optional part taken ask to leave it (not on the turn its page opened on their yes);
+  // then whether it is still held (optional-hold.ts). Facts only.
+  if (!released) v2NoteOptionalLeave(session, state, input.studentSaid, stopAsked);
+  const optionalHold = !closingTurn && !discussion ? v2OptionalHold(session, state, nowMs, marginMin) : null;
+  const facts = renderFacts(session, state, { ...input.facts, nowMs, ...(adaptBefore.lines.length ? { adaptive: adaptBefore.lines } : {}), heard: input.studentSaid, time: tf, ...(practiceShort ? { practiceShort } : {}), ...(morePractice !== undefined ? { morePractice } : {}), ...(stopAsked ? { stopAsked: true } : {}), ...(levelReopened ? { levelReopened: true } : {}), ...(released ? { partOpened: String(released.args.title) } : {}), ...(input.partFlags?.askEvery !== undefined ? { partAskEvery: input.partFlags.askEvery } : {}), ...(droppedAsked ? { droppedAsked } : {}), ...(partVisit ? { partVisit } : {}), ...(partAhead ? { partAhead } : {}), ...(reopenAsked ? { reopenAsked: true } : {}), ...(optionalHeld && !closingTurn ? { optionalHeld } : {}), ...(repeatWaitOn ? { repeatWait: true } : {}), ...(optionalHold ? { optionalHold } : {}) });
   // Task 7i (STAY_IN_PART): the unheard sentences are named in these facts once.
   delete state.unheard;
   // A reply that closes the session: the student's words ask to stop, or the time is up (V2_TIME_UP_MIN, as the facts
@@ -907,6 +914,11 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Task 7c (ASK_NO_CHECKIN): one question per reply, in spoken teaching lessons (the check-in's own guard reaches every
   // spoken lesson, below).
   const oneQuestion = gated && TUTOR_V2_ASK_NO_CHECKIN;
+  // Task 7x (REPEAT_THEN_WAIT): in a spoken language lesson, a reply to their practice answer that asks them to say a sentence again
+  // ends on that ask: a later question (spoken, or a question card) is left out (mic test 7, embed-1795100797999: five barge-ins, each
+  // his repeat over the next question). `repeatAsked`: an earlier model call of this reply asked for it.
+  const repeatWait = gated && repeatWaitOn;
+  let repeatAsked = false;
   // The part the runtime's replacement ask (after a dropped repeat) asked about, for the held page.
   let askedPart: { id: string; title: string } | null = null;
   // Task 7e fix round 1 (HELD_PART_RELEASE, review I2): the held part's page opens when the lesson moves INTO that part: a
@@ -1015,7 +1027,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       if (firstTextMs === null && t.trim()) firstTextMs = Date.now() - t0;
       saidChars += t.length; saidNow += t;
       input.onText?.(t);
-    }, { dropFrame: gated && TUTOR_V2_PART_OFFER_ONCE && !frameDue && !!session.plan, dropFrameIf, holdGoodbye, closeAsk, holdAsk: summaryDue, summaryBegun: V2_SUMMARY_BEGUN, dropCheckIn: oneQuestion, handedOver: oneQuestion && v2HandsOver(v2ReplySentences(saidNow).pop() ?? '') });
+    }, { dropFrame: gated && TUTOR_V2_PART_OFFER_ONCE && !frameDue && !!session.plan, dropFrameIf, holdGoodbye, closeAsk, holdAsk: summaryDue, summaryBegun: V2_SUMMARY_BEGUN, dropCheckIn: oneQuestion, handedOver: oneQuestion && v2HandsOver(v2ReplySentences(saidNow).pop() ?? ''), ...(repeatWait ? { repeatWait: true, repeatAsked } : {}) });
     const hold = (block: InlineBlock, part?: { index: number; title: string } | null) => {
       gate.flush(); gate.releaseAsk(); gate.dropTrailingCheckIn();
       // A held summary page with plan parts not reached: the offer names them and lets the student choose (Task 6e).
@@ -1141,6 +1153,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
             const sayAhead = part.block.kind === 'sentence' && gated && TUTOR_V2_SAY_SENTENCE_CARD && !learnerWatch?.isOwn(part.block.raw) ? sentenceCardToSay(part.block.body, `${saidNow}${gate.heldAsk}`, { leadIn: true, continuing: cardRun }) : null;
             const noteAhead = (part.block.kind === 'note' || part.block.kind === 'table') && gated && languageLesson && TUTOR_V2_SAY_NOTE_SENTENCES ? noteSentencesToSay(part.block.kind, part.block.body, `${saidNow}${gate.heldAsk}`) : null;
             inlineTimed = TUTOR_V2_CARD_AT_SENTENCE && gated && languageLesson ? (sayAhead || noteAhead?.announced ? 'next' : 'text') : undefined;
+            // Task 7x (REPEAT_THEN_WAIT): a question card after the repeat ask is not painted (out of the stored reply too).
+            if (repeatWait && part.block.kind === 'problem' && gate.waitsForRepeat) { retitles.push([part.block.raw, '']); continue; }
             const before = inlineN;
             try { if (settleInline(part.block)) sinceWords.push(`inl_${nowMs.toString(36)}_${before + 1}`); } finally { inlineTimed = undefined; }
           }
@@ -1196,6 +1210,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     if (!gate.holdsGoodbye) gate.releaseAsk();
     // Task 7c fix round 1: this call's words are complete; a check-in straight after a hand-over ended them, and is dropped.
     gate.dropTrailingCheckIn();
+    if (gate.waitsForRepeat) repeatAsked = true;
     askDrops += gate.framesDroppedIf;
     for (const [from, to] of retitles.splice(0)) for (const b of response.content) if (b.type === 'text' && b.text.includes(from)) { b.text = b.text.replace(from, to); break; }
     // Task 7b: the runtime's card is stored where it was written, after the sentence that quotes it.
@@ -1862,6 +1877,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       .map((c) => ({ sentence: String(c.args.sentence), stress: Array.isArray(c.args.emphasis) ? (c.args.emphasis as unknown[]).filter((x): x is string => typeof x === 'string') : [] }));
     adaptEvents.push(...v2AdaptAfter(session, state, adaptPart, answerSentences, v2PracticePairs(answerSentences, cards, (adaptFlags.changed ?? TUTOR_V2_RETEST_TARGET_CHANGED) && adaptFlags.retest), adaptFlags));
   }
+  // Task 7x (FREE_CONVERSATION): a reply in a free-conversation part that asked them to make a question of their own gave the invitation.
+  if (adaptPart && !input.signal?.aborted && spoken.length) v2FreeConvAfter(session, state, adaptPart, spoken.join(' '), adaptFlags.free ?? TUTOR_V2_FREE_CONVERSATION);
   // Task 7v (PART_CLOCK): a part this reply opened begins now.
   if (!input.signal?.aborted) v2MarkPartStart(session, state, nowMs);
   let finalWords = stripToolTalk(spoken.join('\n\n'));

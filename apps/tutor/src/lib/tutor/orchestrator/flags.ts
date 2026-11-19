@@ -2368,3 +2368,31 @@ export const TUTOR_V2_OPENING_PAGE_TITLE = process.env.NEXT_PUBLIC_TUTOR_V2_OPEN
  *  clock governs the part (spoken timed v2 lessons with a labelled plan). Mic test 7 (embed-1795100797999: it fired three times beside
  *  the part clock) (Task 7w, item 5). Default ON; NEXT_PUBLIC_TUTOR_V2_OVERLONG_QUIET=off ⇒ as before. */
 export const TUTOR_V2_OVERLONG_QUIET = process.env.NEXT_PUBLIC_TUTOR_V2_OVERLONG_QUIET !== 'off';
+
+/** Tutor brain v2 (v2/part-flow.ts, v2/optional-hold.ts, v2/facts.ts, v2/turn.ts): a part opened on the learner's yes begins with its
+ *  own first step from the plan (its opening question / choice, asked and waited for); an optional part that was taken is not left
+ *  before two items and, while it still fits, half of its own minutes, unless the learner asks to stop or move on, and the summary
+ *  page's lines are not in the facts meanwhile. Spoken lessons that teach a language with a labelled plan. Mic test 7
+ *  (embed-1795100797999, 16.3 min: the pronunciation part skipped its choice and ended after one word) (Task 7x, item 1). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_PART_FIRST_STEP=off ⇒ as before. */
+export const TUTOR_V2_PART_FIRST_STEP = process.env.NEXT_PUBLIC_TUTOR_V2_PART_FIRST_STEP !== 'off';
+
+/** Tutor brain v2 (v2/adaptive.ts, v2/turn.ts): in a part the plan marks as free conversation, no starter line unless the learner was
+ *  silent or asked for help, at most two corrections made aloud (later mistakes carded quietly, kept for the summary), and once, at half
+ *  the part's minutes, an invitation for the learner to ask the tutor a question. Spoken lessons that teach a language with a labelled
+ *  plan. Mic test 7 (embed-1795100797999: twelve starter questions, seven corrections, no question of the learner's) (Task 7x, item 2).
+ *  Default ON; NEXT_PUBLIC_TUTOR_V2_FREE_CONVERSATION=off ⇒ as before. */
+export const TUTOR_V2_FREE_CONVERSATION = process.env.NEXT_PUBLIC_TUTOR_V2_FREE_CONVERSATION !== 'off';
+
+/** Tutor brain v2 (v2/reply-gate.ts, v2/turn.ts, v2/one-question.ts): in a spoken language lesson, a reply to the learner's practice
+ *  answer that asks them to say a sentence again ends there: a later question in it (spoken or on a question card) is left out, and
+ *  the next question comes after their repeat. Mic test 7 (embed-1795100797999: five barge-ins, each his repeat over the next
+ *  question) (Task 7x, item 3). Default ON; NEXT_PUBLIC_TUTOR_V2_REPEAT_THEN_WAIT=off ⇒ as before. */
+export const TUTOR_V2_REPEAT_THEN_WAIT = process.env.NEXT_PUBLIC_TUTOR_V2_REPEAT_THEN_WAIT !== 'off';
+
+/** Tutor brain v2 (v2/adaptive.ts): the retest line is the instruction for the next question ("Your next question must make them
+ *  say …"), sent for up to three turns, and its outcome stays open until the part it was offered in ends: a later carded sentence of
+ *  theirs in that part using the target right = passed, a new correction on it = missed. Mic test 7 (embed-1795100797999: six
+ *  offered, none asked; a late right use two turns after the window closed) (Task 7x, item 4). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_RETEST_ASKED=off ⇒ as before. */
+export const TUTOR_V2_RETEST_ASKED = process.env.NEXT_PUBLIC_TUTOR_V2_RETEST_ASKED !== 'off';

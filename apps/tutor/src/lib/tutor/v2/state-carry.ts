@@ -92,7 +92,7 @@ export function v2ScopeCarried(state: V2State, session: Pick<V2Session, 'mode' |
   if (!v2CarryApplies(session)) { delete state.practiceSaid; delete state.moveOnAsked; delete state.cardsOwed; delete state.unheard; delete state.visitPages; delete state.partStart; }
   if (!session.plan || session.homework || session.homeworkSheet || discussionOf(session.plan)) delete state.timeFit;
   // Task 7q: the support step and the recorded corrections only for the lessons they run in (adaptive.ts v2AdaptOn).
-  if (!v2AdaptOn(session as V2Session)) { delete state.support; delete state.retests; }
+  if (!v2AdaptOn(session as V2Session)) { delete state.support; delete state.retests; delete state.freeConv; }
   // Task 7w (SUMMARY_MARKS): the corrections with their marks only for the lessons they are recorded in.
   if (!v2SummaryMarksOn(session as V2Session)) delete state.corrections;
   return state;

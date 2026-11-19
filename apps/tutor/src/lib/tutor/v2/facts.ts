@@ -7,7 +7,7 @@
 import { renderBoard } from './board';
 import { stripBoardBlocks } from './board-inline';
 import { TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_OPENER_FACT, TUTOR_V2_PART_ASK_EVERY, TUTOR_V2_PART_OFFER_ONCE } from '../orchestrator/flags';
-import { v2PartAskFacts, v2PlanLabelled } from './part-flow';
+import { v2PartAskFacts, v2PartOfPage, v2PlanLabelled } from './part-flow';
 import { v2FrameDue } from './part-close';
 import { v2HomeworkFacts, v2HomeworkGuardFacts, v2SheetFacts } from './homework-facts';
 import { renderGoalStatus, v2PartOfferFacts, v2PassedPartFact, v2UnreachedAtCloseFact } from './plan-map';
@@ -31,6 +31,10 @@ import { v2SummaryGroupsOn, v2SummaryLayoutLine } from './summary-layout';
 import { TUTOR_V2_ASK_ONE_TEST, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_SILENCE_AFTER_ASK } from '../orchestrator/flags';
 import { v2AsksTheLearner } from './one-question';
 import { SentenceStream } from './sentences';
+import { v2OptionalHoldLine, v2PartOpeningQuestion, type V2OptionalHold } from './optional-hold';
+import { v2AdaptOn } from './adaptive';
+import { TUTOR_V2_PART_FIRST_STEP } from '../orchestrator/flags';
+import { V2_REPEAT_WAIT_LINE } from './one-question';
 import { asksAnywhere } from './board-timing';
 
 /** After the tutor chose to keep listening: how long the student stays silent before it is told so (TutorVoiceV2).
@@ -89,6 +93,10 @@ export interface V2TurnFacts {
   partAhead?: string;
   /** Task 7q (SUPPORT_STEPS, RETEST_MISTAKE): the lines for this turn (adaptive.ts v2AdaptBefore, turn.ts). */
   adaptive?: string[];
+  /** Task 7x (REPEAT_THEN_WAIT): this reply answers their practice answer in a spoken language lesson (turn.ts). */
+  repeatWait?: boolean;
+  /** Task 7x (PART_FIRST_STEP): the optional part taken is held (optional-hold.ts v2OptionalHold). */
+  optionalHold?: V2OptionalHold;
 }
 
 /** A quoted span at the very start of a reply, in any of the quote pairs a tutor uses: 「…」, 『…』, “…”, "…", ‘…’, '…'. */
@@ -180,6 +188,14 @@ export function v2LastReplyAsked(history: V2State['history'], one: boolean = TUT
   return sentences.length > 0 && (asksAnywhere(sentences) || (one && v2AsksTheLearner(replyText(m))));
 }
 
+/** Task 7x (PART_FIRST_STEP): the plan's opening question of the part whose page `title` opened on their yes (spoken language lessons
+ *  with a labelled plan); null: none, or the switch off. */
+function v2OpenedFirstStep(session: V2Session, title: string, enabled: boolean = TUTOR_V2_PART_FIRST_STEP): string | null {
+  if (!enabled || !v2AdaptOn(session) || !session.plan) return null;
+  const i = v2PartOfPage(session.plan, title);
+  return i >= 0 ? v2PartOpeningQuestion(session.plan.segments[i]) : null;
+}
+
 export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts): string {
   const usedMin = Math.max(0, Math.round((f.nowMs - state.startedAtMs) / 60000));
   const discussion = !!discussionOf(session.plan);
@@ -190,7 +206,9 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // Task 7f: the time switches; "the time is up" at the box plus the margin for a taught lesson (F); the close by content (D).
   const tf = v2TimeFlags(f.time);
   const leftStop = discussion ? left : v2LeftToStopMin(session, state, f.nowMs, tf.overrun);
-  const closeOpen = !discussion && !!session.timeBoxMinutes && v2CloseOpen(session, state, f.nowMs, tf.closeByContent);
+  // Task 7x (PART_FIRST_STEP): while the optional part taken is held (optional-hold.ts), nothing in the facts says the summary may begin.
+  const optHold = !discussion && !f.stopAsked ? f.optionalHold ?? null : null;
+  const closeOpen = !discussion && !optHold && !!session.timeBoxMinutes && v2CloseOpen(session, state, f.nowMs, tf.closeByContent);
   // Task 6g: the summary has begun (turn.ts): "time for more" no longer stands (gdi-real-james, v2audio-6f: the review began,
   // and the next two replies offered more practice).
   const summaryBegun = v2SummaryBegun(state);
@@ -209,7 +227,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   const partUp = !discussion && !stay && !closeOpen && !summaryBegun && !morePracticeAllowed ? v2PartTimeUpLine(session, state, f.nowMs) : null;
   // Task 7v (OPTIONAL_FIT): the wrap is held for an optional part that fits.
   const held = !discussion && f.optionalHeld && !summaryBegun && !morePracticeAllowed ? v2OptionalHeldLine(f.optionalHeld) : null;
-  const timeTail = [stay, partUp, held].filter(Boolean).map((x) => `; ${x}`).join('');
+  const timeTail = [stay, partUp, held, optHold && !summaryBegun ? v2OptionalHoldLine(optHold) : null].filter(Boolean).map((x) => `; ${x}`).join('');
   const lines = [
     // A discussion runs 8–12 minutes and may close early once the person has chosen where to go next: the teaching
     // line's "time for more, not at its close" would hold it open.
@@ -241,7 +259,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     // not beside the passed-part line, which already says to offer it.
     // Task 7f D: near the close = the close is open (content done or the wrap minute), not the box's last fifth.
     // The required parts done is near too: an optional part not reached is then offered before the summary.
-    const near = tf.closeByContent ? closeOpen || (!!session.timeBoxMinutes && v2PlanContentDone(session.plan, state, true)) : !!session.timeBoxMinutes && left <= session.timeBoxMinutes * 0.2;
+    const near = optHold && !closing ? false : tf.closeByContent ? closeOpen || (!!session.timeBoxMinutes && v2PlanContentDone(session.plan, state, true)) : !!session.timeBoxMinutes && left <= session.timeBoxMinutes * 0.2;
     // Task 7v (OPTIONAL_FIT): an optional part that still fits by the 7i fit is never "no time for it now"; asked for at the close
     // while it fits, the droppedAsked line below says to take it up. Fix round 1 (m10): where the wrap is held for it too (spoken,
     // the fit decided on arrival); typed lessons as before.
@@ -255,8 +273,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     // Task 7d (CLOSE_INVITES_QUESTIONS): the summary reply ends by inviting their questions, and the lesson ends on their answer.
     // Task 7u (CLOSE_CHECK): the plan's check question is its own step before the invitation: while it is owed or waits for their
     // answer, its line stands in place of the invitation's (close-check.ts).
-    const check = discussion ? { lines: [], replacesInvite: false } : v2CloseCheckFacts(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun, heard: f.heard });
-    if (!discussion && !check.replacesInvite && !(morePracticeAllowed && typeof state.closeInvitedAt === 'number')) lines.push(...v2CloseInviteFacts(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun, moreTime: leftStop > V2_MORE_PRACTICE_MIN_LEFT }));
+    const check = discussion || (optHold && !closing) ? { lines: [], replacesInvite: false } : v2CloseCheckFacts(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun, heard: f.heard });
+    if (!discussion && !(optHold && !closing) && !check.replacesInvite && !(morePracticeAllowed && typeof state.closeInvitedAt === 'number')) lines.push(...v2CloseInviteFacts(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun, moreTime: leftStop > V2_MORE_PRACTICE_MIN_LEFT }));
     lines.push(...check.lines);
     // Task 7u (SUMMARY_GROUPS): near or at the close, before the summary has begun, the summary page's order (summary-layout.ts).
     if (!discussion && (closing || near) && !summaryBegun && !state.closed && v2SummaryGroupsOn(session)) {
@@ -304,6 +322,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // Task 7s (PRACTISED_SENTENCE, STARTER_IS_ANSWER, QUESTION_NOT_NOTE): their asked-for sentence is practice, a starter opens the
   // answer, a question goes on a question card (practice-facts.ts; spoken lessons that teach a language only).
   lines.push(...v2PracticeFactLines(session, state, f.heard));
+  // Task 7x (REPEAT_THEN_WAIT): a correction's repeat ask ends the reply.
+  if (f.repeatWait) lines.push(V2_REPEAT_WAIT_LINE);
   // Task 7v (SUPPORT_FOLLOWED): the support step (the next question's form) and a retest stand beside the practice facts for the next
   // question, not at the end of the facts (mic test 6, embed-1795067373124: a third of new questions ignored the step).
   if (TUTOR_V2_SUPPORT_FOLLOWED && f.adaptive?.length) lines.push(...f.adaptive);
@@ -325,7 +345,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   lines.push(...v2OpenerFact(session, state));
   // The question check at a part change, once in a while (Task 6e); at every part change in a spoken lesson whose plan parts
   // all have names (Task 7a, PART_ASK_EVERY).
-  if (session.plan && !discussion && v2AskEveryOn(session, f.partAskEvery)) lines.push(...v2PartAskFacts(session.plan, state, f.partOpened));
+  // Task 7x (PART_FIRST_STEP): the part opened on their yes begins with its own first step from the plan (its opening question).
+  if (session.plan && !discussion && v2AskEveryOn(session, f.partAskEvery)) lines.push(...v2PartAskFacts(session.plan, state, f.partOpened, f.partOpened ? v2OpenedFirstStep(session, f.partOpened) : null));
   else if (session.plan && !discussion) lines.push(...v2QuestionCheckFact(state));
   lines.push(`your note: ${state.note.trim() || '(empty — nothing written yet)'}`);
   const thinking = discussion ? renderThinking(state.thinking) : '';
