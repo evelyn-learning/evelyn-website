@@ -25,6 +25,7 @@
 import type { LessonPlan } from '../lesson-plan/types';
 import { TUTOR_V2_FREE_CONV_NO_STARTER, TUTOR_V2_FREE_CONVERSATION, TUTOR_V2_PART_CLOCK, TUTOR_V2_RETEST_QUESTION, TUTOR_V2_RETEST_ASKED, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_RETEST_SPREAD, TUTOR_V2_RETEST_TARGET_CHANGED, TUTOR_V2_STARTER_IS_ANSWER, TUTOR_V2_SUPPORT_FOLLOWED, TUTOR_V2_SUPPORT_STEPS } from '../orchestrator/flags';
 import { v2AskedForQuestion, v2CardIsOf, v2SentenceWords } from './learner-card';
+import { v2AsksRepeat } from './one-question';
 import { v2NoteTargetsOn } from './note-targets';
 import { v2PartInHand, v2PartViewed, v2PlanLabelled, v2TutorReplies } from './part-flow';
 import { v2PartOf } from './plan-map';
@@ -462,7 +463,8 @@ export function v2RetestQuestionLine(r: V2Retest): string {
  *  ("?" / "？"), a Latin-script one first (the language taught); null when it asked none. */
 export function v2QuestionOfReply(text: string): string | null {
   const flat = text.replace(/<board[\s\S]*?<\/board>/g, ' ').replace(/\[cut off[^\]]*\]/gi, ' ').replace(/\s+/g, ' ').trim();
-  const parts = flat.split(/(?<=[.!?。！？]["'”’」)]*)\s*/).map((x) => x.trim()).filter((x) => /[?？]["'”’」)]*$/.test(x));
+  // Fix round 1 (M3): never an ask to say a sentence again (a retry is no question another part could ask).
+  const parts = flat.split(/(?<=[.!?。！？]["'”’」)]*)\s*/).map((x) => x.trim()).filter((x) => /[?？]["'”’」)]*$/.test(x) && !v2AsksRepeat(x));
   const latin = parts.filter((x) => /[A-Za-z]/.test(x) && !/[\u3040-\u30ff\u4e00-\u9fff]/.test(x));
   const q = (latin.length ? latin : parts).pop();
   // A short lead before a colon ("I asked: What kind of…?") is not the question.

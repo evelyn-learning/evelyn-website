@@ -223,6 +223,11 @@ export interface V2State {
   /** Task 7w fix round 2 (N1): the check step's one end_lesson deferral was given after the summary began (lesson clock ms): the check is
    *  dropped from then on (close-check.ts). */
   closeCheckDeferredAt?: number;
+  /** Task 7z fix round 1 (UNHEARD_ASK_OWED, I2): the close step the last reply gave (the invitation or the check) and that reply's last
+   *  sentence, by state: set by the reply that records the step, read and cleared by the next turn (v2UnheardCloseAsks). */
+  closeAskLast?: { step: 'invite' | 'check'; last: string };
+  /** Task 7z fix round 1 (I1): the close steps already owed again once because they were not heard; never a second time. */
+  closeReowed?: Array<'invite' | 'check'>;
 }
 
 /** Task 7w: one correction of the lesson. `said`: their sentence; `sentence`: the card's; `stress`: the words the card changed. */

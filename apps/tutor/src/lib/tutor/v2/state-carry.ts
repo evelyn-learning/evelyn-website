@@ -24,7 +24,7 @@ export const V2_MAX_UNHEARD = 4;
  *  the close; final review I6: read whatever STATE_CARRY says, as the held page is (its own switch, CLOSE_INVITES_QUESTIONS,
  *  and its scope are applied in v2ScopeCarried): with STATE_CARRY off it was dropped every turn, and every close after the
  *  invitation was refused and the invitation asked again. */
-type Carried = Pick<V2State, 'heldPage' | 'summaryBegunAt' | 'repliesSinceBoard' | 'boardProblems' | 'closeInvitedAt' | 'closeReopened' | 'closeAsk' | 'closeCheck' | 'closeCheckLate' | 'closeCheckDeferredAt' | 'visitPages' | 'clockPausedMs' | 'timeFit' | 'practiceSaid' | 'moveOnAsked' | 'optionalLeft' | 'cardsOwed' | 'unheard' | 'partStart'>;
+type Carried = Pick<V2State, 'heldPage' | 'summaryBegunAt' | 'repliesSinceBoard' | 'boardProblems' | 'closeInvitedAt' | 'closeReopened' | 'closeAsk' | 'closeCheck' | 'closeCheckLate' | 'closeCheckDeferredAt' | 'closeAskLast' | 'closeReowed' | 'visitPages' | 'clockPausedMs' | 'timeFit' | 'practiceSaid' | 'moveOnAsked' | 'optionalLeft' | 'cardsOwed' | 'unheard' | 'partStart'>;
 const ID = /^[\w.:-]{1,80}$/;
 export function v2ReadCarried(raw: unknown, enabled: boolean = TUTOR_V2_STATE_CARRY): Carried {
   const s = (raw && typeof raw === 'object' ? raw : {}) as Partial<Record<keyof V2State, unknown>>;
@@ -61,6 +61,10 @@ export function v2ReadCarried(raw: unknown, enabled: boolean = TUTOR_V2_STATE_CA
   // Fix round 2 (N1): the check step's one deferral, spent after the summary began.
   const spent = v2ReadCloseCheckDeferred(s.closeCheckDeferredAt);
   if (spent) out.closeCheckDeferredAt = spent;
+  // Task 7z fix round 1 (UNHEARD_ASK_OWED): the close step the last reply gave and its last sentence (I2), the steps owed again once (I1).
+  const cal = s.closeAskLast as Partial<NonNullable<V2State['closeAskLast']>> | undefined;
+  if (cal && typeof cal === 'object' && (cal.step === 'invite' || cal.step === 'check') && typeof cal.last === 'string' && cal.last.trim()) out.closeAskLast = { step: cal.step, last: cal.last.slice(0, PROBLEM_CHARS) };
+  if (Array.isArray(s.closeReowed)) { const list = [...new Set(s.closeReowed.filter((x): x is 'invite' | 'check' => x === 'invite' || x === 'check'))]; if (list.length) out.closeReowed = list; }
   // Task 7v (PART_CLOCK): the part in hand and when the lesson entered it, whatever STATE_CARRY says (its own switch, read in
   // time-fit.ts; scope in v2ScopeCarried).
   const ps = s.partStart as Partial<NonNullable<V2State['partStart']>> | undefined;
@@ -91,8 +95,8 @@ export function v2CarryApplies(session: Pick<V2Session, 'mode' | 'plan' | 'homew
  *  `closeInvitedAt` is kept only for the lessons Task 7d applies to (close-invite.ts v2CloseInviteOn, its switch included);
  *  Task 7k's `closeReopened` likewise. */
 export function v2ScopeCarried(state: V2State, session: Pick<V2Session, 'mode' | 'plan' | 'homework' | 'homeworkSheet'> & Partial<Pick<V2Session, 'languages' | 'pronunciation'>>, closeInviteOn: boolean = v2CloseInviteOn(session)): V2State {
-  if (!v2CarryApplies(session)) { delete state.summaryBegunAt; delete state.repliesSinceBoard; delete state.boardProblems; delete state.closeInvitedAt; delete state.closeReopened; delete state.closeAsk; delete state.closeCheck; delete state.closeCheckLate; delete state.closeCheckDeferredAt; }
-  if (!closeInviteOn) { delete state.closeInvitedAt; delete state.closeReopened; delete state.closeAsk; delete state.closeCheck; delete state.closeCheckLate; delete state.closeCheckDeferredAt; }
+  if (!v2CarryApplies(session)) { delete state.summaryBegunAt; delete state.repliesSinceBoard; delete state.boardProblems; delete state.closeInvitedAt; delete state.closeReopened; delete state.closeAsk; delete state.closeCheck; delete state.closeCheckLate; delete state.closeCheckDeferredAt; delete state.closeAskLast; delete state.closeReowed; }
+  if (!closeInviteOn) { delete state.closeInvitedAt; delete state.closeReopened; delete state.closeAsk; delete state.closeCheck; delete state.closeCheckLate; delete state.closeCheckDeferredAt; delete state.closeAskLast; delete state.closeReowed; }
   // Task 7f: the practice count is the part flow's (spoken plan-led lessons); the time fit any timed taught lesson's with a plan.
   if (!v2CarryApplies(session)) { delete state.practiceSaid; delete state.moveOnAsked; delete state.cardsOwed; delete state.unheard; delete state.visitPages; delete state.partStart; }
   if (!session.plan || session.homework || session.homeworkSheet || discussionOf(session.plan)) delete state.timeFit;

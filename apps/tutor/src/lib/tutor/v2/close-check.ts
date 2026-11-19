@@ -19,7 +19,7 @@
  */
 import { TUTOR_V2_CLOSE_CHECK, TUTOR_V2_UNHEARD_ASK_OWED } from '../orchestrator/flags';
 import type { LessonPlan } from '../lesson-plan/types';
-import { v2CloseInviteOn, v2CloseInviteOwed, v2ReplyInvites } from './close-invite';
+import { v2CloseInviteOn, v2CloseInviteOwed } from './close-invite';
 import { v2NoteTargetsOn } from './note-targets';
 import { v2PlanLabelled } from './part-flow';
 import { v2SummaryOpensCloseOn } from './summary-close';
@@ -124,21 +124,38 @@ export function v2ReadCloseCheckDeferred(raw: unknown): number | undefined {
   return typeof raw === 'number' && Number.isFinite(raw) && raw > 0 ? raw : undefined;
 }
 
-/** Task 7z (UNHEARD_ASK_OWED): before the turn (mutates `state`): a close step whose ask is among the sentences of the last reply the
- *  learner did not hear (state.unheard, the client's record of a barge-in) is not counted as given and is owed again:
- *  - the invitation (closeInvitedAt set and an unheard sentence that invites their questions): closeInvitedAt clears (7d owes it again);
- *  - the check question (asked and not yet answered, and an unheard sentence that asks a question other than the invitation): the
- *    record clears, and once the summary has begun the check is owed in this reply (closeCheckLate, used up after it, as 7w's late check).
- *  Never when their words ask to stop. Mic test 8 (embed-1795115593161, T103: "Do you have any questions before we finish?" cut 0.8 s
- *  in, counted asked; the next reply said goodbye). Returns what it re-owed. */
+/** Task 7z (UNHEARD_ASK_OWED): before the turn (mutates `state`): a close step the last reply gave whose ask the learner did not hear is
+ *  not counted as given and is owed again. Fix round 1 (I2, ruling): decided by state and position only, never by the words: the reply
+ *  that recorded the step left `closeAskLast` (the step and its last sentence), and that last sentence is among the sentences the learner
+ *  did not hear (state.unheard, the client's record of a barge-in). The invitation: closeInvitedAt clears (7d owes it again). The check
+ *  (asked, not answered): its record clears, and once the summary has begun it is owed in this reply (closeCheckLate, used up after it).
+ *  Fix round 1 (I1, ruling): each step is owed again at most once (closeReowed); after its second ask it counts as given, heard or not.
+ *  Never when their words ask to stop. Mic test 8 (embed-1795115593161, T103: the invitation cut 0.8 s in, counted asked; the next reply
+ *  said goodbye). `closeAskLast` is used up here every turn. Returns what it re-owed. */
 export function v2UnheardCloseAsks(session: V2Session, state: V2State, ctx: { nowMs: number; stopAsked: boolean; enabled?: boolean }): { invite: boolean; check: boolean } {
   const none = { invite: false, check: false };
-  if (!(ctx.enabled ?? TUTOR_V2_UNHEARD_ASK_OWED) || ctx.stopAsked || state.closed || !state.unheard?.length || !v2CloseInviteOn(session)) return none;
-  const unheard = state.unheard.map((x) => x.trim()).filter(Boolean);
-  const invite = typeof state.closeInvitedAt === 'number' && unheard.some((x) => v2ReplyInvites(x));
-  if (invite) { delete state.closeInvitedAt; delete state.closeAsk; }
-  const check = !invite && !!state.closeCheck && typeof state.closeCheck.answeredAt !== 'number' && typeof state.closeInvitedAt !== 'number'
-    && unheard.some((x) => /[?？]["'”’」)]*$/.test(x) && !v2ReplyInvites(x));
-  if (check) { delete state.closeCheck; if (typeof state.summaryBegunAt === 'number') state.closeCheckLate = ctx.nowMs; }
-  return { invite, check };
+  const last = state.closeAskLast; delete state.closeAskLast;
+  if (!(ctx.enabled ?? TUTOR_V2_UNHEARD_ASK_OWED) || !last || ctx.stopAsked || state.closed || !state.unheard?.length || !v2CloseInviteOn(session)) return none;
+  if ((state.closeReowed ?? []).includes(last.step)) return none;
+  const key = (x: string) => x.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  if (!key(last.last) || !state.unheard.some((x) => key(x) === key(last.last))) return none;
+  if (last.step === 'invite' && typeof state.closeInvitedAt === 'number') {
+    delete state.closeInvitedAt; delete state.closeAsk;
+    state.closeReowed = [...(state.closeReowed ?? []), 'invite'];
+    return { invite: true, check: false };
+  }
+  if (last.step === 'check' && state.closeCheck && typeof state.closeCheck.answeredAt !== 'number' && typeof state.closeInvitedAt !== 'number') {
+    delete state.closeCheck; if (typeof state.summaryBegunAt === 'number') state.closeCheckLate = ctx.nowMs;
+    state.closeReowed = [...(state.closeReowed ?? []), 'check'];
+    return { invite: false, check: true };
+  }
+  return none;
+}
+
+/** Task 7z fix round 1 (I2): after the reply (mutates `state`): the close step this reply recorded (closeInvitedAt or closeCheck.askedAt
+ *  set to this turn's time) and the reply's last sentence, for the next turn's v2UnheardCloseAsks. */
+export function v2NoteCloseAskLast(state: V2State, nowMs: number, lastSentence: string, enabled: boolean = TUTOR_V2_UNHEARD_ASK_OWED): void {
+  if (!enabled || state.closed || !lastSentence.trim()) return;
+  if (state.closeInvitedAt === nowMs) state.closeAskLast = { step: 'invite', last: lastSentence.trim() };
+  else if (state.closeCheck?.askedAt === nowMs && typeof state.closeCheck.answeredAt !== 'number') state.closeAskLast = { step: 'check', last: lastSentence.trim() };
 }

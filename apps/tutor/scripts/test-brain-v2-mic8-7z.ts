@@ -108,13 +108,13 @@ const closeBoard = () => ({ pages: [...structuredClone(PAGES), structuredClone(P
 /** The state as T104's turn gets it: the check asked (T101) and answered (T102), the invitation recorded (T103), and T103 cut 0.8 s in. */
 const atT104 = (unheard: boolean, extra: Partial<V2State> = {}): V2State => {
   const st = base({ board: closeBoard(), goals: goalsThrough(7), partStart: { part: 'pronunciation', at: 15.2 * MIN }, summaryBegunAt: 17.9 * MIN,
-    closeCheck: { askedAt: 17.9 * MIN, answeredAt: 18.6 * MIN }, closeInvitedAt: 18.6 * MIN,
+    closeCheck: { askedAt: 17.9 * MIN, answeredAt: 18.6 * MIN }, closeInvitedAt: 18.6 * MIN, closeAskLast: { step: 'invite', last: T103_SENTENCES[2]! },
     history: [u('x'), a(T89), u('Yes, pronunciation.'), a(`<board page>Pronunciation</board>\n${T91}`), u('Uh, complete sentence.'), a(T101), u(T102), a(T103)], ...extra });
   return unheard ? trimToSpoken(st, T103_SENTENCES, 0, true) : st;
 };
 /** The state as T102's turn gets it: the check card asked by T101 (pending), unheard when `unheard`. */
 const atT102 = (unheard: boolean): V2State => {
-  const st = base({ board: closeBoard(), goals: goalsThrough(7), partStart: { part: 'pronunciation', at: 15.2 * MIN }, summaryBegunAt: 17.9 * MIN, closeCheck: { askedAt: 17.9 * MIN },
+  const st = base({ board: closeBoard(), goals: goalsThrough(7), partStart: { part: 'pronunciation', at: 15.2 * MIN }, summaryBegunAt: 17.9 * MIN, closeCheck: { askedAt: 17.9 * MIN }, closeAskLast: { step: 'check', last: 'Before we finish, can you explain the difference between these two sentences?' },
     history: [u('x'), a(T89), u('Yes, pronunciation.'), a(`<board page>Pronunciation</board>\n${T91}`), u('Uh, complete sentence.'), a(T101)] });
   return unheard ? trimToSpoken(st, ['Your score was 93 out of 100.', 'Let\'s review what we practised today.', 'Before we finish, one check question.', 'Before we finish, can you explain the difference between these two sentences?'], 3, true) : st;
 };
@@ -130,6 +130,12 @@ const T71_QUIET = 'Good, you have a clear goal there. <board sentence>I sell mor
 const T18 = 'Of course. I asked: What kind of customers did you sell to in China? 「中国でどんなお客様に売りましたか？」\n\nPlease answer with one short sentence.';
 const T19 = 'Um, uh, retail customer, um, uh, they need, um, machine to clean cloth.';
 const T20 = 'Good, I understand: the customers are shops that sell to people. One point: for one machine, we say "a machine". <board sentence stress="a machine">Retail customers need a machine to clean clothes.</board> Can you say that sentence once more?';
+// T10–T12 (wall 01:50–02:20): the ask, his answer, the correction that ends on a Japanese repeat ask.
+const T10 = '仕事について話すときは、短い文で大丈夫です。\n\nでは練習です。仕事で何をしているか、一文か二文で答えてください。\n\nWhat do you do at work? Answer with one or two sentences.';
+const T11 = 'I sell washing machine to customer.';
+const T12 = 'いいですね、意味がよく伝わります。一つだけ直しましょう。「washing machine」と「customer」は複数形にします。\n\n<board sentence stress="washing machines | customers">I sell washing machines to customers.</board>\n\nもう一度言ってみてください。';
+const jobT10 = () => base({ board: { pages: [{ title: 'Overview', items: [] }, { title: 'Your job', items: [] }], current: 1 }, goals: goalsThrough(2), partStart: { part: 'topic-intro', at: 2.0 * MIN },
+  history: [u('x'), a('Next is Your job. Would you like to go on, or do you have a question first?'), u('Uh, go on.'), a(`<board page>Your job</board>\n${T10}`)] });
 const inJob = () => base({ board: { pages: structuredClone(PAGES.slice(0, 2)).map((p, i) => (i === 1 ? { ...p, items: [] } : p)), current: 1 }, goals: goalsThrough(2), partStart: { part: 'topic-intro', at: 2.0 * MIN },
   history: [u('x'), a('Next is Your job. Would you like to go on, or do you have a question first?'), u('Uh, go on.'), a('<board page>Your job</board>\nWhat do you do at work?'), u('I sold machine in China too last year.'), a('Good. What kind of customers did you sell to in China?'), u('Uh, can you repeat?'), a(T18)] });
 const inPP = (extra: Partial<V2State> = {}) => base({ board: { pages: structuredClone(PAGES.slice(0, 3)), current: 2 }, goals: goalsThrough(2), partStart: { part: 'present-perfect', at: 4.85 * MIN },
@@ -153,6 +159,21 @@ async function probe() {
   const stop = await turn(lang, atT104(true), 'Sorry, I have to finish now. Goodbye.', [{ text: 'Of course. Thank you for today\'s lesson, and see you next time!', tools: [{ name: 'end_lesson', input: { summary: 'x', because: 'student_asked' } }] }], 19.1);
   const checkUnheard = await turn(lang, atT102(true), T102, [{ text: 'Good. Before we finish, can you explain the difference between these two sentences in your own words?' }], 18.6);
   const checkHeard = await turn(lang, atT102(false), T102, [{ text: 'Good reading. Can you say the difference in your own words?' }], 18.6);
+  // Fix round 1 (I2): the reply that records the invitation leaves its last sentence (state, by position).
+  const t103 = await turn(lang, atT102(false), T102, [{ text: T103 }], 18.6);
+  // Fix round 1 (I1): unheard a second time: no longer owed; the next reply may say goodbye and end.
+  const again = trimToSpoken(structuredClone(unheard.r.state), unheard.r.spoken.split(/(?<=[.!?])\s+/).map((x) => x.trim()).filter(Boolean), 0, true);
+  const twice = await turn(lang, again, 'No, no questions.', [{ text: 'Thank you for today\'s lesson, and see you next time!', tools: [END] }], 19.5);
+  // Fix round 1 (I2): no wording dependence: an unusually worded invitation, its last sentence unheard / not unheard.
+  const ODD = 'Anything on your mind before we wrap up today?';
+  const oddState = (unheardList: string[]) => ({ ...atT104(false, { closeAskLast: { step: 'invite' as const, last: ODD } }), unheard: unheardList });
+  const oddUnheard = await turn(lang, oddState(['Your sentences were clear today.', ODD]), T104, [{ text: 'Good.' }], 19.1);
+  const oddHeard = await turn(lang, oddState(['Your sentences were clear today.']), T104, [{ text: 'Good.' }], 19.1);
+  // A heard last sentence with an invitation-like unheard sentence before it: not owed (position, not words).
+  const midHeard = await turn(lang, { ...atT104(false, { closeAskLast: { step: 'invite', last: 'Thank you, Praveen.' } }), unheard: ['Do you have any questions before we finish?'] }, T104, [{ text: 'Good.' }], 19.1);
+  // Item 3 (REPEAT_NOT_MISHEARD): T10–T12, the correction that ends 「もう一度言ってみてください。」; a real mishear.
+  const t12live = await turn(lang, jobT10(), T11, [{ text: T12 }], 2.6);
+  const mishear = await turn(lang, jobT10(), T11, [{ text: 'Sorry, I didn\'t catch that. Could you say it again?' }], 2.6);
   // T101's end: the model's lead-in and the check card on the Summary page (the summary begun, the check owed in this reply).
   const t101State = base({ board: { pages: [...structuredClone(PAGES), structuredClone(PRON_PAGE), { title: 'Summary', items: [] }], current: 6 }, goals: goalsThrough(7), partStart: { part: 'pronunciation', at: 15.2 * MIN }, summaryBegunAt: 17.8 * MIN, closeCheckLate: 17.8 * MIN,
     history: [u('x'), a(T89), u('Yes, pronunciation.'), a(`<board page>Pronunciation</board>\n${T91}`), u('I was responsible for communicating with our customers.'), a('Let\'s review what we practised today. You talked about your work and your customers.')] });
@@ -212,6 +233,10 @@ async function probe() {
     recorded, readQ: read?.retests?.[0]?.question ?? null, scopedQ: scoped?.retests?.[0]?.question ?? null, pp1Facts: pp1.facts,
     liftedFacts: lifted.facts, liftedLateFacts: liftedLate.facts, liftedLeaveFacts: liftedLeave.facts, heldOneFacts: heldOne.facts,
     typedFacts: typed.facts, mathsFacts: mathsTurn.facts,
+    t103Last: t103.r.state.closeAskLast ?? null, unheardLast: unheard.r.state.closeAskLast ?? null, unheardReowed: unheard.r.state.closeReowed ?? null,
+    twice: close(twice), twiceReowed: twice.r.state.closeReowed ?? null,
+    oddUnheard: close(oddUnheard), oddHeard: close(oddHeard), midHeard: close(midHeard),
+    t12: { retests: t12live.r.state.retests ?? [], events: (t12live.r.events ?? []).map((e) => `${e.type} ${e.message}`) }, mishear: { retests: mishear.r.state.retests ?? [], events: (mishear.r.events ?? []).map((e) => `${e.type} ${e.message}`) },
   };
 }
 
@@ -239,6 +264,10 @@ async function main() {
   check('T105\'s end_lesson is deferred for the invitation; no goodbye; the reply ends on the invitation, recorded now', u2.results.some((x) => /^not ended: there is time for their questions/.test(x)) && !u2.closed && !/see you next time/i.test(u2.spoken) && /Do you have any questions before we finish\?\s*$/.test(u2.spoken) && typeof u2.invited === 'number' && u2.invited === 19.1 * MIN, u2);
   check('heard as today: the invitation stands, T105 and its end_lesson close the lesson', h2.closed && !h2.results.some((x) => /^not ended/.test(x)) && !h2.facts.includes(V2_CLOSE_INVITE_UNHEARD_LINE) && /then say goodbye and end the lesson in this reply/.test(h2.facts), h2);
   check('the learner asking to stop still ends (the unheard invitation owes nothing then)', on.stop.closed && !on.stop.results.some((x) => /^not ended/.test(x)) && !on.stop.facts.includes(V2_CLOSE_INVITE_UNHEARD_LINE), on.stop);
+  check('fix round 1 (I2): the reply that records the invitation leaves the step and its last sentence (state)', JSON.stringify(on.t103Last) === JSON.stringify({ step: 'invite', last: 'Do you have any questions before we finish?' }), on.t103Last);
+  check('fix round 1 (I1): owed again once (closeReowed), its re-ask recorded with its last sentence; unheard a second time it counts as given: "say goodbye and end", the end_lesson accepted', JSON.stringify(on.unheardReowed) === '["invite"]' && on.unheardLast?.step === 'invite' && !on.twice.facts.includes(V2_CLOSE_INVITE_UNHEARD_LINE) && /then say goodbye and end the lesson in this reply/.test(on.twice.facts) && on.twice.closed && !on.twice.results.some((x) => /^not ended/.test(x)), [on.unheardReowed, on.unheardLast, on.twice]);
+  check('fix round 1 (I2): no wording dependence: "Anything on your mind before we wrap up today?" as the last sentence, unheard: owed again; not in the unheard list: not', on.oddUnheard.facts.includes(V2_CLOSE_INVITE_UNHEARD_LINE) && !on.oddHeard.facts.includes(V2_CLOSE_INVITE_UNHEARD_LINE) && /then say goodbye and end the lesson in this reply/.test(on.oddHeard.facts), [on.oddUnheard.invited, on.oddHeard.invited]);
+  check('fix round 1 (I2): by position: an unheard "Do you have any questions…?" that is not the reply\'s last sentence re-owes nothing', !on.midHeard.facts.includes(V2_CLOSE_INVITE_UNHEARD_LINE) && /then say goodbye and end the lesson in this reply/.test(on.midHeard.facts));
   check('the pin: words said over the unheard ask do not clear it ("ask-unheard"); heard, it clears as before; without the gist (v1 / flag off) as before', on.pinOver.clear === false && on.pinOver.reason === 'ask-unheard' && on.pinHeard.clear === true && on.pinNoGist.clear === true, [on.pinOver, on.pinHeard, on.pinNoGist]);
   {
     const src = readFileSync(join(__dirname, '..', 'src', 'app', 'tutor', 'components', 'session', 'TutorSession.tsx'), 'utf8');
@@ -250,6 +279,10 @@ async function main() {
   check('the check heard: their words are the answer, and the answer line says reading the card back is not an explanation', on.checkHeard.facts.includes(V2_CLOSE_CHECK_READ_BACK) && /your last reply asked the check question/.test(on.checkHeard.facts) && typeof on.checkHeard.check?.answeredAt === 'number', on.checkHeard.facts.split('\n').filter((l) => /closing check/.test(l)));
   check('T101: "Before we finish, one check question." then the card: the card\'s question spoken without "Before we finish" again (the card unchanged)', (on.t101.spoken.match(/Before we finish/g) ?? []).length === 1 && /Can you explain the difference between these two sentences\?/.test(on.t101.spoken) && on.t101.cards.some((x) => /^Before we finish, can you explain/.test(x)), on.t101);
   check('v2DropSaidLead: only a lead-in the sentence just before said', v2DropSaidLead('Before we finish, can you explain it?', 'Good. Before we finish, one check question.') === 'Can you explain it?' && v2DropSaidLead('Before we finish, can you explain it?', 'Good work today.') === 'Before we finish, can you explain it?' && v2DropSaidLead('What did you do?', 'Before we finish.') === 'What did you do?');
+
+  console.log('fix round 1  REPEAT_NOT_MISHEARD: a correction that ends on a repeat ask is counted');
+  check('T12 (correction card, ends 「もう一度言ってみてください。」): the correction counted (practice signal wrong) and recorded for a re-test', on.t12.events.some((e) => /^v2_practice_signal wrong/.test(e)) && on.t12.retests.some((x) => x.right === 'I sell washing machines to customers.'), on.t12);
+  check('a real mishear ("Sorry, I didn\'t catch that. Could you say it again?", no card): nothing counted, as before', on.mishear.events.length === 0 && on.mishear.retests.length === 0, on.mishear);
 
   console.log('3  FREE_CONV_NO_STARTER: no starter unless asked; the corrections-spent line where the model reads it');
   check('an ordinary answer in the conversation: the positive line (ask and stop), and no general starter line', on.convPlain.includes(V2_FREE_CONV_NO_STARTER_LINE) && !on.convPlain.includes(V2_STARTER_LINE), on.convPlain.split('\n').filter((l) => /starter|free conversation/.test(l)));
@@ -270,7 +303,7 @@ async function main() {
   check('T20\'s correction is recorded with its corrected sentence and the question that drew it (T18, its English question)', on.recorded?.right === 'Retail customers need a machine to clean clothes.' && on.recorded?.question === 'What kind of customers did you sell to in China?', on.recorded);
   check('…the question survives JSON → v2ReadClientState → v2ScopeCarried', on.readQ === 'What kind of customers did you sell to in China?' && on.scopedQ === on.readQ, [on.readQ, on.scopedQ]);
   check('in Present perfect the retest line gives both: the sentence and the question to ask again in fresh words', on.pp1Facts.includes(RETEST_Q), on.pp1Facts.split('\n').filter((l) => /retest/.test(l)));
-  check('v2QuestionOfReply: the English question of a bilingual reply, a lead "I asked:" off', v2QuestionOfReply('Of course. I asked: What kind of customers did you sell to in China? 「中国でどんなお客様に売りましたか？」\n\nPlease answer with one short sentence.') === 'What kind of customers did you sell to in China?' && v2QuestionOfReply('Good. Tell me more.') === null);
+  check('v2QuestionOfReply: the English question of a bilingual reply, a lead "I asked:" off', v2QuestionOfReply('Of course. I asked: What kind of customers did you sell to in China? 「中国でどんなお客様に売りましたか？」\n\nPlease answer with one short sentence.') === 'What kind of customers did you sell to in China?' && v2QuestionOfReply('Good. Tell me more.') === null && v2QuestionOfReply('Almost. Can you say the sentence once more?') === null);
 
   console.log('6  OPTIONAL_ONE_MORE: leaving a held optional part');
   check('two items scored, past half its minutes, 1.4 of its 3 minutes left: "one more, or move on?" before leaving it', ONE_MORE.test(on.liftedFacts) && !HOLD.test(on.liftedFacts), on.liftedFacts.split('\n').filter((l) => /^time:/.test(l)));
@@ -293,6 +326,7 @@ async function main() {
     but === 'OPENING_PAGE_FIRST' || off.open.pages[0]?.title === 'Overview',
     but === 'RETEST_QUESTION' || off.pp1Facts.includes(RETEST_Q),
     but === 'OPTIONAL_ONE_MORE' || ONE_MORE.test(off.liftedFacts),
+    but === 'REPEAT_NOT_MISHEARD' || off.t12.retests.length > 0,
   ].every(Boolean);
   {
     const off = child('PART_YES_CHOICES');
@@ -315,6 +349,10 @@ async function main() {
   {
     const off = child('RETEST_QUESTION');
     check('RETEST_QUESTION off: no question kept; the 7x retest line', !off.recorded?.question && !off.pp1Facts.includes(RETEST_Q) && /Your next new question must make them say/.test(off.pp1Facts) && others(off, 'RETEST_QUESTION'));
+  }
+  {
+    const off = child('REPEAT_NOT_MISHEARD');
+    check('REPEAT_NOT_MISHEARD off: T12 read as a mishear, nothing counted (as live)', off.t12.events.length === 0 && off.t12.retests.length === 0 && others(off, 'REPEAT_NOT_MISHEARD'), off.t12);
   }
   {
     const off = child('OPTIONAL_ONE_MORE');

@@ -2462,3 +2462,10 @@ export const TUTOR_V2_RETEST_QUESTION = process.env.NEXT_PUBLIC_TUTOR_V2_RETEST_
  *  the reply of the second score, 1.2 of its minutes left) (Task 7z, item 6). Default ON; NEXT_PUBLIC_TUTOR_V2_OPTIONAL_ONE_MORE=off ⇒
  *  as before. */
 export const TUTOR_V2_OPTIONAL_ONE_MORE = process.env.NEXT_PUBLIC_TUTOR_V2_OPTIONAL_ONE_MORE !== 'off';
+
+/** Tutor brain v2 (v2/turn.ts): a reply that corrects their sentence (a sentence card that reworks their words) and ends by asking them to
+ *  say it again (one-question.ts v2AsksRepeat) is not a reply that "did not catch it" (learner-card.ts V2_REPLY_MISHEARD matched
+ *  「もう一度言って…」), so the correction is counted for the support steps and re-tests and the owed-card check. A real "sorry, I didn't catch
+ *  that" (no correction card) still is. Mic test 8 (embed-1795115593161, T12: the washing-machines correction never recorded) (Task 7z fix
+ *  round 1). Default ON; NEXT_PUBLIC_TUTOR_V2_REPEAT_NOT_MISHEARD=off ⇒ as before. */
+export const TUTOR_V2_REPEAT_NOT_MISHEARD = process.env.NEXT_PUBLIC_TUTOR_V2_REPEAT_NOT_MISHEARD !== 'off';
