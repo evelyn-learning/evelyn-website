@@ -264,11 +264,13 @@ export function v2MoveAnswer(said: string | null, lastTutor: string = '', langua
   if (!s) return 'other';
   if (goNamed && plan && v2NamesAskedPart(s, v2AskedParts(lastTutor, plan, languages, langs), plan) >= 0) return 'go';
   const last = stripBoardBlocks(lastTutor).split(SENTENCES).map((x) => x.trim()).filter(Boolean).pop() ?? '';
-  const ending = langs && plan && !(last && v2IsPartAsk(last)) ? v2EndingPartAsk(lastTutor, plan, languages) : null;
-  const offersQuestion = (!!last && v2IsPartAsk(last) && QUESTIONS_FIRST.test(last)) || (!!ending && QUESTIONS_FIRST.test(ending.ask));
+  const offersQuestion = v2OffersQuestionFirst(lastTutor, plan, languages, langs);
   if (NO_QUESTIONS.test(s)) return 'go';
   // Final review I4: ahead of the decline and question checks (「いいえ」 is a decline word, 「質問」 a question's).
   if ((NO_QUESTIONS_READY.test(s) || NO_QUESTIONS_READY_JA.test(s)) && !READY_BUT.test(s) && offersQuestion) return 'go';
+  // Task 7r fix round 5 (I-F, m-h, ruling): to an ask that offers a question first, 「いいえ。」, 「いいえ、進みましょう。」, 「結構です。」,
+  // "Not now." are "no questions": a go for the part asked about, required or optional.
+  if (goNamed && offersQuestion && (NO_THEN_GO_JA.test(s) || NOT_NOW.test(s)) && !READY_BUT.test(s)) return 'go';
   if (BARE_NO.test(s)) return offersQuestion ? 'go' : 'other';
   // Fix round 2 (out of scope, one line): 「大丈夫です」 / 「いいです」 to "do you want to do X?" (an offer, no questions clause) is a polite no.
   if (goNamed && !offersQuestion && POLITE_NO_JA.test(s) && OFFER_TO_DO_JA.test(last)) return 'other';
@@ -277,6 +279,18 @@ export function v2MoveAnswer(said: string | null, lastTutor: string = '', langua
   if (QUESTION.test(s)) return 'question';
   return GO.test(s) || GO_JA.test(s) ? 'go' : 'other';
 }
+/** Whether the part ask a reply ends on offers a question first (an English frame with a questions clause, or an ask read by
+ *  position / clause in the lesson's languages that holds one): there a no is "no questions". */
+export function v2OffersQuestionFirst(lastTutor: string, plan?: LessonPlan, languages?: readonly string[], langs: boolean = TUTOR_V2_PART_ASK_LANGS): boolean {
+  const last = stripBoardBlocks(lastTutor).split(SENTENCES).map((x) => x.trim()).filter(Boolean).pop() ?? '';
+  const ending = langs && plan && !(last && v2IsPartAsk(last)) ? v2EndingPartAsk(lastTutor, plan, languages) : null;
+  return (!!last && v2IsPartAsk(last) && QUESTIONS_FIRST.test(last)) || (!!ending && QUESTIONS_FIRST.test(ending.ask));
+}
+const NO_THEN_GO_JA = /^(?:(?:いいえ|いや|ううん)(?:[、,。]?\s*(?:進みましょう|進みます|次に進みましょう|次へ|行きましょう|お願いします|結構です))?|結構です)[。！!]*$/u;
+const NOT_NOW = /^(?:(?:no|nope|nah)[,.!]?\s+)?not (?:now|yet|right now|at the moment|really|today)[.!]*$/i;
+/** A yes leading an answer (はい…, "Yes, …"). */
+const YES_LED = /^(?:yes|yeah|yep|yup|sure|ok(?:ay)?|alright|all right|of course|はい|ええ|うん)(?![\p{L}\p{N}])/iu;
+
 /** Task 7r (PART_GO_NAMED): the plan parts a reply's part ask names (indices, plan order): an ask it ends on by position in the
  *  lesson's languages (v2EndingPartAsk: the ask and its lead), else an English part ask ending it (v2IsPartAsk) with the sentence
  *  before it. []: it ends on no part ask, or the ask names no part. */
@@ -384,8 +398,8 @@ export function v2SummaryGo(said: string | null, lastTutor: string, plan: Lesson
 
 /** Task 7r fix round 4 (I-E, the controller's ruling: declining an optional part is state). The optional part the last reply
  *  offered as the lesson arrived at it (the part next by plan order, optional, not entered: named by the reply's part ask, or held
- *  by that reply for its ask) that their answer says no to; -1: none. A no is: a bare or polite no where the ask offered no
- *  question first (「大丈夫です。」, "No, thanks."), words that put it off or skip it ("Skip it.", "Not today."), or going to the
+ *  by that reply for its ask) that their answer says no to; -1: none. Never after an ask that offers a question first (fix round
+ *  5). A no is: a bare or polite no (「大丈夫です。」, "No, thanks."), words that put it off or skip it ("Skip it.", "Not today."), or going to the
  *  summary instead (their words name it; or, to a choice between the part and the summary, moving on: 「進みましょう。」, "No, let's
  *  go."). Never an answer that asks something, or a yes. The caller marks it left out (time-fit.ts v2LeaveOutByChoice). */
 export function v2OptionalDeclined(plan: LessonPlan, state: View & Pick<V2State, 'history' | 'heldPage'>, lastTutor: string, said: string | null, languages?: readonly string[], on: boolean = TUTOR_V2_PART_GO_NAMED): number {
@@ -398,14 +412,22 @@ export function v2OptionalDeclined(plan: LessonPlan, state: View & Pick<V2State,
   const asked = v2AskedParts(lastTutor, plan, languages);
   const h = state.heldPage;
   if (!asked.includes(nx) && !(h && !h.unasked && h.part === seg.id && h.at === v2TutorReplies(state.history))) return -1;
+  // Fix round 5 (I-F, m-h, ruling): a decline is read only where the ask offered the part itself as a yes / no or as a choice
+  // between it and the summary. After an ask that offers a question first, a no is "no questions" (v2MoveAnswer: a go).
+  if (v2OffersQuestionFirst(lastTutor, plan, languages)) return -1;
   const move = v2MoveAnswer(said, lastTutor, languages, undefined, plan);
   if (move === 'question') return -1;
   const namesIt = v2PartNamedIn(seg, s);
   const toSummary = asked.includes(last);
+  // Fix round 5 (m-i, ruling): a yes-led answer is never a decline (「はい、進みましょう。」 to a part-or-summary choice opens the part
+  // offered), unless their words name the summary.
+  const yesLed = YES_LED.test(s);
   if (move === 'go') {
     if (namesIt || !toSummary) return -1;
-    return v2NamesAskedPart(s, [last], plan) === last || LEADING_NO.test(s) || MOVES_ON.test(s) ? nx : -1;
+    if (v2NamesAskedPart(s, [last], plan) === last) return nx;
+    return !yesLed && (LEADING_NO.test(s) || MOVES_ON.test(s)) ? nx : -1;
   }
+  if (yesLed) return -1;
   if (POLITE_NO_JA.test(s) || BARE_NO.test(s) || PUTS_OFF.test(s)) return nx;
   return !namesIt && TO_THE_SUMMARY.test(s) ? nx : -1;
 }
