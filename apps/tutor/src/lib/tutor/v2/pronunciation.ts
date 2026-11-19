@@ -20,7 +20,7 @@ import { MAX_REFERENCE_CHARS } from '../pronunciation/assess-request';
 import { WORD_FLAG_SCORE } from '../pronunciation/normalize';
 import { discussionOf } from './discussion';
 import { stripBoardBlocks } from './board-inline';
-import { v2AsksTheLearner, v2ReplySentences } from './one-question';
+import { v2ReplySentences } from './one-question';
 import { TUTOR_V2_PRONUNCIATION_FALLBACK, TUTOR_V2_PRONUNCIATION_PAGE, TUTOR_V2_TEXT_NO_SOUND } from '../orchestrator/flags';
 import type { V2Session, V2State } from './types';
 
@@ -287,16 +287,22 @@ export function v2ScoredTurn(session: V2Session, state: Pick<V2State, 'pronuncia
   return enabled && v2PronunciationOn(session) && !!state.pronunciation?.armed && heard !== null && heard !== undefined;
 }
 
-/** The repeat request itself: say it, repeat it, after me, once more, your turn (English and Japanese). */
-const REPEAT_ASK = /\b(?:repeat|say (?:it|this|that|the (?:word|sentence)|after me)|after me|once more|one more time|again|your turn|try (?:it|saying))\b|繰り返して|言ってみて|言ってください|と言って|もう一度|どうぞ/i;
-/** Task 7s fix round 2 (M3, controller ruling; PRONUNCIATION_PAGE): a reply that armed a recording and then closes on its own
- *  DIFFERENT question ("…Say it after me: "I emailed everyone to ask them to donate." What else did you do for the project?") does
- *  not make the next turn a scored one: their answer is to that question. True when the reply's last sentence asks (the shared ask
- *  test, one-question.ts v2AsksTheLearner) and is neither the repeat request nor holds an armed item; a reply that ends on the
- *  item, or on no ask, keeps the arm. */
+/** Task 7s fix round 3 (I-A, ruling): a content question: a question word (what / when / where / why / how / which / who; 何 / どこ /
+ *  いつ / なぜ / どうして / どう / どんな / どちら / だれ) in a sentence that is a question (？/? at its end, or a Japanese 〜か ending). */
+const CONTENT_QWORD = /\b(?:what|when|where|why|how|which|who|whom|whose)\b|何|どこ|いつ|なぜ|どうして|どう|どんな|どちら|だれ|誰/i;
+const IS_QUESTION = /[?？]["'”’」』)）]*\s*$|か[。？?]?["'”’」』)）]*\s*$/;
+export function v2IsContentQuestion(sentence: string): boolean {
+  const s = sentence.trim();
+  return !!s && IS_QUESTION.test(s) && CONTENT_QWORD.test(s);
+}
+/** Task 7s fix round 2 (M3), fix round 3 (I-A, controller ruling; PRONUNCIATION_PAGE): a reply that armed a recording keeps the arm,
+ *  unless its LAST sentence is a content question (v2IsContentQuestion) that holds none of the armed items ("…Repeat after me: X.
+ *  What did you do last weekend?"): their answer is to that question. Every invitation to speak, hand-over, readiness check or
+ *  yes/no "can you say it?" keeps the arm (「発音してみてください。」, "Now you try.", "Ready?", 「言えますか。」): a lost score is worse
+ *  than a rare score against the wrong item. */
 export function v2ArmClosesOnOtherAsk(said: string, items: readonly string[]): boolean {
   const last = v2ReplySentences(stripBoardBlocks(said)).pop()?.trim() ?? '';
-  if (!last || !v2AsksTheLearner(last) || REPEAT_ASK.test(last)) return false;
+  if (!v2IsContentQuestion(last)) return false;
   const low = last.toLowerCase();
   return !items.some((x) => { const w = x.toLowerCase().replace(/[.!?]+$/, '').trim(); return !!w && low.includes(w); });
 }

@@ -272,7 +272,7 @@ async function main() {
   console.log('fix round 2');
   check('N1: T36 then the question with a final period ("…last year."): the line', /practised sentence:/.test(on.fPeriod), on.fPeriod);
   check('N1: T36 then lower case with no mark ("did you enjoy … last year"): the line', /practised sentence:/.test(on.fBare));
-  check('N1: the line leaves room for a plain request for help', /Only if they are plainly asking you what to do or what a word means, answer that/.test(on.fPeriod));
+  check('N1: the line leaves room for a plain request for help', /Only if they are plainly asking you what to do, what a word means, or to hear it again, answer that/.test(on.fPeriod));
   check('N1/I1 kept: a question about them, then their real question back: no line', !/practised sentence:/.test(on.fBack) && !/practised sentence:/.test(on.fStarterBack));
   const prod = (t: string) => v2AskedToProduce([a(t)]);
   check('N2: no ask to produce: "Don\'t just repeat my words. What did you do last weekend?", "Feel free to ask me anything. What did you do?", 「よく聞いてみてください。」, a quoted question discussed beside a statement starter', !prod("Don't just repeat my words. What did you do last weekend?") && !prod('Feel free to ask me anything. What did you do?') && !prod('よく聞いてみてください。') && !prod('The question "Have you ever…" is answered with "Yes, I have". Start with "Yes, I have…".'));
@@ -283,6 +283,17 @@ async function main() {
   check('M3: an arm that ends on the repeat request (#69 「私の後に繰り返してください。」) or on the item (#76 "… international") stays armed', on.t69Armed && !v2ArmClosesOnOtherAsk(T76, ['international']) && !v2ArmClosesOnOtherAsk(T69, ['responsibilities']) && !v2ArmClosesOnOtherAsk('Can you say "international" for me?', ['international']));
   check('M3: the shape that disarms, pure', v2ArmClosesOnOtherAsk(ARM_Q_K, ['I emailed everyone to ask them to donate.']));
   check('N6: "Who did you go with?" after "Who did you go with to the party?" is no fragment (a question card is whole)', !v2CardIsFragment('Who did you go with?', 'Who did you go with to the party?'));
+
+  console.log('fix round 3');
+  const KEEP: Array<[string, string]> = [['「international」です。発音してみてください。', 'international'], ['一緒に言ってみましょう。', 'international'], ['この文を読んでみてください。', 'I have worked with international customers.'], ['言えますか。', 'responsibilities'], ['Now you try.', 'international'], ['Go ahead.', 'international'], ['Let me hear it.', 'international'], ['Ready?', 'international'], ['Can you pronounce it?', 'international']];
+  const kept = KEEP.filter(([t, item]) => v2ArmClosesOnOtherAsk(`Listen: "${item}". ${t}`, [item]));
+  check('I-A: the nine hand-overs keep the arm (発音してみて, 一緒に言ってみましょう, 読んでみて, 言えますか, Now you try, Go ahead, Let me hear it, Ready?, Can you pronounce it?)', kept.length === 0, kept);
+  const SESSION_ARMS: Array<[string, string]> = [[T69, 'responsibilities'], ['英語の単語を一つずつ練習しましょう。まず、この単語を言ってみてください。responsibilities', 'responsibilities'], ['もう一度、responsibilities と言ってみてください。', 'responsibilities'], [T76, 'international'], [`${T76}\n\nDoes that make sense?`, 'international'], ['はい、わかりました。では、もう一度 international と言ってみてください。', 'international']];
+  check('I-A: the session\'s real armed replies (#69, #70, #72, #76 with and without its check-in, #78) keep the arm', SESSION_ARMS.every(([t, i]) => !v2ArmClosesOnOtherAsk(t, [i])));
+  check('I-A: "…Repeat after me: X. What did you do last weekend?" and 「…繰り返してください。週末は何をしましたか。」 drop it; the M3 shape still disarms through runV2Turn', v2ArmClosesOnOtherAsk('Good. Repeat after me: "I emailed everyone to ask them to donate." What did you do last weekend?', ['I emailed everyone to ask them to donate.']) && v2ArmClosesOnOtherAsk('「I emailed everyone.」私の後に繰り返してください。週末は何をしましたか。', ['I emailed everyone.']) && !on.armQArmed);
+  check('I-A: a content question that holds the item keeps it ("How do you say \"international\"?")', !v2ArmClosesOnOtherAsk('How do you say "international"?', ['international']));
+  check('m2: the answer to the disarmed reply\'s closing question gets no practised line (the 7b/7g card line stays)', !/practised sentence:/.test(on.armQNextFacts) && /their answer just now had \d+ sentences? of their own|a sentence of theirs/.test(on.armQNextFacts));
+  check('m1: "Could you ask me a question using \'did\'?", "Now you can ask me a question about my weekend.", "Ask me if I have ever been to Japan." are asks to produce; "Feel free to ask me anything." is not', prod("Could you ask me a question using 'did'?") && prod('Now you can ask me a question about my weekend.') && prod('Ask me if I have ever been to Japan.') && !prod('Feel free to ask me anything. What did you do?'));
 
   console.log('each switch off alone (a child process per switch): as at dcdf5430 for that item');
   const child = (flag: string) => {
