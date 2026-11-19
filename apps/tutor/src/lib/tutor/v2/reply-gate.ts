@@ -286,7 +286,8 @@ export class ReplyGate {
     if (this.holding || (this.opts.holdGoodbye && isGoodbye(core.replace(QUOTED_SPANS, ' ')))) { this.holding = true; this.heldParts.push(s); return; }
     if (this.opts.dropCheckIn) this.handedOver = v2HandsOver(core);
     // Task 7x (REPEAT_THEN_WAIT): after the repeat ask, nothing more is asked in this reply.
-    if (this.opts.repeatWait && this.repeated && (asksAnywhere([core]) || v2AsksInJapanese(core) || v2HandsOver(core))) { this.removed.push(core); this.repeatDropped += 1; return; }
+    // Fix round 1 (I1): the same ask in the other teaching language is no later question: it stays.
+    if (this.opts.repeatWait && this.repeated && !v2AsksRepeat(core) && (asksAnywhere([core]) || v2AsksInJapanese(core) || v2HandsOver(core))) { this.removed.push(core); this.repeatDropped += 1; return; }
     if (this.opts.repeatWait && v2AsksRepeat(core)) this.repeated = true;
     if (this.opts.closeAsk && this.opts.holdAsk !== false && this.ask === null && this.opts.closeAsk(core)) { this.ask = s; return; }
     this.emit(s);

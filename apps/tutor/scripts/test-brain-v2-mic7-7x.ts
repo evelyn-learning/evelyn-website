@@ -27,7 +27,8 @@ import { runV2Turn, type V2ModelCall } from '../src/lib/tutor/v2/turn';
 import { newV2State, type V2BoardPage, type V2Retest, type V2Session, type V2State } from '../src/lib/tutor/v2/types';
 import { v2ReadClientState } from '../src/lib/tutor/v2/client-state';
 import { v2ScopeCarried } from '../src/lib/tutor/v2/state-carry';
-import { v2AsksRepeat } from '../src/lib/tutor/v2/one-question';
+import { v2AsksRepeat, v2ReplyHandsOver } from '../src/lib/tutor/v2/one-question';
+import { v2AskedForHelp } from '../src/lib/tutor/v2/adaptive';
 
 let passed = 0; let failed = 0;
 const CHILD = process.env.MIC7_7X_CHILD;
@@ -138,6 +139,25 @@ async function probe() {
   const live44 = await turn(lang, inPast(), T43, [{ text: T44_LIVE }], 9.0);
   const rep44 = await turn(lang, inPast(), T43, [{ text: T44_REPEAT }], 9.0);
   const repeated = await turn(lang, rep44.r.state, 'When I first joined my company, I filled in the joining form.', [{ text: 'Yes, that\'s right. What did you do on your first day at the company?' }], 9.3);
+  // Fix round 1 (I1): the repeat ask in both teaching languages: both stay, the question after them goes (either order).
+  const T44_BI = T44_REPEAT.replace('Can you say the sentence once more?', 'Can you say the sentence once more? もう一度言ってみてください。');
+  const T44_BI_REV = T44_REPEAT.replace('Can you say the sentence once more?', 'もう一度言ってみてください。 Can you say the sentence once more?');
+  const bi = await turn(lang, inPast(), T43, [{ text: T44_BI }], 9.0);
+  const biRev = await turn(lang, inPast(), T43, [{ text: T44_BI_REV }], 9.0);
+  // Fix round 1 (ruling): the tutor's own "once more" / a new question is no repeat ask: the question stays.
+  const ownAgain = await turn(lang, inPast(), T43, [{ text: 'We say "filled in the joining form." Let me say it once more: When I first joined my company, I filled in the joining form. What did you do on your first day?' }], 9.0);
+  const ownAgainJa = await turn(lang, inPast(), T43, [{ text: 'We say "filled in the joining form." もう一度言いますね。 When I first joined my company, I filled in the joining form. What did you do on your first day?' }], 9.0);
+  const newQ = await turn(lang, inPast(), T43, [{ text: 'Let\'s try again with a new question. What did you do on your first day?' }], 9.0);
+  // m6: a model-written check-in or part ask after the repeat ask is left out.
+  const checkIn = await turn(lang, inPast(), T43, [{ text: T44_REPEAT.replace(/\n\nNext, tell me[\s\S]*$/, ' Does that make sense? Shall we go on to the conversation?') }], 9.0);
+  // Fix round 1 (ruling): the quiet card in a free-conversation part with its corrections spent: no correct-then-repeat line.
+  // First step for a grammar part with an opening question (Present perfect, opened on "Yes." to the Your job ask).
+  const ppOpen = await turn(lang, base({ board: { pages: structuredClone(PAGES.slice(0, 2)), current: 1 }, goals: goalsThrough(2), partStart: { part: 'topic-intro', at: 2.8 * MIN }, practiceSaid: { 'topic-intro': 2 },
+    history: [u('x'), a('<board page>Your job</board>\nWhat do you do at work?'), u('I sell washing machines.'), a('Good, you talked about your job. Next is Present perfect. Do you have a question first, or shall we go on?')] }), 'Yes.', [{ text: 'We use the present perfect for experience. Have you worked for your current company for a long time?' }], 4.9);
+  // m4: the invitation ignored twice: not sent a third time.
+  const inv1 = await turn(lang, inConv(), 'I worked on a project for social welfare.', [{ text: 'Good. What was your role?' }], 13.2);
+  const inv2 = await turn(lang, inv1.r.state, 'I was the leader.', [{ text: 'Great. What was hard?' }], 13.5);
+  const inv3 = await turn(lang, inv2.r.state, 'Money was hard.', [{ text: 'I see. How did you solve it?' }], 13.8);
   const mathsRepeat = await turn(maths, { ...newV2State(0), history: [u('x'), a('What is 3 times 4?')] }, '13', [{ text: 'Not quite: 3 × 4 = 12. Can you say it again? What is 6 times 7?' }], 5);
 
   // 4: Present perfect, turns 14–19 of the session (one tutor reply per turn).
@@ -150,6 +170,8 @@ async function probe() {
   // A part change with the retest still open: not asked.
   const left = await turn(lang, { ...p4.r.state, board: { pages: structuredClone(PAGES.slice(0, 4)), current: 3 }, partStart: { part: 'past-simple', at: 7.0 * MIN } }, 'I attended a fair last year.', [{ text: PP_CLEAN('I attended a fair last year.', 'Who did you meet?') }], 7.2);
   // A new correction on the target after the send: missed.
+  // Fix round 1 (ruling, review e): a sentence with only a common phrase of the target ("to customers") does not pass.
+  const falsePass = await turn(lang, p2.r.state, 'I have talked to customers every day.', [{ text: PP_CLEAN('I have talked to customers every day.', 'What do you talk about?') }], 6.0);
   const missed = await turn(lang, p2.r.state, 'I have sold washing machine for customers.', [{ text: 'We say: <board sentence stress="washing machines | to customers">I have sold washing machines to customers.</board> Can you say it once more?' }], 6.0);
 
   // Round trip of the new state.
@@ -166,13 +188,18 @@ async function probe() {
   const retest = (s: V2State) => (s.retests ?? []).find((r) => r.target.join() === WASH.target.join()) ?? null;
   return {
     openedFacts: opened.facts, openedPage: opened.r.state.board.pages[opened.r.state.board.current]?.title ?? null,
-    heldOneFacts: heldOne.facts, leaveFacts: leave.facts, leaveMove: leave.r.state.moveOnAsked ?? [], leftThenFacts: leftThen.facts, twoEarlyFacts: twoEarly.facts, twoLateFacts: twoLate.facts, oneLateFacts: oneLate.facts,
+    heldOneFacts: heldOne.facts, leaveFacts: leave.facts, leaveMove: leave.r.state.optionalLeft ?? [], leaveMoveOn: leave.r.state.moveOnAsked ?? [], leftThenFacts: leftThen.facts, twoEarlyFacts: twoEarly.facts, twoLateFacts: twoLate.facts, oneLateFacts: oneLate.facts,
     convPlain: convPlain.facts, convHelp: convHelp.facts, convAfterSilence: convAfterSilence.facts, convThird: convThird.facts, convSecond: convSecond.facts,
     thirdCorrections: convThird.r.state.corrections ?? null, thirdCount: convThird.r.state.freeConv ?? null, thirdSpoken: convThird.r.spoken,
     halfFacts: half.facts, halfState: half.r.state.freeConv ?? null, afterInviteFacts: afterInvite.facts, earlyFacts: early.facts, ppStarter: ppStarter.facts,
     live44: { spoken: live44.r.spoken, q: q(live44.r), facts: live44.facts }, rep44: { spoken: rep44.r.spoken, q: q(rep44.r), stored: stored(rep44.r) }, repeatedQ: q(repeated.r), repeatedSpoken: repeated.r.spoken,
     mathsRepeat: { spoken: mathsRepeat.r.spoken, facts: mathsRepeat.facts },
     p: [p1, p2, p3, p4, p5].map((x) => ({ facts: x.facts, retest: retest(x.r.state), events: (x.r.events ?? []).map((e) => `${e.type} ${e.message}`) })),
+    falsePass: retest(falsePass.r.state), falsePassFacts: falsePass.facts,
+    bi: { spoken: bi.r.spoken, q: q(bi.r) }, biRev: { spoken: biRev.r.spoken, q: q(biRev.r) }, ownAgain: ownAgain.r.spoken, ownAgainJa: ownAgainJa.r.spoken, newQ: newQ.r.spoken, checkIn: checkIn.r.spoken,
+    ppOpenFacts: ppOpen.facts, inv: [inv1.facts, inv2.facts, inv3.facts],
+    optLeftRead: v2ScopeCarried(structuredClone(v2ReadClientState(JSON.parse(JSON.stringify(leave.r.state)))!), lang).optionalLeft?.[0] ?? null,
+    optLeftMaths: v2ScopeCarried(structuredClone(v2ReadClientState(JSON.parse(JSON.stringify(leave.r.state)))!), maths).optionalLeft ?? null,
     left: { retest: retest(left.r.state), events: (left.r.events ?? []).map((e) => `${e.type} ${e.message}`) }, missed: retest(missed.r.state),
     read: read ? { freeConv: read.freeConv ?? null } : null, scoped: scoped?.freeConv ?? null, scopedMaths: scopedMaths?.freeConv ?? null,
     typedFacts: typed.facts, mathsFacts: mathsTurn.facts,
@@ -188,13 +215,15 @@ async function main() {
   const NO_ALOUD = /From now on do not correct aloud/;
   const INVITE = /your turn to be asked: half of this conversation part's time has passed/;
   const RETEST = /next question's aim \(a retest of an earlier mistake\): Your next new question must make them say "washing machines", "to customers"; for example ask about something whose natural answer is like "I sell washing machines to customers\."/;
-  const REPEAT_LINE = /after a correction: if you ask them to say the corrected sentence again, that ask ENDS this reply/;
+  const REPEAT_LINE = /after a correction: when you correct their sentence, ask them to say the corrected sentence once more, and stop there: that ask ENDS this reply/;
 
   console.log('1  PART_FIRST_STEP: the pronunciation part offers the plan\'s choice and does its minutes');
   check('"Yes, pronunciation." opens its page; the opening facts carry the plan\'s own question with its four choices, to ask and wait for', on.openedPage === 'Pronunciation' && on.openedFacts.includes(`its opening question is "${PLAN_Q}". Ask THAT question in this reply`) && /wait for their answer: no item, exercise or question of your own before it/.test(on.openedFacts), on.openedFacts.split('\n').filter((l) => /said yes to going on/.test(l)));
   check('…and not the bare "begin that part in this reply" line', !/begin that part in this reply, and do not open its page again/.test(on.openedFacts));
+  check('a grammar part with an opening question (Present perfect, opened on "Yes."): its own question in the line', /its opening question is "Have you worked for your current company for a long time\?"/.test(on.ppOpenFacts), on.ppOpenFacts.split('\n').filter((l) => /said yes/.test(l)));
   check('16.9, one word tried twice: the part is held (1 of 2 items; time left of its first half); no summary-page lines', HOLD.test(on.heldOneFacts) && /1 of at least 2 items done/.test(on.heldOneFacts) && /more minute.? of its time before it may close/.test(on.heldOneFacts) && !SUMMARY_LINES.test(on.heldOneFacts), on.heldOneFacts.split('\n').filter((l) => /time:|summary/.test(l)));
   check('his word to leave ("No, let\'s go to the summary."): not held; recorded; the summary-page line is back', !HOLD.test(on.leaveFacts) && on.leaveMove.includes('pronunciation') && /summary page: lay the Summary page out/.test(on.leaveFacts), on.leaveMove);
+  check('fix round 1 (I2): the leave is its own field (optionalLeft); moveOnAsked, which the 7f minimum reads, is untouched', !on.leaveMoveOn.includes('pronunciation') && on.optLeftRead === 'pronunciation' && on.optLeftMaths === null, [on.leaveMoveOn, on.optLeftRead]);
   check('…and on the next turn too (state, not the words)', !HOLD.test(on.leftThenFacts));
   check('two items but under half its minutes while it fits: still held (time only), "one more item, or the summary?"', HOLD.test(on.twoEarlyFacts) && !/items done/.test(on.twoEarlyFacts.split('\n').find((l) => HOLD.test(l)) ?? '') && /ask whether they want one more item or the summary/.test(on.twoEarlyFacts) && !SUMMARY_LINES.test(on.twoEarlyFacts));
   check('two items and past half its minutes (17.9): not held; the summary page\'s line is in', !HOLD.test(on.twoLateFacts) && /summary page: lay the Summary page out/.test(on.twoLateFacts));
@@ -208,6 +237,8 @@ async function main() {
   check('two corrections made: the facts say do not correct aloud, card it quietly for "To improve"', NO_ALOUD.test(on.convThird) && !NO_ALOUD.test(on.convSecond));
   check('the third correction carded with no words about it is recorded (7w list) and counted', JSON.stringify(on.thirdCorrections?.map((c) => c.stress)) === '[["robot","interests"]]' && on.thirdCount?.corrected === 3 && !/robot that interests/i.test(on.thirdSpoken), [on.thirdCorrections, on.thirdCount, on.thirdSpoken]);
   check('half the part\'s minutes passed (13.2, entered 10.61, 5 min): the invitation line, once; not at 12.0', INVITE.test(on.halfFacts) && !INVITE.test(on.earlyFacts));
+  check('fix round 1 (m4): ignored, the invitation is sent on at most 2 turns', INVITE.test(on.inv[0]!) && INVITE.test(on.inv[1]!) && !INVITE.test(on.inv[2]!));
+  check('fix round 1 (m8): "What I did was organise the fair." asks no help; "How do I say it?" does', !v2AskedForHelp('What I did was organise the fair.') && v2AskedForHelp('How do I say it?') && v2AskedForHelp('I don\'t know.'));
   check('the reply that asked him for a question marks it given (state); the next turn has no invitation line', on.halfState?.invited === true && !INVITE.test(on.afterInviteFacts), on.halfState);
 
   console.log('3  REPEAT_THEN_WAIT: after a correction the tutor waits for the repeat');
@@ -215,8 +246,13 @@ async function main() {
   check('T44 with a repeat ask: the reply ends on it; the next question and its card are left out (spoken and stored)', /Can you say the sentence once more\?\s*$/.test(on.rep44.spoken) && !/first day/.test(on.rep44.spoken) && on.rep44.q.length === 0 && !/first day/.test(on.rep44.stored), on.rep44);
   check('T44 as live (no repeat ask): the next question and its card stay', /tell me about your first day/.test(on.live44.spoken) && on.live44.q.length === 1, on.live44);
   check('after his repeat, the next question comes (its card painted)', /first day/.test(on.repeatedSpoken), on.repeatedSpoken);
+  check('fix round 1 (I1): the repeat ask said in English then Japanese: both stay; the next question and its card go', /once more\? もう一度言ってみてください。\s*$/.test(on.bi.spoken) && on.bi.q.length === 0, on.bi);
+  check('…and in the reverse order', /もう一度言ってみてください。\s*Can you say the sentence once more\?\s*$/.test(on.biRev.spoken) && on.biRev.q.length === 0, on.biRev);
+  check('fix round 1 (ruling): "Let me say it once more", 「もう一度言いますね」 and "Let\'s try again with a new question" are no repeat ask: the question stays', [on.ownAgain, on.ownAgainJa, on.newQ].every((x) => /What did you do on your first day\?/.test(x)), [on.ownAgain, on.ownAgainJa, on.newQ]);
+  check('m6: a check-in and a part ask the model wrote after the repeat ask are left out; the reply hands over (the runtime appends nothing after it)', /once more\?\s*$/.test(on.checkIn) && !/make sense|go on/.test(on.checkIn) && v2ReplyHandsOver(on.rep44.spoken), on.checkIn);
+  check('fix round 1 (ruling): the correct-then-repeat line is in a reply to a practice answer; not in the free-conversation part once its corrections aloud are spent', REPEAT_LINE.test(on.live44.facts) && REPEAT_LINE.test(on.convSecond) && !REPEAT_LINE.test(on.convThird));
   check('a maths voice lesson: nothing dropped, no line', /What is 6 times 7\?/.test(on.mathsRepeat.spoken) && !REPEAT_LINE.test(on.mathsRepeat.facts));
-  check('v2AsksRepeat: the asks of the session, and not advice for later', ['Can you say the sentence once more?', 'Can you say the complete sentence?', 'Can you try that sentence again?', 'Please say this after me: I have worked here.', 'もう一度言ってみてください。'].every(v2AsksRepeat) && !['Try to say it this way next time.', 'What did you do next?', 'Tell me about your first day.'].some(v2AsksRepeat));
+  check('v2AsksRepeat: asks directed at the learner, not advice for later, never the tutor saying it again', ['Can you say the sentence once more?', 'Can you say the complete sentence?', 'Can you try that sentence again?', 'Please say this after me: I have worked here.', 'Say it again, please.', 'Try again.', 'もう一度言ってみてください。', '繰り返してください。'].every(v2AsksRepeat) && !['Try to say it this way next time.', 'What did you do next?', 'Tell me about your first day.', 'Let me say it once more.', 'Let\'s try again with a new question.', 'I\'ll say it once more.', 'もう一度言いますね。'].some(v2AsksRepeat));
 
   console.log('4  RETEST_ASKED: re-tests get asked, and a late pass counts');
   const [p1, p2, p3, p4, p5] = on.p;
@@ -227,6 +263,7 @@ async function main() {
   check('sent for 3 turns (turns 1–3 in the part), not a 4th', RETEST.test(p1!.facts) && RETEST.test(p2!.facts) && RETEST.test(p3!.facts) && !RETEST.test(p4!.facts) && p3!.retest?.offered === 3);
   check('…and still open after it (no "not asked" by turns)', !p4!.retest?.outcome && !p4!.events.some((e) => /outcome=not_asked/.test(e)), p4!.retest);
   check('T33: "I have sold more washing machines to customers." in that part = passed', p5!.retest?.outcome === 'passed' && p5!.events.some((e) => /v2_retest_outcome target="washing machines", "to customers" outcome=passed/.test(e)), [p5!.retest, p5!.events]);
+  check('fix round 1 (ruling): "I have talked to customers every day." (only "to customers") does not pass; still open, no praise line', !on.falsePass?.outcome && !/retest: their answer just now uses/.test(on.falsePassFacts), on.falsePass);
   check('the part left with it open: not asked', on.left.retest?.outcome === 'not_asked', on.left);
   check('a new correction on the target: missed', on.missed?.outcome === 'missed', on.missed);
 

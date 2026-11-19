@@ -207,7 +207,10 @@ export interface V2State {
   retests?: V2Retest[];
   /** Task 7x (FREE_CONVERSATION): in the free-conversation part in hand, the answers corrected (aloud or not) and whether a reply has
    *  invited the learner to ask a question of their own (adaptive.ts). Reset when the part changes. */
-  freeConv?: { part: string; corrected: number; invited?: true };
+  freeConv?: { part: string; corrected: number; invited?: true; asks?: number };
+  /** Task 7x fix round 1 (I2): optional parts the learner's words asked to leave (optional-hold.ts v2NoteOptionalLeave). A phrase reading:
+   *  only the hold's facts line reads it, never a runtime hold (moveOnAsked feeds the 7f minimum). */
+  optionalLeft?: string[];
   /** Task 7v (PART_CLOCK), spoken lessons with a labelled plan: the part in hand and when (lesson clock, ms) the lesson entered it.
    *  A part's own time is measured from here (time-fit.ts). */
   partStart?: { part: string; at: number };

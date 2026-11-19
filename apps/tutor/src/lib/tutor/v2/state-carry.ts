@@ -24,7 +24,7 @@ export const V2_MAX_UNHEARD = 4;
  *  the close; final review I6: read whatever STATE_CARRY says, as the held page is (its own switch, CLOSE_INVITES_QUESTIONS,
  *  and its scope are applied in v2ScopeCarried): with STATE_CARRY off it was dropped every turn, and every close after the
  *  invitation was refused and the invitation asked again. */
-type Carried = Pick<V2State, 'heldPage' | 'summaryBegunAt' | 'repliesSinceBoard' | 'boardProblems' | 'closeInvitedAt' | 'closeReopened' | 'closeAsk' | 'closeCheck' | 'closeCheckLate' | 'visitPages' | 'clockPausedMs' | 'timeFit' | 'practiceSaid' | 'moveOnAsked' | 'cardsOwed' | 'unheard' | 'partStart'>;
+type Carried = Pick<V2State, 'heldPage' | 'summaryBegunAt' | 'repliesSinceBoard' | 'boardProblems' | 'closeInvitedAt' | 'closeReopened' | 'closeAsk' | 'closeCheck' | 'closeCheckLate' | 'visitPages' | 'clockPausedMs' | 'timeFit' | 'practiceSaid' | 'moveOnAsked' | 'optionalLeft' | 'cardsOwed' | 'unheard' | 'partStart'>;
 const ID = /^[\w.:-]{1,80}$/;
 export function v2ReadCarried(raw: unknown, enabled: boolean = TUTOR_V2_STATE_CARRY): Carried {
   const s = (raw && typeof raw === 'object' ? raw : {}) as Partial<Record<keyof V2State, unknown>>;
@@ -39,6 +39,8 @@ export function v2ReadCarried(raw: unknown, enabled: boolean = TUTOR_V2_STATE_CA
     if (Object.keys(said).length) out.practiceSaid = said;
   }
   if (Array.isArray(s.moveOnAsked)) { const ids = s.moveOnAsked.filter((x): x is string => typeof x === 'string' && ID.test(x)).slice(-20); if (ids.length) out.moveOnAsked = ids; }
+  // Task 7x fix round 1 (I2): optional parts the learner asked to leave (facts only; scope in v2ScopeCarried).
+  if (Array.isArray(s.optionalLeft)) { const ids = s.optionalLeft.filter((x): x is string => typeof x === 'string' && ID.test(x)).slice(-20); if (ids.length) out.optionalLeft = ids; }
   // Task 7g (CARD_EVERY_SENTENCE): the sentences owed a card, whatever STATE_CARRY says (its own switch; scope in v2ScopeCarried).
   if (Array.isArray(s.cardsOwed)) { const list = s.cardsOwed.filter((x): x is string => typeof x === 'string' && !!x.trim()).slice(0, V2_MAX_CARDS_OWED).map((x) => x.slice(0, PROBLEM_CHARS)); if (list.length) out.cardsOwed = list; }
   // Task 7i (STAY_IN_PART): the sentences of the last reply not heard (its own switch; scope in v2ScopeCarried).
@@ -92,7 +94,7 @@ export function v2ScopeCarried(state: V2State, session: Pick<V2Session, 'mode' |
   if (!v2CarryApplies(session)) { delete state.practiceSaid; delete state.moveOnAsked; delete state.cardsOwed; delete state.unheard; delete state.visitPages; delete state.partStart; }
   if (!session.plan || session.homework || session.homeworkSheet || discussionOf(session.plan)) delete state.timeFit;
   // Task 7q: the support step and the recorded corrections only for the lessons they run in (adaptive.ts v2AdaptOn).
-  if (!v2AdaptOn(session as V2Session)) { delete state.support; delete state.retests; delete state.freeConv; }
+  if (!v2AdaptOn(session as V2Session)) { delete state.support; delete state.retests; delete state.freeConv; delete state.optionalLeft; }
   // Task 7w (SUMMARY_MARKS): the corrections with their marks only for the lessons they are recorded in.
   if (!v2SummaryMarksOn(session as V2Session)) delete state.corrections;
   return state;

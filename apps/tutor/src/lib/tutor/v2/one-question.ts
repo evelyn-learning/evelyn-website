@@ -112,16 +112,21 @@ export function v2IsCheckIn(sentence: string): boolean {
   return CHECK_IN.test(s) || CHECK_IN_JA.test(s);
 }
 
-/** Task 7x (REPEAT_THEN_WAIT): a sentence that asks them to say a sentence again: "Can you say the sentence once more?", "Please try that
+/** Task 7x (REPEAT_THEN_WAIT): a sentence that asks THEM to say a sentence again: "Can you say the sentence once more?", "Please try that
  *  sentence again.", "Can you say the complete sentence?", "Say it after me.", 「もう一度言ってみてください」, 「繰り返してください」. Never
- *  advice for later ("Try to say it this way next time."). */
-const REPEAT_EN = /\b(?:say|repeat|try|read)\b[^.?!]*?\b(?:again|once more|one more time|(?:the|that|this|your) (?:complete|whole|full|correct|corrected|new) sentence|after me)\b|\brepeat (?:it|that|this|the sentence|that sentence|the whole sentence)\b/i;
-const REPEAT_JA = /もう一度[^。！？?]*(?:言って|言い|言え|繰り返|発音|読ん)|繰り返して(?:ください|みて)/;
+ *  advice for later ("Try to say it this way next time."). Fix round 1 (ruling): an ask directed at the learner only: an imperative, or a
+ *  question to "you"; never the tutor saying it again ("Let me say it once more", 「もう一度言いますね」) or moving on ("Let's try again with
+ *  a new question"). */
+const REPEAT_WHAT = String.raw`[^.?!]*?\b(?:again|once more|one more time|(?:the|that|this|your) (?:complete|whole|full|correct|corrected|new) sentence|after me)\b`;
+const REPEAT_EN = new RegExp(String.raw`^(?:(?:okay|ok|so|now|then|good|great|alright|all right|right|and)[,!.:]?\s+)*(?:please[,]?\s+)?(?:say|repeat|try|read)\b${REPEAT_WHAT}|\b(?:can|could|would|will) you\s+(?:please\s+)?(?:say|repeat|try|read)\b${REPEAT_WHAT}|\b(?:can|could|would|will) you\s+(?:please\s+)?repeat (?:it|that|this|the sentence)\b|^(?:(?:okay|ok|so|now|please)[,!.:]?\s+)*repeat (?:it|that|this|the sentence|that sentence|the whole sentence)\b|\byou (?:say|try|repeat)\b${REPEAT_WHAT}`, 'i');
+const NOT_THEIRS = /\b(?:let me|let'?s|let us|i'?ll|i will|i'?m going to|i am going to|i can)\b/i;
+const REPEAT_JA = /もう一度[^。！？?]*(?:言ってみて|言って(?:ください|もらえ|くれ)|言えますか|繰り返して|発音して(?:みて)?ください|読んでみて)|繰り返して(?:ください|みて)/;
 export function v2AsksRepeat(sentence: string): boolean {
   const s = sentence.trim();
   if (!s || LATER.test(s)) return false;
-  return REPEAT_EN.test(s) || REPEAT_JA.test(s);
+  return (REPEAT_EN.test(s) && !NOT_THEIRS.test(s)) || REPEAT_JA.test(s);
 }
 
 /** Task 7x (REPEAT_THEN_WAIT): the facts line of a reply to their practice answer in a spoken language lesson. */
-export const V2_REPEAT_WAIT_LINE = 'after a correction: if you ask them to say the corrected sentence again, that ask ENDS this reply (it is its one question): no next question, question card or offer after it; your next question comes in the reply after their repeat. Without such an ask you may go on to your next question';
+/** Fix round 1 (ruling): in a spoken language lesson, a reply that corrects their sentence asks them to say it once more and ends there. */
+export const V2_CORRECT_THEN_REPEAT_LINE = 'after a correction: when you correct their sentence, ask them to say the corrected sentence once more, and stop there: that ask ENDS this reply (it is its one question): no next question, question card or offer after it. Ask your next question in the reply after they have said it. A reply that corrects nothing goes on to your next question';

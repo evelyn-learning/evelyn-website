@@ -34,7 +34,7 @@ import { SentenceStream } from './sentences';
 import { v2OptionalHoldLine, v2PartOpeningQuestion, type V2OptionalHold } from './optional-hold';
 import { v2AdaptOn } from './adaptive';
 import { TUTOR_V2_PART_FIRST_STEP } from '../orchestrator/flags';
-import { V2_REPEAT_WAIT_LINE } from './one-question';
+import { V2_CORRECT_THEN_REPEAT_LINE } from './one-question';
 import { asksAnywhere } from './board-timing';
 
 /** After the tutor chose to keep listening: how long the student stays silent before it is told so (TutorVoiceV2).
@@ -93,7 +93,8 @@ export interface V2TurnFacts {
   partAhead?: string;
   /** Task 7q (SUPPORT_STEPS, RETEST_MISTAKE): the lines for this turn (adaptive.ts v2AdaptBefore, turn.ts). */
   adaptive?: string[];
-  /** Task 7x (REPEAT_THEN_WAIT): this reply answers their practice answer in a spoken language lesson (turn.ts). */
+  /** Task 7x (REPEAT_THEN_WAIT): this reply answers their practice answer in a spoken language lesson (turn.ts); fix round 1: not where
+   *  the free-conversation part's corrections aloud are spent (the quiet card). */
   repeatWait?: boolean;
   /** Task 7x (PART_FIRST_STEP): the optional part taken is held (optional-hold.ts v2OptionalHold). */
   optionalHold?: V2OptionalHold;
@@ -324,7 +325,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // answer, a question goes on a question card (practice-facts.ts; spoken lessons that teach a language only).
   lines.push(...v2PracticeFactLines(session, state, f.heard));
   // Task 7x (REPEAT_THEN_WAIT): a correction's repeat ask ends the reply.
-  if (f.repeatWait) lines.push(V2_REPEAT_WAIT_LINE);
+  if (f.repeatWait) lines.push(V2_CORRECT_THEN_REPEAT_LINE);
   // Task 7v (SUPPORT_FOLLOWED): the support step (the next question's form) and a retest stand beside the practice facts for the next
   // question, not at the end of the facts (mic test 6, embed-1795067373124: a third of new questions ignored the step).
   if (TUTOR_V2_SUPPORT_FOLLOWED && f.adaptive?.length) lines.push(...f.adaptive);

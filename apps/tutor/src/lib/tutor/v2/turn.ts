@@ -48,7 +48,7 @@ import { v2NoteCorrection, v2SummaryCardCheck } from './summary-marks';
 import { v2SummaryOpensCloseOn } from './summary-close';
 import { V2_CLOSE_CHECK_MIN, V2_CLOSE_CHECK_REFUSAL, v2CloseCheckOn, v2CloseCheckOwed, v2CloseCheckPending, v2PlanCheckQuestion } from './close-check';
 import { v2NoteOptionalLeave, v2OptionalHold } from './optional-hold';
-import { v2AdaptAfter, v2AdaptBefore, v2AdaptOn, v2AdaptPart, v2FreeConvAfter, v2PracticePairs } from './adaptive';
+import { v2AdaptAfter, v2AdaptBefore, v2AdaptOn, v2AdaptPart, v2FreeConvAfter, v2FreeConvQuiet, v2PracticePairs } from './adaptive';
 import { LearnerCardWatch, V2_REPLY_MISHEARD, v2CardIsFragment, v2LearnerCardsOn, v2OwedCardCheckLine, v2PracticeAnswerSentences, v2SentenceOnBoard, v2SentencesNotCarded } from './learner-card';
 import { v2StopAsked } from './stop-signal';
 import { V2_CLOSE_INVITE_LINE, V2_CLOSE_INVITE_REFUSAL, V2_CLOSE_INVITE_WAIT, V2_CLOSE_MORE_LINE, V2_CLOSE_REOPEN_REFUSAL, v2CloseInviteOn, v2CloseInviteOwed, v2CloseReopened, v2ReplyAsksMoreOrFinish, v2ReplyInvites } from './close-invite';
@@ -601,7 +601,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // then whether it is still held (optional-hold.ts). Facts only.
   if (!released) v2NoteOptionalLeave(session, state, input.studentSaid, stopAsked);
   const optionalHold = !closingTurn && !discussion ? v2OptionalHold(session, state, nowMs, marginMin) : null;
-  const facts = renderFacts(session, state, { ...input.facts, nowMs, ...(adaptBefore.lines.length ? { adaptive: adaptBefore.lines } : {}), heard: input.studentSaid, time: tf, ...(practiceShort ? { practiceShort } : {}), ...(morePractice !== undefined ? { morePractice } : {}), ...(stopAsked ? { stopAsked: true } : {}), ...(levelReopened ? { levelReopened: true } : {}), ...(released ? { partOpened: String(released.args.title) } : {}), ...(input.partFlags?.askEvery !== undefined ? { partAskEvery: input.partFlags.askEvery } : {}), ...(droppedAsked ? { droppedAsked } : {}), ...(partVisit ? { partVisit } : {}), ...(partAhead ? { partAhead } : {}), ...(reopenAsked ? { reopenAsked: true } : {}), ...(optionalHeld && !closingTurn ? { optionalHeld } : {}), ...(repeatWaitOn ? { repeatWait: true } : {}), ...(optionalHold ? { optionalHold } : {}) });
+  const facts = renderFacts(session, state, { ...input.facts, nowMs, ...(adaptBefore.lines.length ? { adaptive: adaptBefore.lines } : {}), heard: input.studentSaid, time: tf, ...(practiceShort ? { practiceShort } : {}), ...(morePractice !== undefined ? { morePractice } : {}), ...(stopAsked ? { stopAsked: true } : {}), ...(levelReopened ? { levelReopened: true } : {}), ...(released ? { partOpened: String(released.args.title) } : {}), ...(input.partFlags?.askEvery !== undefined ? { partAskEvery: input.partFlags.askEvery } : {}), ...(droppedAsked ? { droppedAsked } : {}), ...(partVisit ? { partVisit } : {}), ...(partAhead ? { partAhead } : {}), ...(reopenAsked ? { reopenAsked: true } : {}), ...(optionalHeld && !closingTurn ? { optionalHeld } : {}), ...(repeatWaitOn && !v2FreeConvQuiet(session, state, adaptPart, adaptFlags.free) ? { repeatWait: true } : {}), ...(optionalHold ? { optionalHold } : {}) });
   // Task 7i (STAY_IN_PART): the unheard sentences are named in these facts once.
   delete state.unheard;
   // A reply that closes the session: the student's words ask to stop, or the time is up (V2_TIME_UP_MIN, as the facts
@@ -1178,7 +1178,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
             const noteAhead = (part.block.kind === 'note' || part.block.kind === 'table') && gated && languageLesson && TUTOR_V2_SAY_NOTE_SENTENCES ? noteSentencesToSay(part.block.kind, part.block.body, `${saidNow}${gate.heldAsk}`) : null;
             inlineTimed = TUTOR_V2_CARD_AT_SENTENCE && gated && languageLesson ? (sayAhead || noteAhead?.announced ? 'next' : 'text') : undefined;
             // Task 7x (REPEAT_THEN_WAIT): a question card after the repeat ask is not painted (out of the stored reply too).
-            if (repeatWait && part.block.kind === 'problem' && gate.waitsForRepeat) { retitles.push([part.block.raw, '']); continue; }
+            if (repeatWait && part.block.kind === 'problem' && gate.waitsForRepeat) { inlineTimed = undefined; retitles.push([part.block.raw, '']); continue; }
             const before = inlineN;
             try { if (settleInline(part.block)) sinceWords.push(`inl_${nowMs.toString(36)}_${before + 1}`); } finally { inlineTimed = undefined; }
           }

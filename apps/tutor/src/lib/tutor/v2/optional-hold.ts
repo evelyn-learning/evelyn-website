@@ -9,9 +9,9 @@
  *    `question`). The reply that opens the part on their yes asks it and waits (part-flow.ts v2PartAskFacts).
  *  - The optional part taken (v2OptionalHold): not left before V2_OPTIONAL_MIN_ITEMS items and, while it still fits before the session
  *    must end with the parts after it, before half of its own minutes on the part clock, unless the learner asked to stop or move on in
- *    it (state.moveOnAsked, recorded by v2NoteOptionalLeave). While it holds, the facts carry its line and no summary-page lines.
+ *    it (state.optionalLeft, recorded by v2NoteOptionalLeave; fix round 1, I2: its own field, read by nothing else). While it holds, the facts carry its line and no summary-page lines.
  *
- * Facts only: no hold, no refusal, nothing of the lesson's position moves on it (the phrase reading only adds a part to moveOnAsked,
+ * Facts only: no hold, no refusal, nothing of the lesson's position moves on it (the phrase reading only adds a part to optionalLeft,
  * which only lifts this line). Spoken lessons that teach a language with a labelled plan (adaptive.ts v2AdaptOn). Pure, client-safe.
  */
 import type { Segment } from '../lesson-plan/types';
@@ -46,15 +46,15 @@ const LEAVE = /\b(?:move on|skip|(?:the )?summary|wrap (?:it )?up|that'?s enough
 const BARE_NO = /^(?:(?:uh|um|er|hmm)[,.]?\s*)*(?:no|nope|nah)(?:[,.!]?\s*(?:thanks?|thank you|that'?s (?:ok(?:ay)?|fine|enough)))?[.!]*$|^(?:いいえ|大丈夫です|結構です)[。！!]*$/i;
 
 /** Before the facts (mutates `state`): their words just now in the optional part in hand ask to leave it: the part is recorded in
- *  `moveOnAsked` (the hold's line lifts). `stopAsked`: their words end the session. */
+ *  `optionalLeft` (the hold's line lifts; nothing else reads it). `stopAsked`: their words end the session. */
 export function v2NoteOptionalLeave(session: V2Session, state: V2State, said: string | null | undefined, stopAsked: boolean, enabled: boolean = TUTOR_V2_PART_FIRST_STEP): void {
   if (!enabled || !said || !v2AdaptOn(session) || state.closed) return;
   const plan = session.plan!;
   if (v2PartViewed(plan, state) >= 0) return;
   const seg = plan.segments[v2PartInHand(plan, state)];
-  if (!seg || !v2PartIsOptional(seg) || (state.moveOnAsked ?? []).includes(seg.id)) return;
+  if (!seg || !v2PartIsOptional(seg) || (state.optionalLeft ?? []).includes(seg.id)) return;
   const words = said.trim();
-  if (stopAsked || LEAVE.test(words) || BARE_NO.test(words)) state.moveOnAsked = [...(state.moveOnAsked ?? []), seg.id].slice(-20);
+  if (stopAsked || LEAVE.test(words) || BARE_NO.test(words)) state.optionalLeft = [...(state.optionalLeft ?? []), seg.id].slice(-20);
 }
 
 /** The optional part taken and in hand, while it is held: its name, items done, and the minutes left of its first half (null when
@@ -64,7 +64,7 @@ export function v2OptionalHold(session: V2Session, state: V2State, nowMs: number
   if (!enabled || !plan || !box || !v2AdaptOn(session) || state.closed || typeof state.summaryBegunAt === 'number') return null;
   if (v2PartViewed(plan, state) >= 0) return null;
   const cur = v2PartInHand(plan, state); const seg = plan.segments[cur];
-  if (!seg || cur >= plan.segments.length - 1 || !v2PartIsOptional(seg) || state.timeFit?.dropped.includes(seg.id) || state.goals[seg.id]?.status === 'skipped' || (state.moveOnAsked ?? []).includes(seg.id)) return null;
+  if (!seg || cur >= plan.segments.length - 1 || !v2PartIsOptional(seg) || state.timeFit?.dropped.includes(seg.id) || state.goals[seg.id]?.status === 'skipped' || (state.optionalLeft ?? []).includes(seg.id) || (state.moveOnAsked ?? []).includes(seg.id)) return null;
   // A part of their own sentences counts them (7f); any other (pronunciation: words and read-aloud lines) counts the different items
   // carded on its page (the runtime cards each item armed, and a repeat of one is no new card).
   const items = v2PracticePart(plan, cur) ? state.practiceSaid?.[seg.id] ?? 0 : new Set(state.board.pages.filter((pg) => v2PartOfPage(plan, pg.title) === cur)

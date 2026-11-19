@@ -55,6 +55,8 @@ export const V2_RETEST_TURNS = 2;
 export const V2_RETEST_TURNS_ASKED = 3;
 /** Task 7x (FREE_CONVERSATION): corrections made aloud in a free-conversation part at most (the support signals counted per part). */
 export const V2_FREE_CONV_CORRECTIONS = 2;
+/** Fix round 1 (m4): the invitation line is sent on at most this many turns. */
+export const V2_FREE_CONV_INVITE_SENDS = 2;
 const retestTurns = (f: V2AdaptFlags) => (askedOn(f) ? V2_RETEST_TURNS_ASKED : V2_RETEST_TURNS);
 /** Task 7v (RETEST_SPREAD): corrections recorded per part at most. */
 export const V2_RETEST_PER_PART = 2;
@@ -130,6 +132,13 @@ const capped = (plan: LessonPlan, index: number, step: V2SupportStep, on: boolea
 const words = (s: string) => v2SentenceWords(s);
 /** Fix round 1 (M2): the same target = any target word in common ("sold, machines" then "sold" is one entry). */
 const sameTarget = (a: readonly string[], b: readonly string[]) => { const x = new Set(a.flatMap(words)); return b.flatMap(words).some((w) => x.has(w)); };
+/** Task 7x fix round 1 (RETEST_ASKED, ruling): their sentence passes a retest when it holds every run of words the correction changed
+ *  (v2ChangedWords of their sentence → the card's, each run whole: "machines to customers"), where those are known; else, and with the
+ *  switch off, any target phrase as before. "I talk to customers" does not pass "I sell washing machines to customers". */
+function passesRetest(sentence: string, r: Pick<V2Retest, 'said' | 'right' | 'target'>, f: V2AdaptFlags): boolean {
+  const changed = askedOn(f) && changedOn(f) ? v2ChangedWords(r.said, r.right) : [];
+  return changed.length ? changed.every((x) => usesTarget(sentence, [x])) : usesTarget(sentence, r.target);
+}
 const quoteTarget = (t: readonly string[]) => t.map((x) => `"${x}"`).join(', ');
 /** Their sentence holds a target word (a target phrase whole), whole words (numbers in words and digits alike). Fix round 1 (M1):
  *  any of them, not all: "sold, machines" is used by a sentence with "sold". */
@@ -241,7 +250,12 @@ export function v2AdaptBefore(session: V2Session, state: V2State, heard: string 
     const l = free && step === 'starter' && !v2AskedForHelp(heard) && !v2SilenceBefore(state.history) ? null : v2SupportLine(step, undefined, followedOn(flags));
     if (l) lines.push(l);
   }
-  if (free && part && said) lines.push(...v2FreeConvLines(session, state, part, nowMs));
+  if (free && part && said) {
+    const fl = v2FreeConvLines(session, state, part, nowMs);
+    lines.push(...fl);
+    // Fix round 1 (m4): the invitation's sends counted.
+    if (fl.some((l) => l.startsWith('your turn to be asked'))) { const fc = state.freeConv?.part === part.id ? state.freeConv : { part: part.id, corrected: 0 }; state.freeConv = { ...fc, asks: (fc.asks ?? 0) + 1 }; }
+  }
   if (!flags.retest) return { lines, events };
   const list = state.retests ?? [];
   // An open retest is not asked when: the lesson is in another practice part, or at its summary or close (fix round 1, M3: not on
@@ -258,7 +272,7 @@ export function v2AdaptBefore(session: V2Session, state: V2State, heard: string 
   if (!part || !said) return { lines, events };
   const open = list.find((r) => r.offered && !r.outcome);
   // Their answer just now uses the target of the open retest: one word of praise is allowed, once, if it is right.
-  if (open && !open.praised && heard && usesTarget(heard, open.target)) {
+  if (open && !open.praised && heard && passesRetest(heard, open, flags)) {
     open.praised = true;
     // Task 7v (RETEST_TARGET_CHANGED): the praise names only the words the correction changed, never a neighbour shown for context.
     const runs = changedOn(flags) ? v2ChangedWords(open.said, open.right) : [];
@@ -349,7 +363,8 @@ export function v2AdaptAfter(session: V2Session, state: V2State, part: { index: 
   const open = list.find((r) => r.offered && !r.outcome && r.in === part.id && typeof r.askedAt === 'number' && turn > r.askedAt);
   if (open) {
     const missed = pairs.some((p) => p.corrected && ((changedOn(flags) ? samePhrase(p.stress, open.target) : touches(p.stress, open.target)) || (!usesTarget(p.said, open.target) && usesTarget(p.card, open.target))));
-    const passedNow = !missed && pairs.some((p) => usesTarget(p.said, open.target));
+    // Fix round 1 (ruling): a pass needs every word the correction changed (7v's record), not one word of the target phrase.
+    const passedNow = !missed && pairs.some((p) => passesRetest(p.said, open, flags));
     // Task 7x (RETEST_ASKED): no "not asked" by turns: the outcome stays open until the part ends (v2AdaptBefore).
     const outcome = missed ? 'missed' : passedNow ? 'passed' : !askedOn(flags) && (open.offered ?? 0) >= V2_RETEST_TURNS && typeof open.lastAt === 'number' && turn > open.lastAt ? 'not_asked' : null;
     if (outcome) { open.outcome = outcome; events.push(ev('v2_retest_outcome', `target=${quoteTarget(open.target)} outcome=${outcome} part=${part.id} turn=${turn}`)); }
@@ -386,7 +401,7 @@ export function v2ReadAdaptive(raw: Partial<Record<keyof V2State, unknown>>): Pi
   const out: Pick<V2State, 'support' | 'retests' | 'freeConv'> = {};
   // Task 7x (FREE_CONVERSATION).
   const fc = raw.freeConv as Partial<NonNullable<V2State['freeConv']>> | undefined;
-  if (fc && typeof fc === 'object' && typeof fc.part === 'string' && ID.test(fc.part)) out.freeConv = { part: fc.part, corrected: count(fc.corrected, 99), ...(fc.invited === true ? { invited: true as const } : {}) };
+  if (fc && typeof fc === 'object' && typeof fc.part === 'string' && ID.test(fc.part)) out.freeConv = { part: fc.part, corrected: count(fc.corrected, 99), ...(fc.invited === true ? { invited: true as const } : {}), ...(count(fc.asks, 9) ? { asks: count(fc.asks, 9) } : {}) };
   const s = raw.support as Partial<V2Support> | undefined;
   if (s && typeof s === 'object' && typeof s.step === 'string' && STEP_SET.has(s.step)) out.support = { step: s.step, wrong: count(s.wrong, V2_SUPPORT_RUN), clean: count(s.clean, V2_SUPPORT_RUN), ...(typeof s.part === 'string' && ID.test(s.part) ? { part: s.part } : {}) };
   if (Array.isArray(raw.retests)) {
@@ -416,7 +431,8 @@ export function v2RetestAskLine(plan: LessonPlan, r: V2Retest): string {
 
 /** Task 7x (FREE_CONVERSATION): their words just now ask for help or are a question ("How do I say…?", "What should I say?",
  *  「わかりません」). Informs the facts only. */
-const HELP = /[?？]\s*$|^(?:(?:uh|um|er|so|well|sorry|hmm)[,.]?\s+)*(?:how|what|which|can you|could you|would you|do you|is it|help|i don'?t (?:know|understand)|i'?m not sure)\b|わかりません|分かりません|どう言|教えて/i;
+// Fix round 1 (m8): a question mark, or words that ask for help; no bare "What / How …" opener ("What I did was organise the fair.").
+const HELP = /[?？]\s*$|\b(?:how (?:do|can|should) i (?:say|put|answer)|what (?:should|do|can) i say|can you help|could you help|help me|i don'?t (?:know|understand)|i'?m not sure|(?:can|could) you (?:repeat|say (?:that|it) again|give me a hint))\b|わかりません|分かりません|どう言|教えて/i;
 export function v2AskedForHelp(heard: string | null | undefined): boolean {
   return typeof heard === 'string' && HELP.test(heard.trim());
 }
@@ -440,8 +456,15 @@ export function v2FreeConvLines(session: V2Session, state: V2State, part: { inde
   const fc = state.freeConv?.part === part.id ? state.freeConv : null;
   if (fc && fc.corrected >= V2_FREE_CONV_CORRECTIONS) lines.push(`corrections in this conversation part: ${fc.corrected} of their answers were corrected, and this part makes at most ${V2_FREE_CONV_CORRECTIONS} corrections aloud. From now on do not correct aloud and ask for no retry: respond to what they said and go on with the conversation. A sentence of theirs with a mistake still goes on the board as it should be (its sentence card, with no words about it), so it is kept for the summary's "To improve"`);
   const c = v2PartClock(session, state, nowMs);
-  if (!fc?.invited && c && c.index === part.index && c.used >= c.own / 2) lines.push('your turn to be asked: half of this conversation part\'s time has passed and they have not yet been invited to ask you anything. In this reply, after responding to what they said, invite them to ask you one question of their own (about you or your own experience of this topic) instead of asking your next question; answer it briefly from your persona card, then go on with the conversation');
+  // Fix round 1 (m4): sent at most V2_FREE_CONV_INVITE_SENDS times (counted in v2AdaptBefore); a model that ignores it is not told again.
+  if (!fc?.invited && (fc?.asks ?? 0) < V2_FREE_CONV_INVITE_SENDS && c && c.index === part.index && c.used >= c.own / 2) lines.push('your turn to be asked: half of this conversation part\'s time has passed and they have not yet been invited to ask you anything. In this reply, after responding to what they said, invite them to ask you one question of their own (about you or your own experience of this topic) instead of asking your next question; answer it briefly from your persona card, then go on with the conversation');
   return lines;
+}
+
+/** Task 7x fix round 1 (ruling): the free-conversation part in hand has spent its corrections aloud: a correction now is the quiet card,
+ *  and the correct-then-repeat line is not given. */
+export function v2FreeConvQuiet(session: V2Session, state: V2State, part: { index: number; id: string } | null, enabled: boolean = TUTOR_V2_FREE_CONVERSATION): boolean {
+  return enabled && !!part && v2AdaptOn(session) && v2FreeConversationPart(session.plan!.segments[part.index]) && state.freeConv?.part === part.id && state.freeConv.corrected >= V2_FREE_CONV_CORRECTIONS;
 }
 
 /** Task 7x (FREE_CONVERSATION): after the reply (mutates `state`): a reply in a free-conversation part that asked them to make a question

@@ -350,7 +350,9 @@ async function probe() {
   // ── 6 the support step ──
   const gapExplained = v2PracticeAnswerSentences(lang, inPart(3, { history: [u('x'), a('大丈夫です。空欄には「work」の過去分詞を入れます。')] }), 'I see, so I put worked there.');
   const lines = { starter: v2SupportLine('starter'), gap: v2SupportLine('gap'), repeat: v2SupportLine('repeat'), stretch: v2SupportLine('stretch') };
-  const convGap = await turn(lang, inPart(5, { support: { step: 'gap', wrong: 0, clean: 0, part: 'open-conversation' } }), 'I worked on a project to collect money for donation.', 'Good. What was your role?', 15.0);
+  // Task 7x fix round 1: after a silence turn, so the free-conversation part gives its starter line (7x FREE_CONVERSATION: a starter only
+  // after silence or a request for help) and this check runs with that switch on.
+  const convGap = await turn(lang, inPart(5, { support: { step: 'gap', wrong: 0, clean: 0, part: 'open-conversation' }, history: [u('x'), a('Tell me more.'), u('[The student has not replied.]'), a('Take your time.')] }), 'I worked on a project to collect money for donation.', 'Good. What was your role?', 15.0);
   const convAfter = inPart(5, { support: { step: 'starter', wrong: 1, clean: 0, part: 'open-conversation' }, history: [u('x'), a('Tell me about it.'), u('a'), a('b')] });
   v2AdaptAfter(lang, convAfter, { index: 5, id: 'open-conversation' }, ['As a senior manager, I told everyone go raise money.'], v2PracticePairs(['As a senior manager, I told everyone go raise money.'], [{ sentence: 'As a senior manager, I told everyone to raise money.', stress: ['to', 'raise'] }]));
   const intoConv = inPart(5, { support: { step: 'repeat', wrong: 0, clean: 0, part: 'past-simple' } });
