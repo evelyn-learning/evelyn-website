@@ -13,7 +13,7 @@
  * ("3.5") or straight after a single capital ("f. g") or a common abbreviation
  * does not, and neither does anything inside a $…$ span.
  */
-import { TUTOR_V2_NO_FALSE_SILENCE } from '../orchestrator/flags';
+import { TUTOR_V2_MIXED_SENTENCE_PARTS, TUTOR_V2_NO_FALSE_SILENCE } from '../orchestrator/flags';
 
 /** The longest quotation (characters) held as one sentence. */
 const QUOTE_SPAN_MAX = 300;
@@ -21,6 +21,7 @@ const ABBREVIATIONS = /(?:\b(?:e\.g|i\.e|vs|etc|approx|Mr|Mrs|Ms|Dr|St|No|Fig|Eq
 
 export class SentenceStream {
   private buf = '';
+  constructor(private readonly mixedParts: boolean = TUTOR_V2_MIXED_SENTENCE_PARTS) {}
 
   /** Words of the next sentence have begun to arrive. */
   hasPending(): boolean { return /\S/.test(this.buf); }
@@ -84,7 +85,11 @@ export class SentenceStream {
       if (open > before.lastIndexOf('」') && m.index - open < QUOTE_SPAN_MAX) continue;
       if (m[0][0] === '.') {
         if (ABBREVIATIONS.test(before)) continue;
-        if (/(?:^|\s)[A-Za-z]\.$/.test(before)) continue; // a lone letter: "f." in "f. g"
+        // A lone letter: "f." in "f. g". Task 7y (MIXED_SENTENCE_PARTS, mic test 8 flag 1, embed-1795115593161 wall 02:56): not before a
+        // capitalised word: "…we say "washing machines" with an s. Your question…" ran on into the next sentence and its Japanese
+        // quote, and the whole piece went to the Japanese voice. Before another lone letter or a lowercase word the skip stays; the
+        // word after not yet arrived, it waits (the cut is looked for again on the next piece).
+        if (/(?:^|\s)[A-Za-z]\.$/.test(before) && !(this.mixedParts && /^\s+[A-Z][a-z]/.test(this.buf.slice(end)))) continue;
       }
       return end;
     }

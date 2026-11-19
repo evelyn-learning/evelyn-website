@@ -16,7 +16,7 @@
  * Only the voice's text changes: the transcript, the captions and the board keep the quotes.
  */
 
-import { TUTOR_V2_CARD_STRESS_SPOKEN } from '../orchestrator/flags';
+import { TUTOR_V2_CARD_STRESS_SPOKEN, TUTOR_V2_MIXED_SENTENCE_PARTS } from '../orchestrator/flags';
 
 /** The pause either side of a target. */
 export const V2_TARGET_PAUSE_MS = 200;
@@ -87,8 +87,11 @@ const PAUSING = /[,.;:!?\u3001\u3002\uff0c\uff1a\uff1b\uff01\uff1f\u2014\u2013\u
  *  the text or sits before a mark that pauses (so never a mark after a sentence's own full stop); nothing before a
  *  target at the start of the text or after a comma, colon, stop or dash (never doubled). No dash or comma is a word
  *  and neither splits the sentence into two requests (the voice gets the string whole). A stray mark is removed. */
-export function targetPunctuation(spoken: string): string {
-  const ja = JAPANESE.test(spoken);
+/** Task 7y (MIXED_SENTENCE_PARTS, mic test 8 flag 1, embed-1795115593161 wall 02:56): the piece is led in Japanese only when it has
+ *  Japanese outside its marked targets and its 「…」 quotes. "we say "washing machines" with an s. … 「中国で誰に売りましたか？」" had
+ *  Japanese only in its quote, and the target got Japanese commas (、washing machines、). */
+export function targetPunctuation(spoken: string, byPartLanguage: boolean = TUTOR_V2_MIXED_SENTENCE_PARTS): string {
+  const ja = JAPANESE.test(byPartLanguage ? spoken.replace(new RegExp(`${OPEN}[^${CLOSE}]*${CLOSE}|「[^「」]*」|『[^『』]*』`, 'g'), ' ') : spoken);
   const spans = [...spoken.matchAll(new RegExp(`${OPEN}\\s*([^${OPEN}${CLOSE}]*?)\\s*${CLOSE}`, 'g'))].filter((m) => m[1]);
   let out = ''; let at = 0;
   for (const m of spans) {

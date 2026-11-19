@@ -11,10 +11,10 @@
  * voice language (voice/tts-language.ts splitSentenceForTts).
  */
 import type Anthropic from '@anthropic-ai/sdk';
-import { TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_V2_CHECK_MISHEARD, TUTOR_V2_PRACTICE_ASK_CAP, TUTOR_V2_PRACTICE_VERDICT, TUTOR_V2_RETRY_COUNT, TUTOR_V2_SPOKEN_SOUNDS } from '../orchestrator/flags';
+import { TUTOR_TTS_SPLIT_QUOTED_SPANS, TUTOR_V2_MIXED_SENTENCE_PARTS, TUTOR_V2_CHECK_MISHEARD, TUTOR_V2_PRACTICE_ASK_CAP, TUTOR_V2_PRACTICE_VERDICT, TUTOR_V2_RETRY_COUNT, TUTOR_V2_SPOKEN_SOUNDS } from '../orchestrator/flags';
 import { stripBoardBlocks } from './board-inline';
 import { languageNameOf } from '../voice/language-request';
-import { splitSentenceForTts } from '../voice/tts-language';
+import { splitLatinLedForTts, splitSentenceForTts } from '../voice/tts-language';
 
 /** Lines for one support language, by its code. */
 const SUPPORT_LINES: Record<string, string[]> = {
@@ -108,8 +108,11 @@ export function v2RetryFacts(languages: readonly string[] | undefined, history: 
 
 /** What the voice is given for one sentence: a sentence in the support language that quotes a long span of the
  *  target is spoken in parts, each in its own voice language. One part in a one-language session. */
-export function v2SpeechParts(sentence: string, languages: readonly string[] | undefined): string[] {
-  return splitSentenceForTts(sentence, TUTOR_TTS_SPLIT_QUOTED_SPANS ? languages : undefined).map((p) => p.text);
+/** Task 7y (MIXED_SENTENCE_PARTS): a sentence led in English that quotes a Japanese span too (tts-language.ts splitLatinLedForTts). */
+export function v2SpeechParts(sentence: string, languages: readonly string[] | undefined, mixed: boolean = TUTOR_V2_MIXED_SENTENCE_PARTS): string[] {
+  const langs = TUTOR_TTS_SPLIT_QUOTED_SPANS ? languages : undefined;
+  const latinLed = mixed ? splitLatinLedForTts(sentence, langs) : null;
+  return (latinLed ?? splitSentenceForTts(sentence, langs)).map((p) => p.text);
 }
 
 /** A tutor reply that asks them to say or try a sentence. */

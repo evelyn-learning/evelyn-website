@@ -2396,3 +2396,30 @@ export const TUTOR_V2_REPEAT_THEN_WAIT = process.env.NEXT_PUBLIC_TUTOR_V2_REPEAT
  *  offered, none asked; a late right use two turns after the window closed) (Task 7x, item 4). Default ON;
  *  NEXT_PUBLIC_TUTOR_V2_RETEST_ASKED=off ⇒ as before. */
 export const TUTOR_V2_RETEST_ASKED = process.env.NEXT_PUBLIC_TUTOR_V2_RETEST_ASKED !== 'off';
+
+/** Tutor brain v2 (v2/echo-window.ts, components/v2/TutorVoiceV2.tsx): a paused voice ends the played stretch for the echo clock
+ *  (words that begin or keep growing more than the echo tail after the pause are the learner's), a partial that adds words keeps a
+ *  pause going (it ends on the transcript or on silence, not on the sound-pause clock), and one heard word matched to the played
+ *  stretch is undecided, never the tutor's own voice. Mic test 8 (embed-1795115593161, wall 19:09–19:12: his "I" over the paused
+ *  repeat model taken for echo, the voice spoke over him) (Task 7y, item 1). Default ON; NEXT_PUBLIC_TUTOR_V2_PAUSE_NOT_ECHO=off ⇒
+ *  as before. */
+export const TUTOR_V2_PAUSE_NOT_ECHO = process.env.NEXT_PUBLIC_TUTOR_V2_PAUSE_NOT_ECHO !== 'off';
+
+/** Tutor brain v2 (components/v2/TutorVoiceV2.tsx, v2/board-pause.ts): while the voice is paused (barge-in pause, sound pause, the flag
+ *  panel) the board paints nothing: every arriving item is held, the 45 s hold timers are suspended with their remaining time and
+ *  restarted on resume. Mic test 8 (embed-1795115593161, wall 10:15 two cards painted into a barge-in pause; 10:22 → 11:07 a question
+ *  painted during the flag pause) (Task 7y, item 2). Default ON; NEXT_PUBLIC_TUTOR_V2_PAUSE_HOLDS_BOARD=off ⇒ as before. */
+export const TUTOR_V2_PAUSE_HOLDS_BOARD = process.env.NEXT_PUBLIC_TUTOR_V2_PAUSE_HOLDS_BOARD !== 'off';
+
+/** Tutor brain v2 (v2/echo-window.ts, components/v2/TutorVoiceV2.tsx): on a confirmed barge-in the sentence playing counts as heard
+ *  when the echo clock shows at least V2_MOSTLY_HEARD_SHARE of its words played (the record, state.unheard). Mic test 8
+ *  (embed-1795115593161, wall 12:03: a bare "Yes." over the last words of a part ask and the tutor asked again) (Task 7y, item 3).
+ *  Default ON; NEXT_PUBLIC_TUTOR_V2_MOSTLY_HEARD=off ⇒ as before (the sentence playing is always unheard). */
+export const TUTOR_V2_MOSTLY_HEARD = process.env.NEXT_PUBLIC_TUTOR_V2_MOSTLY_HEARD !== 'off';
+
+/** Tutor brain v2 (v2/sentences.ts, v2/languages.ts, v2/target-pauses.ts): a lone letter and a full stop before a capitalised word
+ *  ends the sentence; a sentence led in Latin script that quotes a Japanese span is spoken in parts (English frame, the Japanese span,
+ *  the rest), each part's language by its script; target marks (dash / Japanese comma) by the language of the part around the target.
+ *  Mic test 8 (embed-1795115593161, wall 02:56: "…we say "washing machines" with an s. Your question … 「…」" went whole to the
+ *  Japanese voice) (Task 7y, item 4). Default ON; NEXT_PUBLIC_TUTOR_V2_MIXED_SENTENCE_PARTS=off ⇒ as before. */
+export const TUTOR_V2_MIXED_SENTENCE_PARTS = process.env.NEXT_PUBLIC_TUTOR_V2_MIXED_SENTENCE_PARTS !== 'off';

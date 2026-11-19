@@ -104,6 +104,36 @@ export function splitSentenceForTts(text: string, languages: readonly string[] |
   return parts.length > 1 ? parts : whole;
 }
 
+/**
+ * Tutor brain v2, Task 7y (MIXED_SENTENCE_PARTS; v2/languages.ts v2SpeechParts is the only caller, v1 never calls it): the other
+ * direction. A sentence led in Latin script (no Japanese outside its quotes) that quotes a Japanese span is spoken as parts: the
+ * frame before (English), the Japanese span (its brackets left out), the rest (English); each part's language is then its own
+ * script (ttsLanguageFor). Mic test 8 (embed-1795115593161, wall 02:56): "…so ask me one more: 「中国で誰に売りましたか？」 What
+ * kind of customers…?" went whole to the Japanese voice, which read the English as loanwords. Null: not such a sentence (a
+ * one-language session, Japanese outside the quotes, no Japanese span): the caller goes on as before.
+ */
+export function splitLatinLedForTts(text: string, languages: readonly string[] | null | undefined): TtsPart[] | null {
+  if (!languages || languages.length < 2 || !languages.includes('ja')) return null;
+  const outside = text.replace(QUOTED_SPAN_RE, ' ');
+  if (JAPANESE_SCRIPT.test(outside) || !/[A-Za-z]/.test(outside)) return null;
+  const parts: TtsPart[] = [];
+  const push = (t: string) => {
+    const f = t.trim();
+    if (f && SPOKEN_CONTENT_RE.test(f)) parts.push({ text: f, language: ttsLanguageFor(f, languages) });
+  };
+  let last = 0;
+  for (const m of text.matchAll(QUOTED_SPAN_RE)) {
+    const inner = (m[1] ?? m[2] ?? m[3] ?? '').trim();
+    if (!JAPANESE_SCRIPT.test(inner)) continue;
+    push(text.slice(last, m.index));
+    push(inner);
+    last = (m.index ?? 0) + m[0].length;
+  }
+  if (last === 0) return null;
+  push(text.slice(last));
+  return parts.length > 1 ? parts : null;
+}
+
 /** Task 25 fix round 1 (I-2): the resume tail with the kept split sentence's
  *  remaining parts removed from its head (they are spoken right after the
  *  kill, so the resume must not play them again). */

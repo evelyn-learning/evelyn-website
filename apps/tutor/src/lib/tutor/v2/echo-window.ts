@@ -20,7 +20,7 @@
  * no later than a slow speaking rate puts it, the end no earlier than the audio that has arrived allows.
  */
 import { ownVoiceMatch, ownVoiceWords } from './own-voice';
-import { TUTOR_V2_ECHO_BY_PLAYBACK, TUTOR_V2_REPEAT_NOT_ECHO } from '../orchestrator/flags';
+import { TUTOR_V2_ECHO_BY_PLAYBACK, TUTOR_V2_MOSTLY_HEARD, TUTOR_V2_PAUSE_NOT_ECHO, TUTOR_V2_REPEAT_NOT_ECHO } from '../orchestrator/flags';
 
 /** How long after a part stops sounding its echo can still begin (room, output latency, the recogniser's onset). */
 export const V2_ECHO_TAIL_MS = 1500;
@@ -35,7 +35,13 @@ const KEEP_PARTS = 16;
  *  words watch gives up on a start after 45 s). */
 export const V2_ECHO_ONSET_MAX_MS = 45_000;
 
-export interface V2PlayedPart { text: string; words: string[]; base: number; startMs: number; endMs: number | null }
+export interface V2PlayedPart { text: string; words: string[]; base: number; startMs: number; endMs: number | null; /** Task 7y: the voice paused in this part since then (null: playing). */ pausedAtMs?: number | null }
+
+/** Task 7y (PAUSE_NOT_ECHO): heard words fewer than this, matched to the played stretch, are undecided: never the tutor's own voice
+ *  (one common word such as "I" sits in nearly any played stretch), and not yet the learner's either. */
+export const V2_ECHO_MIN_OWN_WORDS = 2;
+/** Task 7y (MOSTLY_HEARD): the sentence playing at a barge-in counts as heard when at least this share of its words had played. */
+export const V2_MOSTLY_HEARD_SHARE = 0.8;
 /** Where playback stands in the part playing (getSpokenProgress). */
 export interface V2PlayProgress { sentence: string | null; elapsedSec: number; arrivedTotalSec: number; playing: boolean }
 export interface V2EchoJudgement { own: boolean; score: number; part: string | null; timing: string }
@@ -46,9 +52,32 @@ export class V2EchoClock {
    *  cleared when it ends (words, a failure, words lost) and replaced by the next one's start. Task 7h fix round 1 C1: a
    *  start whose turn ended with no words (Ink drops an empty turn.end without a callback) left it standing, and a
    *  learner's repeat ten seconds later was matched against everything played since. */
-  private onset: { atMs: number; pos: number; stopAtMs: number | null; wordsAtMs: number | null } | null = null;
+  private onset: { atMs: number; pos: number; stopAtMs: number | null; wordsAtMs: number | null; /** Task 7y: heard words so far, when they last grew, and whether they grew over a paused voice (then never its echo, resumed or not). */ words?: number; grewAtMs?: number | null; overPause?: boolean } | null = null;
   private nextBase = 0;
-  constructor(private readonly tailMs = V2_ECHO_TAIL_MS, private readonly lagWords = V2_ECHO_LAG_WORDS, private readonly leadWords = V2_ECHO_LEAD_WORDS, private readonly aheadOn: boolean = TUTOR_V2_REPEAT_NOT_ECHO) {}
+  constructor(private readonly tailMs = V2_ECHO_TAIL_MS, private readonly lagWords = V2_ECHO_LAG_WORDS, private readonly leadWords = V2_ECHO_LEAD_WORDS, private readonly aheadOn: boolean = TUTOR_V2_REPEAT_NOT_ECHO, private readonly pauseOn: boolean = TUTOR_V2_PAUSE_NOT_ECHO) {}
+
+  /** Task 7y (PAUSE_NOT_ECHO): the voice was paused (a barge-in pause, a sound pause, the flag panel): the speakers are silent from
+   *  now, so the played stretch ends here for the echo clock until resumed(). Mic test 8 (embed-1795115593161, wall 19:09.57): the
+   *  part paused at word 7 still counted as "still playing", and his "I" over the pause was matched as its echo. */
+  paused(nowMs: number): void {
+    const cur = this.current();
+    if (this.pauseOn && cur && cur.endMs === null && cur.pausedAtMs == null) cur.pausedAtMs = nowMs;
+  }
+
+  /** The paused voice goes on. */
+  resumed(): void {
+    const cur = this.current();
+    if (cur) cur.pausedAtMs = null;
+  }
+
+  /** Task 7y (MOSTLY_HEARD): the share (0–1) of the words of the part playing that have played, at the fewest (the 'low' bound).
+   *  Null: nothing is playing. */
+  playedShare(progress: V2PlayProgress | null): number | null {
+    const cur = this.current();
+    if (!cur || cur.endMs !== null) return null;
+    if (!cur.words.length) return 1;
+    return Math.min(1, Math.max(0, (this.position(progress, 'low') - cur.base) / cur.words.length));
+  }
 
   private current(): V2PlayedPart | undefined { return this.parts[this.parts.length - 1]; }
 
@@ -64,7 +93,7 @@ export class V2EchoClock {
   /** Playback stopped: the queue drained, or it was cut. */
   stopped(nowMs: number): void {
     const cur = this.current();
-    if (cur && cur.endMs === null) cur.endMs = nowMs;
+    if (cur && cur.endMs === null) { cur.endMs = cur.pausedAtMs ?? nowMs; cur.pausedAtMs = null; }
   }
 
   /** How many words of the stream have played. low: the fewest it can be; high: the most. */
@@ -95,8 +124,9 @@ export class V2EchoClock {
   /** Words so far: with no utterance under way (or a stale one), they began about as many words back as they hold. */
   heardWords(text: string, nowMs: number, progress: V2PlayProgress | null): void {
     const o = this.onset;
-    if (!o || nowMs - (o.wordsAtMs ?? o.atMs) > V2_ECHO_ONSET_MAX_MS) this.onset = { atMs: nowMs, pos: this.position(progress, 'low') - ownVoiceWords(text).length, stopAtMs: null, wordsAtMs: nowMs };
-    else o.wordsAtMs = nowMs;
+    const n = ownVoiceWords(text).length;
+    if (!o || nowMs - (o.wordsAtMs ?? o.atMs) > V2_ECHO_ONSET_MAX_MS) this.onset = { atMs: nowMs, pos: this.position(progress, 'low') - n, stopAtMs: null, wordsAtMs: nowMs, words: n, grewAtMs: nowMs };
+    else { o.wordsAtMs = nowMs; if (n > (o.words ?? 0)) { o.words = n; o.grewAtMs = nowMs; } }
   }
 
   /** The utterance is over (its words arrived, its turn ended with none, the recogniser failed, the words were lost, or
@@ -114,6 +144,14 @@ export class V2EchoClock {
     // words so far, else now) means nothing is its own voice.
     const heardAt = onset.wordsAtMs ?? nowMs;
     const silentFor = last && last.endMs !== null ? heardAt - last.endMs : 0;
+    // Task 7y (PAUSE_NOT_ECHO): a paused voice is silent too: words that began, or last grew, more than the tail after the pause
+    // cannot be its echo (an echo cannot grow while the speakers are silent).
+    const pausedAt = this.pauseOn && last && last.endMs === null ? last.pausedAtMs ?? null : null;
+    const grewAt = Math.max(onset.atMs, onset.grewAtMs ?? onset.atMs);
+    if ((pausedAt !== null && grewAt - pausedAt > this.tailMs) || (this.pauseOn && onset.overPause)) {
+      if (this.onset === onset) onset.overPause = true;
+      return { own: false, score: 0, part: last!.text, timing: pausedAt !== null ? `words began ${since(onset.atMs)} ago and grew ${since(grewAt)} ago; the voice paused ${since(pausedAt)} ago (longer than the tail)` : `words began ${since(onset.atMs)} ago and grew over the paused voice` };
+    }
     const live = silentFor > this.tailMs ? [] : this.parts.filter((p) => p.startMs <= nowMs && (p.endMs === null || p.endMs >= onset.atMs - this.tailMs));
     if (!live.length) {
       return { own: false, score: 0, part: null, timing: `words began ${since(onset.atMs)} ago; ${last?.endMs != null ? `the tutor silent since ${since(last.endMs)} ago` : 'nothing played yet'}` };
@@ -161,4 +199,23 @@ export function v2IsEcho(args: { text: string; nowMs: number; clock: V2EchoClock
     return { own, score: own ? 1 : 0, part: null, timing: 'by the sentences written (ECHO_BY_PLAYBACK off)' };
   }
   return args.clock.judge(args.text, args.nowMs, args.progress, args.minWords, args.share);
+}
+
+/** Task 7y (PAUSE_NOT_ECHO): what a partial heard over the voice is. 'own': the tutor's echo (two heard words or more matched to the
+ *  played stretch); 'undecided': one word matched, never enough to call it the echo (mic test 8, embed-1795115593161: all five
+ *  partials taken for the echo were his one-word "I"), and not yet the learner's either; 'learner': not matched. Off: as before
+ *  (any match is 'own'). */
+export function v2PartialVerdict(echo: V2EchoJudgement, text: string, on: boolean = TUTOR_V2_PAUSE_NOT_ECHO): 'own' | 'undecided' | 'learner' {
+  if (!echo.own) return 'learner';
+  return on && ownVoiceWords(text).length < V2_ECHO_MIN_OWN_WORDS ? 'undecided' : 'own';
+}
+
+/** Task 7y (MOSTLY_HEARD): how many of the reply's sentences (as sent to the voice) were heard at a barge-in, `started` of them
+ *  begun. The one playing counts when at least V2_MOSTLY_HEARD_SHARE of its words had played (`share`, V2EchoClock.playedShare,
+ *  read before the cut); below that, or off, it is unheard, as before: cut at "What's your first…", the question did not get
+ *  through. Mic test 8 (embed-1795115593161, wall 12:03): a bare "Yes." over the last words of a part ask got "Sorry, I missed
+ *  part of my last question" and the ask again. */
+export function v2HeardCount(started: number, share: number | null, on: boolean = TUTOR_V2_MOSTLY_HEARD): number {
+  if (started <= 0) return 0;
+  return on && share !== null && share >= V2_MOSTLY_HEARD_SHARE ? started : started - 1;
 }
