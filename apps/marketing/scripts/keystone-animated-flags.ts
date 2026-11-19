@@ -1,6 +1,7 @@
 /**
- * Read-only: the open flags on the animated solutions (all items or one), with step, line, time and comment,
- * and their pictures pulled into --out so a session can look at them. Never writes to the database.
+ * Read-only: the open flags on the animated solutions (all items or one), with who raised each one and their
+ * role (the owner's own, or a Castle Rock reviewer's on a released version), step, line, time and comment, and
+ * their pictures pulled into --out so a session can look at them. Never writes to the database.
  *
  *   KEYSTONE_MONGODB_URI=… npx tsx apps/marketing/scripts/keystone-animated-flags.ts [--item <id>] [--out <dir>] \
  *     [--host root@85.239.239.134] [--local]
@@ -33,7 +34,7 @@ async function main() {
   const host = arg("host") ?? BOX;
   const { closeKs, ks } = await import("../src/lib/keystone/db");
   const { openFlags } = await import("../src/lib/keystone/animreview/store");
-  const { clock, where } = await import("../src/lib/keystone/animreview/pure");
+  const { clock, where, flagSide } = await import("../src/lib/keystone/animreview/pure");
   const { DATA_DIR } = await import("../src/lib/keystone/assets");
   try {
     console.log(target.line);
@@ -43,7 +44,8 @@ async function main() {
     let lastItem = "";
     for (const f of flags) {
       if (f.itemId !== lastItem) console.log(`\nItem ${(lastItem = f.itemId)}`);
-      console.log(`  ${f.id}  v${f.version}  ${where(f.step, f.line)}  ${clock(f.timeMs)}${f.spoken ? "  (spoken)" : ""}`);
+      const by = `${f.createdByName ? `${f.createdByName} (${f.createdBy})` : f.createdBy || "?"}, ${flagSide(f.createdByRole) === "castle-rock" ? `Castle Rock ${f.createdByRole}` : "owner"}`;
+      console.log(`  ${f.id}  v${f.version}  ${where(f.step, f.line)}  ${clock(f.timeMs)}${f.spoken ? "  (spoken)" : ""}  raised by ${by}`);
       for (const l of (f.comment || "(no comment)").split("\n")) console.log(`      ${l}`);
       if (f.reopenOf) {
         const old = await AnimFlag.findById(f.reopenOf).lean();

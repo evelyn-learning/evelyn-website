@@ -5,7 +5,7 @@ import { userFromToken } from "@/lib/keystone/auth";
 import { MIME } from "@/lib/keystone/assets";
 import { canSeeAnimation, parseVersion } from "@/lib/keystone/animreview/pure";
 import { animatedFile } from "@/lib/keystone/animreview/files";
-import { animationStatus } from "@/lib/keystone/animreview/store";
+import { animationStatus, releasedVersion } from "@/lib/keystone/animreview/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,8 +13,9 @@ export const dynamic = "force-dynamic";
 const notFound = () => new NextResponse("Not found", { status: 404 });
 
 /**
- * Serves one published version of an animated solution (html + audio). Evelyn only until the version is
- * released; anyone else gets 404 (the same as a version that does not exist). Range for audio seeking.
+ * Serves one published version of an animated solution (html + audio). Evelyn gets every version; anyone
+ * else only the released one (the latest with status "released") and 404 for every other, the same as a
+ * version that does not exist. Range for audio seeking.
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ itemId: string; version: string; path: string[] }> }) {
   const user = await userFromToken(req.cookies.get(SESSION_COOKIE)?.value);
@@ -31,6 +32,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ item
   const file = animatedFile(itemId, v, rel);
   if (!file) return notFound();
   if (!canSeeAnimation(user.role, await animationStatus(itemId, v))) return notFound();
+  if (user.role !== "evelyn" && (await releasedVersion(itemId)) !== v) return notFound();
   let size: number;
   try {
     const s = await stat(file);

@@ -301,7 +301,11 @@ export type AnimationDoc = {
   createdBy: string;
 };
 
-/** A problem the owner flagged while watching one version of an animated solution. */
+/**
+ * A problem flagged while watching one version of an animated solution: by the owner (any version, during his
+ * review) or by a Castle Rock user (the released version only). The two sides never see each other's flags
+ * except that the owner sees Castle Rock's.
+ */
 export type AnimFlagStatus = "open" | "fixed" | "confirmed" | "reopened";
 export type AnimFlagDoc = {
   itemId: string;
@@ -320,6 +324,10 @@ export type AnimFlagDoc = {
   /** Set on the open flag created by a Reopen: the earlier flag it continues. */
   reopenOf?: string;
   createdBy: string;
+  /** Role of the person who raised it. Absent on flags older than Castle Rock's flag tool: those are the owner's. */
+  createdByRole?: "reviewer" | "tech" | "evelyn";
+  /** Display name of the person who raised it (for the owner's labels and the status email). */
+  createdByName?: string;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -599,6 +607,8 @@ function defineModels(conn: Connection): Models {
     reply: String,
     reopenOf: String,
     createdBy: String,
+    createdByRole: String,
+    createdByName: String,
     createdAt: { type: Date, default: () => new Date() },
     updatedAt: { type: Date, default: () => new Date() },
   });

@@ -429,6 +429,7 @@ const HOUR = 3_600_000;
     const an = {
       toReview: [{ itemId: "991701", version: 1, fixes: 0 }, { itemId: "991702", version: 2, fixes: 1 }],
       beingFixed: [{ itemId: "991703", version: 1, openFlags: 2 }],
+      castleRock: [] as { itemId: string; version: number; who: string; role: string; comment: string }[],
       undecided: [{ itemId: "991704" }, { itemId: "991705", askedBy: "julie<b>" }],
       queuedApi: ["991706"],
       queuedHand: [],
@@ -440,8 +441,28 @@ const HOUR = 3_600_000;
       ok(out.text.includes(piece), `text has: ${piece}`);
     ok(!out.text.includes("By hand ("), "an empty route is left out");
     ok(!out.html.includes("julie<b>") && !out.html.includes("<steps>") && out.html.includes("Animations (4 need you)"), "html is escaped and has the section");
-    const none = renderStatusEmail({ ...empty, animations: { toReview: [], beingFixed: [], undecided: [], queuedApi: [], queuedHand: [], newlySkipped: [] } }, tue7);
-    ok(none.text.includes("ANIMATIONS (0 need you)") && !none.text.includes("Chosen, not built yet") && !none.text.includes("Being fixed"), "empty groups are left out");
+    ok(!out.subject.includes("flagged by Castle Rock") && !out.text.includes("Flagged by Castle Rock") && !out.html.includes("Flagged by Castle Rock"), "no Castle Rock group without their flags");
+    // Castle Rock's open flags: their own group, counted in "need you" and in the subject
+    const cr = renderStatusEmail(
+      {
+        ...empty,
+        animations: {
+          ...an,
+          castleRock: [
+            { itemId: "991708", version: 2, who: "Julie <May>", role: "reviewer", comment: "The arrow points the wrong <way> at the collision" },
+            { itemId: "991708", version: 2, who: "vance", role: "tech", comment: "" },
+          ],
+        },
+      },
+      tue7,
+    );
+    ok(cr.subject.includes("2 animations to review, 2 to decide, 2 flagged by Castle Rock,"), `subject counts Castle Rock's flags: ${cr.subject}`);
+    for (const piece of ["ANIMATIONS (6 need you)", "Flagged by Castle Rock (2)", "- 991708 v2, Julie <May> (reviewer): The arrow points the wrong <way> at the collision", "- 991708 v2, vance (tech): (no comment)", "/item/991708#animated"])
+      ok(cr.text.includes(piece), `text has: ${piece}`);
+    ok(cr.text.indexOf("Flagged by Castle Rock (2)") < cr.text.indexOf("To review (2)"), "their flags come first in the section");
+    ok(cr.html.includes("Animations (6 need you)") && cr.html.includes("Flagged by Castle Rock (2)") && cr.html.includes("Julie &lt;May&gt; (reviewer)") && !cr.html.includes("<way>") && !cr.html.includes("Julie <May>"), "html has the group, escaped");
+    const none = renderStatusEmail({ ...empty, animations: { toReview: [], beingFixed: [], castleRock: [], undecided: [], queuedApi: [], queuedHand: [], newlySkipped: [] } }, tue7);
+    ok(none.text.includes("ANIMATIONS (0 need you)") && !none.text.includes("Chosen, not built yet") && !none.text.includes("Being fixed") && !none.text.includes("Castle Rock ("), "empty groups are left out");
     ok(!renderStatusEmail(empty, tue7).text.includes("ANIMATIONS"), "no section without the data");
   }
   console.log("status.test ok");

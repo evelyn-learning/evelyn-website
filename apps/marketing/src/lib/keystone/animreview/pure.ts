@@ -24,6 +24,33 @@ export function canSeeAnimation(role: Role | undefined, status: AnimationStatus 
   return role === "evelyn" || status === "released";
 }
 
+/** Castle Rock's roles. A flag belongs to their side when one of them raised it; a flag with no role is the owner's. */
+export const isCastleRock = (role: unknown): role is "reviewer" | "tech" => role === "reviewer" || role === "tech";
+
+/** Which side a flag belongs to, from the role stored with it (none stored = raised before Castle Rock had the tool = owner). */
+export const flagSide = (createdByRole: unknown): "castle-rock" | "owner" => (isCastleRock(createdByRole) ? "castle-rock" : "owner");
+
+/**
+ * Whether a viewer may see a flag (its comment, reply and pictures): the owner sees every flag, a Castle Rock
+ * user only flags raised by Castle Rock, anyone else none.
+ */
+export function canSeeFlag(role: Role | undefined, createdByRole: unknown): boolean {
+  if (role === "evelyn") return true;
+  return isCastleRock(role) && isCastleRock(createdByRole);
+}
+
+/** "Julie May · Castle Rock" for the owner's lists; an owner flag is labelled with the name only. */
+export function raisedBy(f: { createdBy: string; createdByName?: string | null; createdByRole?: unknown }): string {
+  const name = f.createdByName || f.createdBy || "?";
+  return isCastleRock(f.createdByRole) ? `${name} · Castle Rock` : name;
+}
+
+/** First `max` characters of a comment on one line, with … when cut (status email, lists). */
+export function excerpt(comment: string, max = 120): string {
+  const one = String(comment ?? "").replace(/\s+/g, " ").trim();
+  return one.length > max ? `${one.slice(0, max)}…` : one;
+}
+
 export const isItemId = (s: unknown): s is string => typeof s === "string" && /^\d{1,12}$/.test(s);
 export const isFlagId = (s: unknown): s is string => typeof s === "string" && /^[0-9a-f]{24}$/.test(s);
 export const parseVersion = (s: unknown): number | null => {
