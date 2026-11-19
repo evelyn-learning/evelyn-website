@@ -407,7 +407,16 @@ export async function loadBrowser(): Promise<{ chromium: BrowserType } | { why: 
   try {
     chromium = (await import("playwright")).chromium;
   } catch (e) {
-    return { why: `Playwright is not installed (${(e as Error).message.split("\n")[0]})` };
+    // The server does not install development packages. There Playwright lives in its own folder, outside the
+    // app (so a deploy's `npm ci` never removes it), named by KEYSTONE_PLAYWRIGHT_DIR.
+    const dir = process.env.KEYSTONE_PLAYWRIGHT_DIR || "/root/keystone-tools/node_modules/playwright";
+    try {
+      const { createRequire } = await import("node:module");
+      chromium = (createRequire(`${dir}/`)(dir) as { chromium: BrowserType }).chromium;
+      if (!chromium) throw new Error(`no chromium export in ${dir}`);
+    } catch {
+      return { why: `Playwright is not installed (${(e as Error).message.split("\n")[0]})` };
+    }
   }
   try {
     const b = await chromium.launch();
