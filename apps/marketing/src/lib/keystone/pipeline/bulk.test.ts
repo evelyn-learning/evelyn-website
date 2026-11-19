@@ -649,6 +649,13 @@ const stepKeys = (run: RunDoc) => run.steps.map((s) => `${s.key}:${s.ok ? "ok" :
       w.vendors.finishAll();
     }
     equal(lineOf(last!, "801").result, "ready", "the dry run reaches its decision");
+    // the same command once more: a finished item is reported from the state file, never started again
+    const batchesBefore = w.vendors.batches.length;
+    const asked = w.vendors.asks.length;
+    const again = await runBulk({ dryRun: true, only: ["801"], asReceived: true }, w.env(fileBulkStore(w.file), never));
+    deepEqual([lineOf(again, "801").state, lineOf(again, "801").result, again.submitted.length, again.runs.length], ["done", "ready", 0, 0], "a finished dry item stays finished");
+    deepEqual([w.vendors.batches.length, w.vendors.asks.length], [batchesBefore, asked], "no new batch and no model call for it");
+    near(lineOf(again, "801").paid, lineOf(last!, "801").paid, "its cost is still reported");
     equal(w.store.itemWrites + w.store.runs.size, 0, "nothing was written: no item, no run record");
     equal(JSON.stringify([...w.store.items.values()]), frozen, "the items are untouched");
     const act = last!.dry!.actions.find((a) => a.action === "saveSolution")!;

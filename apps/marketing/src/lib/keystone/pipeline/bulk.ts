@@ -430,8 +430,15 @@ export async function runBulk(opts: Pick<RunArgs, "only" | "batch" | "limit" | "
   const freshId = `bulk-${now().toISOString().replace(/[:.]/g, "-")}`;
   const maxCost = opts.maxCost ?? DEFAULT_MAX_COST;
   const plan: { item: ItemDoc; runId: string; calls: BulkCallDoc[] }[] = [];
+  const settled: BulkItemLine[] = [];
   for (const item of sel.take) {
     const last = latest.get(item.itemId);
+    // Dry run: nothing was written, so a finished item still looks as it did when it was selected. Its run in the
+    // state file is its result: it is reported, never started again (a writing run cannot meet this: the item moved on).
+    if (dryState && last?.result && last.result !== "failed") {
+      settled.push({ itemId: item.itemId, runId: last.runId, state: "done", result: last.result, flags: last.flags ?? [], error: last.error, waves: [], ...spendOf(last, await store.calls(item.itemId, last.runId)) });
+      continue;
+    }
     // Continue the item's unfinished (or failed) run, as a live run does; otherwise a new one.
     const runId = last && (!last.result || last.result === "failed") ? last.runId : freshId;
     plan.push({ item, runId, calls: await store.calls(item.itemId, runId) });
@@ -439,7 +446,7 @@ export async function runBulk(opts: Pick<RunArgs, "only" | "batch" | "limit" | "
   let spent = plan.reduce((s, p) => s + spendOf(latest.get(p.item.itemId)?.runId === p.runId ? latest.get(p.item.itemId) : null, p.calls).paid, 0);
   const capped = () => spent >= maxCost;
   const runs: RunDoc[] = [];
-  const items: BulkItemLine[] = [];
+  const items: BulkItemLine[] = [...settled];
   const queued: Queued[] = [];
   const fellBack: BulkReport["fellBack"] = [];
   const todo = [...plan];
