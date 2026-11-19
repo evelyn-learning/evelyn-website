@@ -120,7 +120,7 @@ export function waveOf(role: Role, steps: Pick<RunStep, "step">[]): number {
 
 export class ItemPort implements BatchPort {
   queued: Queued[] = [];
-  /** Live calls made in place of a batch request during this invocation: [customId, why]. */
+  /** Live calls made in place of a batch request during this invocation, each with the reason. */
   fellBack: { customId: string; role: string; why: string }[] = [];
   private handed = new Set<string>();
   private uses: { id: string; batch: boolean; saved: number }[] = [];
@@ -198,7 +198,7 @@ export class ItemPort implements BatchPort {
     this.queued.push({ body, call: this.blank(role, spec, hash) });
   }
 
-    record(use: { id: string; batch: boolean; saved: number }): void {
+  record(use: { id: string; batch: boolean; saved: number }): void {
     this.uses.push(use);
   }
 
