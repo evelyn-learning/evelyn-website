@@ -611,6 +611,23 @@ const stepKeys = (run: RunDoc) => run.steps.map((s) => `${s.key}:${s.ok ? "ok" :
     equal([...w.store.runs.values()][0].result, "ready", "with the cap lifted it continues from there");
   }
 
+  // --- an item held before any solution stays Received: the same command again must not start it afresh ---
+  {
+    // three solvers, three answers: no agreement, held for the owner, nothing written but the hold
+    const think: Brain = (a) => (a.role === "solver" ? SOLVE(a.vendor === "anthropic" ? "B" : a.vendor === "openai" ? "C" : "D") : brain(a));
+    const w = world([item("961"), item("962")], think);
+    const opts = { only: ["961", "962"] };
+    await w.invoke(opts);
+    w.vendors.finishAll();
+    let r = await w.invoke(opts);
+    deepEqual(r.runs.map((x) => [x.itemId, x.result, x.flags.join()]).sort(), [["961", "held", "no_agreement"], ["962", "held", "no_agreement"]], "both held with no agreement");
+    equal(w.store.items.get("961")!.stage, "received", "a hold before a solution leaves the item Received");
+    const [batches, asks, runsBefore] = [w.vendors.batches.length, w.vendors.asks.length, w.store.runs.size];
+    r = await w.invoke(opts);
+    deepEqual([r.items.length, r.submitted.length, w.vendors.batches.length, w.vendors.asks.length, w.store.runs.size], [0, 0, batches, asks, runsBefore], "run again with the same --only: not started again, nothing sent, nothing paid");
+    ok(w.logs.some((l) => /961: skipped \(held at its last run, unchanged since\)/.test(l)), "and said why");
+  }
+
   // --- a run never sends without end: past the bound the call is made live ---
   {
     const w = world([item("951")]);

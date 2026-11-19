@@ -410,8 +410,19 @@ export async function runBulk(opts: Pick<RunArgs, "only" | "batch" | "limit" | "
     const n = await reader.failedAttempts(c.itemId, fromOf(c));
     if (n) attempts.set(c.itemId, n);
   }
-  const sel = selectItems(candidates, latest, { ...opts, attempts });
+  // Dry run: nothing was written, so a finished item still looks as it did when it was selected. Its run in the
+  // state file is its result: it is reported below, never started again (a writing run cannot meet this: the item moved on).
+  const settledRuns = new Map<string, RunDoc>();
+  if (dryState) for (const c of candidates) {
+    const last = latest.get(c.itemId);
+    if (last?.result && last.result !== "failed") settledRuns.set(c.itemId, last);
+  }
+  // --only narrows the selection here (reader.candidates) but forces nothing: this command is run again and again
+  // to continue the same items, so an item held at its last run and unchanged since is skipped, as in a run without
+  // --only, instead of being started afresh at every invocation. (To run a held item again on purpose, use a live run with --only.)
+  const sel = selectItems(candidates.filter((c) => !settledRuns.has(c.itemId)), latest, { limit: opts.limit, attempts });
   for (const r of sel.refused) log(`${r.itemId}: refused (${r.why})`);
+  for (const r of sel.skipped) log(`${r.itemId}: skipped (${r.why})`);
   if (!opts.dryRun) {
     // Over the attempt limit: the same plain hold a live run writes.
     for (const it of sel.limited) {
@@ -431,14 +442,11 @@ export async function runBulk(opts: Pick<RunArgs, "only" | "batch" | "limit" | "
   const maxCost = opts.maxCost ?? DEFAULT_MAX_COST;
   const plan: { item: ItemDoc; runId: string; calls: BulkCallDoc[] }[] = [];
   const settled: BulkItemLine[] = [];
+  for (const [itemId, last] of settledRuns) {
+    settled.push({ itemId, runId: last.runId, state: "done", result: last.result, flags: last.flags ?? [], error: last.error, waves: [], ...spendOf(last, await store.calls(itemId, last.runId)) });
+  }
   for (const item of sel.take) {
     const last = latest.get(item.itemId);
-    // Dry run: nothing was written, so a finished item still looks as it did when it was selected. Its run in the
-    // state file is its result: it is reported, never started again (a writing run cannot meet this: the item moved on).
-    if (dryState && last?.result && last.result !== "failed") {
-      settled.push({ itemId: item.itemId, runId: last.runId, state: "done", result: last.result, flags: last.flags ?? [], error: last.error, waves: [], ...spendOf(last, await store.calls(item.itemId, last.runId)) });
-      continue;
-    }
     // Continue the item's unfinished (or failed) run, as a live run does; otherwise a new one.
     const runId = last && (!last.result || last.result === "failed") ? last.runId : freshId;
     plan.push({ item, runId, calls: await store.calls(item.itemId, runId) });
