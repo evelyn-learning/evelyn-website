@@ -796,7 +796,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       speakText: (text) => realtimeRef.current?.speakText(text),
       stopSpeaking: () => { echoRef.current.stopped(Date.now()); void realtimeRef.current?.clearSpeechQueue(); voiceResumed(); },
       setTutorVoiceMuted: (muted) => realtimeRef.current?.setVoiceMuted(muted),
-      endSession: (opts) => { clearSilence(); void realtimeRef.current?.clearSpeechQueue(); turnsRef.current?.end(opts); },
+      endSession: (opts) => { clearSilence(); void realtimeRef.current?.clearSpeechQueue(); voiceResumed(); turnsRef.current?.end(opts); },
       isEnding: () => turnsRef.current?.isEnding() ?? false,
       getSpokenCaption: () => captionsRef.current.poll(realtimeRef.current?.getSpokenProgress() ?? null),
     };

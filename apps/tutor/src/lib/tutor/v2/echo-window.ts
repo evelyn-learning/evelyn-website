@@ -30,6 +30,9 @@ export const V2_ECHO_LAG_WORDS = 2;
 export const V2_ECHO_LEAD_WORDS = 1;
 /** A slow speaking rate, characters per second: the earliest the voice can be through a part. */
 const SLOW_CHARS_PER_SEC = 11.8;
+/** Task 7y fix round 1: a fast speaking rate, characters per second (the shortest a part's audio can be; English at a normal rate is
+ *  about 14–16, Japanese far fewer characters a second). */
+const FAST_CHARS_PER_SEC = 17;
 const KEEP_PARTS = 16;
 /** An utterance's start older than this with no words since is stale whatever else is known (the recogniser's own
  *  words watch gives up on a start after 45 s). */
@@ -70,13 +73,17 @@ export class V2EchoClock {
     if (cur) cur.pausedAtMs = null;
   }
 
-  /** Task 7y (MOSTLY_HEARD): the share (0–1) of the words of the part playing that have played, at the fewest (the 'low' bound).
-   *  Null: nothing is playing. */
+  /** Task 7y (MOSTLY_HEARD): the share (0–1) of the part last begun that has played. Its audio played out (the clock ended it,
+   *  or the voice is no longer playing it: between parts the speech queue reports nothing playing): 1. Playing (or paused, the
+   *  clock frozen): seconds played over its length, the length being the audio arrived for it, or, while that may still be
+   *  coming, no shorter than a fast speaking rate allows. Fix round 1 (I1): the 'low' bound (a slow rate, words floored) put a
+   *  fully played sentence at ≤ 0.8 at a normal rate, so the rule hardly ever fired. Null: nothing has begun. */
   playedShare(progress: V2PlayProgress | null): number | null {
     const cur = this.current();
-    if (!cur || cur.endMs !== null) return null;
-    if (!cur.words.length) return 1;
-    return Math.min(1, Math.max(0, (this.position(progress, 'low') - cur.base) / cur.words.length));
+    if (!cur) return null;
+    if (cur.endMs !== null || !progress?.playing || !progress.sentence) return 1;
+    const total = Math.max(progress.arrivedTotalSec, cur.text.length / FAST_CHARS_PER_SEC);
+    return total > 0 ? Math.min(1, Math.max(0, progress.elapsedSec / total)) : 1;
   }
 
   private current(): V2PlayedPart | undefined { return this.parts[this.parts.length - 1]; }

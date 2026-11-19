@@ -85,11 +85,13 @@ export class SentenceStream {
       if (open > before.lastIndexOf('」') && m.index - open < QUOTE_SPAN_MAX) continue;
       if (m[0][0] === '.') {
         if (ABBREVIATIONS.test(before)) continue;
-        // A lone letter: "f." in "f. g". Task 7y (MIXED_SENTENCE_PARTS, mic test 8 flag 1, embed-1795115593161 wall 02:56): not before a
-        // capitalised word: "…we say "washing machines" with an s. Your question…" ran on into the next sentence and its Japanese
-        // quote, and the whole piece went to the Japanese voice. Before another lone letter or a lowercase word the skip stays; the
+        // A lone letter: "f." in "f. g". Task 7y (MIXED_SENTENCE_PARTS, mic test 8 flag 1, embed-1795115593161 wall 02:56): a LOWERCASE
+        // lone letter after other words of the sentence, before a capitalised word, ends it: "…we say "washing machines" with an s.
+        // Your question…" ran on into the next sentence and its Japanese quote, and the whole piece went to the Japanese voice.
+        // Fix round 1 (I2, controller's ruling): an uppercase letter ("A. Add…", "Q. What…", "Part I. Introduction", "J. K.
+        // Rowling", "point A. Draw") and a letter opening the sentence ("a. Add…") stay as before; so do "f. g" and "e. coli". The
         // word after not yet arrived, it waits (the cut is looked for again on the next piece).
-        if (/(?:^|\s)[A-Za-z]\.$/.test(before) && !(this.mixedParts && /^\s+[A-Z][a-z]/.test(this.buf.slice(end)))) continue;
+        if (/(?:^|\s)[A-Za-z]\.$/.test(before) && !(this.mixedParts && /\S\s+[a-z]\.$/.test(before) && /^\s+[A-Z][a-z]/.test(this.buf.slice(end)))) continue;
       }
       return end;
     }

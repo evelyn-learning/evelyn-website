@@ -119,16 +119,21 @@ function boardCase() {
 
 // ── 3. the sentence playing at a barge-in ──────────────────────────────────────────────────────────────────────────────────────
 const ASK = 'Next is Pronunciation, which is optional: would you like to practise it, or go straight to the summary?';
-function heardCase(elapsedSec: number) {
+// Fix round 1 (I1): realistic timings, elapsed never past arrived. The ask is 103 characters: at a normal English rate (14.7 a
+// second) its audio is 7.0 s, all arrived well before it has played (the voice streams faster than it plays).
+const JA_ASK = '次は発音の練習です。やってみますか？'; // 18 characters, 2.6 s at a normal Japanese rate
+function heardCase(elapsedSec: number, arrivedTotalSec = 7, text = ASK, playing = true) {
   const clock = new V2EchoClock();
-  clock.started('Good.', 0); clock.started(ASK, 1000);
-  // a slow rate puts the sentence at ≥ 8.6 s; the low bound counts against that.
-  const share = clock.playedShare({ sentence: ASK, elapsedSec, arrivedTotalSec: 7, playing: true });
+  clock.started('Good.', 0); clock.started(text, 1000);
+  const share = clock.playedShare(playing ? { sentence: text, elapsedSec, arrivedTotalSec, playing: true } : { sentence: null, elapsedSec: 0, arrivedTotalSec: 0, playing: false });
   const count = v2HeardCount(2, share);
-  const st = { ...newV2State(0), history: [{ role: 'user' as const, content: 'x' }, { role: 'assistant' as const, content: `Good. ${ASK}` }] as Anthropic.MessageParam[] };
-  const trimmed = trimToSpoken(st, ['Good.', ASK], count, true);
+  const st = { ...newV2State(0), history: [{ role: 'user' as const, content: 'x' }, { role: 'assistant' as const, content: `Good. ${text}` }] as Anthropic.MessageParam[] };
+  const trimmed = trimToSpoken(st, ['Good.', text], count, true);
   return { share, count, unheard: trimmed.unheard ?? null };
 }
+/** Fix round 1 (I2): sentences as at ce416b5b (the cut off) and now. */
+const LONE = ['A. Add the numbers. B. Cool it.', 'Q. What is it?', 'Part I. Introduction to the topic.', 'J. K. Rowling wrote it.', 'a. Add the numbers.', 'point A. Draw a line.', 'Use f. g for the composite.', 'The e. coli grew.', 'Dr. J. Smith came.'];
+const cutAll = (t: string, on: boolean) => { const st = new SentenceStream(on); return [...st.push(t), ...st.flush()]; };
 
 // ── 4. T16 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 const T16 = 'Good, you used "sold" for last year. That is the past simple, for a finished event at a specific time. One small thing: we say "washing machines" with an s. Your question is about China, so ask me one more: 「中国で誰に売りましたか？」 What kind of customers did you sell to in China?';
@@ -163,7 +168,11 @@ function probe() {
     oneWord: { own: oneWord.own, verdict: v2PartialVerdict(oneWord, 'worked') },
     tailEcho: { own: tailEcho.own, verdict: v2PartialVerdict(tailEcho, 'once more I have') },
     board: boardCase(),
-    heard90: heardCase(8.0), heard70: heardCase(6.2),
+    heard90: heardCase(6.3), heard70: heardCase(4.2),
+    heardAll: heardCase(7.0), heardYes: heardCase(6.5),
+    heardJa90: heardCase(2.34, 2.6, JA_ASK), heardJa60: heardCase(1.56, 2.6, JA_ASK),
+    heardStreaming: heardCase(3.0, 3.0), heardGap: heardCase(0, 0, ASK, false),
+    lone: LONE.map((t) => ({ on: cutAll(t, true), off: cutAll(t, false) })),
     t16,
     v1Piece: splitSentenceForTts('One small thing: we say "washing machines" with an s. Your question is about China, so ask me one more: 「中国で誰に売りましたか？」', LANGS),
     v1Ja: splitSentenceForTts('「My manager showed me slogans he had written earlier」ですね、いい文です。', LANGS),
@@ -190,9 +199,15 @@ async function main() {
   check('WB34/WB35 (sentence 1 of 3, 1 started) arriving in the pause are held; while playing the same item is "now"', on.board.holdDuring.every(Boolean) && on.board.holdPlaying === false, on.board);
   check('…and the confirmed barge-in drops both (reported as never shown)', on.board.lost.length === 2 && on.board.kept === 0, on.board.lost);
 
+  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
   console.log('3 MOSTLY_HEARD');
-  check('≥ 80 % of the part ask played: counted heard, nothing unheard', on.heard90.share! >= 0.8 && on.heard90.count === 2 && on.heard90.unheard === null, on.heard90);
-  check('below 80 %: unheard, as before (state.unheard holds the ask)', on.heard70.share! < 0.8 && on.heard70.count === 1 && JSON.stringify(on.heard70.unheard) === JSON.stringify([ASK]), on.heard70);
+  check('fully played (7.0 of 7.0 s): counted heard', on.heardAll.count === 2 && on.heardAll.unheard === null, on.heardAll);
+  check('cut at 90 % (6.3 of 7.0 s): counted heard, nothing unheard', on.heard90.share! >= 0.8 && on.heard90.count === 2 && on.heard90.unheard === null, on.heard90);
+  check('cut at 60 % (4.2 of 7.0 s): unheard, as before (state.unheard holds the ask)', on.heard70.share! < 0.8 && on.heard70.count === 1 && JSON.stringify(on.heard70.unheard) === JSON.stringify([ASK]), on.heard70);
+  check('the session\'s "Yes." over the last words of the part ask (voice paused at 6.5 of 7.0 s, "the summary?" left): heard, not asked again', on.heardYes.count === 2 && on.heardYes.unheard === null, on.heardYes);
+  check('a Japanese ask at a normal rate: 90 % heard, 60 % unheard', on.heardJa90.count === 2 && on.heardJa60.count === 1, [on.heardJa90, on.heardJa60]);
+  check('audio still arriving (3.0 s arrived and played of a 103-character ask): not taken for the whole, unheard', on.heardStreaming.count === 1, on.heardStreaming);
+  check('fix round 1 (M4): its playback finished (between parts, nothing playing): heard', on.heardGap.share === 1 && on.heardGap.count === 2, on.heardGap);
 
   console.log('4 MIXED_SENTENCE_PARTS: T16');
   const voice = on.t16.voice;
@@ -203,6 +218,7 @@ async function main() {
   check('"— washing machines —" in the English part', !!ws && ws.language === 'en' && /— washing machines —/.test(ws.spoken), ws);
   check('target marks by the part\'s language: the whole piece (Japanese only in its quote) gets dashes', /— washing machines —/.test(on.t16.wholePiece) && /— washing machines —/.test(on.punctWhole), [on.t16.wholePiece, on.punctWhole]);
   check('"f. g" and a lone letter before a lowercase word stay inside the sentence', on.t16.others[0] === 'Use f. g for the composite.' && on.t16.others[1] === 'We add an s. then we stop.', on.t16.others);
+  check('fix round 1 (I2): uppercase lone letters, list labels, initials and a sentence-opening letter split exactly as at ce416b5b', on.lone.every((x) => same(x.on, x.off)) && same(on.lone[0]!.on, ['A. Add the numbers.', 'B. Cool it.']) && same(on.lone[3]!.on, ['J. K. Rowling wrote it.']), on.lone.filter((x) => !same(x.on, x.off)));
   check('v1\'s split unchanged: the piece whole to the Japanese voice; a Japanese sentence quoting English as before', JSON.stringify(on.v1Piece) === JSON.stringify([{ text: 'One small thing: we say "washing machines" with an s. Your question is about China, so ask me one more: 「中国で誰に売りましたか？」', language: 'ja' }]) && JSON.stringify(on.v1Ja.map((x) => x.language)) === '["en","ja"]', [on.v1Piece, on.v1Ja]);
   check('a one-language session: one part, no language', JSON.stringify(v2SpeechParts('Your question: 「中国」 What?', undefined)) === JSON.stringify(['Your question: 「中国」 What?']));
 
@@ -217,7 +233,6 @@ async function main() {
     if (!line) { console.log(res.stdout, res.stderr); throw new Error(`child ${flag} gave no result`); }
     return JSON.parse(line.slice('OFF_JSON '.length)) as ReturnType<typeof probe>;
   };
-  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
   {
     const off = child('PAUSE_NOT_ECHO');
     check('PAUSE_NOT_ECHO off: "I" taken for the echo and the sound pause runs out at 5.83 s, the voice over him', /3900 "I" own/.test(off.on95.log.join(' | ')) && off.on95.resumes[0] === 3330 + SOUND_PAUSE_MS, off.on95.log);
