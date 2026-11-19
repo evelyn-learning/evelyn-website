@@ -228,6 +228,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // Task 7v (OPTIONAL_FIT): the wrap is held for an optional part that fits.
   const held = !discussion && f.optionalHeld && !summaryBegun && !morePracticeAllowed ? v2OptionalHeldLine(f.optionalHeld) : null;
   const timeTail = [stay, partUp, held, optHold && !summaryBegun ? v2OptionalHoldLine(optHold) : null].filter(Boolean).map((x) => `; ${x}`).join('');
+  let summaryCorrectionsShown = false;
   const lines = [
     // A discussion runs 8–12 minutes and may close early once the person has chosen where to go next: the teaching
     // line's "time for more, not at its close" would hold it open.
@@ -281,7 +282,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
       lines.push(v2SummaryLayoutLine(session, state, f.heard));
       // Task 7w (SUMMARY_MARKS): the corrections the "To improve" cards come from, with what they said and the words changed.
       const corrections = v2SummaryCorrectionsLine(session, state);
-      if (corrections) lines.push(corrections);
+      if (corrections) { lines.push(corrections); summaryCorrectionsShown = (state.corrections?.length ?? 0) > 0; }
       // Task 7w (SUMMARY_OPENS_CLOSE): the reply that gives the summary ends on the check question even before the close is open by the
       // clock (the summary opens it); where the 7u line is already in these facts, nothing more.
       const checkBeside = check.lines.length || check.replacesInvite ? null : v2CloseCheckSummaryLine(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun });
@@ -328,7 +329,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // question, not at the end of the facts (mic test 6, embed-1795067373124: a third of new questions ignored the step).
   if (TUTOR_V2_SUPPORT_FOLLOWED && f.adaptive?.length) lines.push(...f.adaptive);
   // The learner's corrected sentences, for the summary's sentence cards (sentence-cards.ts).
-  lines.push(...v2SentenceCardsFacts(session, state));
+  // Task 7w fix round 1 (M2): not beside the said → correct list of the summary (it holds the same corrections, with more).
+  if (!summaryCorrectionsShown) lines.push(...v2SentenceCardsFacts(session, state));
   // Task 7p (CARD_GLOSS_ASK, CARD_GLOSS_REMIND; mic test 4 flag 5c): a beginner's question cards and rule notes carry a line in their
   // language (card-gloss.ts); by the level at this turn.
   lines.push(...v2CardGlossFacts(session, state, f.heard, { ask: TUTOR_V2_CARD_GLOSS_ASK, remind: TUTOR_V2_CARD_GLOSS_REMIND }));

@@ -89,11 +89,16 @@ export function v2SummaryCardCheck(session: V2Session, state: V2State, args: Rec
   const onPage = new Set(page.items.map((it) => it.id));
   const headings = calls.filter((c) => c.name === 'annotate' && c.args.style === 'heading' && !/^not /.test(c.outcome) && onPage.has(c.id)).map((c) => String(c.args.text ?? ''));
   const last = headings[headings.length - 1];
-  const well = last !== undefined && (WELL.test(last) ? !IMPROVE.test(last) : !IMPROVE.test(last) && headings.length === 1);
+  // Fix round 1 (M3): only a heading that reads as "What went well"; an unrecognised one ("Next steps") is no reason to refuse.
+  const well = last !== undefined && WELL.test(last) && !IMPROVE.test(last);
   if (well) return V2_SUMMARY_WELL_REFUSED;
   const words = new Set(v2SentenceTokens(args.sentence));
   const given = stressOf(args.emphasis);
-  const fits = given.length > 0 && given.every((w) => v2SentenceTokens(w).length > 0 && v2SentenceTokens(w).every((x) => words.has(x)));
+  // Fix round 1 (M4): the model's marks stand only when they are words of the sentence and include every word the correction changed
+  // (mic test 7: the live card marked "robot, is" where "robots … interest" was the error).
+  const givenWords = new Set(given.flatMap((w) => v2SentenceTokens(w)));
+  const fits = given.length > 0 && given.every((w) => v2SentenceTokens(w).length > 0 && v2SentenceTokens(w).every((x) => words.has(x)))
+    && rec.stress.flatMap((w) => v2SentenceTokens(w)).every((x) => givenWords.has(x));
   if (!fits && rec.stress.length) args.emphasis = [...rec.stress];
   return null;
 }

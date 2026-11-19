@@ -73,7 +73,7 @@ const PAGES: V2BoardPage[] = [
   { title: 'Present perfect', items: [card('p1', 'I have learned good negotiation skills from my boss.')] },
   { title: 'Past simple', items: [card('s1', 'I attended the robotics competition last year.')] },
   { title: 'Conversation', items: [card('c1', 'I have worked on this project for one year.')] },
-  { title: 'Pronunciation', items: [card('r1', 'responsibilities')] },
+  { title: 'Pronunciation', items: [card('r1', 'responsibilities'), card('r2', 'international')] },
 ];
 const doneGoals = Object.fromEntries(ids.slice(0, 6).map((id) => [id, { status: 'shown' as const, at: 0 }]));
 // T84: the score and the second try armed (the arm is left out: the score line is not what is tested here).
@@ -85,10 +85,13 @@ const HISTORY = [u('x'), a('That was the level check. Next is Your job. Shall we
   a('Shall we move on to the conversation part?'), u('Uh, continue.'), a('<board page>Conversation</board>\nTell me about a project you are proud of.'), u('The robots that interest me most is the dancing robot.'),
   a('The sentence on the board is the one to use: "The robot that interests me most is the dancing robot." The subject is one robot, so we use "is." Would you like a minute of pronunciation practice before the summary, or shall we go straight to the summary?'),
   u('Yes, pronunciation.'), a('<board page>Pronunciation</board>\nいいですね。まず一つの単語から練習しましょう。「Listen, then repeat after me.」\n\nresponsibilities'), u('responsibilities.'), a(T84)];
-/** The state at T86 (lesson 16.9): Pronunciation entered at 16.3 (its page opened on "Yes, pronunciation."), its goal unmarked. */
+/** The state at T86 (lesson 16.9): Pronunciation entered, its goal unmarked. Fix round 1: with 7x's PART_FIRST_STEP on, the part taken is
+ *  held (no summary lines) until 2 items and half its minutes; so here it has two items (responsibilities, international, as in
+ *  embed-1795050656326) and was entered at 15.3 (live: 16.3, one item), which leaves the summary turn as live: the wrap held past 16.9,
+ *  the close not open, the summary page's lines in the facts. */
 const atSummary = (extra: Partial<V2State> = {}): V2State => ({
   ...newV2State(0), workingLevel: { level: 'beginner', from: 'this_lesson' }, board: { pages: structuredClone(PAGES), current: 5 }, goals: doneGoals,
-  timeFit: { dropped: [], byArrival: true }, partStart: { part: 'pronunciation', at: 16.3 * MIN }, history: structuredClone(HISTORY), ...extra,
+  timeFit: { dropped: [], byArrival: true }, partStart: { part: 'pronunciation', at: 15.3 * MIN }, history: structuredClone(HISTORY), ...extra,
 });
 
 // ── T86 as live: the page and its nine blocks with nothing said for them, then "You worked hard today", and end_lesson ──
@@ -110,9 +113,9 @@ const CHECK_REPLY = `Before we finish, can you explain the difference between th
 const MENU = /something harder, more practice, a question of their own, or to stop here/;
 
 async function turn(session: V2Session, state: V2State, said: string | null, replies: Reply[], atMin: number, silence?: number) {
-  const m = scripted(replies);
-  const r = await runV2Turn({ session, state: structuredClone(state), studentSaid: said, callModel: m.call, boardPass: false, mathsCheck: false, nowMs: atMin * MIN, ...(silence ? { facts: { silenceSeconds: silence } } : {}) });
-  return { r, facts: m.facts.join('\n'), results: m.results };
+  const m = scripted(replies); const heard: string[] = [];
+  const r = await runV2Turn({ session, state: structuredClone(state), studentSaid: said, callModel: m.call, onText: (t) => heard.push(t), boardPass: false, mathsCheck: false, nowMs: atMin * MIN, ...(silence ? { facts: { silenceSeconds: silence } } : {}) });
+  return { r, facts: m.facts.join('\n'), results: m.results, heard: heard.join('') };
 }
 const cardOf = (r: Awaited<ReturnType<typeof turn>>['r'], sentence: string) => r.toolCalls.find((c) => c.name === 'show_sentence' && c.args.sentence === sentence);
 
@@ -132,7 +135,7 @@ async function probe() {
   // 3: T86 at 16.9 ("responsibilities." is their second try), then the deferral and the check card in the same turn.
   const live = await turn(lang, base, 'responsibilities.', [{ text: T86, tools: [END] }, { text: CHECK_REPLY }], 16.9);
   // …the model's stress on a summary card: wrong words (not in the sentence) and right ones.
-  const wrongStress = await turn(lang, base, 'responsibilities.', [{ text: T86.replace('<board sentence gloss="一つのロボット">', '<board sentence stress="are" gloss="一つのロボット">').replace('<board sentence gloss="複数形">', '<board sentence stress="good" gloss="複数形">') }], 16.9);
+  const wrongStress = await turn(lang, base, 'responsibilities.', [{ text: T86.replace('<board sentence gloss="一つのロボット">', '<board sentence stress="are" gloss="一つのロボット">').replace('<board sentence gloss="複数形">', '<board sentence stress="skills | good" gloss="複数形">') }], 16.9);
   // Their answer to the check, then the close.
   const answered = await turn(lang, live.r.state, 'The first one, I still work there. The second one, I don\'t work there now.', [{ text: 'Yes, that\'s right: the first is still true now, the second is finished. Do you have any questions before we finish?' }], 17.5);
   const closed = await turn(lang, answered.r.state, 'No, thank you.', [{ text: 'Thank you for today\'s lesson, Praveen. See you next time!', tools: [END] }], 17.8);
@@ -146,6 +149,31 @@ async function probe() {
   const afterLate = await turn(lang, lateSkipped.r.state, 'Okay.', [{ text: 'Do you have any questions before we finish?' }], 17.6);
   // The skipped check with an end_lesson whose deferral the model answers with nothing more: no runtime invitation in its place.
   const skippedEnd = await turn(lang, base, 'responsibilities.', [{ text: T86, tools: [END] }, { text: 'Thank you.' }], 16.9);
+  // Fix round 1 (M4): the live in-lesson marks "robot | is" on the summary card: replaced (they miss "interests").
+  const liveMarks = await turn(lang, base, 'responsibilities.', [{ text: T86.replace('<board sentence gloss="一つのロボット">', '<board sentence stress="robot | is" gloss="一つのロボット">') }], 16.9);
+  // Fix round 1 (I1): the check step defers end_lesson once in total. (a) The summary reply's deferral, then a question other than the
+  // check: the check is dropped; the next reply's end_lesson meets the invitation's deferral (the runtime's invitation), the one after
+  // closes. (b) The skipped check owed late: its reply's end_lesson is the check's one deferral; nothing more after it ends on the check.
+  const otherQ = await turn(lang, base, 'responsibilities.', [{ text: T86, tools: [END] }, { text: 'Would you like to try one more word?' }], 16.9);
+  const otherQ2 = await turn(lang, otherQ.r.state, 'No, thank you.', [{ text: 'All right. See you next time!', tools: [END] }, { text: '' }], 17.2);
+  const otherQ3 = await turn(lang, otherQ2.r.state, 'No questions.', [{ text: 'Thank you for today. Goodbye!', tools: [END] }], 17.5);
+  const lateEnd = await turn(lang, skipped.r.state, 'Thank you.', [{ text: 'You\'re welcome. See you next time!', tools: [END] }, { text: 'Thanks.' }], 17.3);
+  // Fix round 1 (I3): minute 8, "Next is Past simple. Shall we go on?" → "Yes." → the model writes a Summary page and ends.
+  const early: V2State = { ...newV2State(0), workingLevel: { level: 'beginner', from: 'this_lesson' }, board: { pages: structuredClone(PAGES.slice(0, 3)), current: 2 }, goals: Object.fromEntries(ids.slice(0, 4).map((id) => [id, { status: 'shown' as const, at: 0 }])), timeFit: { dropped: [], byArrival: true }, practiceSaid: { 'present-perfect': 3 }, history: [...structuredClone(HISTORY).slice(0, 9), a('Next is Past simple. Shall we go on?')] };
+  const earlySum = await turn(lang, early, 'Yes.', [{ text: 'Great work today. Before we finish, here is a quick summary. <board page>Summary</board><board note>You practised the present perfect.</board> You did well.', tools: [END] }, { text: 'Next is Past simple. Shall we go on?' }], 8);
+  // Fix round 1 (M1): end_lesson in the reply's first call before any summary (required parts done, the close not open by the clock),
+  // then the Summary page in its second call.
+  const m1 = await turn(lang, base, 'responsibilities.', [{ text: 'Your score on that was 95 out of 100. You worked hard today, Praveen.', tools: [END] }, { text: T86.split('\n').slice(1).join('\n') }], 16.9);
+  // Fix round 1 (M7): the pinned older suites' scenarios with every switch on. close-7d: every part reached (Pronunciation skipped), a
+  // summary at 12 min; 6f / 7d: the next-time line of a summary begun at 12 goes on the reply that closes (the invitation is owed first).
+  const B7d = ['Lesson overview', 'Your job', 'Present perfect', 'Past simple', 'Your project'];
+  const goals7d = { overview: { status: 'shown' as const, at: 0 }, 'topic-intro': { status: 'shown' as const, at: 0 }, 'present-perfect': { status: 'demonstrated' as const, at: 0 }, 'past-simple': { status: 'demonstrated' as const, at: 0 }, 'open-conversation': { status: 'shown' as const, at: 0 }, pronunciation: { status: 'skipped' as const, at: 0 } };
+  const s7d: V2State = { ...newV2State(0), board: { pages: B7d.map((title) => ({ title, items: [] })), current: B7d.length - 1 }, goals: goals7d, workingLevel: { level: 'intermediate', from: 'this_lesson' }, history: [u('x'), a('Try the whole sentence again, and say "was" clearly.')] };
+  const ken: V2Session = { ...lang, studentName: 'Ken', wrapMinutes: undefined, pronunciation: undefined };
+  const t60 = 'Good work today. Before we finish, here is a quick summary. <board page>Summary</board><board note>You practised the present perfect and the past simple.</board> You used "have worked" well.';
+  const d1 = await turn(ken, s7d, 'My responsibility in sales area is contact for our client.', [{ text: t60 }], 12);
+  const d2 = await turn(ken, d1.r.state, 'Uh, the first is still true now?', [{ text: 'Yes, that\'s right. Do you have any questions before we finish?' }], 12.5);
+  const d3 = await turn(ken, d2.r.state, 'No, nothing else.', [{ text: 'All right. Thank you for today\'s lesson, Ken. See you next time!', tools: [END] }], 13);
   // The close is open once the summary has begun (time-box.ts), and the state round-trips through the route's readState.
   const read = v2ReadClientState(JSON.parse(JSON.stringify({ ...skipped.r.state })));
   const scoped = read ? v2ScopeCarried(structuredClone(read), lang) : null;
@@ -173,6 +201,12 @@ async function probe() {
     cleanCard: cardOf(live.r, 'I have worked on this project for one year.') ? { outcome: cardOf(live.r, 'I have worked on this project for one year.')!.outcome, emphasis: cardOf(live.r, 'I have worked on this project for one year.')!.args.emphasis ?? null } : null,
     wrongRobot: cardOf(wrongStress.r, 'The robot that interests me most is the dancing robot.')?.args.emphasis ?? null,
     wrongSkills: cardOf(wrongStress.r, 'I have learned good negotiation skills from my boss.')?.args.emphasis ?? null,
+    liveMarks: cardOf(liveMarks.r, 'The robot that interests me most is the dancing robot.')?.args.emphasis ?? null,
+    otherQ: { results: otherQ.results, check: otherQ.r.state.closeCheck ?? null, late: otherQ.r.state.closeCheckLate ?? null }, otherQ2: { results: otherQ2.results, spoken: otherQ2.r.spoken, invited: otherQ2.r.state.closeInvitedAt ?? null, closed: otherQ2.r.state.closed, facts: otherQ2.facts }, otherQ3: { results: otherQ3.results, closed: otherQ3.r.state.closed },
+    lateEnd: { results: lateEnd.results, spoken: lateEnd.r.spoken, check: lateEnd.r.state.closeCheck ?? null, late: lateEnd.r.state.closeCheckLate ?? null, closed: lateEnd.r.state.closed },
+    earlySum: { results: earlySum.results, pages: earlySum.r.state.board.pages.map((p) => p.title), begun: earlySum.r.state.summaryBegunAt ?? null, closed: earlySum.r.state.closed, spoken: earlySum.r.spoken, closeOpen: v2CloseOpen(lang, earlySum.r.state, 8.5 * MIN) },
+    m1: { results: m1.results, begun: m1.r.state.summaryBegunAt ?? null, check: m1.r.state.closeCheck ?? null, closed: m1.r.state.closed, spoken: m1.r.spoken },
+    d1: { spoken: d1.r.spoken, begun: d1.r.state.summaryBegunAt ?? null, check: d1.r.state.closeCheck ?? null, late: d1.r.state.closeCheckLate ?? null, facts: d1.facts }, d2: { invited: d2.r.state.closeInvitedAt ?? null, check: d2.r.state.closeCheck ?? null }, d3: { closed: d3.r.state.closed, spoken: d3.r.spoken, heard: d3.heard, results: d3.results }, d1heard: d1.heard,
     boardProblems: live.r.state.boardProblems ?? [],
     answeredFacts: answered.facts, answeredState: { closeCheck: answered.r.state.closeCheck ?? null, closeInvitedAt: answered.r.state.closeInvitedAt ?? null, closed: answered.r.state.closed },
     closedResults: closed.results, closedState: closed.r.state.closed,
@@ -180,7 +214,7 @@ async function probe() {
     skipped: { late: skipped.r.state.closeCheckLate ?? null, check: skipped.r.state.closeCheck ?? null, invited: skipped.r.state.closeInvitedAt ?? null, spoken: skipped.r.spoken },
     lateAskedFacts: lateAsked.facts, lateAsked: { late: lateAsked.r.state.closeCheckLate ?? null, check: lateAsked.r.state.closeCheck ?? null },
     lateSkipped: { late: lateSkipped.r.state.closeCheckLate ?? null, check: lateSkipped.r.state.closeCheck ?? null }, afterLateFacts: afterLate.facts, afterLateInvited: afterLate.r.state.closeInvitedAt ?? null,
-    skippedEnd: { results: skippedEnd.results, spoken: skippedEnd.r.spoken, late: skippedEnd.r.state.closeCheckLate ?? null, closed: skippedEnd.r.state.closed },
+    skippedEnd: { results: skippedEnd.results, spoken: skippedEnd.r.spoken, late: skippedEnd.r.state.closeCheckLate ?? null, closed: skippedEnd.r.state.closed, check: skippedEnd.r.state.closeCheck ?? null, card: skippedEnd.r.toolCalls.filter((c) => c.name === 'show_problem' && /^painted/.test(c.outcome)).map((c) => String(c.args.statement ?? '')) },
     closeOpenAfter: v2CloseOpen(lang, skipped.r.state, 17.0 * MIN), closeOpenBefore: v2CloseOpen({ ...lang, wrapMinutes: 19.3 }, base, 16.9 * MIN),
     read: read ? { corrections: read.corrections ?? null, late: read.closeCheckLate ?? null, begun: read.summaryBegunAt ?? null } : null,
     scoped: scoped ? { corrections: scoped.corrections ?? null, late: scoped.closeCheckLate ?? null } : null,
@@ -204,7 +238,8 @@ async function main() {
   check('T70: "appreciate" → "appreciated" recorded; T30: "skill" → "skills"', on.t70?.[0]?.stress.join() === 'appreciated' && on.t30?.[0]?.stress.join() === 'skills' && on.t30?.[0]?.said === 'I have learned, uh, good negotiation skill from my boss.', [on.t70, on.t30]);
   check('T86: the robot card, written with no stress, is drawn with the correction\'s marks', JSON.stringify(on.robotEmphasis) === '["robot","interests"]', on.robotEmphasis);
   check('T86: the negotiation card likewise ("skills")', JSON.stringify(on.skillsEmphasis) === '["skills"]', on.skillsEmphasis);
-  check('stress written with words not in the sentence ("are") is replaced by the correction\'s marks; words in it ("good") are kept', JSON.stringify(on.wrongRobot) === '["robot","interests"]' && JSON.stringify(on.wrongSkills) === '["good"]', [on.wrongRobot, on.wrongSkills]);
+  check('stress written with words not in the sentence ("are") is replaced by the correction\'s marks; words in it that hold the changed word ("skills | good") are kept', JSON.stringify(on.wrongRobot) === '["robot","interests"]' && JSON.stringify(on.wrongSkills) === '["skills","good"]', [on.wrongRobot, on.wrongSkills]);
+  check('fix round 1 (M4): the live in-lesson marks "robot | is" miss a changed word ("interests"): replaced by the correction\'s', JSON.stringify(on.liveMarks) === '["robot","interests"]', on.liveMarks);
   check('"I felt nice when people appreciated me." (a correction) is refused under "What went well"', /^not painted: this sentence is one of their corrections, so it goes under "To improve"/.test(on.wellCard ?? ''), on.wellCard);
   check('…and the reason reaches the next turn\'s facts; the sentence he said right first time stays, with no marks added', on.boardProblems.some((x) => /one of their corrections/.test(x)) && /^painted/.test(on.cleanCard?.outcome ?? '') && on.cleanCard?.emphasis === null, [on.boardProblems, on.cleanCard]);
   check('the summary facts list the corrections as said → correct (changed: …), the "To improve" source, and the "What went well" rule', /their corrections in this lesson \(said → correct\): "I have learned, uh, good negotiation skill from my boss\." → "I have learned good negotiation skills from my boss\." \(changed: skills\); "I felt nice when people appreciate me\." → "I felt nice when people appreciated me\." \(changed: appreciated\); "The robots that interest me most is the dancing robot\." → "The robot that interests me most is the dancing robot\." \(changed: robot, interests\)\. The "To improve" cards come only from this list.*do not describe an error that is not in it\. A sentence in this list is never put under "What went well"/.test(on.liveFacts), on.liveFacts.split('\n').filter((l) => /corrections in this lesson/.test(l)));
@@ -225,7 +260,16 @@ async function main() {
   check('the skipped check: a summary reply ending on no check and no question owes it on the next reply (closeCheckLate)', typeof on.skipped.late === 'number' && on.skipped.check === null && on.skipped.invited === null, on.skipped);
   check('…the next reply\'s facts carry the check line (not the invitation); its check card is recorded asked, the late mark used up', /closing check: there is time for the plan's check question/.test(on.lateAskedFacts) && !/questions before the close: there is time for their questions/.test(on.lateAskedFacts) && typeof on.lateAsked.check?.askedAt === 'number' && on.lateAsked.late === null, on.lateAsked);
   check('…skipped again: owed no more (once); the following turn has the invitation line, and its invitation is recorded', on.lateSkipped.late === null && on.lateSkipped.check === null && /questions before the close: there is time for their questions/.test(on.afterLateFacts) && !/closing check: there is time/.test(on.afterLateFacts) && typeof on.afterLateInvited === 'number', [on.lateSkipped, on.afterLateInvited]);
-  check('the deferred end_lesson answered with nothing more: no runtime invitation pre-empts the check; it is owed on the next reply', !/any questions before we finish/i.test(on.skippedEnd.spoken) && typeof on.skippedEnd.late === 'number' && !on.skippedEnd.closed && !result(on.skippedEnd.results, MENU), on.skippedEnd);
+  check('fix round 1 (I2): the deferred end_lesson answered with nothing more: the runtime asks the plan\'s check question (spoken once, on a Question card), counted as asked; nothing owed late', /Thank you\.\s+Before we finish, can you explain the difference between these two sentences\? I have worked here for five years\. I worked here five years ago\./.test(on.skippedEnd.spoken) && (on.skippedEnd.spoken.match(/can you explain the difference/g) ?? []).length === 1 && on.skippedEnd.card.length === 1 && /can you explain the difference/i.test(on.skippedEnd.card[0]!) && typeof on.skippedEnd.check?.askedAt === 'number' && on.skippedEnd.late === null && !on.skippedEnd.closed && !result(on.skippedEnd.results, MENU), on.skippedEnd);
+  const DEFER_CHECK = /^not ended: there is time for the check question/; const DEFER_INVITE = /^not ended: there is time for their questions/;
+  check('fix round 1 (I1): the summary reply\'s one check deferral; its reply ended on another question (the 7u rule reads it as asked)', on.otherQ.results.filter((x) => DEFER_CHECK.test(x)).length === 1 && on.otherQ.late === null, on.otherQ);
+  check('…the next reply\'s end_lesson meets the invitation\'s one deferral (never the check\'s again), and the runtime\'s invitation ends it', on.otherQ2.results.length === 1 && DEFER_INVITE.test(on.otherQ2.results[0]!) && /Do you have any questions before we finish\?$/.test(on.otherQ2.spoken.trim()) && typeof on.otherQ2.invited === 'number' && !on.otherQ2.closed, on.otherQ2);
+  check('…the one after closes: two deferrals in all, one per step', on.otherQ3.closed && !result(on.otherQ3.results, /^not ended/), on.otherQ3);
+  check('fix round 1 (I1): the late check\'s reply: its end_lesson is the check step\'s one deferral, and with nothing more the runtime asks the check (asked; late used up)', on.lateEnd.results.filter((x) => DEFER_CHECK.test(x)).length === 1 && /can you explain the difference/.test(on.lateEnd.spoken) && typeof on.lateEnd.check?.askedAt === 'number' && on.lateEnd.late === null && !on.lateEnd.closed, on.lateEnd);
+  check('fix round 1 (I3): a Summary page at minute 8 (Past simple, Conversation not reached) after "Yes." to "Next is Past simple": held (not shown), nothing begun, the close not open, the lesson not ended', !on.earlySum.pages.includes('Summary') && on.earlySum.begun === null && !on.earlySum.closeOpen && !on.earlySum.closed, on.earlySum);
+  check('fix round 1 (M1): end_lesson before the Summary page in the same reply meets the check\'s deferral, never the menu; the page then opens the close and the reply ends on the check', on.m1.results.length === 1 && DEFER_CHECK.test(on.m1.results[0]!) && !result(on.m1.results, MENU) && on.m1.begun === 16.9 * MIN && typeof on.m1.check?.askedAt === 'number' && !on.m1.closed, on.m1);
+  check('fix round 1 (M7, close-7d / 6f with every switch on): a summary at 12 min with every part reached opens the close; the next-time line is not said at its page', on.d1.begun === 12 * MIN && !/We didn't get to/.test(on.d1heard), on.d1heard);
+  check('…the skipped check is owed late; the reply ending on the invitation records it; "No, nothing else." closes, and the next-time line comes on that closing reply, once', typeof on.d1.late === 'number' && typeof on.d2.invited === 'number' && on.d3.closed && (on.d3.heard.match(/We didn't get to the pronunciation part today, so that's for next time\./g) ?? []).length === 1, [on.d1.late, on.d2, on.d3]);
 
   console.log('4  OPENING_PAGE_TITLE: the first page');
   check('T0 painted nothing: the fallback opens the overview\'s page with the lesson\'s title as its heading, no objectives', JSON.stringify(on.openCalls.map((c) => [c.name, c.args.title ?? c.args.text, c.args.style ?? null])) === JSON.stringify([['new_page', 'Overview', null], ['annotate', 'Talking About Your Work and Recent Projects', 'heading']]), on.openCalls);

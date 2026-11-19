@@ -27,7 +27,7 @@ import { speaksMaths, unwrittenEquations } from './spoken-maths';
 import { cardQuestion, saidCovers, sentenceCardToSay, unsaidAsk, unsaidBoardItem, asksAnywhere, noteSentencesToSay, pointsBackAtBoard } from './board-timing';
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, v2AskEveryOn, v2SummaryBegun, V2_NO_ASK_RECHECK_S, V2_TIME_UP_MIN, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
-import { v2CloseOpen, v2LeftToStopMin, v2LessonNowMs, v2OverrunMin, v2TimeFlags, v2WrapDue, v2WrapMin, type V2TimeFlags } from './time-box';
+import { v2CloseOpen, v2LeftToStopMin, v2LessonNowMs, v2OverrunMin, v2PlanContentDone, v2TimeFlags, v2WrapDue, v2WrapMin, type V2TimeFlags } from './time-box';
 import { V2_MIN_PRACTICE, V2_MORE_PRACTICE_MIN_LEFT, v2ArrivalDrops, v2LeaveOutByChoice, v2AsksMorePractice, v2CountPractice, v2PartPracticeAsked, v2DroppedMentioned, v2TakeEnteredDropped, v2PartsToDrop, v2PracticeMoreLine, v2PracticeShort, v2TimeFitAfterReply, v2TimeFitDue, v2TimeFitUpFront, v2MarkPartStart, v2OptionalAskedAtClose, v2OptionalWrapMin } from './time-fit';
 import { planGoalIds, renderPlanMap, v2NextTimeAllLine, v2PagePartLabel, v2NextTimeLine, v2PartIsOptional, v2PartNamedIn, v2PartOf, v2PartOffers, v2UnreachedOffer } from './plan-map';
 import { stripToolTalk } from './tool-talk';
@@ -46,7 +46,7 @@ import { v2NoteCorrectedSentence, v2SentenceCardsOn, v2SentenceCardsSection } fr
 import { V2_SUMMARY_CARDS_FULL, v2SummaryCardsFull, v2SummaryGroupsOn } from './summary-layout';
 import { v2NoteCorrection, v2SummaryCardCheck } from './summary-marks';
 import { v2SummaryOpensCloseOn } from './summary-close';
-import { V2_CLOSE_CHECK_REFUSAL, v2CloseCheckOwed, v2CloseCheckPending } from './close-check';
+import { V2_CLOSE_CHECK_MIN, V2_CLOSE_CHECK_REFUSAL, v2CloseCheckOn, v2CloseCheckOwed, v2CloseCheckPending, v2PlanCheckQuestion } from './close-check';
 import { v2NoteOptionalLeave, v2OptionalHold } from './optional-hold';
 import { v2AdaptAfter, v2AdaptBefore, v2AdaptOn, v2AdaptPart, v2FreeConvAfter, v2PracticePairs } from './adaptive';
 import { LearnerCardWatch, V2_REPLY_MISHEARD, v2CardIsFragment, v2LearnerCardsOn, v2OwedCardCheckLine, v2PracticeAnswerSentences, v2SentenceOnBoard, v2SentencesNotCarded } from './learner-card';
@@ -485,6 +485,11 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   let checkOwed = v2CloseCheckOwed(session, state, { nowMs, stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun });
   // Task 7w: the check owed late (the summary reply before this one skipped it): owed in this reply only.
   const checkLateBefore = typeof state.closeCheckLate === 'number';
+  // Fix round 1 (I1, ruling): the check step defers a tutor end_lesson once in total. Found in the history (as 7v's deferredBefore): after
+  // that one deferral the check is dropped and the invitation step follows. `checkDeferred`: this reply's.
+  const checkDeferredBefore = state.history.some((h) => Array.isArray(h.content) && h.content.some((c) => c.type === 'tool_result' && c.content === V2_CLOSE_CHECK_REFUSAL));
+  let checkDeferred = false;
+  if (checkDeferredBefore && v2SummaryOpensCloseOn(session)) checkOwed = false;
   const checkPending = v2CloseCheckPending(session, state);
   // Task 7f C (PART_MIN_PRACTICE): the learner's words count for the part in hand, before any page opens on their yes. Task 7k:
   // not their request for practice of another part.
@@ -758,7 +763,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         // the model asked a second invitation straight after the first.
         // Task 7k (CLOSE_REOPENED): reopened, the ask is "more, or finish?", and a reply already ending on it waits too.
         : block.name === 'end_lesson' && inviteOwed && args.because !== 'student_asked' ? (inviteRefused || v2ReplyInvites(lastSentences(stripBoardBlocks(saidNow), 1)) || (reopened && v2ReplyAsksMoreOrFinish(lastSentences(stripBoardBlocks(saidNow), 1))) ? V2_CLOSE_INVITE_WAIT : reopened ? V2_CLOSE_REOPEN_REFUSAL : checkOwed ? V2_CLOSE_CHECK_REFUSAL : V2_CLOSE_INVITE_REFUSAL)
-        : applyControlTool(state, session, block.name, args, nowMs, input.studentSaid, { tf, practiceHold: practiceShort, ...(heldWrap ? { heldWrap } : {}) });
+        : closeInsteadOfMenu(applyControlTool(state, session, block.name, args, nowMs, input.studentSaid, { tf, practiceHold: practiceShort, ...(heldWrap ? { heldWrap } : {}) }), args);
     } else {
       // An object written as its JSON text is the object: a tree's root arrived as a string and the board drew
       // the text itself in one box (data structures, embed-1794458110435).
@@ -802,6 +807,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       }
     }
     if (outcome === V2_CLOSE_INVITE_REFUSAL || outcome === V2_CLOSE_REOPEN_REFUSAL || outcome === V2_CLOSE_CHECK_REFUSAL) inviteRefused = true;
+    if (outcome === V2_CLOSE_CHECK_REFUSAL) checkDeferred = true;
     if (outcome === V2_CLOSE_INVITE_WAIT) inviteWait = true;
     // Task 7s (PRONUNCIATION_PAGE): each item they are to say goes on the pronunciation page in view as a card (by the runtime, from
     // the arm it already has: the model wrote nothing there and the board hides an empty page).
@@ -979,11 +985,24 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const reached = before.filter((seg) => !!state.goals[seg.id] || state.board.pages.some((pg) => !!v2PartOf(seg).label && v2PagePartLabel(session.plan, pg.title) === v2PartOf(seg).label)).length;
     return before.length > 0 && reached * 2 >= before.length;
   };
+  // Fix round 1 (I3, ruling): only once every required part before the summary has been reached (the facts' "near"), or the close is
+  // open by the clock: an early Summary page is held (earlySummary, below) and opens nothing.
+  const requiredDone = () => !!session.plan && (v2PlanContentDone(session.plan, state, true) || selfCloseOpen);
   const summaryOpensNow = () => {
-    if (!opensClose || state.closed || typeof state.summaryBegunAt === 'number' || !summaryReached()) return;
+    if (!opensClose || state.closed || typeof state.summaryBegunAt === 'number' || !summaryReached() || !requiredDone()) return;
     state.summaryBegunAt = nowMs; summaryNow = true;
     inviteOwed = v2CloseInviteOwed(session, state, { nowMs, stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun });
-    checkOwed = v2CloseCheckOwed(session, state, { nowMs, stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun, summaryNow: true });
+    checkOwed = !checkDeferredBefore && v2CloseCheckOwed(session, state, { nowMs, stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun, summaryNow: true });
+  };
+  // Fix round 1 (M1, ruling): where the summary would open the close (its required parts done), a tutor end_lesson the close rules
+  // would answer with the generic menu ("something harder, more practice…") meets the close's own steps instead, decided for the reply
+  // as a whole: the check's deferral (once in total), else the invitation's; a second in the reply waits. Never when they asked to stop.
+  const closeInsteadOfMenu = (r: string, args: Record<string, unknown>): string => {
+    if (!opensClose || !/^not ended: the session goes on\./.test(r) || stopAsked || args.because === 'student_asked' || state.closed) return r;
+    if (!requiredDone() || !v2CloseInviteOn(session) || leftMin <= V2_TIME_UP_MIN || typeof state.closeInvitedAt === 'number' || typeof state.closeReopened === 'number') return r;
+    if (inviteRefused) return V2_CLOSE_INVITE_WAIT;
+    const check = v2CloseCheckOn(session) && !state.closeCheck && !checkDeferredBefore && !checkDeferred && leftMin > V2_TIME_UP_MIN + V2_CLOSE_CHECK_MIN;
+    return check ? V2_CLOSE_CHECK_REFUSAL : V2_CLOSE_INVITE_REFUSAL;
   };
   // The reply's whole text, while a page held until it was complete is let go (D1): the next-time line checks it.
   let releaseText = '';
@@ -1119,12 +1138,17 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           // summary is then next by plan order: they chose it; no offer of the part again in place of the page.
           const goForPage = TUTOR_V2_PART_GO_NAMED && askEvery && !!session.plan && goIndex >= 0 && (v2GoForPart(input.studentSaid, lastTutorText, session.plan, state, goIndex, askLangs)
             || (declinedNow >= 0 && goIndex === session.plan.segments.length - 1 && v2NextPart(session.plan, state, v2PartInHand(session.plan, state)) === goIndex));
-          const holdIt = !goForPage && part.block.kind === 'page' && !discussion && !summaryBegun && !(summaryBefore && closingPage) && ((closingPage ? frameDueOld : frameDue) || (closesLesson(part.block.body) && !!v2UnreachedOffer(session.plan, state))) && partChange && !boardHasPage(part.block.body) && !state.closed && !closingTurn && !releasing && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length, strict: askEvery, ...(askEvery && TUTOR_V2_PAGE_NEEDS_GO ? { go: v2MoveAnswer(input.studentSaid, lastTutorText, askLangs, undefined, session.plan) === 'go' } : {}) });
+          // Fix round 1 (I3, ruling): a Summary page before every required part was reached (and the close is not open by the clock,
+          // nor a closing turn) is held like any other part page out of order: not shown, nothing begun; the close rules before 7w apply.
+          // A plan whose parts the lesson has all been to (no part left to offer: v2UnreachedOffer, the 6e rule) is no page out of order:
+          // it opens as before, and the summary opens the close only once the required parts are done (summaryOpensNow).
+          const earlySummary = opensClose && closingPage && !closingTurn && !summaryBefore && !goForPage && !requiredDone() && !!v2UnreachedOffer(session.plan, state) && !boardHasPage(part.block.body) && !state.closed && !releasing;
+          const holdIt = earlySummary || !goForPage && part.block.kind === 'page' && !discussion && !summaryBegun && !(summaryBefore && closingPage) && ((closingPage ? frameDueOld : frameDue) || (closesLesson(part.block.body) && !!v2UnreachedOffer(session.plan, state))) && partChange && !boardHasPage(part.block.body) && !state.closed && !closingTurn && !releasing && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length, strict: askEvery, ...(askEvery && TUTOR_V2_PAGE_NEEDS_GO ? { go: v2MoveAnswer(input.studentSaid, lastTutorText, askLangs, undefined, session.plan) === 'go' } : {}) });
           // Task 6g: the summary begins here, so a practice ask waiting before it is dropped; any other page lets it go.
           if (part.block.kind === 'page' && !holdIt) { if (closingPage) { gate.summaryBegins(); closingOpened = true; summaryOpensNow(); } else gate.releaseAsk(); }
           // Task 7d: not said while their questions are still to be invited (the page still opens): the line goes on the reply
           // that closes. Task 7w: read after a summary that begins here has opened the close.
-          const summaryLine = inviteOwed ? null : lineHere;
+          const summaryLine = inviteOwed || earlySummary ? null : lineHere;
           if (summaryLine) { nextTimeAt = { raw: part.block.raw, line: summaryLine }; nextTimeSaid = true; gate.push(` ${summaryLine} `); gate.flush(); }
           if (holdIt) {
             // In the box's last fifth the tutor may close by itself, and a reply that does is a closing turn: whether it
@@ -1774,8 +1798,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // page block then stays on it (settleInline). Mic test 7 (embed-1795100797999): an untitled page 1 of the title and three
     // objectives, then an "Overview" page saying the same.
     const overview = v2OpeningOverview(session);
-    const raw = overview ? `${state.board.current < 0 ? `<board page>${overview}</board>` : ''}<board note style="heading">${String(session.plan!.title ?? '').trim()}</board>` : body ? `<board note style="highlight">${body}</board>` : '';
-    const blocks = overview && !String(session.plan!.title ?? '').trim() ? boardBlocksIn(raw).filter((x) => x.kind === 'page') : boardBlocksIn(raw);
+    // Fix round 1 (M5): the title as plain text (no markup can end the block); no title: the overview's name as the heading.
+    const heading = overview ? (String(session.plan!.title ?? '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim() || overview) : '';
+    const raw = overview ? `${state.board.current < 0 ? `<board page>${overview.replace(/[<>]/g, '')}</board>` : ''}<board note style="heading">${heading}</board>` : body ? `<board note style="highlight">${body}</board>` : '';
+    const blocks = boardBlocksIn(raw);
     const done = blocks.filter((b) => settleInline(b, true));
     if (done.length) {
       const holder = stored.find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));
@@ -1798,8 +1824,25 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // question keeps it (one question a reply); the invitation stays owed in the facts.
   // Task 7w (SUMMARY_OPENS_CLOSE): not while the check is owed in a summary reply: the invitation comes after the check, which the next
   // reply then owes (closeCheckLate, below).
+  // Fix round 1 (I2, ruling): a deferred close always leaves them something to answer: the question that is owed, the plan's check
+  // question (as a question card, spoken once, counted as asked) while the check is owed, else the invitation as before.
   const checkFirst = opensClose && checkOwed && !state.closeCheck;
-  if (inviteOwed && (inviteRefused || inviteWait) && !state.closed && !heldAt && !input.signal?.aborted && !checkFirst) {
+  const checkQ = checkFirst ? v2PlanCheckQuestion(session.plan) : null;
+  if (inviteOwed && (inviteRefused || inviteWait) && !state.closed && !heldAt && !input.signal?.aborted && checkQ) {
+    const last = lastSentences(stripBoardBlocks(spoken.join(' ')), 1);
+    if (!v2ReplyInvites(last) && !endsAsking(last, true)) {
+      const q = checkQ.replace(/[<>]/g, '');
+      const b = boardBlocksIn(`<board problem>${q}</board>`)[0];
+      input.onText?.(spoken.length ? `\n\n${q}` : q);
+      spoken.push(q);
+      const painted = !!b && settleInline(b);
+      const words = painted ? `${q}\n${b!.raw}` : q;
+      const tail = stored[stored.length - 1];
+      const textBlock = tail?.role === 'assistant' && Array.isArray(tail.content) ? [...(tail.content as Anthropic.ContentBlockParam[])].reverse().find((c): c is Anthropic.TextBlockParam => c.type === 'text') : undefined;
+      if (textBlock) textBlock.text = `${textBlock.text}\n\n${words}`; else stored.push({ role: 'assistant', content: [{ type: 'text', text: words }] });
+      if (!painted) state.closeCheck = { askedAt: nowMs };
+    }
+  } else if (inviteOwed && (inviteRefused || inviteWait) && !state.closed && !heldAt && !input.signal?.aborted) {
     const last = lastSentences(stripBoardBlocks(spoken.join(' ')), 1);
     if (!v2ReplyInvites(last) && !endsAsking(last, true)) {
       // Task 7k (CLOSE_REOPENED): reopened, the runtime's ask is "more, or finish?".
@@ -1839,7 +1882,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // that reply uses it up, asked or not.
   if (opensClose && !input.signal?.aborted) {
     if (checkLateBefore) delete state.closeCheckLate;
-    else if (summaryNow && checkOwed && !state.closeCheck && !state.closed && typeof state.closeInvitedAt !== 'number') state.closeCheckLate = nowMs;
+    // Fix round 1 (I1): never after the check step's one deferral (the check is then dropped).
+    else if (summaryNow && checkOwed && !checkDeferred && !state.closeCheck && !state.closed && typeof state.closeInvitedAt !== 'number') state.closeCheckLate = nowMs;
   }
   state.history = [...state.history, ...stored];
   // Task 7f B: the parts left out for time are told once (a reply names them, or the facts have asked twice).

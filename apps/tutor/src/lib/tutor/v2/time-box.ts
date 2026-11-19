@@ -134,7 +134,9 @@ export function v2PlanContentDone(plan: LessonPlan | undefined, state: Pick<V2St
  *  page), close-invite.ts and facts.ts. */
 export function v2CloseOpen(session: V2Session, state: Pick<V2State, 'startedAtMs' | 'goals' | 'board' | 'workingLevel' | 'history' | 'timeFit'> & Partial<Pick<V2State, 'practiceSaid' | 'summaryBegunAt' | 'closed'>>, nowMs: number, on: boolean = TUTOR_V2_CLOSE_BY_CONTENT): boolean {
   // Task 7w (SUMMARY_OPENS_CLOSE): once the tutor has begun the summary, the close is open, whatever the wrap minute (summary-close.ts).
-  if (v2SummaryOpensClose(session, state)) return true;
+  // Fix round 1 (I3): only once every required part before the summary has been reached (the facts' "near"): an early summary page
+  // never lets the tutor end the lesson by itself.
+  if (v2SummaryOpensClose(session, state) && v2PlanContentDone(session.plan, state, true)) return true;
   if (!on || session.homework || session.homeworkSheet) return v2CloseOpenByClock(session, state, nowMs);
   if (!session.timeBoxMinutes) return true;
   if (v2WrapDue(session, (nowMs - state.startedAtMs) / 60000, true, true)) return true;
