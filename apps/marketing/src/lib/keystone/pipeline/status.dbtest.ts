@@ -192,7 +192,7 @@ const OLD = new Date("2026-11-10T17:00:00Z");
 
     const email = renderStatusEmail(s, NOW);
     equal(email.subject, "Keystone: 3 waiting on you, 0 animations to review, 10 to decide, 2 in review, 3 approved", "subject from the seed");
-    ok(/^Keystone: \d+ waiting on you, \d+ in review, \d+ approved$/.test(email.subject), "subject matches the pattern");
+    ok(/^Keystone: \d+ waiting on you, (\d+ flagged by Castle Rock, )?\d+ animations? to review, \d+ to decide, \d+ in review, \d+ approved$/.test(email.subject), "subject matches the pattern");
     ok(!email.html.includes("<table><tr><td>x &amp; y"), "the pasted markup is not in the HTML as markup");
 
     // --- blocked batches, heldWhy, and the sample left out of "going out today" ---
