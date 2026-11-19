@@ -220,6 +220,9 @@ export interface V2State {
   /** Task 7w (SUMMARY_OPENS_CLOSE): the summary reply did not end on the plan's check question: the next reply owes it, once
    *  (close-check.ts). When it was found missing (lesson clock ms). */
   closeCheckLate?: number;
+  /** Task 7w fix round 2 (N1): the check step's one end_lesson deferral was given after the summary began (lesson clock ms): the check is
+   *  dropped from then on (close-check.ts). */
+  closeCheckDeferredAt?: number;
 }
 
 /** Task 7w: one correction of the lesson. `said`: their sentence; `sentence`: the card's; `stress`: the words the card changed. */

@@ -53,6 +53,8 @@ export function v2CloseCheckOwed(session: V2Session, state: V2State, ctx: Ctx): 
   // Task 7w (SUMMARY_OPENS_CLOSE): the summary reply itself (begun in this reply), and the reply after one that skipped it, once.
   const late = v2SummaryOpensCloseOn(session, ctx.opensClose) && (ctx.summaryNow === true || typeof state.closeCheckLate === 'number');
   if (!v2CloseCheckOn(session, ctx.enabled) || state.closeCheck || (typeof state.summaryBegunAt === 'number' && !late) || typeof state.closeReopened === 'number') return false;
+  // Fix round 2 (N1): the check step's one deferral, given after the summary began, was spent: the check is dropped (the invitation follows).
+  if (v2SummaryOpensCloseOn(session, ctx.opensClose) && typeof state.closeCheckDeferredAt === 'number') return false;
   if (!v2CloseInviteOwed(session, state, { nowMs: ctx.nowMs, stopAsked: ctx.stopAsked, closeByContent: ctx.closeByContent, overrun: ctx.overrun })) return false;
   return v2LeftToStopMin(session, state, ctx.nowMs, ctx.overrun) > V2_TIME_UP_MIN + V2_CLOSE_CHECK_MIN;
 }
@@ -96,5 +98,22 @@ export function v2CloseCheckSummaryLine(session: V2Session, state: V2State, ctx:
 
 /** Task 7w: the route's reading of closeCheckLate. */
 export function v2ReadCloseCheckLate(raw: unknown): number | undefined {
+  return typeof raw === 'number' && Number.isFinite(raw) && raw > 0 ? raw : undefined;
+}
+
+/** Task 7w fix round 2 (b): the Question card of a check the runtime asks: the question and the sentences after it that it asks about,
+ *  not the plan's words to the learner after them ("Take your time; I'll help you if you need it."): a sentence addressing the learner
+ *  ("you", "your") after the question ends the card. The whole wording is spoken. */
+export function v2CheckCardText(q: string): string {
+  const parts = q.replace(/\s+/g, ' ').trim().split(/(?<=[.?!])\s+/);
+  const at = parts.findIndex((x) => x.includes('?'));
+  if (at < 0) return q.trim();
+  const out = [parts[at]!];
+  for (const x of parts.slice(at + 1)) { if (/\b(?:you|your|you'll|you're)\b/i.test(x)) break; out.push(x); }
+  return out.join(' ');
+}
+
+/** Task 7w fix round 2: the route's reading of closeCheckDeferredAt. */
+export function v2ReadCloseCheckDeferred(raw: unknown): number | undefined {
   return typeof raw === 'number' && Number.isFinite(raw) && raw > 0 ? raw : undefined;
 }

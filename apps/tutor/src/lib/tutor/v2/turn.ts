@@ -46,7 +46,7 @@ import { v2NoteCorrectedSentence, v2SentenceCardsOn, v2SentenceCardsSection } fr
 import { V2_SUMMARY_CARDS_FULL, v2SummaryCardsFull, v2SummaryGroupsOn } from './summary-layout';
 import { v2NoteCorrection, v2SummaryCardCheck } from './summary-marks';
 import { v2SummaryOpensCloseOn } from './summary-close';
-import { V2_CLOSE_CHECK_MIN, V2_CLOSE_CHECK_REFUSAL, v2CloseCheckOn, v2CloseCheckOwed, v2CloseCheckPending, v2PlanCheckQuestion } from './close-check';
+import { V2_CLOSE_CHECK_REFUSAL, v2CheckCardText, v2CloseCheckOwed, v2CloseCheckPending, v2PlanCheckQuestion } from './close-check';
 import { v2NoteOptionalLeave, v2OptionalHold } from './optional-hold';
 import { v2AdaptAfter, v2AdaptBefore, v2AdaptOn, v2AdaptPart, v2FreeConvAfter, v2FreeConvQuiet, v2PracticePairs } from './adaptive';
 import { LearnerCardWatch, V2_REPLY_MISHEARD, v2CardIsFragment, v2LearnerCardsOn, v2OwedCardCheckLine, v2PracticeAnswerSentences, v2SentenceOnBoard, v2SentencesNotCarded } from './learner-card';
@@ -485,11 +485,16 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   let checkOwed = v2CloseCheckOwed(session, state, { nowMs, stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun });
   // Task 7w: the check owed late (the summary reply before this one skipped it): owed in this reply only.
   const checkLateBefore = typeof state.closeCheckLate === 'number';
-  // Fix round 1 (I1, ruling): the check step defers a tutor end_lesson once in total. Found in the history (as 7v's deferredBefore): after
-  // that one deferral the check is dropped and the invitation step follows. `checkDeferred`: this reply's.
-  const checkDeferredBefore = state.history.some((h) => Array.isArray(h.content) && h.content.some((c) => c.type === 'tool_result' && c.content === V2_CLOSE_CHECK_REFUSAL));
+  // Fix round 1 (I1, ruling): the check step defers a tutor end_lesson once in total: after that one deferral the check is dropped and
+  // the invitation step follows. Fix round 2 (N1, ruling): a deferral counts only once the summary has begun (state.closeCheckDeferredAt,
+  // stamped after a reply whose check refusal came with the summary begun); one before the summary (7u's, the close open by the clock)
+  // is given as before 7w and spends nothing. `checkDeferred`: this reply's counted one.
+  const checkDeferredBefore = v2SummaryOpensCloseOn(session) && typeof state.closeCheckDeferredAt === 'number';
   let checkDeferred = false;
-  if (checkDeferredBefore && v2SummaryOpensCloseOn(session)) checkOwed = false;
+  if (checkDeferredBefore) checkOwed = false;
+  // Fix round 2 (M1 kept): the generic menu given to an end_lesson in this reply (before any summary): a Summary page that then opens the
+  // close in the same reply drops a menu question after it (6g's gate) and ends the reply on the question owed instead.
+  let menuGiven = false;
   const checkPending = v2CloseCheckPending(session, state);
   // Task 7f C (PART_MIN_PRACTICE): the learner's words count for the part in hand, before any page opens on their yes. Task 7k:
   // not their request for practice of another part.
@@ -763,7 +768,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         // the model asked a second invitation straight after the first.
         // Task 7k (CLOSE_REOPENED): reopened, the ask is "more, or finish?", and a reply already ending on it waits too.
         : block.name === 'end_lesson' && inviteOwed && args.because !== 'student_asked' ? (inviteRefused || v2ReplyInvites(lastSentences(stripBoardBlocks(saidNow), 1)) || (reopened && v2ReplyAsksMoreOrFinish(lastSentences(stripBoardBlocks(saidNow), 1))) ? V2_CLOSE_INVITE_WAIT : reopened ? V2_CLOSE_REOPEN_REFUSAL : checkOwed ? V2_CLOSE_CHECK_REFUSAL : V2_CLOSE_INVITE_REFUSAL)
-        : closeInsteadOfMenu(applyControlTool(state, session, block.name, args, nowMs, input.studentSaid, { tf, practiceHold: practiceShort, ...(heldWrap ? { heldWrap } : {}) }), args);
+        : applyControlTool(state, session, block.name, args, nowMs, input.studentSaid, { tf, practiceHold: practiceShort, ...(heldWrap ? { heldWrap } : {}) });
     } else {
       // An object written as its JSON text is the object: a tree's root arrived as a string and the board drew
       // the text itself in one box (data structures, embed-1794458110435).
@@ -807,7 +812,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       }
     }
     if (outcome === V2_CLOSE_INVITE_REFUSAL || outcome === V2_CLOSE_REOPEN_REFUSAL || outcome === V2_CLOSE_CHECK_REFUSAL) inviteRefused = true;
-    if (outcome === V2_CLOSE_CHECK_REFUSAL) checkDeferred = true;
+    if (outcome === V2_CLOSE_CHECK_REFUSAL && typeof state.summaryBegunAt === 'number') checkDeferred = true;
+    if (block.name === 'end_lesson' && /^not ended: the session goes on\./.test(outcome)) menuGiven = true;
     if (outcome === V2_CLOSE_INVITE_WAIT) inviteWait = true;
     // Task 7s (PRONUNCIATION_PAGE): each item they are to say goes on the pronunciation page in view as a card (by the runtime, from
     // the arm it already has: the model wrote nothing there and the board hides an empty page).
@@ -993,16 +999,6 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     state.summaryBegunAt = nowMs; summaryNow = true;
     inviteOwed = v2CloseInviteOwed(session, state, { nowMs, stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun });
     checkOwed = !checkDeferredBefore && v2CloseCheckOwed(session, state, { nowMs, stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun, summaryNow: true });
-  };
-  // Fix round 1 (M1, ruling): where the summary would open the close (its required parts done), a tutor end_lesson the close rules
-  // would answer with the generic menu ("something harder, more practice…") meets the close's own steps instead, decided for the reply
-  // as a whole: the check's deferral (once in total), else the invitation's; a second in the reply waits. Never when they asked to stop.
-  const closeInsteadOfMenu = (r: string, args: Record<string, unknown>): string => {
-    if (!opensClose || !/^not ended: the session goes on\./.test(r) || stopAsked || args.because === 'student_asked' || state.closed) return r;
-    if (!requiredDone() || !v2CloseInviteOn(session) || leftMin <= V2_TIME_UP_MIN || typeof state.closeInvitedAt === 'number' || typeof state.closeReopened === 'number') return r;
-    if (inviteRefused) return V2_CLOSE_INVITE_WAIT;
-    const check = v2CloseCheckOn(session) && !state.closeCheck && !checkDeferredBefore && !checkDeferred && leftMin > V2_TIME_UP_MIN + V2_CLOSE_CHECK_MIN;
-    return check ? V2_CLOSE_CHECK_REFUSAL : V2_CLOSE_INVITE_REFUSAL;
   };
   // The reply's whole text, while a page held until it was complete is let go (D1): the next-time line checks it.
   let releaseText = '';
@@ -1828,11 +1824,14 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // question (as a question card, spoken once, counted as asked) while the check is owed, else the invitation as before.
   const checkFirst = opensClose && checkOwed && !state.closeCheck;
   const checkQ = checkFirst ? v2PlanCheckQuestion(session.plan) : null;
-  if (inviteOwed && (inviteRefused || inviteWait) && !state.closed && !heldAt && !input.signal?.aborted && checkQ) {
+  // Fix round 2 (M1): also a reply whose end_lesson met the generic menu and whose Summary page then opened the close.
+  const menuThenSummary = opensClose && summaryNow && menuGiven;
+  if (inviteOwed && (inviteRefused || inviteWait || menuThenSummary) && !state.closed && !heldAt && !input.signal?.aborted && checkQ) {
     const last = lastSentences(stripBoardBlocks(spoken.join(' ')), 1);
     if (!v2ReplyInvites(last) && !endsAsking(last, true)) {
       const q = checkQ.replace(/[<>]/g, '');
-      const b = boardBlocksIn(`<board problem>${q}</board>`)[0];
+      // Fix round 2 (b): the card holds the question and the sentences it asks about; the spoken line keeps the plan's whole wording.
+      const b = boardBlocksIn(`<board problem>${v2CheckCardText(q)}</board>`)[0];
       input.onText?.(spoken.length ? `\n\n${q}` : q);
       spoken.push(q);
       const painted = !!b && settleInline(b);
@@ -1842,7 +1841,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       if (textBlock) textBlock.text = `${textBlock.text}\n\n${words}`; else stored.push({ role: 'assistant', content: [{ type: 'text', text: words }] });
       if (!painted) state.closeCheck = { askedAt: nowMs };
     }
-  } else if (inviteOwed && (inviteRefused || inviteWait) && !state.closed && !heldAt && !input.signal?.aborted) {
+  } else if (inviteOwed && (inviteRefused || inviteWait || menuThenSummary) && !state.closed && !heldAt && !input.signal?.aborted) {
     const last = lastSentences(stripBoardBlocks(spoken.join(' ')), 1);
     if (!v2ReplyInvites(last) && !endsAsking(last, true)) {
       // Task 7k (CLOSE_REOPENED): reopened, the runtime's ask is "more, or finish?".
@@ -1881,6 +1880,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Task 7w (SUMMARY_OPENS_CLOSE): a summary reply that did not end on the check (nor on the invitation) owes it on the next reply, once;
   // that reply uses it up, asked or not.
   if (opensClose && !input.signal?.aborted) {
+    if (checkDeferred) state.closeCheckDeferredAt = nowMs;
     if (checkLateBefore) delete state.closeCheckLate;
     // Fix round 1 (I1): never after the check step's one deferral (the check is then dropped).
     else if (summaryNow && checkOwed && !checkDeferred && !state.closeCheck && !state.closed && typeof state.closeInvitedAt !== 'number') state.closeCheckLate = nowMs;
