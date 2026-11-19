@@ -5,7 +5,9 @@
  * One Cartesia request per step: POST /tts/sse with add_timestamps, which
  * returns raw PCM chunks AND word timestamps from the same generation (the
  * timestamps endpoint cannot return mp3: SSE output_format is container "raw"
- * only). The PCM (s16le, 44.1 kHz mono — the format of the October prototype
+ * only; checked again 2026-11-18 for the server build: /tts/sse and the
+ * WebSocket take container "raw" only, and /tts/bytes, which can return mp3,
+ * has no timestamps — so ffmpeg stays). The PCM (s16le, 44.1 kHz mono — the format of the October prototype
  * clips) is encoded to `audio/step-N.mp3` with ffmpeg (96 kbps, as October),
  * and the word stream is aligned to the step's lines to give one start (ms)
  * per line in `timing.json`.
@@ -285,12 +287,72 @@ export const ffmpegEncode: Encoder = (pcm, outFile) =>
     p.stdin.end(pcm);
   });
 
+export const FFMPEG_MISSING = "ffmpeg is not installed; it encodes the clips to mp3 (brew install ffmpeg).";
+
 export function ffmpegAvailable(): Promise<boolean> {
   return new Promise((resolve) => {
     const p = spawn("ffmpeg", ["-hide_banner", "-version"], { stdio: "ignore" });
     p.on("error", () => resolve(false));
     p.on("close", (code) => resolve(code === 0));
   });
+}
+
+// ---------- the stand-in voice (tests and local trial runs only) ----------
+
+/** What a character sent to the voice costs, in dollars (the rate the daily spend cap counts with). */
+export const VOICE_USD_PER_CHAR = 0.00005;
+
+/** The switch for the stand-in voice. Honoured only on a database whose name ends in `_smoke`. */
+export const FAKE_VOICE_ENV = "KEYSTONE_ANIM_FAKE_VOICE";
+
+/**
+ * Whether the stand-in voice is on: KEYSTONE_ANIM_FAKE_VOICE=1 AND the database name ends in `_smoke`. The second
+ * condition is what makes it impossible to switch on in production by accident: production's database is
+ * castle_rock_review, and a stray variable there changes nothing.
+ */
+export function fakeVoiceOn(env: Record<string, string | undefined>, dbName: string): boolean {
+  return env[FAKE_VOICE_ENV] === "1" && /_smoke$/.test(dbName);
+}
+
+/** One silent MPEG-1 Layer III frame: 64 kbps, 44.1 kHz, mono; empty side information decodes to silence. */
+const SILENT_FRAME = (() => {
+  const f = Buffer.alloc(208);
+  f.set([0xff, 0xfb, 0x50, 0xc0]);
+  return f;
+})();
+const FRAME_MS = (1152 / SAMPLE_RATE) * 1000;
+
+/** A silent mp3 of about `durationMs`. */
+export function silentMp3(durationMs: number): Buffer {
+  const n = Math.max(2, Math.ceil(durationMs / FRAME_MS));
+  return Buffer.concat(Array.from({ length: n }, () => SILENT_FRAME));
+}
+
+/** An encoder that needs no ffmpeg: a silent mp3 as long as the PCM it is given. */
+export const silentEncode: Encoder = async (pcm, outFile) => {
+  await writeFile(outFile, silentMp3(pcmDurationMs(pcm)));
+};
+
+/**
+ * A fetch that answers like Cartesia's SSE endpoint without the network: silence as long as the transcript would
+ * take at `msPerChar`, and one timestamp per word spread evenly over it. With silentEncode it takes recordItem
+ * through its real path (alignment, timing.json, the log) at no cost.
+ */
+export function fakeVoiceFetch(msPerChar = 30): FetchLike {
+  return async (_url, init) => {
+    const transcript = String((JSON.parse(init.body) as { transcript?: string }).transcript ?? "");
+    const words = transcript.split(/\s+/).filter(Boolean);
+    const durationMs = Math.max(600, charCount(transcript) * msPerChar);
+    const per = durationMs / 1000 / Math.max(1, words.length);
+    const pcm = Buffer.alloc(Math.round((durationMs / 1000) * SAMPLE_RATE) * 2);
+    const events = [
+      { type: "timestamps", word_timestamps: { words, start: words.map((_, k) => k * per), end: words.map((_, k) => (k + 0.9) * per) } },
+      { type: "chunk", data: pcm.toString("base64") },
+      { type: "done", done: true },
+    ];
+    const body = events.map((e) => `data: ${JSON.stringify(e)}\n\n`).join("");
+    return { ok: true, status: 200, text: async () => body };
+  };
 }
 
 // ---------- item ----------
@@ -366,7 +428,7 @@ export async function recordItem(srcDir: string, opts: RecordOptions = {}): Prom
   if (!opts.apiKey) throw new Error("CARTESIA_API_KEY is not set in the environment; export it and run again (the key is never printed).");
   if (!opts.fetch) throw new Error("no fetch available");
   const encode = opts.encode ?? ffmpegEncode;
-  if (!opts.encode && !(await ffmpegAvailable())) throw new Error("ffmpeg is not installed; it encodes the clips to mp3 (brew install ffmpeg).");
+  if (!opts.encode && !(await ffmpegAvailable())) throw new Error(FFMPEG_MISSING);
 
   await mkdir(path.join(srcDir, "audio"), { recursive: true });
   const now = opts.now ?? (() => new Date());

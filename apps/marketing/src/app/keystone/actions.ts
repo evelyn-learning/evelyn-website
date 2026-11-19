@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { can, SECTIONS, STAGES, STAGE_LABEL, VERDICTS, type SectionKind, type Stage, type Verdict } from "@/lib/keystone/config";
 import { changePassword, requireUser, signIn } from "@/lib/keystone/auth";
 import { ksHref } from "@/lib/keystone/paths";
@@ -179,6 +180,16 @@ export async function clearHoldAction(_prev: ReviewResult, form: FormData): Prom
   return ownerAction(form, (itemId) => clearHoldByOwner(itemId), "cleared");
 }
 
+/** Runs after the response: builds what is queued for API credits. Never throws (there is no one to catch it). */
+async function startAnimatedBuild() {
+  try {
+    const { buildQueued } = await import("@/lib/keystone/animated/serverbuild");
+    await buildQueued();
+  } catch (e) {
+    console.error(`[keystone animated build] stopped: ${e instanceof Error ? e.message : String(e)}`);
+  }
+}
+
 /** The owner's "To animate" list: queue the ticked items for the API build, or take them back to the by-hand list. */
 export async function setAnimateRouteAction(form: FormData) {
   const user = await requireUser();
@@ -186,7 +197,14 @@ export async function setAnimateRouteAction(form: FormData) {
   const { setAnimateRoute } = await import("@/lib/keystone/animreview/store");
   const asked = String(form.get("route"));
   const route = asked === "api" || asked === "hand" || asked === "none" ? asked : "undecided";
-  await setAnimateRoute(form.getAll("itemId").map(String), route, { username: user.username, role: user.role }, String(form.get("reason") || ""));
+  const r = await setAnimateRoute(form.getAll("itemId").map(String), route, { username: user.username, role: user.role }, String(form.get("reason") || ""));
+  // "Build with API credits" starts the server's build by itself, after this response is sent (the request does
+  // not wait for it). A build already running picks the new items up; KEYSTONE_ANIM_SERVER_BUILD=off leaves the
+  // button marking the item only.
+  if (route === "api" && "ok" in r) {
+    const { serverBuildOn } = await import("@/lib/keystone/animated/buildstate");
+    if (serverBuildOn()) after(startAnimatedBuild);
+  }
   revalidatePath("/keystone", "layout");
 }
 

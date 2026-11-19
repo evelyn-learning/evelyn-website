@@ -6,7 +6,32 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { validateSpec, validateTiming, type Box, type BoxKind, type Spec, type Timing } from "./spec";
 
-const HERE = dirname(fileURLToPath(import.meta.url));
+/**
+ * Where the files beside this module (player.js, player.css, AUTHORING.md) may be: beside the module when it runs
+ * from source (tsx scripts, tests), else the source tree under the working directory. The bundled Next server has
+ * no file beside its compiled chunk, and its import.meta.url may not be a file address at all, but it runs with
+ * the app's source tree at its working directory.
+ */
+export function assetDirs(cwd: string = process.cwd()): string[] {
+  const dirs: string[] = [];
+  try {
+    dirs.push(dirname(fileURLToPath(import.meta.url)));
+  } catch {
+    // not a file address (bundled)
+  }
+  dirs.push(join(cwd, "src", "lib", "keystone", "animated"), join(cwd, "apps", "marketing", "src", "lib", "keystone", "animated"));
+  return dirs;
+}
+
+/** The text of a file that ships beside this module, from the first folder that has it. */
+export function readBeside(name: string, dirs: string[] = assetDirs()): string {
+  for (const d of dirs) {
+    const p = join(d, name);
+    if (existsSync(p)) return readFileSync(p, "utf8");
+  }
+  throw new Error(`${name} not found (looked in ${dirs.join(", ")})`);
+}
+
 const FOOTER = "© 2026 Evelyn Learning";
 const BOX_ORDER: readonly BoxKind[] = ["selfcheck", "sanity", "slip", "explore", "tryone", "takeaway", "diploma"];
 const EQ_HINT = `<p class="es-small">Tap an equation line to see the operation behind it.</p>`;
@@ -53,8 +78,8 @@ export interface PageInput {
 /** The page for a valid spec. Pure: no file access when playerJs and playerCss are given. */
 export function renderPage(input: PageInput): string {
   const { spec } = input;
-  const css = input.playerCss ?? readFileSync(join(HERE, "player.css"), "utf8");
-  const js = (input.playerJs ?? readFileSync(join(HERE, "player.js"), "utf8")).replace(/^\s*\/\*[\s\S]*?\*\/\s*/, ""); // the authoring notes stay out of the page
+  const css = input.playerCss ?? readBeside("player.css");
+  const js = (input.playerJs ?? readBeside("player.js")).replace(/^\s*\/\*[\s\S]*?\*\/\s*/, ""); // the authoring notes stay out of the page
 
   let hinted = false;
   const stepsHtml = spec.steps

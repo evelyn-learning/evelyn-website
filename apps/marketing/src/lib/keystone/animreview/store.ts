@@ -4,7 +4,8 @@
 import { cp, mkdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { Types } from "mongoose";
-import { isReadOnly, ks, READ_ONLY_MESSAGE, type AnimationDoc, type AnimFlagDoc } from "../db";
+import { isReadOnly, ks, READ_ONLY_MESSAGE, type AnimateBuild, type AnimationDoc, type AnimFlagDoc } from "../db";
+import { buildBudget } from "../animated/buildstate";
 import type { Role } from "../config";
 import { cleanComment, cleanPosition, isFlagId, isItemId, MAX_REPLY, shotsProblem } from "./pure";
 import { animatedDir, shotDir } from "./files";
@@ -405,7 +406,18 @@ export async function recordPublish(input: PublishInput, expectVersion: number):
 // ---------- the "To animate" list (owner's queue) ----------
 
 export type AnimateChoice = "api" | "hand" | "none" | "undecided";
-export type ToAnimate = { itemId: string; course: string; stage: string; route: AnimateChoice; requestedAt?: Date; reason?: string; by?: string; askedBy?: string };
+export type ToAnimate = {
+  itemId: string;
+  course: string;
+  stage: string;
+  route: AnimateChoice;
+  requestedAt?: Date;
+  reason?: string;
+  by?: string;
+  askedBy?: string;
+  /** Where the server's own build stands: on an item queued for API credits, or on a by-hand item whose build failed. */
+  build?: AnimateBuild;
+};
 const ROUTES = ["api", "hand", "none"];
 
 /**
@@ -430,6 +442,7 @@ export async function toAnimate(role: Role | undefined): Promise<ToAnimate[] | n
     reason: i.animate?.reason,
     by: i.animate?.requestedBy,
     askedBy: i.animate?.askedBy,
+    ...(i.animate?.build?.state ? { build: i.animate.build } : {}),
   }));
 }
 
@@ -447,8 +460,17 @@ export async function setAnimateRoute(itemIds: string[], route: AnimateChoice, w
   if (!ids.length) return { error: "Tick at least one item." };
   const { Item } = await ks();
   const why = (reason ?? "").replace(/\s+/g, " ").trim().slice(0, 240);
-  const animate = { route: route === "undecided" ? "wanted" : route, requestedAt: new Date(), requestedBy: who.username, ...(route === "none" && why ? { reason: why } : {}) };
-  const r = await Item.updateMany({ itemId: { $in: ids } }, { $set: { animate } });
+  const animate = {
+    route: route === "undecided" ? "wanted" : route,
+    requestedAt: new Date(),
+    requestedBy: who.username,
+    ...(route === "none" && why ? { reason: why } : {}),
+    // Queued for the server's own build (animated/serverbuild.ts).
+    ...(route === "api" ? { build: { state: "queued" } } : {}),
+  };
+  // An item the server is building right now is left as it is: a second press while a build runs changes nothing for it.
+  const notBuilding = route === "api" ? { $nor: [{ "animate.route": "api", "animate.build.state": "building" }] } : {};
+  const r = await Item.updateMany({ itemId: { $in: ids }, ...notBuilding }, { $set: { animate } });
   return { ok: r.modifiedCount };
 }
 
@@ -508,9 +530,15 @@ export type AnimationDigest = {
   beingFixed: { itemId: string; version: number; openFlags: number }[];
   /** On the To animate list with no route chosen; askedBy = the Castle Rock user who asked for it. */
   undecided: { itemId: string; askedBy?: string }[];
-  /** Route chosen, not built yet: built when a session is told to. */
+  /** Queued for API credits: the server builds these by itself when `serverBuilds` (its switch is on). */
   queuedApi: string[];
+  serverBuilds?: boolean;
+  /** Queued for a by-hand build: built when a session is told to. */
   queuedHand: string[];
+  /** The server's build failed: the item is now on the by-hand route and needs the owner's look. */
+  failedBuilds?: { itemId: string; reason: string }[];
+  /** Today's spend cap for server builds is reached while items are still queued: they wait until tomorrow or a higher cap. */
+  capReached?: { cap: number; spent: number; waiting: string[] };
   /** Sorted out as "No animation needed" since `since`, with who decided and the reason Castle Rock reads. */
   newlySkipped: { itemId: string; by: string; reason: string }[];
 };
@@ -531,13 +559,18 @@ export async function animationDigest(since: Date): Promise<AnimationDigest> {
     else if (a.status === "review" || a.status === "fixing") toReview.push({ itemId: a.itemId, version: a.version, fixes: (a.addresses ?? []).length });
   }
   const todo = (await toAnimate("evelyn")) ?? [];
+  const queuedApi = todo.filter((t) => t.route === "api").map((t) => t.itemId);
+  const budget = await buildBudget();
   const skipped = await Item.find({ "animate.route": "none", "animate.requestedAt": { $gte: since }, player: { $exists: false } }).select("itemId animate").sort({ itemId: 1 }).lean();
   return {
     toReview,
     beingFixed,
     undecided: todo.filter((t) => t.route === "undecided").map((t) => ({ itemId: t.itemId, ...(t.askedBy ? { askedBy: t.askedBy } : {}) })),
-    queuedApi: todo.filter((t) => t.route === "api").map((t) => t.itemId),
-    queuedHand: todo.filter((t) => t.route === "hand").map((t) => t.itemId),
+    queuedApi,
+    serverBuilds: budget.on,
+    queuedHand: todo.filter((t) => t.route === "hand" && t.build?.state !== "failed").map((t) => t.itemId),
+    failedBuilds: todo.filter((t) => t.route === "hand" && t.build?.state === "failed").map((t) => ({ itemId: t.itemId, reason: t.build?.failure || "No reason recorded." })),
+    ...(budget.on && budget.capReached && queuedApi.length ? { capReached: { cap: budget.cap, spent: budget.spent, waiting: queuedApi } } : {}),
     newlySkipped: skipped.map((i) => ({ itemId: i.itemId, by: i.animate?.requestedBy === AUTO ? "automatically" : `by ${i.animate?.requestedBy ?? "?"}`, reason: i.animate?.reason || NO_ANIMATION_DEFAULT })),
   };
 }

@@ -6,8 +6,10 @@ import { ownerQueue, type QueueRow } from "@/lib/keystone/queries";
 import { pacificTime } from "@/lib/keystone/pipeline/status";
 import { TopBar } from "../_components/TopBar";
 import { DoneNote, HeldControls, HoldControl } from "../_components/OwnerControls";
-import { listAnimations, toAnimate } from "@/lib/keystone/animreview/store";
+import { listAnimations, toAnimate, type ToAnimate } from "@/lib/keystone/animreview/store";
 import { ANIMATION_STATUS_LABEL } from "@/lib/keystone/animreview/pure";
+import { buildBudget, type BuildBudget } from "@/lib/keystone/animated/buildstate";
+import { AutoRefresh } from "../_components/AutoRefresh";
 import { setAnimateRouteAction } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -39,6 +41,17 @@ function Facts({ r }: { r: QueueRow }) {
 
 type AnimNote = Map<string, string>;
 const ROUTE_WORDS = { undecided: "Not decided", api: "Queued for API credits", hand: "Queued for a by-hand build", none: "No animation needed" } as const;
+
+const usd = (n: number) => `$${n.toFixed(2)}`;
+
+/** Where the server's own build of an API item stands, in the owner's words. Nothing when the server build is switched off. */
+function buildWords(t: ToAnimate, budget: BuildBudget): string {
+  if (t.route !== "api" || !budget.on) return "";
+  const b = t.build;
+  if (b?.state === "building") return ` · Building since ${b.startedAt ? pacificTime(new Date(b.startedAt)) : "just now"}${(b.attempts ?? 1) > 1 ? " (second try: the first was interrupted)" : ""}`;
+  if (budget.capReached) return ` · Waiting: today's limit for builds is reached (${usd(budget.spent)} of ${usd(budget.cap)}); it is built tomorrow`;
+  return " · The server builds it by itself, one item at a time";
+}
 
 function Head({ r, base, anim }: { r: QueueRow; base: string; anim?: AnimNote }) {
   return (
@@ -73,12 +86,14 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
   const { done } = await searchParams;
   const q = await ownerQueue(user.role);
   if (!q) return null; // unreachable: requireUser sent any other role to the overview
-  const [anims, todo] = await Promise.all([listAnimations(user.role), toAnimate(user.role)]);
+  const [anims, todo, budget] = await Promise.all([listAnimations(user.role), toAnimate(user.role), buildBudget()]);
   const anim: AnimNote = new Map(
     (anims ?? []).map((a) => [a.itemId, `Animation v${a.latest}: ${ANIMATION_STATUS_LABEL[a.status]}${a.openFlags ? `, ${a.openFlags} open flag${a.openFlags === 1 ? "" : "s"}` : ""}`]),
   );
   const build = (todo ?? []).filter((t) => t.route !== "none");
   const skipped = (todo ?? []).filter((t) => t.route === "none");
+  // A build is running or about to: the list follows it without a reload by hand.
+  const live = budget.on && build.some((t) => t.route === "api" && (t.build?.state === "building" || !budget.capReached));
   const open = (id: string, ready = true) => `${base}/item/${encodeURIComponent(id)}${ready ? "?stage=ready" : ""}`;
 
   return (
@@ -168,6 +183,7 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
         <section className="ks-card ks-q-sec" id="animate">
           <h2>To animate · {build.length}</h2>
           <p className="ks-sub">Items with a written solution and no animation yet. Items that need no animation are sorted out automatically, with the reason Castle Rock reads; you can put any of them back. Tick items here, then choose how each is built.</p>
+          {live && <AutoRefresh seconds={10} />}
           {build.length ? (
             <form action={setAnimateRouteAction}>
               <ul className="ks-q-list">
@@ -181,9 +197,15 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
                       <span className="ks-q-meta">
                         {t.course || "No course"} · {STAGE_LABEL[t.stage as keyof typeof STAGE_LABEL] ?? t.stage} · <b>{ROUTE_WORDS[t.route]}</b>
                         {t.requestedAt && t.route !== "undecided" ? ` since ${pacificTime(new Date(t.requestedAt))}` : ""}
+                        {buildWords(t, budget)}
                         {t.askedBy ? <b className="bad"> · Asked for by Castle Rock ({t.askedBy})</b> : ""}
                       </span>
                     </div>
+                    {t.route === "hand" && t.build?.state === "failed" && (
+                      <div className="ks-q-why">
+                        <b className="bad">Failed: {t.build.failure || "no reason recorded"}</b> It is now on the by-hand list.
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>

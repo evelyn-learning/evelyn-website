@@ -36,7 +36,7 @@ import {
 import { readKey, type Answer, type Decision } from "./answers";
 import { calcCheck, type CalcFinding } from "./calc";
 import { bannedWordsIn, renderCheck, rulesAudit, workingCheck, type CheckResult, type Finding, type RenderCheckOpts } from "./checks";
-import { intakeCode, intakeModel, intakeNote, lastSegment, type IntakeFinding } from "./intake";
+import { intakeCode, intakeModel, intakeNote, lastSegment, shownImages, type IntakeFinding } from "./intake";
 import { callModel, redact } from "./models";
 import { suggestFor } from "./outbox";
 import { releaseAt, sampleAfterRun } from "./release";
@@ -333,15 +333,9 @@ export function sniffImage(data: Uint8Array): ImageType | null {
   return null;
 }
 
-/**
- * The image files the QUESTION itself shows (stem, passage, options / choices), exactly the names intake's
- * image markers produce: intakeCode without the package resource list. The only images a model ever receives.
- */
-export function shownImages(item: ItemDoc): string[] {
-  const out: string[] = [];
-  intakeCode({ ...item, qti: item.qti ? { ...item.qti, resources: [] } : undefined }, (f) => { out.push(f); return true; });
-  return [...new Set(out)];
-}
+// shownImages lives in intake.ts (beside intakeCode) so the server build of animated solutions can use it without
+// loading this module, which reaches calc.ts and cannot load inside the Next bundle.
+export { shownImages };
 
 const srcFiles = (html: string) =>
   [...html.matchAll(/<(?:[\w-]+:)?(?:img|object|embed)\b[^>]*?\b(?:src|data)\s*=\s*(?:"([^"]*)"|'([^']*)')/gi)].map((m) => lastSegment(m[1] ?? m[2] ?? "")).filter(Boolean);

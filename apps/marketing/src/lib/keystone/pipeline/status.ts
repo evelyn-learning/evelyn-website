@@ -558,7 +558,8 @@ const countOf = (s: Status, stage: Stage) => s.byOwner.flatMap((g) => g.rows).fi
 
 export function renderStatusEmail(s: Status, now: Date): { subject: string; html: string; text: string } {
   const an = s.animations;
-  const animN = an ? an.toReview.length + an.undecided.length : 0;
+  const failedBuilds = an?.failedBuilds ?? [];
+  const animN = an ? an.toReview.length + an.undecided.length + failedBuilds.length + (an.capReached ? 1 : 0) : 0;
   const subject = `Keystone: ${s.waitingOnPraveen.length} waiting on you, ${an ? `${plural(an.toReview.length, "animation")} to review, ${an.undecided.length} to decide, ` : ""}${countOf(s, "in_review")} in review, ${countOf(s, "approved")} approved`;
   const when = pacificTime(now);
   const t: string[] = [`Keystone status, ${when}`, ""];
@@ -604,13 +605,22 @@ export function renderStatusEmail(s: Status, now: Date): { subject: string; html
     const review = an.toReview.map((r) => ({ id: r.itemId, line: `v${r.version}${r.fixes ? `: ${plural(r.fixes, "fix", "fixes")} to confirm` : r.version > 1 ? ": new version" : ": new"}` }));
     const decide = an.undecided.map((u) => ({ id: u.itemId, line: u.askedBy ? `asked for by Castle Rock (${u.askedBy})` : "" }));
     const queued = [
-      ...(an.queuedApi.length ? [`API credits (${an.queuedApi.length}): ${ids(an.queuedApi)}`] : []),
-      ...(an.queuedHand.length ? [`By hand (${an.queuedHand.length}): ${ids(an.queuedHand)}`] : []),
+      ...(an.queuedApi.length ? [`API credits (${an.queuedApi.length}), ${an.serverBuilds ? "built by the server by itself" : "built when you start a session and say so"}: ${ids(an.queuedApi)}`] : []),
+      ...(an.queuedHand.length ? [`By hand (${an.queuedHand.length}), built when you start a session and say so: ${ids(an.queuedHand)}`] : []),
     ];
+    const usd = (n: number) => `$${n.toFixed(2)}`;
+    const capLine = an.capReached
+      ? `Today's limit for builds with API credits is reached (${usd(an.capReached.spent)} of ${usd(an.capReached.cap)}): ${plural(an.capReached.waiting.length, "item")} wait until tomorrow (${ids(an.capReached.waiting)})`
+      : "";
+    const needN = failedBuilds.length + (capLine ? 1 : 0);
     t.push(`ANIMATIONS (${animN} need you)`);
     t.push(`To review (${review.length}): open the item, play it, flag or accept`, ...(review.length ? review.flatMap((r) => [`- ${r.id} ${r.line}`, `  ${itemUrl(r.id)}#animated`]) : ["- nothing"]));
     t.push(`To decide (${decide.length}): choose API credits, by hand, or no animation at ${QUEUE}`, ...(decide.length ? decide.map((d) => `- ${d.id}${d.line ? `: ${d.line}` : ""}`) : ["- nothing"]));
-    if (queued.length) t.push("Chosen, not built yet: they are built when you start a session and say so", ...queued.map((q) => `- ${q}`));
+    if (needN) {
+      t.push(`Builds that need you (${needN}): a failed build is now on the by-hand list at ${QUEUE}`);
+      t.push(...failedBuilds.map((f) => `- ${f.itemId}: build failed: ${f.reason}`), ...(capLine ? [`- ${capLine}`] : []));
+    }
+    if (queued.length) t.push("Chosen, not built yet", ...queued.map((q) => `- ${q}`));
     if (an.beingFixed.length) t.push(`Being fixed, nothing for you (${an.beingFixed.length})`, ...an.beingFixed.map((b) => `- ${b.itemId} v${b.version}: ${plural(b.openFlags, "open flag")}`));
     if (an.newlySkipped.length) t.push(`Marked "No animation needed" in the last 24 hours (${an.newlySkipped.length}): put any back at ${QUEUE}`, ...an.newlySkipped.map((k) => `- ${k.itemId} (${k.by}): ${k.reason}`));
     t.push("");
@@ -622,7 +632,12 @@ export function renderStatusEmail(s: Status, now: Date): { subject: string; html
       `<p ${P}><strong>To decide (${decide.length})</strong>: choose API credits, by hand, or no animation on <a href="${esc(QUEUE)}" style="color:#1a56db">your To animate list</a></p>`,
       list(decide.map((d) => `${link(d.id)}${d.line ? `: <strong>${esc(d.line)}</strong>` : ""}`), "Nothing."),
     );
-    if (queued.length) h.push(`<p ${P}><strong>Chosen, not built yet</strong>: they are built when you start a session and say so</p>`, list(queued.map(esc), ""));
+    if (needN)
+      h.push(
+        `<p ${P}><strong style="color:#a11">Builds that need you (${needN})</strong>: a failed build is now on the by-hand list on <a href="${esc(QUEUE)}" style="color:#1a56db">your To animate list</a></p>`,
+        list([...failedBuilds.map((f) => `${link(f.itemId)}: build failed: ${esc(f.reason)}`), ...(capLine ? [esc(capLine)] : [])], ""),
+      );
+    if (queued.length) h.push(`<p ${P}><strong>Chosen, not built yet</strong></p>`, list(queued.map(esc), ""));
     if (an.beingFixed.length) h.push(`<p ${P}><strong>Being fixed, nothing for you (${an.beingFixed.length})</strong></p>`, list(an.beingFixed.map((b) => `${alink(b.itemId)} v${b.version}: ${esc(plural(b.openFlags, "open flag"))}`), ""));
     if (an.newlySkipped.length)
       h.push(

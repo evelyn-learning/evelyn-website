@@ -21,21 +21,16 @@
  * (ANTHROPIC_API_KEY); nothing here records a voice.
  */
 import { spawnSync } from "node:child_process";
-import { appendFileSync, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { AuthorAsset, AuthorExample, AuthorInput, AuthorResult } from "../src/lib/keystone/animated/author";
+import type { AuthorResult } from "../src/lib/keystone/animated/author";
 import type { ItemDoc } from "../src/lib/keystone/db";
 
 const LAPTOP_SRC = "/Users/luke/Dev/evelynlearning/docs/whitelabel/castle-rock/keystone/animated-src";
 const LAPTOP_PLAYBOOK = "/Users/luke/Dev/evelynlearning/docs/whitelabel/castle-rock/enhanced-solution-playbook.md";
 const BOX_ASSETS = "root@85.239.239.134:/root/keystone-data/assets";
-/** Shown first when the subject matches (the reviewer's reference items), then the rest by id. */
-const PREFERRED = ["234035", "286312", "193246", "93953", "135676", "98186"];
-const IMAGE_MIME: Record<string, string> = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp" };
-const AUTHORABLE_STAGES = ["ready", "approved", "in_review"];
-
 const argv = process.argv.slice(2);
 const VALUED = new Set(["src", "examples", "playbook", "assets-dir", "max-cost"]);
 const has = (n: string) => argv.includes(`--${n}`);
@@ -44,61 +39,8 @@ const arg = (n: string) => {
   return i >= 0 ? argv[i + 1] : undefined;
 };
 const ids = argv.filter((a, i) => !a.startsWith("--") && !(i > 0 && argv[i - 1].startsWith("--") && VALUED.has(argv[i - 1].slice(2))));
-const safeName = (s: string) => s.replace(/[^A-Za-z0-9._-]/g, "_");
 const kb = (n: number) => `${(n / 1024).toFixed(1)} KB`;
 const usd = (n: number) => `$${n.toFixed(4)}`;
-
-/** The finished items of a source folder, preferred ones first. Folders without the three texts are skipped. */
-function loadExamples(dir: string): AuthorExample[] {
-  if (!existsSync(dir)) return [];
-  const names = readdirSync(dir).filter((n) => /^\d+$/.test(n));
-  names.sort((a, b) => (PREFERRED.indexOf(a) + 1 || 99) - (PREFERRED.indexOf(b) + 1 || 99) || Number(a) - Number(b));
-  const out: AuthorExample[] = [];
-  for (const id of names) {
-    const f = (n: string) => path.join(dir, id, n);
-    if (!existsSync(f("spec.json")) || !existsSync(f("figure.svg")) || !existsSync(f("written.md"))) continue;
-    try {
-      const spec = readFileSync(f("spec.json"), "utf8");
-      const written = readFileSync(f("written.md"), "utf8");
-      // The solution part only: the question is in the example's spec, and the stored HTML of a question is long.
-      const at = written.indexOf("## APPROVED WRITTEN SOLUTION");
-      out.push({ itemId: id, subject: String((JSON.parse(spec) as { subject?: string }).subject ?? ""), spec, svg: readFileSync(f("figure.svg"), "utf8"), boardJs: existsSync(f("board.js")) ? readFileSync(f("board.js"), "utf8") : undefined, written: at >= 0 ? written.slice(at) : written });
-    } catch {
-      // an unreadable example is not an example
-    }
-  }
-  return out;
-}
-
-/** Parts 1 and 5 of the playbook (the rules and "write for the ear"); the rest is process. */
-function houseRules(file: string): string | undefined {
-  if (!existsSync(file)) return undefined;
-  const text = readFileSync(file, "utf8");
-  const part = (n: string) => new RegExp(`^## Part ${n} [\\s\\S]*?(?=^## Part |(?![\\s\\S]))`, "m").exec(text)?.[0].trim() ?? "";
-  const out = [part("1"), part("5")].filter(Boolean).join("\n\n");
-  return out || undefined;
-}
-
-/** written.md: the question as stored, the options and the solution's sections (the numbers check reads all of it). */
-function writtenFile(item: ItemDoc, version: number, sections: { kind: string; md: string }[]): string {
-  return [
-    `# Item ${item.itemId} — ${item.subject} — ${item.course}`,
-    "",
-    `Stage: ${item.stage} · solution version ${version} · key ${JSON.stringify(item.key ?? "")} · our answer ${item.evelynAnswer} · item type ${item.itemType}`,
-    "",
-    "## QUESTION (as shown; html)",
-    "",
-    item.questionHtml,
-    "",
-    "",
-    "### Options",
-    JSON.stringify((item.options ?? []).map((o) => ({ label: o.label, html: o.html, md: o.md })), null, 1),
-    "",
-    "## APPROVED WRITTEN SOLUTION",
-    "",
-    ...sections.flatMap((s) => [`### ${s.kind}`, "", s.md.trim(), ""]),
-  ].join("\n");
-}
 
 type Row = { itemId: string; result: AuthorResult["result"] | "skipped" | "dry-run"; cost: number; note: string };
 
@@ -121,7 +63,8 @@ async function main() {
     assertKeys(["animator"]); // names the missing variable, never a value
   }
   const { authorItem, buildPrompt, AUTHOR_MAX_TOKENS } = await import("../src/lib/keystone/animated/author");
-  const { questionAsText } = await import("../src/lib/keystone/pipeline/intake");
+  // The same functions the server build uses (src/lib/keystone/animated/source.ts).
+  const { AUTHORABLE_STAGES, authorInputFor, houseRules, loadExamples, readQuestionAssets, safeName, writeSource, writtenFile } = await import("../src/lib/keystone/animated/source");
   const { shownImages } = await import("../src/lib/keystone/pipeline/run");
   const { ks, closeKs } = await import("../src/lib/keystone/db");
 
@@ -169,32 +112,13 @@ async function main() {
         const r = spawnSync("rsync", ["-a", "--exclude=player/", "--exclude=animated/", "--", `${BOX_ASSETS}/${itemId}/`, `${into}/`], { stdio: ["ignore", "inherit", "inherit"] });
         if (r.status !== 0) console.log(`  !! assets could not be pulled (rsync exit ${r.status})`);
       }
-      const assets: AuthorAsset[] = [];
-      const missing: string[] = [];
-      for (const name of shown) {
-        const file = path.join(assetsDir, safeName(itemId), safeName(path.basename(name)));
-        const mime = IMAGE_MIME[path.extname(name).slice(1).toLowerCase()];
-        if (existsSync(file) && statSync(file).isFile()) assets.push(mime ? { name, mime, data: new Uint8Array(readFileSync(file)) } : { name });
-        else { missing.push(name); assets.push({ name }); }
-      }
+      const itemAssets = path.join(assetsDir, safeName(itemId));
+      const { assets, missing } = readQuestionAssets(itemAssets, shown);
       if (missing.length && !dry) { skip(`its question image(s) could not be read: ${missing.join(", ")} (not authored without them)`); continue; }
 
       const sections = sol.sections.map((s) => ({ kind: s.kind, md: s.md }));
       const written = writtenFile(item, sol.version, sections);
-      const input: AuthorInput = {
-        itemId,
-        subject: item.subject,
-        course: item.course,
-        itemType: item.itemType,
-        questionHtml: item.questionHtml,
-        questionText: questionAsText(item),
-        options: (item.options ?? []).map((o) => ({ label: o.label, html: o.html })),
-        assets,
-        // The solution's sections. The checks add the stored question and the options, so they read what written.md holds.
-        writtenMd: sections.map((s) => `### ${s.kind}\n\n${s.md.trim()}`).join("\n\n"),
-        answer: item.evelynAnswer,
-        key: item.key || undefined,
-      };
+      const input = authorInputFor(item, sections, assets);
       const deps = { guide, rules, examples };
       const prompt = buildPrompt(input, deps);
       const sent = assets.filter((a) => a.data);
@@ -212,19 +136,7 @@ async function main() {
       spent += r.cost;
       const failed = r.result === "failed";
       const out = failed ? path.join(src, "_failed", itemId) : dest;
-      if (r.files) {
-        if (failed) rmSync(out, { recursive: true, force: true });
-        mkdirSync(path.join(out, "question-assets"), { recursive: true });
-        writeFileSync(path.join(out, "spec.json"), r.files.specJson);
-        writeFileSync(path.join(out, "figure.svg"), r.files.figureSvg);
-        if (r.files.boardJs) writeFileSync(path.join(out, "board.js"), r.files.boardJs);
-        else rmSync(path.join(out, "board.js"), { force: true });
-        writeFileSync(path.join(out, "written.md"), written);
-        for (const a of assets) {
-          const from = path.join(assetsDir, safeName(itemId), safeName(path.basename(a.name)));
-          if (existsSync(from)) copyFileSync(from, path.join(out, "question-assets", safeName(path.basename(a.name))));
-        }
-      }
+      if (r.files) writeSource(out, r.files, written, assets, itemAssets, { clean: failed });
       for (const c of r.calls) console.log(`  ${c.kind}: ${c.model || "(no reply)"} in ${c.tokens.in} (cache write ${c.tokens.cacheWrite}, read ${c.tokens.cacheRead}) out ${c.tokens.out} ${usd(c.cost)}${c.ms ? ` ${Math.round(c.ms / 1000)} s` : ""}${c.ok ? "" : " FAILED"}`);
       if (r.firstFindings.length) console.log(`  first reply, ${r.firstFindings.length} finding(s):\n${r.firstFindings.map((f) => `    - ${f}`).join("\n")}`);
       if (failed) console.log(`  FAILED, ${r.findings.length} finding(s) left (by-hand list)${r.files ? `; draft in ${out}` : ""}:\n${r.findings.map((f) => `    - ${f}`).join("\n")}`);

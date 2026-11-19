@@ -4,6 +4,7 @@
 // than 24 characters) → 503; a wrong or missing header → 404 with an empty body. Same work as
 // scripts/keystone-release.ts in a writing run (pipeline/jobs.ts releaseJob): lock, release, heartbeat.
 // The JSON reply is read only by the cron log.
+import { after } from "next/server";
 import { CRON_HEADER, cronGate, releaseJob } from "@/lib/keystone/pipeline/jobs";
 
 export const runtime = "nodejs";
@@ -15,6 +16,21 @@ export async function POST(req: Request): Promise<Response> {
   const gate = cronGate(req.headers.get(CRON_HEADER), process.env.KEYSTONE_CRON_SECRET);
   if (gate === "unconfigured") return new Response("not configured", { status: 503 });
   if (gate === "denied") return new Response(null, { status: 404 });
+  // Safety net for the server's build of animated solutions: whatever is still queued for API credits (a build
+  // interrupted by a restart, a press that found the lock held) is built after this reply, never inside it.
+  try {
+    after(async () => {
+      try {
+        const { buildQueued } = await import("@/lib/keystone/animated/serverbuild");
+        await buildQueued();
+      } catch (e) {
+        console.error(`[keystone animated build] stopped: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    });
+  } catch {
+    // Called outside a request (the route's own test calls POST directly): there is no "after the response", and
+    // the release below must still run. The next cron call is the safety net.
+  }
   try {
     const r = await releaseJob(new Date());
     if (r.status === "busy") return json({ status: "busy" });

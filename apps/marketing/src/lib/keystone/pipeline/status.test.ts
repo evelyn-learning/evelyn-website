@@ -436,9 +436,18 @@ const HOUR = 3_600_000;
     };
     const out = renderStatusEmail({ ...empty, animations: an }, tue7);
     ok(out.subject.includes("2 animations to review, 2 to decide"), `subject counts animations: ${out.subject}`);
-    for (const piece of ["ANIMATIONS (4 need you)", "- 991701 v1: new", "- 991702 v2: 1 fix to confirm", "/item/991701#animated", "- 991705: asked for by Castle Rock (julie<b>)", "API credits (1): 991706", "- 991703 v1: 2 open flags", "- 991707 (automatically): Only algebra <steps>.", "/queue#animate"])
+    for (const piece of ["ANIMATIONS (4 need you)", "- 991701 v1: new", "- 991702 v2: 1 fix to confirm", "/item/991701#animated", "- 991705: asked for by Castle Rock (julie<b>)", "API credits (1), built when you start a session and say so: 991706", "- 991703 v1: 2 open flags", "- 991707 (automatically): Only algebra <steps>.", "/queue#animate"])
       ok(out.text.includes(piece), `text has: ${piece}`);
     ok(!out.text.includes("By hand ("), "an empty route is left out");
+    ok(!out.text.includes("Builds that need you"), "no build group without a failed build or a reached limit");
+    // the server's own builds: a failed build and a reached daily limit need the owner
+    const srv = renderStatusEmail(
+      { ...empty, animations: { ...an, serverBuilds: true, queuedHand: ["991709"], failedBuilds: [{ itemId: "991708", reason: "ffmpeg is not installed on the server <x>" }], capReached: { cap: 15, spent: 15.4, waiting: ["991706"] } } },
+      tue7,
+    );
+    for (const piece of ["ANIMATIONS (6 need you)", "Builds that need you (2)", "- 991708: build failed: ffmpeg is not installed on the server <x>", "limit for builds with API credits is reached ($15.40 of $15.00): 1 item wait", "API credits (1), built by the server by itself: 991706", "By hand (1), built when you start a session and say so: 991709"])
+      ok(srv.text.includes(piece), `text has: ${piece}`);
+    ok(srv.html.includes("Builds that need you (2)") && !srv.html.includes("server <x>"), "the build group is in the html, escaped");
     ok(!out.html.includes("julie<b>") && !out.html.includes("<steps>") && out.html.includes("Animations (4 need you)"), "html is escaped and has the section");
     const none = renderStatusEmail({ ...empty, animations: { toReview: [], beingFixed: [], undecided: [], queuedApi: [], queuedHand: [], newlySkipped: [] } }, tue7);
     ok(none.text.includes("ANIMATIONS (0 need you)") && !none.text.includes("Chosen, not built yet") && !none.text.includes("Being fixed"), "empty groups are left out");

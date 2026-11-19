@@ -7,6 +7,10 @@
  *   cd apps/marketing && KEYSTONE_MONGODB_URI=mongodb://127.0.0.1:2710 \
  *   npx tsx --env-file=.env.local scripts/keystone-animated-run.ts [--queued | <itemId>…] [--by praveen] [--max-cost 6] [--no-voice] [--dry-run]
  *
+ * Since the server builds queued items by itself (src/lib/keystone/animated/serverbuild.ts, started by the button
+ * and the hourly cron), this laptop run is for when that is switched off (KEYSTONE_ANIM_SERVER_BUILD=off) or for
+ * ids given by hand. Do not run it with --queued against a server whose own build is on: both would build.
+ *
  * --dry-run   lists the items and what would run; no model call, no recording, no write.
  * --no-voice  stops after the build and the screen check (nothing recorded, nothing published).
  * Spends API credits and voice characters, and writes to the database it is pointed at: production needs Praveen's go.

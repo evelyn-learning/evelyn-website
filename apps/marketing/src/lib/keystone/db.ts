@@ -133,6 +133,26 @@ export type RunDoc = {
   failedAttempts?: number;
 };
 
+/**
+ * Where the server's own build of an item's animation stands (animated/serverbuild.ts), for the owner's To animate
+ * list. queued: waiting for the build; building: being built since startedAt; failed: not built (the item's route
+ * is then "hand" and `failure` says why in plain words); built: published for the owner's review.
+ */
+export type AnimateBuildState = "queued" | "building" | "failed" | "built";
+export type AnimateBuild = {
+  state: AnimateBuildState;
+  startedAt?: Date;
+  finishedAt?: Date;
+  /** Why it failed, one short sentence the owner reads. */
+  failure?: string;
+  /** Dollars spent on this item's builds so far (model calls + voice). */
+  cost?: number;
+  /** Correction calls the author needed (0 or 1). */
+  corrections?: number;
+  /** Times a build of this item was started (an interrupted build is retried once). */
+  attempts?: number;
+};
+
 export type ItemDoc = {
   itemId: string;
   subject: string;
@@ -158,7 +178,7 @@ export type ItemDoc = {
   /** Animated (voiced) player attached to the item: files under assets/<itemId>/player/. */
   player?: { entry: string; voice?: string; height: number; note?: string; attachedAt: Date; version?: number };
   /** The owner's decision on this item's animation: build with API credits, build by hand in a session, or none needed. Absent: not decided. */
-  animate?: { route: "api" | "hand" | "none" | "wanted"; requestedAt: Date; requestedBy: string; reason?: string; askedBy?: string };
+  animate?: { route: "api" | "hand" | "none" | "wanted"; requestedAt: Date; requestedBy: string; reason?: string; askedBy?: string; build?: AnimateBuild };
   stage: Stage;
   /** The latest key query (kept for the record once answered). Undefined on items never queried. */
   keyQuery?: KeyQueryDoc;
@@ -324,6 +344,21 @@ export type AnimFlagDoc = {
   updatedAt: Date;
 };
 
+/** One server build attempt of an item's animation: the record the daily spend cap is counted from. */
+export type AnimBuildDoc = {
+  itemId: string;
+  startedAt: Date;
+  finishedAt?: Date;
+  result?: "built" | "failed" | "dropped";
+  /** Dollars: model calls + voice characters. */
+  cost: number;
+  modelCost?: number;
+  voiceChars?: number;
+  corrections?: number;
+  failure?: string;
+  version?: number;
+};
+
 type Models = {
   Lesson: Model<LessonDoc>;
   Heartbeat: Model<HeartbeatDoc>;
@@ -339,6 +374,7 @@ type Models = {
   Upload: Model<UploadDoc>;
   Animation: Model<AnimationDoc>;
   AnimFlag: Model<AnimFlagDoc>;
+  AnimBuild: Model<AnimBuildDoc>;
 };
 
 type Cache = { conn: Connection | null; promise: Promise<Connection> | null; models: Models | null };
@@ -434,7 +470,17 @@ function defineModels(conn: Connection): Models {
       required: false,
     },
     animate: {
-      type: new Schema({ route: String, requestedAt: Date, requestedBy: String, reason: String, askedBy: String }, { _id: false }),
+      type: new Schema(
+        {
+          route: String,
+          requestedAt: Date,
+          requestedBy: String,
+          reason: String,
+          askedBy: String,
+          build: { type: new Schema({ state: String, startedAt: Date, finishedAt: Date, failure: String, cost: Number, corrections: Number, attempts: Number }, { _id: false }), required: false },
+        },
+        { _id: false },
+      ),
       required: false,
     },
     stage: { type: String, index: true },
@@ -604,7 +650,20 @@ function defineModels(conn: Connection): Models {
   });
   AnimFlag.index({ itemId: 1, version: 1 });
   AnimFlag.index({ status: 1 });
-  if (isReadOnly()) for (const schema of [Lesson, Heartbeat, Lock, Run, Outbox, Batch, User, Session, Item, Solution, Activity, Upload, Animation, AnimFlag]) blockWrites(schema as Schema);
+  const AnimBuild = new Schema<AnimBuildDoc>({
+    itemId: { type: String, required: true },
+    startedAt: { type: Date, required: true },
+    finishedAt: Date,
+    result: String,
+    cost: { type: Number, default: 0 },
+    modelCost: Number,
+    voiceChars: Number,
+    corrections: Number,
+    failure: String,
+    version: Number,
+  });
+  AnimBuild.index({ startedAt: -1 });
+  if (isReadOnly()) for (const schema of [Lesson, Heartbeat, Lock, Run, Outbox, Batch, User, Session, Item, Solution, Activity, Upload, Animation, AnimFlag, AnimBuild]) blockWrites(schema as Schema);
   return {
     Lesson: conn.model<LessonDoc>("Lesson", Lesson, "lessons"),
     Heartbeat: conn.model<HeartbeatDoc>("Heartbeat", Heartbeat, "heartbeats"),
@@ -620,6 +679,7 @@ function defineModels(conn: Connection): Models {
     Upload: conn.model<UploadDoc>("Upload", Upload, "uploads"),
     Animation: conn.model<AnimationDoc>("Animation", Animation, "animations"),
     AnimFlag: conn.model<AnimFlagDoc>("AnimFlag", AnimFlag, "animflags"),
+    AnimBuild: conn.model<AnimBuildDoc>("AnimBuild", AnimBuild, "animbuilds"),
   };
 }
 
