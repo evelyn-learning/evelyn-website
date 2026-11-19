@@ -87,11 +87,11 @@ export function v2AsksInJapanese(sentence: string): boolean {
 export function v2AsksTheLearner(text: string): boolean {
   // Quoted phrases out of the whole reply first: cut into sentences, 「…。"Please tell me" は…」 splits at the opening quote.
   const plain = v2WithoutQuotedPhrases(stripBoardBlocks(text));
-  const clean = (x: string) => (v2InviteHeldBack(x) ? '' : x);
-  const old = plain.split(/(?<=[.?!])\s+/).map(clean).filter((x) => x.trim());
-  const now = v2ReplySentences(plain).map(clean).filter((x) => x.trim());
-  if (asksAnywhere(old) || now.some(v2AsksInJapanese)) return true;
-  return now.slice(-2).some((s) => v2HandsOver(s) || v2InvitesToSpeak(s));
+  // Fix round 2 (N1): a sentence that is itself a question always stays (「今までに、海外出張をしたことがありますか。」); the condition /
+  // later guard leaves out invitations only.
+  const kept = v2ReplySentences(plain).filter((x) => /[?？]/.test(x) || v2AsksInJapanese(x) || !v2InviteHeldBack(x));
+  if (asksAnywhere(kept) || kept.some(v2AsksInJapanese)) return true;
+  return kept.slice(-2).some((s) => v2HandsOver(s) || v2InvitesToSpeak(s));
 }
 
 /** Whether a reply hands the turn over for an ask the runtime would add after it (a part ask, an offer): its last sentence is a

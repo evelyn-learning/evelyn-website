@@ -21,7 +21,7 @@ import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import { TUTOR_V2_ASK_ONE_TEST, TUTOR_V2_PART_ASK_CLAUSES, TUTOR_V2_PART_GO_NAMED, TUTOR_V2_SILENCE_AFTER_ASK } from '../src/lib/tutor/orchestrator/flags';
 import { asksAnywhere } from '../src/lib/tutor/v2/board-timing';
-import { v2AsksTheLearner, v2ReplyAsks } from '../src/lib/tutor/v2/one-question';
+import { v2AsksInJapanese, v2AsksTheLearner, v2ReplyAsks, v2ReplySentences } from '../src/lib/tutor/v2/one-question';
 import { v2LastReplyAsked, v2LastReplyAskedGuarded } from '../src/lib/tutor/v2/facts';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { v2SpeechParts } from '../src/lib/tutor/v2/languages';
@@ -105,6 +105,18 @@ const I1_OFFER = 'Before the summary, there is still pronunciation. Would you li
 // I2: offers, homework and taught phrases are no ask.
 const I2_NOT_ASK = ['わからない単語があれば、いつでも教えてください。', '次回までに、この文を三回書いてみてください。', '"Please tell me" は「教えてください」です。', '一緒に考えてみましょう。'];
 const I2_QUOTED_Q = '"Could you tell me…?" は「教えてもらえますか」という意味です。';
+// ── Fix round 2: the re-review's failing inputs ──
+// N1: か-questions holding a time or condition word stay asks.
+const N1_ASKS = ['今までに、海外出張をしたことがありますか。', '同時に二つのプロジェクトを担当したことはありますか。', '仕事で英語を使うときは、どんな場面が多いですか。', '今度の会議では、何について話しますか。', 'プロジェクトが終わったら、何をしますか。'];
+// N2: "before moving to X, continue Y?" keeps the part in hand.
+const N2_NOT_PART: Array<[string, V2BoardPage[]]> = [['発音の練習に進む前に、もう少し会話を続けますか。', [TODAY, JOB, PP, PS, CONV]], ['まとめに入る前に、もう一度最初から始めましょうか。', [TODAY, JOB, PP, PS, CONV]]];
+// N3: a 次に lead with a questions-or-go choice; an optional part offered in the model's words.
+const N3_ASK = '次に、会話の練習をします。質問がありますか、それとも進みましょうか。';
+const N3_OFFER = '発音の練習もできます。やりますか、それとも、まとめに進みますか。';
+// n4: a 次は lead about content, not a part.
+const N4_NOT_PART = '次は過去形と比べてみましょう。何か質問はありますか。';
+// n5: a quoted question the learner is asked to put.
+const N5_ASK = '"How long have you worked there?" と聞いてみてください。';
 const MATHS_ASK = 'Nice work on the product rule. Now differentiate x cubed times sine x. What do you get?';
 
 /** The client's decision at HEAD (TutorVoiceV2: asksAnywhere on the voice parts) and with the switch (or the one test on the
@@ -200,8 +212,36 @@ async function probe() {
   await runV2Turn({ session: maths, state: { ...newV2State(0), history: [u('ok'), a(MATHS_ASK)] }, studentSaid: null, callModel: mf.call, onText: () => {}, boardPass: false, mathsCheck: false, nowMs: 5 * MIN, facts: { silenceSeconds: 12 } });
   const mathsSilence = mf.facts.join('\n');
   const m1 = { conversationQ: v2MoveAnswer('Conversation?', T42, LANGS, undefined, GDI) };
+  // Fix round 2.
+  const sessionQs = [T0, T12, T13, T27, T28, T42, T43, T63, T66, T80, T84].flatMap((t) => v2ReplySentences(t).filter(v2AsksInJapanese));
+  const n1 = { asks: N1_ASKS.map((t) => ({ t, one: v2AsksTheLearner(`いいですね。${t}`), guarded: v2LastReplyAskedGuarded([u('x'), a(`いいですね。${t}`)]), server: v2LastReplyAsked([u('x'), a(`いいですね。${t}`)]) })), sessionQs: sessionQs.map((t) => ({ t, one: v2AsksTheLearner(t) })) };
+  const n2 = [];
+  for (const [t, pages] of N2_NOT_PART) {
+    const ps = { ...beforeConv, 'open-conversation': 1 };
+    const asking = await runV2Turn({ session: lang, state: base(pages, { practiceSaid: ps, history: [u('x'), a('y')] }), studentSaid: 'The project went very well.', callModel: scripted([t]).call, onText: () => {}, boardPass: false, mathsCheck: false, nowMs: 13 * MIN });
+    const answered = await runV2Turn({ session: lang, state: asking.state, studentSaid: 'はい、続けましょう。', callModel: scripted(['では、もう一つ質問します。']).call, onText: () => {}, boardPass: false, mathsCheck: false, nowMs: 13.5 * MIN });
+    n2.push({ t, ending: !!v2EndingPartAsk(t, GDI, LANGS), held: asking.state.heldPage?.title ?? null, pagesAfter: answered.state.board.pages.length - pages.length });
+  }
+  const n3 = [];
+  for (const said of ['Yes, let\'s go.', 'はい、お願いします。']) {
+    const heard: string[] = [];
+    const t = await runV2Turn({ session: lang, state: base([TODAY, JOB, PP, PS], { practiceSaid: beforeConv, history: [u('I enjoyed the exhibition a lot.'), a(N3_ASK)] }), studentSaid: said, callModel: scripted([`<board page>会話</board>${T45}`]).call, onText: (d) => heard.push(d), boardPass: false, mathsCheck: false, nowMs: 11.4 * MIN });
+    n3.push({ said, ending: !!v2EndingPartAsk(N3_ASK, GDI, LANGS), pages: pageTitles(t.state), held: t.state.heldPage?.title ?? null, heard: heard.join('') });
+  }
+  const offerAt = base([TODAY, JOB, PP, PS, CONV], { practiceSaid: { ...beforeConv, 'open-conversation': 3 }, history: [u('x'), a(N3_OFFER)] });
+  const heardOffer: string[] = [];
+  const tOffer = await runV2Turn({ session: lang, state: offerAt, studentSaid: '発音をお願いします。', callModel: scripted(['<board page>発音</board>では、発音の練習をしましょう。']).call, onText: (d) => heardOffer.push(d), boardPass: false, mathsCheck: false, nowMs: 15 * MIN });
+  const n3Offer = { move: v2MoveAnswer('発音をお願いします。', N3_OFFER, LANGS, undefined, GDI), pending: v2PendingPart(GDI, base([TODAY, JOB, PP, PS, CONV], { practiceSaid: { ...beforeConv, 'open-conversation': 3 }, history: [u('x'), a(N3_OFFER)] }), N3_OFFER, '発音をお願いします。', undefined, LANGS)?.title ?? null, pages: pageTitles(tOffer.state), held: tOffer.state.heldPage?.title ?? null, heard: heardOffer.join(''), politeNo: v2MoveAnswer('大丈夫です。', N3_OFFER, LANGS, undefined, GDI), okToQuestions: v2MoveAnswer('大丈夫です。', T42, LANGS, undefined, GDI) };
+  // State before wording: a page owed its ask, the model's reply ends on a question the wording does not read; then 「はい」.
+  const owedSt = base([TODAY, JOB, PP, PS], { practiceSaid: beforeConv, history: [u('x'), a('y')], heldPage: { title: 'Conversation', part: 'open-conversation', at: 1, unasked: true } });
+  const heardOwed: string[] = [];
+  const tOwed = await runV2Turn({ session: lang, state: owedSt, studentSaid: 'I enjoyed the exhibition a lot.', callModel: scripted(['その文は正しいです。過去形の練習はここまでです。準備はいいですか。']).call, onText: (d) => heardOwed.push(d), boardPass: false, mathsCheck: false, nowMs: 11 * MIN });
+  const tOwedGo = await runV2Turn({ session: lang, state: tOwed.state, studentSaid: 'はい', callModel: scripted([T45]).call, onText: () => {}, boardPass: false, mathsCheck: false, nowMs: 11.4 * MIN });
+  const owed = { held: tOwed.state.heldPage ?? null, heard: heardOwed.join(''), pagesAfterGo: pageTitles(tOwedGo.state) };
+  const n4 = { ending: !!v2EndingPartAsk(N4_NOT_PART, GDI, LANGS), pending: v2PendingPart(GDI, base([TODAY, JOB, PP], { history: [u('x'), a(N4_NOT_PART)] }), N4_NOT_PART, 'いいえ、大丈夫です。', undefined, LANGS)?.title ?? null };
+  const n5 = { guarded: v2LastReplyAskedGuarded([u('x'), a(N5_ASK)]), one: v2AsksTheLearner(N5_ASK) };
   return {
-    item1, f84, f42, f2s, fStatement, item3, t66, n7, go, c1, i1, i1Offer, i2, mathsSilence, m1,
+    item1, f84, f42, f2s, fStatement, item3, t66, n7, go, c1, i1, i1Offer, i2, mathsSilence, m1, n1, n2, n3, n3Offer, owed, n4, n5,
     t43: { pages: pageTitles(t43.state), heard: heard43.join(''), held: t43.state.heldPage?.title ?? null },
     tOdd: { pages: pageTitles(tOdd.state), heard: heardOdd.join(''), held: tOdd.state.heldPage?.title ?? null },
     t80: { pages: pageTitles(t80.state), heard: heard80.join(''), held: t80.state.heldPage?.title ?? null },
@@ -265,6 +305,18 @@ async function main() {
   check('I2 the session\'s asks stay asks (どうぞ, 繰り返してください, 言ってみましょう)', on.i2.stillAsks.every(Boolean), on.i2.stillAsks);
   check('m1 "Conversation?" (asking what it is) is not a go', on.m1.conversationQ !== 'go', on.m1);
   check('m6 a maths voice reply that asked: the long silence says the question in hand stands', /not answered the question in hand yet/.test(on.mathsSilence), on.mathsSilence.match(/the student has said nothing[^\n]*/)?.[0]);
+
+  console.log('7  fix round 2');
+  for (const x of on.n1.asks) check(`N1 a か-question with a time / condition word stays an ask (one test, guarded, server): 「${x.t}」`, x.one && x.guarded && x.server, x);
+  check(`N1 every か-question of the session is an ask by the one test (${on.n1.sessionQs.length})`, on.n1.sessionQs.length >= 10 && on.n1.sessionQs.every((x) => x.one), on.n1.sessionQs.filter((x) => !x.one));
+  for (const x of on.n2) check(`N2 「${x.t}」: no part ask, nothing held, 「はい、続けましょう。」 opens no page`, !x.ending && x.held === null && x.pagesAfter === 0, x);
+  for (const x of on.n3) check(`N3 「次に、会話の練習をします。質問がありますか、それとも進みましょうか。」 + "${x.said}": read, Conversation opens, no English ask`, x.ending && x.pages.includes('Conversation') && x.held === null && !ENGLISH_ASK.test(x.heard), x);
+  check('N3 the optional part offered in the model\'s words + 「発音をお願いします。」: a go, Pronunciation pends and opens, no English ask', on.n3Offer.move === 'go' && on.n3Offer.pending === 'Pronunciation' && on.n3Offer.pages.includes('Pronunciation') && on.n3Offer.held === null && !ENGLISH_ASK.test(on.n3Offer.heard), on.n3Offer);
+  check('N3 (state before wording): a page owed its ask + a reply closing on 「準備はいいですか。」: that is the ask (held, asked, no English ask added)', on.owed.held?.part === 'open-conversation' && !on.owed.held?.unasked && !ENGLISH_ASK.test(on.owed.heard), on.owed);
+  check('N3 …and 「はい」 then opens Conversation', on.owed.pagesAfterGo.includes('Conversation'), on.owed.pagesAfterGo);
+  check('「大丈夫です。」 to an offer to do a part is a polite no; to "questions, or go on?" a go', on.n3Offer.politeNo === 'other' && on.n3Offer.okToQuestions === 'go', on.n3Offer);
+  check('n4 「次は過去形と比べてみましょう。何か質問はありますか。」 is no part ask', !on.n4.ending && on.n4.pending === null, on.n4);
+  check('n5 「"How long have you worked there?" と聞いてみてください。」 is an ask (silence-after-ask line too)', on.n5.guarded && on.n5.one, on.n5);
 
   console.log('5  each switch off alone (a child process per switch): as at 7ce31282 for that item, the others on');
   const child = (flag: string) => {

@@ -47,9 +47,12 @@ const JA_CLAUSE_QUESTIONS = /(?:ご?質問|聞きたいこと)(?:は|が)(?:何�
 const JA_CLAUSE_ASKS = /(?:[?？]|か[。．]?)["'」』）)]*\s*$/u;
 const JA_CLAUSE_OR = /^(?:それとも|または|あるいは)/u;
 // Task 7r fix round 1 (I2): not 考え / 練習し / 始め + てみましょう (「一緒に考えてみましょう。」 is the tutor's set-up, as 「一語ずつ練習しましょう。」).
-const JA_INVITE_ASK = /(?:言っ|話し|答え|書い|読ん|使っ|作っ|続け|繰り返し|発音し)てみましょう|繰り返して(?:ください|みて|ね|[。．！!]|$)|(?:教えて|始めて|聞かせて|言って|話して|答えて|書いて|読んで|使って|作って|続けて|発音して|練習して|選んで)(?:みて)?(?:ください|くださいね|ちょうだい|もらえますか)|どうぞ[。．！!]?["'」』）)]*$/u;
-const JA_INVITE_NOT = /(?:があれば|あれば|あったら|たら[、,]|なら[、,]|ときは|時は|ときに|時に|いつでも|次回|次の機会|までに|宿題|あとで|後で|今度)/u;
-const JA_LEAD = /^(?:(?:では|じゃあ|それでは|さて)[、,]?\s*)?次は[、,]?\s*\S/u;
+const JA_INVITE_ASK = /(?:言っ|話し|答え|書い|読ん|使っ|作っ|続け|繰り返し|発音し|聞い|尋ね)てみましょう|繰り返して(?:ください|みて|ね|[。．！!]|$)|(?:教えて|始めて|聞かせて|言って|話して|答えて|書いて|読んで|使って|作って|続けて|発音して|練習して|選んで|聞いて|尋ねて)(?:みて)?(?:ください|くださいね|ちょうだい|もらえますか)|どうぞ[。．！!]?["'」』）)]*$/u;
+// Fix round 2 (N1): whole markers only, and only ever applied to an invitation (never to a sentence that is itself a question):
+// 今までに / 同時に / 〜ときは in 「今までに、海外出張をしたことがありますか。」 are no condition.
+const JA_INVITE_NOT = /次回|次の機会|今度[はも、,]|(?<!今)までに|(?:あれ|すれ|れ)ば[、,]|があれば|あったら|たら[、,]|なら[、,]|いつでも|宿題|あとで|後で/u;
+// Fix round 2 (N3): forward leads besides 次は: 次に、 / つぎは / では次 / 続いて / このあと(は) / この次は (「次に、会話の練習をします。」).
+const JA_LEAD = /^(?:(?:では|じゃあ|それでは|さて)[、,]?\s*)?(?:次は|次に|つぎは|つぎに|続いて|このあと(?:は)?|この後(?:は)?|この次は)[、,]?\s*\S/u;
 
 export const V2_LANGUAGE_PACKS: Record<string, V2LanguagePack> = {
   en: {
@@ -71,6 +74,11 @@ export const V2_LANGUAGE_PACKS: Record<string, V2LanguagePack> = {
 export function v2LanguagePacks(languages?: readonly string[]): V2LanguagePack[] {
   const codes = languages?.length ? languages.map((c) => c.toLowerCase().split(/[-_]/)[0]!) : Object.keys(V2_LANGUAGE_PACKS);
   return [...new Set(codes)].map((c) => V2_LANGUAGE_PACKS[c]).filter((x): x is V2LanguagePack => !!x);
+}
+
+/** Task 7r fix round 2: whether one of the languages reads part asks by clauses (a pack with askClauses). */
+export function v2ReadsByClauses(languages?: readonly string[], clauses: boolean = TUTOR_V2_PART_ASK_CLAUSES): boolean {
+  return clauses && v2LanguagePacks(languages).some((p) => !!p.askClauses);
 }
 
 /** Whether a sentence is a part ask's lead in one of the languages. */
@@ -103,8 +111,11 @@ export function v2EndingAsk(sentences: readonly string[], languages?: readonly s
       if (!askXs.some(holds)) continue;
       // Fix round 1 (C1): the sentence before is the lead only as a "次は…" / "Next is…" lead (a lead pointing forward), in any of
       // the languages: 「過去形とは違って、今も続いていることを表します。何か質問はありますか。」 is the lesson's contrast and a check-in.
+      // Fix round 2 (N3): a choice between doing something and moving on, with no questions clause (「発音の練習もできます。やりますか、それとも、
+      // まとめに進みますか。」), reads the part offered in the sentence before it as well: the learner names the one they want.
       const before = i >= 1 ? xs[i - 1]! : '';
-      return { ask: askXs.join(' '), lead: before && v2IsAskLead(before, languages) ? before : '' };
+      const choice = askXs.some((x) => /それとも/u.test(x)) && !askXs.some((x) => c.questions.test(x));
+      return { ask: askXs.join(' '), lead: before && (v2IsAskLead(before, languages) || choice) ? before : '' };
     }
     if (!p.askGoOn?.test(last)) continue;
     let i = xs.length - 1;

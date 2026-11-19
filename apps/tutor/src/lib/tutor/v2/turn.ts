@@ -38,6 +38,7 @@ import { ReplyGate, isGoodbye, isPartFrame } from './reply-gate';
 import { v2AnswerAsksOrDeclines, v2GoForPart, v2AskRepeats, v2AsksPartChange, v2EndingPartAsk, v2HeldPageOwed, v2HeldPartWaiting, v2IsPartAsk, v2MoveAnswer, v2NextPart, v2PageForPart, v2PartAskLine, v2PartChangeAsked, v2PartInHand, v2PartNamedLate, v2PartOfPage, v2PartViewed, v2PageTurnNote, v2PositionPage, v2PendingPart, v2PlanLabelled, v2TutorReplies } from './part-flow';
 import { heardAsWords } from './heard';
 import { v2IsPracticeAsk, v2LanguagesSection } from './languages';
+import { v2ReadsByClauses } from './language-pack';
 import { v2AsksTheLearner, v2HandsOver, v2ReplyAsks, v2ReplyHandsOver, v2ReplySentences } from './one-question';
 import { V2_LEVEL_WAIT, V2_LEVEL_WAIT_OVER, V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2MarkLevelKnownParts, v2ReopenLevelCheck, v2WorkingLevelSection } from './working-level';
 import { V2_PRACTISE_PRONUNCIATION_TOOL, v2ApplyPractisePronunciation, v2ConsumePronunciation, v2PronunciationOn, v2PronunciationSection, v2ScoredTurn } from './pronunciation';
@@ -1547,7 +1548,11 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   if (owed && !practiceShort && session.plan && !heldAt && !askedPart && !state.closed && !input.signal?.aborted && spoken.length && !toolCalls.some((c) => (c.name === 'new_page' && !/^not /.test(c.outcome)) || c.name === 'keep_listening' || c.name === 'end_lesson')) {
     const said = spoken.join(' ');
     const last = v2ReplySentences(stripBoardBlocks(said)).pop() ?? '';
-    if (v2IsPartAsk(last)) owedPartAsked = true;
+    // Task 7r fix round 2 (N3, state before wording): the facts ordered this ask ("part change owed"), so in a lesson whose language
+    // reads asks by clauses the reply's closing question is that ask, whatever its words (the 7i ruling: by position).
+    // Only a question in such a language: an English one keeps 7c's rule (a reply that asks something else leaves the change owed,
+    // test-brain-v2-one-question-7c I2), as English asks are read by their frames.
+    if (v2IsPartAsk(last) || (v2ReadsByClauses(askLangs) && endsAsking(last, true) && !/^[\x00-\x7f]*$/.test(last))) owedPartAsked = true;
     else if (!v2ReplyHandsOver(said) && !carriesPartAsk()) {
       const plan = session.plan; const inHand = v2PartInHand(plan, state);
       const done = inHand >= 0 && plan.segments[inHand]!.kind !== 'hook' && !v2PartOf(plan.segments[inHand]!).skipWhenLevelKnown ? v2PartOf(plan.segments[inHand]!).label : undefined;
