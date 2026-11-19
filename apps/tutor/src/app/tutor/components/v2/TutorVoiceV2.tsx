@@ -570,7 +570,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     if (realtimeRef.current?.isSpeechPending()) {
       p.current.onDebugEvent?.('v2_bargein', opts?.typed ? 'typed over the tutor' : 'spoke over the tutor');
       // Task 7y (MOSTLY_HEARD): how much of the sentence playing had played, read before the clock is stopped.
-      const playedShare = TUTOR_V2_MOSTLY_HEARD ? echoRef.current.playedShare(playProgress()) : null;
+      const playedShare = TUTOR_V2_MOSTLY_HEARD ? echoRef.current.playedShare(playProgress(), realtimeRef.current?.getSpokenAudioState?.()) : null;
       echoRef.current.stopped(Date.now());
       void realtimeRef.current.clearSpeechQueue();
       captionsRef.current.cut();
@@ -580,7 +580,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       // question did not get through, and the tutor says it again. Task 7y (MOSTLY_HEARD): unless about 80 % of its words had
       // played (v2/echo-window.ts v2HeardCount).
       const heardCount = v2HeardCount(startedCountRef.current, playedShare);
-      if (heardCount === startedCountRef.current && heardCount > 0) p.current.onDebugEvent?.('v2_mostly_heard', `sentence ${heardCount} counted heard: ${Math.round((playedShare ?? 0) * 100)}% of its words had played`);
+      if (heardCount === startedCountRef.current && heardCount > 0) p.current.onDebugEvent?.('v2_mostly_heard', `sentence ${heardCount} counted heard: ${Math.round((playedShare ?? 0) * 100)}% of its audio had played`);
       const st = turnsRef.current?.stateRef.current;
       if (turnsRef.current?.busy) cutHeardRef.current = turnSentencesRef.current.slice(0, heardCount).join(' ');
       else if (st) {
@@ -796,7 +796,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       speakText: (text) => realtimeRef.current?.speakText(text),
       stopSpeaking: () => { echoRef.current.stopped(Date.now()); void realtimeRef.current?.clearSpeechQueue(); voiceResumed(); },
       setTutorVoiceMuted: (muted) => realtimeRef.current?.setVoiceMuted(muted),
-      endSession: (opts) => { clearSilence(); void realtimeRef.current?.clearSpeechQueue(); voiceResumed(); turnsRef.current?.end(opts); },
+      endSession: (opts) => { clearSilence(); echoRef.current.stopped(Date.now()); void realtimeRef.current?.clearSpeechQueue(); voiceResumed(); turnsRef.current?.end(opts); },
       isEnding: () => turnsRef.current?.isEnding() ?? false,
       getSpokenCaption: () => captionsRef.current.poll(realtimeRef.current?.getSpokenProgress() ?? null),
     };

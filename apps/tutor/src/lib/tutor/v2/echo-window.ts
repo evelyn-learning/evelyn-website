@@ -30,9 +30,6 @@ export const V2_ECHO_LAG_WORDS = 2;
 export const V2_ECHO_LEAD_WORDS = 1;
 /** A slow speaking rate, characters per second: the earliest the voice can be through a part. */
 const SLOW_CHARS_PER_SEC = 11.8;
-/** Task 7y fix round 1: a fast speaking rate, characters per second (the shortest a part's audio can be; English at a normal rate is
- *  about 14–16, Japanese far fewer characters a second). */
-const FAST_CHARS_PER_SEC = 17;
 const KEEP_PARTS = 16;
 /** An utterance's start older than this with no words since is stale whatever else is known (the recogniser's own
  *  words watch gives up on a start after 45 s). */
@@ -73,17 +70,18 @@ export class V2EchoClock {
     if (cur) cur.pausedAtMs = null;
   }
 
-  /** Task 7y (MOSTLY_HEARD): the share (0–1) of the part last begun that has played. Its audio played out (the clock ended it,
-   *  or the voice is no longer playing it: between parts the speech queue reports nothing playing): 1. Playing (or paused, the
-   *  clock frozen): seconds played over its length, the length being the audio arrived for it, or, while that may still be
-   *  coming, no shorter than a fast speaking rate allows. Fix round 1 (I1): the 'low' bound (a slow rate, words floored) put a
-   *  fully played sentence at ≤ 0.8 at a normal rate, so the rule hardly ever fired. Null: nothing has begun. */
-  playedShare(progress: V2PlayProgress | null): number | null {
+  /** Task 7y (MOSTLY_HEARD): the share (0–1) of the part last begun that has played, or null when it is not known (then the part
+   *  counts unheard, as before). `audio` is the speech queue's state of the sentence in its pipeline (useOpenAIRealtime
+   *  getSpokenAudioState). Fix round 2 (controller's ruling, no rate guessing): only a part whose audio has ALL arrived has a known
+   *  length: then the share is seconds played over that length (the clock frozen while paused). Its audio played out (the clock
+   *  ended it, or nothing is left in the pipeline): 1. Audio still arriving (a streamed tail, a gap inside a streamed sentence,
+   *  the Realtime path, or no state given): null. Null too when nothing has begun. */
+  playedShare(progress: V2PlayProgress | null, audio?: 'none' | 'arriving' | 'complete'): number | null {
     const cur = this.current();
     if (!cur) return null;
-    if (cur.endMs !== null || !progress?.playing || !progress.sentence) return 1;
-    const total = Math.max(progress.arrivedTotalSec, cur.text.length / FAST_CHARS_PER_SEC);
-    return total > 0 ? Math.min(1, Math.max(0, progress.elapsedSec / total)) : 1;
+    if (cur.endMs !== null || audio === 'none') return 1;
+    if (audio !== 'complete' || !progress?.playing || !progress.sentence || progress.arrivedTotalSec <= 0) return null;
+    return Math.min(1, Math.max(0, progress.elapsedSec / progress.arrivedTotalSec));
   }
 
   private current(): V2PlayedPart | undefined { return this.parts[this.parts.length - 1]; }

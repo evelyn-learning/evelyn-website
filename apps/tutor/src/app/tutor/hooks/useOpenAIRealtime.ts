@@ -514,6 +514,8 @@ export interface RealtimeResult {
   getCurrentSentenceFraction: () => number;
   /** Caption word-sync: live playback progress of the sentence playing NOW. */
   getSpokenProgress: () => SpokenProgress;
+  /** Tutor brain v2 (Task 7y): whether the sentence in the playback pipeline has all its audio ('none': nothing in it). */
+  getSpokenAudioState?: () => 'none' | 'arriving' | 'complete';
   /**
    * Stage 4 regression fix (2026-06-16). Drive the 'processing'
    * ("Thinking…") indicator from the claude-brain orchestrator. With the
@@ -958,6 +960,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // peekSpeechQueue returns unique sentence list = [currentSpeakText,
   //  ...audioQueueSentenceRef (deduped), ...speakTextQueueRef].
   const currentSpeakTextRef = useRef<string | null>(null);
+  // Tutor brain v2, Task 7y fix round 2 (MOSTLY_HEARD): the sentence (as dispatched) whose audio has ALL arrived, so its length is
+  // known. Set where a dispatch's last audio is queued (a whole buffer, a stream's terminal); cleared at each new dispatch. Only
+  // read by getSpokenAudioState (v2); nothing else changes.
+  const audioCompleteTextRef = useRef<string | null>(null);
   const audioQueueSentenceRef = useRef<string[]>([]);
   // Resume-from-cut (P5): audio-seconds of the CURRENT sentence already played
   // (accumulated in playNextAudio, reset on a sentence transition). With the
@@ -3236,6 +3242,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       },
     }));
     speakTextInFlightRef.current = true;
+    audioCompleteTextRef.current = null;
     updateState('processing');
   }, [updateState]);
 
@@ -3438,6 +3445,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // Cheaper than Realtime audio output; chosen via relayMode.ttsProvider.
   const sendOneSpeakTextViaOpenAITTS = useCallback(async (trimmed: string, scriptId?: number) => {
     speakTextInFlightRef.current = true;
+    audioCompleteTextRef.current = null;
     updateState('processing');
     // Capture the speak epoch at dispatch time. If clearSpeechQueue runs
     // during the await below, the epoch will have changed and we must
@@ -3499,6 +3507,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             };
             for (const c of job.chunks) pushChunk(c);
             job.chunks = [];
+            if (job.done && !job.failed) audioCompleteTextRef.current = trimmed;
             if (!job.done && !job.failed) {
               // Tail bookkeeping — identical semantics to the streamed-head
               // path (invariants 1–3): same-text continuation chunks, one
@@ -3533,6 +3542,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                 clearTimeout(tailTimeout);
                 if (pendingTailRef.current !== tailToken) return;
                 pendingTailRef.current = null;
+                if (!job.failed) audioCompleteTextRef.current = trimmed;
                 if (!isPlayingRef.current) playNextAudio();
               };
             }
@@ -3587,6 +3597,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           // Chunks are pumped INCREMENTALLY (~0.5s windows) — the 2026-07-22
           // live round showed a single monolithic tail gaps audibly while
           // the remainder synthesizes.
+          if (streamed.done) audioCompleteTextRef.current = trimmed;
           if (!streamed.done) {
             const tailToken = { epoch: dispatchEpoch };
             pendingTailRef.current = tailToken;
@@ -3616,6 +3627,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               clearTimeout(tailTimeout);
               if (pendingTailRef.current !== tailToken) return;
               pendingTailRef.current = null;
+              audioCompleteTextRef.current = trimmed;
               // Pump complete: if the queue already drained (held branch),
               // re-enter so the sentence can end properly.
               if (!isPlayingRef.current) playNextAudio();
@@ -3703,6 +3715,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       // is right here).
       audioQueueSentenceRef.current.push(trimmed);
       audioQueueScriptIdRef.current.push(scriptId); // V2: ∥ scriptId
+      audioCompleteTextRef.current = trimmed;
       if (!isPlayingRef.current) playNextAudio();
       // Pre-fetch the NEXT queued sentence's audio in parallel so its
       // bytes are ready when this one ends. Idempotent — repeat calls
@@ -4276,6 +4289,15 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     };
   }, []);
 
+  // Tutor brain v2, Task 7y fix round 2 (MOSTLY_HEARD): 'none' = no sentence in the playback pipeline (the last one played out);
+  // 'complete' = the sentence in it has all its audio queued (its length is known); 'arriving' = more of it may still come (a
+  // streamed tail, a gap inside a streamed sentence, or the Realtime path, which never says).
+  const getSpokenAudioState = useCallback((): 'none' | 'arriving' | 'complete' => {
+    const s = currentSpeakTextRef.current;
+    if (!s) return 'none';
+    return audioCompleteTextRef.current === s ? 'complete' : 'arriving';
+  }, []);
+
   // Task 3.1 (humanlike-latency): the word clock. A rAF loop compares the
   // current sentence's playback position (same chunk-clock math as
   // getSpokenProgress) against its WS word timestamps and emits a 'word'
@@ -4379,6 +4401,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     resumeSpeakText,
     getCurrentSentenceFraction,
     getSpokenProgress,
+    getSpokenAudioState,
     signalBrainThinking,
     unlockAudio,
     setVoiceMuted,

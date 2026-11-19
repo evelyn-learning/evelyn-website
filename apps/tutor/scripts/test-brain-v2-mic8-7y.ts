@@ -122,10 +122,12 @@ const ASK = 'Next is Pronunciation, which is optional: would you like to practis
 // Fix round 1 (I1): realistic timings, elapsed never past arrived. The ask is 103 characters: at a normal English rate (14.7 a
 // second) its audio is 7.0 s, all arrived well before it has played (the voice streams faster than it plays).
 const JA_ASK = '次は発音の練習です。やってみますか？'; // 18 characters, 2.6 s at a normal Japanese rate
-function heardCase(elapsedSec: number, arrivedTotalSec = 7, text = ASK, playing = true) {
+// Fix round 2 (controller's ruling): `audio` is the speech queue's state of the sentence (getSpokenAudioState): the share counts
+// only once all its audio has arrived ('complete'); 'arriving' = unheard as at ce416b5b; 'none' = it played out.
+function heardCase(elapsedSec: number, arrivedTotalSec = 7, text = ASK, playing = true, audio: 'none' | 'arriving' | 'complete' = 'complete') {
   const clock = new V2EchoClock();
   clock.started('Good.', 0); clock.started(text, 1000);
-  const share = clock.playedShare(playing ? { sentence: text, elapsedSec, arrivedTotalSec, playing: true } : { sentence: null, elapsedSec: 0, arrivedTotalSec: 0, playing: false });
+  const share = clock.playedShare(playing ? { sentence: text, elapsedSec, arrivedTotalSec, playing: true } : { sentence: null, elapsedSec: 0, arrivedTotalSec: 0, playing: false }, audio);
   const count = v2HeardCount(2, share);
   const st = { ...newV2State(0), history: [{ role: 'user' as const, content: 'x' }, { role: 'assistant' as const, content: `Good. ${text}` }] as Anthropic.MessageParam[] };
   const trimmed = trimToSpoken(st, ['Good.', text], count, true);
@@ -171,7 +173,9 @@ function probe() {
     heard90: heardCase(6.3), heard70: heardCase(4.2),
     heardAll: heardCase(7.0), heardYes: heardCase(6.5),
     heardJa90: heardCase(2.34, 2.6, JA_ASK), heardJa60: heardCase(1.56, 2.6, JA_ASK),
-    heardStreaming: heardCase(3.0, 3.0), heardGap: heardCase(0, 0, ASK, false),
+    heardStreaming: heardCase(3.0, 3.0, ASK, true, 'arriving'), heardGap: heardCase(0, 0, ASK, false, 'none'),
+    heardEnArriving: heardCase(6.4, 6.5, ASK, true, 'arriving'), heardJaArriving: heardCase(2.9, 3.0, '次は発音の練習です。今日の仕事について、もう少し詳しく話してみましょう。やってみますか？', true, 'arriving'),
+    heardTailGap: heardCase(0, 0, ASK, false, 'arriving'), heardNoState: (() => { const c = new V2EchoClock(); c.started(ASK, 0); return c.playedShare({ sentence: ASK, elapsedSec: 6.9, arrivedTotalSec: 7, playing: true }); })(),
     lone: LONE.map((t) => ({ on: cutAll(t, true), off: cutAll(t, false) })),
     t16,
     v1Piece: splitSentenceForTts('One small thing: we say "washing machines" with an s. Your question is about China, so ask me one more: 「中国で誰に売りましたか？」', LANGS),
@@ -207,6 +211,10 @@ async function main() {
   check('the session\'s "Yes." over the last words of the part ask (voice paused at 6.5 of 7.0 s, "the summary?" left): heard, not asked again', on.heardYes.count === 2 && on.heardYes.unheard === null, on.heardYes);
   check('a Japanese ask at a normal rate: 90 % heard, 60 % unheard', on.heardJa90.count === 2 && on.heardJa60.count === 1, [on.heardJa90, on.heardJa60]);
   check('audio still arriving (3.0 s arrived and played of a 103-character ask): not taken for the whole, unheard', on.heardStreaming.count === 1, on.heardStreaming);
+  check('fix round 2: English still arriving above the old 17 cps floor (6.4 of 6.5 s arrived): unheard', on.heardEnArriving.share === null && on.heardEnArriving.count === 1, on.heardEnArriving);
+  check('fix round 2: Japanese still arriving, 2.9 of 3.0 s played: unheard', on.heardJaArriving.share === null && on.heardJaArriving.count === 1 && on.heardJaArriving.unheard !== null, on.heardJaArriving);
+  check('fix round 2: a gap inside a streamed sentence (head played, tail not arrived, nothing playing): unheard', on.heardTailGap.share === null && on.heardTailGap.count === 1, on.heardTailGap);
+  check('fix round 2: no audio state given (a voice path that never says): unknown, unheard', on.heardNoState === null);
   check('fix round 1 (M4): its playback finished (between parts, nothing playing): heard', on.heardGap.share === 1 && on.heardGap.count === 2, on.heardGap);
 
   console.log('4 MIXED_SENTENCE_PARTS: T16');
@@ -225,6 +233,8 @@ async function main() {
   console.log('source pins (TutorVoiceV2)');
   const src = readFileSync(join(__dirname, '..', 'src', 'app', 'tutor', 'components', 'v2', 'TutorVoiceV2.tsx'), 'utf8');
   check('a partial that grows keeps the pause; pause/resume go through the echo clock and the board', /TUTOR_V2_PAUSE_NOT_ECHO && grew && pauseTimerRef\.current/.test(src) && /echoRef\.current\.paused\(Date\.now\(\)\); boardPauseRef\.current\.pause\(/.test(src) && /if \(boardPauseRef\.current\.holding\) return;/.test(src) && /v2HeardCount\(startedCountRef\.current, playedShare\)/.test(src));
+  const hook = readFileSync(join(__dirname, '..', 'src', 'app', 'tutor', 'hooks', 'useOpenAIRealtime.ts'), 'utf8');
+  check('fix round 2: the speech queue says when a sentence\'s audio has all arrived (whole buffer, stream terminal, WS terminal; cleared per dispatch) and the client passes it', /playedShare\(playProgress\(\), realtimeRef\.current\?\.getSpokenAudioState\?\.\(\)\)/.test(src) && (hook.match(/audioCompleteTextRef\.current = trimmed;/g) ?? []).length === 5 && (hook.match(/audioCompleteTextRef\.current = null;/g) ?? []).length === 2);
 
   console.log('each switch off alone (a child process per switch): as at HEAD for that item');
   const child = (flag: string) => {
