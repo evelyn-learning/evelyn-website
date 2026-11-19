@@ -241,8 +241,8 @@ const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", co
     const styleFail = (n: number): CheckResult => ({ findings: [{ check: "audit", code: "rule_broken", ruleId: "R-canadian-spelling", detail: `spelling ${n}`, quote: "Short 1" } as Finding], cost: 0.05, model: "m-audit" });
     const found = (r: CheckResult): Finding[] => ("findings" in r ? r.findings : []);
     ok(styleOnly(found(styleFail(1))) && !styleOnly(found(auditFail(1))) && !styleOnly([]), "styleOnly: a style rule yes, a content rule no, nothing no");
-    ok(!styleOnly([...found(styleFail(1)), { check: "working", code: "line_does_not_follow", detail: "x" }]), "one content finding among style ones: not style only");
-    ok(styleOnly([{ check: "render", code: "katex", detail: "x" }]) && !styleOnly([{ check: "render", code: "missing_image", detail: "x" }]) && !styleOnly([{ check: "audit", code: "rule_broken", detail: "no rule id" }]), "form codes yes; a missing picture or an unnamed rule no");
+    ok(!styleOnly([...found(styleFail(1)), { check: "working", code: "line_does_not_follow", detail: "x" } as Finding]), "one content finding among style ones: not style only");
+    ok(styleOnly([{ check: "render", code: "katex", detail: "x" } as Finding]) && !styleOnly([{ check: "render", code: "missing_image", detail: "x" } as Finding]) && !styleOnly([{ check: "audit", code: "rule_broken", detail: "no rule id" } as Finding]), "form codes yes; a missing picture or an unnamed rule no");
 
     // style fails twice, then passes: two corrections, every check re-run on the last draft, ready with no flag
     let n = 0;

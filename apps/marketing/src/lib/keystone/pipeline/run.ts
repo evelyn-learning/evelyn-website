@@ -164,7 +164,7 @@ const STYLE_CODES: readonly string[] = ["banned_word", "closing_missing", "katex
  * finding about the answer, the working, a missing picture or section, or how the solution was made, and the
  * item is held for the owner as before. An empty list is not "style only". Pure.
  */
-export function styleOnly(findings: readonly { check: string; code: string; ruleId?: string }[]): boolean {
+export function styleOnly(findings: readonly Pick<Finding, "check" | "code" | "ruleId">[]): boolean {
   return (
     findings.length > 0 &&
     findings.every((f) => (f.check === "audit" && f.code === "rule_broken" ? !!f.ruleId && !CONTENT_RULES.includes(f.ruleId) : (f.check === "audit" || f.check === "render") && STYLE_CODES.includes(f.code)))
