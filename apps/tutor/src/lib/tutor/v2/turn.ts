@@ -29,7 +29,7 @@ import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, v2AskEveryOn, v2SummaryBegun, V2_NO_ASK_RECHECK_S, V2_TIME_UP_MIN, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
 import { v2CloseOpen, v2LeftToStopMin, v2LessonNowMs, v2OverrunMin, v2TimeFlags, v2WrapDue, v2WrapMin, type V2TimeFlags } from './time-box';
 import { V2_MIN_PRACTICE, V2_MORE_PRACTICE_MIN_LEFT, v2ArrivalDrops, v2LeaveOutByChoice, v2AsksMorePractice, v2CountPractice, v2PartPracticeAsked, v2DroppedMentioned, v2TakeEnteredDropped, v2PartsToDrop, v2PracticeMoreLine, v2PracticeShort, v2TimeFitAfterReply, v2TimeFitDue, v2TimeFitUpFront, v2MarkPartStart, v2OptionalAskedAtClose, v2OptionalWrapMin } from './time-fit';
-import { planGoalIds, renderPlanMap, v2NextTimeAllLine, v2PagePartLabel, v2NextTimeLine, v2PartIsOptional, v2PartNamedIn, v2PartOf, v2UnreachedOffer } from './plan-map';
+import { planGoalIds, renderPlanMap, v2NextTimeAllLine, v2PagePartLabel, v2NextTimeLine, v2PartIsOptional, v2PartNamedIn, v2PartOf, v2PartOffers, v2UnreachedOffer } from './plan-map';
 import { stripToolTalk } from './tool-talk';
 import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
@@ -140,6 +140,10 @@ interface V2ControlCtx {
   tf: V2TimeFlags;
   /** C: the practice part in hand is short of its sentences: its goal is not marked done yet. */
   practiceHold?: { id: string; n: number } | null;
+  /** Task 7v fix round 1 (a): the wrap is held for an optional part not yet offered: `real` is the session with the host's wrap; a
+   *  tutor-chosen end_lesson that only the moved wrap refuses is deferred once (`deferred`: already deferred, in an earlier reply or
+   *  earlier in this one), then accepted. */
+  heldWrap?: { real: V2Session; label: string; deferred: { done: boolean } };
 }
 
 /** What the student's grade asks of the tutor's pace. The constitution says to teach at their level; a grade 7
@@ -255,6 +259,8 @@ function storable(content: Anthropic.ContentBlock[]): Anthropic.ContentBlockPara
 export { V2_CLOSING_PAGE } from './part-close';
 
 /** A reply that says only yes (or ok): to "any question, or are you finished?" it says neither (GAC validation, round 2). */
+/** Task 7v fix round 1 (a): the start of the once-only end_lesson deferral for an optional part that fits (found in the history). */
+export const V2_OPTIONAL_DEFER_PREFIX = 'not ended yet:';
 export const V2_BARE_ASSENT = /^\s*(?:yes|yeah|yep|yup|ya|y|ok|okay|k|sure|alright|all right|mhm|uh[- ]?huh)\s*[.!]*\s*$/i;
 
 /** The own-question results a homework session keeps (note_own_answer). */
@@ -350,7 +356,12 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
       return 'not ended: "yes" does not say whether they are finished. Ask, in one short question with one meaning, whether they have any question about it.';
     }
     // Task 7f D (CLOSE_BY_CONTENT): the close is open when the plan's parts are done or the wrap minute is reached (time-box.ts).
-    if (!asked && !homeworkDone && !v2CloseOpen(session, state, nowMs, ctx.tf.closeByContent)) {
+    // Task 7v fix round 1 (a): the close is open by the host's wrap but not by the wrap moved for an optional part that fits and was
+    // not offered: deferred once (the 7d pattern), never twice, never when they asked to stop.
+    const held = ctx.heldWrap;
+    if (!asked && !homeworkDone && held && !v2CloseOpen(session, state, nowMs, ctx.tf.closeByContent) && v2CloseOpen(held.real, state, nowMs, ctx.tf.closeByContent)) {
+      if (!held.deferred.done) { held.deferred.done = true; return `${V2_OPTIONAL_DEFER_PREFIX} the optional ${held.label} part still fits before the session must end and has not been offered. Say nothing of this message. In one sentence of your own, offer it before the summary; if they would rather not, go to the summary and close.`; }
+    } else if (!asked && !homeworkDone && !v2CloseOpen(session, state, nowMs, ctx.tf.closeByContent)) {
       // Said to the student as the tutor's own thought. The first wording was repeated to them: "The system says
       // there are about seven minutes left and you haven't asked to stop" (embed-1794595194384).
       // Task 6g (CLOSE_ONE_QUESTION): once the summary has begun, the menu offers no more practice: gdi-real-james's review began
@@ -393,8 +404,14 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // minute moves to where its minutes and the summary's still fit (time-fit.ts v2OptionalWrapMin): every wrap reader of this turn
   // (the closing turn, the time line, the close by the clock) reads the moved minute. Mic test 6 (embed-1795067373124): "Uh, yes,
   // let's go." at 18.1 to Pronunciation, offered at 17.85, opened nothing because the wrap was 18.
-  const optionalHeld = !discussion && session.plan && !(TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid)) ? v2OptionalWrapMin(session, state, nowMs, v2WrapMin(session, tf.closeByContent), tf.overrun ? v2OverrunMin(true) : 0, (() => { const a = v2PendingPart(session.plan!, state, lastTutorText, null, undefined, askLangs); return a ? session.plan!.segments[a.index]!.id : null; })()) : null;
+  // Fix round 1 (m2): not on the turn of their no to it (or to going on to the summary past it), which the 7r block below records.
+  const declining = !!session.plan && TUTOR_V2_PART_GO_NAMED && input.studentSaid !== null && (v2OptionalDeclined(session.plan, state, lastTutorText, input.studentSaid, askLangs) >= 0 || v2SummaryGo(input.studentSaid, lastTutorText, session.plan, state, askLangs));
+  const realSession = session;
+  const optionalHeld = !discussion && session.plan && !declining && !(TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid)) ? v2OptionalWrapMin(session, state, nowMs, v2WrapMin(session, tf.closeByContent), tf.overrun ? v2OverrunMin(true) : 0, (() => { const a = v2PendingPart(session.plan!, state, lastTutorText, null, undefined, askLangs); return a ? session.plan!.segments[a.index]!.id : null; })()) : null;
   if (optionalHeld) session = { ...session, wrapMinutes: optionalHeld.wrap };
+  // Fix round 1 (a): the once-only deferral of a tutor-chosen end_lesson while the part is next and not yet offered.
+  const heldPart = optionalHeld?.phase === 'next' && session.plan ? session.plan.segments.find((x) => v2PartOf(x).label === optionalHeld.label) : undefined;
+  const heldWrap: V2ControlCtx['heldWrap'] = heldPart && v2PartOffers(heldPart, state.history) === 0 ? { real: realSession, label: optionalHeld!.label, deferred: { done: state.history.some((h) => Array.isArray(h.content) && h.content.some((c) => c.type === 'tool_result' && typeof c.content === 'string' && c.content.startsWith(V2_OPTIONAL_DEFER_PREFIX))) } } : undefined;
   const leftMin = v2LeftToStopMin(session, state, nowMs, tf.overrun);
   const closingTurn = (TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid)) || leftMin <= V2_TIME_UP_MIN
     // Lessons only: the wrap fact is the lesson's time line, and homework and a discussion are paced by their own (review 5a M2).
@@ -710,7 +727,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         // the model asked a second invitation straight after the first.
         // Task 7k (CLOSE_REOPENED): reopened, the ask is "more, or finish?", and a reply already ending on it waits too.
         : block.name === 'end_lesson' && inviteOwed && args.because !== 'student_asked' ? (inviteRefused || v2ReplyInvites(lastSentences(stripBoardBlocks(saidNow), 1)) || (reopened && v2ReplyAsksMoreOrFinish(lastSentences(stripBoardBlocks(saidNow), 1))) ? V2_CLOSE_INVITE_WAIT : reopened ? V2_CLOSE_REOPEN_REFUSAL : checkOwed ? V2_CLOSE_CHECK_REFUSAL : V2_CLOSE_INVITE_REFUSAL)
-        : applyControlTool(state, session, block.name, args, nowMs, input.studentSaid, { tf, practiceHold: practiceShort });
+        : applyControlTool(state, session, block.name, args, nowMs, input.studentSaid, { tf, practiceHold: practiceShort, ...(heldWrap ? { heldWrap } : {}) });
     } else {
       // An object written as its JSON text is the object: a tree's root arrived as a string and the board drew
       // the text itself in one box (data structures, embed-1794458110435).

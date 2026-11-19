@@ -242,8 +242,9 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     // The required parts done is near too: an optional part not reached is then offered before the summary.
     const near = tf.closeByContent ? closeOpen || (!!session.timeBoxMinutes && v2PlanContentDone(session.plan, state, true)) : !!session.timeBoxMinutes && left <= session.timeBoxMinutes * 0.2;
     // Task 7v (OPTIONAL_FIT): an optional part that still fits by the 7i fit is never "no time for it now"; asked for at the close
-    // while it fits, the droppedAsked line below says to take it up.
-    const fitting = TUTOR_V2_OPTIONAL_FIT && !!session.timeBoxMinutes && !discussion && !f.stopAsked ? (seg: { id: string }) => { const i = session.plan!.segments.findIndex((x) => x.id === seg.id); return i >= 0 && !state.timeFit?.dropped.includes(seg.id) && v2OptionalFits(session.plan!, state, i, (f.nowMs - state.startedAtMs) / 60000, session.timeBoxMinutes!, tf.overrun ? v2OverrunMin(true) : 0); } : undefined;
+    // while it fits, the droppedAsked line below says to take it up. Fix round 1 (m10): where the wrap is held for it too (spoken,
+    // the fit decided on arrival); typed lessons as before.
+    const fitting = TUTOR_V2_OPTIONAL_FIT && !!session.timeBoxMinutes && session.mode === 'voice' && !!state.timeFit?.byArrival && !discussion && !f.stopAsked ? (seg: { id: string }) => { const i = session.plan!.segments.findIndex((x) => x.id === seg.id); return i >= 0 && !state.timeFit?.dropped.includes(seg.id) && v2OptionalFits(session.plan!, state, i, (f.nowMs - state.startedAtMs) / 60000, session.timeBoxMinutes!, tf.overrun ? v2OverrunMin(true) : 0); } : undefined;
     if (!discussion && !passed.length && !(f.droppedAsked?.notReached && f.droppedAsked.fits)) lines.push(...v2UnreachedAtCloseFact(session.plan, state, closing || summaryBegun ? 'closing' : near ? 'near' : null, undefined, fitting));
     // Task 6g: an optional part offered and not taken up is offered at most once more (tester A: four offers in nine turns).
     if (!discussion) lines.push(...v2PartOfferFacts(session.plan, state));

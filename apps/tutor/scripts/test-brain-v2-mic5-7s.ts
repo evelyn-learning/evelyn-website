@@ -23,7 +23,7 @@ import type Anthropic from '@anthropic-ai/sdk';
 import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
 import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import { v2AskedForSentence, v2AskedToProduce, v2CardIsFragment, v2PracticeAnswerSentences } from '../src/lib/tutor/v2/learner-card';
-import { v2SupportLine } from '../src/lib/tutor/v2/adaptive';
+import { v2SupportFormLine, v2SupportLine } from '../src/lib/tutor/v2/adaptive';
 import { v2NextTimeAllLine } from '../src/lib/tutor/v2/plan-map';
 import { v2ArmClosesOnOtherAsk, v2ReadPronunciation } from '../src/lib/tutor/v2/pronunciation';
 import { flagFreeElapsedSec } from '../src/app/tutor/components/session/useFlagClockPause';
@@ -334,7 +334,7 @@ async function main() {
   }
   {
     const off = child('STARTER_IS_ANSWER');
-    check('STARTER_IS_ANSWER off: no starter line, the 7q step as before', !/starters:/.test(off.f37) && !/as a statement/.test(off.starter ?? '') && /(?:Give them|give) the first words of the answer to build on/.test(off.starter ?? ''));
+    check('STARTER_IS_ANSWER off: no starter line; the step line exactly the 7v form line without the statement clause (the 7q wording is SUPPORT_FOLLOWED off)', !/starters:/.test(off.f37) && off.starter === v2SupportFormLine('starter', false), off.starter);
   }
   {
     const off = child('PRONUNCIATION_PAGE');

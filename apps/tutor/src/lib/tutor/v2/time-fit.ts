@@ -174,11 +174,13 @@ export function v2StayInPartLine(session: V2Session, state: V2State, nowMs: numb
   if (!seg || !v2PracticePart(plan, cur) || v2PartIsOptional(seg) || (state.moveOnAsked ?? []).includes(seg.id)) return null;
   // Task 7v (PART_CLOCK): measured from when the lesson entered the part, against its own minutes.
   const own = v2PartOf(seg).minutes;
-  const clock = v2PartClock(session, state, nowMs, clockOn);
-  if (clock) {
-    if (!own || clock.used >= own / 2) return null;
-    const left = Math.max(1, Math.round(own - clock.used));
-    return `this part (${v2PartOf(seg).label ?? seg.id}) has about ${Math.min(left, own)} of its ${own} minutes left by the plan: there is time, so go on with it (another question, or a follow-up on their answer) rather than offering the next part`;
+  const pace = v2PartPace(session, state, nowMs, clockOn);
+  if (pace) {
+    if (!pace.stay) return null;
+    const left = Math.max(1, Math.round(pace.left));
+    return pace.core
+      ? `this part (${pace.label}) is the lesson's main practice and has about ${left} minutes left (its own ${pace.own}, and the time the earlier parts saved): there is time, so go on with it (another question, or a follow-up on their answer) rather than offering the next part`
+      : `this part (${pace.label}) has about ${Math.min(left, pace.own)} of its ${pace.own} minutes left by the plan: there is time, so go on with it (another question, or a follow-up on their answer) rather than offering the next part`;
   }
   const before = plan.segments.slice(0, cur).filter((x) => counts(x, state));
   if (!own || before.some((x) => !v2PartOf(x).minutes)) return null;
@@ -220,9 +222,57 @@ export function v2PartClock(session: V2Session, state: V2State, nowMs: number, o
  *  practice is done. Facts only (the 7f minimum still holds the part, and nothing is squeezed). Not where they asked to move on (they
  *  decided), nor in the level check, the overview or the close. */
 export function v2PartTimeUpLine(session: V2Session, state: V2State, nowMs: number, on: boolean = TUTOR_V2_PART_CLOCK): string | null {
+  const c = v2PartPace(session, state, nowMs, on);
+  if (!c || !c.up || !v2TeachingPart(session.plan!, c.index) || (state.moveOnAsked ?? []).includes(c.id)) return null;
+  if (c.late) return `the lesson is behind its plan (about ${Math.round(c.lessonUsed)} minutes used, the plan has this part (${c.label}) done by ${Math.round(c.planThrough)}): its practice is done, so close it now and offer the next part`;
+  return `this part (${c.label}) has had its ${c.core ? 'time' : `${c.own} planned minutes`} (about ${Math.round(c.used)} used in it): once its practice is done, close it and offer the next part`;
+}
+
+/** Fix round 1 (I1, the controller's ruling): the lesson's main practice part, which keeps the time earlier parts saved: the required
+ *  practice part the plan gives the most minutes (the later one on a tie). 7i's stay line was written for it (mic test 3,
+ *  embed-1794967959470: the five-minute conversation); the plan names no such part, so it is found by its minutes. -1: none. */
+export function v2CorePart(plan: LessonPlan): number {
+  let best = -1; let most = 0;
+  plan.segments.forEach((seg, i) => { const m = v2PartOf(seg).minutes ?? 0; if (v2PracticePart(plan, i) && !v2PartIsOptional(seg) && m > 0 && m >= most) { best = i; most = m; } });
+  return best;
+}
+
+/** Fix round 1 (I1): how a part in hand stands on the part clock (facts only).
+ *   - Any part but the core one: go on until half its own minutes from its own start (`stay`), its time is up at its own minutes (`up`).
+ *   - The core part (v2CorePart): go on until its own minutes from its own start AND until the lesson clock reaches the target less
+ *     the minutes of the parts still to come (an optional part that fits and was not declined, the required ones, the summary): the
+ *     time saved stays in hand for it.
+ *   - Behind: the lesson clock is more than V2_BEHIND_SLACK_MIN past the plan minutes of every part up to and including this one, and
+ *     its two practice sentences are said (7f): no go-on line, its time is up now (`late`).
+ *  Null where the part clock does not run (v2PartClock). */
+export const V2_BEHIND_SLACK_MIN = 1;
+export function v2PartPace(session: V2Session, state: V2State, nowMs: number, on: boolean = TUTOR_V2_PART_CLOCK): { index: number; id: string; label: string; own: number; used: number; lessonUsed: number; planThrough: number; core: boolean; stay: boolean; up: boolean; late: boolean; left: number } | null {
   const c = v2PartClock(session, state, nowMs, on);
-  if (!c || !v2TeachingPart(session.plan!, c.index) || (state.moveOnAsked ?? []).includes(c.id) || c.used < c.own) return null;
-  return `this part (${c.label}) has had its ${c.own} planned minutes (about ${Math.round(c.used)} used in it): once its practice is done, close it and offer the next part`;
+  if (!c) return null;
+  const plan = session.plan!; const box = session.timeBoxMinutes!;
+  const lessonUsed = (nowMs - state.startedAtMs) / 60000;
+  const through = plan.segments.slice(0, c.index + 1).filter((x) => counts(x, state));
+  const planThrough = through.reduce((t, x) => t + (v2PartOf(x).minutes ?? 0), 0);
+  const minMet = !v2PracticePart(plan, c.index) || (state.practiceSaid?.[c.id] ?? 0) >= V2_MIN_PRACTICE;
+  const late = through.every((x) => !!v2PartOf(x).minutes) && lessonUsed > planThrough + V2_BEHIND_SLACK_MIN && minMet;
+  const core = c.index === v2CorePart(plan);
+  if (core) {
+    const margin = v2OverrunMin();
+    let rest = 0;
+    plan.segments.forEach((seg, j) => {
+      if (j <= c.index || !counts(seg, state)) return;
+      const m = v2PartOf(seg).minutes ?? 0;
+      if (!v2PartIsOptional(seg)) { rest += m; return; }
+      if (v2OfferedOut(plan, state).has(seg.id) || state.goals[seg.id]?.status === 'skipped') return;
+      const need = minutesFrom(plan, j, state);
+      if (need !== null && lessonUsed + need <= box + margin + 1e-9) rest += m;
+    });
+    const until = Math.max(c.own - c.used, box - rest - lessonUsed);
+    const stay = !late && until > 0;
+    return { ...c, lessonUsed, planThrough, core, stay, up: !stay, late, left: until };
+  }
+  const stay = !late && c.used < c.own / 2;
+  return { ...c, lessonUsed, planThrough, core, stay, up: late || c.used >= c.own, late, left: c.own - c.used };
 }
 
 /** Task 7v (OPTIONAL_FIT): the 7i fit for optional part `i` now: its minutes and those of the required parts after it (the summary's,
@@ -253,8 +303,10 @@ export function v2OptionalWrapMin(session: V2Session, state: V2State, nowMs: num
   const seg = plan.segments[cur];
   if (seg && cur < plan.segments.length - 1 && v2PartIsOptional(seg) && !dropped.includes(seg.id) && v2PartOf(seg).minutes) {
     const own = v2PartOf(seg).minutes!;
-    const start = state.partStart?.part === seg.id ? (state.partStart.at - state.startedAtMs) / 60000 : box + marginMin - after(cur) - own;
-    const wrap = Math.min(start + own, box + marginMin - after(cur));
+    // Fix round 1 (I2): no start known (PART_CLOCK off, or a state from before it): no hold, as before this task; never one invented.
+    if (state.partStart?.part !== seg.id) return null;
+    const start = (state.partStart.at - state.startedAtMs) / 60000;
+    const wrap = Math.min(start + own, box + marginMin - V2_HOLD_SLACK_MIN - after(cur));
     return wrap > wrapMin ? { wrap, label: v2PartOf(seg).label ?? seg.id, minutes: own, phase: 'in', leftInPart: Math.max(0, start + own - used) } : null;
   }
   const nx = v2NextPart(plan, state, cur, true);
@@ -262,11 +314,15 @@ export function v2OptionalWrapMin(session: V2Session, state: V2State, nowMs: num
   if (!next || nx >= plan.segments.length - 1 || !v2PartIsOptional(next) || dropped.includes(next.id) || state.goals[next.id] || v2OfferedOut(plan, state).has(next.id)) return null;
   const need = minutesFrom(plan, nx, state);
   if (need === null) return null;
-  const fits = used + need <= box + marginMin + 1e-9;
+  // Fix round 1 (m3): the hold leaves V2_HOLD_SLACK_MIN before the hard stop for the close after the summary.
+  const fits = used + need <= box + marginMin - V2_HOLD_SLACK_MIN + 1e-9;
   if (!fits && asked !== next.id) return null;
-  const wrap = Math.max(box + marginMin - need, used + 0.01);
+  const wrap = Math.max(box + marginMin - V2_HOLD_SLACK_MIN - need, used + 0.01);
   return wrap > wrapMin ? { wrap, label: v2PartOf(next).label ?? next.id, minutes: v2PartOf(next).minutes ?? 0, phase: 'next' } : null;
 }
+
+/** Fix round 1 (m3): minutes kept free before the hard stop when the wrap is held for an optional part. */
+export const V2_HOLD_SLACK_MIN = 0.5;
 
 /** Task 7v (OPTIONAL_FIT): the time line's addition while the wrap is held for an optional part (v2OptionalWrapMin). */
 export function v2OptionalHeldLine(h: { label: string; minutes: number; phase: 'next' | 'in'; leftInPart?: number }): string {

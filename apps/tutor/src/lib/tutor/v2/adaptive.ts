@@ -93,25 +93,27 @@ export function v2SupportFormLine(step: V2SupportStep, starterIsAnswer: boolean 
   const tail = 'Only your next NEW question takes this form: a correction, a retry it asks for, one question a reply and the cards stay as they are';
   switch (step) {
     // Task 7s (STARTER_IS_ANSWER): the starter is the opening of their answer, a statement, never the question form.
-    case 'starter': return `next question's form: STARTER (support step: starter, their recent answers in this part needed corrections). Ask your question and give the first words of ${starterIsAnswer ? 'their answer as a statement, never the question form' : 'the answer to build on'}, shaped like: "What did you do last week? Start with: I visited…". They finish the sentence. Not a gap-fill. ${tail}`;
-    case 'gap': return `next question's form: GAP-FILL (support step: gap, their recent answers needed corrections even with a start). One sentence with one gap, said aloud and on the question card with the gap as ___, shaped like: "Last year, I ___ a customer in Canada." Not a starter ("Start with: …"), not an open question. ${tail}`;
-    case 'repeat': return `next question's form: REPEAT AFTER ME (support step: repeat, their recent answers needed corrections even with a gap to fill). One model sentence of this part's form for them to say after you, shaped like: "Please say this after me: I have worked here for five years."; once they have, one easy question that takes the same form. Not a starter, not a gap-fill. ${tail}`;
-    case 'stretch': return `next question's form: OPEN, NO HELP (support step: stretch, their last answers in this part were right with no correction). A more open question that needs a longer answer or a reason, still on this part's point, shaped like: "Why was that project important to you?" No starter, no gap-fill. ${tail}`;
+    // Fix round 1 (m8): the shapes are abstract (no sentence of any one lesson: the engine's prompts stay generic).
+    case 'starter': return `next question's form: STARTER (support step: starter, their recent answers in this part needed corrections). Ask your question and give the first words of ${starterIsAnswer ? 'their answer as a statement, never the question form' : 'the answer to build on'}, shaped as: <your question> + "Start with: <the first two or three words of an answer in this part's form>…". They finish the sentence. Not a gap-fill. ${tail}`;
+    case 'gap': return `next question's form: GAP-FILL (support step: gap, their recent answers needed corrections even with a start). One full sentence of this part's form with ONE word replaced by a gap (the word the part is about, for example its verb), said aloud and on the question card with the gap as ___. Not a starter ("Start with: …"), not an open question. ${tail}`;
+    case 'repeat': return `next question's form: REPEAT AFTER ME (support step: repeat, their recent answers needed corrections even with a gap to fill). One model sentence of this part's form for them to say after you, shaped as: "Please say this after me: <the sentence>"; once they have, one easy question that takes the same form. Not a starter, not a gap-fill. ${tail}`;
+    case 'stretch': return `next question's form: OPEN, NO HELP (support step: stretch, their last answers in this part were right with no correction). A more open question that needs a longer answer or a reason ("why" or "how"), still on this part's point. No starter, no gap-fill. ${tail}`;
     default: return null;
   }
 }
 
-/** Task 7v (SUPPORT_FOLLOWED): a part the plan marks as free conversation: its note, aim or script calls it an open / free conversation
- *  or the tutor a conversation partner, or its name is a conversation. No part name is fixed in the engine. */
-const FREE_CONVERSATION = /\b(?:open|free|natural|real)[- ]conversation\b|\bconversation partner\b/i;
+/** Task 7v (SUPPORT_FOLLOWED): a part the plan marks as free conversation: the opening sentence of its note, aim or script calls it an
+ *  open / free conversation, or the note makes the tutor a conversation partner. No part name is fixed in the engine. */
+const FREE_CONVERSATION = /\b(?:open|free)[- ]conversation\b|\bconversation partner\b/i;
 export function v2FreeConversationPart(seg: Segment | undefined): boolean {
   if (!seg) return false;
   const x = seg as unknown as Record<string, unknown>;
   // The opening sentence of its note, aim or script says what the part is ("Open conversation practice."); a note that only names
   // the next part ("…advance to the open conversation.") does not. A conversation partner anywhere in it.
   const texts = ['teacherNote', 'goal', 'script'].map((k) => (typeof x[k] === 'string' ? x[k] as string : '')).filter(Boolean);
-  if (texts.some((t) => FREE_CONVERSATION.test(t.split(/(?<=[.!?:])\s/)[0] ?? '') || /\bconversation partner\b/i.test(t))) return true;
-  return /\bconversation\b/i.test(v2PartOf(seg).label ?? '');
+  // Fix round 1 (m4): the plan's own text only; no name keyword ("Conversation drills" is no free conversation). The plan schema has
+  // no field for it (kind, response format and goals say nothing of free speaking).
+  return texts.some((t) => FREE_CONVERSATION.test(t.split(/(?<=[.!?:])\s/)[0] ?? '') || /\bconversation partner\b/i.test(t));
 }
 /** Task 7v (SUPPORT_FOLLOWED): in a free-conversation part the step never goes above starter (no gap-fill or repeat drills there). */
 const capped = (plan: LessonPlan, index: number, step: V2SupportStep, on: boolean) => (on && stepAt(step) > stepAt('starter') && v2FreeConversationPart(plan.segments[index]) ? 'starter' : step);

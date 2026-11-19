@@ -66,6 +66,9 @@ export function v2SelfCorrection(heard: string | null | undefined): { sentence: 
   const phrase = parts[parts.length - 1]!; const before = parts[parts.length - 2]!;
   const n = v2SentenceTokens(phrase).filter((w) => !/^(?:u+h+|u+m+|e+r+m*)$/.test(w)).length;
   if (n < 1 || n > 3 || /[?？]\s*$/.test(phrase) || NOT_A_PHRASE.test(phrase)) return null;
+  // Fix round 1 (m11): it says part of the sentence again (a word in common): "And you" or "In Tokyo." after another sentence adds.
+  const had = new Set(v2SentenceTokens(before));
+  if (!v2SentenceTokens(phrase).some((w) => had.has(w))) return null;
   const sentence = v2LearnerSentence(before);
   return sentence ? { sentence: before.replace(/\s+/g, ' ').slice(0, 200), phrase: phrase.slice(0, 80) } : null;
 }
