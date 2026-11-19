@@ -269,7 +269,8 @@ export function v2MoveAnswer(said: string | null, lastTutor: string = '', langua
   // Final review I4: ahead of the decline and question checks (「いいえ」 is a decline word, 「質問」 a question's).
   if ((NO_QUESTIONS_READY.test(s) || NO_QUESTIONS_READY_JA.test(s)) && !READY_BUT.test(s) && offersQuestion) return 'go';
   // Task 7r fix round 5 (I-F, m-h, ruling): to an ask that offers a question first, 「いいえ。」, 「いいえ、進みましょう。」, 「結構です。」,
-  // "Not now." are "no questions": a go for the part asked about, required or optional.
+  // "Not really." are "no questions": a go for the part asked about, required or optional. Task 7t (I-G): "Not yet.", "Not now."
+  // and their kin (STAY_PUT) are never a go: they answer the move-on half ("stay"), so they fall to the decline words (other).
   if (goNamed && offersQuestion && (NO_THEN_GO_JA.test(s) || NOT_NOW.test(s)) && !READY_BUT.test(s)) return 'go';
   if (BARE_NO.test(s)) return offersQuestion ? 'go' : 'other';
   // Fix round 2 (out of scope, one line): 「大丈夫です」 / 「いいです」 to "do you want to do X?" (an offer, no questions clause) is a polite no.
@@ -287,7 +288,12 @@ export function v2OffersQuestionFirst(lastTutor: string, plan?: LessonPlan, lang
   return (!!last && v2IsPartAsk(last) && QUESTIONS_FIRST.test(last)) || (!!ending && QUESTIONS_FIRST.test(ending.ask));
 }
 const NO_THEN_GO_JA = /^(?:(?:いいえ|いや|ううん)(?:[、,。]?\s*(?:進みましょう|進みます|次に進みましょう|次へ|行きましょう|お願いします|結構です))?|結構です)[。！!]*$/u;
-const NOT_NOW = /^(?:(?:no|nope|nah)[,.!]?\s+)?not (?:now|yet|right now|at the moment|really|today)[.!]*$/i;
+const NOT_NOW = /^(?:(?:no|nope|nah)[,.!]?\s+)?not (?:really|today)[.!]*$/i;
+/** Task 7t (I-G): "not yet / not now / wait" to any part ask: stay where we are. Neither a go nor a decline of the part (nothing
+ *  opens, nothing is left out, the hold stays). */
+const STAY_PUT = /^(?:(?:no|nope|nah)[,.!]?\s+)?(?:not (?:yet|now|right now|at the moment)|wait|hold on|just a (?:moment|minute|second|sec))(?:,?\s+(?:a (?:moment|minute|second|sec)|please))?[.!]*$|^(?:(?:いいえ|いや|ううん)[、,]?\s*)?(?:まだ(?:です|だ)?|(?:ちょっと|少し)?待って(?:ください)?)[。！!]*$/iu;
+/** Task 7t (m-l): an explicit skip / summary word after a yes ("Okay, skip it.") is no yes-led answer. */
+const SKIPS_IT = /\b(?:skip|summary)\b|スキップ|飛ばし|まとめ/i;
 /** A yes leading an answer (はい…, "Yes, …"). */
 const YES_LED = /^(?:yes|yeah|yep|yup|sure|ok(?:ay)?|alright|all right|of course|はい|ええ|うん)(?![\p{L}\p{N}])/iu;
 
@@ -415,13 +421,16 @@ export function v2OptionalDeclined(plan: LessonPlan, state: View & Pick<V2State,
   // Fix round 5 (I-F, m-h, ruling): a decline is read only where the ask offered the part itself as a yes / no or as a choice
   // between it and the summary. After an ask that offers a question first, a no is "no questions" (v2MoveAnswer: a go).
   if (v2OffersQuestionFirst(lastTutor, plan, languages)) return -1;
+  // Task 7t (I-G): "Not yet." / "Not now." / 「まだです」 put off the move, not the part: no decline.
+  if (STAY_PUT.test(s)) return -1;
   const move = v2MoveAnswer(said, lastTutor, languages, undefined, plan);
   if (move === 'question') return -1;
   const namesIt = v2PartNamedIn(seg, s);
   const toSummary = asked.includes(last);
   // Fix round 5 (m-i, ruling): a yes-led answer is never a decline (「はい、進みましょう。」 to a part-or-summary choice opens the part
   // offered), unless their words name the summary.
-  const yesLed = YES_LED.test(s);
+  // Task 7t (m-l): "Okay, skip it." / "Sure, skip it." (a yes, then an explicit skip / summary word) is not yes-led.
+  const yesLed = YES_LED.test(s) && !SKIPS_IT.test(s);
   if (move === 'go') {
     if (namesIt || !toSummary) return -1;
     if (v2NamesAskedPart(s, [last], plan) === last) return nx;

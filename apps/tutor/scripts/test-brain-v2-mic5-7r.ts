@@ -326,7 +326,27 @@ async function probe() {
   const miTake = await turnF(afterOffer(), 'はい、進みましょう。', 'では、発音の練習をしましょう。最初の単語は responsibilities です。私の後に繰り返してください。', 13.3);
   const stay = [['進みましょう。', T63], ['Uh, no, let\'s go.', T63], ['No, let\'s go on.', EN_CHOICE], ['Yes, let\'s go to the summary.', EN_CHOICE]].map(([x, ask]) => ({ x, i: declined(x!, ask!) }));
   const wire = v2ReadClientState(JSON.parse(JSON.stringify({ ...ieNo.state, heldPage: raAsk.t.state.heldPage })));
-  const r5 = { qfHeld: qfOffer.state.heldPage ?? null, iF, mh, mi, miTake: { pages: miTake.pages, tf: miTake.state.timeFit ?? null }, stay, wire: { byChoice: wire?.timeFit?.byChoice ?? null, byPosition: wire?.heldPage?.byPosition ?? null } };
+  // Task 7t (I-G, m-l, m-m): "not yet" and its kin to any part ask stay put: no go, no decline, nothing opens.
+  const EN_RT_ASK = 'That\'s past simple done. Next up is conversation. Shall we move on, or is there anything you would like to ask first?';
+  const STAY = ['Not yet.', 'No, not yet.', 'Not now.', 'Not right now.', 'Wait.', 'Hold on.', 'まだです。', 'いいえ、まだです。', 'ちょっと待ってください。'];
+  const NO_QS = ['いいえ。', 'いいえ、進みましょう。', 'No.', 'No, let\'s go.', '結構です。', '大丈夫です。'];
+  const asks7t: Array<[string, string]> = [['EN runtime ask', EN_RT_ASK], ['#42', T42], ['#43', T43], ['QF_OPT', QF_OPT], ['EN_OPT_ASK', EN_OPT_ASK], ['#63', T63], ['EN_CHOICE', EN_CHOICE]];
+  const t7Stay = STAY.flatMap((x) => asks7t.map(([k, ask]) => ({ x, k, move: v2MoveAnswer(x, ask, LANGS, undefined, GDI), i: declined(x, ask, ask === QF_OPT ? structuredClone(qfOffer.state) : afterOffer()) })));
+  const t7Go = NO_QS.flatMap((x) => asks7t.slice(0, 5).map(([k, ask]) => ({ x, k, move: v2MoveAnswer(x, ask, LANGS, undefined, GDI) })));
+  const t7E2e = [];
+  for (const said of ['Not yet.', 'Not now.', 'No, not yet.', 'まだです。']) {
+    for (const [k, ask] of [['EN runtime ask', EN_RT_ASK], ['#42', T42]] as const) {
+      const st = base([TODAY, JOB, PP, PS], { practiceSaid: beforeConv, history: [u('I enjoyed the exhibition a lot.'), a(ask)], heldPage: { title: 'Conversation', part: 'open-conversation', at: 1 } });
+      const r = await turnF(st, said, `<board page>会話</board>${T45}`, 11.4);
+      t7E2e.push({ said, k, added: r.pages.length - st.board.pages.length, pages: r.pages, held: r.state.heldPage ?? null, tf: r.state.timeFit ?? null });
+    }
+    const opt = await turnF(structuredClone(qfOffer.state), said, 'わかりました。どうぞ、ゆっくりで大丈夫です。', 13.3);
+    t7E2e.push({ said, k: 'QF_OPT', added: opt.pages.length - qfOffer.state.board.pages.length, pages: opt.pages, held: opt.state.heldPage ?? null, tf: opt.state.timeFit ?? null });
+  }
+  const t7GoE2e = await turnF(base([TODAY, JOB, PP, PS], { practiceSaid: beforeConv, history: [u('I enjoyed the exhibition a lot.'), a(EN_RT_ASK)], heldPage: { title: 'Conversation', part: 'open-conversation', at: 1 } }), 'No.', `<board page>会話</board>${T45}`, 11.4);
+  const t7Ml = ['Okay, skip it.', 'Sure, skip it.'].flatMap((x) => [['#63', T63], ['EN_CHOICE', EN_CHOICE]].map(([k, ask]) => ({ x, k, i: declined(x, ask!) })));
+  const t7 = { stay: t7Stay, go: t7Go, e2e: t7E2e, goE2e: t7GoE2e.pages, ml: t7Ml };
+  const r5 = { t7, qfHeld: qfOffer.state.heldPage ?? null, iF, mh, mi, miTake: { pages: miTake.pages, tf: miTake.state.timeFit ?? null }, stay, wire: { byChoice: wire?.timeFit?.byChoice ?? null, byPosition: wire?.heldPage?.byPosition ?? null } };
   const iE = {
     offerHeld: offer.state.heldPage ?? null,
     no: { tf: ieNo.state.timeFit ?? null, held: ieNo.state.heldPage ?? null, pages: ieNo.pages, heard: ieNo.heard },
@@ -474,10 +494,17 @@ async function main() {
       check(`I-F 「${x.said}」 to it: a go, no decline; the Pronunciation page opens, nothing left out, no English ask`, x.move === 'go' && x.declined === -1 && pron(x.optPages) && !x.optTf?.dropped.length && !ENGLISH_ASK.test(x.optHeard), x);
       check(`I-F 「${x.said}」 to #42 (required part): Conversation opens, no English ask`, x.reqPages.includes('Conversation') && !ENGLISH_ASK.test(x.reqHeard), { pages: x.reqPages, heard: x.reqHeard });
     }
-    for (const x of r.mh) check(`m-h "${x.x}" to a questions-first ask about the optional part (…${x.ask}) is no decline${x.x === 'Skip it.' ? '' : ', and a go'}`, x.i === -1 && (x.x === 'Skip it.' || x.move === 'go'), x);
+    // Task 7t (I-G) changes the round 5 pin for "Not now.": no go now (stay put), still no decline.
+    for (const x of r.mh) check(`m-h "${x.x}" to a questions-first ask about the optional part (…${x.ask}) is no decline${x.x === 'Skip it.' ? '' : x.x === 'Not now.' ? ', and no go (7t)' : ', and a go'}`, x.i === -1 && (x.x === 'Skip it.' || (x.x === 'Not now.' ? x.move !== 'go' : x.move === 'go')), x);
     for (const x of r.mi) check(`m-i yes-led "${x.x}" to a part-or-summary choice is no decline`, x.i === -1, x);
     check('m-i 「はい、進みましょう。」 to #63 end to end: the Pronunciation page opens, nothing left out', pron(r.miTake.pages) && !r.miTake.tf?.dropped.length, r.miTake);
     for (const x of r.stay) check(`unchanged: "${x.x}" to a part-or-summary choice declines the part`, x.i === 6, x);
+    const t = r.t7;
+    for (const x of t.stay) check(`7t I-G "${x.x}" to ${x.k}: no go, no decline`, x.move !== 'go' && x.i === -1, x);
+    for (const x of t.go) check(`7t unchanged: "${x.x}" to the questions-first ask ${x.k} is a go`, x.move === 'go', x);
+    for (const x of t.e2e) check(`7t m-m "${x.said}" to ${x.k} end to end: no page opens, the part stays held, nothing left out`, x.added === 0 && !!x.held && !x.tf?.dropped.length, x);
+    check('7t …while "No." to the English runtime ask opens Conversation (same setup)', t.goE2e.includes('Conversation'), t.goE2e);
+    for (const x of t.ml) check(`7t m-l "${x.x}" to the optional part offered (${x.k}) declines it`, x.i === 6, x);
     check('m-k the new fields survive the route\'s read (JSON → v2ReadClientState → v2ReadCarried)', JSON.stringify(r.wire.byChoice) === '["pronunciation"]' && r.wire.byPosition === true, r.wire);
   }
 
