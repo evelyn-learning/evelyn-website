@@ -19,6 +19,8 @@ import { PRONUNCIATION_LOW_SCORE, pronunciationLowScore } from '../pronunciation
 import { MAX_REFERENCE_CHARS } from '../pronunciation/assess-request';
 import { WORD_FLAG_SCORE } from '../pronunciation/normalize';
 import { discussionOf } from './discussion';
+import { stripBoardBlocks } from './board-inline';
+import { v2AsksTheLearner, v2ReplySentences } from './one-question';
 import { TUTOR_V2_PRONUNCIATION_FALLBACK, TUTOR_V2_PRONUNCIATION_PAGE, TUTOR_V2_TEXT_NO_SOUND } from '../orchestrator/flags';
 import type { V2Session, V2State } from './types';
 
@@ -283,4 +285,18 @@ export function v2PronunciationSection(): string {
  *  (「私の後に繰り返してください。」 then "responsibilities." got both, mic test 5, embed-1795050656326). Read before the arm is used up. */
 export function v2ScoredTurn(session: V2Session, state: Pick<V2State, 'pronunciation'>, heard: string | null | undefined, enabled: boolean = TUTOR_V2_PRONUNCIATION_PAGE): boolean {
   return enabled && v2PronunciationOn(session) && !!state.pronunciation?.armed && heard !== null && heard !== undefined;
+}
+
+/** The repeat request itself: say it, repeat it, after me, once more, your turn (English and Japanese). */
+const REPEAT_ASK = /\b(?:repeat|say (?:it|this|that|the (?:word|sentence)|after me)|after me|once more|one more time|again|your turn|try (?:it|saying))\b|繰り返して|言ってみて|言ってください|と言って|もう一度|どうぞ/i;
+/** Task 7s fix round 2 (M3, controller ruling; PRONUNCIATION_PAGE): a reply that armed a recording and then closes on its own
+ *  DIFFERENT question ("…Say it after me: "I emailed everyone to ask them to donate." What else did you do for the project?") does
+ *  not make the next turn a scored one: their answer is to that question. True when the reply's last sentence asks (the shared ask
+ *  test, one-question.ts v2AsksTheLearner) and is neither the repeat request nor holds an armed item; a reply that ends on the
+ *  item, or on no ask, keeps the arm. */
+export function v2ArmClosesOnOtherAsk(said: string, items: readonly string[]): boolean {
+  const last = v2ReplySentences(stripBoardBlocks(said)).pop()?.trim() ?? '';
+  if (!last || !v2AsksTheLearner(last) || REPEAT_ASK.test(last)) return false;
+  const low = last.toLowerCase();
+  return !items.some((x) => { const w = x.toLowerCase().replace(/[.!?]+$/, '').trim(); return !!w && low.includes(w); });
 }

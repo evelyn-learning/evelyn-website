@@ -25,6 +25,7 @@ import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import { v2AskedForSentence, v2AskedToProduce, v2CardIsFragment, v2PracticeAnswerSentences } from '../src/lib/tutor/v2/learner-card';
 import { v2SupportLine } from '../src/lib/tutor/v2/adaptive';
 import { v2NextTimeAllLine } from '../src/lib/tutor/v2/plan-map';
+import { v2ArmClosesOnOtherAsk } from '../src/lib/tutor/v2/pronunciation';
 import { flagFreeElapsedSec } from '../src/app/tutor/components/session/useFlagClockPause';
 import { stripBoardBlocks } from '../src/lib/tutor/v2/board-inline';
 import { runV2Turn, type V2ModelCall } from '../src/lib/tutor/v2/turn';
@@ -108,6 +109,7 @@ const T59 = 'その文は正しいです。みんなにメールで寄付をお�
 const T69 = 'わかりました、一語ずつ練習しましょう。最初の単語は responsibilities です。私の後に繰り返してください。';
 const T76 = '「international」です。私の後に繰り返してください。 international';
 const T51_FRAG = `「I proud of」の前に「am」が必要です。「私は誇りに思っています」は「I am proud of」と言います。${S('I am proud of.', ['am'])}${S('I am proud of the donation project for climate change.', ['am', 'proud', 'of'])}\n\nもう一度、この文を言ってみてください。`;
+const ARM_Q_K = 'みんなにメールを送ったんですね。Say it after me: "I emailed everyone to ask them to donate." What else did you do for the project?';
 const SENT_K = 'I have worked with international customers.';
 const CHECK_IN = /Does that make sense|Is that clear|Any questions so far|Ready to go on/i;
 
@@ -161,6 +163,15 @@ async function probe() {
   const CONV_Q = `では、会話を始めましょう。\n\n${Q('What is one project you are proud of?', '誇りに思っているプロジェクトを一つ教えてください。')}\nWhat is one project you are proud of?`;
   const fBack = await factsOf(lang, base([TODAY, JOB, PP, PS, CONV], { history: [u('Yes, let\'s go.'), a(CONV_Q)] }), 'Hmm, what about you? What project are you proud of?', 12.6);
   const fMake = await factsOf(lang, base([TODAY, JOB, PP, PS], { history: [u('I enjoyed the exhibition a lot.'), a('Now ask me a question about my weekend. Start with "Did you…".')] }), 'Did you go to the mountains?', 10.4);
+  // ── Fix round 2 ──
+  // N1: the n2 question transcribed with a period, and lower case with no mark: the line all the same.
+  const fPeriod = await factsOf(lang, base([TODAY, JOB, PP, PS], { history: [u('I saw dancing robot singing to music.'), a(T36)] }), 'Uh, did you enjoy the robotics exhibition in Tokyo last year.', 10.2);
+  const fBare = await factsOf(lang, base([TODAY, JOB, PP, PS], { history: [u('I saw dancing robot singing to music.'), a(T36)] }), 'did you enjoy the robotics exhibition in tokyo last year', 10.2);
+  // M3: a practice-part reply arms its corrected sentence and closes on its own different question; then their answer.
+  const ARM_Q = 'みんなにメールを送ったんですね。「I emailed everyone to ask them to donate.」と言います。Say it after me: "I emailed everyone to ask them to donate." What else did you do for the project?';
+  const armQ = await runV2Turn({ session: lang, state: base([TODAY, JOB, PP, PS, CONV], { history: [u('x'), a(ASKS[5]!.ask)] }), studentSaid: ASKS[5]!.answer, callModel: scripted([{ text: ARM_Q, tools: [{ name: 'practise_pronunciation', input: { items: ['I emailed everyone to ask them to donate.'] } }] }, { text: '' }]).call, onText: () => {}, boardPass: false, mathsCheck: false, nowMs: 13.6 * MIN });
+  const armQNextM = scripted([{ text: `Posters are a good idea. ${S('We made posters for the school festival.', [])}` }]);
+  const armQNext = await runV2Turn({ session: lang, state: structuredClone(armQ.state), studentSaid: 'We make posters for the school festival.', callModel: armQNextM.call, onText: () => {}, boardPass: false, mathsCheck: false, nowMs: 14 * MIN });
   const fStarterBack = await factsOf(lang, base([TODAY, JOB, PP], { history: [u('I have worked here for five years.'), a('What have you learned at your company? Start with "I have learned…".')] }), 'Hmm, what about you? What have you learned?', 6.2);
   const fMakeJa = await factsOf(lang, base([TODAY, JOB, PP, PS], { history: [u('I enjoyed the exhibition a lot.'), a('では、「Did you…」で私に質問を作ってみてください。')] }), 'Did you enjoy the exhibition?', 10.4);
   // I3 / M1 / M2 / M5: a sentence item armed on the pronunciation page, then the scored attempt (the learner says the sentence).
@@ -174,7 +185,8 @@ async function probe() {
   const frag2 = await runV2Turn({ session: lang, state: base([TODAY, JOB, PP, PS, CONV], { history: [u('x'), a('Now ask me a question about where I live.')] }), studentSaid: 'I live in Nagoya. What city do you live in?', callModel: scripted([{ text: `Good question. ${S('What city do you live in?', [])} I live in Gifu.` }]).call, onText: () => {}, boardPass: false, mathsCheck: false, nowMs: 12.8 * MIN });
 
   return {
-    fBack, fMake, fMakeJa, fStarterBack,
+    fBack, fMake, fMakeJa, fStarterBack, fPeriod, fBare,
+    armQArmed: !!armQ.state.pronunciation?.armed, armQEvents: (armQ.events ?? []).map((e) => e.type), armQNextFacts: armQNextM.facts.join('\n'), armQNextEvents: (armQNext.events ?? []).map((e) => `${e.type} ${e.message}`), t69Armed: !!pron.state.pronunciation?.armed,
     askedBack: v2AskedToProduce([a(CONV_Q)]), askedT36: v2AskedToProduce([a(T36)]),
     armedNextTime: v2NextTimeAllLine(GDI, armedOnly), armedSaid: armSent.state.practiceSaid?.pronunciation ?? 0, armCards: armSent.state.board.pages[armSent.state.board.pages.length - 1]!.items.map((it) => it.summary),
     sentFacts: sentM.facts.join('\n'), sentCalls: sentScored.toolCalls.filter((c) => c.name === 'show_sentence').map((c) => String(c.args.sentence)), sentSaid: sentScored.state.practiceSaid?.pronunciation ?? 0,
@@ -206,7 +218,7 @@ async function main() {
   console.log('2  PRACTISED_SENTENCE: a sentence they were asked to make or say is practice');
   check('#36 「"Did you enjoy..." で答えてみてください。」 and #59 are asks for a sentence', on.asked36 && on.asked59);
   check('the turn of "did you enjoy the robotics exhibition…?" (n2): the facts say it is their practice, no persona answer', /practised sentence: your last reply asked them to make a question or to say a sentence you gave/.test(on.f37) && /nothing from your own persona card/.test(on.f37), on.f37);
-  check('fix round 1 (I1): #59 → "Yes, uh, the project uh go very well." is a statement, not a question: no line (feedback as usual)', !/practised sentence:/.test(on.f59), on.f59);
+  check('fix round 2 (N1 ruling): #59 asked to answer with "Has the project...": his statement is that practice, the line fires whatever its form', /practised sentence:/.test(on.f59), on.f59);
   check('after the part ask #42: no such line', !/practised sentence: your last reply asked them to make a question or to say a sentence you gave/.test(on.f42));
 
   console.log('3  STARTER_IS_ANSWER: a starter is the opening of the answer');
@@ -257,6 +269,21 @@ async function main() {
   check('M2: the score line says the word numbers are not to be said', /the word numbers above are for you, not to be said/.test(on.sentFacts));
   check('M5: no starter line on the pronunciation page; it stays in a practice part', !/starters:/.test(on.sentFacts) && /starters:/.test(on.f37));
 
+  console.log('fix round 2');
+  check('N1: T36 then the question with a final period ("…last year."): the line', /practised sentence:/.test(on.fPeriod), on.fPeriod);
+  check('N1: T36 then lower case with no mark ("did you enjoy … last year"): the line', /practised sentence:/.test(on.fBare));
+  check('N1: the line leaves room for a plain request for help', /Only if they are plainly asking you what to do or what a word means, answer that/.test(on.fPeriod));
+  check('N1/I1 kept: a question about them, then their real question back: no line', !/practised sentence:/.test(on.fBack) && !/practised sentence:/.test(on.fStarterBack));
+  const prod = (t: string) => v2AskedToProduce([a(t)]);
+  check('N2: no ask to produce: "Don\'t just repeat my words. What did you do last weekend?", "Feel free to ask me anything. What did you do?", 「よく聞いてみてください。」, a quoted question discussed beside a statement starter', !prod("Don't just repeat my words. What did you do last weekend?") && !prod('Feel free to ask me anything. What did you do?') && !prod('よく聞いてみてください。') && !prod('The question "Have you ever…" is answered with "Yes, I have". Start with "Yes, I have…".'));
+  check('N2: asks to produce: 「質問をしてみてください。」, 「質問を作りましょう。」, 「「Did you…」を使って質問をしてください。」, "Try asking me about my weekend.", "Make two questions with \'did\'."', prod('では、質問をしてみてください。') && prod('では、質問を作りましょう。') && prod('「Did you…」を使って質問をしてください。') && prod('Try asking me about my weekend.') && prod("Make two questions with 'did'."));
+  check('N2: kept: T36, "Now ask me a question…", "Repeat after me."', on.askedT36 && prod('Now ask me a question about my weekend.') && prod('Repeat after me: "I have worked here for five years."'));
+  check('M3: an arm, then the reply closes on its own different question ("What else did you do for the project?"): disarmed (event), nothing recorded', !on.armQArmed && on.armQEvents.includes('pronunciation_disarmed'), [on.armQArmed, on.armQEvents]);
+  check('M3: their answer next turn is an ordinary practice turn: the 7b/7g card line and a 7q signal', /their answer just now had \d+ sentences? of their own|a sentence of theirs/.test(on.armQNextFacts) && on.armQNextEvents.some((e) => /^v2_practice_signal (?:wrong|clean)/.test(e)), [on.armQNextEvents]);
+  check('M3: an arm that ends on the repeat request (#69 「私の後に繰り返してください。」) or on the item (#76 "… international") stays armed', on.t69Armed && !v2ArmClosesOnOtherAsk(T76, ['international']) && !v2ArmClosesOnOtherAsk(T69, ['responsibilities']) && !v2ArmClosesOnOtherAsk('Can you say "international" for me?', ['international']));
+  check('M3: the shape that disarms, pure', v2ArmClosesOnOtherAsk(ARM_Q_K, ['I emailed everyone to ask them to donate.']));
+  check('N6: "Who did you go with?" after "Who did you go with to the party?" is no fragment (a question card is whole)', !v2CardIsFragment('Who did you go with?', 'Who did you go with to the party?'));
+
   console.log('each switch off alone (a child process per switch): as at dcdf5430 for that item');
   const child = (flag: string) => {
     const res = spawnSync(process.execPath, [...process.execArgv, __filename], { env: { ...process.env, [`NEXT_PUBLIC_TUTOR_V2_${flag}`]: 'off', MIC5_7S_CHILD: '1' }, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
@@ -277,6 +304,8 @@ async function main() {
     const off = child('PRONUNCIATION_PAGE');
     check('PRONUNCIATION_PAGE off: no card, no practice counted, "didn\'t get to the pronunciation part", no score-only line', !off.pronCards.length && !off.practiceSaid?.pronunciation && /pronunciation/i.test(off.nextTime ?? '') && !/only number you may say/.test(off.scoredFacts), [off.pronCards, off.practiceSaid, off.nextTime]);
     check('PRONUNCIATION_PAGE off: #76 with the arm gets "Does that make sense?" (as live)', CHECK_IN.test(off.said76), off.said76);
+    check('fix round 2 (N5): PRONUNCIATION_PAGE off, PRACTISED_SENTENCE on: the scored "responsibilities." turn after 「繰り返して」 gets no practised line', !/practised sentence:/.test(off.scoredFacts));
+    check('fix round 2 (M3): PRONUNCIATION_PAGE off: the arm before another question stands (as before)', off.armQArmed);
   }
   {
     const off = child('QUESTION_NOT_NOTE');

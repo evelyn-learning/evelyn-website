@@ -328,12 +328,16 @@ const SENTENCE_REQUEST_JA = /で答えて|答えてみて|繰り返して/;
  *  with an instruction to say it or answer with it), not any question about them: "What is one project you are proud of?" then
  *  "What about you? What project are you proud of?" is a question back, answered from the persona card as before. Structural:
  *  what the reply asked for. */
-const MAKE_QUESTION = /\b(?:ask me|make (?:a|your own|one) question|ask (?:a|the|your own|one) question|form a question|turn (?:it|this|that) into a question)\b|質問を作って|質問して|聞いてみて|尋ねてみて/i;
-const SAY_GIVEN = /と言って|言ってみて|繰り返して|\brepeat\b|\bsay after me\b|\bsay (?:it|this|that|the sentence)\b/i;
-/** A quoted model in question form ("Did you enjoy...", 「Has the project…」): a statement starter given for an answer is not an
- *  ask to produce a question, and a question back after it is a real question. */
-const QUOTED_QUESTION = /[「"“]\s*(?:what|how|where|when|why|which|who|did|do|does|have|has|is|are|was|were|can|could|would|will)\b[^」"”]*[」"”]/i;
-const ANSWER_WITH = /で答えて|で始めて|答えてみて|\b(?:answer|start|begin)(?:ing)? with\b/i;
+// Fix round 2 (N2): "Feel free to ask me anything", "Don't just repeat my words" and 「よく聞いてみてください」 (listen) ask for nothing to
+// be produced; 「質問をしてみてください」, 「質問を作りましょう」, 「…を使って質問して」, "Try asking me…", "Make two questions…" do.
+const MAKE_QUESTION = /\b(?:(?<!(?:free to|can|could|may) )ask me(?! anything| if\b)|make (?:a|your own|one|two|three|some|a few) questions?|ask (?:a|the|your own|one) question|form a question|turn (?:it|this|that) into a question|try asking)\b|質問を?作って|質問を?作りましょう|質問を?して(?:みて)?ください|質問してみて|尋ねてみて/i;
+const SAY_GIVEN = /と言って|言ってみて|繰り返して|(?<!(?:n['’]t|not|just) )(?<!(?:n['’]t|not) just )\brepeat\b|\bsay after me\b|\bsay (?:it|this|that|the sentence)\b/i;
+/** A quoted model in question form ("Did you enjoy...", 「Has the project…」) that the instruction is about: the quote right before
+ *  で答えて / で始めて / を使って, or right after "answer / start with". A statement starter given for an answer is no ask to produce a
+ *  question, and a quoted question merely discussed next to one ("The question "Have you ever…" is answered with "Yes, I have".
+ *  Start with "Yes, I have…".", fix round 2 N2) is none either. */
+const QWORD = String.raw`(?:what|how|where|when|why|which|who|did|do|does|have|has|is|are|was|were|can|could|would|will)\b`;
+const QUOTED_QUESTION_ASK = new RegExp(String.raw`[「"“]\s*${QWORD}[^」"”]*[」"”]\s*(?:で答え|で始め|を使って|から始め)|\b(?:answer|start|begin)(?:ing)? with:?\s*[「"“]\s*${QWORD}`, 'i');
 export function v2AskedToProduce(history: Anthropic.MessageParam[]): boolean {
   const last = [...history].reverse().find((h) => h.role === 'assistant');
   if (!last) return false;
@@ -344,12 +348,7 @@ export function v2AskedToProduce(history: Anthropic.MessageParam[]): boolean {
   // A quote ending in "..." is cut from the instruction after it (「"Did you enjoy..." で答えてみてください。」): read in pairs.
   const tail = sentences.slice(-3);
   const pairs = tail.map((x, i) => (i + 1 < tail.length ? `${x} ${tail[i + 1]}` : x));
-  return tail.some((x) => MAKE_QUESTION.test(x) || SAY_GIVEN.test(x)) || pairs.some((x) => QUOTED_QUESTION.test(x) && ANSWER_WITH.test(x));
-}
-/** Their turn is a question (the "do not answer it" half of the practised-sentence line needs one). */
-export function v2HeardIsQuestion(heard: string | null | undefined): boolean {
-  const t = (heard ?? '').trim();
-  return /[?？]["'”’]*$/.test(t) || /(?:^|[.!?]\s+)(?:(?:uh|um|er|so|and|oh|okay|ok)[,.]?\s+)*(?:what|how|where|when|why|which|who|did|do|does|have|has|is|are|was|were|can|could|would|will|shall)\b[^.!?]*$/i.test(t);
+  return tail.some((x) => MAKE_QUESTION.test(x) || SAY_GIVEN.test(x)) || pairs.some((x) => QUOTED_QUESTION_ASK.test(x));
 }
 /** Task 7s: exported for the practised-sentence facts (practice-facts.ts): the same structural test. */
 export function v2AskedForSentence(history: Anthropic.MessageParam[], wide: boolean = TUTOR_V2_PRACTISED_SENTENCE): boolean { return askedForSentence(history, wide); }
@@ -512,7 +511,8 @@ export function v2CardIsFragment(card: string, heard: string | null | undefined)
   const words = (t: string) => (t.toLowerCase().match(/[a-z]+(?:['’][a-z]+)?/g) ?? []).filter((w) => !FILLER_WORDS.has(w));
   const c = words(card);
   const last = c[c.length - 1]; const prev = c[c.length - 2];
-  if (!last || !OPEN_END.has(last) || !heard) return false;
+  // Fix round 2 (N6): a question card ending on a preposition is a whole question ("Who did you go with?", "Where are you from?").
+  if (!last || !OPEN_END.has(last) || !heard || /\?["'”’)]*\s*$/.test(card)) return false;
   const head = c.slice(0, -1); const allowed = head.length >= 6 ? 2 : 1;
   return heard.split(SPLIT).some((sentence) => {
     const h = words(sentence);

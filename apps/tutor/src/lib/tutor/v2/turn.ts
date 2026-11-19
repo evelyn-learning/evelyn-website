@@ -41,7 +41,7 @@ import { v2IsPracticeAsk, v2LanguagesSection } from './languages';
 import { v2ReadsByClauses } from './language-pack';
 import { v2AsksTheLearner, v2HandsOver, v2ReplyAsks, v2ReplyHandsOver, v2ReplySentences } from './one-question';
 import { V2_LEVEL_WAIT, V2_LEVEL_WAIT_OVER, V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2MarkLevelKnownParts, v2ReopenLevelCheck, v2WorkingLevelSection } from './working-level';
-import { V2_PRACTISE_PRONUNCIATION_TOOL, v2ApplyPractisePronunciation, v2ConsumePronunciation, v2PronunciationOn, v2PronunciationSection, v2ScoredTurn } from './pronunciation';
+import { V2_PRACTISE_PRONUNCIATION_TOOL, v2ArmClosesOnOtherAsk, v2ApplyPractisePronunciation, v2ConsumePronunciation, v2PronunciationOn, v2PronunciationSection, v2ScoredTurn } from './pronunciation';
 import { v2NoteCorrectedSentence, v2SentenceCardsOn, v2SentenceCardsSection } from './sentence-cards';
 import { v2AdaptAfter, v2AdaptBefore, v2AdaptPart, v2PracticePairs } from './adaptive';
 import { LearnerCardWatch, V2_REPLY_MISHEARD, v2CardIsFragment, v2LearnerCardsOn, v2OwedCardCheckLine, v2PracticeAnswerSentences, v2SentenceOnBoard, v2SentencesNotCarded } from './learner-card';
@@ -1614,6 +1614,18 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     if (textBlock) textBlock.text = `${textBlock.text}\n\n${words}`;
   }
 
+  // Task 7s fix round 2 (M3, ruling): a reply that armed a recording but closes on its own different question is disarmed (the client
+  // arms from the state it gets back, useV2Turns onPronunciationArm): their answer is to that question, an ordinary practice turn
+  // (card lines and 7q kept), never scored against the armed item. Disarming is the smaller change: nothing is recorded or sent.
+  let disarmed: { type: string; message: string } | null = null;
+  if (TUTOR_V2_PRONUNCIATION_PAGE && noteTargets && v2PronunciationOn(session)) {
+    const arm = state.pronunciation?.armed;
+    const armedNow = arm && toolCalls.some((c) => c.name === 'practise_pronunciation' && /^armed/.test(c.outcome));
+    if (arm && armedNow && spoken.length && v2ArmClosesOnOtherAsk(spoken.join(' '), arm.items)) {
+      state.pronunciation = { seq: state.pronunciation!.seq, ...(state.pronunciation!.off ? { off: true } : {}) };
+      disarmed = { type: 'pronunciation_disarmed', message: `the reply closed on another question after arming "${arm.reference.slice(0, 60)}"` };
+    }
+  }
   // A session never begins on a bare board (embed-1794362141944, embed-1794376295543). When the opening reply
   // and the check after it both wrote nothing, the lesson's heading and what it is for go up.
   // Not in homework: the problem is in its panel beside the chat, and the plan's title is only "Problem 3".
@@ -1702,6 +1714,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Task 7q: their answer counted from this reply's sentence cards (a card changing their words = one that needed a correction).
   // Not for a reply that was cut, closed the lesson or did not catch their words (the owed cards' conditions).
   const adaptEvents = [...adaptBefore.events];
+  if (disarmed) adaptEvents.push(disarmed);
   if (adaptPart && answerSentences.length && !state.closed && !input.signal?.aborted && !V2_REPLY_MISHEARD.test(stripBoardBlocks(spoken.join(' ')))) {
     const cards = toolCalls.filter((c) => c.name === 'show_sentence' && (!/^not /.test(c.outcome) || !!c.pointsAt) && typeof c.args.sentence === 'string')
       .map((c) => ({ sentence: String(c.args.sentence), stress: Array.isArray(c.args.emphasis) ? (c.args.emphasis as unknown[]).filter((x): x is string => typeof x === 'string') : [] }));
