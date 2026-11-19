@@ -50,6 +50,9 @@ export interface V2PronunciationState {
   retryOf?: string[];
   /** Measuring is not available to this session: no more practice is offered. */
   off?: boolean;
+  /** Task 7s fix round 4 (N-A): the last reply armed a recording and the arm was dropped because the reply closed on its own
+   *  different question (turn.ts, the M3 rule): their next words answer that question. Gone with the next spoken turn or arm. */
+  disarmed?: boolean;
 }
 
 /** At most this many items in one arm: one recording holds them all, and a clip is capped at 15 s. */
@@ -164,6 +167,7 @@ export function v2ReadPronunciation(raw: unknown): V2PronunciationState | undefi
   const retryOf = Array.isArray(r.retryOf) ? r.retryOf.filter((x): x is string => typeof x === 'string').slice(0, 80) : [];
   if (retryOf.length) out.retryOf = retryOf;
   if (r.off === true) out.off = true;
+  if (r.disarmed === true && !out.armed) out.disarmed = true;
   return out;
 }
 
@@ -289,20 +293,27 @@ export function v2ScoredTurn(session: V2Session, state: Pick<V2State, 'pronuncia
 
 /** Task 7s fix round 3 (I-A, ruling): a content question: a question word (what / when / where / why / how / which / who; 何 / どこ /
  *  いつ / なぜ / どうして / どう / どんな / どちら / だれ) in a sentence that is a question (？/? at its end, or a Japanese 〜か ending). */
-const CONTENT_QWORD = /\b(?:what|when|where|why|how|which|who|whom|whose)\b|何|どこ|いつ|なぜ|どうして|どう|どんな|どちら|だれ|誰/i;
+const CONTENT_QWORD = /\b(?:what|when|where|why|how|which|who|whom|whose)\b|何|どこ|いつ(?!も)|なぜ|どうして|どう(?!ぞ)|どんな|どちら|だれ|誰/i;
+/** Fix round 4 (n-b, ruling): a question word counts only as a whole word: いつも and どうぞ are other words (the lookaheads above),
+ *  and 「どうでしょう、…」 as an opener and "How about you…" hand the turn over, they ask about nothing. */
+const NOT_A_QWORD = /どうでしょう(?:か)?[、,]|\bhow about you\b/gi;
+/** Fix round 4 (n-b, ruling): the sentence invites them to say / try / repeat / pronounce / read it. */
+const INVITES_TO_SAY = /言って|言え|発音|読んで|繰り返|\b(?:try|say|repeat|pronounce)\b/i;
 const IS_QUESTION = /[?？]["'”’」』)）]*\s*$|か[。？?]?["'”’」』)）]*\s*$/;
 export function v2IsContentQuestion(sentence: string): boolean {
   const s = sentence.trim();
-  return !!s && IS_QUESTION.test(s) && CONTENT_QWORD.test(s);
+  return !!s && IS_QUESTION.test(s) && CONTENT_QWORD.test(s.replace(NOT_A_QWORD, ' '));
 }
 /** Task 7s fix round 2 (M3), fix round 3 (I-A, controller ruling; PRONUNCIATION_PAGE): a reply that armed a recording keeps the arm,
  *  unless its LAST sentence is a content question (v2IsContentQuestion) that holds none of the armed items ("…Repeat after me: X.
  *  What did you do last weekend?"): their answer is to that question. Every invitation to speak, hand-over, readiness check or
  *  yes/no "can you say it?" keeps the arm (「発音してみてください。」, "Now you try.", "Ready?", 「言えますか。」): a lost score is worse
- *  than a rare score against the wrong item. */
+ *  than a rare score against the wrong item.
+ *  Fix round 4 (n-b, ruling): kept by default: a last sentence that also invites them to say it (INVITES_TO_SAY: "How would you say
+ *  that word?", 「いつもの発音で言ってみませんか。」) keeps the arm whatever else it holds. */
 export function v2ArmClosesOnOtherAsk(said: string, items: readonly string[]): boolean {
   const last = v2ReplySentences(stripBoardBlocks(said)).pop()?.trim() ?? '';
-  if (!v2IsContentQuestion(last)) return false;
+  if (!v2IsContentQuestion(last) || INVITES_TO_SAY.test(last)) return false;
   const low = last.toLowerCase();
   return !items.some((x) => { const w = x.toLowerCase().replace(/[.!?]+$/, '').trim(); return !!w && low.includes(w); });
 }

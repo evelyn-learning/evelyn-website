@@ -1644,7 +1644,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const arm = state.pronunciation?.armed;
     const armedNow = arm && toolCalls.some((c) => c.name === 'practise_pronunciation' && /^armed/.test(c.outcome));
     if (arm && armedNow && spoken.length && v2ArmClosesOnOtherAsk(spoken.join(' '), arm.items)) {
-      state.pronunciation = { seq: state.pronunciation!.seq, ...(state.pronunciation!.off ? { off: true } : {}) };
+      // Fix round 4 (N-A): the mark the practised-sentence line reads (practice-facts.ts); the next spoken turn uses it up.
+      state.pronunciation = { seq: state.pronunciation!.seq, ...(state.pronunciation!.off ? { off: true } : {}), disarmed: true };
       disarmed = { type: 'pronunciation_disarmed', message: `the reply closed on another question after arming "${arm.reference.slice(0, 60)}"` };
     }
   }

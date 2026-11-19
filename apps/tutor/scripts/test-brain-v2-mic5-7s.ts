@@ -25,7 +25,7 @@ import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import { v2AskedForSentence, v2AskedToProduce, v2CardIsFragment, v2PracticeAnswerSentences } from '../src/lib/tutor/v2/learner-card';
 import { v2SupportLine } from '../src/lib/tutor/v2/adaptive';
 import { v2NextTimeAllLine } from '../src/lib/tutor/v2/plan-map';
-import { v2ArmClosesOnOtherAsk } from '../src/lib/tutor/v2/pronunciation';
+import { v2ArmClosesOnOtherAsk, v2ReadPronunciation } from '../src/lib/tutor/v2/pronunciation';
 import { flagFreeElapsedSec } from '../src/app/tutor/components/session/useFlagClockPause';
 import { stripBoardBlocks } from '../src/lib/tutor/v2/board-inline';
 import { runV2Turn, type V2ModelCall } from '../src/lib/tutor/v2/turn';
@@ -183,8 +183,22 @@ async function probe() {
   const sentScored = await runV2Turn({ session: lang, state: sentHeard, studentSaid: 'I have worked with international customer.', callModel: sentM.call, onText: () => {}, boardPass: false, mathsCheck: false, nowMs: 16.6 * MIN });
   // I2: the review's failing inputs, and #51 through runV2Turn with a two-sentence turn.
   const frag2 = await runV2Turn({ session: lang, state: base([TODAY, JOB, PP, PS, CONV], { history: [u('x'), a('Now ask me a question about where I live.')] }), studentSaid: 'I live in Nagoya. What city do you live in?', callModel: scripted([{ text: `Good question. ${S('What city do you live in?', [])} I live in Gifu.` }]).call, onText: () => {}, boardPass: false, mathsCheck: false, nowMs: 12.8 * MIN });
+  // ── Fix round 4 ──
+  // N-A: the practice sentence is a question of its own after the ask, no arm: their repetition is practice (the line).
+  const NA1 = 'Good. Repeat after me.\n\nWhat did you do last weekend?';
+  const NA2 = 'Ask me a question about my weekend. What would you like to know?';
+  const fNA1 = await factsOf(lang, base([TODAY, JOB, PP, PS], { history: [u('I enjoyed the exhibition a lot.'), a(NA1)] }), 'What did you do last weekend?', 10.4);
+  const fNA2 = await factsOf(lang, base([TODAY, JOB, PP, PS], { history: [u('I enjoyed the exhibition a lot.'), a(NA2)] }), 'What did you do on Saturday?', 10.4);
+  // The M3 shape of the finding: "…Repeat after me: X. What did you do last weekend?" with an arm, then their answer.
+  const ARM_Q4 = 'Good. Repeat after me: "I emailed everyone to ask them to donate." What did you do last weekend?';
+  const armQ4 = await runV2Turn({ session: lang, state: base([TODAY, JOB, PP, PS, CONV], { history: [u('x'), a(ASKS[5]!.ask)] }), studentSaid: ASKS[5]!.answer, callModel: scripted([{ text: ARM_Q4, tools: [{ name: 'practise_pronunciation', input: { items: ['I emailed everyone to ask them to donate.'] } }] }, { text: '' }]).call, onText: () => {}, boardPass: false, mathsCheck: false, nowMs: 13.6 * MIN });
+  const armQ4NextM = scripted([{ text: 'That sounds fun.' }]);
+  // The route's round trip: the pronunciation state as the route reads it back from the client.
+  const armQ4State = structuredClone(armQ4.state); armQ4State.pronunciation = v2ReadPronunciation(JSON.parse(JSON.stringify(armQ4State.pronunciation ?? null)));
+  const armQ4Next = await runV2Turn({ session: lang, state: armQ4State, studentSaid: 'I went to the mountains.', callModel: armQ4NextM.call, onText: () => {}, boardPass: false, mathsCheck: false, nowMs: 14 * MIN });
 
   return {
+    fNA1, fNA2, armQ4Armed: !!armQ4.state.pronunciation?.armed, armQ4Mark: !!armQ4.state.pronunciation?.disarmed, armQ4NextFacts: armQ4NextM.facts.join('\n'), armQ4NextMark: !!armQ4Next.state.pronunciation?.disarmed,
     fBack, fMake, fMakeJa, fStarterBack, fPeriod, fBare,
     armQArmed: !!armQ.state.pronunciation?.armed, armQEvents: (armQ.events ?? []).map((e) => e.type), armQNextFacts: armQNextM.facts.join('\n'), armQNextEvents: (armQNext.events ?? []).map((e) => `${e.type} ${e.message}`), t69Armed: !!pron.state.pronunciation?.armed,
     askedBack: v2AskedToProduce([a(CONV_Q)]), askedT36: v2AskedToProduce([a(T36)]),
@@ -295,6 +309,16 @@ async function main() {
   check('m2: the answer to the disarmed reply\'s closing question gets no practised line (the 7b/7g card line stays)', !/practised sentence:/.test(on.armQNextFacts) && /their answer just now had \d+ sentences? of their own|a sentence of theirs/.test(on.armQNextFacts));
   check('m1: "Could you ask me a question using \'did\'?", "Now you can ask me a question about my weekend.", "Ask me if I have ever been to Japan." are asks to produce; "Feel free to ask me anything." is not', prod("Could you ask me a question using 'did'?") && prod('Now you can ask me a question about my weekend.') && prod('Ask me if I have ever been to Japan.') && !prod('Feel free to ask me anything. What did you do?'));
 
+  console.log('fix round 4');
+  check('N-A: "Good. Repeat after me.\\n\\nWhat did you do last weekend?" (no arm), then their repetition: the practised line', /practised sentence:/.test(on.fNA1), on.fNA1);
+  check('N-A: "Ask me a question about my weekend. What would you like to know?" (no arm), then their question: the practised line', /practised sentence:/.test(on.fNA2), on.fNA2);
+  check('N-A: "…Repeat after me: X. What did you do last weekend?" with an arm: disarmed and marked; their answer gets no practised line; the mark is used up', !on.armQ4Armed && on.armQ4Mark && !/practised sentence:/.test(on.armQ4NextFacts) && !on.armQ4NextMark, [on.armQ4Armed, on.armQ4Mark, on.armQ4NextMark]);
+  check('N-A: the mark is read back by the route only without an arm', v2ReadPronunciation({ seq: 2, disarmed: true })?.disarmed === true && !v2ReadPronunciation({ seq: 2, disarmed: true, armed: { seq: 2, items: ['x'], attempt: 1 } })?.disarmed && !('disarmed' in (v2ReadPronunciation({ seq: 2 }) ?? {})));
+  const KEEP4: Array<[string, string]> = [['How about you try?', 'international'], ['どうでしょう、言えますか。', 'international'], ['どうぞ、言ってみませんか。', 'international'], ['いつもの発音で言ってみませんか。', 'international']];
+  const kept4 = KEEP4.filter(([t, item]) => v2ArmClosesOnOtherAsk(`Listen: "${item}". ${t}`, [item]));
+  check('n-b: "How about you try?", 「どうでしょう、言えますか。」, 「どうぞ、言ってみませんか。」, 「いつもの発音で言ってみませんか。」 keep the arm', kept4.length === 0, kept4);
+  check('n-b: an invitation to say it keeps the arm beside a question word ("Now, how would you say that word?"); いつも / どうぞ are no question words, いつ / どう still are', !v2ArmClosesOnOtherAsk('Listen: "international". Now, how would you say that word?', ['international']) && !v2ArmClosesOnOtherAsk('「international」です。いつもどおりでいいですか。', ['international']) && v2ArmClosesOnOtherAsk('「international」です。いつ行きましたか。', ['international']) && v2ArmClosesOnOtherAsk('「international」です。週末はどうでしたか。', ['international']) && v2ArmClosesOnOtherAsk('Listen: "international". How about your weekend, what did you do?', ['international']));
+
   console.log('each switch off alone (a child process per switch): as at dcdf5430 for that item');
   const child = (flag: string) => {
     const res = spawnSync(process.execPath, [...process.execArgv, __filename], { env: { ...process.env, [`NEXT_PUBLIC_TUTOR_V2_${flag}`]: 'off', MIC5_7S_CHILD: '1' }, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
@@ -305,6 +329,7 @@ async function main() {
   {
     const off = child('PRACTISED_SENTENCE');
     check('PRACTISED_SENTENCE off: no line, and #36 / #59 are no asks for a sentence again', !/practised sentence:/.test(off.f37) && !off.asked36 && !off.asked59);
+    check('fix round 4 (N-A): PRACTISED_SENTENCE off: no line on either input', !/practised sentence:/.test(off.fNA1) && !/practised sentence:/.test(off.fNA2));
     check('PRACTISED_SENTENCE off: the other items unchanged', /starters:/.test(off.f37) && off.practiceSaid?.pronunciation === 1);
   }
   {
@@ -317,6 +342,7 @@ async function main() {
     check('PRONUNCIATION_PAGE off: #76 with the arm gets "Does that make sense?" (as live)', CHECK_IN.test(off.said76), off.said76);
     check('fix round 2 (N5): PRONUNCIATION_PAGE off, PRACTISED_SENTENCE on: the scored "responsibilities." turn after 「繰り返して」 gets no practised line', !/practised sentence:/.test(off.scoredFacts));
     check('fix round 2 (M3): PRONUNCIATION_PAGE off: the arm before another question stands (as before)', off.armQArmed);
+    check('fix round 4 (N-A): PRONUNCIATION_PAGE off: both unarmed inputs still get the practised line; the arm stands unmarked', /practised sentence:/.test(off.fNA1) && /practised sentence:/.test(off.fNA2) && off.armQ4Armed && !off.armQ4Mark, [off.armQ4Armed, off.armQ4Mark]);
   }
   {
     const off = child('QUESTION_NOT_NOTE');
