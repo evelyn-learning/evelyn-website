@@ -2423,3 +2423,42 @@ export const TUTOR_V2_MOSTLY_HEARD = process.env.NEXT_PUBLIC_TUTOR_V2_MOSTLY_HEA
  *  Mic test 8 (embed-1795115593161, wall 02:56: "…we say "washing machines" with an s. Your question … 「…」" went whole to the
  *  Japanese voice) (Task 7y, item 4). Default ON; NEXT_PUBLIC_TUTOR_V2_MIXED_SENTENCE_PARTS=off ⇒ as before. */
 export const TUTOR_V2_MIXED_SENTENCE_PARTS = process.env.NEXT_PUBLIC_TUTOR_V2_MIXED_SENTENCE_PARTS !== 'off';
+
+/** Tutor brain v2 (v2/optional-hold.ts, v2/part-flow.ts): a part opened on the learner's yes whose plan opening question leads with a
+ *  yes/no offer of the part and then gives choices: the facts say they already said yes, to say in a few words that it is starting and
+ *  give the choices (quoted), not to ask again whether they want it, and that its question card holds the choices. Nothing after the
+ *  yes/no: the 7x line as before. Mic test 8 (embed-1795115593161, wall 17:35: "Yes, pronunciation." got the yes/no again) (Task 7z,
+ *  item 1). Default ON; NEXT_PUBLIC_TUTOR_V2_PART_YES_CHOICES=off ⇒ as before. */
+export const TUTOR_V2_PART_YES_CHOICES = process.env.NEXT_PUBLIC_TUTOR_V2_PART_YES_CHOICES !== 'off';
+
+/** Tutor brain v2 (v2/turn.ts, v2/close-check.ts, v2/close-invite.ts, lib/tutor/qpin-behavior.ts, components/v2/useV2Turns.ts): a close
+ *  step whose ask is in state.unheard (the check question, the invitation to ask questions) is not counted as given and is owed again;
+ *  a question pin is not cleared by words said over an ask that was not heard; the check's answer line says reading the card back is
+ *  no explanation; a question card the runtime speaks drops a lead-in clause the sentence just before already said. Mic test 8
+ *  (embed-1795115593161, wall 21:45–22:02: the invitation cut 0.8 s in, then goodbye) (Task 7z, item 2). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_UNHEARD_ASK_OWED=off ⇒ as before. */
+export const TUTOR_V2_UNHEARD_ASK_OWED = process.env.NEXT_PUBLIC_TUTOR_V2_UNHEARD_ASK_OWED !== 'off';
+
+/** Tutor brain v2 (v2/adaptive.ts, v2/facts.ts): in a free-conversation part, a positive facts line: ask the question and stop, a
+ *  sentence starter only after silence or a request for help (the general starter line is not sent then); the "no more corrections
+ *  aloud" line stands beside the card line of their answer. Mic test 8 (embed-1795115593161: 11 starters, 4 corrections aloud) (Task
+ *  7z, item 3). Default ON; NEXT_PUBLIC_TUTOR_V2_FREE_CONV_NO_STARTER=off ⇒ as before. */
+export const TUTOR_V2_FREE_CONV_NO_STARTER = process.env.NEXT_PUBLIC_TUTOR_V2_FREE_CONV_NO_STARTER !== 'off';
+
+/** Tutor brain v2 (v2/turn.ts): in a lesson whose labelled plan opens on an overview part, the opening reply's first page is always
+ *  the overview's page with the plan title as its heading, written before anything the reply writes (which goes under it). Mic test 8
+ *  (embed-1795115593161: an untitled "Page 1" holding the model's grammar note) (Task 7z, item 4). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_OPENING_PAGE_FIRST=off ⇒ as before (the 7w fallback only when the reply painted nothing). */
+export const TUTOR_V2_OPENING_PAGE_FIRST = process.env.NEXT_PUBLIC_TUTOR_V2_OPENING_PAGE_FIRST !== 'off';
+
+/** Tutor brain v2 (v2/adaptive.ts, v2/turn.ts): each recorded correction keeps the tutor question that drew it; the retest line gives
+ *  the corrected sentence and that question, to be asked again in fresh words before the next question. Mic test 8
+ *  (embed-1795115593161: 1 of 3 retests asked; fragments no other question fitted) (Task 7z, item 5). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_RETEST_QUESTION=off ⇒ as before. */
+export const TUTOR_V2_RETEST_QUESTION = process.env.NEXT_PUBLIC_TUTOR_V2_RETEST_QUESTION !== 'off';
+
+/** Tutor brain v2 (v2/optional-hold.ts, v2/facts.ts): once the hold of an optional part taken lifts and the part still has minutes, the
+ *  facts say to ask "one more, or move on?" before leaving it. Facts only. Mic test 8 (embed-1795115593161, wall 20:53: the summary in
+ *  the reply of the second score, 1.2 of its minutes left) (Task 7z, item 6). Default ON; NEXT_PUBLIC_TUTOR_V2_OPTIONAL_ONE_MORE=off ⇒
+ *  as before. */
+export const TUTOR_V2_OPTIONAL_ONE_MORE = process.env.NEXT_PUBLIC_TUTOR_V2_OPTIONAL_ONE_MORE !== 'off';

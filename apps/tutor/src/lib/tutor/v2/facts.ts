@@ -31,7 +31,8 @@ import { v2SummaryGroupsOn, v2SummaryLayoutLine } from './summary-layout';
 import { TUTOR_V2_ASK_ONE_TEST, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_SILENCE_AFTER_ASK } from '../orchestrator/flags';
 import { v2AsksTheLearner } from './one-question';
 import { SentenceStream } from './sentences';
-import { v2OptionalHoldLine, v2PartOpeningQuestion, type V2OptionalHold } from './optional-hold';
+import { v2OptionalHoldLine, v2OptionalOneMoreLine, v2PartOpeningQuestion, type V2OptionalHold } from './optional-hold';
+import { V2_STARTER_LINE } from './practice-facts';
 import { v2AdaptOn } from './adaptive';
 import { TUTOR_V2_PART_FIRST_STEP } from '../orchestrator/flags';
 import { V2_CORRECT_THEN_REPEAT_LINE } from './one-question';
@@ -98,6 +99,14 @@ export interface V2TurnFacts {
   repeatWait?: boolean;
   /** Task 7x (PART_FIRST_STEP): the optional part taken is held (optional-hold.ts v2OptionalHold). */
   optionalHold?: V2OptionalHold;
+  /** Task 7z (UNHEARD_ASK_OWED): the invitation the last reply gave was not heard and is owed again (close-check.ts v2UnheardCloseAsks). */
+  inviteUnheard?: boolean;
+  /** Task 7z (FREE_CONV_NO_STARTER): the free-conversation lines that stand beside the card line of their answer (adaptive.ts), and
+   *  whether the general starter line is left out this turn. */
+  freeConv?: string[];
+  noStarter?: boolean;
+  /** Task 7z (OPTIONAL_ONE_MORE): the optional part taken, its hold lifted, with minutes of its own left (optional-hold.ts). */
+  optionalOneMore?: { label: string; left: number };
 }
 
 /** A quoted span at the very start of a reply, in any of the quote pairs a tutor uses: 「…」, 『…』, “…”, "…", ‘…’, '…'. */
@@ -228,7 +237,9 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   const partUp = !discussion && !stay && !closeOpen && !summaryBegun && !morePracticeAllowed ? v2PartTimeUpLine(session, state, f.nowMs) : null;
   // Task 7v (OPTIONAL_FIT): the wrap is held for an optional part that fits.
   const held = !discussion && f.optionalHeld && !summaryBegun && !morePracticeAllowed ? v2OptionalHeldLine(f.optionalHeld) : null;
-  const timeTail = [stay, partUp, held, optHold && !summaryBegun ? v2OptionalHoldLine(optHold) : null].filter(Boolean).map((x) => `; ${x}`).join('');
+  // Task 7z (OPTIONAL_ONE_MORE): the hold lifted with minutes of the part left: "one more, or move on?" before leaving it.
+  const oneMore = !discussion && !optHold && !summaryBegun && !f.stopAsked && f.optionalOneMore ? v2OptionalOneMoreLine(f.optionalOneMore) : null;
+  const timeTail = [stay, partUp, held, optHold && !summaryBegun ? v2OptionalHoldLine(optHold) : null, oneMore].filter(Boolean).map((x) => `; ${x}`).join('');
   let summaryCorrectionsShown = false;
   const lines = [
     // A discussion runs 8–12 minutes and may close early once the person has chosen where to go next: the teaching
@@ -276,7 +287,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     // Task 7u (CLOSE_CHECK): the plan's check question is its own step before the invitation: while it is owed or waits for their
     // answer, its line stands in place of the invitation's (close-check.ts).
     const check = discussion || (optHold && !closing) ? { lines: [], replacesInvite: false } : v2CloseCheckFacts(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun, heard: f.heard });
-    if (!discussion && !(optHold && !closing) && !check.replacesInvite && !(morePracticeAllowed && typeof state.closeInvitedAt === 'number')) lines.push(...v2CloseInviteFacts(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun, moreTime: leftStop > V2_MORE_PRACTICE_MIN_LEFT }));
+    if (!discussion && !(optHold && !closing) && !check.replacesInvite && !(morePracticeAllowed && typeof state.closeInvitedAt === 'number')) lines.push(...v2CloseInviteFacts(session, state, { nowMs: f.nowMs, stopAsked: !!f.stopAsked, closeByContent: tf.closeByContent, overrun: tf.overrun, moreTime: leftStop > V2_MORE_PRACTICE_MIN_LEFT, ...(f.inviteUnheard ? { inviteUnheard: true } : {}) }));
     lines.push(...check.lines);
     // Task 7u (SUMMARY_GROUPS): near or at the close, before the summary has begun, the summary page's order (summary-layout.ts).
     if (!discussion && (closing || near) && !summaryBegun && !state.closed && v2SummaryGroupsOn(session)) {
@@ -324,7 +335,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   if (!session.homework && !session.homeworkSheet && !discussion) lines.push(...v2PracticeAskFacts(session.languages, state.history, f.heard));
   // Task 7s (PRACTISED_SENTENCE, STARTER_IS_ANSWER, QUESTION_NOT_NOTE): their asked-for sentence is practice, a starter opens the
   // answer, a question goes on a question card (practice-facts.ts; spoken lessons that teach a language only).
-  lines.push(...v2PracticeFactLines(session, state, f.heard));
+  // Task 7z (FREE_CONV_NO_STARTER): in a free-conversation part with no starter due, the general starter line is left out.
+  lines.push(...v2PracticeFactLines(session, state, f.heard).filter((l) => !(f.noStarter && l === V2_STARTER_LINE)));
   // Task 7x (REPEAT_THEN_WAIT): a correction's repeat ask ends the reply. Fix round 2 (N3, ruling): not on a second try at one sentence:
   // the tries line (the correct sentence said, no further try) wins.
   if (f.repeatWait && !retryLines.length) lines.push(V2_CORRECT_THEN_REPEAT_LINE);
@@ -338,6 +350,9 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // language (card-gloss.ts); by the level at this turn.
   lines.push(...v2CardGlossFacts(session, state, f.heard, { ask: TUTOR_V2_CARD_GLOSS_ASK, remind: TUTOR_V2_CARD_GLOSS_REMIND }));
   // Task 7b (BOARD_LEARNER_SENTENCE): their words just now were a sentence: it goes on the board as it should be (learner-card.ts).
+  // Task 7z (FREE_CONV_NO_STARTER): the free-conversation lines (no starter; corrections aloud spent) right before the card line of their
+  // answer, where the model decides how to answer it (mic test 8, embed-1795115593161: corrections aloud after the limit).
+  if (f.freeConv?.length) lines.push(...f.freeConv);
   if (!summaryBegun || f.partVisit) lines.push(...v2LearnerSentenceFacts(session, state, f.heard, f.learnerCards));
   // Task 7g (CARD_EVERY_SENTENCE): sentences of their last answer the last reply left off the board.
   // Task 7m (NO_FALSE_SILENCE): not on a silence turn: the owed card waits for their next answer (mic test 4, 9.94: carded on the

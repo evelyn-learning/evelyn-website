@@ -151,6 +151,20 @@ export function cardQuestion(statement: string): string | null {
   const q = parts.slice(first, last + 1).join(' ');
   return norm(q).length <= SAY_ASK_WORDS ? q : null;
 }
+/** Task 7z (UNHEARD_ASK_OWED): a question card's question spoken by the runtime, without a lead-in clause the sentence said just before it
+ *  already said: "Before we finish, one check question." then the card "Before we finish, can you explain…?" was heard as "Before we
+ *  finish" twice (mic test 8, embed-1795115593161, T101). The lead-in is the words before the question's first comma (at most five);
+ *  they must all stand, in order, in the last sentence said. Only the runtime's own words change; the card is unchanged. */
+export function v2DropSaidLead(question: string, said: string): string {
+  const m = /^([^,，、?？]{2,60})[,，、]\s*(\S[\s\S]*)$/.exec(question.trim());
+  if (!m) return question;
+  const lead = norm(m[1]!);
+  if (!lead.length || lead.length > 5) return question;
+  const last = said.replace(/<board[\s\S]*?<\/board>/g, ' ').trim().split(/(?<=[.!?。！？])\s+/).filter((x) => /[\p{L}\p{N}]/u.test(x)).pop() ?? '';
+  if (!` ${norm(last).join(' ')} `.includes(` ${lead.join(' ')} `)) return question;
+  const rest = m[2]!;
+  return rest.charAt(0).toUpperCase() + rest.slice(1);
+}
 export function unsaidAsk(statement: string, sentences: string[], opts: { questionOnce?: boolean } = {}): string | null {
   const card = statement.replace(/\s+/g, ' ').trim();
   if (!card || !sentences.length) return null;

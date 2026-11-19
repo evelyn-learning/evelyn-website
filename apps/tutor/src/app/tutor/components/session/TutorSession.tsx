@@ -62,7 +62,7 @@ import type { StudentMarkEvent } from '@/lib/tutor/whiteboard/student-marks';
 import { acceptWhiteboardBatch, createSeedGuard, type WhiteboardBatchMeta } from '@/lib/tutor/whiteboard/resume-seed';
 import { DEFAULT_PACE_BIAS } from '@/lib/tutor/voice/pace-preference';
 import { type SessionMode, textModeSecondsPerWord } from '@/lib/tutor/voice/resolve-session-mode';
-import { TUTOR_MANUAL_MIC, TUTOR_AGENDA_RAIL, TUTOR_PAGE_TITLE_HEADER, TUTOR_QPIN_GIST_GROUNDED } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_MANUAL_MIC, TUTOR_AGENDA_RAIL, TUTOR_PAGE_TITLE_HEADER, TUTOR_QPIN_GIST_GROUNDED, TUTOR_V2_UNHEARD_ASK_OWED } from '@/lib/tutor/orchestrator/flags';
 import { lastQuestionSentence, lastAskSentence, stripMarkdownEmphasis, verbatimQuestionPin, languagePinCandidate, pinReplacedByTurn, gistGrounded, stripQuestionLead, repairFragmentGist } from '@/lib/tutor/question-gist-text';
 import { sessionAllowsNonLatin } from '@/lib/tutor/voice/transcript-filters';
 import { isQpinStaleByTurns, shouldClearQpinOnAnswer, QPIN_MAX_TUTOR_TURNS_BEHIND } from '@/lib/tutor/qpin-behavior';
@@ -1320,7 +1320,8 @@ export default function TutorSession(props: TutorSessionProps) {
   const qpinAnswerRefusalRef = useRef<string>('');
   useEffect(() => {
     if (!TUTOR_QUESTION_PIN || !TUTOR_QPIN_CLEAR_ON_ANSWER || !questionPin) return;
-    const decision = shouldClearQpinOnAnswer(transcript, questionPin.turnId, { movedOnClears: sessionMode === 'text' });
+    // Task 7z (UNHEARD_ASK_OWED): v2 only, words said over the pinned ask they did not hear do not clear it.
+    const decision = shouldClearQpinOnAnswer(transcript, questionPin.turnId, { movedOnClears: sessionMode === 'text', ...(TUTOR_V2_UNHEARD_ASK_OWED && brainVersion === 'v2' ? { unheardGist: questionPin.gist } : {}) });
     if (!decision.clear) {
       const key = `${questionPin.turnId}:${decision.reason}`;
       if (qpinAnswerRefusalRef.current !== key) {
@@ -1337,7 +1338,7 @@ export default function TutorSession(props: TutorSessionProps) {
       `${decision.reason === 'moved-on' ? 'answered, and the reply asked nothing more' : 'answered and affirmed'} — "${questionPin.gist.slice(0, 60)}"`,
     );
     setQuestionPin(null);
-  }, [transcript, questionPin, onDebugEvent, sessionMode]);
+  }, [transcript, questionPin, onDebugEvent, sessionMode, brainVersion]);
 
   // R47 Task 3c (review fix): live mirror of the segment id, kept in sync
   // every time it changes — separate from prevQpinSegmentIdRef above

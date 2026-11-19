@@ -15,7 +15,7 @@
  * which only lifts this line). Spoken lessons that teach a language with a labelled plan (adaptive.ts v2AdaptOn). Pure, client-safe.
  */
 import type { Segment } from '../lesson-plan/types';
-import { TUTOR_V2_PART_FIRST_STEP } from '../orchestrator/flags';
+import { TUTOR_V2_OPTIONAL_ONE_MORE, TUTOR_V2_PART_FIRST_STEP, TUTOR_V2_PART_YES_CHOICES } from '../orchestrator/flags';
 import { v2AdaptOn } from './adaptive';
 import { v2PartInHand, v2PartOfPage, v2PartViewed } from './part-flow';
 import { v2PartIsOptional, v2PartOf } from './plan-map';
@@ -34,8 +34,25 @@ export function v2PartOpeningQuestion(seg: Segment | undefined): string | null {
   return t ? t.slice(0, 400) : null;
 }
 
-/** The line of a part opened on their yes (part-flow.ts v2PartAskFacts): its own first step from the plan, asked and waited for. */
-export function v2PartFirstStepLine(opened: string, question: string): string {
+/** Task 7z (PART_YES_CHOICES): a sentence that offers the part itself as a yes/no ("Would you like to practice your pronunciation?",
+ *  "Do you want to try some?"): a question that asks whether they want it, with no "or" (an "or" makes it a choice). */
+const YES_NO_OFFER = /^(?:(?:so|now|okay|ok|great|good)[,!.]?\s+)?(?:would you like|do you want|would you care|do you wish|are you ready|shall we|should we|can we|could we)\b[^?]*\?["'”’)]*$/i;
+/** Task 7z (PART_YES_CHOICES): the plan's opening question split at a leading yes/no offer of the part: the offer and the choices that
+ *  follow it. Null when it does not lead with such an offer, or nothing follows it. A phrase test that only informs a facts line. */
+export function v2PartYesChoices(question: string): { offer: string; choices: string } | null {
+  const parts = question.replace(/\s+/g, ' ').trim().split(/(?<=[.?!])\s+/).filter(Boolean);
+  let k = 0;
+  while (k < parts.length && YES_NO_OFFER.test(parts[k]!) && !/\bor\b/i.test(parts[k]!)) k += 1;
+  if (k === 0 || k >= parts.length) return null;
+  return { offer: parts.slice(0, k).join(' '), choices: parts.slice(k).join(' ') };
+}
+
+/** The line of a part opened on their yes (part-flow.ts v2PartAskFacts): its own first step from the plan, asked and waited for.
+ *  Task 7z (PART_YES_CHOICES, `yesChoices`): when the question leads with a yes/no offer of the part and choices follow, they already
+ *  said yes: the line gives the choices only, and the card holds them (mic test 8, embed-1795115593161, T89–T91). */
+export function v2PartFirstStepLine(opened: string, question: string, yesChoices: boolean = TUTOR_V2_PART_YES_CHOICES): string {
+  const split = yesChoices ? v2PartYesChoices(question) : null;
+  if (split) return `they said yes to going on: the "${opened}" page is open now, headed by the part's name. They have already said yes to this part, so do not ask again whether they want it (the plan's "${split.offer}" is answered). Begin it in this reply: say in a few words that you are starting it, then give its choices from the plan: "${split.choices}". Put those choices on its question card (a <board problem> block holding the choices, not the yes/no question), and wait for their answer: no item, exercise or question of your own before it. Do not open its page again`;
   return `they said yes to going on: the "${opened}" page is open now, headed by the part's name. Begin that part in this reply with its own first step from the plan: its opening question is "${question}". Ask THAT question in this reply (after at most the short introduction the plan's note gives), in its words or close to them with every choice it offers, and wait for their answer: no item, exercise or question of your own before it. Do not open its page again`;
 }
 
@@ -57,11 +74,12 @@ export function v2NoteOptionalLeave(session: V2Session, state: V2State, said: st
   if (stopAsked || LEAVE.test(words) || BARE_NO.test(words)) state.optionalLeft = [...(state.optionalLeft ?? []), seg.id].slice(-20);
 }
 
-/** The optional part taken and in hand, while it is held: its name, items done, and the minutes left of its first half (null when
- *  only the item minimum holds it). Null: no such part, it is done by both rules, they asked to leave it, the summary has begun. */
-export function v2OptionalHold(session: V2Session, state: V2State, nowMs: number, marginMin: number, enabled: boolean = TUTOR_V2_PART_FIRST_STEP): V2OptionalHold | null {
+/** The optional part taken and in hand, as the hold reads it: its name, items done, the minutes left of its first half (null: past it,
+ *  or it no longer fits), and the minutes left of its own (null: not known, or it no longer fits). Null: no such part, they asked to leave
+ *  it, the summary has begun. */
+function optionalInHand(session: V2Session, state: V2State, nowMs: number, marginMin: number): (V2OptionalHold & { ownLeft: number | null }) | null {
   const plan = session.plan; const box = session.timeBoxMinutes;
-  if (!enabled || !plan || !box || !v2AdaptOn(session) || state.closed || typeof state.summaryBegunAt === 'number') return null;
+  if (!plan || !box || !v2AdaptOn(session) || state.closed || typeof state.summaryBegunAt === 'number') return null;
   if (v2PartViewed(plan, state) >= 0) return null;
   const cur = v2PartInHand(plan, state); const seg = plan.segments[cur];
   if (!seg || cur >= plan.segments.length - 1 || !v2PartIsOptional(seg) || state.timeFit?.dropped.includes(seg.id) || state.goals[seg.id]?.status === 'skipped' || (state.optionalLeft ?? []).includes(seg.id) || (state.moveOnAsked ?? []).includes(seg.id)) return null;
@@ -70,16 +88,39 @@ export function v2OptionalHold(session: V2Session, state: V2State, nowMs: number
   const items = v2PracticePart(plan, cur) ? state.practiceSaid?.[seg.id] ?? 0 : new Set(state.board.pages.filter((pg) => v2PartOfPage(plan, pg.title) === cur)
     .flatMap((pg) => pg.items.filter((it) => it.tool === 'show_sentence').map((it) => (it.core ?? it.summary).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim()))).size;
   const own = v2PartOf(seg).minutes;
-  let halfLeft: number | null = null;
+  let halfLeft: number | null = null; let ownLeft: number | null = null;
   if (own && state.partStart?.part === seg.id) {
     const lessonUsed = (nowMs - state.startedAtMs) / 60000;
     const usedIn = Math.max(0, (nowMs - state.partStart.at) / 60000);
     const after = plan.segments.slice(cur + 1).filter((x) => !v2PartIsOptional(x) && state.goals[x.id]?.status !== 'skipped' && !state.timeFit?.dropped.includes(x.id)).reduce((t, x) => t + (v2PartOf(x).minutes ?? 0), 0);
     const fits = lessonUsed + Math.max(0, own - usedIn) + after <= box + marginMin - V2_HOLD_SLACK_MIN + 1e-9;
     if (fits && usedIn < own / 2) halfLeft = own / 2 - usedIn;
+    if (fits && usedIn < own) ownLeft = own - usedIn;
   }
-  if (items >= V2_OPTIONAL_MIN_ITEMS && halfLeft === null) return null;
-  return { label: v2PartOf(seg).label ?? seg.id, items, minItems: V2_OPTIONAL_MIN_ITEMS, halfLeft };
+  return { label: v2PartOf(seg).label ?? seg.id, items, minItems: V2_OPTIONAL_MIN_ITEMS, halfLeft, ownLeft };
+}
+
+/** The optional part taken and in hand, while it is held: its name, items done, and the minutes left of its first half (null when
+ *  only the item minimum holds it). Null: no such part, it is done by both rules, they asked to leave it, the summary has begun. */
+export function v2OptionalHold(session: V2Session, state: V2State, nowMs: number, marginMin: number, enabled: boolean = TUTOR_V2_PART_FIRST_STEP): V2OptionalHold | null {
+  if (!enabled) return null;
+  const h = optionalInHand(session, state, nowMs, marginMin);
+  if (!h || (h.items >= V2_OPTIONAL_MIN_ITEMS && h.halfLeft === null)) return null;
+  return { label: h.label, items: h.items, minItems: h.minItems, halfLeft: h.halfLeft };
+}
+
+/** Task 7z (OPTIONAL_ONE_MORE): the optional part taken, its hold lifted (its items and half its minutes done), with minutes of its own
+ *  still left and fitting: its name and those minutes. Null otherwise (also while held: the hold's line says it). Facts only. */
+export function v2OptionalOneMore(session: V2Session, state: V2State, nowMs: number, marginMin: number, enabled: boolean = TUTOR_V2_OPTIONAL_ONE_MORE && TUTOR_V2_PART_FIRST_STEP): { label: string; left: number } | null {
+  if (!enabled) return null;
+  const h = optionalInHand(session, state, nowMs, marginMin);
+  if (!h || h.items < V2_OPTIONAL_MIN_ITEMS || h.halfLeft !== null || h.ownLeft === null) return null;
+  return { label: h.label, left: h.ownLeft };
+}
+
+/** Task 7z (OPTIONAL_ONE_MORE): the time line's addition then. */
+export function v2OptionalOneMoreLine(o: { label: string; left: number }): string {
+  return `the optional ${o.label} part has had its items and still has about ${Math.max(1, Math.round(o.left))} minute${Math.round(o.left) > 1 ? 's' : ''} of its own: after the result of an item, ask whether they would like one more or to move on, and leave it only after their answer (at once if they ask to stop or move on)`;
 }
 
 /** The time line's addition while the optional part is held. */

@@ -27,7 +27,7 @@ import { V2_UNHEARD_SAID } from '@/lib/tutor/v2/heard';
 import { V2_CONTROL_TOOL_NAMES } from '@/lib/tutor/v2/tool-names';
 import { mentionsTool } from '@/lib/tutor/v2/tool-talk';
 import { newV2State, type V2State, type V2ToolCall } from '@/lib/tutor/v2/types';
-import { TUTOR_LESSON_CLOSE_AUTO_END, TUTOR_V2_CHIP_ON_PAINT, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FLAG_CLOCK_PAUSE, TUTOR_V2_TIME_BOX, TUTOR_WORKING_LEVEL, TUTOR_WORKING_LEVEL_ESTIMATE } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_LESSON_CLOSE_AUTO_END, TUTOR_V2_CHIP_ON_PAINT, TUTOR_V2_UNHEARD_ASK_OWED, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FLAG_CLOCK_PAUSE, TUTOR_V2_TIME_BOX, TUTOR_WORKING_LEVEL, TUTOR_WORKING_LEVEL_ESTIMATE } from '@/lib/tutor/orchestrator/flags';
 import { V2_CLOCK_PAUSE_HONOURED, v2HardStop, v2HardStopDelayMs, v2HardStopMinutes, v2StartClock } from '@/lib/tutor/v2/time-box';
 import { v2HardStopNextTime } from '@/lib/tutor/v2/close-invite';
 import { goodbyeLine } from '@/lib/tutor/voice/timebox-lines';
@@ -278,7 +278,10 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     busyRef.current = true; setBusy(true); p.current.onTutorBusy?.(true);
     const stamp = Date.now();
     // Noise is not stored as their words: 5,000 characters of 、 and 号 went into the session's transcript (Task 6e).
-    if (studentSaid && !unheard) transcriptRef.current = [...transcriptRef.current, { id: `student-${stamp}`, timestamp: new Date(), role: 'student', text: studentSaid }];
+    // Task 7z (UNHEARD_ASK_OWED): the entry keeps the sentences of the last reply these words came over unheard (the barge-in record), so a
+    // question pin among them is not cleared by them (TutorSession, qpin-behavior.ts).
+    const overUnheard = TUTOR_V2_UNHEARD_ASK_OWED && stateRef.current.unheard?.length ? [...stateRef.current.unheard] : null;
+    if (studentSaid && !unheard) transcriptRef.current = [...transcriptRef.current, { id: `student-${stamp}`, timestamp: new Date(), role: 'student', text: studentSaid, ...(overUnheard ? { overUnheard } : {}) }];
     // Task 7v (SELF_CORRECTION): their words of a turn cut before anything reached them go to the brain with the words that cut it
     // (the transcript already holds them): "for senior bosses." reached it alone and was corrected as a fragment (embed-1795067373124).
     const carried = carriedSaidRef.current; carriedSaidRef.current = null;

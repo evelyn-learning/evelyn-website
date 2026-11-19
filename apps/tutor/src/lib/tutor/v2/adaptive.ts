@@ -23,7 +23,7 @@
  * visit). Keyed on the session, never on a partner. Pure, client-safe.
  */
 import type { LessonPlan } from '../lesson-plan/types';
-import { TUTOR_V2_FREE_CONVERSATION, TUTOR_V2_PART_CLOCK, TUTOR_V2_RETEST_ASKED, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_RETEST_SPREAD, TUTOR_V2_RETEST_TARGET_CHANGED, TUTOR_V2_STARTER_IS_ANSWER, TUTOR_V2_SUPPORT_FOLLOWED, TUTOR_V2_SUPPORT_STEPS } from '../orchestrator/flags';
+import { TUTOR_V2_FREE_CONV_NO_STARTER, TUTOR_V2_FREE_CONVERSATION, TUTOR_V2_PART_CLOCK, TUTOR_V2_RETEST_QUESTION, TUTOR_V2_RETEST_ASKED, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_RETEST_SPREAD, TUTOR_V2_RETEST_TARGET_CHANGED, TUTOR_V2_STARTER_IS_ANSWER, TUTOR_V2_SUPPORT_FOLLOWED, TUTOR_V2_SUPPORT_STEPS } from '../orchestrator/flags';
 import { v2AskedForQuestion, v2CardIsOf, v2SentenceWords } from './learner-card';
 import { v2NoteTargetsOn } from './note-targets';
 import { v2PartInHand, v2PartViewed, v2PlanLabelled, v2TutorReplies } from './part-flow';
@@ -36,13 +36,16 @@ import type { V2Retest, V2Session, V2State, V2Support, V2SupportStep, V2TurnEven
 /** Task 7v: `changed` (RETEST_TARGET_CHANGED), `spread` (RETEST_SPREAD), `followed` (SUPPORT_FOLLOWED): each only where its 7q switch
  *  is on; absent = its flag. */
 /** Task 7x: `free` (FREE_CONVERSATION), `asked` (RETEST_ASKED); absent = its flag. */
-export interface V2AdaptFlags { support: boolean; retest: boolean; changed?: boolean; spread?: boolean; followed?: boolean; free?: boolean; asked?: boolean }
+/** Task 7z: `noStarter` (FREE_CONV_NO_STARTER), `question` (RETEST_QUESTION); absent = its flag. */
+export interface V2AdaptFlags { support: boolean; retest: boolean; changed?: boolean; spread?: boolean; followed?: boolean; free?: boolean; asked?: boolean; noStarter?: boolean; question?: boolean }
 const FLAGS = (): V2AdaptFlags => ({ support: TUTOR_V2_SUPPORT_STEPS, retest: TUTOR_V2_RETEST_MISTAKE });
 const changedOn = (f: V2AdaptFlags) => f.changed ?? TUTOR_V2_RETEST_TARGET_CHANGED;
 const spreadOn = (f: V2AdaptFlags) => f.spread ?? TUTOR_V2_RETEST_SPREAD;
 const followedOn = (f: V2AdaptFlags) => f.followed ?? TUTOR_V2_SUPPORT_FOLLOWED;
 const freeOn = (f: V2AdaptFlags) => f.free ?? TUTOR_V2_FREE_CONVERSATION;
 const askedOn = (f: V2AdaptFlags) => f.asked ?? TUTOR_V2_RETEST_ASKED;
+const noStarterOn = (f: V2AdaptFlags) => freeOn(f) && (f.noStarter ?? TUTOR_V2_FREE_CONV_NO_STARTER);
+const questionOn = (f: V2AdaptFlags) => askedOn(f) && (f.question ?? TUTOR_V2_RETEST_QUESTION);
 
 export const V2_SUPPORT_STEPS: readonly V2SupportStep[] = ['stretch', 'normal', 'starter', 'gap', 'repeat'];
 /** Answers in a row that move the step. */
@@ -228,9 +231,13 @@ export function v2PartBehind(session: V2Session, state: V2State, index: number, 
 
 /** Before the facts (mutates `state`): a part change moves the step one towards normal; an open retest left behind in another
  *  part is not asked; the lines for this turn (support step, retest ask, praise). */
-export function v2AdaptBefore(session: V2Session, state: V2State, heard: string | null | undefined, nowMs: number, flags: V2AdaptFlags = FLAGS()): { lines: string[]; events: V2TurnEvent[] } {
+/** Task 7z (FREE_CONV_NO_STARTER): `free`, the free-conversation part's lines that stand beside the card line of their answer (the
+ *  no-starter line, and the corrections-aloud-spent line), and `noStarter`, the general starter line is not sent this turn. */
+export function v2AdaptBefore(session: V2Session, state: V2State, heard: string | null | undefined, nowMs: number, flags: V2AdaptFlags = FLAGS()): { lines: string[]; events: V2TurnEvent[]; free?: string[]; noStarter?: true } {
   const lines: string[] = []; const events: V2TurnEvent[] = [];
-  if ((!flags.support && !flags.retest) || !v2AdaptOn(session)) return { lines, events };
+  const freeLines: string[] = []; let noStarter = false;
+  const out = () => ({ lines, events, ...(freeLines.length ? { free: freeLines } : {}), ...(noStarter ? { noStarter: true as const } : {}) });
+  if ((!flags.support && !flags.retest) || !v2AdaptOn(session)) return out();
   const plan = session.plan!;
   const part = v2AdaptPart(session, state);
   // The number of this turn's reply (v2AdaptAfter counts it once the reply is in the history): both name the same turn.
@@ -252,11 +259,20 @@ export function v2AdaptBefore(session: V2Session, state: V2State, heard: string 
   }
   if (free && part && said) {
     const fl = v2FreeConvLines(session, state, part, nowMs);
-    lines.push(...fl);
+    // Task 7z (FREE_CONV_NO_STARTER, mic test 8, embed-1795115593161: 11 "Start with: …" with no starter line sent, 4 corrections aloud):
+    // a positive line, ask and stop, a starter only after silence or a request for help; it and the corrections-spent line stand beside
+    // the card line of their answer (facts.ts), not among the next question's lines.
+    if (noStarterOn(flags)) {
+      const helped = v2AskedForHelp(heard) || v2SilenceBefore(state.history);
+      if (!helped) { freeLines.push(V2_FREE_CONV_NO_STARTER_LINE); noStarter = true; }
+      const spent = fl.filter((l) => l.startsWith('corrections in this conversation part'));
+      freeLines.push(...spent);
+      lines.push(...fl.filter((l) => !spent.includes(l)));
+    } else lines.push(...fl);
     // Fix round 1 (m4): the invitation's sends counted.
     if (fl.some((l) => l.startsWith('your turn to be asked'))) { const fc = state.freeConv?.part === part.id ? state.freeConv : { part: part.id, corrected: 0 }; state.freeConv = { ...fc, asks: (fc.asks ?? 0) + 1 }; }
   }
-  if (!flags.retest) return { lines, events };
+  if (!flags.retest) return out();
   const list = state.retests ?? [];
   // An open retest is not asked when: the lesson is in another practice part, or at its summary or close (fix round 1, M3: not on
   // a turn on the pronunciation page or a 7k visit, from which the part comes back); or its last send's answer has gone by
@@ -269,7 +285,7 @@ export function v2AdaptBefore(session: V2Session, state: V2State, heard: string 
     const spent = !askedOn(flags) && (r.offered ?? 0) >= V2_RETEST_TURNS && typeof r.lastAt === 'number' && turn > r.lastAt + 1;
     if (left || spent) { r.outcome = 'not_asked'; events.push(ev('v2_retest_outcome', `target=${quoteTarget(r.target)} outcome=not_asked part=${r.in} turn=${turn}`)); }
   }
-  if (!part || !said) return { lines, events };
+  if (!part || !said) return out();
   const open = list.find((r) => r.offered && !r.outcome);
   // Their answer just now uses the target of the open retest: one word of praise is allowed, once, if it is right.
   if (open && !open.praised && heard && passesRetest(heard, open, flags)) {
@@ -280,7 +296,7 @@ export function v2AdaptBefore(session: V2Session, state: V2State, heard: string 
     const named = runs.length === open.target.length ? runs.filter((_, i) => usesTarget(heard, [open.target[i]!])) : [];
     const praise = named.length ? named : open.target;
     lines.push(`retest: their answer just now uses ${quoteTarget(open.target)}, which they got wrong earlier in the lesson ("${open.said}"). If it is right there, you may add one short word of praise that names it (you said ${quoteTarget(praise)} this time); once only`);
-    return { lines, events };
+    return out();
   }
   let ask: V2Retest | undefined;
   if (open && (open.offered ?? 0) < retestTurns(flags)) ask = open;
@@ -300,10 +316,11 @@ export function v2AdaptBefore(session: V2Session, state: V2State, heard: string 
     events.push(ev('v2_retest_offered', `target=${quoteTarget(ask.target)} part=${part.id} from=${ask.part} send=${ask.offered}/${retestTurns(flags)} turn=${turn}`));
     // Task 7x (RETEST_ASKED): the instruction for the next question, one imperative sentence that gives its aim (mic test 7: six offered
     // as background, none asked).
-    if (askedOn(flags)) lines.push(v2RetestAskLine(plan, ask));
+    if (questionOn(flags) && ask.question) lines.push(v2RetestQuestionLine(ask));
+    else if (askedOn(flags)) lines.push(v2RetestAskLine(plan, ask));
     else lines.push(`retest of an earlier mistake: in the ${label(plan, ask.part)} part they said "${ask.said}" where "${ask.right}" was right (the point: ${quoteTarget(ask.target)}). If it fits this part's own topic, shape ONE of your questions in this part so that a natural answer needs ${quoteTarget(ask.target)}; do not mention the earlier mistake before they answer. If it does not fit, leave it`);
   }
-  return { lines, events };
+  return out();
 }
 
 /** One sentence of their answer and the card this reply gave it: right as said, or corrected (its stress words). */
@@ -332,7 +349,9 @@ export function v2PracticePairs(sentences: readonly string[], cards: ReadonlyArr
 /** After the reply (mutates `state`): this answer counted (one that needed a correction, or right), the step moved, corrections
  *  recorded, the open retest's outcome. `part`: the practice part the answer was given in (v2AdaptPart before the reply), null
  *  where nothing applies. `uncarded`: their answer had sentences of theirs and the reply carded none of them. */
-export function v2AdaptAfter(session: V2Session, state: V2State, part: { index: number; id: string } | null, sentences: readonly string[], pairs: readonly V2PracticePair[], flags: V2AdaptFlags = FLAGS()): V2TurnEvent[] {
+/** Task 7z (RETEST_QUESTION): `question`, the question of the tutor's reply their answer replies to (v2QuestionOfReply), kept with a
+ *  correction recorded now. */
+export function v2AdaptAfter(session: V2Session, state: V2State, part: { index: number; id: string } | null, sentences: readonly string[], pairs: readonly V2PracticePair[], flags: V2AdaptFlags = FLAGS(), question?: string | null): V2TurnEvent[] {
   const events: V2TurnEvent[] = [];
   if ((!flags.support && !flags.retest) || !part || !v2AdaptOn(session) || state.closed) return events;
   const turn = v2TutorReplies(state.history);
@@ -378,7 +397,7 @@ export function v2AdaptAfter(session: V2Session, state: V2State, part: { index: 
       if (list.filter((r) => r.part === part.id).length >= V2_RETEST_PER_PART) continue;
       if (list.length >= V2_RETEST_MAX_KEPT) { const k = list.findIndex((r) => !r.offered && !r.outcome); if (k < 0) continue; const gone = list.splice(k, 1)[0]!; events.push(ev('v2_retest_replaced', `target=${quoteTarget(gone.target)} part=${gone.part} by=${quoteTarget(p.stress)} turn=${turn}`)); }
     } else if (list.length >= V2_RETEST_MAX_KEPT) continue;
-    list.push({ part: part.id, said: p.said, right: p.card, target: p.stress, turn });
+    list.push({ part: part.id, said: p.said, right: p.card, target: p.stress, turn, ...(questionOn(flags) && question ? { question: question.slice(0, MAX_CHARS) } : {}) });
     events.push(ev('v2_retest_recorded', `target=${quoteTarget(p.stress)} part=${part.id} turn=${turn}`));
   }
   if (list.length) state.retests = list;
@@ -417,7 +436,9 @@ export function v2ReadAdaptive(raw: Partial<Record<keyof V2State, unknown>>): Pi
         ...(typeof r.askedAt === 'number' && Number.isFinite(r.askedAt) && r.askedAt >= 0 ? { askedAt: count(r.askedAt, 10000) } : {}),
         ...(typeof r.lastAt === 'number' && Number.isFinite(r.lastAt) && r.lastAt >= 0 ? { lastAt: count(r.lastAt, 10000) } : {}),
         ...(r.outcome === 'passed' || r.outcome === 'missed' || r.outcome === 'not_asked' ? { outcome: r.outcome } : {}),
-        ...(r.praised === true ? { praised: true as const } : {}) });
+        ...(r.praised === true ? { praised: true as const } : {}),
+        // Task 7z (RETEST_QUESTION): the question that drew the corrected answer.
+        ...(str(r.question) ? { question: str(r.question)! } : {}) });
     }
     if (list.length) out.retests = list;
   }
@@ -427,6 +448,25 @@ export function v2ReadAdaptive(raw: Partial<Record<keyof V2State, unknown>>): Pi
 /** Task 7x (RETEST_ASKED): the retest as the instruction for the next question: one imperative sentence that gives its aim. */
 export function v2RetestAskLine(plan: LessonPlan, r: V2Retest): string {
   return `next question's aim (a retest of an earlier mistake): Your next new question must make them say ${quoteTarget(r.target)}; for example ask about something whose natural answer is like "${r.right}" (in the ${label(plan, r.part)} part they said "${r.said}"). Keep it on this part's topic; do not mention the earlier mistake before they answer. A correction, a retry it asks for and one question a reply stay as they are`;
+}
+
+/** Task 7z (FREE_CONV_NO_STARTER): the free-conversation part's positive line (no part or topic named). */
+export const V2_FREE_CONV_NO_STARTER_LINE = 'free conversation: this part is a conversation, not a drill. Respond to what they said, then ask your one question and stop there: no sentence starter ("Start with: …") and no example answer after it. Give a starter only after they have been silent or have asked for help';
+
+/** Task 7z (RETEST_QUESTION): the retest as the corrected sentence and the question that drew it, asked again in fresh words. */
+export function v2RetestQuestionLine(r: V2Retest): string {
+  return `next question's aim (a retest of an earlier mistake): earlier they needed help with "${r.right}"; in this reply, before your next question, ask them "${r.question}" again in fresh words. Do not mention the earlier mistake before they answer. A correction, a retry it asks for and one question a reply stay as they are`;
+}
+
+/** Task 7z (RETEST_QUESTION): the question of the tutor's reply that their answer replies to: the last sentence of it that asks
+ *  ("?" / "？"), a Latin-script one first (the language taught); null when it asked none. */
+export function v2QuestionOfReply(text: string): string | null {
+  const flat = text.replace(/<board[\s\S]*?<\/board>/g, ' ').replace(/\[cut off[^\]]*\]/gi, ' ').replace(/\s+/g, ' ').trim();
+  const parts = flat.split(/(?<=[.!?。！？]["'”’」)]*)\s*/).map((x) => x.trim()).filter((x) => /[?？]["'”’」)]*$/.test(x));
+  const latin = parts.filter((x) => /[A-Za-z]/.test(x) && !/[\u3040-\u30ff\u4e00-\u9fff]/.test(x));
+  const q = (latin.length ? latin : parts).pop();
+  // A short lead before a colon ("I asked: What kind of…?") is not the question.
+  return q ? q.replace(/^[^:：?？]{1,30}[:：]\s*(?=["'“‘]?[A-Z])/, '').replace(/^["'“‘]+|["'”’]+$/g, '').slice(0, MAX_CHARS) : null;
 }
 
 /** Task 7x (FREE_CONVERSATION): their words just now ask for help or are a question ("How do I say…?", "What should I say?",

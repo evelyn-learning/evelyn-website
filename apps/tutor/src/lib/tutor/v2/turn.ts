@@ -24,7 +24,7 @@ import { catalogueSubjects, figureCatalogueFor, tutorFigureLines } from './figur
 import { applyToModelBoard, boardMisfit, renderBoard, summariseBoardCall, taskOnly, spacedRoman, wordsAsText } from './board';
 import { BoardInlineStream, boardBlocksIn, inlineToolCall, insertBlock, stripBoardBlocks, type InlineBlock, type InlinePart } from './board-inline';
 import { speaksMaths, unwrittenEquations } from './spoken-maths';
-import { cardQuestion, saidCovers, sentenceCardToSay, unsaidAsk, unsaidBoardItem, asksAnywhere, noteSentencesToSay, pointsBackAtBoard } from './board-timing';
+import { cardQuestion, v2DropSaidLead, saidCovers, sentenceCardToSay, unsaidAsk, unsaidBoardItem, asksAnywhere, noteSentencesToSay, pointsBackAtBoard } from './board-timing';
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, v2AskEveryOn, v2SummaryBegun, V2_NO_ASK_RECHECK_S, V2_TIME_UP_MIN, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
 import { v2CloseOpen, v2LeftToStopMin, v2LessonNowMs, v2OverrunMin, v2PlanContentDone, v2TimeFlags, v2WrapDue, v2WrapMin, type V2TimeFlags } from './time-box';
@@ -46,13 +46,13 @@ import { v2NoteCorrectedSentence, v2SentenceCardsOn, v2SentenceCardsSection } fr
 import { V2_SUMMARY_CARDS_FULL, v2SummaryCardsFull, v2SummaryGroupsOn } from './summary-layout';
 import { v2NoteCorrection, v2SummaryCardCheck } from './summary-marks';
 import { v2SummaryOpensCloseOn } from './summary-close';
-import { V2_CLOSE_CHECK_REFUSAL, v2CheckCardText, v2CloseCheckOwed, v2CloseCheckPending, v2PlanCheckQuestion } from './close-check';
-import { v2NoteOptionalLeave, v2OptionalHold } from './optional-hold';
-import { v2AdaptAfter, v2AdaptBefore, v2AdaptOn, v2AdaptPart, v2FreeConvAfter, v2FreeConvQuiet, v2PracticePairs } from './adaptive';
+import { V2_CLOSE_CHECK_REFUSAL, v2CheckCardText, v2CloseCheckOwed, v2CloseCheckPending, v2PlanCheckQuestion, v2UnheardCloseAsks } from './close-check';
+import { v2NoteOptionalLeave, v2OptionalHold, v2OptionalOneMore } from './optional-hold';
+import { v2AdaptAfter, v2AdaptBefore, v2AdaptOn, v2AdaptPart, v2FreeConvAfter, v2FreeConvQuiet, v2PracticePairs, v2QuestionOfReply } from './adaptive';
 import { LearnerCardWatch, V2_REPLY_MISHEARD, v2CardIsFragment, v2LearnerCardsOn, v2OwedCardCheckLine, v2PracticeAnswerSentences, v2SentenceOnBoard, v2SentencesNotCarded } from './learner-card';
 import { v2StopAsked } from './stop-signal';
 import { V2_CLOSE_INVITE_LINE, V2_CLOSE_INVITE_REFUSAL, V2_CLOSE_INVITE_WAIT, V2_CLOSE_MORE_LINE, V2_CLOSE_REOPEN_REFUSAL, v2CloseInviteOn, v2CloseInviteOwed, v2CloseReopened, v2ReplyAsksMoreOrFinish, v2ReplyInvites } from './close-invite';
-import { TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_NOTE_TARGET_QUOTES, TUTOR_V2_NOTE_TARGET_MARK, TUTOR_V2_NOTE_STRESS_MARK, TUTOR_V2_NO_MARKDOWN_STARS, TUTOR_V2_CARD_GLOSS_SHOW, TUTOR_V2_SUPPORT_STEPS, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_PART_GO_NAMED, TUTOR_V2_PRONUNCIATION_PAGE, TUTOR_V2_FRAGMENT_CARD, TUTOR_V2_CARD_AT_SENTENCE, TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_RETEST_TARGET_CHANGED, TUTOR_V2_OPENING_PAGE_TITLE, TUTOR_V2_FREE_CONVERSATION, TUTOR_V2_REPEAT_THEN_WAIT } from '../orchestrator/flags';
+import { TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_NOTE_TARGET_QUOTES, TUTOR_V2_NOTE_TARGET_MARK, TUTOR_V2_NOTE_STRESS_MARK, TUTOR_V2_NO_MARKDOWN_STARS, TUTOR_V2_CARD_GLOSS_SHOW, TUTOR_V2_SUPPORT_STEPS, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_PART_GO_NAMED, TUTOR_V2_PRONUNCIATION_PAGE, TUTOR_V2_FRAGMENT_CARD, TUTOR_V2_CARD_AT_SENTENCE, TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_RETEST_TARGET_CHANGED, TUTOR_V2_OPENING_PAGE_TITLE, TUTOR_V2_FREE_CONVERSATION, TUTOR_V2_REPEAT_THEN_WAIT, TUTOR_V2_OPENING_PAGE_FIRST, TUTOR_V2_UNHEARD_ASK_OWED } from '../orchestrator/flags';
 import { v2CardGlossOn, v2CleanGloss, v2GlossLevelOn } from './card-gloss';
 import { v2NoteTargetsOn, v2NoteTargetsSection, v2NoteHasTarget, v2NoteStressWords } from './note-targets';
 import { V2StarStrip, v2StripStars } from './markdown-stars';
@@ -465,6 +465,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Task 7k (CLOSE_REOPENED): a close the client marked reopened (spoken over: useV2Turns) is re-armed: closeInvitedAt clears,
   // so the next end_lesson waits for the ask "more, or finish?" once (the 7d deferral), and the facts press no goodbye.
   if (TUTOR_V2_CLOSE_REOPENED && !state.closed && typeof state.closeReopened === 'number') delete state.closeInvitedAt;
+  // Task 7z (UNHEARD_ASK_OWED): a close step whose ask the learner did not hear (state.unheard: they spoke over it) is not counted as
+  // given and is owed again: the invitation (closeInvitedAt clears) or the check question (owed in this reply). Mic test 8
+  // (embed-1795115593161, T103–T105). Read before inviteOwed / checkOwed below.
+  const unheardAsks = v2UnheardCloseAsks(session, state, { nowMs, stopAsked });
   const reopened = v2CloseReopened(state);
   // …and after the invitation, their words asking for more practice or another part (recognising only: the facts allow it, and
   // an end_lesson in this reply is never refused for it, 7f E). The close is reopened after the reply, only if the reply did
@@ -606,7 +610,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // then whether it is still held (optional-hold.ts). Facts only.
   if (!released) v2NoteOptionalLeave(session, state, input.studentSaid, stopAsked);
   const optionalHold = !closingTurn && !discussion ? v2OptionalHold(session, state, nowMs, marginMin) : null;
-  const facts = renderFacts(session, state, { ...input.facts, nowMs, ...(adaptBefore.lines.length ? { adaptive: adaptBefore.lines } : {}), heard: input.studentSaid, time: tf, ...(practiceShort ? { practiceShort } : {}), ...(morePractice !== undefined ? { morePractice } : {}), ...(stopAsked ? { stopAsked: true } : {}), ...(levelReopened ? { levelReopened: true } : {}), ...(released ? { partOpened: String(released.args.title) } : {}), ...(input.partFlags?.askEvery !== undefined ? { partAskEvery: input.partFlags.askEvery } : {}), ...(droppedAsked ? { droppedAsked } : {}), ...(partVisit ? { partVisit } : {}), ...(partAhead ? { partAhead } : {}), ...(reopenAsked ? { reopenAsked: true } : {}), ...(optionalHeld && !closingTurn ? { optionalHeld } : {}), ...(repeatWaitOn && !v2FreeConvQuiet(session, state, adaptPart, adaptFlags.free) ? { repeatWait: true } : {}), ...(optionalHold ? { optionalHold } : {}) });
+  // Task 7z (OPTIONAL_ONE_MORE): the hold lifted, minutes of the part left: the facts ask "one more, or move on?" first.
+  const optionalOneMore = !closingTurn && !discussion && !optionalHold && !stopAsked ? v2OptionalOneMore(session, state, nowMs, marginMin) : null;
+  const facts = renderFacts(session, state, { ...input.facts, nowMs, ...(adaptBefore.lines.length ? { adaptive: adaptBefore.lines } : {}), heard: input.studentSaid, time: tf, ...(practiceShort ? { practiceShort } : {}), ...(morePractice !== undefined ? { morePractice } : {}), ...(stopAsked ? { stopAsked: true } : {}), ...(levelReopened ? { levelReopened: true } : {}), ...(released ? { partOpened: String(released.args.title) } : {}), ...(input.partFlags?.askEvery !== undefined ? { partAskEvery: input.partFlags.askEvery } : {}), ...(droppedAsked ? { droppedAsked } : {}), ...(partVisit ? { partVisit } : {}), ...(partAhead ? { partAhead } : {}), ...(reopenAsked ? { reopenAsked: true } : {}), ...(optionalHeld && !closingTurn ? { optionalHeld } : {}), ...(repeatWaitOn && !v2FreeConvQuiet(session, state, adaptPart, adaptFlags.free) ? { repeatWait: true } : {}), ...(optionalHold ? { optionalHold } : {}), ...(unheardAsks.invite ? { inviteUnheard: true } : {}), ...(adaptBefore.free ? { freeConv: adaptBefore.free } : {}), ...(adaptBefore.noStarter ? { noStarter: true } : {}), ...(optionalOneMore ? { optionalOneMore } : {}) });
   // Task 7i (STAY_IN_PART): the unheard sentences are named in these facts once.
   delete state.unheard;
   // A reply that closes the session: the student's words ask to stop, or the time is up (V2_TIME_UP_MIN, as the facts
@@ -1022,6 +1028,15 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Task 7a: the page opened on their yes turns as the reply begins (TutorVoiceV2: an agreed page before any words).
   if (released) { pageTurnAt = 0; pageBefore = releasedFrom; toolCalls.push(released); input.onToolCall?.(released); }
   if (visit) { pageTurnAt = 0; pageBefore = visitFrom; toolCalls.push(visit); input.onToolCall?.(visit); }
+  // Task 7z (OPENING_PAGE_FIRST): in a lesson whose labelled plan opens on an overview part, the opening reply's first page is the
+  // overview's page with the plan title as its heading, written before anything the reply writes (which goes under it). The 7w fallback
+  // ran only when the opening reply painted nothing: mic test 8 (embed-1795115593161) had an untitled "Page 1" holding the model's grammar
+  // note. No objectives (7w ruling). The overview's own page block then stays on this page (settleInline).
+  const openingFirst: string[] = [];
+  if (TUTOR_V2_OPENING_PAGE_FIRST && opening && openingOverview && !session.homework && !session.homeworkSheet && !state.closed && state.board.current < 0 && !state.board.pages.length) {
+    const heading = String(session.plan!.title ?? '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim() || openingOverview;
+    for (const b of boardBlocksIn(`<board page>${openingOverview.replace(/[<>]/g, '')}</board><board note style="heading">${heading}</board>`)) if (settleInline(b, true)) openingFirst.push(b.raw);
+  }
   // Task 7o (NO_MARKDOWN_STARS): spoken lessons that teach a language (mic test 4, 12.87 min).
   const stars = TUTOR_V2_NO_MARKDOWN_STARS && noteTargets ? new V2StarStrip() : null;
   // Fix round 1 (minor 2): the runtime's own lines that may carry the model's words (an offer, a card's ask, a correction) too.
@@ -1195,7 +1210,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           if (part.block.kind === 'problem' && gated && questionCards && TUTOR_V2_QUESTION_ONCE) {
             const shown = toolCalls[toolCalls.length - 1];
             const q = shown?.name === 'show_problem' && !/^not /.test(shown.outcome) ? cardQuestion(String(shown.args.statement ?? '')) : null;
-            if (q && !saidCovers(q, `${saidNow}${gate.heldAsk}`)) { saidCards.set(part.block.raw, q); questionSaid.set(part.block.raw, q); sinceWords = []; gate.speakCard(q); }
+            // Task 7z (UNHEARD_ASK_OWED): without a lead-in clause the sentence just before it said ("Before we finish, …" twice, T101).
+            const qSay = q && TUTOR_V2_UNHEARD_ASK_OWED ? v2DropSaidLead(q, `${saidNow}${gate.heldAsk}`) : q;
+            if (q && qSay && !saidCovers(q, `${saidNow}${gate.heldAsk}`)) { saidCards.set(part.block.raw, qSay); questionSaid.set(part.block.raw, qSay); sinceWords = []; gate.speakCard(qSay); }
           }
           // Task 6f: a note or a table of example sentences a lead-in points at is spoken there too (board-timing.ts
           // noteSentencesToSay): announced before it, at once; otherwise only if the next sentence points back at it.
@@ -1783,7 +1800,13 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // A session never begins on a bare board (embed-1794362141944, embed-1794376295543). When the opening reply
   // and the check after it both wrote nothing, the lesson's heading and what it is for go up.
   // Not in homework: the problem is in its panel beside the chat, and the plan's title is only "Problem 3".
-  if (opening && !session.homework && !session.homeworkSheet && !state.closed && spoken.length && !paintedSoFar()) {
+  // Task 7z (OPENING_PAGE_FIRST): the page and heading written first are part of the stored reply, before its words.
+  if (openingFirst.length) {
+    const holder = stored.find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));
+    const textBlock = (holder?.content as Anthropic.ContentBlockParam[] | undefined)?.find((c): c is Anthropic.TextBlockParam => c.type === 'text');
+    if (textBlock) textBlock.text = `${openingFirst.join('\n')}\n${textBlock.text}`;
+  }
+  if (opening && !openingFirst.length && !session.homework && !session.homeworkSheet && !state.closed && spoken.length && !paintedSoFar()) {
     // Standards codes are for the plan's author, not the student: "(CCSS 8.G.B.6, 8.G.B.7)" was printed on the first card (demo check, 2026-11-13).
     const noCodes = (x: string) => x.replace(/\s*\((?:[^()]*\b(?:CCSS|NGSS|TEKS|HS-|MS-|[0-9]\.[A-Z]{1,3}\.[A-Z]?\.?\d)[^()]*)\)/g, '').trim();
     // A discussion's objectives are written about the participant, for the tutor ("greater clarity about their own
@@ -1919,7 +1942,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   if (adaptPart && answerSentences.length && !state.closed && !input.signal?.aborted && !V2_REPLY_MISHEARD.test(stripBoardBlocks(spoken.join(' ')))) {
     const cards = toolCalls.filter((c) => c.name === 'show_sentence' && (!/^not /.test(c.outcome) || !!c.pointsAt) && typeof c.args.sentence === 'string')
       .map((c) => ({ sentence: String(c.args.sentence), stress: Array.isArray(c.args.emphasis) ? (c.args.emphasis as unknown[]).filter((x): x is string => typeof x === 'string') : [] }));
-    adaptEvents.push(...v2AdaptAfter(session, state, adaptPart, answerSentences, v2PracticePairs(answerSentences, cards, (adaptFlags.changed ?? TUTOR_V2_RETEST_TARGET_CHANGED) && adaptFlags.retest), adaptFlags));
+    adaptEvents.push(...v2AdaptAfter(session, state, adaptPart, answerSentences, v2PracticePairs(answerSentences, cards, (adaptFlags.changed ?? TUTOR_V2_RETEST_TARGET_CHANGED) && adaptFlags.retest), adaptFlags, v2QuestionOfReply(lastTutorText)));
   }
   // Task 7x (FREE_CONVERSATION): a reply in a free-conversation part that asked them to make a question of their own gave the invitation.
   if (adaptPart && !input.signal?.aborted && spoken.length) v2FreeConvAfter(session, state, adaptPart, spoken.join(' '), adaptFlags.free ?? TUTOR_V2_FREE_CONVERSATION);

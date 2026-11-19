@@ -235,7 +235,9 @@ export interface V2Support { step: V2SupportStep; wrong: number; clean: number; 
  *  `target`: the card's stress words; `turn`: tutor replies so far when it was made; `offered`: turns the facts asked for it;
  *  `in`: the part it was asked in; `outcome` once known; `praised`: the praise line was given. */
 /** Fix round 1 (I1, I2): `askedAt` / `lastAt`: the turns (tutor reply numbers) of the first and the last send. */
-export interface V2Retest { part: string; said: string; right: string; target: string[]; turn: number; offered?: number; in?: string; askedAt?: number; lastAt?: number; outcome?: 'passed' | 'missed' | 'not_asked'; praised?: true }
+export interface V2Retest { part: string; said: string; right: string; target: string[]; turn: number; offered?: number; in?: string; askedAt?: number; lastAt?: number; outcome?: 'passed' | 'missed' | 'not_asked'; praised?: true;
+  /** Task 7z (RETEST_QUESTION): the tutor question their corrected answer replied to. */
+  question?: string }
 
 /** A working level and where it came from: an earlier lesson (may be revised once, case 11) or this lesson (final). */
 export interface V2WorkingLevel { level: WorkingLevel; from: 'earlier_lesson' | 'this_lesson' }

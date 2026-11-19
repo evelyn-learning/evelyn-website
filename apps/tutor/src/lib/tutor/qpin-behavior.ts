@@ -190,7 +190,8 @@ export type QpinAnswerReason =
   | 'awaiting-tutor-turn'
   | 'no-affirm'
   | 'correction'
-  | 'moved-on';
+  | 'moved-on'
+  | 'ask-unheard';
 
 export interface QpinAnswerDecision {
   clear: boolean;
@@ -203,9 +204,30 @@ export interface QpinAnswerDecision {
  *  Whitelist on purpose — see the note above. */
 const ANSWER_SHAPED_CATEGORIES = new Set(['numeric-echo', 'think-aloud', 'generic']);
 
+/**
+ * Task 7z (UNHEARD_ASK_OWED, tutor brain v2): the student's words were said over sentences of the tutor's reply they did not hear
+ * (`overUnheard`, the client's record of a barge-in), and the pinned question is one of them: those words do not answer it. Mic test 8
+ * (embed-1795115593161, wall 22:00–22:02): "Do you have any questions before we finish?" was cut 0.8 s in, his explanation of the check
+ * came over it, and the pin cleared as "answered and affirmed". The pin's gist is matched by its words (most of them in one unheard
+ * sentence, or that sentence's in the gist). Pure.
+ */
+export function qpinAskUnheard(overUnheard: readonly string[] | undefined, gist: string): boolean {
+  if (!overUnheard?.length || !gist.trim()) return false;
+  const words = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean);
+  const g = words(gist);
+  if (!g.length) return false;
+  return overUnheard.some((x) => {
+    const u = new Set(words(x));
+    if (!u.size) return false;
+    const inU = g.filter((w) => u.has(w)).length / g.length;
+    const gs = new Set(g); const inG = [...u].filter((w) => gs.has(w)).length / u.size;
+    return inU >= 0.6 || inG >= 0.8;
+  });
+}
+
 export function shouldClearQpinOnAnswer<
-  T extends { id?: string; role: string; text?: string; historyOnly?: boolean },
->(transcript: readonly T[], pinTurnId: string | null | undefined, opts?: { movedOnClears?: boolean }): QpinAnswerDecision {
+  T extends { id?: string; role: string; text?: string; historyOnly?: boolean; overUnheard?: string[] },
+>(transcript: readonly T[], pinTurnId: string | null | undefined, opts?: { movedOnClears?: boolean; unheardGist?: string }): QpinAnswerDecision {
   const movedOnClears = opts?.movedOnClears === true;
   if (!pinTurnId) return { clear: false, reason: 'pin-not-found' };
   const idx = transcript.findIndex((t) => t.id === pinTurnId);
@@ -233,6 +255,8 @@ export function shouldClearQpinOnAnswer<
   }
   if (!sawStudent) return { clear: false, reason: 'no-student-turn' };
   if (sIdx < 0) return movedOn ? { clear: true, reason: 'moved-on' } : { clear: false, reason: 'not-answer-shaped', coverCategory: firstCategory };
+  // Task 7z: words said over the pinned ask, which they did not hear, are no answer to it (opts.unheardGist: the pin's gist, v2 only).
+  if (opts?.unheardGist && qpinAskUnheard(transcript[sIdx].overUnheard, opts.unheardGist)) return { clear: false, reason: 'ask-unheard' };
 
   // 3. the tutor's following SUBSTANTIVE turn must read as an affirmation.
   //    historyOnly turns are skipped — R38's guarantee, same as the turn bound.

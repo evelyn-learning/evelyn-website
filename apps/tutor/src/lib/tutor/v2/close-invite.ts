@@ -64,7 +64,10 @@ export const V2_CLOSE_INVITE_WAIT = 'not ended: wait for their answer to your qu
 
 /** The facts line: the invitation owed, or given (only while the clock lets the tutor close: never "end the lesson in this
  *  reply" where the close would be refused). */
-export function v2CloseInviteFacts(session: V2Session, state: V2State, ctx: { nowMs: number; stopAsked: boolean; enabled?: boolean; closeByContent?: boolean; overrun?: boolean; reopenedOn?: boolean; moreTime?: boolean }): string[] {
+/** Task 7z (UNHEARD_ASK_OWED): the line when the invitation the last reply gave did not reach them (v2UnheardCloseAsks re-owed it). */
+export const V2_CLOSE_INVITE_UNHEARD_LINE = 'questions before the close: your question whether they have any questions before you finish did not reach them (they spoke over it), so it is still owed. Answer what they said first (if it answers your check question, short feedback on it), then end this reply by asking it again, in new words (that is its one question; no goodbye in it). The lesson ends on their answer to it';
+/** `inviteUnheard`: Task 7z, the invitation was re-owed this turn because it was not heard. */
+export function v2CloseInviteFacts(session: V2Session, state: V2State, ctx: { nowMs: number; stopAsked: boolean; enabled?: boolean; closeByContent?: boolean; overrun?: boolean; reopenedOn?: boolean; moreTime?: boolean; inviteUnheard?: boolean }): string[] {
   if (!v2CloseInviteOn(session, ctx.enabled) || state.closed) return [];
   // Final review I3: the summary is part of the close; when no summary has begun (no summary page, no summary reply), it comes
   // first, in a few words.
@@ -79,6 +82,7 @@ export function v2CloseInviteFacts(session: V2Session, state: V2State, ctx: { no
   if (v2MoreAskAnswered(state, ctx.reopenedOn)) return [ctx.moreTime !== false && !ctx.stopAsked ? V2_MORE_ASK_ANSWER_LINE : V2_MORE_ASK_NO_TIME_LINE];
   if (typeof state.closeInvitedAt === 'number') return v2CloseOpen(session, state, ctx.nowMs, ctx.closeByContent) ? [`questions before the close: you have asked whether they have any questions before you finish. If they asked one, answer it briefly; ${summaryGiven ? '' : 'if you have not given the summary yet, give it in a few words first; '}then say goodbye and end the lesson in this reply`] : [];
   if (!v2CloseInviteOwed(session, state, ctx)) return [];
+  if (ctx.inviteUnheard) return [V2_CLOSE_INVITE_UNHEARD_LINE];
   return ['questions before the close: there is time for their questions, so the reply that gives the summary does not end the lesson: it ends with one question, in your own words, asking whether they have any questions before you finish (that is its one question; no goodbye in it). The lesson ends on their answer'];
 }
 

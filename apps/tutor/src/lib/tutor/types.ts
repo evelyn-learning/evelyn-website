@@ -66,6 +66,10 @@ export interface TranscriptEntry {
    *  made for the turn (a pin written from the words alone named a different limit, embed-1794345628228). */
   askOnBoard?: boolean;
 
+  /** Tutor brain v2, Task 7z (UNHEARD_ASK_OWED): on a student entry, the sentences of the tutor's last reply these words were said over
+   *  and did not hear (the barge-in record, state.unheard). A question pin is not cleared by them (qpin-behavior.ts qpinAskUnheard). */
+  overUnheard?: string[];
+
   /** When true, this entry exists ONLY for the brain's conversation
    *  history (next-turn input). The chat UI MUST NOT render it. Used
    *  for the "(rendered: tool, tool, …)" placeholder we append for
