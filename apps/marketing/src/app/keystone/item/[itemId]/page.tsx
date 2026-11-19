@@ -2,11 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/keystone/auth";
 import { ksBase } from "@/lib/keystone/paths";
-import { ITEM_TYPE_LABEL, OWNER_LABEL, SECTION_TITLE, STAGES, STAGE_HELP, STAGE_LABEL, STAGE_OWNER, can, releasedVersionOf, sectionTitle } from "@/lib/keystone/config";
+import { DIPLOMA_COURSES, ITEM_TYPE_LABEL, LEVEL_SOURCE_LABEL, OWNER_LABEL, SECTION_TITLE, STAGES, STAGE_HELP, STAGE_LABEL, STAGE_OWNER, can, releasedVersionOf, sectionTitle } from "@/lib/keystone/config";
 import { getItem, holdReasons, itemChecks, neighbours, reviewQueue } from "@/lib/keystone/queries";
 import { pacificTime } from "@/lib/keystone/pipeline/status";
-import type { OwnerPipeline } from "@/lib/keystone/store";
-import { askForAnimationAction, setStageAction } from "../../actions";
+import { LEVEL_OPEN_STAGES, type OwnerPipeline } from "@/lib/keystone/store";
+import { askForAnimationAction, setLevelAction, setStageAction } from "../../actions";
+import { ActionForm } from "../../_components/ActionForm";
 import { NO_ANIMATION_DEFAULT } from "@/lib/keystone/animreview/store";
 import { TopBar } from "../../_components/TopBar";
 import { Feed, Note, StageChip, ago } from "../../_components/ui";
@@ -122,7 +123,13 @@ export default async function ItemPage({
               Item {item.itemId} {item.showcase && <span className="ks-chip">Showcase</span>}
             </h1>
             <div className="ks-meta">
-              <span>{item.subject}</span>·<span>{item.course}</span>·<span>{ITEM_TYPE_LABEL[item.itemType] ?? item.itemType}</span>
+              <span>{item.subject}</span>·
+              <span title={item.levelWhy || undefined}>
+                {/* The file's own course data is not a level we write to: shown only once a level is set. */}
+                {item.courseSource === "metadata" ? "Level not set yet" : <>Level: <b>{item.course || "not set yet"}</b></>}
+                {item.courseSource && LEVEL_SOURCE_LABEL[item.courseSource] && <span style={{ fontSize: 12 }}> ({LEVEL_SOURCE_LABEL[item.courseSource]})</span>}
+              </span>
+              ·<span>{ITEM_TYPE_LABEL[item.itemType] ?? item.itemType}</span>
               {item.topic && (
                 <>
                   ·<span>{item.topic}</span>
@@ -131,6 +138,30 @@ export default async function ItemPage({
             </div>
           </div>
           <div className="ks-meta">
+            {can.review(user.role) && LEVEL_OPEN_STAGES.includes(item.stage) && (
+              <details className="ks-level">
+                <summary>Change level</summary>
+                <ActionForm action={setLevelAction} className="ks-level-form">
+                  <input type="hidden" name="itemId" value={item.itemId} />
+                  <label>
+                    Level the solution should be written to
+                    <input name="level" list="ks-levels" defaultValue={item.courseSource === "metadata" ? "" : item.course} maxLength={40} required placeholder="Math 30-1" />
+                  </label>
+                  <datalist id="ks-levels">
+                    {DIPLOMA_COURSES.map((c) => (
+                      <option key={c} value={c} />
+                    ))}
+                  </datalist>
+                  <label>
+                    Note (optional)
+                    <input name="note" maxLength={300} />
+                  </label>
+                  {item.levelWhy && <p className="ks-level-why">Why this level: {item.levelWhy}</p>}
+                  {item.stage === "in_review" && <p className="ks-level-why">The solution will come back to you rewritten to the new level.</p>}
+                  <button className="ks-btn" type="submit">Save level</button>
+                </ActionForm>
+              </details>
+            )}
             <StageChip stage={item.stage} role={user.role} />
             {versions.length > 0 && !keyQuery && (
               <span>

@@ -251,8 +251,14 @@ export type ItemDoc = {
   releasedVersion?: number;
   /** evelynAnswer as it was when the solution was released; what Castle Rock sees. */
   releasedAnswer?: string;
-  /** Where `course` came from: only a spreadsheet value counts (QTI metadata is unreliable). Undefined on older rows. */
-  courseSource?: "sheet" | "metadata";
+  /**
+   * Where `course` (the level the solution is written to) came from. "metadata" (the file's own data, unreliable) is
+   * never written to: the pipeline reads the level from the question ("pipeline"); a spreadsheet course ("sheet") or
+   * one a person set on the item page ("person") is used as it is. Undefined on older rows.
+   */
+  courseSource?: "sheet" | "metadata" | "pipeline" | "person";
+  /** One sentence on what in the question decided a "pipeline" level. */
+  levelWhy?: string;
   batchId?: string;
   /** When the item (or its spreadsheet row) last arrived, whichever is later. */
   receivedAt?: Date;
@@ -566,6 +572,7 @@ function defineModels(conn: Connection): Models {
     releasedVersion: Number,
     releasedAnswer: String,
     courseSource: String,
+    levelWhy: String,
     batchId: String,
     receivedAt: Date,
     pipeline: {

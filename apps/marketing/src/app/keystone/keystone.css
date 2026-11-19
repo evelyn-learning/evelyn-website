@@ -286,3 +286,14 @@
 }
 .ks-nav a { white-space: nowrap; }
 .ks-nav { flex-wrap: wrap; row-gap: 2px; }
+
+/* Item page: the level a solution is written to, corrected by the reviewer. */
+.ks-level { position: relative; font-size: 13px; }
+.ks-level > summary { cursor: pointer; color: var(--accent); list-style: none; }
+.ks-level > summary::-webkit-details-marker { display: none; }
+.ks-level-form { position: absolute; right: 0; top: 26px; z-index: 5; width: min(320px, 86vw); background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.12); }
+.ks-level-form label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.ks-level-form input[name] { display: block; width: 100%; margin-top: 3px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; font: inherit; color: var(--ink); background: var(--card); box-sizing: border-box; }
+.ks-level-why { font-size: 12px; color: var(--muted); margin: 0 0 8px; }
+/* On a phone "Change level" sits at the left edge: the form opens to the right of it, inside the page. */
+@media (max-width: 700px) { .ks-level-form { left: 0; right: auto; } }

@@ -594,6 +594,7 @@ function bindWriter(w: Writer, saveRun: Writer["saveRun"]): Writer {
     raiseKeyQuery: (...a) => w.raiseKeyQuery(...a),
     saveSolution: (...a) => w.saveSolution(...a),
     setPipeline: (...a) => w.setPipeline(...a),
+    setLevel: (...a) => w.setLevel(...a),
     suggest: (...a) => w.suggest(...a),
     saveLesson: (...a) => w.saveLesson(...a),
     ...(w.sample ? { sample: (...a: Parameters<NonNullable<Writer["sample"]>>) => w.sample!(...a) } : {}),

@@ -9,6 +9,7 @@ import { ks } from "@/lib/keystone/db";
 import {
   addComment,
   clearHoldByOwner,
+  correctLevel,
   holdByOwner,
   keepHoldingByOwner,
   releaseIfHeld,
@@ -153,6 +154,19 @@ async function ownerAction(form: FormData, run: (itemId: string, user: Awaited<R
   if ("error" in out) return { error: out.error };
   revalidatePath("/keystone", "layout");
   return { go: await ownerBack(form, itemId, "already" in out ? "already" : done) };
+}
+
+/** The reviewer (or Evelyn) corrects the level the solution is written to. A solution in review goes back to Evelyn to be rewritten. */
+export async function setLevelAction(_prev: ReviewResult, form: FormData): Promise<ReviewResult> {
+  const user = await requireUser();
+  if (!can.review(user.role)) return { error: "Only the reviewer can change the level." };
+  try {
+    await correctLevel(String(form.get("itemId")), String(form.get("level") || ""), String(form.get("note") || ""), user);
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+  revalidatePath("/keystone", "layout");
+  return { ok: Date.now() };
 }
 
 /** Send to review: the held solution goes to Castle Rock as an ordinary "Sent for review". A second call is harmless. */

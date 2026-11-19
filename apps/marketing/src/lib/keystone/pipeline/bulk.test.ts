@@ -84,6 +84,10 @@ class FakeStore implements Reader, Writer {
     this.itemWrites++;
     i.pipeline = pipeline;
   }
+  async setLevel(id: string, level: string, why: string, e: Expect) {
+    const i = this.unchanged(id, e);
+    Object.assign(i, { course: level, courseSource: "pipeline", levelWhy: why });
+  }
   async suggest(kind: string, itemIds: string[]) { this.suggestions.push(`${kind}:${itemIds.join(",")}`); }
   async saveLesson(_l: LessonDoc) { /* not used here */ }
   async sample(batchIds: string[], unbatched: string[]) { this.sampled.push({ batchIds, unbatched }); }

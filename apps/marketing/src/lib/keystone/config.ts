@@ -160,8 +160,19 @@ export const SECTION_TITLE: Record<SectionKind, string> = {
 /** Alberta diploma courses: the only ones whose second section is a "Diploma-style answer". */
 export const DIPLOMA_COURSES = ["Math 30-1", "Math 30-2", "Biology 30", "Chemistry 30", "Physics 30", "Science 30"] as const;
 
-/** Second-section title for every other course. null until the client says what to call it; the pipeline holds such items. */
-export const OTHER_COURSE_SECTION_TITLE: string | null = null;
+/**
+ * Second-section title for every other level (2026-11-19: items come without a course, the level is read from the
+ * question, so a neutral name is needed; the client has not chosen one). null would hold every such item
+ * (section_title_unset). No "exam" in it: rules.md R-no-diploma-wording keeps that word to diploma courses.
+ */
+export const OTHER_COURSE_SECTION_TITLE: string | null = "Worked answer";
+
+/** Where an item's level came from, as the item page words it. */
+export const LEVEL_SOURCE_LABEL: Record<string, string> = {
+  sheet: "from the spreadsheet",
+  pipeline: "set by Evelyn from the question",
+  person: "set in review",
+};
 
 /**
  * A course string as the spreadsheet wrote it, mapped to the canonical diploma

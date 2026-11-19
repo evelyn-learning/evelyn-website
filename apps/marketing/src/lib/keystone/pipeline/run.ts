@@ -29,6 +29,7 @@ import {
   saveRun as storeSaveRun,
   saveSolution as storeSaveSolution,
   setPipelineIfUnchanged,
+  setLevelIfUnchanged,
   solutionRunId,
   type Actor,
   type Expect,
@@ -37,6 +38,7 @@ import { readKey, type Answer, type Decision } from "./answers";
 import { calcCheck, type CalcFinding } from "./calc";
 import { bannedWordsIn, renderCheck, rulesAudit, workingCheck, type CheckResult, type Finding, type RenderCheckOpts } from "./checks";
 import { intakeCode, intakeModel, intakeNote, lastSegment, shownImages, type IntakeFinding } from "./intake";
+import { levelModel } from "./level";
 import { callModel, redact } from "./models";
 import { suggestFor } from "./outbox";
 import { releaseAt, sampleAfterRun } from "./release";
@@ -79,6 +81,8 @@ export interface Writer {
     expect: Expect,
   ): Promise<number>;
   setPipeline(itemId: string, pipeline: PipelineDoc, expect: Expect): Promise<void>;
+  /** The level read from the question, stored on the item (stage and updatedAt unchanged, so the run goes on). */
+  setLevel(itemId: string, level: string, why: string, expect: Expect): Promise<void>;
   suggest(kind: SuggestKind, itemIds: string[], batchId?: string): Promise<void>;
   /**
    * Records the send-back as a lesson, unless one exists for the same item and version (upsert-if-absent):
@@ -92,6 +96,7 @@ export interface Writer {
 /** The model-backed and code steps, injected so tests call no model. */
 export type Steps = {
   intakeModel(item: ItemDoc, images: ModelImage[]): Promise<{ complete: boolean; missing: string[]; cost?: number; model?: string } | { failed: string; cost?: number; model?: string; transient?: boolean }>;
+  setLevel(item: ItemDoc, images: ModelImage[]): Promise<{ level: string; why: string; cost?: number; model?: string } | { failed: string; cost?: number; model?: string; transient?: boolean }>;
   agreeOnAnswer(item: ItemDoc, images: ModelImage[], course: string, hint?: string): Promise<{ decision: Decision; solves: Solves; cost: number }>;
   writeSolution(item: ItemDoc, course: string, answer: Answer, opts: WriteOpts): Promise<ModelReply<Draft>>;
   calcCheck(draft: Draft, answer: Answer, item: ItemDoc): Promise<CalcFinding[]>;
@@ -509,17 +514,6 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
     if (r.findings.length) return toItemData(r.findings);
   }
 
-  // [2] Course: only a spreadsheet course counts.
-  const sheetCourse = item.courseSource === "sheet" && item.course?.trim() ? item.course.trim() : null;
-  await step("course", async () => ({ ok: !!sheetCourse, output: { course: sheetCourse } }));
-  if (!sheetCourse) {
-    await guard();
-    await writer.suggest("course_missing", [itemId], item.batchId);
-    return finish("course_missing");
-  }
-  const course = sheetCourse;
-  if (!sectionTitle("diploma", course)) return hold(["section_title_unset"]);
-
   // Images: never solve an image item blind, and never let a figure go out missing or broken.
   // The question's own images (stem, passages, options, choices): intakeCode without the package resource list.
   // These, and ONLY these, ever reach a model (intake and the blind solvers). A package resource the question
@@ -564,6 +558,27 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
     const out = m.output as { complete: boolean; missing: string[] };
     if (!out.complete) return toItemData(out.missing.map((detail) => ({ code: "model_missing" as const, detail })));
   }
+
+  // [2] Level. The client sends no course (2026-11-19), so the level is read from the question. A level already
+  // on the item is used as it is: one a person set on the item page, one from a spreadsheet, or one an earlier
+  // run read (so a rewrite stays at the level the reviewer saw). The file's own course data never counts.
+  const known = item.courseSource && item.courseSource !== "metadata" && item.course?.trim() ? item.course.trim() : null;
+  type LevelOut = { course: string; source: string; why?: string } | { failed: string };
+  const lv = await step<LevelOut>("course", async () => {
+    if (known) return { ok: true, output: { course: known, source: item.courseSource! } };
+    const r = await steps.setLevel(item, images);
+    if ("failed" in r) return { ok: false, output: { failed: r.failed }, cost: r.cost, model: r.model, transient: r.transient };
+    return { ok: true, output: { course: r.level, source: "pipeline", why: r.why }, cost: r.cost, model: r.model };
+  });
+  if (!lv.ok || !("course" in lv.output) || !lv.output.course) return hold(["step_failed"]);
+  const course = lv.output.course;
+  if (lv.output.source === "pipeline" && !(item.courseSource === "pipeline" && item.course === course)) {
+    // Stored at once, so the item page shows it even when the run later holds or raises a query.
+    await writer.setLevel(itemId, course, lv.output.why ?? "", expect);
+    item.course = course;
+    item.courseSource = "pipeline";
+  }
+  if (!sectionTitle("diploma", course)) return hold(["section_title_unset"]);
 
   // changes_requested: what the reviewer's note asks for.
   let fixNote: string | undefined;
@@ -868,7 +883,7 @@ export function asReceivedReader(reader: Reader, ids: string[]): Reader {
 
 // --- writers -----------------------------------------------------------------------------------
 
-export type DryAction = { itemId: string; action: "flagItemData" | "raiseKeyQuery" | "saveSolution" | "setPipeline" | "suggest" | "saveLesson"; detail: Record<string, unknown> };
+export type DryAction = { itemId: string; action: "flagItemData" | "raiseKeyQuery" | "saveSolution" | "setPipeline" | "setLevel" | "suggest" | "saveLesson"; detail: Record<string, unknown> };
 
 /** Records what a run would write; writes nothing. */
 export class DryRunWriter implements Writer {
@@ -882,6 +897,7 @@ export class DryRunWriter implements Writer {
     return expect.version + 1;
   }
   async setPipeline(itemId: string, pipeline: PipelineDoc) { this.actions.push({ itemId, action: "setPipeline", detail: { pipeline } }); }
+  async setLevel(itemId: string, level: string, why: string) { this.actions.push({ itemId, action: "setLevel", detail: { level, why } }); }
   async suggest(kind: SuggestKind, itemIds: string[], batchId?: string) {
     for (const itemId of itemIds) this.actions.push({ itemId, action: "suggest", detail: { kind, batchId } });
   }
@@ -934,6 +950,7 @@ export function mongoWriter(actor: Actor): Writer {
         set: { evelynAnswer: s.evelynAnswer, pipeline: s.pipeline, ...(s.topic ? { topic: s.topic } : {}) },
       }),
     setPipeline: (itemId, pipeline, expect) => setPipelineIfUnchanged(itemId, pipeline, expect),
+    setLevel: (itemId, level, why, expect) => setLevelIfUnchanged(itemId, level, why, expect),
     suggest: (kind, itemIds, batchId) => suggestFor(kind, { itemIds }, batchId),
     saveLesson: (lesson) => saveLesson(lesson),
     sample: async (batchIds, unbatched) => { await sampleAfterRun(batchIds, unbatched); },
@@ -996,6 +1013,7 @@ const CAUSE_SCHEMA = {
 export function realSteps(modelDeps: ModelDeps = {}): Steps {
   return {
     intakeModel: (item, images) => intakeModel(item, images, modelDeps),
+    setLevel: (item, images) => levelModel(item, images, modelDeps),
     agreeOnAnswer: (item, images, course, hint) => agreeOnAnswer(item, images, course, hint, modelDeps),
     writeSolution: (item, course, answer, opts) => writeSolution(item, course, answer, opts, modelDeps),
     calcCheck: (draft, answer, item) => calcCheck(draft, answer, item),

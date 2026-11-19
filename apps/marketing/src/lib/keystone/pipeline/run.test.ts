@@ -10,7 +10,7 @@ import type { Draft } from "./write";
 import type { CheckResult, Finding } from "./checks";
 import type { CalcFinding } from "./calc";
 import type { ModelReply } from "./types";
-import { visibleStage } from "../config";
+import { sectionTitle, visibleStage } from "../config";
 import type { ModelImage } from "./types";
 import { releaseAt } from "./release";
 import { agreeOnAnswer } from "./solve";
@@ -96,6 +96,10 @@ class FakeStore implements Reader, Writer {
     this.itemWrites++;
     i.pipeline = pipeline;
   }
+  async setLevel(id: string, level: string, why: string, e: Expect) {
+    const i = this.unchanged(id, e);
+    Object.assign(i, { course: level, courseSource: "pipeline", levelWhy: why });
+  }
   async suggest(kind: "items_need_data" | "keys_queried" | "course_missing", itemIds: string[], batchId?: string) { this.suggestions.push({ kind, itemIds, batchId }); }
   lessons: LessonDoc[] = [];
   lessonCalls = 0;
@@ -126,9 +130,10 @@ type Calls = Record<keyof Steps, number> & { hints: (string | undefined)[]; writ
 
 /** Steps that pass by default; each can be replaced. Counts every call. */
 function steps(over: Partial<Steps> = {}): { steps: Steps; calls: Calls } {
-  const calls = { intakeModel: 0, agreeOnAnswer: 0, writeSolution: 0, calcCheck: 0, workingCheck: 0, rulesAudit: 0, renderCheck: 0, classifyCause: 0, hints: [], writeOpts: [] } as Calls;
+  const calls = { intakeModel: 0, setLevel: 0, agreeOnAnswer: 0, writeSolution: 0, calcCheck: 0, workingCheck: 0, rulesAudit: 0, renderCheck: 0, classifyCause: 0, hints: [], writeOpts: [] } as Calls;
   const base: Steps = {
     intakeModel: async () => ({ complete: true, missing: [] }),
+    setLevel: async () => ({ level: "Math 30-1", why: "logarithms", cost: 0.001, model: "m-intake" }),
     agreeOnAnswer: async () => ({ decision: { outcome: "pass", answer: B, confirm: false }, solves: solves(B), cost: 0.2 }),
     writeSolution: async () => okReply(draft(), 0.1, "m-author"),
     calcCheck: async () => [],
@@ -299,30 +304,54 @@ const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", co
     equal(store.solutions.length, 1, "draft kept as a held solution");
   }
 
-  // --- course from metadata only → item untouched, course_missing ---
+  // --- no course with the item (the file's own data never counts) → the level is read from the question ---
   {
-    const store = new FakeStore([item({ courseSource: "metadata" })]);
-    const before = structuredClone(store.items.get("100"));
-    const { steps: s, calls } = steps();
+    const store = new FakeStore([item({ course: "Pure Math 30", courseSource: "metadata" })]);
+    const seen: string[] = [];
+    const { steps: s, calls } = steps({
+      setLevel: async () => ({ level: "Math 30-2", why: "odds", cost: 0.001, model: "m-intake" }),
+      agreeOnAnswer: async (_i, _im, course) => { seen.push(course); return { decision: { outcome: "pass", answer: B, confirm: false }, solves: solves(B), cost: 0.2 }; },
+    });
     const run = await processItem("100", "r1", deps(store, s));
-    equal(run.result, "course_missing", "course missing");
-    deepEqual(store.items.get("100"), before, "item untouched");
-    deepEqual(store.suggestions.map((x) => x.kind), ["course_missing"], "course_missing suggested");
-    equal(calls.intakeModel + calls.agreeOnAnswer, 0, "no model spend");
+    equal(run.result, "ready", "solved without a course from the client");
+    const it = store.items.get("100")!;
+    equal(it.course, "Math 30-2", "level stored on the item");
+    equal(it.courseSource, "pipeline", "marked as read from the question");
+    equal(it.levelWhy, "odds", "reason kept");
+    deepEqual(seen, ["Math 30-2"], "the solvers were given the level");
+    equal(calls.setLevel, 1, "one level call");
+    deepEqual(store.suggestions.map((x) => x.kind), [], "the client is not asked for a course");
   }
 
-  // --- sectionTitle null → section_title_unset, no model ---
-  {
-    const store = new FakeStore([item({ course: "Physics 20" })]);
+  // --- a level a person set on the item page, or one an earlier run read, is used as it is ---
+  for (const courseSource of ["person", "pipeline", "sheet"] as const) {
+    const store = new FakeStore([item({ course: "Math 30-2", courseSource })]);
     const { steps: s, calls } = steps();
     const run = await processItem("100", "r1", deps(store, s));
+    equal(run.result, "ready", `${courseSource}: solved`);
+    equal(calls.setLevel, 0, `${courseSource}: no level call`);
+    equal(store.items.get("100")!.course, "Math 30-2", `${courseSource}: level kept`);
+  }
+
+  // --- the level cannot be read → held for Praveen, nothing solved ---
+  {
+    const store = new FakeStore([item({ courseSource: "metadata" })]);
+    const { steps: s, calls } = steps({ setLevel: async () => ({ failed: "network: down", cost: 0, model: "m-intake" }) });
+    const run = await processItem("100", "r1", deps(store, s));
     equal(run.result, "held", "held");
-    deepEqual(run.flags, ["section_title_unset"], "flag");
-    const it = store.items.get("100")!;
-    equal(it.stage, "received", "stage unchanged");
-    equal(it.pipeline?.heldFor, "praveen", "heldFor");
-    deepEqual(it.pipeline?.flags, ["section_title_unset"], "flags on the item");
-    equal(Object.values(calls).filter((v) => typeof v === "number").reduce((a, b) => (a as number) + (b as number), 0), 0, "no model call at all");
+    deepEqual(run.flags, ["step_failed"], "step_failed");
+    equal(calls.agreeOnAnswer, 0, "not solved");
+    equal(store.items.get("100")!.courseSource, "metadata", "no level stored");
+  }
+
+  // --- a level outside the diploma courses is written too, under the neutral section name ---
+  {
+    const store = new FakeStore([item({ course: "Physics 20" })]);
+    const { steps: s } = steps();
+    const run = await processItem("100", "r1", deps(store, s));
+    equal(run.result, "ready", "solved");
+    equal(sectionTitle("diploma", "Physics 20"), "Worked answer", "neutral section name");
+    equal(sectionTitle("diploma", "Mathematics 30–1"), "Diploma-style answer", "diploma name kept for diploma courses");
   }
 
   // --- kill after solve, run again → solvers not called again ---
