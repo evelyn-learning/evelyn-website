@@ -2275,3 +2275,62 @@ export const TUTOR_V2_LEVEL_NO_NUMBER = process.env.NEXT_PUBLIC_TUTOR_V2_LEVEL_N
  *  sentence right. Mic test 6 (embed-1795067373124, 5.0 and 9.7 min: two false "wrong" signals) (Task 7u, item 5). Default ON;
  *  NEXT_PUBLIC_TUTOR_V2_NUMBER_NOT_CORRECTION=off ⇒ as before. */
 export const TUTOR_V2_NUMBER_NOT_CORRECTION = process.env.NEXT_PUBLIC_TUTOR_V2_NUMBER_NOT_CORRECTION !== 'off';
+
+/** Tutor brain v2 (v2/time-fit.ts, v2/turn.ts, v2/facts.ts, v2/adaptive.ts): a part's time is measured from when the lesson entered
+ *  it (state.partStart, round-tripped), not from the lesson's start: "there is time in this part, go on with it" holds until half of
+ *  its own plan minutes have passed since it began, "this part's minutes are used, offer the next part" comes once all of them have,
+ *  and the lesson-clock "[part] would be running now" guide is not shown beside them. Time an early part saved stays in hand for the
+ *  core and optional parts. Spoken timed lessons with a labelled plan only. Mic test 6 (embed-1795067373124: a level check done in
+ *  1.5 of its 3 minutes made "Your job" run 5.3 minutes against 3 planned) (Task 7v, item 1). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_PART_CLOCK=off ⇒ as before. */
+export const TUTOR_V2_PART_CLOCK = process.env.NEXT_PUBLIC_TUTOR_V2_PART_CLOCK !== 'off';
+
+/** Tutor brain v2 (v2/time-fit.ts, v2/turn.ts, v2/facts.ts, v2/plan-map.ts): the 7i time fit (the optional part's minutes plus the
+ *  summary's within the box plus the margin, from the real elapsed time) alone decides an optional part: at the offer, at their yes
+ *  (its page opens past the wrap minute while it fits, and the wrap moves to the end of its minutes), and when they ask for it later
+ *  by name (its page opens for it while it fits). The wrap minute never overrides a fit that says yes. Mic test 6
+ *  (embed-1795067373124: "Uh, yes, let's go." at 18.1 minutes, after the wrap at 18, opened nothing, and a later request with six
+ *  minutes left was refused) (Task 7v, item 2). Default ON; NEXT_PUBLIC_TUTOR_V2_OPTIONAL_FIT=off ⇒ as before. */
+export const TUTOR_V2_OPTIONAL_FIT = process.env.NEXT_PUBLIC_TUTOR_V2_OPTIONAL_FIT !== 'off';
+
+/** Tutor brain v2 (v2/adaptive.ts, under RETEST_MISTAKE): a retest's target is the word(s) the correction changed (numbers and
+ *  fillers aside, function words kept), each shown with one neighbour word ("in the home"); more than three changed words, or none:
+ *  the card's stress words, adjacent ones as one phrase. The praise line names only changed words. Mic test 6 (embed-1795067373124:
+ *  "on → in" became the target "home, appliance, division", and "You said 'customers' clearly" praised a word never wrong) (Task 7v,
+ *  item 3). Default ON; NEXT_PUBLIC_TUTOR_V2_RETEST_TARGET_CHANGED=off ⇒ as before. */
+export const TUTOR_V2_RETEST_TARGET_CHANGED = process.env.NEXT_PUBLIC_TUTOR_V2_RETEST_TARGET_CHANGED !== 'off';
+
+/** Tutor brain v2 (v2/adaptive.ts, under RETEST_MISTAKE): retests are spread: at most two corrections recorded per part (a newer one
+ *  replaces the oldest never offered when the list is full), one retest offered per part, one place kept for a free-conversation part
+ *  still to come, and only retests that were put to them (not ended "not asked") count against the three a lesson. Mic test 6
+ *  (embed-1795067373124: all three retests went to Present perfect, none was asked, and the list was full after "Your job") (Task
+ *  7v, item 4). Default ON; NEXT_PUBLIC_TUTOR_V2_RETEST_SPREAD=off ⇒ as before. */
+export const TUTOR_V2_RETEST_SPREAD = process.env.NEXT_PUBLIC_TUTOR_V2_RETEST_SPREAD !== 'off';
+
+/** Tutor brain v2 (v2/learner-card.ts): an answer to a fill-the-gap ask ("Next, fill the gap in this sentence and say the whole
+ *  sentence aloud. Last year, I ___ a customer in Canada.", or a question card with a ___ gap in the reply), or to an ask the learner
+ *  spoke over (its sentences in state.unheard), is an answer to an ask for a sentence: it is carded and counted for the support step.
+ *  Mic test 6 (embed-1795067373124, turns 30, 35, 44: three right answers gave no practice signal) (Task 7v, item 5). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_ANSWER_SIGNAL=off ⇒ as before. */
+export const TUTOR_V2_ANSWER_SIGNAL = process.env.NEXT_PUBLIC_TUTOR_V2_ANSWER_SIGNAL !== 'off';
+
+/** Tutor brain v2 (v2/adaptive.ts, v2/facts.ts): the support step's facts line names the form of the next question first, with one
+ *  example of its shape ("not a starter" for a gap), and stands beside the practice facts for the next question; in a part the plan
+ *  marks as free conversation (its note, aim or name: "open conversation", "conversation partner") the step never goes above
+ *  starter (no gap-fill or repeat drills; stretch allowed). Mic test 6 (embed-1795067373124: a third of new questions ignored the
+ *  step, and the core conversation became nine mostly gap drills) (Task 7v, item 6). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_SUPPORT_FOLLOWED=off ⇒ as before. */
+export const TUTOR_V2_SUPPORT_FOLLOWED = process.env.NEXT_PUBLIC_TUTOR_V2_SUPPORT_FOLLOWED !== 'off';
+
+/** Tutor brain v2 (components/v2/useV2Turns.ts, v2/practice-facts.ts): words of the learner's whose reply was cut before anything
+ *  reached them are carried into the next turn with the words that cut it, and a short phrase right after a full sentence in the
+ *  same turn is read as a self-correction of that sentence, never corrected as a fragment. Mic test 6 (embed-1795067373124, 6.1
+ *  min: "for senior bosses." after his full sentence reached the tutor alone and was corrected as a fragment) (Task 7v, item 7a).
+ *  Default ON; NEXT_PUBLIC_TUTOR_V2_SELF_CORRECTION=off ⇒ as before. */
+export const TUTOR_V2_SELF_CORRECTION = process.env.NEXT_PUBLIC_TUTOR_V2_SELF_CORRECTION !== 'off';
+
+/** Tutor brain v2 (v2/echo-window.ts): heard words that run ahead of the tutor's voice (two or more of them are words of the part
+ *  playing that it has not played yet) are the learner saying the sentence with it or after it, never its echo. Mic test 6
+ *  (embed-1795067373124, 13:38: his repeat-after-me said with the model sentence was dropped as the tutor's own voice) (Task 7v,
+ *  item 7b). Default ON; NEXT_PUBLIC_TUTOR_V2_REPEAT_NOT_ECHO=off ⇒ as before. */
+export const TUTOR_V2_REPEAT_NOT_ECHO = process.env.NEXT_PUBLIC_TUTOR_V2_REPEAT_NOT_ECHO !== 'off';

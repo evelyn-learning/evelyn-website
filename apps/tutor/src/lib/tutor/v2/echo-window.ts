@@ -20,7 +20,7 @@
  * no later than a slow speaking rate puts it, the end no earlier than the audio that has arrived allows.
  */
 import { ownVoiceMatch, ownVoiceWords } from './own-voice';
-import { TUTOR_V2_ECHO_BY_PLAYBACK } from '../orchestrator/flags';
+import { TUTOR_V2_ECHO_BY_PLAYBACK, TUTOR_V2_REPEAT_NOT_ECHO } from '../orchestrator/flags';
 
 /** How long after a part stops sounding its echo can still begin (room, output latency, the recogniser's onset). */
 export const V2_ECHO_TAIL_MS = 1500;
@@ -48,7 +48,7 @@ export class V2EchoClock {
    *  learner's repeat ten seconds later was matched against everything played since. */
   private onset: { atMs: number; pos: number; stopAtMs: number | null; wordsAtMs: number | null } | null = null;
   private nextBase = 0;
-  constructor(private readonly tailMs = V2_ECHO_TAIL_MS, private readonly lagWords = V2_ECHO_LAG_WORDS, private readonly leadWords = V2_ECHO_LEAD_WORDS) {}
+  constructor(private readonly tailMs = V2_ECHO_TAIL_MS, private readonly lagWords = V2_ECHO_LAG_WORDS, private readonly leadWords = V2_ECHO_LEAD_WORDS, private readonly aheadOn: boolean = TUTOR_V2_REPEAT_NOT_ECHO) {}
 
   private current(): V2PlayedPart | undefined { return this.parts[this.parts.length - 1]; }
 
@@ -126,9 +126,31 @@ export class V2EchoClock {
     }
     const m = ownVoiceMatch(heard, said, minWords, share);
     const part = m.at >= 0 ? owner[m.at]! : live[live.length - 1]!;
-    const timing = `words began ${since(onset.atMs)} ago at word ${Math.max(0, onset.pos - part.base)} of this part; part began ${since(part.startMs)} ago, ${part.endMs === null ? 'still playing' : `ended ${since(part.endMs)} ago`}; ${said.length} word(s) played in reach`;
-    return { own: m.own, score: Math.round(m.score * 100) / 100, part: part.text, timing };
+    // Task 7v (REPEAT_NOT_ECHO): heard words that run ahead of the voice (words of a part playing that it has not played yet) are the
+    // learner saying the sentence with it, never its echo: an echo cannot hold what the speakers have not yet sounded. Mic test 6
+    // (embed-1795067373124, 13:38): "Yesterday I wrote an email to the customer." said with the model sentence, two words ahead of
+    // the voice, was dropped as its own voice (score 0.75) and he had to say it again. 7h's window did not cover it: he began with
+    // the model sentence, not after the voice had passed its start.
+    const ahead = m.own && this.aheadOn ? aheadWords(heard, said, live.filter((p) => p.endMs === null).flatMap((p) => p.words.slice(Math.max(0, to - p.base)))) : 0;
+    const timing = `words began ${since(onset.atMs)} ago at word ${Math.max(0, onset.pos - part.base)} of this part; part began ${since(part.startMs)} ago, ${part.endMs === null ? 'still playing' : `ended ${since(part.endMs)} ago`}; ${said.length} word(s) played in reach${ahead ? `; ${ahead} word(s) ahead of the voice` : ''}`;
+    return { own: m.own && ahead < V2_ECHO_AHEAD_WORDS, score: Math.round(m.score * 100) / 100, part: part.text, timing };
   }
+}
+
+/** Task 7v (REPEAT_NOT_ECHO): heard words of the part playing that the voice has not reached, this many or more: not an echo. */
+export const V2_ECHO_AHEAD_WORDS = 2;
+/** How many of the heard words, matched in order against the played stretch and then the words not yet played, fall among the words
+ *  not yet played (each found within a few words of the last match). */
+function aheadWords(heard: readonly string[], played: readonly string[], unplayed: readonly string[]): number {
+  const all = [...played, ...unplayed]; let j = 0; let n = 0;
+  for (const w of heard) {
+    let k = -1;
+    for (let x = j; x < (j === 0 ? all.length : Math.min(all.length, j + 4)); x++) if (all[x] === w) { k = x; break; }
+    if (k < 0) continue;
+    if (k >= played.length) n += 1;
+    j = k + 1;
+  }
+  return n;
 }
 
 /** The echo decision for heard words. Under TUTOR_V2_ECHO_BY_PLAYBACK the played stretch decides (above); off, as before:

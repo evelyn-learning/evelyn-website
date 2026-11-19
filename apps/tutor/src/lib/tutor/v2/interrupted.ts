@@ -11,7 +11,7 @@ import type Anthropic from '@anthropic-ai/sdk';
 import { applyToModelBoard } from './board';
 import { V2_CONTROL_TOOL_NAMES } from './tool-names';
 import type { V2State, V2ToolCall } from './types';
-import { TUTOR_V2_STAY_IN_PART } from '../orchestrator/flags';
+import { TUTOR_V2_SELF_CORRECTION, TUTOR_V2_STAY_IN_PART } from '../orchestrator/flags';
 
 export const V2_CUT_MARK = '[cut off here: the student began to speak]';
 
@@ -65,4 +65,16 @@ export function trimToSpoken(state: V2State, sentences: string[], started: numbe
   const unheard = sentences.slice(Math.max(0, started)).map((x) => x.trim()).filter(Boolean).slice(0, 4);
   if (keepUnheard && unheard.length) next.unheard = unheard;
   return next;
+}
+
+/** Task 7v (SELF_CORRECTION): the learner's words of a turn cut before anything of the reply reached them (no words heard, no board
+ *  item settled) while newer words of theirs wait (`pending`: what cut it): carried into the next turn, since the record keeps no
+ *  trace of the cut turn (foldInterruptedTurn). Null: nothing to carry. Mic test 6 (embed-1795067373124, 6.1 min): "My team is
+ *  working on um uh presentation for senior staff." was lost and "for senior bosses." reached the tutor alone. */
+export function v2CutWordsCarried(said: string | null, reached: string, settled: number, pending: string | null, on: boolean = TUTOR_V2_SELF_CORRECTION): string | null {
+  return on && !!said && !reached.trim() && settled === 0 && !!pending ? said : null;
+}
+/** Task 7v (SELF_CORRECTION): their words for the brain this turn: carried words first, then theirs. */
+export function v2WithCarried(carried: string | null, said: string | null, on: boolean = TUTOR_V2_SELF_CORRECTION): string | null {
+  return on && carried && said ? `${carried}\n${said}` : said;
 }

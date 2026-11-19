@@ -20,10 +20,10 @@ import type { LessonPlan, Segment } from '../lesson-plan/types';
 import { stripBoardBlocks } from './board-inline';
 import { v2LearnerSentence } from './learner-card';
 import { v2AsksPartChange, v2EndingPartAsk, v2MoveAnswer, v2NextPart, v2OpenPagePart, v2PartInHand, v2PartViewed, v2PlanLabelled } from './part-flow';
-import { v2IsPageOfPart, v2PartEntered, v2PartIsOptional, v2PartNamedIn, v2PartOf } from './plan-map';
+import { v2IsPageOfPart, v2OfferedOut, v2PartEntered, v2PartIsOptional, v2PartNamedIn, v2PartOf } from './plan-map';
 import { v2OverrunMin, v2Taught } from './time-box';
 import { v2WithoutFillers } from './language-pack';
-import { TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_PART_ASK_LANGS, TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART } from '../orchestrator/flags';
+import { TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_PART_ASK_LANGS, TUTOR_V2_PART_CLOCK, TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART, TUTOR_V2_TIME_NO_SQUEEZE } from '../orchestrator/flags';
 import type { V2Session, V2State } from './types';
 
 /** The practice sentences of their own a practice part needs before it closes (Task 7f C). */
@@ -100,13 +100,37 @@ export function v2ArrivalDrops(plan: LessonPlan, state: V2State, usedMin: number
 /** Task 7i fix round 1 (the controller's ruling, as in 7f E: never decided by phrases): an optional part left out on arrival that
  *  the learner's words name. Only the facts use it (v2TimeFitFacts' mention line): a mention changes no state. `left`: minutes to
  *  the hard stop; `fits`: the part's own minutes fit in them. Null: none named. */
-export function v2DroppedMentioned(plan: LessonPlan, state: V2State, said: string | null, usedMin: number, boxMin: number | undefined, marginMin: number): { index: number; left: number; minutes: number; fits: boolean } | null {
+export function v2DroppedMentioned(plan: LessonPlan, state: V2State, said: string | null, usedMin: number, boxMin: number | undefined, marginMin: number, optionalToo: boolean = TUTOR_V2_OPTIONAL_FIT): { index: number; left: number; minutes: number; fits: boolean; notReached?: true } | null {
   if (!said || !boxMin || !state.timeFit?.byArrival) return null;
   const i = plan.segments.findIndex((seg) => state.timeFit!.dropped.includes(seg.id) && !!v2PartOf(seg).label && v2PartNamedIn(seg, said));
-  if (i < 0) return null;
-  const minutes = v2PartOf(plan.segments[i]!).minutes ?? 0;
   const left = boxMin + marginMin - usedMin;
+  if (i < 0) {
+    // Task 7v (OPTIONAL_FIT): at the close, an optional part not reached that a request of theirs names ("Can we do pronunciation
+    // before going?", mic test 6 at 18.9 with six minutes left): the 7i fit says whether it can be taken now.
+    const k = optionalToo ? v2OptionalAskedAtClose(plan, state, said) : -1;
+    if (k < 0) return null;
+    return { index: k, left, minutes: v2PartOf(plan.segments[k]!).minutes ?? 0, fits: v2OptionalFits(plan, state, k, usedMin, boxMin, marginMin), notReached: true };
+  }
+  const minutes = v2PartOf(plan.segments[i]!).minutes ?? 0;
   return { index: i, left, minutes, fits: minutes <= left + 1e-9 };
+}
+
+/** Task 7v (OPTIONAL_FIT): at the close (the summary begun or their questions invited), a sentence of theirs asked of the tutor
+ *  (a request frame: can / could we, let's, I'd like, please, a question) that names an optional part the lesson has not entered and
+ *  did not leave out; never their intent for later, a negated sentence or another day. Its index, or -1. Recognising only: the caller
+ *  turns the board to its page (7k) and the facts say whether it fits; nothing of the lesson's state moves on it. */
+export function v2OptionalAskedAtClose(plan: LessonPlan, state: V2State, said: string | null | undefined, on: boolean = TUTOR_V2_OPTIONAL_FIT): number {
+  if (!on || !said || !v2PlanLabelled(plan) || (typeof state.summaryBegunAt !== 'number' && typeof state.closeInvitedAt !== 'number')) return -1;
+  const last = plan.segments.length - 1;
+  for (const raw of said.split(/(?<=[.!?。！？])\s*/)) {
+    const x = raw.replace(DECLINE_LEAD, '').trim();
+    if (!x) continue;
+    const ja = /[぀-ヿ一-鿿]/.test(x);
+    if (ja ? !(ASK_JA.test(x) || /(?:できますか|しませんか|お願いします|やりたい|したい)/.test(x)) || OWN_INTENT_JA.test(x) || DECLINES_JA.test(x) : !REQUEST_FRAME.test(x) || OWN_INTENT.test(x) || NEGATED.test(x) || SOME_OTHER_TIME.test(x)) continue;
+    const i = plan.segments.findIndex((seg, k) => k !== last && v2PartIsOptional(seg) && !!v2PartOf(seg).label && v2PartNamedIn(seg, x) && !state.timeFit?.dropped.includes(seg.id) && !v2PartEntered(seg, state));
+    if (i >= 0) return i;
+  }
+  return -1;
 }
 
 /** Task 7i fix round 1: a part left out on arrival that the lesson has ENTERED (plan-map.ts v2PartEntered, its being left out
@@ -142,20 +166,113 @@ export function v2LeaveOutByChoice(state: V2State, ids: readonly string[]): stri
  *  under the plan minutes of the parts before it plus half its own): how many of its minutes are left, and to go on with it.
  *  Facts only: no hold, no refusal. Mic test 3 (embed-1794967959470, flag 6): the summary began at 12.6 of 20 minutes after one
  *  exchange of the five-minute conversation. Spoken lessons with labelled plans; null otherwise. */
-export function v2StayInPartLine(session: V2Session, state: V2State, nowMs: number, on: boolean = TUTOR_V2_STAY_IN_PART): string | null {
+export function v2StayInPartLine(session: V2Session, state: V2State, nowMs: number, on: boolean = TUTOR_V2_STAY_IN_PART, clockOn: boolean = TUTOR_V2_PART_CLOCK): string | null {
   const plan = session.plan;
   if (!on || !plan || !session.timeBoxMinutes || session.mode !== 'voice' || !v2Taught(session) || !v2PlanLabelled(plan) || state.closed) return null;
   const cur = v2PartInHand(plan, state);
   const seg = plan.segments[cur];
   if (!seg || !v2PracticePart(plan, cur) || v2PartIsOptional(seg) || (state.moveOnAsked ?? []).includes(seg.id)) return null;
-  const before = plan.segments.slice(0, cur).filter((x) => counts(x, state));
+  // Task 7v (PART_CLOCK): measured from when the lesson entered the part, against its own minutes.
   const own = v2PartOf(seg).minutes;
+  const clock = v2PartClock(session, state, nowMs, clockOn);
+  if (clock) {
+    if (!own || clock.used >= own / 2) return null;
+    const left = Math.max(1, Math.round(own - clock.used));
+    return `this part (${v2PartOf(seg).label ?? seg.id}) has about ${Math.min(left, own)} of its ${own} minutes left by the plan: there is time, so go on with it (another question, or a follow-up on their answer) rather than offering the next part`;
+  }
+  const before = plan.segments.slice(0, cur).filter((x) => counts(x, state));
   if (!own || before.some((x) => !v2PartOf(x).minutes)) return null;
   const start = before.reduce((t, x) => t + (v2PartOf(x).minutes ?? 0), 0);
   const used = (nowMs - state.startedAtMs) / 60000;
   if (used >= start + own / 2) return null;
   const left = Math.max(1, Math.round(start + own - used));
   return `this part (${v2PartOf(seg).label ?? seg.id}) has about ${Math.min(left, own)} of its ${own} minutes left by the plan: there is time, so go on with it (another question, or a follow-up on their answer) rather than offering the next part`;
+}
+
+/** Task 7v (PART_CLOCK): the lessons the part clock runs in: spoken, timed, taught, with a labelled plan, not closed. */
+export function v2PartClockOn(session: V2Session, state: Pick<V2State, 'closed'>, on: boolean = TUTOR_V2_PART_CLOCK): boolean {
+  return on && !!session.plan && !!session.timeBoxMinutes && session.mode === 'voice' && v2Taught(session) && v2PlanLabelled(session.plan) && !state.closed;
+}
+
+/** Task 7v (PART_CLOCK): the part in hand is a new part: it began now (state.partStart, mutates). Called as the turn begins (a page
+ *  opened on their yes) and after the reply (a page the reply opened). Mic test 6 (embed-1795067373124): the stay line measured each
+ *  part from the lesson's start, so the minutes an early level check saved went to "Your job" (5.3 of its 3 minutes). */
+export function v2MarkPartStart(session: V2Session, state: V2State, nowMs: number, on: boolean = TUTOR_V2_PART_CLOCK): void {
+  if (!v2PartClockOn(session, state, on)) return;
+  const plan = session.plan!;
+  if (v2PartViewed(plan, state) >= 0) return;
+  const seg = plan.segments[v2PartInHand(plan, state)];
+  if (seg && state.partStart?.part !== seg.id) state.partStart = { part: seg.id, at: nowMs };
+}
+
+/** Task 7v (PART_CLOCK): the part in hand, its own plan minutes and the minutes used in it since the lesson entered it; null when the
+ *  clock does not run, the part has no minutes, or its start is not known. */
+export function v2PartClock(session: V2Session, state: V2State, nowMs: number, on: boolean = TUTOR_V2_PART_CLOCK): { index: number; id: string; label: string; own: number; used: number } | null {
+  if (!v2PartClockOn(session, state, on)) return null;
+  const plan = session.plan!;
+  const index = v2PartInHand(plan, state); const seg = plan.segments[index];
+  const own = seg ? v2PartOf(seg).minutes : undefined;
+  if (!seg || !own || state.partStart?.part !== seg.id) return null;
+  return { index, id: seg.id, label: v2PartOf(seg).label ?? seg.id, own, used: Math.max(0, (nowMs - state.partStart.at) / 60000) };
+}
+
+/** Task 7v (PART_CLOCK): the time line's addition once a teaching part has had its own plan minutes: offer the next part when its
+ *  practice is done. Facts only (the 7f minimum still holds the part, and nothing is squeezed). Not where they asked to move on (they
+ *  decided), nor in the level check, the overview or the close. */
+export function v2PartTimeUpLine(session: V2Session, state: V2State, nowMs: number, on: boolean = TUTOR_V2_PART_CLOCK): string | null {
+  const c = v2PartClock(session, state, nowMs, on);
+  if (!c || !v2TeachingPart(session.plan!, c.index) || (state.moveOnAsked ?? []).includes(c.id) || c.used < c.own) return null;
+  return `this part (${c.label}) has had its ${c.own} planned minutes (about ${Math.round(c.used)} used in it): once its practice is done, close it and offer the next part`;
+}
+
+/** Task 7v (OPTIONAL_FIT): the 7i fit for optional part `i` now: its minutes and those of the required parts after it (the summary's,
+ *  unless the summary has begun: then its own alone) within the box plus the margin from `usedMin`. False for a part without minutes. */
+export function v2OptionalFits(plan: LessonPlan, state: V2State, i: number, usedMin: number, boxMin: number, marginMin: number): boolean {
+  const seg = plan.segments[i];
+  if (!seg || !v2PartIsOptional(seg)) return false;
+  const need = typeof state.summaryBegunAt === 'number' ? v2PartOf(seg).minutes ?? null : minutesFrom(plan, i, state);
+  return need !== null && usedMin + need <= boxMin + marginMin + 1e-9;
+}
+
+/** Task 7v (OPTIONAL_FIT): the wrap minute for this turn while an optional part fits (mic test 6, embed-1795067373124: the yes at
+ *  18.1 to Pronunciation offered at 17.85 opened nothing, the wrap being 18). The wrap moves later, never earlier, and never past the
+ *  minute the summary still needs before the box plus the margin:
+ *   - the optional part is in hand (the lesson entered it): to the end of its own minutes from its start;
+ *   - it is the next part (the part in hand is the one before it) and it fits now, or the last reply asked about it (the 7i
+ *     decision made at the ask stands): to the last minute it still fits.
+ *  Null: nothing moves (no optional part there, it was declined, left out, offered out, the summary has begun, or the flag off).
+ *  `asked`: the part the last reply asked about. Labelled spoken timed lessons whose time fit is decided on arrival only. */
+export function v2OptionalWrapMin(session: V2Session, state: V2State, nowMs: number, wrapMin: number | undefined, marginMin: number, asked: string | null, on: boolean = TUTOR_V2_OPTIONAL_FIT): { wrap: number; label: string; minutes: number; phase: 'next' | 'in'; leftInPart?: number } | null {
+  const plan = session.plan; const box = session.timeBoxMinutes;
+  if (!on || !TUTOR_V2_OPTIONAL_AT_ARRIVAL || !TUTOR_V2_TIME_NO_SQUEEZE || !plan || !box || wrapMin === undefined || session.mode !== 'voice' || !v2Taught(session) || !v2PlanLabelled(plan)) return null;
+  if (state.closed || typeof state.summaryBegunAt === 'number' || typeof state.closeInvitedAt === 'number' || !state.timeFit?.byArrival) return null;
+  const used = (nowMs - state.startedAtMs) / 60000;
+  const cur = v2PartInHand(plan, state);
+  const dropped = state.timeFit.dropped;
+  const after = (i: number) => plan.segments.slice(i + 1).filter((seg) => !v2PartIsOptional(seg) && counts(seg, state)).reduce((t, seg) => t + (v2PartOf(seg).minutes ?? 0), 0);
+  const seg = plan.segments[cur];
+  if (seg && cur < plan.segments.length - 1 && v2PartIsOptional(seg) && !dropped.includes(seg.id) && v2PartOf(seg).minutes) {
+    const own = v2PartOf(seg).minutes!;
+    const start = state.partStart?.part === seg.id ? (state.partStart.at - state.startedAtMs) / 60000 : box + marginMin - after(cur) - own;
+    const wrap = Math.min(start + own, box + marginMin - after(cur));
+    return wrap > wrapMin ? { wrap, label: v2PartOf(seg).label ?? seg.id, minutes: own, phase: 'in', leftInPart: Math.max(0, start + own - used) } : null;
+  }
+  const nx = v2NextPart(plan, state, cur, true);
+  const next = plan.segments[nx];
+  if (!next || nx >= plan.segments.length - 1 || !v2PartIsOptional(next) || dropped.includes(next.id) || state.goals[next.id] || v2OfferedOut(plan, state).has(next.id)) return null;
+  const need = minutesFrom(plan, nx, state);
+  if (need === null) return null;
+  const fits = used + need <= box + marginMin + 1e-9;
+  if (!fits && asked !== next.id) return null;
+  const wrap = Math.max(box + marginMin - need, used + 0.01);
+  return wrap > wrapMin ? { wrap, label: v2PartOf(next).label ?? next.id, minutes: v2PartOf(next).minutes ?? 0, phase: 'next' } : null;
+}
+
+/** Task 7v (OPTIONAL_FIT): the time line's addition while the wrap is held for an optional part (v2OptionalWrapMin). */
+export function v2OptionalHeldLine(h: { label: string; minutes: number; phase: 'next' | 'in'; leftInPart?: number }): string {
+  return h.phase === 'in'
+    ? `the optional ${h.label} part fits before the session must end: go on with it (about ${Math.max(1, Math.round(h.leftInPart ?? h.minutes))} of its ${h.minutes} minutes left), then the summary`
+    : `the optional ${h.label} part (about ${h.minutes} minutes) still fits before the session must end with the summary after it: when this part is done, offer it in one line; if they say yes, take it; if they would rather not, go to the summary`;
 }
 
 /** A teaching part: not the overview (an opening hook), not the level check, not the close. */
@@ -378,6 +495,10 @@ export function v2PartPracticeAsked(plan: LessonPlan, state: V2State, said: stri
     const i = plan.segments.findIndex((seg, k) => k !== last && k !== inView && !v2PartOf(seg).skipWhenLevelKnown && !!v2PartOf(seg).label && v2PartNamedIn(seg, s));
     if (i >= 0) return { index: i, ahead: typeof state.summaryBegunAt !== 'number' && i > pos };
   }
+  // Task 7v (OPTIONAL_FIT): at the close, a request that names an optional part not reached, with no practice cue ("Can we do
+  // pronunciation before going?"): its page is turned to as for practice they asked for (the caller checks it fits).
+  const opt = v2OptionalAskedAtClose(plan, state, said);
+  if (opt >= 0 && opt !== inView) return { index: opt, ahead: false };
   return null;
 }
 

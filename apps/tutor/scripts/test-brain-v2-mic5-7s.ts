@@ -334,7 +334,7 @@ async function main() {
   }
   {
     const off = child('STARTER_IS_ANSWER');
-    check('STARTER_IS_ANSWER off: no starter line, the 7q step as before', !/starters:/.test(off.f37) && !/as a statement/.test(off.starter ?? '') && /Give them the first words of the answer to build on/.test(off.starter ?? ''));
+    check('STARTER_IS_ANSWER off: no starter line, the 7q step as before', !/starters:/.test(off.f37) && !/as a statement/.test(off.starter ?? '') && /(?:Give them|give) the first words of the answer to build on/.test(off.starter ?? ''));
   }
   {
     const off = child('PRONUNCIATION_PAGE');

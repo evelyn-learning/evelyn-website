@@ -23,17 +23,23 @@
  * visit). Keyed on the session, never on a partner. Pure, client-safe.
  */
 import type { LessonPlan } from '../lesson-plan/types';
-import { TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_STARTER_IS_ANSWER, TUTOR_V2_SUPPORT_STEPS } from '../orchestrator/flags';
+import { TUTOR_V2_PART_CLOCK, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_RETEST_SPREAD, TUTOR_V2_RETEST_TARGET_CHANGED, TUTOR_V2_STARTER_IS_ANSWER, TUTOR_V2_SUPPORT_FOLLOWED, TUTOR_V2_SUPPORT_STEPS } from '../orchestrator/flags';
 import { v2CardIsOf, v2SentenceWords } from './learner-card';
 import { v2NoteTargetsOn } from './note-targets';
 import { v2PartInHand, v2PartViewed, v2PlanLabelled, v2TutorReplies } from './part-flow';
 import { v2PartOf } from './plan-map';
-import { v2IsCorrectionOf } from './sentence-cards';
-import { v2PracticePart } from './time-fit';
+import { v2CorrectionWords, v2IsCorrectionOf } from './sentence-cards';
+import { v2PartClock, v2PracticePart } from './time-fit';
+import type { Segment } from '../lesson-plan/types';
 import type { V2Retest, V2Session, V2State, V2Support, V2SupportStep, V2TurnEvent } from './types';
 
-export interface V2AdaptFlags { support: boolean; retest: boolean }
+/** Task 7v: `changed` (RETEST_TARGET_CHANGED), `spread` (RETEST_SPREAD), `followed` (SUPPORT_FOLLOWED): each only where its 7q switch
+ *  is on; absent = its flag. */
+export interface V2AdaptFlags { support: boolean; retest: boolean; changed?: boolean; spread?: boolean; followed?: boolean }
 const FLAGS = (): V2AdaptFlags => ({ support: TUTOR_V2_SUPPORT_STEPS, retest: TUTOR_V2_RETEST_MISTAKE });
+const changedOn = (f: V2AdaptFlags) => f.changed ?? TUTOR_V2_RETEST_TARGET_CHANGED;
+const spreadOn = (f: V2AdaptFlags) => f.spread ?? TUTOR_V2_RETEST_SPREAD;
+const followedOn = (f: V2AdaptFlags) => f.followed ?? TUTOR_V2_SUPPORT_FOLLOWED;
 
 export const V2_SUPPORT_STEPS: readonly V2SupportStep[] = ['stretch', 'normal', 'starter', 'gap', 'repeat'];
 /** Answers in a row that move the step. */
@@ -41,6 +47,8 @@ export const V2_SUPPORT_RUN = 2;
 export const V2_RETEST_MAX_KEPT = 5;
 export const V2_RETEST_MAX_ASKED = 3;
 export const V2_RETEST_TURNS = 2;
+/** Task 7v (RETEST_SPREAD): corrections recorded per part at most. */
+export const V2_RETEST_PER_PART = 2;
 const MAX_TARGET_WORDS = 4;
 const MAX_CHARS = 200;
 
@@ -64,7 +72,8 @@ const label = (plan: LessonPlan, id: string) => { const seg = plan.segments.find
 const ev = (type: string, message: string): V2TurnEvent => ({ type, message });
 
 /** The facts line for a support step (none at normal). */
-export function v2SupportLine(step: V2SupportStep, starterIsAnswer: boolean = TUTOR_V2_STARTER_IS_ANSWER): string | null {
+export function v2SupportLine(step: V2SupportStep, starterIsAnswer: boolean = TUTOR_V2_STARTER_IS_ANSWER, followed: boolean = TUTOR_V2_SUPPORT_FOLLOWED): string | null {
+  if (followed) return v2SupportFormLine(step, starterIsAnswer);
   const tail = 'This shapes only your next new question: a correction, a retry it asks for, one question a reply and the cards stay as they are';
   switch (step) {
     // Task 7s (STARTER_IS_ANSWER): the starter is the opening of their answer, a statement, never the question form.
@@ -77,6 +86,35 @@ export function v2SupportLine(step: V2SupportStep, starterIsAnswer: boolean = TU
     default: return null;
   }
 }
+
+/** Task 7v (SUPPORT_FOLLOWED): the step's line, the form of the next new question named first, with one example of its shape. Mic test
+ *  6 (embed-1795067373124): about a third of new questions ignored the step (starters given while it was gap). */
+export function v2SupportFormLine(step: V2SupportStep, starterIsAnswer: boolean = TUTOR_V2_STARTER_IS_ANSWER): string | null {
+  const tail = 'Only your next NEW question takes this form: a correction, a retry it asks for, one question a reply and the cards stay as they are';
+  switch (step) {
+    // Task 7s (STARTER_IS_ANSWER): the starter is the opening of their answer, a statement, never the question form.
+    case 'starter': return `next question's form: STARTER (support step: starter, their recent answers in this part needed corrections). Ask your question and give the first words of ${starterIsAnswer ? 'their answer as a statement, never the question form' : 'the answer to build on'}, shaped like: "What did you do last week? Start with: I visited…". They finish the sentence. Not a gap-fill. ${tail}`;
+    case 'gap': return `next question's form: GAP-FILL (support step: gap, their recent answers needed corrections even with a start). One sentence with one gap, said aloud and on the question card with the gap as ___, shaped like: "Last year, I ___ a customer in Canada." Not a starter ("Start with: …"), not an open question. ${tail}`;
+    case 'repeat': return `next question's form: REPEAT AFTER ME (support step: repeat, their recent answers needed corrections even with a gap to fill). One model sentence of this part's form for them to say after you, shaped like: "Please say this after me: I have worked here for five years."; once they have, one easy question that takes the same form. Not a starter, not a gap-fill. ${tail}`;
+    case 'stretch': return `next question's form: OPEN, NO HELP (support step: stretch, their last answers in this part were right with no correction). A more open question that needs a longer answer or a reason, still on this part's point, shaped like: "Why was that project important to you?" No starter, no gap-fill. ${tail}`;
+    default: return null;
+  }
+}
+
+/** Task 7v (SUPPORT_FOLLOWED): a part the plan marks as free conversation: its note, aim or script calls it an open / free conversation
+ *  or the tutor a conversation partner, or its name is a conversation. No part name is fixed in the engine. */
+const FREE_CONVERSATION = /\b(?:open|free|natural|real)[- ]conversation\b|\bconversation partner\b/i;
+export function v2FreeConversationPart(seg: Segment | undefined): boolean {
+  if (!seg) return false;
+  const x = seg as unknown as Record<string, unknown>;
+  // The opening sentence of its note, aim or script says what the part is ("Open conversation practice."); a note that only names
+  // the next part ("…advance to the open conversation.") does not. A conversation partner anywhere in it.
+  const texts = ['teacherNote', 'goal', 'script'].map((k) => (typeof x[k] === 'string' ? x[k] as string : '')).filter(Boolean);
+  if (texts.some((t) => FREE_CONVERSATION.test(t.split(/(?<=[.!?:])\s/)[0] ?? '') || /\bconversation partner\b/i.test(t))) return true;
+  return /\bconversation\b/i.test(v2PartOf(seg).label ?? '');
+}
+/** Task 7v (SUPPORT_FOLLOWED): in a free-conversation part the step never goes above starter (no gap-fill or repeat drills there). */
+const capped = (plan: LessonPlan, index: number, step: V2SupportStep, on: boolean) => (on && stepAt(step) > stepAt('starter') && v2FreeConversationPart(plan.segments[index]) ? 'starter' : step);
 
 const words = (s: string) => v2SentenceWords(s);
 /** Fix round 1 (M2): the same target = any target word in common ("sold, machines" then "sold" is one entry). */
@@ -95,12 +133,71 @@ export function v2RetestTarget(stress: readonly string[], max: number = MAX_TARG
   return (content.length ? content : xs).slice(0, max);
 }
 const touches = (stress: readonly string[], target: readonly string[]) => { const t = new Set(target.flatMap(words)); return stress.flatMap(words).some((w) => t.has(w)); };
+/** Task 7v (RETEST_TARGET_CHANGED): two targets are the same when a phrase of one holds a phrase of the other whole ("the best" and
+ *  "in the home" share "the" and are not the same). */
+const phraseIn = (a: string, b: string) => { const x = ` ${words(a).join(' ')} `; const y = words(b).join(' '); return !!y && x.includes(` ${y} `); };
+const samePhrase = (a: readonly string[], b: readonly string[]) => a.some((x) => b.some((y) => phraseIn(x, y) || phraseIn(y, x)));
+
+/** Task 7v (RETEST_TARGET_CHANGED): the runs of card words the correction added or changed (numbers as words and fillers out, 7u):
+ *  the card's words outside the longest common run of theirs and the card's, in order. Each run: its word positions in the card. */
+function changedRuns(said: string, card: string): { cardWords: string[]; runs: number[][] } {
+  const a = v2CorrectionWords(said); const b = v2CorrectionWords(card);
+  const dp: number[][] = Array.from({ length: a.length + 1 }, () => new Array<number>(b.length + 1).fill(0));
+  for (let i = a.length - 1; i >= 0; i--) for (let j = b.length - 1; j >= 0; j--) dp[i]![j] = a[i] === b[j] ? dp[i + 1]![j + 1]! + 1 : Math.max(dp[i + 1]![j]!, dp[i]![j + 1]!);
+  const kept = new Set<number>(); let i = 0; let j = 0;
+  while (i < a.length && j < b.length) { if (a[i] === b[j]) { kept.add(j); i += 1; j += 1; } else if (dp[i + 1]![j]! >= dp[i]![j + 1]!) i += 1; else j += 1; }
+  const runs: number[][] = [];
+  b.forEach((_, k) => { if (kept.has(k)) return; const last = runs[runs.length - 1]; if (last && last[last.length - 1] === k - 1) last.push(k); else runs.push([k]); });
+  return { cardWords: b, runs };
+}
+/** At most this many changed words make a target of them; more, and the card's stress words are the target. */
+export const V2_TARGET_CHANGED_MAX = 3;
+/** Task 7v (RETEST_TARGET_CHANGED): the words the correction changed, as phrases (no neighbour): for the praise line. Empty when
+ *  nothing differs or more than V2_TARGET_CHANGED_MAX words do. */
+export function v2ChangedWords(said: string, card: string): string[] {
+  const { cardWords, runs } = changedRuns(said, card);
+  const n = runs.reduce((t, r) => t + r.length, 0);
+  return n === 0 || n > V2_TARGET_CHANGED_MAX ? [] : runs.map((r) => r.map((k) => cardWords[k]!).join(' '));
+}
+/** Task 7v (RETEST_TARGET_CHANGED): the retest target of a correction: each run of changed words with one neighbour word for context (the
+ *  word after a run that ends on a function word, "in the home"; else the word before, "negotiate with customers"), function words kept
+ *  (in a language lesson the preposition or article is the point). Nothing changed, or more than three words: the card's stress words,
+ *  adjacent ones as one phrase ("is to tell"). Mic test 6 (embed-1795067373124): "on → in" became "home, appliance, division". */
+export function v2ChangedTarget(said: string, card: string, stress: readonly string[]): string[] {
+  const { cardWords, runs } = changedRuns(said, card);
+  const n = runs.reduce((t, r) => t + r.length, 0);
+  if (n === 0 || n > V2_TARGET_CHANGED_MAX) return stressPhrases(cardWords, stress);
+  return runs.map((r) => {
+    const first = r[0]!; const last = r[r.length - 1]!;
+    const after = last + 1 < cardWords.length; const before = first > 0;
+    const span = r.map((k) => cardWords[k]!);
+    if (after && (FUNCTION_WORDS.has(cardWords[last]!) || !before)) return [...span, cardWords[last + 1]!].join(' ');
+    return before ? [cardWords[first - 1]!, ...span].join(' ') : span.join(' ');
+  }).slice(0, MAX_TARGET_WORDS);
+}
+/** The card's stress words as phrases: those next to each other in the card joined ("is", "to", "tell" → "is to tell"). */
+function stressPhrases(cardWords: readonly string[], stress: readonly string[]): string[] {
+  const xs = stress.map((x) => x.trim()).filter(Boolean);
+  if (!xs.length) return [];
+  const at = xs.map((x) => { const w = v2CorrectionWords(x); const k = cardWords.findIndex((_, i) => w.length > 0 && w.every((y, d) => cardWords[i + d] === y)); return { x, k, len: w.length }; });
+  const out: string[] = [];
+  let prevEnd = -2;
+  for (const p of at.filter((q) => q.k >= 0).sort((m, q) => m.k - q.k)) {
+    if (out.length && p.k === prevEnd + 1) out[out.length - 1] = `${out[out.length - 1]} ${p.x}`; else out.push(p.x);
+    prevEnd = p.k + p.len - 1;
+  }
+  for (const p of at) if (p.k < 0) out.push(p.x);
+  return out.slice(0, MAX_TARGET_WORDS);
+}
 
 /** Whether the part is behind its plan minutes (the time used is past the minutes of the parts before it plus its own). No box,
  *  or a part with no minutes: not behind (nothing to tell by). */
-export function v2PartBehind(session: V2Session, state: V2State, index: number, nowMs: number): boolean {
+export function v2PartBehind(session: V2Session, state: V2State, index: number, nowMs: number, clockOn: boolean = TUTOR_V2_PART_CLOCK): boolean {
   const plan = session.plan;
   if (!plan || !session.timeBoxMinutes) return false;
+  // Task 7v (PART_CLOCK): by the part's own minutes since the lesson entered it.
+  const c = v2PartClock(session, state, nowMs, clockOn);
+  if (c && c.index === index) return c.used > c.own;
   const counts = (i: number) => { const seg = plan.segments[i]!; return state.goals[seg.id]?.status !== 'skipped' && !state.timeFit?.dropped.includes(seg.id) && !(v2PartOf(seg).skipWhenLevelKnown && state.workingLevel?.from === 'earlier_lesson'); };
   const own = v2PartOf(plan.segments[index]!).minutes;
   const before = plan.segments.slice(0, index).map((_, i) => i).filter(counts);
@@ -119,14 +216,14 @@ export function v2AdaptBefore(session: V2Session, state: V2State, heard: string 
   // The number of this turn's reply (v2AdaptAfter counts it once the reply is in the history): both name the same turn.
   const turn = v2TutorReplies(state.history) + 1;
   if (flags.support && part && state.support && state.support.part && state.support.part !== part.id) {
-    const from = state.support.step; const to = moved(from, from === 'normal' ? 0 : stepAt(from) > stepAt('normal') ? -1 : 1);
+    const from = state.support.step; const to = capped(plan, part.index, moved(from, from === 'normal' ? 0 : stepAt(from) > stepAt('normal') ? -1 : 1), followedOn(flags));
     state.support = { step: to, wrong: 0, clean: 0, part: part.id };
     if (to !== from) events.push(ev('v2_support_step', `from=${from} to=${to} why=part_change part=${part.id} turn=${turn}`));
   }
   // A silence turn (no words from them) gets no line: its reply is one short line with no new question (facts.ts), and a retest
   // sent then would spend one of its turns.
   const said = typeof heard === 'string' && !!heard.trim();
-  if (flags.support && part && state.support && said) { const l = v2SupportLine(state.support.step); if (l) lines.push(l); }
+  if (flags.support && part && state.support && said) { const l = v2SupportLine(capped(plan, part.index, state.support.step, followedOn(flags)), undefined, followedOn(flags)); if (l) lines.push(l); }
   if (!flags.retest) return { lines, events };
   const list = state.retests ?? [];
   // An open retest is not asked when: the lesson is in another practice part, or at its summary or close (fix round 1, M3: not on
@@ -144,11 +241,23 @@ export function v2AdaptBefore(session: V2Session, state: V2State, heard: string 
   // Their answer just now uses the target of the open retest: one word of praise is allowed, once, if it is right.
   if (open && !open.praised && heard && usesTarget(heard, open.target)) {
     open.praised = true;
-    lines.push(`retest: their answer just now uses ${quoteTarget(open.target)}, which they got wrong earlier in the lesson ("${open.said}"). If it is right there, you may add one short word of praise that names it (you said ${quoteTarget(open.target)} this time); once only`);
+    // Task 7v (RETEST_TARGET_CHANGED): the praise names only the words the correction changed, never a neighbour shown for context.
+    const runs = changedOn(flags) ? v2ChangedWords(open.said, open.right) : [];
+    // Each target phrase holds its changed run (v2ChangedTarget, same order): only the runs of the phrases their answer used.
+    const named = runs.length === open.target.length ? runs.filter((_, i) => usesTarget(heard, [open.target[i]!])) : [];
+    const praise = named.length ? named : open.target;
+    lines.push(`retest: their answer just now uses ${quoteTarget(open.target)}, which they got wrong earlier in the lesson ("${open.said}"). If it is right there, you may add one short word of praise that names it (you said ${quoteTarget(praise)} this time); once only`);
     return { lines, events };
   }
   let ask: V2Retest | undefined;
   if (open && (open.offered ?? 0) < V2_RETEST_TURNS) ask = open;
+  else if (!open && spreadOn(flags)) {
+    // Task 7v (RETEST_SPREAD): one retest offered per part; only retests put to them count against the three a lesson (one that
+    // ended "not asked" never reached them); one place kept for a free-conversation part still to come.
+    const asked = list.filter((r) => r.offered && r.outcome !== 'not_asked').length;
+    const convLater = !v2FreeConversationPart(plan.segments[part.index]) && plan.segments.some((seg, i) => i > part.index && v2PracticePart(plan, i) && v2FreeConversationPart(seg) && !state.timeFit?.dropped.includes(seg.id));
+    if (!list.some((r) => r.in === part.id) && asked < V2_RETEST_MAX_ASKED - (convLater ? 1 : 0) && !v2PartBehind(session, state, part.index, nowMs)) ask = list.find((r) => !r.offered && !r.outcome && r.part !== part.id);
+  }
   else if (!open && list.filter((r) => r.offered).length < V2_RETEST_MAX_ASKED && !v2PartBehind(session, state, part.index, nowMs)) ask = list.find((r) => !r.offered && !r.outcome && r.part !== part.id);
   if (ask) {
     // Fix round 1 (I1, I2): the turn of each send: only answers after the first send are scored, and not asked only after the
@@ -165,13 +274,15 @@ export interface V2PracticePair { said: string; card: string; corrected: boolean
 
 /** The pairs of this answer: each sentence of theirs with the reply's card of it (each card used once); a sentence with no card
  *  is left out. `cards`: the reply's sentence cards painted or pointed back at, with their stress. */
-export function v2PracticePairs(sentences: readonly string[], cards: ReadonlyArray<{ sentence: string; stress: readonly string[] }>): V2PracticePair[] {
+export function v2PracticePairs(sentences: readonly string[], cards: ReadonlyArray<{ sentence: string; stress: readonly string[] }>, changed: boolean = TUTOR_V2_RETEST_TARGET_CHANGED && TUTOR_V2_RETEST_MISTAKE): V2PracticePair[] {
   const left = [...cards]; const out: V2PracticePair[] = [];
   for (const s of sentences) {
     const at = left.findIndex((c) => v2CardIsOf(c.sentence, s));
     if (at < 0) continue;
     const c = left.splice(at, 1)[0]!;
     const corrected = v2IsCorrectionOf(c.sentence, s);
+    // Task 7v (RETEST_TARGET_CHANGED): the words the correction changed, with one neighbour each.
+    if (changed && corrected) { const t = v2ChangedTarget(s, c.sentence, c.stress); if (t.length) { out.push({ said: s.slice(0, MAX_CHARS), card: c.sentence.slice(0, MAX_CHARS), corrected, stress: t }); continue; } }
     let stress = corrected ? v2RetestTarget(c.stress) : [];
     // A correction card with no stress: the card's words that are not theirs (learner-card.ts computes a runtime card's alike),
     // fix round 1 (M1): function words out when a content word stays, at most two.
@@ -196,7 +307,7 @@ export function v2AdaptAfter(session: V2Session, state: V2State, part: { index: 
     const cur: V2Support = state.support && state.support.part === part.id ? { ...state.support } : { step: state.support?.step ?? 'normal', wrong: 0, clean: 0, part: part.id };
     if (signal === 'wrong') { cur.wrong = Math.min(V2_SUPPORT_RUN, cur.wrong + 1); cur.clean = 0; } else { cur.clean = Math.min(V2_SUPPORT_RUN, cur.clean + 1); cur.wrong = 0; }
     const by = cur.wrong >= V2_SUPPORT_RUN ? 1 : cur.clean >= V2_SUPPORT_RUN ? -1 : 0;
-    const to = moved(cur.step, by);
+    const to = capped(session.plan!, part.index, moved(cur.step, by), followedOn(flags));
     if (to !== cur.step) { events.push(ev('v2_support_step', `from=${cur.step} to=${to} why=${by > 0 ? 'two_wrong' : 'two_clean'} part=${part.id} turn=${turn}`)); cur.step = to; cur.wrong = 0; cur.clean = 0; }
     state.support = cur;
   }
@@ -209,14 +320,20 @@ export function v2AdaptAfter(session: V2Session, state: V2State, part: { index: 
   // (the turn after it) has been read with neither outcome.
   const open = list.find((r) => r.offered && !r.outcome && r.in === part.id && typeof r.askedAt === 'number' && turn > r.askedAt);
   if (open) {
-    const missed = pairs.some((p) => p.corrected && (touches(p.stress, open.target) || (!usesTarget(p.said, open.target) && usesTarget(p.card, open.target))));
+    const missed = pairs.some((p) => p.corrected && ((changedOn(flags) ? samePhrase(p.stress, open.target) : touches(p.stress, open.target)) || (!usesTarget(p.said, open.target) && usesTarget(p.card, open.target))));
     const passedNow = !missed && pairs.some((p) => usesTarget(p.said, open.target));
     const outcome = missed ? 'missed' : passedNow ? 'passed' : (open.offered ?? 0) >= V2_RETEST_TURNS && typeof open.lastAt === 'number' && turn > open.lastAt ? 'not_asked' : null;
     if (outcome) { open.outcome = outcome; events.push(ev('v2_retest_outcome', `target=${quoteTarget(open.target)} outcome=${outcome} part=${part.id} turn=${turn}`)); }
   }
   for (const p of pairs) {
-    if (!p.corrected || !p.stress.length || list.length >= V2_RETEST_MAX_KEPT) continue;
-    if (list.some((r) => sameTarget(r.target, p.stress))) continue;
+    if (!p.corrected || !p.stress.length) continue;
+    if (list.some((r) => (changedOn(flags) ? samePhrase(r.target, p.stress) : sameTarget(r.target, p.stress)))) continue;
+    if (spreadOn(flags)) {
+      // Task 7v (RETEST_SPREAD): at most V2_RETEST_PER_PART per part (the first two distinct targets); the list full, a newer one takes
+      // the place of the oldest never offered, so later parts' mistakes are kept (mic test 6: full after "Your job").
+      if (list.filter((r) => r.part === part.id).length >= V2_RETEST_PER_PART) continue;
+      if (list.length >= V2_RETEST_MAX_KEPT) { const k = list.findIndex((r) => !r.offered && !r.outcome); if (k < 0) continue; const gone = list.splice(k, 1)[0]!; events.push(ev('v2_retest_replaced', `target=${quoteTarget(gone.target)} part=${gone.part} by=${quoteTarget(p.stress)} turn=${turn}`)); }
+    } else if (list.length >= V2_RETEST_MAX_KEPT) continue;
     list.push({ part: part.id, said: p.said, right: p.card, target: p.stress, turn });
     events.push(ev('v2_retest_recorded', `target=${quoteTarget(p.stress)} part=${part.id} turn=${turn}`));
   }

@@ -15,15 +15,16 @@
  * Facts only: nothing of the lesson's state moves on them. Spoken lessons that teach a language (the 7h gate, note-targets.ts);
  * every other lesson gets none, so its facts are byte-identical. Pure, client-safe.
  */
-import { TUTOR_V2_PRACTISED_SENTENCE, TUTOR_V2_QUESTION_NOT_NOTE, TUTOR_V2_STARTER_IS_ANSWER } from '../orchestrator/flags';
-import { v2AskedToProduce } from './learner-card';
+import { TUTOR_V2_PRACTISED_SENTENCE, TUTOR_V2_QUESTION_NOT_NOTE, TUTOR_V2_SELF_CORRECTION, TUTOR_V2_STARTER_IS_ANSWER } from '../orchestrator/flags';
+import { v2AskedToProduce, v2LearnerSentence } from './learner-card';
+import { v2SentenceTokens } from './sentence-cards';
 import { v2ScoredTurn } from './pronunciation';
 import { v2NoteTargetsOn } from './note-targets';
 import { v2PartInHand, v2PlanLabelled } from './part-flow';
 import { v2PracticePart } from './time-fit';
 import type { V2Session, V2State } from './types';
 
-export interface V2PracticeFactFlags { practised: boolean; starter: boolean; questionCard: boolean }
+export interface V2PracticeFactFlags { practised: boolean; starter: boolean; questionCard: boolean; selfCorrection?: boolean }
 const FLAGS = (): V2PracticeFactFlags => ({ practised: TUTOR_V2_PRACTISED_SENTENCE, starter: TUTOR_V2_STARTER_IS_ANSWER, questionCard: TUTOR_V2_QUESTION_NOT_NOTE });
 
 export const V2_PRACTISED_SENTENCE_LINE = 'practised sentence: your last reply asked them to make a question or to say a sentence you gave, so their words just now are that practice sentence, whatever its form (a question such as "Did you enjoy…?" included, with or without a question mark): give feedback on it as practice (right as said, or corrected) and card it as you card their sentences; do not answer it as if they had asked you, and nothing from your own persona card. Only if they are plainly asking you what to do, what a word means, or to hear it again, answer that. A question they ask you outside such an ask is answered as usual';
@@ -47,5 +48,24 @@ export function v2PracticeFactLines(session: V2Session, state: V2State, heard: s
   const practice = !v2PlanLabelled(session.plan) || v2PracticePart(session.plan, v2PartInHand(session.plan, state));
   if (flags.starter && typeof state.summaryBegunAt !== 'number' && practice) lines.push(V2_STARTER_LINE);
   if (flags.questionCard) lines.push(V2_QUESTION_CARD_LINE);
+  // Task 7v (SELF_CORRECTION): a short phrase right after a full sentence of theirs in the same turn corrects that sentence.
+  const self = (flags.selfCorrection ?? TUTOR_V2_SELF_CORRECTION) ? v2SelfCorrection(heard) : null;
+  if (self) lines.push(`self-correction: their words just now are "${self.sentence}" and then "${self.phrase}". The short phrase right after their sentence corrects it (part of it said again, better): read the two together as the one sentence they meant and give your feedback on that sentence; never treat or correct the phrase as a sentence of its own or a fragment`);
   return lines;
+}
+
+/** Task 7v (SELF_CORRECTION): their turn's last part is a short phrase (one to three words, not a yes / no, a thanks or a question)
+ *  said right after a full sentence (four words or more, v2LearnerSentence): the sentence and the phrase, else null. Mic test 6
+ *  (embed-1795067373124, 6.1 min): "My team is working on um uh presentation for senior staff." then "for senior bosses." was
+ *  corrected as a fragment. */
+const NOT_A_PHRASE = /^(?:yes|yeah|yep|no|nope|ok(?:ay)?|sure|thanks?|thank you|sorry|right|i see|uh|um|はい|いいえ|ええ)\b/i;
+export function v2SelfCorrection(heard: string | null | undefined): { sentence: string; phrase: string } | null {
+  if (!heard) return null;
+  const parts = heard.split(/\n+|(?<=[.!?。！？])\s+/).map((x) => x.trim()).filter(Boolean);
+  if (parts.length < 2) return null;
+  const phrase = parts[parts.length - 1]!; const before = parts[parts.length - 2]!;
+  const n = v2SentenceTokens(phrase).filter((w) => !/^(?:u+h+|u+m+|e+r+m*)$/.test(w)).length;
+  if (n < 1 || n > 3 || /[?？]\s*$/.test(phrase) || NOT_A_PHRASE.test(phrase)) return null;
+  const sentence = v2LearnerSentence(before);
+  return sentence ? { sentence: before.replace(/\s+/g, ' ').slice(0, 200), phrase: phrase.slice(0, 80) } : null;
 }

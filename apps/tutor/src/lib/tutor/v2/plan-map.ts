@@ -227,7 +227,9 @@ const partNames = (segs: Segment[]) => {
  *  box's last fifth): offer them in one line before the summary if the time allows, else name them in it as next time.
  *  'closing' (the time is up, the wrap is due or the student is stopping): name them in the summary as next time. Not
  *  once the lesson has closed. `enabled` is the kill switch. */
-export function v2UnreachedAtCloseFact(plan: LessonPlan | undefined, state: V2State, phase: 'near' | 'closing' | null, enabled: boolean = TUTOR_V2_PASSED_PART_CLOSE): string[] {
+/** Task 7v (OPTIONAL_FIT, `fits`): at the closing phase, parts that all still fit by the 7i fit are named as next time without "there
+ *  is no time for them now" (mic test 6, embed-1795067373124: said at 18.1 of a box that ran to 25). */
+export function v2UnreachedAtCloseFact(plan: LessonPlan | undefined, state: V2State, phase: 'near' | 'closing' | null, enabled: boolean = TUTOR_V2_PASSED_PART_CLOSE, fits?: (seg: Segment) => boolean): string[] {
   if (!enabled || !plan || !phase || state.closed) return [];
   const out = v2OfferedOut(plan, state);
   // Task 7f B: near the close, a part left out for time is not offered (the time-fit line names it as next time).
@@ -235,6 +237,7 @@ export function v2UnreachedAtCloseFact(plan: LessonPlan | undefined, state: V2St
   if (!left.length) return [];
   const list = partNames(left); const one = left.length === 1; const it = one ? 'it' : 'them';
   const head = `${list[0]!.toUpperCase()}${list.slice(1)} ${one ? 'was' : 'were'} not reached`;
+  if (phase === 'closing' && fits && left.every(fits)) return [`${head}: in your summary, name ${it} in one short line as something for next time; ${one ? 'it' : 'they'} would still fit, so if they ask for ${it}, ${one ? 'it is' : 'they are'} taken`];
   return [phase === 'closing'
     ? `${head}, and there is no time for ${it} now: in your summary, name ${it} in one short line as something for next time`
     : `${head}: before the summary, offer ${it} in one line if the time allows; if not, name ${it} in your summary, in one short line, as something for next time`];

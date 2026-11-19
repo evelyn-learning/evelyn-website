@@ -23,7 +23,7 @@ export const V2_MAX_UNHEARD = 4;
  *  the close; final review I6: read whatever STATE_CARRY says, as the held page is (its own switch, CLOSE_INVITES_QUESTIONS,
  *  and its scope are applied in v2ScopeCarried): with STATE_CARRY off it was dropped every turn, and every close after the
  *  invitation was refused and the invitation asked again. */
-type Carried = Pick<V2State, 'heldPage' | 'summaryBegunAt' | 'repliesSinceBoard' | 'boardProblems' | 'closeInvitedAt' | 'closeReopened' | 'closeAsk' | 'closeCheck' | 'visitPages' | 'clockPausedMs' | 'timeFit' | 'practiceSaid' | 'moveOnAsked' | 'cardsOwed' | 'unheard'>;
+type Carried = Pick<V2State, 'heldPage' | 'summaryBegunAt' | 'repliesSinceBoard' | 'boardProblems' | 'closeInvitedAt' | 'closeReopened' | 'closeAsk' | 'closeCheck' | 'visitPages' | 'clockPausedMs' | 'timeFit' | 'practiceSaid' | 'moveOnAsked' | 'cardsOwed' | 'unheard' | 'partStart'>;
 const ID = /^[\w.:-]{1,80}$/;
 export function v2ReadCarried(raw: unknown, enabled: boolean = TUTOR_V2_STATE_CARRY): Carried {
   const s = (raw && typeof raw === 'object' ? raw : {}) as Partial<Record<keyof V2State, unknown>>;
@@ -52,6 +52,10 @@ export function v2ReadCarried(raw: unknown, enabled: boolean = TUTOR_V2_STATE_CA
   // Task 7u (CLOSE_CHECK): the closing check asked / answered, read as closeInvitedAt is (its switch and scope in v2ScopeCarried).
   const check = v2ReadCloseCheck(s.closeCheck);
   if (check) out.closeCheck = check;
+  // Task 7v (PART_CLOCK): the part in hand and when the lesson entered it, whatever STATE_CARRY says (its own switch, read in
+  // time-fit.ts; scope in v2ScopeCarried).
+  const ps = s.partStart as Partial<NonNullable<V2State['partStart']>> | undefined;
+  if (ps && typeof ps === 'object' && typeof ps.part === 'string' && ID.test(ps.part) && typeof ps.at === 'number' && Number.isFinite(ps.at) && ps.at >= 0) out.partStart = { part: ps.part, at: ps.at };
   if (Array.isArray(s.visitPages)) { const list = s.visitPages.filter((x): x is number => typeof x === 'number' && Number.isInteger(x) && x >= 0 && x < 200).slice(-20); if (list.length) out.visitPages = list; }
   // Task 7n (FLAG_CLOCK_PAUSE): the flag panel's paused total, whatever STATE_CARRY says (its own switch, read in time-box.ts).
   // Fix round 1 (I2): never in production (no legitimate sender); bounded by elapsed time and the box where it is read (time-box.ts).
@@ -81,7 +85,7 @@ export function v2ScopeCarried(state: V2State, session: Pick<V2Session, 'mode' |
   if (!v2CarryApplies(session)) { delete state.summaryBegunAt; delete state.repliesSinceBoard; delete state.boardProblems; delete state.closeInvitedAt; delete state.closeReopened; delete state.closeAsk; delete state.closeCheck; }
   if (!closeInviteOn) { delete state.closeInvitedAt; delete state.closeReopened; delete state.closeAsk; delete state.closeCheck; }
   // Task 7f: the practice count is the part flow's (spoken plan-led lessons); the time fit any timed taught lesson's with a plan.
-  if (!v2CarryApplies(session)) { delete state.practiceSaid; delete state.moveOnAsked; delete state.cardsOwed; delete state.unheard; delete state.visitPages; }
+  if (!v2CarryApplies(session)) { delete state.practiceSaid; delete state.moveOnAsked; delete state.cardsOwed; delete state.unheard; delete state.visitPages; delete state.partStart; }
   if (!session.plan || session.homework || session.homeworkSheet || discussionOf(session.plan)) delete state.timeFit;
   // Task 7q: the support step and the recorded corrections only for the lessons they run in (adaptive.ts v2AdaptOn).
   if (!v2AdaptOn(session as V2Session)) { delete state.support; delete state.retests; }

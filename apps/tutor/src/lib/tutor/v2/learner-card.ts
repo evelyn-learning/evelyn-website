@@ -36,7 +36,7 @@
  * session): maths and science, one-language lessons, typed lessons, homework and a discussion are unchanged.
  */
 import type Anthropic from '@anthropic-ai/sdk';
-import { TUTOR_V2_BOARD_LEARNER_SENTENCE, TUTOR_V2_CARD_EVERY_SENTENCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_PRACTISED_SENTENCE } from '../orchestrator/flags';
+import { TUTOR_V2_ANSWER_SIGNAL, TUTOR_V2_BOARD_LEARNER_SENTENCE, TUTOR_V2_CARD_EVERY_SENTENCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_PRACTISED_SENTENCE } from '../orchestrator/flags';
 import { languageNameOf } from '../voice/language-request';
 import { stripBoardBlocks, type InlineBlock, type InlinePart } from './board-inline';
 import { v2IsPracticeAsk } from './languages';
@@ -365,6 +365,27 @@ function askedForSentence(history: Anthropic.MessageParam[], wide: boolean = TUT
   return sentences.some((x) => v2IsPracticeAsk(x) || SENTENCE_REQUEST.test(x) || (wide && SENTENCE_REQUEST_JA.test(x))) || QUESTION_ABOUT_THEM.test(sentences[sentences.length - 1] ?? '');
 }
 
+/** Task 7v (ANSWER_SIGNAL): an ask to fill a gap ("Next, fill the gap in this sentence and say the whole sentence aloud.") and a question
+ *  card with a gap in the reply ask for a sentence too; so does the ask of a reply they spoke over (its sentences cut from the record
+ *  and kept in state.unheard). Mic test 6 (embed-1795067373124): turns 35 and 44 answered a gap ask, turn 30 an ask cut from the
+ *  record by his barge-in, and none gave a practice signal or an owed card. */
+const GAP_ASK = /\bfill (?:in )?(?:the|this|each|a|that) (?:gap|blank)s?\b|空欄/i;
+const GAP_CARD = /<board\s+problem\b[^>]*>[^<]*_{2,}/i;
+const textOf = (m: Anthropic.MessageParam) => (typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '));
+function askedForAnswer(state: Pick<V2State, 'history' | 'unheard'>, wide: boolean = TUTOR_V2_PRACTISED_SENTENCE, signal: boolean = TUTOR_V2_ANSWER_SIGNAL): boolean {
+  if (askedForSentence(state.history, wide)) return true;
+  if (!signal) return false;
+  const last = [...state.history].reverse().find((h) => h.role === 'assistant');
+  if (!last) return false;
+  const raw = textOf(last);
+  const heardPart = stripBoardBlocks(raw).replace(/\[cut off[^\]]*\]/gi, ' ');
+  const sentences = [...heardPart.split(/(?<=[.!?。！？]["'”’」)]*)\s+/), ...(state.unheard ?? [])].map((x) => x.trim()).filter(Boolean);
+  const end = sentences[sentences.length - 1] ?? '';
+  if (end && (v2IsPartAsk(end) || v2ReplyInvites(end))) return false;
+  const gapCard = GAP_CARD.test(raw) || (Array.isArray(last.content) && last.content.some((c) => c.type === 'tool_use' && c.name === 'show_problem' && /_{2,}/.test(JSON.stringify(c.input ?? ''))));
+  return gapCard || sentences.some((x) => GAP_ASK.test(x)) || (state.unheard ?? []).some((x) => v2IsPracticeAsk(x) || SENTENCE_REQUEST.test(x) || (wide && SENTENCE_REQUEST_JA.test(x)));
+}
+
 /** Task 7g (CARD_EVERY_SENTENCE), fix round 1 (I1): a sentence that is no practice sentence of theirs is one whose WHOLE shape
  *  is a request to the tutor about the lesson itself: move on, one more, say it again, slower, "I didn't catch that", "I have a
  *  question" (fillers, a yes or a no, a sorry and a "please" around it). Anything with content beyond the ask is theirs ("I want
@@ -405,7 +426,7 @@ export function v2LearnerSentences(said: string | null | undefined): string[] {
 export function v2PracticeAnswerSentences(session: V2Session, state: V2State, heard: string | null | undefined, enabled: boolean = TUTOR_V2_CARD_EVERY_SENTENCE): string[] {
   const plan = session.plan;
   const viewed = v2PlanLabelled(plan) ? v2PartViewed(plan, state) : -1;
-  if (!enabled || !v2LearnerCardsOn(session, state, heard) || (typeof state.closeInvitedAt === 'number' && viewed < 0) || !askedForSentence(state.history)) return [];
+  if (!enabled || !v2LearnerCardsOn(session, state, heard) || (typeof state.closeInvitedAt === 'number' && viewed < 0) || !askedForAnswer(state)) return [];
   if (v2PlanLabelled(plan)) {
     const seg = plan.segments[viewed >= 0 ? viewed : v2PartInHand(plan, state)];
     if (!seg || seg.kind === 'hook' || v2PartOf(seg).skipWhenLevelKnown) return [];
@@ -496,7 +517,7 @@ export function v2LearnerSentenceFacts(session: V2Session, state: V2State, heard
     return [`their answer just now had ${n === 1 ? '1 sentence' : `${n} sentences`} of their own: ${all.map((x, k) => `${k + 1}. ${JSON.stringify(x)}`).join(' ')}. Put ${n === 1 ? 'it' : 'every one of them'} on the board, one sentence card per sentence, as it should be said: as they said it (without fillers) when it is right; your corrected sentence, the changed words stressed, with a short ${support} gloss of the point, when you correct it. None left off, and no card for anything not in this list (none of their mistake, none for small talk)`];
   }
   const s = v2LearnerSentence(heard);
-  if (!s || !askedForSentence(state.history) || v2SentenceOnBoard(state.board, s, state.correctedSentences ?? [])) return [];
+  if (!s || !askedForAnswer(state) || v2SentenceOnBoard(state.board, s, state.correctedSentences ?? [])) return [];
   return [`their words just now answered your ask with a sentence of theirs: put it on the board as one sentence card as it should be, where you answer it: as they said it (without fillers) when it is right; your corrected sentence, the changed words stressed, with a short ${support} gloss, when you correct it. One card in this reply at most; none of their mistake, none for small talk, none when the sentence is up already`];
 }
 

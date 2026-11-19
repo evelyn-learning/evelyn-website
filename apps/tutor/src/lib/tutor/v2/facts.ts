@@ -21,9 +21,9 @@ import { TUTOR_V2_CARD_GLOSS_ASK, TUTOR_V2_CARD_GLOSS_REMIND } from '../orchestr
 import { v2CardsOwedFacts, v2LearnerSentenceFacts } from './learner-card';
 import { v2PracticeAskFacts, v2RetryFacts } from './languages';
 import { v2PracticeFactLines } from './practice-facts';
-import { V2_TIME_UP_MIN, v2CloseOpen, v2PlanContentDone, v2LeftToStopMin, v2LessonTimeLine, v2PartDueFact, v2TimeFlags, v2WrapDue, type V2TimeFlags } from './time-box';
-import { V2_MORE_PRACTICE_MIN_LEFT, v2MorePracticeFacts, v2PracticeFacts, v2StayInPartLine, v2TimeFitFacts } from './time-fit';
-import { TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART } from '../orchestrator/flags';
+import { V2_TIME_UP_MIN, v2CloseOpen, v2PlanContentDone, v2LeftToStopMin, v2LessonTimeLine, v2OverrunMin, v2PartDueFact, v2TimeFlags, v2WrapDue, type V2TimeFlags } from './time-box';
+import { V2_MORE_PRACTICE_MIN_LEFT, v2MorePracticeFacts, v2OptionalFits, v2OptionalHeldLine, v2PartClock, v2PartTimeUpLine, v2PracticeFacts, v2StayInPartLine, v2TimeFitFacts } from './time-fit';
+import { TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART, TUTOR_V2_SUPPORT_FOLLOWED } from '../orchestrator/flags';
 import { v2CloseInviteFacts, v2CloseReopened, v2MoreAskAnswered } from './close-invite';
 import { v2CloseCheckFacts } from './close-check';
 import { v2SummaryGroupsOn, v2SummaryLayoutLine } from './summary-layout';
@@ -73,7 +73,9 @@ export interface V2TurnFacts {
   morePractice?: boolean;
   /** Task 7i (OPTIONAL_AT_ARRIVAL), fix round 1: their words name an optional part left out for time: its name, its minutes, the
    *  minutes left before the session must end, and whether it fits in them. Facts only (permissive): nothing changes on it. */
-  droppedAsked?: { label: string; minutes: number; left: number; fits: boolean };
+  droppedAsked?: { label: string; minutes: number; left: number; fits: boolean; notReached?: true };
+  /** Task 7v (OPTIONAL_FIT): the wrap is held for an optional part that fits (time-fit.ts v2OptionalWrapMin). */
+  optionalHeld?: { label: string; minutes: number; phase: 'next' | 'in'; leftInPart?: number };
   /** Task 7k (PRACTICE_ON_PART_PAGE): the page in view is another part's page for practice they asked for (turn.ts):
    *  that part's name, the page's heading, the heading of the position's page to return to, and whether the runtime turned
    *  the board to it as this reply begins. */
@@ -202,6 +204,11 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // Task 7i (STAY_IN_PART): ahead of the plan in a required practice part, the time line says to go on with it. Not once the
   // close is open, the summary has begun, or more practice was asked for at the close.
   const stay = !discussion && !session.homework && !session.homeworkSheet && !closeOpen && !summaryBegun && !morePracticeAllowed ? v2StayInPartLine(session, state, f.nowMs) : null;
+  // Task 7v (PART_CLOCK): the part in hand has had its own plan minutes (measured from when the lesson entered it): offer the next.
+  const partUp = !discussion && !stay && !closeOpen && !summaryBegun && !morePracticeAllowed ? v2PartTimeUpLine(session, state, f.nowMs) : null;
+  // Task 7v (OPTIONAL_FIT): the wrap is held for an optional part that fits.
+  const held = !discussion && f.optionalHeld && !summaryBegun && !morePracticeAllowed ? v2OptionalHeldLine(f.optionalHeld) : null;
+  const timeTail = [stay, partUp, held].filter(Boolean).map((x) => `; ${x}`).join('');
   const lines = [
     // A discussion runs 8–12 minutes and may close early once the person has chosen where to go next: the teaching
     // line's "time for more, not at its close" would hold it open.
@@ -215,7 +222,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
       // on v1, it cut into the menu the tutor was reading (tester-2, time-box.ts).
       // Task 7f E (fix round 4): in a turn whose facts allow more practice, the time line carries no "then summary" or
       // "the close is near": only what is left before the session must end.
-      : `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${morePracticeAllowed ? `about ${Math.max(1, Math.floor(leftStop))} minutes before the session must end` : v2LessonTimeLine(session, state, f.nowMs, { summaryBegun, closeOpen, tf })}` : ''}${stay ? `; ${stay}` : ''}`,
+      : `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${morePracticeAllowed ? `about ${Math.max(1, Math.floor(leftStop))} minutes before the session must end` : v2LessonTimeLine(session, state, f.nowMs, { summaryBegun, closeOpen, tf })}` : ''}${timeTail}`,
     `board:\n  ${renderBoard(state.board)}`,
   ];
   if ((state.repliesSinceBoard ?? 0) >= 1) lines.push(`board last written on: ${state.repliesSinceBoard} ${state.repliesSinceBoard === 1 ? 'reply' : 'replies'} ago`);
@@ -234,7 +241,10 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     // Task 7f D: near the close = the close is open (content done or the wrap minute), not the box's last fifth.
     // The required parts done is near too: an optional part not reached is then offered before the summary.
     const near = tf.closeByContent ? closeOpen || (!!session.timeBoxMinutes && v2PlanContentDone(session.plan, state, true)) : !!session.timeBoxMinutes && left <= session.timeBoxMinutes * 0.2;
-    if (!discussion && !passed.length) lines.push(...v2UnreachedAtCloseFact(session.plan, state, closing || summaryBegun ? 'closing' : near ? 'near' : null));
+    // Task 7v (OPTIONAL_FIT): an optional part that still fits by the 7i fit is never "no time for it now"; asked for at the close
+    // while it fits, the droppedAsked line below says to take it up.
+    const fitting = TUTOR_V2_OPTIONAL_FIT && !!session.timeBoxMinutes && !discussion && !f.stopAsked ? (seg: { id: string }) => { const i = session.plan!.segments.findIndex((x) => x.id === seg.id); return i >= 0 && !state.timeFit?.dropped.includes(seg.id) && v2OptionalFits(session.plan!, state, i, (f.nowMs - state.startedAtMs) / 60000, session.timeBoxMinutes!, tf.overrun ? v2OverrunMin(true) : 0); } : undefined;
+    if (!discussion && !passed.length && !(f.droppedAsked?.notReached && f.droppedAsked.fits)) lines.push(...v2UnreachedAtCloseFact(session.plan, state, closing || summaryBegun ? 'closing' : near ? 'near' : null, undefined, fitting));
     // Task 6g: an optional part offered and not taken up is offered at most once more (tester A: four offers in nine turns).
     if (!discussion) lines.push(...v2PartOfferFacts(session.plan, state));
     if (!discussion && summaryBegun && !morePracticeAllowed && !reopened && !moreAsked && !f.partVisit) lines.push('the summary has begun: from here, no new practice, exercise or offer of more practice unless they ask for it. Answer what they say and bring the lesson to its close');
@@ -251,7 +261,10 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     // Task 7f B: the parts left out for time; C: the practice the part in hand still needs; E: more practice asked for at the close.
     if (!discussion) lines.push(...v2TimeFitFacts(session, state, tf.noSqueeze, f.nowMs));
     // Task 7i (OPTIONAL_AT_ARRIVAL), fix round 1: their words name a part left out for time. Permissive: the model reads their meaning.
-    if (!discussion && f.droppedAsked) { const d = f.droppedAsked; const left = Math.max(0, Math.floor(d.left)); lines.push(d.fits
+    if (!discussion && f.droppedAsked?.notReached) { const d = f.droppedAsked; const left = Math.max(0, Math.floor(d.left)); lines.push(d.fits
+      ? `they asked for the ${d.label} part, which the lesson has not reached: there are about ${left} minutes before the session must end and it takes about ${d.minutes}, so it fits: take it up now on its page, then come back to the close (a short summary if it has not been given)`
+      : `they asked for the ${d.label} part, which the lesson has not reached. There are about ${left} minutes before the session must end, not enough for it (about ${d.minutes}): say so plainly in one short sentence; it is for next time`); }
+    else if (!discussion && f.droppedAsked) { const d = f.droppedAsked; const left = Math.max(0, Math.floor(d.left)); lines.push(d.fits
       ? `they mentioned the ${d.label} part, left out for time. If they are asking to do it now: there are about ${left} minutes before the session must end and it takes about ${d.minutes}, so you may take it up now (its page first), keeping the summary short; if they mean something else (a refusal, next time, a remark about it), it stays for next time`
       : `they mentioned the ${d.label} part, left out for time. There are about ${left} minutes before the session must end, not enough for it (about ${d.minutes}): if they are asking for it, say so plainly in one short sentence; it stays for next time`); }
     if (!discussion && f.practiceShort && session.plan) lines.push(...v2PracticeFacts(session.plan, f.practiceShort));
@@ -263,7 +276,10 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   }
   // Where the parts' minutes put the lesson now, so it paces itself to the box (time-box.ts).
   const partDue = v2PartDueFact(session, state, f.nowMs, !!session.timeBoxMinutes && leftStop <= V2_TIME_UP_MIN, undefined, tf.noSqueeze);
-  if (partDue) lines.push(partDue);
+  // Task 7v (PART_CLOCK): where the part clock runs, the lesson-clock guide ("[part] would be running now") is not shown: each part
+  // keeps its own minutes from when it began, and the time an early part saved stays in hand (the "every part's time has passed"
+  // line at the time up or the wrap stays).
+  if (partDue && !(v2PartClock(session, state, f.nowMs) && !/every part's time has passed$/.test(partDue))) lines.push(partDue);
   // The working level, every turn, so the language, questions and corrections stay at it (working-level.ts).
   lines.push(...v2WorkingLevelFacts(session, state, f.heard, { reopened: f.levelReopened }));
   // A measured score, or that there is none: the only ground for a word on how they sounded (pronunciation.ts).
@@ -277,6 +293,9 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // Task 7s (PRACTISED_SENTENCE, STARTER_IS_ANSWER, QUESTION_NOT_NOTE): their asked-for sentence is practice, a starter opens the
   // answer, a question goes on a question card (practice-facts.ts; spoken lessons that teach a language only).
   lines.push(...v2PracticeFactLines(session, state, f.heard));
+  // Task 7v (SUPPORT_FOLLOWED): the support step (the next question's form) and a retest stand beside the practice facts for the next
+  // question, not at the end of the facts (mic test 6, embed-1795067373124: a third of new questions ignored the step).
+  if (TUTOR_V2_SUPPORT_FOLLOWED && f.adaptive?.length) lines.push(...f.adaptive);
   // The learner's corrected sentences, for the summary's sentence cards (sentence-cards.ts).
   lines.push(...v2SentenceCardsFacts(session, state));
   // Task 7p (CARD_GLOSS_ASK, CARD_GLOSS_REMIND; mic test 4 flag 5c): a beginner's question cards and rule notes carry a line in their
@@ -290,7 +309,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   const silenceTurn = TUTOR_V2_NO_FALSE_SILENCE && !!f.silenceSeconds && !f.heard;
   if ((!summaryBegun || f.partVisit) && !state.closed && !silenceTurn) lines.push(...v2CardsOwedFacts(state));
   // Task 7q (SUPPORT_STEPS, RETEST_MISTAKE): the shape of the next question, and a retest of an earlier mistake (adaptive.ts).
-  if (f.adaptive?.length) lines.push(...f.adaptive);
+  if (!TUTOR_V2_SUPPORT_FOLLOWED && f.adaptive?.length) lines.push(...f.adaptive);
   // How the last reply opened, so the next does not open the same way (D10).
   lines.push(...v2OpenerFact(session, state));
   // The question check at a part change, once in a while (Task 6e); at every part change in a spoken lesson whose plan parts

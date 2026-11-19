@@ -20,7 +20,7 @@ import type { WhiteboardCommand } from '@core/knowledge/types';
 import { mapFunctionCallToCommand } from '@/app/tutor/hooks/toolDefinitions';
 import type { TranscriptEntry } from '@/lib/tutor/types';
 import { paintsOnBoard, streamV2Turn, type V2ClientSession } from '@/lib/tutor/v2/client';
-import { foldInterruptedTurn } from '@/lib/tutor/v2/interrupted';
+import { foldInterruptedTurn, v2CutWordsCarried, v2WithCarried } from '@/lib/tutor/v2/interrupted';
 import { KEYED_VERDICT_DEBUG_TYPE, formatKeyedVerdictDebug } from '@/lib/tutor/voice/keyed-verdict';
 import { SentenceStream } from '@/lib/tutor/v2/sentences';
 import { V2_UNHEARD_SAID } from '@/lib/tutor/v2/heard';
@@ -204,6 +204,8 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     p.current.onHomeworkProgress?.({ current: at + 1, total: problems.length, text: problems[at]?.text, solved: rec?.solved.length ?? 0 });
   }, []);
   const pendingRef = useRef<string | null>(null);
+  /** Task 7v (SELF_CORRECTION): words of a turn cut before anything reached them, for the next turn. */
+  const carriedSaidRef = useRef<string | null>(null);
   // An opening turn asked for while an earlier one is still being torn down
   // (React runs effects twice in development: start, clean up, start again).
   const pendingOpenRef = useRef(false);
@@ -277,6 +279,10 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     const stamp = Date.now();
     // Noise is not stored as their words: 5,000 characters of 、 and 号 went into the session's transcript (Task 6e).
     if (studentSaid && !unheard) transcriptRef.current = [...transcriptRef.current, { id: `student-${stamp}`, timestamp: new Date(), role: 'student', text: studentSaid }];
+    // Task 7v (SELF_CORRECTION): their words of a turn cut before anything reached them go to the brain with the words that cut it
+    // (the transcript already holds them): "for senior bosses." reached it alone and was corrected as a fragment (embed-1795067373124).
+    const carried = carriedSaidRef.current; carriedSaidRef.current = null;
+    const brainSaid = v2WithCarried(carried, studentSaid);
     const tutorId = `tutor-${stamp}`;
     publish();
     // The tutor's entry appears with its first words: the session save refuses an entry with no text.
@@ -331,7 +337,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     const pageShown = () => { if (pagesHeldRef.current.painted(turnNo)) reportProgress(); };
     try {
       const done = await streamV2Turn({
-        session, state: stateRef.current, studentSaid, embedToken: p.current.embedToken, signal: abort.signal,
+        session, state: stateRef.current, studentSaid: brainSaid, embedToken: p.current.embedToken, signal: abort.signal,
         ...(silenceSeconds ? { silenceSeconds } : {}),
         ...(resumeTurnRef.current ? { resumed: true } : {}),
         onText: (delta) => {
@@ -448,7 +454,10 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         // What reached the student is what was played, when the voice client knows it: text that had
         // arrived but not been spoken was never heard.
         const reached = p.current.heardSoFar?.() ?? text;
-        stateRef.current = foldInterruptedTurn(stateRef.current, studentSaid ?? (stateRef.current.history.length === 0 ? '[The session has just started. The student has joined and is waiting for you to begin the lesson.]' : '[The student has not replied.]'), reached, settled);
+        // Task 7v (SELF_CORRECTION): nothing of the reply reached them: the record keeps no trace of the turn, so their words go on to
+        // the next turn with the words that cut it.
+        carriedSaidRef.current = v2CutWordsCarried(brainSaid, reached, settled.length, pendingRef.current);
+        stateRef.current = foldInterruptedTurn(stateRef.current, brainSaid ?? (stateRef.current.history.length === 0 ? '[The session has just started. The student has joined and is waiting for you to begin the lesson.]' : '[The student has not replied.]'), reached, settled);
         p.current.onDebugEvent?.('v2_turn_cut', `${text.trim().split(/\s+/).filter(Boolean).length} words kept, ${settled.length} tool call(s)`);
         if (text.trim()) setTutor(text.trim(), false);
       } else {
