@@ -35,7 +35,7 @@ import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
 import { V2_CLOSING_PAGE, endsAsking, leftOpen, mayOpenPart, namesPart, partOffer, v2FrameDue } from './part-close';
 import { ReplyGate, isGoodbye, isPartFrame } from './reply-gate';
-import { v2AnswerAsksOrDeclines, v2GoForPart, v2AskRepeats, v2AsksPartChange, v2EndingPartAsk, v2HeldPageOwed, v2HeldPartWaiting, v2IsPartAsk, v2MoveAnswer, v2NextPart, v2PageForPart, v2PartAskLine, v2PartChangeAsked, v2PartInHand, v2PartNamedLate, v2PartOfPage, v2PartViewed, v2PageTurnNote, v2PositionPage, v2PendingPart, v2PlanLabelled, v2TutorReplies } from './part-flow';
+import { V2_JA_SCRIPT, v2AnswerAsksOrDeclines, v2GoForPart, v2AskRepeats, v2AsksPartChange, v2EndingPartAsk, v2HeldPageOwed, v2HeldPartWaiting, v2IsPartAsk, v2MoveAnswer, v2NextPart, v2PageForPart, v2PartAskLine, v2PartChangeAsked, v2PartInHand, v2PartNamedLate, v2PartOfPage, v2PartViewed, v2PageTurnNote, v2PositionPage, v2PendingPart, v2PlanLabelled, v2TutorReplies } from './part-flow';
 import { heardAsWords } from './heard';
 import { v2IsPracticeAsk, v2LanguagesSection } from './languages';
 import { v2ReadsByClauses } from './language-pack';
@@ -1552,7 +1552,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // reads asks by clauses the reply's closing question is that ask, whatever its words (the 7i ruling: by position).
     // Only a question in such a language: an English one keeps 7c's rule (a reply that asks something else leaves the change owed,
     // test-brain-v2-one-question-7c I2), as English asks are read by their frames.
-    if (v2IsPartAsk(last) || (v2ReadsByClauses(askLangs) && endsAsking(last, true) && !/^[\x00-\x7f]*$/.test(last))) owedPartAsked = true;
+    // Fix round 3: never on a silence turn (I-A: the facts there forbid a new ask, and the hint question is not the part ask), and
+    // only a question in Japanese script (I-B: ’ — “ are English too).
+    if (v2IsPartAsk(last) || (input.studentSaid !== null && v2ReadsByClauses(askLangs) && endsAsking(last, true) && V2_JA_SCRIPT.test(last))) owedPartAsked = true;
     else if (!v2ReplyHandsOver(said) && !carriesPartAsk()) {
       const plan = session.plan; const inHand = v2PartInHand(plan, state);
       const done = inHand >= 0 && plan.segments[inHand]!.kind !== 'hook' && !v2PartOf(plan.segments[inHand]!).skipWhenLevelKnown ? v2PartOf(plan.segments[inHand]!).label : undefined;

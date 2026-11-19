@@ -20,7 +20,7 @@ import { V2_PART_FRAME_JA, isPartFrame } from './reply-gate';
 import type { V2Board, V2State } from './types';
 import { TUTOR_V2_LEVEL_CHECK_CHIP, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PART_ASK_LANGS, TUTOR_V2_PART_ASK_NAMED, TUTOR_V2_PART_GO_NAMED, TUTOR_V2_PART_ASK_CLAUSES, TUTOR_V2_PART_ENTERED, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PRACTICE_ON_PART_PAGE } from '../orchestrator/flags';
 import { v2LevelCheckBegun } from './level-check-count';
-import { V2_LANGUAGE_PACKS, v2EndingAsk, v2IsAskLead, v2WithoutFillers } from './language-pack';
+import { V2_LANGUAGE_PACKS, v2EndingAsk, v2IsAskLead, v2ReadsByClauses, v2WithoutFillers } from './language-pack';
 
 /** `history` (Task 7g, LEVEL_CHECK_CHIP): when present, a level check under way lights its chip before any goal is marked. */
 type View = Pick<V2State, 'board' | 'goals' | 'workingLevel'> & { closed?: boolean; history?: V2State['history'] } & Partial<Pick<V2State, 'practiceSaid' | 'timeFit' | 'summaryBegunAt' | 'visitPages'>>;
@@ -321,6 +321,39 @@ const A_CHOICE = /\bor\b|それとも|どちら|または/i;
 /** Fix round 2 (N3): "questions, or go on?" (質問がありますか、それとも進みましょうか) is no choice between parts. */
 const QUESTIONS_CHOICE = /質問|聞きたいこと|\bquestions?\b|\bask\b/i;
 
+/** Fix round 1 (I1) / round 3: a go and nothing else ("Yes.", "Yes, let's go.", 「はい、お願いします。」). */
+export function v2BareGo(said: string | null, languages?: readonly string[]): boolean {
+  const bare = v2WithoutFillers((said ?? '').trim(), languages).trim();
+  return !!bare && ((BARE_GO.test(bare) && BARE_GO_WORD.test(bare)) || (BARE_GO_JA.test(bare) && bare.replace(/[。！!、,\s]/gu, '') !== ''));
+}
+
+/** Task 7r fix round 3 (I-C): the last reply's part ask is read only by the clause route (PART_ASK_CLAUSES), not by the 7n reading
+ *  or the English frames. */
+export function v2ClauseRouteOnly(plan: LessonPlan, lastTutor: string, languages?: readonly string[], langs: boolean = TUTOR_V2_PART_ASK_LANGS): boolean {
+  if (!TUTOR_V2_PART_ASK_CLAUSES || !langs) return false;
+  const last = stripBoardBlocks(lastTutor).split(SENTENCES).map((x) => x.trim()).filter(Boolean).pop() ?? '';
+  if (!last || v2IsPartAsk(last)) return false;
+  return !!v2EndingPartAsk(lastTutor, plan, languages, langs, true) && !v2EndingPartAsk(lastTutor, plan, languages, langs, false);
+}
+
+/** Task 7r fix round 3 (I-C): the part (not in hand) that a clause-read ask names and their words name; -1: none. */
+function v2ClauseAskTheirs(plan: LessonPlan, state: View, lastTutor: string, said: string | null, languages?: readonly string[], langs: boolean = TUTOR_V2_PART_ASK_LANGS): number {
+  if (!said || !v2ClauseRouteOnly(plan, lastTutor, languages, langs)) return -1;
+  const cur = v2PartInHand(plan, state);
+  const asked = v2AskedParts(lastTutor, plan, languages, langs).filter((i) => i !== cur);
+  const named = asked.find((i) => v2PartNamedIn(plan.segments[i]!, said));
+  return named ?? v2NamesAskedPart(v2WithoutFillers(said, languages), asked, plan);
+}
+
+/** Task 7r fix round 3 (ruling a): the held page was held by the last reply because the facts ordered its ask and that reply's
+ *  closing question was taken as the ask (turn.ts, state before wording): the reply's wording reads no part ask. */
+export function v2HeldByPosition(plan: LessonPlan, state: View & Partial<Pick<V2State, 'heldPage'>>, lastTutor: string, languages?: readonly string[]): boolean {
+  const h = state.heldPage;
+  if (!h || h.unasked || !state.history || h.at !== v2TutorReplies(state.history) || !v2ReadsByClauses(languages)) return false;
+  const last = stripBoardBlocks(lastTutor).split(SENTENCES).map((x) => x.trim()).filter(Boolean).pop() ?? '';
+  return !v2IsPartAsk(last) && !v2AskedParts(lastTutor, plan, languages).length;
+}
+
 /** Task 7r (PART_GO_NAMED): whether their answer is a go to the last reply's ask about part `index`: the ask named it (by the
  *  clause reading or the English frames; of two parts named, the one their words name; never the part in hand, fix round 1 m1);
  *  or, an ask the runtime could not read (fix round 1, I1): their answer is a bare go, the last sentence asks and offers no choice,
@@ -332,25 +365,32 @@ export function v2GoForPart(said: string | null, lastTutor: string, plan: Lesson
   if (index === cur) return false;
   // Fix round 2 (N3, state before wording): a page held for its ask (asked, not lapsed, not opened) is the part their go answers,
   // however the ask was worded.
+  // Fix round 3 (I-C): their words naming a part the clause-read ask offered decide; a bare go after such an ask is the part next
+  // by plan order.
+  const clauseOnly = v2ClauseRouteOnly(plan, lastTutor, languages);
+  const theirsClause = clauseOnly ? v2ClauseAskTheirs(plan, state, lastTutor, said, languages) : -1;
+  if (theirsClause >= 0) return index === theirsClause;
   const h = state.heldPage;
-  if (h && !h.unasked && state.history && v2TutorReplies(state.history) - h.at <= V2_HELD_PAGE_REPLIES && !paged(plan, state.board, index) && plan.segments[index]?.id === h.part) return true;
+  if (h && !h.unasked && state.history && v2TutorReplies(state.history) - h.at <= V2_HELD_PAGE_REPLIES && !paged(plan, state.board, index) && plan.segments[index]?.id === h.part) return !(v2HeldByPosition(plan, state, lastTutor, languages) && !v2BareGo(said, languages));
+  if (clauseOnly) return index === v2NextPart(plan, state, cur);
   const asked = v2AskedParts(lastTutor, plan, languages).filter((i) => i !== cur);
   if (asked.length) {
     const theirs = asked.filter((i) => v2PartNamedIn(plan.segments[i]!, said));
     return (theirs.length ? theirs : asked).includes(index) && (asked.length === 1 || theirs.length > 0 || v2NamesAskedPart(v2WithoutFillers(said, languages), asked, plan) === index);
   }
   const bare = v2WithoutFillers(said, languages).trim();
-  if (!((BARE_GO.test(bare) && BARE_GO_WORD.test(bare)) || (BARE_GO_JA.test(bare) && bare.replace(/[。！!、,\s]/gu, '') !== '') || v2NamesAskedPart(bare, [index], plan) === index)) return false;
+  if (!(v2BareGo(said, languages) || v2NamesAskedPart(bare, [index], plan) === index)) return false;
   const sentences = stripBoardBlocks(lastTutor).split(SENTENCES).map((x) => x.trim()).filter(Boolean);
   const last = sentences[sentences.length - 1] ?? '';
   if (!last || !endsAsking(last, true) || (A_CHOICE.test(last) && !QUESTIONS_CHOICE.test(last))) return false;
   const before = sentences[sentences.length - 2] ?? '';
-  const where = [last, before && v2IsAskLead(before, languages) ? before : ''].filter(Boolean).join(' ');
+  const where = [last, before && v2IsAskLead(before, languages, TUTOR_V2_PART_ASK_CLAUSES) ? before : ''].filter(Boolean).join(' ');
   const named = plan.segments.map((seg, i) => i).filter((i) => i !== cur && !!v2PartOf(plan.segments[i]!).label && !entered(plan, state, i) && v2PartNamedIn(plan.segments[i]!, where));
   return named.length === 1 && named[0] === index;
 }
 
-const POLITE_NO_JA = /^(?:大丈夫|いいです|結構)(?:です)?(?:よ|ね)?[。！!]*$/u;
+// Fix round 3 (m-b): 「いいですよ」 / 「いいですね」 to an offer are a willing yes (GO_JA), only the bare form a polite no.
+const POLITE_NO_JA = /^(?:大丈夫|いいです|結構)(?:です)?[。！!]*$/u;
 const OFFER_TO_DO_JA = /(?:やり|し|練習し|やってみ)ますか|どうですか|いかがですか|どうでしょうか|やりましょうか/u;
 /** An unambiguous yes on its own ("Yes.", "Sure, please."): the only go-ahead to a choice offer that does not name the part. */
 const BARE_YES = new RegExp(`^${FILLER}(?:yes|yeah|yep|sure|ok(?:ay)?|alright|all right|of course|はい|ええ)(?:,?\\s*(?:please|let'?s do (?:it|that)|i'?d like (?:that|to)|お願いします))?[.!。！]*$`, 'i');
@@ -391,6 +431,12 @@ export function v2PendingPart(plan: LessonPlan, state: View & Pick<V2State, 'his
   // question, not a part change.
   if (held && !held.unasked && v2TutorReplies(state.history) - held.at <= V2_HELD_PAGE_REPLIES) {
     const index = plan.segments.findIndex((seg) => seg.id === held.part);
+    // Task 7r fix round 3 (I-C): a part the clause-read ask offered that their words name comes before the held one.
+    const theirs = said ? v2ClauseAskTheirs(plan, state, lastTutor, said, languages, langs) : -1;
+    if (theirs >= 0 && theirs !== index) return { index: theirs, title: v2PartOf(plan.segments[theirs]!).label! };
+    // Task 7r fix round 3 (ruling a): a page held because the facts ordered the ask, the reply's closing question taken as it
+    // (turn.ts, state before wording), opens only on a bare go: "Yes, I have been to Canada." answers the question.
+    if (said && v2HeldByPosition(plan, state, lastTutor, languages) && !v2BareGo(said, languages)) return null;
     if (index >= 0 && !paged(plan, state.board, index)) return { index, title: held.title };
   }
   const cur = v2PartInHand(plan, state);
@@ -411,6 +457,14 @@ export function v2PendingPart(plan: LessonPlan, state: View & Pick<V2State, 'his
     const two = ending || askNamed ? askText : sentences.slice(-2).join(' ');
     const namedNow = plan.segments.map((seg, i) => ({ seg, i })).filter(({ seg }) => !!v2PartOf(seg).label && v2PartNamedIn(seg, two));
     const others = namedNow.filter(({ i }) => i !== cur);
+    // Task 7r fix round 3 (I-C, ruling: plan order is state, the offered name is wording): an ask read only by the clause route
+    // pends the part the part flow has next by plan order (v2NextPart, 7i's arrival rules), or a part it names that their words
+    // name. 「最後に、発音の練習もします。もう少し練習しますか、それとも進みましょうか。」 + 「進みましょう。」 is Conversation, not Pronunciation.
+    if (ending && v2ClauseRouteOnly(plan, lastTutor, languages, langs)) {
+      const theirs = said ? others.find(({ seg }) => v2PartNamedIn(seg, said)) : undefined;
+      const index = theirs ? theirs.i : v2NextPart(plan, state, cur);
+      return index >= 0 && index !== cur && index < plan.segments.length - 1 && !paged(plan, state.board, index) ? { index, title: v2PartOf(plan.segments[index]!).label! } : null;
+    }
     // Two parts named ("pronunciation, or shall we move on to the summary?"): only the one their words name.
     const pickNow = others.length > 1 ? others.find(({ seg }) => !!said && v2PartNamedIn(seg, said)) ?? null : others[0] ?? null;
     if (others.length > 1 && !pickNow) return null;
@@ -445,7 +499,7 @@ export function v2PendingPart(plan: LessonPlan, state: View & Pick<V2State, 'his
  *  as English's NOT_THE_LESSON keeps "the next question" out. No plan: none. */
 export function v2EndingPartAsk(lastTutor: string, plan: LessonPlan | undefined, languages?: readonly string[], langs: boolean = TUTOR_V2_PART_ASK_LANGS, clauses: boolean = TUTOR_V2_PART_ASK_CLAUSES): { ask: string; lead: string } | null {
   if (!langs || !plan) return null;
-  const ending = v2EndingAsk(stripBoardBlocks(lastTutor).split(SENTENCES).map((x) => x.trim()).filter(Boolean), languages);
+  const ending = v2EndingAsk(stripBoardBlocks(lastTutor).split(SENTENCES).map((x) => x.trim()).filter(Boolean), languages, clauses);
   if (!ending) return null;
   const text = [ending.lead, ending.ask].filter(Boolean).join(' ');
   // Fix round 1 (C1, PART_ASK_CLAUSES): the ask points forward: the part is named by a "次は…" lead, or in the ask as the
@@ -464,13 +518,15 @@ export function v2PartIsDestination(seg: LessonPlan['segments'][number], sentenc
   // 6g frame, reply-gate.ts JA_QUESTION_BEFORE.)
   return partNames(seg).some((n) => new RegExp(`${escapeRe(n)}${NAME_TAIL}(?:(?:に|へ)\\s*(?:(?:進み|移り|入り|行き)(?:ますか|ましょうか|ますが)|(?:進ん|移っ|入っ|行っ)(?:で|て)\\s*(?:も)?\\s*(?:いい|よい|よろしい|大丈夫))|を\\s*始め(?:ますか|ましょうか))`, 'iu').test(sentence));
 }
+/** Task 7r fix round 3 (I-B): Japanese script (kana or kanji), not "any non-ASCII" (’ — “ are English too). */
+export const V2_JA_SCRIPT = /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u;
 const partNames = (seg: LessonPlan['segments'][number]) => { const p = v2PartOf(seg); return [p.label ?? '', ...Object.values(p.labelLocalized ?? {})].map((x) => x.trim()).filter(Boolean); };
 /** The name may close a quote, carry a gloss in brackets and "の練習 / の部分". */
 const NAME_TAIL = `[」』"”]?\\s*(?:[（(][^）)]*[）)])?\\s*(?:の(?:練習|部分|パート|ところ))?\\s*`;
 /** Fix round 2 (n4): a lead names a part as its topic (「次は会話の練習です。」, 「次に、会話の練習をします。」, 「次は「present perfect」に進みます。」,
  *  「発音の練習もできます。」), not in passing (「次は過去形と比べてみましょう。」); an English lead by its words ("Next is past simple."). */
 export function v2PartIsTopic(seg: LessonPlan['segments'][number], lead: string): boolean {
-  if (/^[\x00-\x7f]*$/.test(lead)) return v2PartNamedIn(seg, lead);
+  if (!V2_JA_SCRIPT.test(lead)) return v2PartNamedIn(seg, lead);
   return partNames(seg).some((n) => new RegExp(`${escapeRe(n)}${NAME_TAIL}(?:です|になります|に|へ|を|も|。|、|$)`, 'iu').test(lead));
 }
 

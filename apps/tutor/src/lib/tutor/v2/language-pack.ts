@@ -14,6 +14,8 @@ import { TUTOR_V2_PART_ASK_CLAUSES } from '../orchestrator/flags';
 export interface V2LanguagePack {
   /** The lead of a part ask, said just before it, that names the part ("Next is present perfect.", 「次は Present perfect です。」). */
   askLead: RegExp;
+  /** Task 7r fix round 3 (I-D): the wider forward leads, read only with PART_ASK_CLAUSES (次に / つぎは / 続いて / このあと). */
+  askLeadWide?: RegExp;
   /** A go-on ask as a whole sentence ending the reply (「それとも、このまま進みますか？」, 「次は Past simple に進みますが、よろしいですか？」).
    *  Absent: the language's asks are read by its frames elsewhere (English: reply-gate.ts / part-close.ts, as before). */
   askGoOn?: RegExp;
@@ -47,12 +49,13 @@ const JA_CLAUSE_QUESTIONS = /(?:ご?質問|聞きたいこと)(?:は|が)(?:何�
 const JA_CLAUSE_ASKS = /(?:[?？]|か[。．]?)["'」』）)]*\s*$/u;
 const JA_CLAUSE_OR = /^(?:それとも|または|あるいは)/u;
 // Task 7r fix round 1 (I2): not 考え / 練習し / 始め + てみましょう (「一緒に考えてみましょう。」 is the tutor's set-up, as 「一語ずつ練習しましょう。」).
-const JA_INVITE_ASK = /(?:言っ|話し|答え|書い|読ん|使っ|作っ|続け|繰り返し|発音し|聞い|尋ね)てみましょう|繰り返して(?:ください|みて|ね|[。．！!]|$)|(?:教えて|始めて|聞かせて|言って|話して|答えて|書いて|読んで|使って|作って|続けて|発音して|練習して|選んで|聞いて|尋ねて)(?:みて)?(?:ください|くださいね|ちょうだい|もらえますか)|どうぞ[。．！!]?["'」』）)]*$/u;
+const JA_INVITE_ASK = /(?:言っ|話し|答え|書い|読ん|使っ|作っ|続け|繰り返し|発音し|尋ね)てみましょう|繰り返して(?:ください|みて|ね|[。．！!]|$)|(?:教えて|始めて|聞かせて|言って|話して|答えて|書いて|読んで|使って|作って|続けて|発音して|練習して|選んで|尋ねて)(?:みて)?(?:ください|くださいね|ちょうだい|もらえますか)|どうぞ[。．！!]?["'」』）)]*$/u;
 // Fix round 2 (N1): whole markers only, and only ever applied to an invitation (never to a sentence that is itself a question):
 // 今までに / 同時に / 〜ときは in 「今までに、海外出張をしたことがありますか。」 are no condition.
 const JA_INVITE_NOT = /次回|次の機会|今度[はも、,]|(?<!今)までに|(?:あれ|すれ|れ)ば[、,]|があれば|あったら|たら[、,]|なら[、,]|いつでも|宿題|あとで|後で/u;
 // Fix round 2 (N3): forward leads besides 次は: 次に、 / つぎは / では次 / 続いて / このあと(は) / この次は (「次に、会話の練習をします。」).
-const JA_LEAD = /^(?:(?:では|じゃあ|それでは|さて)[、,]?\s*)?(?:次は|次に|つぎは|つぎに|続いて|このあと(?:は)?|この後(?:は)?|この次は)[、,]?\s*\S/u;
+const JA_LEAD = /^(?:(?:では|じゃあ|それでは|さて)[、,]?\s*)?次は[、,]?\s*\S/u;
+const JA_LEAD_WIDE = /^(?:(?:では|じゃあ|それでは|さて)[、,]?\s*)?(?:次は|次に|つぎは|つぎに|続いて|このあと(?:は)?|この後(?:は)?|この次は)[、,]?\s*\S/u;
 
 export const V2_LANGUAGE_PACKS: Record<string, V2LanguagePack> = {
   en: {
@@ -62,6 +65,7 @@ export const V2_LANGUAGE_PACKS: Record<string, V2LanguagePack> = {
   },
   ja: {
     askLead: JA_LEAD,
+    askLeadWide: JA_LEAD_WIDE,
     askGoOn: JA_GO_ON,
     askQuestionFirst: JA_QUESTION_FIRST,
     askClauses: { asks: JA_CLAUSE_ASKS, goOn: JA_CLAUSE_GO, questions: JA_CLAUSE_QUESTIONS, or: JA_CLAUSE_OR },
@@ -82,9 +86,9 @@ export function v2ReadsByClauses(languages?: readonly string[], clauses: boolean
 }
 
 /** Whether a sentence is a part ask's lead in one of the languages. */
-export function v2IsAskLead(sentence: string, languages?: readonly string[]): boolean {
+export function v2IsAskLead(sentence: string, languages?: readonly string[], wide: boolean = false): boolean {
   const s = sentence.trim();
-  return v2LanguagePacks(languages).some((p) => p.askLead.test(s));
+  return v2LanguagePacks(languages).some((p) => (wide && p.askLeadWide ? p.askLeadWide : p.askLead).test(s));
 }
 
 /** The part ask a reply's sentences end on, read by position in the packs that word a go-on: the last sentence a go-on, the
@@ -115,7 +119,7 @@ export function v2EndingAsk(sentences: readonly string[], languages?: readonly s
       // まとめに進みますか。」), reads the part offered in the sentence before it as well: the learner names the one they want.
       const before = i >= 1 ? xs[i - 1]! : '';
       const choice = askXs.some((x) => /それとも/u.test(x)) && !askXs.some((x) => c.questions.test(x));
-      return { ask: askXs.join(' '), lead: before && (v2IsAskLead(before, languages) || choice) ? before : '' };
+      return { ask: askXs.join(' '), lead: before && (v2IsAskLead(before, languages, true) || choice) ? before : '' };
     }
     if (!p.askGoOn?.test(last)) continue;
     let i = xs.length - 1;

@@ -117,6 +117,10 @@ const N3_OFFER = '発音の練習もできます。やりますか、それと�
 const N4_NOT_PART = '次は過去形と比べてみましょう。何か質問はありますか。';
 // n5: a quoted question the learner is asked to put.
 const N5_ASK = '"How long have you worked there?" と聞いてみてください。';
+// ── Fix round 3: the second re-review's failing inputs ──
+const IC_ASK = '最後に、発音の練習もします。もう少し練習しますか、それとも進みましょうか。';
+const ID_ASK = '次に、会話の練習をします。では、進みましょうか。';
+const MA_NOT_ASK = ['私の発音をよく聞いてください。', 'では、よく聞いてみてください。'];
 const MATHS_ASK = 'Nice work on the product rule. Now differentiate x cubed times sine x. What do you get?';
 
 /** The client's decision at HEAD (TutorVoiceV2: asksAnywhere on the voice parts) and with the switch (or the one test on the
@@ -240,8 +244,42 @@ async function probe() {
   const owed = { held: tOwed.state.heldPage ?? null, heard: heardOwed.join(''), pagesAfterGo: pageTitles(tOwedGo.state) };
   const n4 = { ending: !!v2EndingPartAsk(N4_NOT_PART, GDI, LANGS), pending: v2PendingPart(GDI, base([TODAY, JOB, PP], { history: [u('x'), a(N4_NOT_PART)] }), N4_NOT_PART, 'いいえ、大丈夫です。', undefined, LANGS)?.title ?? null };
   const n5 = { guarded: v2LastReplyAskedGuarded([u('x'), a(N5_ASK)]), one: v2AsksTheLearner(N5_ASK) };
+  // Fix round 3. A Conversation page owed its ask (held unasked) in Past simple.
+  const owedAt = () => base([TODAY, JOB, PP, PS], { practiceSaid: beforeConv, history: [u('I attended a fair.'), a('いいですね。去年、海外出張をしましたか。')], heldPage: { title: 'Conversation', part: 'open-conversation', at: 1, unasked: true } });
+  const turn = async (st: V2State, said: string | null, reply: string, at: number, silence?: number) => {
+    const heard: string[] = [];
+    const t = await runV2Turn({ session: lang, state: st, studentSaid: said, callModel: scripted([reply]).call, onText: (d) => heard.push(d), boardPass: false, mathsCheck: false, nowMs: at * MIN, ...(silence ? { facts: { silenceSeconds: silence } } : {}) });
+    return { t, heard: heard.join('') };
+  };
+  // I-A: a silence turn's hint question is not the part ask; the practice answer after it opens nothing.
+  const iaSil = await turn(owedAt(), null, 'ゆっくりで大丈夫です。例えば、どこに行きましたか。', 11, 12);
+  const iaAns = await turn(iaSil.t.state, 'Yes, I went to Singapore.', 'シンガポールですね。いいですね。', 11.3);
+  const iA = { held: iaSil.t.state.heldPage ?? null, pages: pageTitles(iaAns.t.state) };
+  // I-B: English closing questions with ’ or — keep 7c (the change stays owed).
+  const iB = [];
+  for (const q of ['What’s the biggest project you’ve worked on?', 'Have you ever led a team — even a small one?']) {
+    const r1 = await turn(owedAt(), 'I went to Singapore last year.', `Good. ${q}`, 11);
+    const r2 = await turn(r1.t.state, 'Yes, I have.', 'Great.', 11.3);
+    iB.push({ q, held: r1.t.state.heldPage ?? null, pages: pageTitles(r2.t.state) });
+  }
+  // Ruling a: a Japanese content question taken as the ordered ask; a content answer keeps it waiting, a bare go opens it.
+  const raAsk = await turn(owedAt(), 'I went to Singapore last year.', 'いいですね。カナダに行ったことがありますか。', 11);
+  const raContent = await turn(structuredClone(raAsk.t.state), 'Yes, I have been to Canada.', 'カナダですね。', 11.3);
+  const raGo = await turn(structuredClone(raAsk.t.state), 'はい', T45, 11.3);
+  const ruleA = { held: raAsk.t.state.heldPage ?? null, contentPages: pageTitles(raContent.t.state), goPages: pageTitles(raGo.t.state) };
+  // I-C: a later part mentioned before a "more practice, or go on?" choice; a bare go opens the part next by plan order.
+  const icSt = () => base([TODAY, JOB, PP, PS], { practiceSaid: beforeConv, history: [u('I enjoyed the exhibition a lot.'), a(IC_ASK)] });
+  const icOwn = await turn(base([TODAY, JOB, PP, PS], { practiceSaid: beforeConv, history: [u('x'), a('y')] }), 'I enjoyed the exhibition a lot.', IC_ASK, 11);
+  const icGo = [];
+  for (const said of ['進みましょう。', 'はい']) { const r = await turn(icSt(), said, `<board page>会話</board>${T45}`, 11.4); icGo.push({ said, pending: v2PendingPart(GDI, icSt(), IC_ASK, said, undefined, LANGS)?.title ?? null, pages: pageTitles(r.t.state), heard: r.heard }); }
+  const iC = { ownHeld: icOwn.t.state.heldPage?.title ?? null, go: icGo, named: v2PendingPart(GDI, icSt(), IC_ASK, '発音の練習をしたいです。', undefined, LANGS)?.title ?? null };
+  // I-D: the wider leads only with PART_ASK_CLAUSES.
+  const iD = { pending: v2PendingPart(GDI, base([TODAY, JOB, PP, PS], { practiceSaid: beforeConv, history: [u('x'), a(ID_ASK)] }), ID_ASK, 'はい', undefined, LANGS)?.title ?? null, ending: !!v2EndingPartAsk(ID_ASK, GDI, LANGS) };
+  // m-a / m-b.
+  const mA = MA_NOT_ASK.map((t) => ({ t, one: v2AsksTheLearner(`いいですね。${t}`), guarded: v2LastReplyAskedGuarded([u('x'), a(`いいですね。${t}`)]) }));
+  const mB = ['いいですよ。', 'いいですね。'].map((x) => ({ x, move: v2MoveAnswer(x, N3_OFFER, LANGS, undefined, GDI) }));
   return {
-    item1, f84, f42, f2s, fStatement, item3, t66, n7, go, c1, i1, i1Offer, i2, mathsSilence, m1, n1, n2, n3, n3Offer, owed, n4, n5,
+    item1, f84, f42, f2s, fStatement, item3, t66, n7, go, c1, i1, i1Offer, i2, mathsSilence, m1, n1, n2, n3, n3Offer, owed, n4, n5, iA, iB, ruleA, iC, iD, mA, mB,
     t43: { pages: pageTitles(t43.state), heard: heard43.join(''), held: t43.state.heldPage?.title ?? null },
     tOdd: { pages: pageTitles(tOdd.state), heard: heardOdd.join(''), held: tOdd.state.heldPage?.title ?? null },
     t80: { pages: pageTitles(t80.state), heard: heard80.join(''), held: t80.state.heldPage?.title ?? null },
@@ -316,7 +354,20 @@ async function main() {
   check('N3 …and 「はい」 then opens Conversation', on.owed.pagesAfterGo.includes('Conversation'), on.owed.pagesAfterGo);
   check('「大丈夫です。」 to an offer to do a part is a polite no; to "questions, or go on?" a go', on.n3Offer.politeNo === 'other' && on.n3Offer.okToQuestions === 'go', on.n3Offer);
   check('n4 「次は過去形と比べてみましょう。何か質問はありますか。」 is no part ask', !on.n4.ending && on.n4.pending === null, on.n4);
-  check('n5 「"How long have you worked there?" と聞いてみてください。」 is an ask (silence-after-ask line too)', on.n5.guarded && on.n5.one, on.n5);
+  check('n5 → round 3 m-a: 聞いて is no invitation form now, so 「"How long have you worked there?" と聞いてみてください。」 is no ask (the ruling: drop 聞いて)', !on.n5.guarded && !on.n5.one, on.n5);
+
+  console.log('8  fix round 3');
+  check('I-A a silence turn\'s hint question 「…例えば、どこに行きましたか。」 is not the owed part ask (the page stays held unasked)', !!on.iA.held?.unasked, on.iA.held);
+  check('I-A …and "Yes, I went to Singapore." opens no Conversation page', !on.iA.pages.includes('Conversation'), on.iA.pages);
+  for (const x of on.iB) check(`I-B English "${x.q}": the change stays owed (7c), "Yes, I have." opens nothing`, !!x.held?.unasked && !x.pages.includes('Conversation'), x);
+  check('ruling a: an owed change + 「カナダに行ったことがありますか。」: held as asked', on.ruleA.held?.part === 'open-conversation' && !on.ruleA.held?.unasked, on.ruleA.held);
+  check('ruling a: "Yes, I have been to Canada." keeps it waiting (no page); 「はい」 opens Conversation', !on.ruleA.contentPages.includes('Conversation') && on.ruleA.goPages.includes('Conversation'), on.ruleA);
+  check('I-C the reply ending 「最後に、発音の練習もします。…それとも進みましょうか。」 holds Conversation (next by plan order), not Pronunciation', on.iC.ownHeld === 'Conversation', on.iC.ownHeld);
+  for (const g of on.iC.go) check(`I-C 「${g.said}」 to it: Conversation pends and opens, Pronunciation does not`, g.pending === 'Conversation' && g.pages.includes('Conversation') && !g.pages.includes('Pronunciation') && !ENGLISH_ASK.test(g.heard), g);
+  check('I-C an answer naming the offered part (「発音の練習をしたいです。」) pends Pronunciation', on.iC.named === 'Pronunciation', on.iC.named);
+  check('I-D (CLAUSES on) 「次に、会話の練習をします。では、進みましょうか。」 + 「はい」 pends Conversation', on.iD.ending && on.iD.pending === 'Conversation', on.iD);
+  for (const x of on.mA) check(`m-a 「${x.t}」 (listen) is no ask`, !x.one && !x.guarded, x);
+  for (const x of on.mB) check(`m-b 「${x.x}」 to an offer to do a part is a yes`, x.move === 'go', x);
 
   console.log('5  each switch off alone (a child process per switch): as at 7ce31282 for that item, the others on');
   const child = (flag: string) => {
@@ -340,6 +391,7 @@ async function main() {
     const off = child('PART_ASK_CLAUSES');
     check('PART_ASK_CLAUSES off: none of the session\'s Japanese part asks is read (as before)', off.item3.every((x) => !x.ending), off.item3.map((x) => [x.k, x.ending]));
     check('PART_ASK_CLAUSES off: the morning\'s ask still pends Present perfect (7n)', off.n7.morning === 'Present perfect');
+    check('I-D PART_ASK_CLAUSES off: 「次に、会話の練習をします。では、進みましょうか。」 is not read (次は lead only, as at 7ce31282)', !off.iD.ending && off.iD.pending === null, off.iD);
   }
   {
     const off = child('PART_GO_NAMED');
