@@ -156,8 +156,9 @@ export interface V2State {
    *  student is asked whether to go on (`title`: the part's name; `part`: its goal id; `at`: the tutor replies in the
    *  history when it was held). It opens on their yes, whether or not the reply writes it again. Task 7c fix round 1
    *  (`unasked`): held at a reply that already asked something else, so not yet asked about: no yes opens it; the next
-   *  reply asks (the facts say so, and the runtime asks when that reply asks nothing). */
-  heldPage?: { title: string; part: string; at: number; unasked?: true };
+   *  reply asks (the facts say so, and the runtime asks when that reply asks nothing). Task 7r fix round 4 (`byPosition`): the
+   *  ask was the reply's closing question taken as the ordered ask (its wording reads no part ask): only a bare go opens it. */
+  heldPage?: { title: string; part: string; at: number; unasked?: true; byPosition?: true };
   /** Task 7d (CLOSE_INVITES_QUESTIONS), spoken plan-led second-language lessons: when the learner was invited to ask
    *  questions before the close (close-invite.ts). From then on the close is never refused for the invitation. */
   closeInvitedAt?: number;
@@ -181,8 +182,10 @@ export interface V2State {
    *  Task 7i (OPTIONAL_AT_ARRIVAL, `byArrival`): nothing was dropped up front; an optional part is added to `dropped` when the
    *  lesson arrives at it and it no longer fits, and leaves it again when the learner asks for it while it still fits (`taken`:
    *  such parts, never left out again; fix round 1: only once the lesson entered it). `toldIds`: the parts left out on arrival
-   *  that a reply has named to the learner (each told once). */
-  timeFit?: { dropped: string[]; told?: true; shown?: number; byArrival?: true; taken?: string[]; toldIds?: string[] };
+   *  that a reply has named to the learner (each told once). Task 7r fix round 4 (`byChoice`): the parts in `dropped` that were
+   *  left out by the learner's choice, not for time (an optional part they said no to when it was offered, or one the lesson
+   *  went past to the summary with their yes): treated as any part left out, but never announced as "no time". */
+  timeFit?: { dropped: string[]; told?: true; shown?: number; byArrival?: true; taken?: string[]; toldIds?: string[]; byChoice?: string[] };
   /** Task 7i (STAY_IN_PART): the sentences of the last reply the learner did not hear (a barge-in cut them: interrupted.ts
    *  trimToSpoken), named in the next turn's facts once, then cleared. */
   unheard?: string[];

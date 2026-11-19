@@ -118,8 +118,24 @@ export function v2TakeEnteredDropped(plan: LessonPlan, state: V2State): string[]
   // Task 7k fix round 1 (I1, ruling c): a visit's page is the lesson entering a part left out for time (7i decides taken).
   const bare = { ...state, timeFit: undefined, visitPages: undefined };
   const ids = fit.dropped.filter((id) => { const seg = plan.segments.find((x) => x.id === id); return !!seg && v2PartEntered(seg, bare); });
-  if (ids.length) state.timeFit = { ...fit, dropped: fit.dropped.filter((id) => !ids.includes(id)), taken: [...(fit.taken ?? []), ...ids] };
+  if (ids.length) {
+    const { byChoice, ...rest } = fit; const chosen = (byChoice ?? []).filter((id) => !ids.includes(id));
+    state.timeFit = { ...rest, dropped: fit.dropped.filter((id) => !ids.includes(id)), taken: [...(fit.taken ?? []), ...ids], ...(chosen.length ? { byChoice: chosen } : {}) };
+  }
   return ids;
+}
+
+/** Task 7r fix round 4 (I-E, the controller's ruling: declining an optional part is state): the parts `ids` are left out by the
+ *  learner's choice (part-flow.ts v2OptionalDeclined: a no to the part when it was offered; v2SummaryGo: their yes to going on to
+ *  the summary past it). Left out exactly as a part left out for time on arrival is (`dropped`: plan order goes past it, it is
+ *  named as next time and carried, and taken after all once the lesson enters it), marked `byChoice` so the facts never call it
+ *  "no time", and already told (they chose). Only where the time fit is decided on arrival. Mutates; the ids added. */
+export function v2LeaveOutByChoice(state: V2State, ids: readonly string[]): string[] {
+  const fit = state.timeFit;
+  if (!fit?.byArrival) return [];
+  const add = ids.filter((id) => !fit.dropped.includes(id));
+  if (add.length) state.timeFit = { ...fit, dropped: [...fit.dropped, ...add], byChoice: [...new Set([...(fit.byChoice ?? []), ...add])], toldIds: [...new Set([...(fit.toldIds ?? []), ...add])] };
+  return add;
 }
 
 /** Task 7i (STAY_IN_PART): the time line's addition while the lesson is ahead of its plan in a required practice part (elapsed
@@ -179,9 +195,16 @@ export function v2TimeFitFacts(session: V2Session, state: V2State, on: boolean, 
   // Fix round 1 (minor 1): told per part (`toldIds`): a part left out later is told, one already told is not told again.
   if (state.timeFit?.byArrival) {
     const toldIds = state.timeFit.toldIds ?? [];
-    const toTell = typeof state.summaryBegunAt === 'number' ? [] : dropped.filter((seg) => !toldIds.includes(seg.id));
-    const rest = dropped.filter((seg) => !toTell.includes(seg));
+    // Task 7r fix round 4: a part left out by their choice (v2LeaveOutByChoice) has its own line: never "no time".
+    const chosen = dropped.filter((seg) => state.timeFit!.byChoice?.includes(seg.id));
+    const timed = dropped.filter((seg) => !chosen.includes(seg));
+    const toTell = typeof state.summaryBegunAt === 'number' ? [] : timed.filter((seg) => !toldIds.includes(seg.id));
+    const rest = timed.filter((seg) => !toTell.includes(seg));
     const lines: string[] = [];
+    if (chosen.length) {
+      const c1 = chosen.length === 1;
+      lines.push(`not taken today by their choice (they said no to ${c1 ? 'it' : 'them'}, or agreed to go on to the summary without ${c1 ? 'it' : 'them'}): ${names(chosen)}, for next time; do not offer ${c1 ? 'it' : 'them'} again unless they ask, and never say there was no time for ${c1 ? 'it' : 'them'}`);
+    }
     if (rest.length) {
       const r1 = rest.length === 1;
       lines.push(`left out for time (${rest.every((seg) => toldIds.includes(seg.id)) ? 'already told' : 'name it in your summary as next time'}): ${names(rest)}, for next time; do not offer ${r1 ? 'it' : 'them'} unless they ask`);

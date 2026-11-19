@@ -25,7 +25,9 @@ import { v2AsksInJapanese, v2AsksTheLearner, v2ReplyAsks, v2ReplySentences } fro
 import { v2LastReplyAsked, v2LastReplyAskedGuarded } from '../src/lib/tutor/v2/facts';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { v2SpeechParts } from '../src/lib/tutor/v2/languages';
-import { v2AskedParts, v2EndingPartAsk, v2GoForPart, v2MoveAnswer, v2PendingPart } from '../src/lib/tutor/v2/part-flow';
+import { v2AskedParts, v2EndingPartAsk, v2GoForPart, v2MoveAnswer, v2OptionalDeclined, v2PendingPart } from '../src/lib/tutor/v2/part-flow';
+import { v2ReadCarried } from '../src/lib/tutor/v2/state-carry';
+import { v2LeftForNextTime } from '../src/lib/tutor/v2/memory';
 import { v2InvitesToSpeak } from '../src/lib/tutor/v2/language-pack';
 import { runV2Turn, type V2ModelCall } from '../src/lib/tutor/v2/turn';
 import { newV2State, type V2BoardPage, type V2Session, type V2State } from '../src/lib/tutor/v2/types';
@@ -278,8 +280,58 @@ async function probe() {
   // m-a / m-b.
   const mA = MA_NOT_ASK.map((t) => ({ t, one: v2AsksTheLearner(`いいですね。${t}`), guarded: v2LastReplyAskedGuarded([u('x'), a(`いいですね。${t}`)]) }));
   const mB = ['いいですよ。', 'いいですね。'].map((x) => ({ x, move: v2MoveAnswer(x, N3_OFFER, LANGS, undefined, GDI) }));
+  // Fix round 4 (I-E). Conversation in hand, Pronunciation (optional) next and fitting; the tutor's offer #63 through runV2Turn.
+  const turnF = async (st: V2State, said: string | null, reply: string, at: number) => {
+    const heard: string[] = []; const m = scripted([reply]);
+    const t = await runV2Turn({ session: lang, state: st, studentSaid: said, callModel: m.call, onText: (d) => heard.push(d), boardPass: false, mathsCheck: false, nowMs: at * MIN });
+    return { state: t.state, heard: heard.join(''), facts: m.facts.join('\n'), pages: pageTitles(t.state) };
+  };
+  const SUMMARY_PAGE = '<board page>まとめ</board>まとめに入ります。今日は仕事の話を、現在完了と過去形を使って話せました。';
+  const SUMMARY_ASK = 'わかりました。では、まとめに進みましょうか。';
+  const convSt = () => base([TODAY, JOB, PP, PS, CONV], { history: [u('x'), a('y')] });
+  const offer = await turnF(convSt(), 'The project went very well.', T63, 13);
+  const afterOffer = () => structuredClone(offer.state);
+  const ieNo = await turnF(afterOffer(), '大丈夫です。', SUMMARY_ASK, 13.3);
+  const ieYes = await turnF(structuredClone(ieNo.state), 'はい', SUMMARY_PAGE, 13.6);
+  const ieDirect = await turnF(afterOffer(), '大丈夫です。', `<board page>まとめ</board>わかりました。では、まとめに入ります。今日は仕事の話を、現在完了と過去形を使って話せました。`, 13.3);
+  const ieLater = await turnF(structuredClone(ieNo.state), 'Can we do some pronunciation practice, please?', 'Sure, a short one. <board page>Pronunciation</board> Say this word after me. <board sentence>responsibilities</board>', 13.6);
+  const ieUnread = await turnF(afterOffer(), 'Hmm, maybe later.', SUMMARY_ASK, 13.3);
+  const ieUnreadYes = await turnF(structuredClone(ieUnread.state), 'はい', SUMMARY_PAGE, 13.6);
+  const ieTake = await turnF(afterOffer(), 'はい', 'では、発音の練習をしましょう。最初の単語は responsibilities です。私の後に繰り返してください。', 13.3);
+  const movedPast = await turnF(convSt(), 'The project went very well.', 'その文は正しいです。時間があまりないので、まとめに進みましょうか。', 13);
+  const movedPastYes = await turnF(structuredClone(movedPast.state), 'はい', SUMMARY_PAGE, 13.3);
+  const movedPastWant = await turnF(structuredClone(movedPast.state), 'Yes, but I would like to do pronunciation.', '<board page>発音</board>では、発音の練習をしましょう。', 13.3);
+  const declined = (said: string, reply: string = T63, st: V2State = afterOffer()) => v2OptionalDeclined(GDI, { ...st, history: [...st.history.slice(0, -1), a(reply)] }, reply, said, LANGS);
+  const EN_OPT_ASK = 'Thank you, that was a good conversation. Next is Pronunciation. Shall we go on, or do you have a question first?';
+  const pastSt = base([TODAY, JOB, PP, PS], { practiceSaid: beforeConv, history: [u('x'), a(T42)] });
+  const summaries = [];
+  for (const said of ['Uh, wrap up.', 'summary', 'Uh, summary.', 'まとめ']) { const r = await turnF(base([TODAY, JOB, PP, PS, CONV, PRON], { history: [u('International.'), a(T80)] }), said, SUMMARY_PAGE, 14.5); summaries.push({ said, pages: r.pages, heard: r.heard }); }
+  const mdContent = await turn(structuredClone(raAsk.t.state), 'Yes, I have been to Canada.', 'カナダですね。トロントは寒かったですか。', 11.3);
+  const mdCold = await turn(structuredClone(mdContent.t.state), 'Yes, it was very cold.', 'そうですか。寒かったんですね。', 11.6);
+  const mdGo = await turn(structuredClone(mdContent.t.state), 'はい、お願いします。', T45, 11.6);
+  const carried = v2ReadCarried({ timeFit: ieNo.state.timeFit, heldPage: raAsk.t.state.heldPage });
+  const iE = {
+    offerHeld: offer.state.heldPage ?? null,
+    no: { tf: ieNo.state.timeFit ?? null, held: ieNo.state.heldPage ?? null, pages: ieNo.pages, heard: ieNo.heard },
+    yes: { pages: ieYes.pages, heard: ieYes.heard, facts: ieYes.facts.match(/not taken today by their choice[^\n]*/)?.[0] ?? '', noTime: /no longer time for|left out for time/.test(ieYes.facts), next: v2LeftForNextTime(GDI, ieYes.state) },
+    direct: { pages: ieDirect.pages, heard: ieDirect.heard, tf: ieDirect.state.timeFit ?? null },
+    later: { tf: ieLater.state.timeFit ?? null, pages: ieLater.pages, facts: /they mentioned the Pronunciation part/.test(ieLater.facts) },
+    unread: { tf: ieUnread.state.timeFit ?? null, held: ieUnread.state.heldPage ?? null, pages: ieUnreadYes.pages, heard: ieUnreadYes.heard, tfAfter: ieUnreadYes.state.timeFit ?? null },
+    take: { pages: ieTake.pages, tf: ieTake.state.timeFit ?? null, heard: ieTake.heard },
+    movedPast: { held: movedPast.state.heldPage ?? null, pages: movedPastYes.pages, tf: movedPastYes.state.timeFit ?? null, heard: movedPastYes.heard, wantPages: movedPastWant.pages, wantTf: movedPastWant.state.timeFit ?? null },
+    nos: ['No, thanks.', 'Skip it.', 'Let\'s go to the summary.', '結構です。', 'いいです。', '大丈夫ですよ。', 'いいえ、まとめに進みましょう。', 'まとめに進みましょう。', '進みましょう。', 'Uh, no, let\'s go.', 'Not today.'].map((x) => ({ x, i: declined(x) })),
+    notNos: ['はい', 'はい、お願いします。', 'いいですよ。', '発音をお願いします。', 'pronunciation.', 'Yes, please.', 'What is that?', 'No, I want pronunciation.'].map((x) => ({ x, i: declined(x) })),
+    questionsFirst: ['No.', 'No, thanks.', '大丈夫です。'].map((x) => ({ x, i: declined(x, EN_OPT_ASK), move: v2MoveAnswer(x, EN_OPT_ASK, LANGS, undefined, GDI) })),
+    enSkip: declined('Skip it.', EN_OPT_ASK),
+    required: ['Skip it.', 'No, thanks.', 'Let\'s go to the summary.'].map((x) => v2OptionalDeclined(GDI, pastSt, T42, x, LANGS)),
+    mc: v2MoveAnswer('大丈夫ですよ。', N3_OFFER, LANGS, undefined, GDI),
+    me: v2PendingPart(GDI, afterOffer(), T63, 'まとめに進みましょう。', undefined, LANGS)?.title ?? null,
+    summaries,
+    md: { held: mdContent.t.state.heldPage ?? null, cold: pageTitles(mdCold.t.state), go: pageTitles(mdGo.t.state) },
+    carried,
+  };
   return {
-    item1, f84, f42, f2s, fStatement, item3, t66, n7, go, c1, i1, i1Offer, i2, mathsSilence, m1, n1, n2, n3, n3Offer, owed, n4, n5, iA, iB, ruleA, iC, iD, mA, mB,
+    item1, f84, f42, f2s, fStatement, item3, t66, n7, go, c1, i1, i1Offer, i2, mathsSilence, m1, n1, n2, n3, n3Offer, owed, n4, n5, iA, iB, ruleA, iC, iD, mA, mB, iE,
     t43: { pages: pageTitles(t43.state), heard: heard43.join(''), held: t43.state.heldPage?.title ?? null },
     tOdd: { pages: pageTitles(tOdd.state), heard: heardOdd.join(''), held: tOdd.state.heldPage?.title ?? null },
     t80: { pages: pageTitles(t80.state), heard: heard80.join(''), held: t80.state.heldPage?.title ?? null },
@@ -369,6 +421,34 @@ async function main() {
   for (const x of on.mA) check(`m-a 「${x.t}」 (listen) is no ask`, !x.one && !x.guarded, x);
   for (const x of on.mB) check(`m-b 「${x.x}」 to an offer to do a part is a yes`, x.move === 'go', x);
 
+  console.log('9  fix round 4 (I-E: declining an optional part is state; an ask that names only the summary)');
+  {
+    const e = on.iE; const left = (tf: V2State['timeFit'] | null) => !!tf?.dropped.includes('pronunciation') && !!tf.byChoice?.includes('pronunciation');
+    check('the offer #63 through runV2Turn holds Pronunciation as asked', e.offerHeld?.part === 'pronunciation' && !e.offerHeld.unasked, e.offerHeld);
+    check('I-E 「大丈夫です。」 to it: Pronunciation is left out by their choice (dropped, byChoice, told), its hold cleared, no page, no English ask', left(e.no.tf) && !!e.no.tf?.toldIds?.includes('pronunciation') && e.no.held === null && !e.no.pages.includes('Pronunciation') && !ENGLISH_ASK.test(e.no.heard), e.no);
+    check('I-E …then 「では、まとめに進みましょうか。」 + 「はい」: the summary page opens, Pronunciation does not, no English ask', e.yes.pages.includes('まとめ') && !e.yes.pages.some((p) => /Pronunciation|発音/.test(p)) && !ENGLISH_ASK.test(e.yes.heard), e.yes);
+    check('…told once: the facts name it as not taken by their choice, for next time, never as "no time"', /the Pronunciation part, for next time; do not offer it again unless they ask/.test(e.yes.facts) && !e.yes.noTime, e.yes.facts);
+    check('…carried to the next session', /Not reached last time, to do next: Pronunciation\./.test(String(e.yes.next)), e.yes.next);
+    check('the tutor goes straight to the summary in the reply to the no: its page opens, no offer of the part in its place', e.direct.pages.includes('まとめ') && !e.direct.pages.some((p) => /Pronunciation|発音/.test(p)) && left(e.direct.tf) && !ENGLISH_ASK.test(e.direct.heard), e.direct);
+    check('named later while it fits ("Can we do some pronunciation practice, please?") and entered: taken after all, no longer left out', e.later.facts && e.later.pages.includes('Pronunciation') && !e.later.tf?.dropped.includes('pronunciation') && !!e.later.tf?.taken?.includes('pronunciation') && !e.later.tf?.byChoice?.length, e.later);
+    check('a no the runtime does not read ("Hmm, maybe later."): nothing marked, but the summary ask clears the hold…', !e.unread.tf?.dropped.length && e.unread.held === null, e.unread);
+    check('…and 「はい」 opens the summary, not Pronunciation (left out then: the lesson went past it with their yes)', e.unread.pages.includes('まとめ') && !e.unread.pages.some((p) => /Pronunciation|発音/.test(p)) && left(e.unread.tfAfter) && !ENGLISH_ASK.test(e.unread.heard), e.unread);
+    check('m-g the offer + 「はい」: the Pronunciation page opens as the reply begins, nothing left out, no English ask', e.take.pages.includes('Pronunciation') && !e.take.tf?.dropped.length && !ENGLISH_ASK.test(e.take.heard), e.take);
+    check('the tutor moves past it (「時間があまりないので、まとめに進みましょうか。」): nothing held; 「はい」 opens the summary and leaves Pronunciation out', e.movedPast.held === null && e.movedPast.pages.includes('まとめ') && !e.movedPast.pages.some((p) => /Pronunciation|発音/.test(p)) && left(e.movedPast.tf) && !ENGLISH_ASK.test(e.movedPast.heard), e.movedPast);
+    check('…"Yes, but I would like to do pronunciation." to it: not left out, and the model\'s Pronunciation page opens (their words name it)', !e.movedPast.wantTf?.dropped.length && e.movedPast.wantPages.some((p) => /Pronunciation|発音/.test(p)), e.movedPast);
+    for (const n of e.nos) check(`a no to the offer #63: "${n.x}"`, n.i === 6, n);
+    for (const n of e.notNos) check(`no decline: "${n.x}" to #63`, n.i === -1, n);
+    for (const n of e.questionsFirst) check(`to "Next is Pronunciation. Shall we go on, or do you have a question first?", "${n.x}" is "no questions" (a go), not a decline`, n.i === -1 && n.move === 'go', n);
+    check('…and "Skip it." to that English ask is a decline', e.enSkip === 6, e.enSkip);
+    check('a required part is never declined ("Skip it.", "No, thanks.", "Let\'s go to the summary." to #42)', e.required.every((i) => i === -1), e.required);
+    check('m-c 「大丈夫ですよ。」 to an offer to do a part is a polite no', e.mc === 'other', e.mc);
+    check('m-e the offer held + 「まとめに進みましょう。」: the release opens no page (not the summary, not the held part)', e.me === null, e.me);
+    for (const s of e.summaries) check(`#80 + "${s.said}": the summary page opens, no English ask`, s.pages.includes('まとめ') && !ENGLISH_ASK.test(s.heard), s);
+    check('m-d a hold taken by position stays so after a content answer: "Yes, it was very cold." to a second content question opens nothing', !!e.md.held?.byPosition && !e.md.cold.includes('Conversation'), e.md);
+    check('m-d …and a bare go still opens it', e.md.go.includes('Conversation'), e.md.go);
+    check('the new state round-trips (timeFit.byChoice, heldPage.byPosition: state-carry.ts)', JSON.stringify(e.carried.timeFit?.byChoice) === '["pronunciation"]' && e.carried.heldPage?.byPosition === true, e.carried);
+  }
+
   console.log('5  each switch off alone (a child process per switch): as at 7ce31282 for that item, the others on');
   const child = (flag: string) => {
     const res = spawnSync(process.execPath, [...process.execArgv, __filename], { env: { ...process.env, [`NEXT_PUBLIC_TUTOR_V2_${flag}`]: 'off', MIC5_7R_CHILD: '1' }, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
@@ -396,6 +476,7 @@ async function main() {
   {
     const off = child('PART_GO_NAMED');
     check('PART_GO_NAMED off: "Uh, wrap up." and "summary" are not go answers (as before)', off.go.wrap80 !== 'go' && off.go.wraps.find((w) => w.x === 'Uh, summary.')?.toEn !== 'go', off.go.wraps);
+    check('PART_GO_NAMED off: a no to the optional part offered marks nothing (as before)', !off.iE.no.tf?.dropped.length && off.iE.nos.every((n) => n.i === -1), off.iE.no);
     check('PART_GO_NAMED off: #80 + "Uh, wrap up." holds the summary page and asks in English again (as live at 18 min)', !off.t80.pages.includes('まとめ') && ENGLISH_ASK.test(off.t80.heard), off.t80);
   }
 

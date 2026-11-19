@@ -15,12 +15,12 @@
 import type { LessonPlan } from '../lesson-plan/types';
 import { stripBoardBlocks } from './board-inline';
 import { PART_OFFERS, V2_CLOSING_PAGE, endsAsking } from './part-close';
-import { V2_OFFER_SHAPE, v2IsPageOfPart, v2PartEntered, v2PartNamedIn, v2PartOf, v2PageHoldsWork } from './plan-map';
+import { V2_OFFER_SHAPE, v2IsPageOfPart, v2PartEntered, v2PartIsOptional, v2PartNamedIn, v2PartOf, v2PageHoldsWork } from './plan-map';
 import { V2_PART_FRAME_JA, isPartFrame } from './reply-gate';
 import type { V2Board, V2State } from './types';
 import { TUTOR_V2_LEVEL_CHECK_CHIP, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PART_ASK_LANGS, TUTOR_V2_PART_ASK_NAMED, TUTOR_V2_PART_GO_NAMED, TUTOR_V2_PART_ASK_CLAUSES, TUTOR_V2_PART_ENTERED, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PRACTICE_ON_PART_PAGE } from '../orchestrator/flags';
 import { v2LevelCheckBegun } from './level-check-count';
-import { V2_LANGUAGE_PACKS, v2EndingAsk, v2IsAskLead, v2ReadsByClauses, v2WithoutFillers } from './language-pack';
+import { V2_LANGUAGE_PACKS, v2EndingAsk, v2IsAskLead, v2WithoutFillers } from './language-pack';
 
 /** `history` (Task 7g, LEVEL_CHECK_CHIP): when present, a level check under way lights its chip before any goal is marked. */
 type View = Pick<V2State, 'board' | 'goals' | 'workingLevel'> & { closed?: boolean; history?: V2State['history'] } & Partial<Pick<V2State, 'practiceSaid' | 'timeFit' | 'summaryBegunAt' | 'visitPages'>>;
@@ -345,13 +345,69 @@ function v2ClauseAskTheirs(plan: LessonPlan, state: View, lastTutor: string, sai
   return named ?? v2NamesAskedPart(v2WithoutFillers(said, languages), asked, plan);
 }
 
-/** Task 7r fix round 3 (ruling a): the held page was held by the last reply because the facts ordered its ask and that reply's
- *  closing question was taken as the ask (turn.ts, state before wording): the reply's wording reads no part ask. */
-export function v2HeldByPosition(plan: LessonPlan, state: View & Partial<Pick<V2State, 'heldPage'>>, lastTutor: string, languages?: readonly string[]): boolean {
+/** Task 7r fix round 3 (ruling a): the held page was held because the facts ordered its ask and a reply's closing question was
+ *  taken as the ask (turn.ts, state before wording): that reply's wording read no part ask.
+ *  Fix round 4 (m-d): a mark on the hold (`byPosition`, set where it is held), kept until the hold is asked by wording, opened or
+ *  lapsed: the reply after a content answer no longer lets any go-prefixed answer open the page. */
+export function v2HeldByPosition(state: Partial<Pick<V2State, 'heldPage'>>): boolean {
+  return !!state.heldPage?.byPosition && !state.heldPage.unasked;
+}
+
+/** Task 7r fix round 4 (I-E): the last reply's part ask, read by the clause route, names the closing part as its only destination
+ *  (「では、まとめに進みましょうか。」) and no required part is left before it: the lesson is going to the summary. Such an ask pends
+ *  no page (the close keeps its own rules, as an English ask that names the summary always has), and an optional part not
+ *  entered is not next by plan order: the learner declined it or the tutor moved past it. */
+export function v2SummaryAsked(plan: LessonPlan, state: View, lastTutor: string, languages?: readonly string[], langs: boolean = TUTOR_V2_PART_ASK_LANGS): boolean {
+  if (!v2ClauseRouteOnly(plan, lastTutor, languages, langs)) return false;
+  const last = plan.segments.length - 1; const cur = v2PartInHand(plan, state);
+  const asked = v2AskedParts(lastTutor, plan, languages, langs).filter((i) => i !== cur);
+  if (!asked.length || asked.some((i) => i !== last)) return false;
+  return v2OptionalAhead(plan, state) !== null;
+}
+/** The optional parts between the part in hand and the closing part, when no required part is left there (a level check whose
+ *  level is set and a part already left out aside); null: a required part is still to come, or the closing part is in hand. */
+export function v2OptionalAhead(plan: LessonPlan, state: View): number[] | null {
+  const last = plan.segments.length - 1; const cur = v2PartInHand(plan, state);
+  if (cur >= last) return null;
+  const out: number[] = [];
+  for (let i = v2NextPart(plan, state, cur); i >= 0 && i < last; i = v2NextPart(plan, state, i)) {
+    if (!v2PartIsOptional(plan.segments[i]!)) return null;
+    if (!entered(plan, state, i)) out.push(i);
+  }
+  return out;
+}
+/** Task 7r fix round 4 (I-E): their answer is a go to such a summary ask: a bare go, or their words name the summary. */
+export function v2SummaryGo(said: string | null, lastTutor: string, plan: LessonPlan, state: View, languages?: readonly string[]): boolean {
+  if (!said || !v2SummaryAsked(plan, state, lastTutor, languages) || v2MoveAnswer(said, lastTutor, languages, undefined, plan) !== 'go') return false;
+  return v2BareGo(said, languages) || v2ClauseAskTheirs(plan, state, lastTutor, said, languages) === plan.segments.length - 1;
+}
+
+/** Task 7r fix round 4 (I-E, the controller's ruling: declining an optional part is state). The optional part the last reply
+ *  offered as the lesson arrived at it (the part next by plan order, optional, not entered: named by the reply's part ask, or held
+ *  by that reply for its ask) that their answer says no to; -1: none. A no is: a bare or polite no where the ask offered no
+ *  question first (「大丈夫です。」, "No, thanks."), words that put it off or skip it ("Skip it.", "Not today."), or going to the
+ *  summary instead (their words name it; or, to a choice between the part and the summary, moving on: 「進みましょう。」, "No, let's
+ *  go."). Never an answer that asks something, or a yes. The caller marks it left out (time-fit.ts v2LeaveOutByChoice). */
+export function v2OptionalDeclined(plan: LessonPlan, state: View & Pick<V2State, 'history' | 'heldPage'>, lastTutor: string, said: string | null, languages?: readonly string[], on: boolean = TUTOR_V2_PART_GO_NAMED): number {
+  const s = v2WithoutFillers((said ?? '').trim(), languages);
+  if (!on || !s || /[?？]\s*$/u.test(s)) return -1;
+  const last = plan.segments.length - 1; const cur = v2PartInHand(plan, state); const nx = v2NextPart(plan, state, cur);
+  if (nx <= cur || nx >= last) return -1;
+  const seg = plan.segments[nx]!;
+  if (!v2PartIsOptional(seg) || paged(plan, state.board, nx) || entered(plan, state, nx)) return -1;
+  const asked = v2AskedParts(lastTutor, plan, languages);
   const h = state.heldPage;
-  if (!h || h.unasked || !state.history || h.at !== v2TutorReplies(state.history) || !v2ReadsByClauses(languages)) return false;
-  const last = stripBoardBlocks(lastTutor).split(SENTENCES).map((x) => x.trim()).filter(Boolean).pop() ?? '';
-  return !v2IsPartAsk(last) && !v2AskedParts(lastTutor, plan, languages).length;
+  if (!asked.includes(nx) && !(h && !h.unasked && h.part === seg.id && h.at === v2TutorReplies(state.history))) return -1;
+  const move = v2MoveAnswer(said, lastTutor, languages, undefined, plan);
+  if (move === 'question') return -1;
+  const namesIt = v2PartNamedIn(seg, s);
+  const toSummary = asked.includes(last);
+  if (move === 'go') {
+    if (namesIt || !toSummary) return -1;
+    return v2NamesAskedPart(s, [last], plan) === last || LEADING_NO.test(s) || MOVES_ON.test(s) ? nx : -1;
+  }
+  if (POLITE_NO_JA.test(s) || BARE_NO.test(s) || PUTS_OFF.test(s)) return nx;
+  return !namesIt && TO_THE_SUMMARY.test(s) ? nx : -1;
 }
 
 /** Task 7r (PART_GO_NAMED): whether their answer is a go to the last reply's ask about part `index`: the ask named it (by the
@@ -370,8 +426,11 @@ export function v2GoForPart(said: string | null, lastTutor: string, plan: Lesson
   const clauseOnly = v2ClauseRouteOnly(plan, lastTutor, languages);
   const theirsClause = clauseOnly ? v2ClauseAskTheirs(plan, state, lastTutor, said, languages) : -1;
   if (theirsClause >= 0) return index === theirsClause;
+  // Fix round 4 (I-E): a bare go to an ask that names only the summary, no required part left before it, is a go for the summary
+  // page, whatever optional part plan order still has (they declined it, or the tutor moved past it).
+  if (clauseOnly && index === plan.segments.length - 1 && v2BareGo(said, languages) && v2SummaryAsked(plan, state, lastTutor, languages)) return true;
   const h = state.heldPage;
-  if (h && !h.unasked && state.history && v2TutorReplies(state.history) - h.at <= V2_HELD_PAGE_REPLIES && !paged(plan, state.board, index) && plan.segments[index]?.id === h.part) return !(v2HeldByPosition(plan, state, lastTutor, languages) && !v2BareGo(said, languages));
+  if (h && !h.unasked && state.history && v2TutorReplies(state.history) - h.at <= V2_HELD_PAGE_REPLIES && !paged(plan, state.board, index) && plan.segments[index]?.id === h.part) return !(v2HeldByPosition(state) && !v2BareGo(said, languages));
   if (clauseOnly) return index === v2NextPart(plan, state, cur);
   const asked = v2AskedParts(lastTutor, plan, languages).filter((i) => i !== cur);
   if (asked.length) {
@@ -390,7 +449,14 @@ export function v2GoForPart(said: string | null, lastTutor: string, plan: Lesson
 }
 
 // Fix round 3 (m-b): 「いいですよ」 / 「いいですね」 to an offer are a willing yes (GO_JA), only the bare form a polite no.
-const POLITE_NO_JA = /^(?:大丈夫|いいです|結構)(?:です)?[。！!]*$/u;
+// Fix round 4 (m-c): 「大丈夫ですよ」 / 「結構ですよ」 to an offer are still "no need".
+const POLITE_NO_JA = /^(?:(?:大丈夫|結構)(?:です)?よ?|いいです)[。！!]*$/u;
+// Fix round 4 (v2OptionalDeclined): a no to an optional part offered: it is put off or skipped; the summary is chosen instead; to a
+// choice between the part and the summary, a leading no or a move-on.
+const PUTS_OFF = /\b(?:skip|rather not|no,? thanks?|no,? thank you|not (?:now|today)|don'?t (?:want|need)|next time)\b|スキップ|飛ばし|やめ|いいえ|結構です|次回|今度/i;
+const TO_THE_SUMMARY = /\b(?:summary|wrap(?: it)? up)\b|まとめ/i;
+const LEADING_NO = /^(?:no|nope|nah)\b|^(?:いいえ|いや)/i;
+const MOVES_ON = /\b(?:move on|go on|next)\b|進み|次へ|次に/i;
 const OFFER_TO_DO_JA = /(?:やり|し|練習し|やってみ)ますか|どうですか|いかがですか|どうでしょうか|やりましょうか/u;
 /** An unambiguous yes on its own ("Yes.", "Sure, please."): the only go-ahead to a choice offer that does not name the part. */
 const BARE_YES = new RegExp(`^${FILLER}(?:yes|yeah|yep|sure|ok(?:ay)?|alright|all right|of course|はい|ええ)(?:,?\\s*(?:please|let'?s do (?:it|that)|i'?d like (?:that|to)|お願いします))?[.!。！]*$`, 'i');
@@ -427,16 +493,21 @@ const NEXT_LEAD = V2_LANGUAGE_PACKS.en!.askLead;
  *  Present perfect, the part named by its lead, else the part after the one in hand (mic test 4, embed-1795028886172, flag 3). */
 export function v2PendingPart(plan: LessonPlan, state: View & Pick<V2State, 'history' | 'heldPage'>, lastTutor: string, said: string | null, askNamed: boolean = TUTOR_V2_PART_ASK_NAMED, languages?: readonly string[], langs: boolean = TUTOR_V2_PART_ASK_LANGS): { index: number; title: string } | null {
   const held = state.heldPage;
+  // Task 7r fix round 4 (I-E): an ask that names only the summary, with no required part left before it, pends no page: not the
+  // optional part plan order still has, nor a page held for an earlier ask (that ask is superseded). The close keeps its own rules.
+  if (v2SummaryAsked(plan, state, lastTutor, languages, langs)) return null;
   // Task 7c fix round 1: a page held unasked (the reply asked something else) waits for its ask; a yes now answers that other
   // question, not a part change.
   if (held && !held.unasked && v2TutorReplies(state.history) - held.at <= V2_HELD_PAGE_REPLIES) {
     const index = plan.segments.findIndex((seg) => seg.id === held.part);
     // Task 7r fix round 3 (I-C): a part the clause-read ask offered that their words name comes before the held one.
+    // Fix round 4 (m-e): under the guards every other route applies: never the closing part, never a part already paged (their
+    // naming the summary opens no page here, and does not open the held one either).
     const theirs = said ? v2ClauseAskTheirs(plan, state, lastTutor, said, languages, langs) : -1;
-    if (theirs >= 0 && theirs !== index) return { index: theirs, title: v2PartOf(plan.segments[theirs]!).label! };
+    if (theirs >= 0 && theirs !== index) return theirs < plan.segments.length - 1 && !paged(plan, state.board, theirs) ? { index: theirs, title: v2PartOf(plan.segments[theirs]!).label! } : null;
     // Task 7r fix round 3 (ruling a): a page held because the facts ordered the ask, the reply's closing question taken as it
     // (turn.ts, state before wording), opens only on a bare go: "Yes, I have been to Canada." answers the question.
-    if (said && v2HeldByPosition(plan, state, lastTutor, languages) && !v2BareGo(said, languages)) return null;
+    if (said && v2HeldByPosition(state) && !v2BareGo(said, languages)) return null;
     if (index >= 0 && !paged(plan, state.board, index)) return { index, title: held.title };
   }
   const cur = v2PartInHand(plan, state);

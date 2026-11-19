@@ -28,14 +28,14 @@ import { cardQuestion, saidCovers, sentenceCardToSay, unsaidAsk, unsaidBoardItem
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, v2AskEveryOn, v2SummaryBegun, V2_NO_ASK_RECHECK_S, V2_TIME_UP_MIN, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
 import { v2CloseOpen, v2LeftToStopMin, v2LessonNowMs, v2OverrunMin, v2TimeFlags, v2WrapDue, type V2TimeFlags } from './time-box';
-import { V2_MIN_PRACTICE, V2_MORE_PRACTICE_MIN_LEFT, v2ArrivalDrops, v2AsksMorePractice, v2CountPractice, v2PartPracticeAsked, v2DroppedMentioned, v2TakeEnteredDropped, v2PartsToDrop, v2PracticeMoreLine, v2PracticeShort, v2TimeFitAfterReply, v2TimeFitDue, v2TimeFitUpFront } from './time-fit';
+import { V2_MIN_PRACTICE, V2_MORE_PRACTICE_MIN_LEFT, v2ArrivalDrops, v2LeaveOutByChoice, v2AsksMorePractice, v2CountPractice, v2PartPracticeAsked, v2DroppedMentioned, v2TakeEnteredDropped, v2PartsToDrop, v2PracticeMoreLine, v2PracticeShort, v2TimeFitAfterReply, v2TimeFitDue, v2TimeFitUpFront } from './time-fit';
 import { planGoalIds, renderPlanMap, v2NextTimeAllLine, v2PagePartLabel, v2NextTimeLine, v2PartIsOptional, v2PartNamedIn, v2PartOf, v2UnreachedOffer } from './plan-map';
 import { stripToolTalk } from './tool-talk';
 import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
 import { V2_CLOSING_PAGE, endsAsking, leftOpen, mayOpenPart, namesPart, partOffer, v2FrameDue } from './part-close';
 import { ReplyGate, isGoodbye, isPartFrame } from './reply-gate';
-import { V2_JA_SCRIPT, v2AnswerAsksOrDeclines, v2GoForPart, v2AskRepeats, v2AsksPartChange, v2EndingPartAsk, v2HeldPageOwed, v2HeldPartWaiting, v2IsPartAsk, v2MoveAnswer, v2NextPart, v2PageForPart, v2PartAskLine, v2PartChangeAsked, v2PartInHand, v2PartNamedLate, v2PartOfPage, v2PartViewed, v2PageTurnNote, v2PositionPage, v2PendingPart, v2PlanLabelled, v2TutorReplies } from './part-flow';
+import { V2_JA_SCRIPT, v2AnswerAsksOrDeclines, v2GoForPart, v2AskedParts, v2OptionalAhead, v2OptionalDeclined, v2SummaryAsked, v2SummaryGo, v2AskRepeats, v2AsksPartChange, v2EndingPartAsk, v2HeldPageOwed, v2HeldPartWaiting, v2IsPartAsk, v2MoveAnswer, v2NextPart, v2PageForPart, v2PartAskLine, v2PartChangeAsked, v2PartInHand, v2PartNamedLate, v2PartOfPage, v2PartViewed, v2PageTurnNote, v2PositionPage, v2PendingPart, v2PlanLabelled, v2TutorReplies } from './part-flow';
 import { heardAsWords } from './heard';
 import { v2IsPracticeAsk, v2LanguagesSection } from './languages';
 import { v2ReadsByClauses } from './language-pack';
@@ -443,9 +443,20 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const arrivalOn = tf.noSqueeze && TUTOR_V2_OPTIONAL_AT_ARRIVAL && !!session.timeBoxMinutes && !discussion && !session.homework && !session.homeworkSheet && v2PlanLabelled(session.plan);
   const marginMin = tf.overrun ? v2OverrunMin(true) : 0;
   let droppedAsked: { label: string; minutes: number; left: number; fits: boolean } | undefined;
+  // Task 7r fix round 4 (I-E, the controller's ruling: declining an optional part is state): the optional part the last reply
+  // offered on arrival that their answer says no to (part-flow.ts v2OptionalDeclined); -1: none.
+  let declinedNow = -1;
   if (arrivalOn && session.plan && state.timeFit?.byArrival && !state.closed) {
     const usedMin = (nowMs - state.startedAtMs) / 60000;
     v2TakeEnteredDropped(session.plan, state);
+    // …it is left out as a part left out for time is (plan order then gives the summary), and so is an optional part not entered
+    // when they say go to an ask that names only the summary (v2SummaryGo): the tutor moved past it with their yes.
+    if (partFlow && TUTOR_V2_PART_GO_NAMED && input.studentSaid !== null && !closingTurn) {
+      const plan = session.plan;
+      declinedNow = v2OptionalDeclined(plan, state, lastTutorText, input.studentSaid, askLangs);
+      const out = declinedNow >= 0 ? [declinedNow] : v2SummaryGo(input.studentSaid, lastTutorText, plan, state, askLangs) ? v2OptionalAhead(plan, state) ?? [] : [];
+      if (!v2LeaveOutByChoice(state, out.map((i) => plan.segments[i]!.id)).length) declinedNow = -1;
+    }
     const named = v2DroppedMentioned(session.plan, state, input.studentSaid, usedMin, session.timeBoxMinutes, marginMin);
     if (named) { const seg = session.plan.segments[named.index]!; droppedAsked = { label: v2PartOf(seg).label ?? seg.id, minutes: named.minutes, left: named.left, fits: named.fits }; }
     // Fix round 1 (minor 2): the part the last reply asked about keeps the decision made at the ask.
@@ -1008,7 +1019,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           // Task 7r (PART_GO_NAMED): a page of the part their go answered (the ask named it, or the summary) opens: the ask the
           // runtime could not read left "Conversation" held with no ask after "Uh, no, let's go." (mic test 5, embed-1795050656326).
           const goIndex = part.block.kind === 'page' && session.plan ? (closingPage ? session.plan.segments.length - 1 : pagePart?.index ?? -1) : -1;
-          const goForPage = TUTOR_V2_PART_GO_NAMED && askEvery && !!session.plan && goIndex >= 0 && v2GoForPart(input.studentSaid, lastTutorText, session.plan, state, goIndex, askLangs);
+          // Fix round 4 (I-E): the summary page in the reply to their no to the optional part offered (declinedNow), when the
+          // summary is then next by plan order: they chose it; no offer of the part again in place of the page.
+          const goForPage = TUTOR_V2_PART_GO_NAMED && askEvery && !!session.plan && goIndex >= 0 && (v2GoForPart(input.studentSaid, lastTutorText, session.plan, state, goIndex, askLangs)
+            || (declinedNow >= 0 && goIndex === session.plan.segments.length - 1 && v2NextPart(session.plan, state, v2PartInHand(session.plan, state)) === goIndex));
           const holdIt = !goForPage && part.block.kind === 'page' && !discussion && !summaryBegun && !(summaryBefore && closingPage) && ((closingPage ? frameDueOld : frameDue) || (closesLesson(part.block.body) && !!v2UnreachedOffer(session.plan, state))) && partChange && !boardHasPage(part.block.body) && !state.closed && !closingTurn && !releasing && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length, strict: askEvery, ...(askEvery && TUTOR_V2_PAGE_NEEDS_GO ? { go: v2MoveAnswer(input.studentSaid, lastTutorText, askLangs, undefined, session.plan) === 'go' } : {}) });
           // Task 6g: the summary begins here, so a practice ask waiting before it is dropped; any other page lets it go.
           if (part.block.kind === 'page' && !holdIt) { if (closingPage) { gate.summaryBegins(); closingOpened = true; } else gate.releaseAsk(); }
@@ -1541,7 +1555,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
 
   // Task 7c fix round 1 (review I2): a page held unasked at an earlier reply is owed its ask. A reply that asks nothing (and
   // turns no page, holds none) ends with the part ask, and the page then waits for their yes as any held page does.
-  let owedPartAsked = false;
+  let owedPartAsked = false; let owedByPosition = false;
   const owedHeld = oneQuestion && askEvery && partFlow && session.plan && state.heldPage?.unasked && v2HeldPageOwed(session.plan, state) ? state.heldPage : null;
   // Task 7r (PART_GO_NAMED): not owed to a reply to their go for that same part.
   const owed = owedHeld && session.plan && TUTOR_V2_PART_GO_NAMED && v2GoForPart(input.studentSaid, lastTutorText, session.plan, state, session.plan.segments.findIndex((seg) => seg.id === owedHeld.part), askLangs) ? null : owedHeld;
@@ -1554,7 +1568,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // test-brain-v2-one-question-7c I2), as English asks are read by their frames.
     // Fix round 3: never on a silence turn (I-A: the facts there forbid a new ask, and the hint question is not the part ask), and
     // only a question in Japanese script (I-B: ’ — “ are English too).
-    if (v2IsPartAsk(last) || (input.studentSaid !== null && v2ReadsByClauses(askLangs) && endsAsking(last, true) && V2_JA_SCRIPT.test(last))) owedPartAsked = true;
+    // Fix round 4 (m-d): a closing question whose wording reads no part ask is the ask by position: the hold is marked, and only a
+    // bare go opens it for as long as it waits.
+    if (v2IsPartAsk(last)) owedPartAsked = true;
+    else if (input.studentSaid !== null && v2ReadsByClauses(askLangs) && endsAsking(last, true) && V2_JA_SCRIPT.test(last)) { owedPartAsked = true; owedByPosition = !v2AskedParts(said, session.plan, askLangs).length; }
     else if (!v2ReplyHandsOver(said) && !carriesPartAsk()) {
       const plan = session.plan; const inHand = v2PartInHand(plan, state);
       const done = inHand >= 0 && plan.segments[inHand]!.kind !== 'hook' && !v2PartOf(plan.segments[inHand]!).skipWhenLevelKnown ? v2PartOf(plan.segments[inHand]!).label : undefined;
@@ -1582,7 +1599,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // the next turn would read it), as the runtime's ask does: an answer that is neither yes nor a question then keeps it
   // waiting, and the facts say to answer and ask again (v2audio-7 learner 2 T25–T27: the ask was forgotten after a content
   // answer, and the next part was taught on the old part's page).
-  let ownAsk: { id: string; title: string } | null = null;
+  let ownAsk: { id: string; title: string } | null = null; let summaryAsked = false;
   if (releaseOn && session.plan && !heldAt && !askedPart && !owedPartAsked && !state.closed && !input.signal?.aborted && spoken.length) {
     const said = stripBoardBlocks(spoken.join(' '));
     const last = v2ReplySentences(said).pop() ?? '';
@@ -1590,6 +1607,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // Task 7n (PART_ASK_LANGS): an ask it ends on by position in the lesson's languages holds its part as well.
     const q = last && (v2IsPartAsk(last) || !!v2EndingPartAsk(said, plan, askLangs)) ? v2PendingPart(plan, { ...state, heldPage: undefined }, said, null, undefined, askLangs) : null;
     if (q) ownAsk = { id: plan.segments[q.index]!.id, title: q.title };
+    // Fix round 4 (I-E): a reply that ends asking to go to the summary (no required part left) supersedes a page still held for an
+    // earlier ask: their yes to it must not open that page.
+    else if (last && v2SummaryAsked(plan, state, said, askLangs)) summaryAsked = true;
   }
 
   // A spoken reply that asks the student nothing leaves them not knowing whose move it is. Going on unasked a
@@ -1699,8 +1719,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // reply owes its ask (fix round 1); once asked (the runtime's ask, or the reply's own part ask) it waits as any held page.
     if (held?.part && !state.closed) state.heldPage = { title: held.part.title, part: held.part.id, at: v2TutorReplies(state.history), ...(held.unasked ? { unasked: true as const } : {}) };
     else if (askedPart && !held && !state.closed) state.heldPage = { title: askedPart.title, part: askedPart.id, at: v2TutorReplies(state.history) };
-    else if (owed && owedPartAsked && !state.closed) state.heldPage = { title: owed.title, part: owed.part, at: v2TutorReplies(state.history) };
+    else if (owed && owedPartAsked && !state.closed) state.heldPage = { title: owed.title, part: owed.part, at: v2TutorReplies(state.history), ...(owedByPosition ? { byPosition: true as const } : {}) };
     else if (ownAsk && !state.closed) state.heldPage = { title: ownAsk.title, part: ownAsk.id, at: v2TutorReplies(state.history) };
+    else if (summaryAsked && state.heldPage && !state.heldPage.unasked) delete state.heldPage;
     else if (state.closed || toolCalls.some((c) => c.name === 'new_page' && !/^not /.test(c.outcome))) delete state.heldPage;
   }
   // Fed back as a fact next turn: how long the tutor has been talking without writing.
