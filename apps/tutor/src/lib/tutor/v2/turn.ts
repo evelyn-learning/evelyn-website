@@ -143,7 +143,7 @@ interface V2ControlCtx {
   /** Task 7v fix round 1 (a): the wrap is held for an optional part not yet offered: `real` is the session with the host's wrap; a
    *  tutor-chosen end_lesson that only the moved wrap refuses is deferred once (`deferred`: already deferred, in an earlier reply or
    *  earlier in this one), then accepted. */
-  heldWrap?: { real: V2Session; label: string; deferred: { done: boolean } };
+  heldWrap?: { real: V2Session; label: string; phase: 'next' | 'in'; deferred: { done: boolean } };
 }
 
 /** What the student's grade asks of the tutor's pace. The constitution says to teach at their level; a grade 7
@@ -261,6 +261,8 @@ export { V2_CLOSING_PAGE } from './part-close';
 /** A reply that says only yes (or ok): to "any question, or are you finished?" it says neither (GAC validation, round 2). */
 /** Task 7v fix round 1 (a): the start of the once-only end_lesson deferral for an optional part that fits (found in the history). */
 export const V2_OPTIONAL_DEFER_PREFIX = 'not ended yet:';
+/** Fix round 3 (N3): the same, inside the optional part they took. */
+export const V2_OPTIONAL_DEFER_IN_PREFIX = 'not ended yet, in the part:';
 export const V2_BARE_ASSENT = /^\s*(?:yes|yeah|yep|yup|ya|y|ok|okay|k|sure|alright|all right|mhm|uh[- ]?huh)\s*[.!]*\s*$/i;
 
 /** The own-question results a homework session keeps (note_own_answer). */
@@ -360,7 +362,12 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
     // not offered: deferred once (the 7d pattern), never twice, never when they asked to stop.
     const held = ctx.heldWrap;
     if (!asked && !homeworkDone && held && !v2CloseOpen(session, state, nowMs, ctx.tf.closeByContent) && v2CloseOpen(held.real, state, nowMs, ctx.tf.closeByContent)) {
-      if (!held.deferred.done) { held.deferred.done = true; return `${V2_OPTIONAL_DEFER_PREFIX} the optional ${held.label} part still fits before the session must end and has not been offered. Say nothing of this message. In one sentence of your own, offer it before the summary; if they would rather not, go to the summary and close.`; }
+      if (!held.deferred.done) {
+        held.deferred.done = true;
+        return held.phase === 'in'
+          ? `${V2_OPTIONAL_DEFER_IN_PREFIX} they chose the optional ${held.label} part and its minutes are not over. Say nothing of this message. Finish the item in hand with them, then give the summary and close.`
+          : `${V2_OPTIONAL_DEFER_PREFIX} the optional ${held.label} part still fits before the session must end and has not been offered. Say nothing of this message. In one sentence of your own, offer it before the summary; if they would rather not, go to the summary and close.`;
+      }
     } else if (!asked && !homeworkDone && !v2CloseOpen(session, state, nowMs, ctx.tf.closeByContent)) {
       // Said to the student as the tutor's own thought. The first wording was repeated to them: "The system says
       // there are about seven minutes left and you haven't asked to stop" (embed-1794595194384).
@@ -410,8 +417,12 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const optionalHeld = !discussion && session.plan && !declining && !(TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid)) ? v2OptionalWrapMin(session, state, nowMs, v2WrapMin(session, tf.closeByContent), tf.overrun ? v2OverrunMin(true) : 0, (() => { const a = v2PendingPart(session.plan!, state, lastTutorText, null, undefined, askLangs); return a ? session.plan!.segments[a.index]!.id : null; })()) : null;
   if (optionalHeld) session = { ...session, wrapMinutes: optionalHeld.wrap };
   // Fix round 1 (a): the once-only deferral of a tutor-chosen end_lesson while the part is next and not yet offered.
-  const heldPart = optionalHeld?.phase === 'next' && session.plan ? session.plan.segments.find((x) => v2PartOf(x).label === optionalHeld.label) : undefined;
-  const heldWrap: V2ControlCtx['heldWrap'] = heldPart && v2PartOffers(heldPart, state.history) === 0 ? { real: realSession, label: optionalHeld!.label, deferred: { done: state.history.some((h) => Array.isArray(h.content) && h.content.some((c) => c.type === 'tool_result' && typeof c.content === 'string' && c.content.startsWith(V2_OPTIONAL_DEFER_PREFIX))) } } : undefined;
+  const heldPart = optionalHeld && session.plan ? session.plan.segments.find((x) => v2PartOf(x).label === optionalHeld.label) : undefined;
+  // Fix round 3 (N3, ruling): inside the optional part too, deferred once, then accepted (its own prefix: a deferral before it was
+  // offered does not count for one inside it).
+  const deferPrefix = optionalHeld?.phase === 'in' ? V2_OPTIONAL_DEFER_IN_PREFIX : V2_OPTIONAL_DEFER_PREFIX;
+  const deferredBefore = state.history.some((h) => Array.isArray(h.content) && h.content.some((c) => c.type === 'tool_result' && typeof c.content === 'string' && c.content.startsWith(deferPrefix)));
+  const heldWrap: V2ControlCtx['heldWrap'] = heldPart && (optionalHeld!.phase === 'in' || v2PartOffers(heldPart, state.history) === 0) ? { real: realSession, label: optionalHeld!.label, phase: optionalHeld!.phase, deferred: { done: deferredBefore } } : undefined;
   const leftMin = v2LeftToStopMin(session, state, nowMs, tf.overrun);
   const closingTurn = (TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid)) || leftMin <= V2_TIME_UP_MIN
     // Lessons only: the wrap fact is the lesson's time line, and homework and a discussion are paced by their own (review 5a M2).

@@ -249,7 +249,10 @@ async function probe() {
     psLateStay: v2StayInPartLine(lang, inPart(4, { partStart: { part: 'past-simple', at: 15.0 * MIN } }), 16.2 * MIN) };
   const sims = { quick: simulate('quick'), plan: simulate('plan'), slow: simulate('slow') };
   // Fix round 2: the core part is the last required teaching part; two other plan shapes, fast; N2 the slow case's line at 19.3.
-  const cores = { teach: v2CorePart(TEACH_PRACTICE.plan), concept: v2CorePart(CONCEPT_TWO.plan) };
+  const cores = { teach: v2CorePart(TEACH_PRACTICE.plan), concept: v2CorePart(CONCEPT_TWO.plan),
+    // Fix round 3 (N9): a required pronunciation part after the practice is no core part; a plan with no practice part: its last teaching part.
+    pronLast: v2CorePart({ ...TEACH_PRACTICE.plan, segments: [...TEACH_PRACTICE.plan.segments.slice(0, 3), { ...GDI.segments[6]!, id: 'say-it', teacherNote: 'Say the words.', problem: 'Say it.', metadata: { label: 'Say it', pronunciation: { words: ['x'], sentences: [] } }, estimatedMinutes: 3 } as Segment, TEACH_PRACTICE.plan.segments[3]!] }),
+    noPractice: v2CorePart({ ...TEACH_PRACTICE.plan, segments: [TEACH_PRACTICE.plan.segments[0]!, { ...GDI.segments[6]!, id: 'say-it', teacherNote: 'Say the words.', problem: 'Say it.', metadata: { label: 'Say it', pronunciation: { words: ['x'], sentences: [] } }, estimatedMinutes: 3 } as Segment, TEACH_PRACTICE.plan.segments[3]!] }) };
   const fast = { teach: simulateFast(TEACH_PRACTICE), concept: simulateFast(CONCEPT_TWO) };
   const slow193 = v2StayInPartLine({ ...lang, wrapMinutes: 19.5 }, inPart(5, { partStart: { part: 'open-conversation', at: 16.3 * MIN } }), 19.3 * MIN);
   // ── 2 OPTIONAL_FIT: Conversation entered at 13.8; Pronunciation offered at 17.85 (T99); "Uh, yes, let's go." at 18.1 ──
@@ -278,6 +281,9 @@ async function probe() {
   const notOffered = (extra: Partial<V2State> = {}) => inPart(5, { partStart: { part: 'open-conversation', at: 13.8 * MIN }, history: [u('x'), a('What was the hardest part of that project?')], ...extra });
   const endOnce = await turn(lang, notOffered(), 'It was the deadline.', [{ text: 'I see. Thank you, goodbye!', tools: [{ name: 'end_lesson', input: { summary: 'x' } }] }, { text: 'Goodbye!', tools: [{ name: 'end_lesson', input: { summary: 'x' } }] }], 18.5);
   const endAfter = await turn(lang, notOffered({ history: [u('x'), { role: 'assistant', content: [{ type: 'tool_use', id: 'e1', name: 'end_lesson', input: { summary: 'x' } }] }, { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'e1', content: 'not ended yet: the optional Pronunciation part still fits…' }] }, a('What was the hardest part?')] }), 'The deadline.', [{ text: 'Thank you, goodbye!', tools: [{ name: 'end_lesson', input: { summary: 'x' } }] }], 18.7);
+  // Fix round 3 (N3): inside the optional part (taken at 18.1, held to 21.1): two tutor end_lesson calls → the second accepted.
+  const endIn = await turn(lang, inPron, 'Responsibilities.', [{ text: 'Good. Thank you, goodbye!', tools: [{ name: 'end_lesson', input: { summary: 'x' } }] }, { text: 'Goodbye!', tools: [{ name: 'end_lesson', input: { summary: 'x' } }] }], 19.0);
+  const endInStop = await turn(lang, inPron, 'Sorry, I have to finish now.', [{ text: 'Of course. Goodbye!', tools: [{ name: 'end_lesson', input: { summary: 'x' } }] }], 19.0);
   const endStop = await turn(lang, notOffered(), 'Sorry, I have to finish now.', [{ text: 'Of course. Goodbye!', tools: [{ name: 'end_lesson', input: { summary: 'x' } }] }], 18.5);
   // Fix round 1 (m10): a typed lesson with this plan past the wrap: the closing line as before.
   const typedFacts = renderFacts({ ...lang, mode: 'text' }, inPart(5), { nowMs: 18.5 * MIN, heard: 'Okay.' });
@@ -356,8 +362,8 @@ async function probe() {
   // ── 7 ──
   const self = v2SelfCorrection('My team is working on um uh presentation for senior staff.\nfor senior bosses.');
   const selfLines = v2PracticeFactLines(lang, inPart(2, { history: [u('x'), a('Now a question about your team\'s current work. Start your answer with: My team is working on…')] }), 'My team is working on um uh presentation for senior staff.\nfor senior bosses.');
-  const selfNot = ['Yes, I think so.', 'I work in sales.\nYes.', 'I work in sales.\nWhat about you?', 'I work in sales. I sell washing machines.', 'I work in sales.\nI sell washing machines.', 'I visited Tokyo last year.\nI went there.'].map((x) => v2SelfCorrection(x));
-  const selfYes = ['I have work here for five years.\nWorked.', 'I goed to Tokyo.\nWent.'].map((x) => v2SelfCorrection(x)?.phrase ?? null);
+  const selfNot = ['Yes, I think so.', 'I work in sales.\nYes.', 'I work in sales.\nThank you.', 'I work in sales.\nOkay.', 'I work in sales.\nWhat about you?', 'I work in sales. I sell big washing machines.', 'I work in sales.\nI sell washing machines to shops.'].map((x) => v2SelfCorrection(x));
+  const selfYes = ['I have work here for five years.\nWorked.', 'I goed to Tokyo.\nWent.', 'My team is working on a presentation for senior staff.\nThe senior bosses.', 'My team is working on a presentation for senior staff.\nMy team members.', 'I have work here for five years.\nI have worked.', 'I goed to Tokyo last year.\nI went.', 'My team is working on um uh presentation for senior staff.\nfor senior bosses.'].map((x) => v2SelfCorrection(x)?.phrase ?? null);
   const carried = v2CutWordsCarried('My team is working on um uh presentation for senior staff.', '', 0, 'for senior bosses.');
   const carriedNot = [v2CutWordsCarried('My team is working on a report.', 'That\'s', 0, 'for senior bosses.'), v2CutWordsCarried('My team is working on a report.', '', 1, 'for senior bosses.'), v2CutWordsCarried('My team is working on a report.', '', 0, null)];
   const joined = v2WithCarried(carried, 'for senior bosses.');
@@ -374,7 +380,7 @@ async function probe() {
     return { own: own.own, score: own.score, timing: own.timing, echo: echo.own };
   };
   return {
-    spokenClosing, core, sims, cores, fast, slow193, declineTurnFacts: declineTurn.facts, noStart, endOnce: { results: endOnce.results, closed: endOnce.r.state.closed }, endAfter: { results: endAfter.results, closed: endAfter.r.state.closed }, endStop: endStop.r.state.closed, typedFacts, cov, gapExplained,
+    spokenClosing, core, sims, cores, fast, slow193, declineTurnFacts: declineTurn.facts, noStart, endOnce: { results: endOnce.results, closed: endOnce.r.state.closed }, endAfter: { results: endAfter.results, closed: endAfter.r.state.closed }, endStop: endStop.r.state.closed, endIn: { results: endIn.results, closed: endIn.r.state.closed }, endInStop: endInStop.r.state.closed, typedFacts, cov, gapExplained,
     clock, facts30, facts52: t52.facts, first, kept, moved, freshStart: fresh.r.state.partStart ?? null, roundTrip, mathsClock, mathsFacts, mathsPlainFacts,
     wrapAtOffer, yesPage: yesPage ? String(yesPage.args.title) : null, yesFacts: yes.facts, yesStart: yes.r.state.partStart ?? null, wrapIn, pron19Facts: pron19.facts, pron212Facts: pron212.facts,
     askedIndex, laterFacts: later.facts, laterPage: laterPage ? String(laterPage.args.title) : null, tooLateFacts: tooLate.facts, notAsk, noFit, declined,
@@ -397,7 +403,7 @@ async function main() {
   check('not when they asked to move on (theirs to close)', on.clock.upMovedOn === null);
   check('through runV2Turn: 3.0 has the stay line; 5.2 the part-time line and no lesson-clock "would be running now"', /has about 2 of its 3 minutes left/.test(on.facts30) && /has had its 3 planned minutes/.test(on.facts52) && !/would be running now/.test(on.facts52), on.facts52.split('\n').filter((l) => /^time:|would be running/.test(l)));
   console.log('1  fix round 1 (I1): the core part keeps the time saved; a cumulative behind check');
-  check('the core part is the last required teaching part: Conversation (maths demo: Practice; teach 5 / practice 4: Practice; concept 5 / practice 3 / practice 3: the last practice)', on.core.index === 5 && on.core.mathsIndex === 1 && on.cores.teach === 2 && on.cores.concept === 3, [on.core, on.cores]);
+  check('the core part is the last required practice part (else the last required teaching part): Conversation (maths demo: Practice; teach 5 / practice 4: Practice; concept 5 / practice 3 / practice 3: the last practice)', on.core.index === 5 && on.core.mathsIndex === 1 && on.cores.teach === 2 && on.cores.concept === 3 && on.cores.pronLast === 2 && on.cores.noPractice === 1, [on.core, on.cores]);
   const fseq = (k: 'teach' | 'concept') => on.fast[k].map((p) => `${p.part} ${p.from}–${p.to}`).join(' · ');
   console.log(`    teach 5 / practice 4 (target 12), fast:  ${fseq('teach')}\n    concept 5 / practice 3 / practice 3 (target 15), fast:  ${fseq('concept')}`);
   check('a fast lesson on either shape closes no more than 2 minutes before its target (the saved time goes to the last practice part)', (on.fast.teach.at(-1)?.to ?? 0) >= 12 - 2 && (on.fast.concept.at(-1)?.to ?? 0) >= 15 - 2, on.fast);
@@ -433,6 +439,7 @@ async function main() {
   check('fix round 1 (a): a tutor-chosen end_lesson in the held window is deferred once, then accepted in the same reply', /^not ended yet: the optional Pronunciation part still fits/.test(on.endOnce.results[0] ?? '') && on.endOnce.results.length === 1 && on.endOnce.closed, on.endOnce);
   check('…deferred in an earlier reply: accepted at once; asked to stop: accepted at once', on.endAfter.closed && on.endStop, on.endAfter);
   check('spoken, summary begun at 18.3 with Pronunciation still fitting: named as next time without "no time", taken if they ask', /was not reached: in your summary, name it in one short line as something for next time; it would still fit/.test(on.spokenClosing) && !/no time for it now/.test(on.spokenClosing));
+  check('fix round 3 (N3): inside the optional part a tutor end_lesson is deferred once, the second accepted; their stop ends at once', on.endIn.results.length === 1 && /^not ended yet, in the part: they chose the optional Pronunciation part/.test(on.endIn.results[0] ?? '') && on.endIn.closed && on.endInStop, on.endIn);
   check('fix round 1 (m10): a typed lesson past the wrap keeps the closing line as before', /no time for it now/.test(on.typedFacts) && !/would still fit/.test(on.typedFacts));
 
   console.log('3  RETEST_TARGET_CHANGED: the words that changed');
@@ -480,8 +487,8 @@ async function main() {
   console.log('7  SELF_CORRECTION, REPEAT_NOT_ECHO');
   check('"…for senior staff." then "for senior bosses.": one sentence and its correction', on.self?.phrase === 'for senior bosses.' && /senior staff/.test(on.self?.sentence ?? ''));
   check('the practice facts say to read the two together and never correct the phrase as a fragment', on.selfLines.some((l) => /^self-correction: .*read the two together as the one sentence they meant .*never treat or correct the phrase as a sentence of its own or a fragment/.test(l)));
-  check('fix round 2 (N1): a one-word replacement after the sentence is a self-correction: "…\\nWorked.", "I goed to Tokyo.\\nWent."', JSON.stringify(on.selfYes) === JSON.stringify(['Worked.', 'Went.']), on.selfYes);
-  check('not for a yes, a question, or a second full sentence (more than 4 words, or its own subject and verb: "I went there.")', on.selfNot.every((x) => x === null), on.selfNot);
+  check('fix rounds 2–3 (N1, N8): a phrase of at most 4 words after the sentence is a self-correction, whatever its words', JSON.stringify(on.selfYes) === JSON.stringify(['Worked.', 'Went.', 'The senior bosses.', 'My team members.', 'I have worked.', 'I went.', 'for senior bosses.']), on.selfYes);
+  check('not for "Yes." / "Thank you." / "Okay.", a question, or a second sentence of 5 words or more', on.selfNot.every((x) => x === null), on.selfNot);
   check('the cut turn (nothing reached him) carries his words to the next turn, joined before the words that cut it', on.carried === 'My team is working on um uh presentation for senior staff.' && on.joined === 'My team is working on um uh presentation for senior staff.\nfor senior bosses.' && on.carriedNot.every((x) => x === null));
   check('13:38: his repeat, said with the model sentence and two words ahead of the voice, is not its echo', on.repeatOn.own === false && /2 word\(s\) ahead of the voice/.test(on.repeatOn.timing), on.repeatOn);
   check('…the same words with the switch off are dropped as before (score 0.75); a true echo inside the played words still is', on.repeatOff.own === true && on.repeatOff.score === 0.75 && on.repeatOn.echo === true, on.repeatOff);

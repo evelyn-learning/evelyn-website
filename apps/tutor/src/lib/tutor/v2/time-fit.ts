@@ -233,9 +233,15 @@ export function v2PartTimeUpLine(session: V2Session, state: V2State, nowMs: numb
  *  part of the plan (not optional, not the overview, the level check or the summary), so saved time flows to the end of the lesson. GDI:
  *  Conversation; teach / practice / summary: Practice. The plan names no main part. -1: none. */
 export function v2CorePart(plan: LessonPlan): number {
-  let last = -1;
-  plan.segments.forEach((seg, i) => { if (v2TeachingPart(plan, i) && !v2PartIsOptional(seg) && (v2PartOf(seg).minutes ?? 0) > 0) last = i; });
-  return last;
+  // Fix round 3 (N9, ruling): among the practice parts (v2PracticePart: not a pronunciation part); the last required teaching part only
+  // when the plan has no practice part.
+  let practice = -1; let teaching = -1;
+  plan.segments.forEach((seg, i) => {
+    if (v2PartIsOptional(seg) || !((v2PartOf(seg).minutes ?? 0) > 0)) return;
+    if (v2PracticePart(plan, i)) practice = i;
+    if (v2TeachingPart(plan, i)) teaching = i;
+  });
+  return practice >= 0 ? practice : teaching;
 }
 
 /** Fix round 1 (I1): how a part in hand stands on the part clock (facts only).
