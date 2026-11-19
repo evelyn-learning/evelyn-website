@@ -559,8 +559,10 @@ const countOf = (s: Status, stage: Stage) => s.byOwner.flatMap((g) => g.rows).fi
 export function renderStatusEmail(s: Status, now: Date): { subject: string; html: string; text: string } {
   const an = s.animations;
   const failedBuilds = an?.failedBuilds ?? [];
-  const animN = an ? an.toReview.length + an.undecided.length + failedBuilds.length + (an.capReached ? 1 : 0) : 0;
-  const subject = `Keystone: ${s.waitingOnPraveen.length} waiting on you, ${an ? `${plural(an.toReview.length, "animation")} to review, ${an.undecided.length} to decide, ` : ""}${countOf(s, "in_review")} in review, ${countOf(s, "approved")} approved`;
+  // Castle Rock's open flags on a released animation need the owner as much as a version to review does.
+  const crFlags = an?.castleRock ?? [];
+  const animN = an ? an.toReview.length + an.undecided.length + crFlags.length + failedBuilds.length + (an.capReached ? 1 : 0) : 0;
+  const subject = `Keystone: ${s.waitingOnPraveen.length} waiting on you, ${an ? `${plural(an.toReview.length, "animation")} to review, ${an.undecided.length} to decide, ${crFlags.length ? `${crFlags.length} flagged by Castle Rock, ` : ""}` : ""}${countOf(s, "in_review")} in review, ${countOf(s, "approved")} approved`;
   const when = pacificTime(now);
   const t: string[] = [`Keystone status, ${when}`, ""];
   const h: string[] = [];
@@ -613,7 +615,10 @@ export function renderStatusEmail(s: Status, now: Date): { subject: string; html
       ? `Today's limit for builds with API credits is reached (${usd(an.capReached.spent)} of ${usd(an.capReached.cap)}): ${plural(an.capReached.waiting.length, "item")} wait until tomorrow (${ids(an.capReached.waiting)})`
       : "";
     const needN = failedBuilds.length + (capLine ? 1 : 0);
+    const crLine = (f: (typeof crFlags)[number]) => `v${f.version}, ${f.who}${f.role ? ` (${f.role})` : ""}: ${f.comment || "(no comment)"}`;
     t.push(`ANIMATIONS (${animN} need you)`);
+    if (crFlags.length)
+      t.push(`Flagged by Castle Rock (${crFlags.length}): on an animation they can see; it stays open for them until a new version that addresses it is released`, ...crFlags.flatMap((f) => [`- ${f.itemId} ${crLine(f)}`, `  ${itemUrl(f.itemId)}#animated`]));
     t.push(`To review (${review.length}): open the item, play it, flag or accept`, ...(review.length ? review.flatMap((r) => [`- ${r.id} ${r.line}`, `  ${itemUrl(r.id)}#animated`]) : ["- nothing"]));
     t.push(`To decide (${decide.length}): choose API credits, by hand, or no animation at ${QUEUE}`, ...(decide.length ? decide.map((d) => `- ${d.id}${d.line ? `: ${d.line}` : ""}`) : ["- nothing"]));
     if (needN) {
@@ -627,6 +632,12 @@ export function renderStatusEmail(s: Status, now: Date): { subject: string; html
     const P = `style="margin:8px 0 2px;color:#333"`;
     h.push(
       `<h3 ${H3}>Animations (${animN} need you)</h3>`,
+      ...(crFlags.length
+        ? [
+            `<p ${P}><strong>Flagged by Castle Rock (${crFlags.length})</strong>: on an animation they can see; it stays open for them until a new version that addresses it is released</p>`,
+            list(crFlags.map((f) => `${alink(f.itemId)} ${esc(crLine(f))}`), ""),
+          ]
+        : []),
       `<p ${P}><strong>To review (${review.length})</strong>: open the item, play it, flag or accept</p>`,
       list(review.map((r) => `${alink(r.id)} ${esc(r.line)}`), "Nothing."),
       `<p ${P}><strong>To decide (${decide.length})</strong>: choose API credits, by hand, or no animation on <a href="${esc(QUEUE)}" style="color:#1a56db">your To animate list</a></p>`,

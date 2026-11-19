@@ -88,8 +88,9 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
   if (!q) return null; // unreachable: requireUser sent any other role to the overview
   const [anims, todo, budget] = await Promise.all([listAnimations(user.role), toAnimate(user.role), buildBudget()]);
   const anim: AnimNote = new Map(
-    (anims ?? []).map((a) => [a.itemId, `Animation v${a.latest}: ${ANIMATION_STATUS_LABEL[a.status]}${a.openFlags ? `, ${a.openFlags} open flag${a.openFlags === 1 ? "" : "s"}` : ""}`]),
+    (anims ?? []).map((a) => [a.itemId, `Animation v${a.latest}: ${ANIMATION_STATUS_LABEL[a.status]}${a.openFlags ? `, ${a.openFlags} open flag${a.openFlags === 1 ? "" : "s"}` : ""}${a.castleRockOpen ? `, ${a.castleRockOpen} flagged by Castle Rock` : ""}`]),
   );
+  const flaggedByCr = (anims ?? []).filter((a) => a.castleRockOpen > 0);
   const build = (todo ?? []).filter((t) => t.route !== "none");
   const skipped = (todo ?? []).filter((t) => t.route === "none");
   // A build is running or about to: the list follows it without a reload by hand.
@@ -138,6 +139,25 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
             <div className="ks-empty">Nothing is waiting for you.</div>
           )}
         </section>
+
+        {flaggedByCr.length > 0 && (
+          <section className="ks-card ks-q-sec" id="cr-flags">
+            <h2>Animations flagged by Castle Rock · {flaggedByCr.length}</h2>
+            <p className="ks-sub">Castle Rock flagged something on a released animation. Each flag stays open for them until a new version that addresses it is released.</p>
+            <ul className="ks-q-list">
+              {flaggedByCr.map((a) => (
+                <li key={a.itemId} className="ks-q-row" data-item={a.itemId}>
+                  <div className="ks-q-head">
+                    <Link href={`${base}/item/${encodeURIComponent(a.itemId)}#animated`}>
+                      <b>Item {a.itemId}</b>
+                    </Link>
+                    <span className="ks-q-meta">· {anim.get(a.itemId)}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         <section className="ks-card ks-q-sec" id="before">
           <h2>Held before a solution · {q.beforeSolution.length}</h2>

@@ -21,9 +21,16 @@ export type FlagView = {
   reopenOf: string | null;
   createdBy: string;
   createdAt: string;
+  /** Who raised it, for the label: "Name" or "Name · Castle Rock". */
+  by: string;
+  castleRock: boolean;
+  /** Castle Rock's view only: a fix is on its way in a version not out yet; the flag reads as open and cannot be edited. */
+  pending: boolean;
 };
 
 type Props = {
+  /** The owner's review, or Castle Rock's flag tool on the released version (no Accept, no other versions, their flags only). */
+  viewer: "owner" | "castle-rock";
   base: string;
   me: string;
   itemId: string;
@@ -280,6 +287,7 @@ export function AnimReview(p: Props) {
   const onKey = useCallback(
     (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey || typing(e.target)) return;
+      if (document.querySelector("dialog[open]")) return; // the pop-up player is open: keys belong to it
       if (e.key === "f" || e.key === "F") {
         e.preventDefault();
         openFlag();
@@ -327,7 +335,11 @@ export function AnimReview(p: Props) {
   };
 
   const px = WIDTHS.find((w) => w.key === width)!.px;
-  const openCount = p.flags.filter((f) => f.status === "open").length + p.stillOpen.length;
+  const owner = p.viewer === "owner";
+  // Only the owner's own open flags stand in the way of Accept; Castle Rock's stay open across it (store.ts, top).
+  const mineOpen = (f: FlagView) => f.status === "open" && !f.castleRock;
+  const openCount = p.flags.filter(mineOpen).length + p.stillOpen.filter(mineOpen).length;
+  const theirsOpen = p.flags.filter((f) => f.status === "open" && f.castleRock).length + p.stillOpen.filter((f) => f.castleRock).length;
 
   return (
     <div className="ks-ar">
@@ -335,7 +347,7 @@ export function AnimReview(p: Props) {
         <div>
           {p.embedded ? (
             <h2>
-              Animated solution · v{p.version} <span className={`ks-chip a-${p.status}`}>{ANIMATION_STATUS_LABEL[p.status]}</span>
+              Animated solution · v{p.version} {owner && <span className={`ks-chip a-${p.status}`}>{ANIMATION_STATUS_LABEL[p.status]}</span>}
             </h2>
           ) : (
             <h1>
@@ -343,19 +355,27 @@ export function AnimReview(p: Props) {
             </h1>
           )}
           <p className="ks-sub">
-            {p.embedded ? "Flag anything wrong here. It goes to Castle Rock with the written solution." : <Link href={`${p.base}/animated`}>All animated solutions</Link>}
-            {p.voice ? ` · voice: ${p.voice}` : ""}
-            {p.notes ? ` · ${p.notes}` : ""}
+            {!owner ? (
+              "See something wrong? Pause on that step, press Flag and tell us what it is. You can type it, say it, or add a picture. Evelyn fixes it, and you confirm the fix here."
+            ) : p.embedded ? (
+              "Flag anything wrong here. It goes to Castle Rock with the written solution."
+            ) : (
+              <Link href={`${p.base}/animated`}>All animated solutions</Link>
+            )}
+            {owner && p.voice ? ` · voice: ${p.voice}` : ""}
+            {owner && p.notes ? ` · ${p.notes}` : ""}
           </p>
         </div>
         <div className="ks-ar-ctl">
-          <nav className="ks-ar-seg" aria-label="Version">
-            {p.versions.map((v) => (
-              <Link key={v.version} href={p.embedded ? `${p.base}/item/${p.itemId}?av=${v.version}#animated` : `${p.base}/animated/${p.itemId}?v=${v.version}`} className={v.version === p.version ? "on" : ""} title={ANIMATION_STATUS_LABEL[v.status]}>
-                v{v.version}
-              </Link>
-            ))}
-          </nav>
+          {owner && (
+            <nav className="ks-ar-seg" aria-label="Version">
+              {p.versions.map((v) => (
+                <Link key={v.version} href={p.embedded ? `${p.base}/item/${p.itemId}?av=${v.version}#animated` : `${p.base}/animated/${p.itemId}?v=${v.version}`} className={v.version === p.version ? "on" : ""} title={ANIMATION_STATUS_LABEL[v.status]}>
+                  v{v.version}
+                </Link>
+              ))}
+            </nav>
+          )}
           <div className="ks-ar-seg" role="group" aria-label="Width">
             {WIDTHS.map((w) => (
               <button key={w.key} type="button" className={w.key === width ? "on" : ""} onClick={() => setWidth(w.key)} aria-pressed={w.key === width}>
@@ -379,13 +399,14 @@ export function AnimReview(p: Props) {
             <button type="button" className="ks-btn" onClick={() => void snap()} disabled={busy}>
               Snap <kbd>s</kbd>
             </button>
-            {p.canAccept && openCount === 0 && !draft && (
+            {owner && p.canAccept && openCount === 0 && !draft && (
               <button
                 type="button"
                 className="ks-btn ok"
                 disabled={busy}
                 onClick={() => {
-                  if (window.confirm(`Accept v${p.version} of item ${p.itemId}?`)) void act({ op: "accept", itemId: p.itemId, version: String(p.version) }, "Version accepted.");
+                  const stays = theirsOpen ? ` ${theirsOpen} flag${theirsOpen === 1 ? "" : "s"} raised by Castle Rock that this version does not address will stay open.` : "";
+                  if (window.confirm(`Accept v${p.version} of item ${p.itemId}?${stays}`)) void act({ op: "accept", itemId: p.itemId, version: String(p.version) }, "Version accepted.");
                 }}
               >
                 Accept this version
@@ -441,23 +462,25 @@ export function AnimReview(p: Props) {
           )}
           {msg && <div className={msg.bad ? "ks-err" : "ks-ar-msg"}>{msg.text}</div>}
 
-          <h2>Flags on v{p.version} · {p.flags.length}</h2>
+          <h2>
+            {owner ? "Flags" : "Your team's flags"} on v{p.version} · {p.flags.length}
+          </h2>
           {p.flags.length ? (
             <ul className="ks-ar-list">
               {p.flags.map((f) => (
-                <FlagRow key={f.id} f={f} me={p.me} busy={busy} act={act} />
+                <FlagRow key={f.id} f={f} me={p.me} owner={owner} busy={busy} act={act} />
               ))}
             </ul>
           ) : (
-            <div className="ks-empty">No flag on this version.</div>
+            <div className="ks-empty">{owner ? "No flag on this version." : "No flag on this version yet."}</div>
           )}
 
           {p.fixedHere.length > 0 && (
             <>
-              <h2>Fixed in v{p.version} · {p.fixedHere.length}</h2>
+              <h2>{owner ? `Fixed in v${p.version}` : "Fixed: please check"} · {p.fixedHere.length}</h2>
               <ul className="ks-ar-list">
                 {p.fixedHere.map((f) => (
-                  <FixedRow key={f.id} f={f} busy={busy} act={act} />
+                  <FixedRow key={f.id} f={f} owner={owner} busy={busy} act={act} />
                 ))}
               </ul>
             </>
@@ -465,11 +488,11 @@ export function AnimReview(p: Props) {
 
           {p.stillOpen.length > 0 && (
             <>
-              <h2>Still open from earlier versions · {p.stillOpen.length}</h2>
+              <h2>{owner ? "Still open from earlier versions" : "Still with Evelyn from earlier versions"} · {p.stillOpen.length}</h2>
               <ul className="ks-ar-list">
                 {p.stillOpen.map((f) => (
-                  <li key={f.id} className="ks-ar-flag">
-                    <FlagHead f={f} />
+                  <li key={f.id} className="ks-ar-flag" data-flag={f.id}>
+                    <FlagHead f={f} owner={owner} />
                     <div className="ks-ar-comment">{f.comment}</div>
                     <Shots f={f} />
                   </li>
@@ -485,7 +508,9 @@ export function AnimReview(p: Props) {
 
 const STATUS_LABEL: Record<AnimFlagStatus, string> = { open: "Open", fixed: "Fixed", confirmed: "Confirmed", reopened: "Reopened" };
 
-function FlagHead({ f }: { f: FlagView }) {
+/** The owner sees who raised each flag, Castle Rock's marked as theirs; Castle Rock see the name of the colleague who raised it. */
+function FlagHead({ f, owner }: { f: FlagView; owner: boolean }) {
+  const label = f.status === "fixed" && f.fixedInVersion ? `Fixed in v${f.fixedInVersion}` : f.status === "open" && !owner ? "With Evelyn" : STATUS_LABEL[f.status];
   return (
     <div className="ks-q-head">
       <b>{where(f.step, f.line)}</b>
@@ -494,10 +519,13 @@ function FlagHead({ f }: { f: FlagView }) {
         {f.spoken ? " · spoken" : ""}
         {f.reopenOf ? " · reopened" : ""}
       </span>
-      <span className={`ks-chip f-${f.status}`}>{f.status === "fixed" && f.fixedInVersion ? `Fixed in v${f.fixedInVersion}` : STATUS_LABEL[f.status]}</span>
+      <span className={`ks-chip f-${f.status}`}>{label}</span>
+      {owner && f.castleRock ? <span className="ks-chip f-theirs">{f.by}</span> : <span className="ks-q-meta">{f.by}</span>}
     </div>
   );
 }
+
+const replyLabel = (owner: boolean) => (owner ? "Fix" : "Evelyn's reply");
 
 function Shots({ f }: { f: FlagView }) {
   if (!f.shots.length) return null;
@@ -515,14 +543,18 @@ function Shots({ f }: { f: FlagView }) {
 
 type Act = (fields: Record<string, string>, ok: string) => Promise<boolean>;
 
-function FlagRow({ f, me, busy, act }: { f: FlagView; me: string; busy: boolean; act: Act }) {
+function FlagRow({ f, me, owner, busy, act }: { f: FlagView; me: string; owner: boolean; busy: boolean; act: Act }) {
   const [edit, setEdit] = useState<string | null>(null);
-  const mine = f.createdBy === me && f.status === "open";
+  const mine = f.createdBy === me && f.status === "open" && !f.pending;
   return (
     <li className="ks-ar-flag" data-flag={f.id}>
-      <FlagHead f={f} />
+      <FlagHead f={f} owner={owner} />
       {edit === null ? <div className="ks-ar-comment">{f.comment || <i>No comment</i>}</div> : <textarea rows={3} value={edit} onChange={(e) => setEdit(e.target.value)} />}
-      {f.reply && <div className="ks-ar-reply">Fix: {f.reply}</div>}
+      {f.reply && (
+        <div className="ks-ar-reply">
+          {replyLabel(owner)}: {f.reply}
+        </div>
+      )}
       <Shots f={f} />
       {mine && (
         <div className="ks-ar-buttons">
@@ -558,15 +590,22 @@ function FlagRow({ f, me, busy, act }: { f: FlagView; me: string; busy: boolean;
   );
 }
 
-function FixedRow({ f, busy, act }: { f: FlagView; busy: boolean; act: Act }) {
+function FixedRow({ f, owner, busy, act }: { f: FlagView; owner: boolean; busy: boolean; act: Act }) {
   const [why, setWhy] = useState<string | null>(null);
+  // A fix is judged by the side that raised the flag (the store refuses anything else).
+  const canJudge = f.status === "fixed" && owner !== f.castleRock;
   return (
     <li className="ks-ar-flag" data-flag={f.id}>
-      <FlagHead f={f} />
+      <FlagHead f={f} owner={owner} />
       <div className="ks-ar-comment">{f.comment || <i>No comment</i>}</div>
-      {f.reply && <div className="ks-ar-reply">Fix: {f.reply}</div>}
+      {f.reply && (
+        <div className="ks-ar-reply">
+          {replyLabel(owner)}: {f.reply}
+        </div>
+      )}
       <Shots f={f} />
-      {f.status === "fixed" && (
+      {f.status === "fixed" && owner && f.castleRock && <div className="ks-q-meta">Castle Rock confirm this fix or reopen it. They see it once this version is released.</div>}
+      {canJudge && (
         <div className="ks-ar-buttons">
           {why === null ? (
             <>
