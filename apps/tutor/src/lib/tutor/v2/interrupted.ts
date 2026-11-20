@@ -49,8 +49,14 @@ export function trimToSpoken(state: V2State, sentences: string[], started: numbe
   const blocks: Anthropic.ContentBlockParam[] = typeof msg.content === 'string' ? [{ type: 'text', text: msg.content }] : [...(msg.content as Anthropic.ContentBlockParam[])];
   const said = sentences.slice(0, Math.max(0, started)).join(' ').trim();
   const others = blocks.filter((b) => b.type !== 'text');
+  // A problem this reply put on the board is on the board, heard or not, and the student may go on to answer it.
+  // With its sentence struck from the record the tutor did not know it had set it: the student solved it, and was
+  // then told "the next one is already on the board" and given the same problem again (ACT Math, portal-3d431436).
+  const whole = blocks.map((b) => (b.type === 'text' ? b.text : '')).join('\n');
+  const cards = [...whole.matchAll(/<board problem[^>]*>([\s\S]*?)<\/board>/g)].map((m) => m[1].replace(/\s+/g, ' ').trim()).filter(Boolean);
+  const onBoard = cards.length ? ` [this reply had already put on the board, where the student can read it: ${cards.map((c) => `the problem "${c.slice(0, 300)}"`).join('; ')}]` : '';
   const next: V2State = structuredClone(state);
-  next.history[i] = { role: 'assistant', content: [{ type: 'text', text: said ? `${said} ${V2_CUT_MARK}` : V2_CUT_MARK }, ...others] };
+  next.history[i] = { role: 'assistant', content: [{ type: 'text', text: `${said ? `${said} ${V2_CUT_MARK}` : V2_CUT_MARK}${onBoard}` }, ...others] };
   return next;
 }
 

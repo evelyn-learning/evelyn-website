@@ -26,6 +26,12 @@ export const ROOM_CHECK_TIMEOUT_MS = 1500;
 /** Words of a stretch still being spoken before it is judged early, so a pause on a television lasts a second
  *  or two and not the length of the advert (the first pause on embed-1795049380206 ran 14.6 s). */
 export const ROOM_PARTIAL_WORDS = 5;
+/** Five words are thin grounds for talking over someone. In a room where no other voice has yet been found, a
+ *  stretch judged another voice at five words is judged again at this many before the tutor goes on: "So the
+ *  center here would" and "But my teacher told" were the student answering, were read as background, and the
+ *  tutor went on speaking over them four times in one lesson (ACT Math, portal-3d431436). */
+export const ROOM_PARTIAL_CONFIRM_WORDS = 10;
+export function partialIsConfirmed(text: string): boolean { return wordCount(text) >= ROOM_PARTIAL_CONFIRM_WORDS; }
 /** In a room known to be noisy the tutor is not paused until the words are judged, so they are judged sooner. */
 export const ROOM_PARTIAL_WORDS_NOISY = 3;
 

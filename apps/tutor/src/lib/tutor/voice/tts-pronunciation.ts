@@ -2301,6 +2301,20 @@ export function speakCoefficientLetters(text: string): string {
   return text.replace(/(\d)([gmlhk])(?![A-Za-z0-9²³])/g, (_m, d: string, l: string) => `${d} ${UNIT_LETTER[l]}`);
 }
 
+/** The coefficients of a general form, said as letters. "y = ax² + bx + c" went to the voice as written and came
+ *  out "y equals x squared plus…", the a lost (heard as the article, or not at all); "the b and a from", "(2a)" and
+ *  "a is 1" the same way (ACT Math, portal-3d431436). Only in a mathematics lesson, and only where the letter can
+ *  be nothing else: written against x, against a number, or named beside b and c or given a value. */
+const COEFF_NAME: Record<string, string> = { a: 'ay', b: 'bee', c: 'see' };
+export function speakCoefficientNames(text: string): string {
+  return text
+    .replace(/(?<![A-Za-z])(\d*)([abc])x([²³]?)(?![A-Za-z])/g, (_m, d: string, l: string, p: string) => `${d ? `${d} ` : ''}${COEFF_NAME[l]} x${p}`)
+    .replace(/(?<![A-Za-z0-9.])(\d+)(ac|ab|a)(?![A-Za-z0-9²³])/g, (_m, d: string, ls: string) => `${d} ${[...ls].map((l) => COEFF_NAME[l]).join(' ')}`)
+    .replace(/\b([bc]) and a\b/g, '$1 and ay')
+    .replace(/\ba(?=,? (?:b,? )?and [bc]\b)/g, 'ay')
+    .replace(/\ba(?= (?:is|equals|=) (?:[-−]?\d|not\b|positive\b|negative\b|zero\b))/g, 'ay');
+}
+
 /** In a science lesson "O=O" is a double bond between two atoms, and the voice reads it "O equals O"
  *  (embed-1794372328590). Only between the atoms that form multiple bonds, written with no spaces, and only
  *  where the caller knows the subject: "C=N" in an algebra lesson is an equation. */

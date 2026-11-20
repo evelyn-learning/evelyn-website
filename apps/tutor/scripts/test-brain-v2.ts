@@ -44,7 +44,7 @@ import { speakGroups } from '../src/lib/tutor/voice/tts-pronunciation';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { mentionsTool, stripToolTalk } from '../src/lib/tutor/v2/tool-talk';
 import { isOwnVoice } from '../src/lib/tutor/v2/own-voice';
-import { ROOM_NOISY_AFTER, afterWords, partialIsJudged, plainlyTheStudent, repliedBackground, roomCheckMessage, roomVoicesFact, sameWords, studentPart, studentWordsIn, waitsForCheck } from '../src/lib/tutor/v2/room-voices';
+import { ROOM_NOISY_AFTER, afterWords, partialIsConfirmed, partialIsJudged, plainlyTheStudent, repliedBackground, roomCheckMessage, roomVoicesFact, sameWords, studentPart, studentWordsIn, waitsForCheck } from '../src/lib/tutor/v2/room-voices';
 import { foldInterruptedTurn, trimToSpoken, V2_CUT_MARK } from '../src/lib/tutor/v2/interrupted';
 import { brainVersionOverrides, resolvePartnerSessionOptions, v2CanRunSession } from '../src/lib/tutor/portal/partner-session-options';
 
@@ -842,6 +842,15 @@ async function main() {
   const far = await runV2Turn({ session: sessS, state: structuredClone(t3.state), studentSaid: 'show me (2, 6)', nowMs: 240000, callModel: sayR('Here. <board graph x="-5..5" y="-5..5">y > 2x - 1\n(2, 6) | the point</board> See it?'), boardPass: false });
   const farG = far.toolCalls.find((c) => c.name === 'show_function_graph');
   check('a graph\'s window grows to take in a point outside it', JSON.stringify(farG?.args.yRange) === '[-5,7]' && JSON.stringify(farG?.args.xRange) === '[-5,5]', [farG?.args.xRange, farG?.args.yRange]);
+  // portal-3d431436 (ACT Math, coordinate geometry).
+  check('a sentence that carries the card\'s own expression has asked it: the card is not read out after it', unsaidAsk('What is the vertex of the parabola y = x² − 6x + 5? Give it as an ordered pair (x, y).', ['Then plug 3 back in to get the y-value.', 'Try the vertex of y = x² − 6x + 5.']) === null && unsaidAsk('Find the net force on the sled, in newtons.', ['A sled sits on snow.', 'Try it.']) !== null);
+  check('an ordered pair of letters is one piece of mathematics', typesetMaths('Give it as an ordered pair (x, y).') === 'Give it as an ordered pair $(x,\\ y)$.' && typesetMaths('from A(1, 2) to B(7, 10)') === 'from A(1, 2) to B(7, 10)', typesetMaths('Give it as an ordered pair (x, y).'));
+  {
+    const stT = { ...newV2State(0), history: [{ role: 'user', content: 'plus 3' }, { role: 'assistant', content: [{ type: 'text', text: 'Yes, plus 3. So the vertex is (−2, 3).\n\nOne more: what is the vertex of y = x² − 2x − 3?\n\n<board problem difficulty="medium">What is the vertex of the parabola y = x² − 2x − 3?</board>' }] }] } as never;
+    const cutT = JSON.stringify(trimToSpoken(stT, ['Yes, plus 3.', 'So the vertex is (−2, 3).', 'One more: what is the vertex of y = x² − 2x − 3?'], 2).history[1]);
+    check('a problem put on the board in a sentence that was cut stays in the tutor\'s record', cutT.includes('So the vertex is (−2, 3). [cut off here') && /had already put on the board[^\]]*the problem \\"What is the vertex of the parabola y = x² − 2x − 3\?/.test(cutT), cutT);
+  }
+  check('a first reading of "another voice" is confirmed on more words', !partialIsConfirmed('So the center here would') && partialIsConfirmed('So the center here would be negative 3 comma 1 and'));
   const triBlank = drawFigure('geometry_figure', { shape: 'triangle', sides: [3, 4, 5], sideLabels: ['a', 'b', 'c'], angleLabels: ['', '', '90°'] });
   check('an empty label on a triangle is no label, not a refusal (demo check 11-13)', 'svg' in triBlank, JSON.stringify(triBlank).slice(0, 200));
   const cellNamed = drawFigure('cell', { cellType: 'plant', organelles: ['nucleus', 'chloroplasts', 'vacuole', 'cell wall', 'mitochondria', 'lysosome'] });

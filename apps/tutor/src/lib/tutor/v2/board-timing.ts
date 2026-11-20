@@ -129,7 +129,12 @@ export function unsaidAsk(statement: string, sentences: string[]): string | null
   // A bare instruction is not the question: "Here is a new one. Say yes or no, and say why." was taken as asked, and
   // a nine-year-old heard no question while "Does the bulb light up?" sat on the card (demo check, 2026-11-13).
   const cardAbout = about(card);
-  const bare = (x: string) => !/[?？]/.test(x) && [...about(x)].filter((w) => cardAbout.has(w)).length < 2;
+  // A sentence that carries the card's own expression has put the problem: "Try the vertex of y = x² − 6x + 5." was
+  // followed by the card's question read out in full, the equation said twice in one breath (ACT Math, portal-3d431436).
+  const squeeze = (x: string) => x.replace(/\s+|\$/g, '').replace(/−/g, '-').toLowerCase();
+  const cardText = squeeze(card);
+  const sharesExpression = (x: string) => { const t = squeeze(x); for (let i = 0; i + 6 <= t.length; i++) { const piece = t.slice(i, i + 6); if (/\d/.test(piece) && /[=+\-<>^²³/]/.test(piece) && cardText.includes(piece)) return true; } return false; };
+  const bare = (x: string) => !/[?？]/.test(x) && !sharesExpression(x) && [...about(x)].filter((w) => cardAbout.has(w)).length < 2;
   const asking = sentences.slice(-2).filter((x) => asksAloud([x]));
   if (asking.length && !asking.every(bare)) return null;
   const parts: string[] = []; let cur = ''; let inMath = false;

@@ -3,7 +3,7 @@
 // em-dash normalization, math-variable letter respelling.
 import assert from 'node:assert';
 import { speechRateForLevel } from '../src/lib/tutor/voice/speech-rate';
-import { outsideMathSpans, rewriteForTTS, speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakNumberPlurals, speakPhonemeSlashes, speakReEndings, speakSlashes, speakLessonNotation, speakLetterUnits } from '../src/lib/tutor/voice/tts-pronunciation';
+import { outsideMathSpans, rewriteForTTS, speakBonds, speakCoefficientLetters, speakCoefficientNames, speakDataRuns, speakFormulas, speakNumberPlurals, speakPhonemeSlashes, speakReEndings, speakSlashes, speakLessonNotation, speakLetterUnits } from '../src/lib/tutor/voice/tts-pronunciation';
 
 // --- Slash-pair whitelist -----------------------------------------
 assert.strictEqual(
@@ -1572,6 +1572,8 @@ console.log('OK — tts-pronunciation rewrites validated');
   // portal-e8640e11: "a thick band of fibres" was said "fibrase".
   assert.equal(speakReEndings('a thick band of fibres, 3 metres from the Centre; a centred lens, 2 litres, a fibre'), 'a thick band of fibers, 3 meters from the Center; a centered lens, 2 liters, a fiber');
   for (const keep of ['the genre and the acre', 'they are more sure here', 'a fiber and a meter', 'mitre']) assert.equal(speakReEndings(keep), keep);
+  assert.equal(speakCoefficientNames('using the b and a from y = ax² + bx + c, over (2a) or 4ac; here a is 1'), 'using the b and ay from y = ay x² + bee x + c, over (2 ay) or 4 ay see; here ay is 1');
+  for (const keep of ['Take a box and a ball; a is the first letter.', 'Divide by x, then relax and fix the tax.', '2x + 3y = 12']) assert.equal(speakCoefficientNames(keep), keep);
   // A unit over seconds is "per second" and one letter over another is "over" (AP Physics 1, embed-1794441323503).
   assert.match(rewriteForTTS(speakSlashes('Yes, ω is 8 rad/s, and L is 8 kg·m²/s.')), /8 radians per second, .*squared per second/);
   assert.equal(speakSlashes('the same rate ω = v/r, so use F/m'), 'the same rate ω = v over r, so use F over m');
