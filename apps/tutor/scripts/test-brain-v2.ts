@@ -850,6 +850,8 @@ async function main() {
     const cutT = JSON.stringify(trimToSpoken(stT, ['Yes, plus 3.', 'So the vertex is (−2, 3).', 'One more: what is the vertex of y = x² − 2x − 3?'], 2).history[1]);
     check('a problem put on the board in a sentence that was cut stays in the tutor\'s record', cutT.includes('So the vertex is (−2, 3). [cut off here') && /had already put on the board[^\]]*the problem \\"What is the vertex of the parabola y = x² − 2x − 3\?/.test(cutT), cutT);
   }
+  { const hyp = drawFigure('geometry_figure', { shape: 'triangle', sides: [5, 4, 3], vertices: ['O', 'Q', 'P'], sideLabels: ['distance = 5 (hypotenuse)', '4 (up)', '3 (across)'], angleLabels: [null, null, 'right angle'] });
+    check('a figure whose label is too long is drawn with the label shortened', 'svg' in hyp && /distance = 5/.test(hyp.svg) && !/hypotenuse\)/.test(hyp.svg), JSON.stringify(hyp).slice(0, 200)); }
   check('a first reading of "another voice" is confirmed on more words', !partialIsConfirmed('So the center here would') && partialIsConfirmed('So the center here would be negative 3 comma 1 and'));
   const triBlank = drawFigure('geometry_figure', { shape: 'triangle', sides: [3, 4, 5], sideLabels: ['a', 'b', 'c'], angleLabels: ['', '', '90°'] });
   check('an empty label on a triangle is no label, not a refusal (demo check 11-13)', 'svg' in triBlank, JSON.stringify(triBlank).slice(0, 200));

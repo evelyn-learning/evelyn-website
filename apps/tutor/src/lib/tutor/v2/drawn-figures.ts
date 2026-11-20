@@ -297,6 +297,8 @@ const ENGINE: Record<string, { type: string; draw: (r: Reader, uid: string) => D
 const FIGURES: Record<string, (p: Record<string, unknown>) => DrawnFigure> = { refraction, apparent_depth: apparentDepth, particles, buoyancy, pipe_flow: pipeFlow, moon_orbit: moonOrbit };
 export const DRAWN_FIGURE_KINDS = [...Object.keys(FIGURES), ...Object.keys(ENGINE)];
 
+/** The longest label the figure engine takes on a side or an angle (practice-figure/spec.ts). */
+const LABEL_FITS = 18;
 export function drawFigure(kind: unknown, params: unknown): DrawnFigure {
   const k = String(kind ?? ''); const p = params && typeof params === 'object' && !Array.isArray(params) ? (params as Record<string, unknown>) : {};
   if (FIGURES[k]) return FIGURES[k](p);
@@ -305,7 +307,19 @@ export function drawFigure(kind: unknown, params: unknown): DrawnFigure {
   try {
     // The title stands over the card on the board, not inside the figure as well.
     const { title: _title, ...given } = p; void _title;
-    const rest = e.prep ? e.prep(given) : given;
+    const prepped = e.prep ? e.prep(given) : given;
+    // A label too long for its place is shortened, not a reason to draw nothing: asked what a hypotenuse is, the
+    // tutor drew the triangle with one side named "distance = 5 (hypotenuse)", seven characters over, and the
+    // student got words and no figure (ACT Math, portal-3d431436). A bracketed aside goes first, then whole words.
+    const fit = (label: unknown): unknown => {
+      if (typeof label !== 'string' || label.length <= LABEL_FITS) return label;
+      const plain = label.replace(/\s*\([^)]*\)\s*/g, ' ').trim();
+      if (plain && plain.length <= LABEL_FITS) return plain;
+      const words = (plain || label).split(/\s+/); let out = '';
+      for (const w of words) { if (`${out} ${w}`.trim().length > LABEL_FITS) break; out = `${out} ${w}`.trim(); }
+      return out || (plain || label).slice(0, LABEL_FITS);
+    };
+    const rest = Object.fromEntries(Object.entries(prepped).map(([key, v]) => [key, /Labels$/.test(key) && Array.isArray(v) ? v.map(fit) : v]));
     const uid = `v2${[...JSON.stringify(rest)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7).toString(36)}`;
     const d = e.draw(new Reader(e.type, rest), uid);
     return { svg: svgDocument(d.W ?? FIGURE_WIDTH, d.H, d.body) };
