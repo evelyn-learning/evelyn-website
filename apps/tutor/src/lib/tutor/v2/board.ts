@@ -20,7 +20,7 @@ export function summariseBoardCall(name: string, args: Record<string, unknown>):
   const fns = Array.isArray(args.functions) ? (args.functions as Array<Record<string, unknown>>).map((f) => text(f.expression) || text(f.latex)).filter(Boolean).join(', ') : '';
   // Tables, timelines and organisers: their cells, in reading order.
   const flat = (v: unknown): string[] => (Array.isArray(v) ? v.flatMap(flat) : v && typeof v === 'object' ? Object.values(v as Record<string, unknown>).flatMap(flat) : typeof v === 'string' && v.trim() ? [v.trim()] : []);
-  const structured = [args.params, args.components, args.leftHeader, args.rightHeader, args.headers, args.rows, args.events, args.leftItems, args.rightItems, args.steps, args.source, args.object, args.forces, args.functions, Array.isArray(args.points) ? (args.points as Array<Record<string, unknown>>).map((p) => String(p.label ?? p.value ?? '')) : []].flatMap(flat).join(' · ');
+  const structured = [args.params, args.components, args.leftHeader, args.rightHeader, args.headers, args.rows, args.events, args.leftItems, args.rightItems, args.steps, args.source, args.object, args.forces, args.inequalities, args.functions, Array.isArray(args.points) ? (args.points as Array<Record<string, unknown>>).map((p) => String(p.label ?? p.value ?? '')) : []].flatMap(flat).join(' · ');
   // (A circuit is its components and how they are wired: with none of that in its summary, every untitled
   // circuit read "(no text)" and a parallel pair was refused as the series loop already up, embed-1794500923861.)
   // A catalogue figure is its numbers as much as its words: two solids of revolution with different profiles
@@ -61,6 +61,8 @@ export function taskOnly(statement: string): { statement: string; cut: string[] 
 /** Ordinary words typed straight into LaTeX are set as a run of italic variables with no spaces: "and at x = 3"
  *  appeared on the board as "andatx = 3" (embed-1794361050464). They are wrapped in \text{}. */
 const PLAIN_WORDS = 'and|at|so|then|gives|give|when|if|for|the|is|are|or|to|of|with|which|because|since|that|we|get|you|becomes|means|where|from|into|but|not|both|each|by|on|in|as|now|after|before|times|plus|minus|equals|over|per|total|answer|check|left|right|east|west|north|south|toward|away|net|force';
+/** Names of functions written without their backslash ("sinx", "logx"): mathematics, not words. */
+const MATHS_NAME = /^(?:(?:arc)?(?:sin|cos|tan|sec|csc|cot)h?[a-z]?|(?:log|exp|lim|max|min|det|sqrt|frac|mod|gcd|lcm)[a-z]?)$/i;
 /** \\mathrm{…} is roman type for symbols and drops the spaces between words: "(usable by plants)" came out
  *  "(usablebyplants)" (embed-1794376956230). Words inside it get their spaces back. */
 export function spacedRoman(latex: string): string {
@@ -78,9 +80,29 @@ export function stackedRow(latex: string): string {
   return `\\begin{aligned} ${parts.map((x) => `&${x}`).join(' \\\\ ')} \\end{aligned}`;
 }
 export function wordsAsText(latex: string): string {
-  const re = new RegExp(String.raw`(?<![\\A-Za-z])(?:${PLAIN_WORDS})(?![A-Za-z])(?:\s+(?:${PLAIN_WORDS})(?![A-Za-z]))*`, 'gi');
-  // Leave what is already inside \text{…} (and its relatives) alone.
-  return latex.split(/(\\(?:text|textrm|textbf|textit|mathrm|operatorname)\s*\{[^{}]*\})/).map((part, i) => (i % 2 ? part : part.replace(re, (w) => `\\text{ ${w} }`))).join('');
+  const plain = new RegExp(`^(?:${PLAIN_WORDS})$`, 'i');
+  // An English word is one of the short words above, or four letters and more written as a word is: a variable
+  // is a letter or two, and a product of four in a row is rare. Only "so" and "the" of "so (0, -3) fails the test"
+  // were on the list, and the rest was set as mathematics, in italics with no spaces (Digital SAT, portal-a9b9b4d4).
+  const isWord = (w: string) => plain.test(w) || (/^[A-Za-z][a-z]{3,}$/.test(w) && !MATHS_NAME.test(w));
+  const run = /(?<![\\A-Za-z])[A-Za-z]+(?![A-Za-z])(?:\s+[A-Za-z]+(?![A-Za-z]))*/g;
+  // Leave what is already inside \text{…} (and its relatives) alone, and the names an environment or a colour takes.
+  return latex.split(/(\\(?:text|textrm|textbf|textit|mathrm|mathbf|mathit|mathsf|mathtt|mathbb|mathcal|operatorname|begin|end|color|textcolor|tag|label)\s*\{[^{}]*\})/).map((part, i) => (i % 2 ? part : part.replace(run, (found: string, at: number) => {
+    // Inside a subscript or a braced argument the words stand close: no space either side.
+    const tight = /[{_^]$/.test(part.slice(0, at));
+    let out = ''; let gap = ''; const held: string[] = [];
+    const flush = () => { if (held.length) { out += tight ? `\\text{${held.join(' ')}}` : `\\text{ ${held.join(' ')} }`; held.length = 0; } };
+    const pieces = found.split(/(\s+)/);
+    for (let k = 0; k < pieces.length; k++) {
+      const piece = pieces[k];
+      if (!piece) continue;
+      if (/^\s+$/.test(piece)) { if (held.length) gap = piece; else out += piece; continue; }
+      // "a" between two words is the article, not a variable.
+      if (isWord(piece) || (piece === 'a' && held.length > 0 && isWord(pieces[k + 2] ?? ''))) { held.push(piece); gap = ''; } else { flush(); out += gap + piece; gap = ''; }
+    }
+    flush();
+    return out + gap;
+  }))).join('');
 }
 
 /** Why a board call would not sit well on the board, or null. An equation card is one centred line of
@@ -90,7 +112,7 @@ export function boardMisfit(name: string, args: Record<string, unknown>): string
   // A figure with nothing in it is worse than no figure (an empty graph grid titled "Tug-of-war" opened a
   // forces lesson, embed-1794363148240).
   const count = (v: unknown) => (Array.isArray(v) ? v.length : 0);
-  if (name === 'show_function_graph' && count(args.functions) + count(args.functionsOfY) + count(args.points) + count(args.segments) === 0) return 'a graph needs at least one function or point to plot; for anything else use the form that fits it';
+  if (name === 'show_function_graph' && count(args.functions) + count(args.functionsOfY) + count(args.inequalities) + count(args.points) + count(args.segments) === 0) return 'a graph needs at least one function or point to plot; for anything else use the form that fits it';
   if (name === 'show_free_body_diagram' && count(args.forces) === 0) return 'a forces diagram needs at least one force: name | direction | size';
   // A figure tool called with nothing in it paints an empty frame (an empty Venn diagram opened a statistics
   // lesson, browser run 2026-11-11).
@@ -188,7 +210,7 @@ export function applyToModelBoard(board: V2Board, id: string, name: string, args
     // On the page in view, writing a thing again points at it: the board scrolls back to it.
     return { painted: false, detail: `already on the board (page ${p + 1})`, ...(p === board.current ? { pointAt: items[at].id } : {}) };
   }
-  board.pages[board.current].items.push({ id, tool: name, summary, core, ...(name === 'show_function_graph' ? { args: { functions: args.functions, points: args.points, segments: args.segments, xRange: args.xRange, yRange: args.yRange, title: args.title } } : {}) });
+  board.pages[board.current].items.push({ id, tool: name, summary, core, ...(name === 'show_function_graph' ? { args: { functions: args.functions, inequalities: args.inequalities, points: args.points, segments: args.segments, xRange: args.xRange, yRange: args.yRange, title: args.title } } : {}) });
   return { painted: true, detail: `painted on page ${board.current + 1}` };
 }
 

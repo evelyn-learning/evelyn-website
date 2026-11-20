@@ -18,7 +18,7 @@
 import { drawFigure } from './drawn-figures';
 import { typesetMaths } from './rich-text';
 import { closeDueMinutes } from './close-heard';
-import { goalForProblem, goalForTalk, goalForTitle, laterPartAlone, wholeProblem } from './progress';
+import { RECAP_TITLE, goalForProblem, goalForTalk, goalForTitle, laterPartAlone, wholeProblem } from './progress';
 import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient } from '../ai/model-registry';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
@@ -48,6 +48,14 @@ const V2_FIGURE_TOOL_NAMES = new Set(['show_free_body_diagram', 'show_number_lin
 export const V2_MAX_MODEL_CALLS = 5;
 /** After a look back at an earlier page, what a later reply writes goes on the page of the work in progress. Kill switch: TUTOR_V2_LOOK_RETURNS=off. */
 const V2_LOOK_RETURNS = process.env.TUTOR_V2_LOOK_RETURNS !== 'off';
+const V2_RECAP_PAGE = process.env.TUTOR_V2_RECAP_PAGE !== 'off';
+/** The heading of a note that is a recap: its first line, when that line is a recap's title and points follow it. */
+function recapHeading(text: unknown): string | null {
+  if (typeof text !== 'string') return null;
+  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
+  const first = (lines[0] ?? '').replace(/^[#*\s]+|[*:.\s]+$/g, '');
+  return lines.length >= 3 && first.split(/\s+/).length <= 4 && /^(?:(?:lesson|quick|today's)\s+)?(?:recap|summary|key (?:points|takeaways)|takeaways?|what to remember|wrap[- ]up)\b/i.test(first) ? first : null;
+}
 /** The longest answer key kept for a problem of the tutor's own. */
 export const V2_OWN_KEY_CHARS = 700;
 /** Asked on a clean page, with the problem alone: the same model that agreed with a wrong root mid-lesson solves it right. */
@@ -115,6 +123,15 @@ export function v2LevelLine(level: string): string {
     : `A student in grade ${grade}: go slower than you would with an older student. One new idea per reply, in short sentences and everyday words. Work an example together before they try one alone, and give a second problem of the same kind before moving to a new kind.`;
 }
 
+/** Which English the tutor writes. The courses are American ones (AP, SAT, ACT, grade-numbered), and a tutor that
+ *  wrote "centred" and "colour" in an AP lesson would be noticed sooner or later (Praveen, AP Psychology,
+ *  portal-e8640e11). A course named the British way keeps its own spelling. */
+export function v2EnglishLine(session: V2Session): string {
+  const where = `${session.subject} ${session.topic ?? ''} ${session.level}`;
+  if (/\b(?:i?gcse|a[- ]levels?|as[- ]levels?|key stage|ks[1-5]|year\s*\d{1,2}|cbse|icse)\b/i.test(where)) return '';
+  return 'When you write or speak English, use American spelling and usage throughout, on the board as well: center, color, organize, math.';
+}
+
 export function v2SessionPart(session: V2Session): string {
   const discussion = discussionOf(session.plan);
   if (discussion && session.plan) {
@@ -137,6 +154,7 @@ export function v2SessionPart(session: V2Session): string {
     // Who the student chose to be taught by (a partner's teacher persona, the marketing demo's picker).
     session.teacher?.name ? `You are ${session.teacher.name}${session.teacher.nameIsRole ? ' (a role, not a person\'s name)' : ''}: say so when you greet the student.${session.teacher.style ? ` How you teach: ${session.teacher.style}` : ''}` : '',
     v2LevelLine(session.level),
+    v2EnglishLine(session),
     v2ModeLines(session.mode),
     // A free trial is the student's to steer (Praveen 2026-10-28: a trial student asked five times for another
     // topic and was kept on the plan).
@@ -394,7 +412,11 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       const key = (f: Record<string, unknown>) => String(f.expr ?? f.expression ?? f.latex ?? '').replace(/\s+/g, '');
       if (old?.args) {
         const mine = fns(args.functions); const theirs = fns(old.args.functions);
-        if (!mine.length || mine.some((f) => theirs.some((g) => key(g) === key(f)))) {
+        // Regions are curves of the picture too: a point tested against a shaded region is drawn in that region.
+        const myRegions = fns(args.inequalities); const theirRegions = fns(old.args.inequalities);
+        if ((!mine.length && !myRegions.length) || mine.some((f) => theirs.some((g) => key(g) === key(f))) || myRegions.some((f) => theirRegions.some((g) => key(g) === key(f)))) {
+          const regions = [...theirRegions, ...myRegions.filter((f) => !theirRegions.some((g) => key(g) === key(f)))];
+          if (regions.length) args.inequalities = regions;
           const pts = (v: unknown) => fns(v);
           args.functions = [...theirs, ...mine.filter((f) => !theirs.some((g) => key(g) === key(f)))];
           const points = [...pts(old.args.points), ...pts(args.points).filter((q) => !pts(old.args!.points).some((o) => o.x === q.x && o.y === q.y))];
@@ -464,6 +486,15 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         // there, with the problem itself a page away (AP Psychology, portal-e8640e11). A page block in this
         // reply means the tutor chose the page.
         if (block.name === 'new_page' || block.name === 'go_to_page') turnedNow = true;
+        // A recap is a page of its own. Written as a note headed "Recap" under the last problem's working, it sat at
+        // the foot of the practice page, and the lesson then closed on a second recap, the plan's, on a new page
+        // (Digital SAT, portal-a9b9b4d4). The note's heading becomes the page's.
+        else if (block.name === 'annotate' && !turnedNow && !markBeforeTurn && V2_RECAP_PAGE && recapHeading(args.text) && state.board.current >= 0 && state.board.pages[state.board.current].items.length > 0 && !RECAP_TITLE.test(state.board.pages[state.board.current].title)) {
+          turnedNow = true;
+          const heading = recapHeading(args.text)!;
+          settle({ type: 'tool_use', id: `recap_${nowMs.toString(36)}_${toolCalls.length}`, name: 'new_page', input: { title: heading } } as Anthropic.ToolUseBlock, boardOnly, inline);
+          args.text = String(args.text).replace(/^\s*[^\n]*\n+/, '');
+        }
         else if (state.board.look && !turnedNow && !markBeforeTurn && block.name !== 'highlight' && V2_LOOK_RETURNS && state.board.current < state.board.pages.length - 1) {
           turnedNow = true;
           const last = state.board.pages.length - 1;
@@ -1010,7 +1041,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const reached = (id: string) => !!state.goals[id] || !!state.partsSeen?.[id];
     const taught = session.plan.segments.some((seg) => seg.kind === 'concept' && reached(seg.id));
     const hasRecapPage = state.board.pages.some((pg) => goalForTitle(session.plan!, pg.title) === recapPart?.id);
-    if (recapPart && points.length && taught && !reached(recapPart.id) && !hasRecapPage && state.board.pages.length) {
+    // A reply that wrote its own summary has put the recap up: the plan's would be a second one.
+    const wroteSummary = toolCalls.some((c) => c.name === 'annotate' && !/^not /.test(c.outcome) && String(c.args.text ?? '').split('\n').filter((l) => l.trim()).length >= 3);
+    if (recapPart && points.length && taught && !reached(recapPart.id) && !hasRecapPage && !wroteSummary && state.board.pages.length) {
       const stamp = nowMs.toString(36);
       settle({ type: 'tool_use', id: `recap_page_${stamp}`, name: 'new_page', input: { title: 'Recap' } } as Anthropic.ToolUseBlock, true);
       settle({ type: 'tool_use', id: `recap_note_${stamp}`, name: 'annotate', input: { text: points.slice(0, 6).map((x) => `- ${x.trim()}`).join('\n') } } as Anthropic.ToolUseBlock, true);

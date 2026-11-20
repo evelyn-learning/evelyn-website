@@ -94,7 +94,7 @@ export function laterPartAlone(authored: string, statement: string): boolean {
 }
 
 const TITLE_FILLER = new Set(['the', 'a', 'an', 'and', 'or', 'of', 'in', 'on', 'to', 'for', 'with', 'vs', 'versus', 'no', 'page', 'part', 'about', 'more', 'what', 'how', 'why', 'is', 'are']);
-const RECAP_TITLE = /\b(?:recap|summary|review|takeaways?|wrap(?:ping)?[- ]up|key points|what to remember)\b/i;
+export const RECAP_TITLE = /\b(?:recap|summary|review|takeaways?|wrap(?:ping)?[- ]up|key points|what to remember)\b/i;
 function titleWords(text: string): string[] {
   return (text.toLowerCase().match(/[a-z]+|\d+[a-z]*/g) ?? []).filter((w) => !TITLE_FILLER.has(w)).map((w) => (w.length > 4 && w.endsWith('s') ? w.slice(0, -1) : w));
 }
