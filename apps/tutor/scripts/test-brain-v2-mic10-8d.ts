@@ -122,6 +122,9 @@ async function main() {
   const unrec = { ...structuredClone(t91.r.state) }; delete unrec.closeInvitedAt; delete unrec.closeAskLast;
   const t92u = await turn(unrec, T92, [{ text: T93_CALL1, tools: [END] }, { text: 'Before I finish, do you have any questions?' }], 18.9);
   const t92n = await turn(noSummary(), 'Okay.', [{ text: 'Thank you, goodbye!', tools: [END] }, { text: 'Do you have any questions before we finish?' }], 18.9);
+  // Fix round 1 (M1): the Summary page opened with nothing on it: not "given"; the summary is still asked for.
+  const bare = structuredClone(unrec); bare.board.pages = bare.board.pages.map((pg) => (pg.title === 'Summary' ? { ...pg, items: [] } : pg));
+  const t92bare = await turn(bare, T92, [{ text: T93_CALL1, tools: [END] }, { text: 'Before I finish, do you have any questions?' }], 18.9);
   const stop = await turn(unrec, STOP, [{ text: T95, tools: [END] }], 18.9);
   const on = {
     t91: { invited: t91.r.state.closeInvitedAt, last: t91.r.state.closeAskLast?.last ?? null, answered: t91.r.state.closeCheck?.answeredAt },
@@ -129,6 +132,7 @@ async function main() {
     t92u: { facts: t92u.facts, ends: t92u.ends, closed: t92u.r.state.closed, results: t92u.results },
     t92n: { facts: t92n.facts, ends: t92n.ends, closed: t92n.r.state.closed },
     stop: { facts: stop.facts, ends: stop.ends, closed: stop.r.state.closed },
+    t92bare: { facts: t92bare.facts, ends: t92bare.ends },
     inviteOf: v2InviteOfReply(T91),
   };
 
@@ -143,18 +147,36 @@ async function main() {
   const inviteCut = trimToSpoken(t91.r.state, T91_SENTENCES, 2, true);
   const noQ = await turn(inviteCut, T92, [{ text: T95, tools: [END] }], 18.9);
   const sorry = await turn(inviteCut, 'Sorry?', [{ text: T95, tools: [END] }, { text: 'Do you have any questions before we finish?' }], 18.9);
+  // Fix round 1 (I1): an English held ask cut whole (they spoke over "Nice work."), then an explicit order: released as at 74014f96.
+  const ENG_ASK = 'Nice work, that is the past simple done. Next is Conversation. Shall we move on to Conversation, or do you have a question first?';
+  const engAsked = await turn(atT51(), T51, [{ text: ENG_ASK }], 12.2);
+  const engCut = trimToSpoken(engAsked.r.state, v2ReplySentences(ENG_ASK), 0, true);
+  const engGo = await turn(engCut, 'Okay, let\'s go to Conversation.', [{ text: 'Great. What is one project you are proud of?' }], 12.5);
+  // Fix round 1 (I2): a recap lead 「Pronunciation で、…」 (not the next part) before a bare go-on ask: it pends and holds nothing of its own (the
+  // go-on ask keeps its reading at 74014f96: the next part by plan order).
+  const RECAP = 'よくできました。Pronunciation で、たくさん話せました。次に進みますか？';
+  const recapAsked = await turn(atT51(), T51, [{ text: RECAP }], 12.2);
+  const recapYes = await turn(recapAsked.r.state, 'Yes.', [{ text: 'では、続けましょう。' }], 12.5);
   const pages = (r: Awaited<ReturnType<typeof turn>>) => r.r.toolCalls.filter((c) => c.name === 'new_page' && !/^not /.test(c.outcome)).map((c) => String(c.args.title));
   Object.assign(on, {
     t52Unheard: overAsk.unheard, t52Held: t52.r.state.heldPage ?? null,
     yes: { pages: pages(yes), facts: yes.facts }, q: { pages: pages(q), facts: q.facts }, yesLead: { pages: pages(yesLead), facts: yesLead.facts, calls: yesLead.r.toolCalls.map((c) => `${c.name} ${c.id} ${c.outcome}`), unheard: overLead.unheard },
     noQ: { facts: noQ.facts, ends: noQ.ends, closed: noQ.r.state.closed, invited: noQ.r.state.closeInvitedAt }, sorry: { facts: sorry.facts, ends: sorry.ends, closed: sorry.r.state.closed },
+    engHeld: engAsked.r.state.heldPage?.title ?? null, engUnheard0: engCut.unheard?.[0] ?? null, engGo: { pages: pages(engGo) },
+    recap: { held: recapAsked.r.state.heldPage ?? null, pages: pages(recapYes) },
     overAskOf: v2UnheardPartAsk(GDI, overAsk, (overAsk.history[overAsk.history.length - 1]!.content as Array<{ type: string; text?: string }>).map((c) => c.text ?? '').join(' '), ['en', 'ja']),
   });
 
   // ── 3 ──
   const t82 = await turn(atT81(), 'Uh, 3.', [{ text: `${T82}${T82_CARD}`, tools: [{ name: 'practise_pronunciation', input: { items: [SENTENCE] } }] }, { text: '' }], 19.3);
   const t82said = await turn(atT81(), 'Uh, 3.', [{ text: `${T82} ${SENTENCE}`, tools: [{ name: 'practise_pronunciation', input: { items: [SENTENCE] } }] }, { text: '' }], 19.3);
+  // Fix round 1 (I3): a retry arm (the facts ask them to say it once more, unmodelled): nothing added; a partly said item: nothing added.
+  const retryState: V2State = { ...atT81(), pronunciation: { seq: 1, armed: { seq: 1, items: [SENTENCE], reference: SENTENCE, attempt: 1 }, heard: { seq: 1, status: 'cut' } } };
+  const retry = await turn(retryState, SENTENCE, [{ text: 'もう一度言ってみてください。', tools: [{ name: 'practise_pronunciation', input: { items: [SENTENCE] } }] }, { text: '' }], 19.6);
+  const PART = '3番ですね。Say: I worked on a project to collect donations.';
+  const partly = await turn(atT81(), 'Uh, 3.', [{ text: PART, tools: [{ name: 'practise_pronunciation', input: { items: [SENTENCE] } }] }, { text: '' }], 19.3);
   Object.assign(on, {
+    retry: { spoken: retry.r.spoken, attempt: retry.r.state.pronunciation?.armed?.attempt ?? null }, partly: { spoken: partly.r.spoken },
     t82: { spoken: t82.r.spoken, armed: t82.r.state.pronunciation?.armed?.reference ?? null, events: (t82.r.events ?? []).map((e) => e.type), stored: JSON.stringify(t82.r.state.history[t82.r.state.history.length - 1]) },
     t82said: { spoken: t82said.r.spoken },
   });
@@ -170,11 +192,14 @@ async function main() {
   check('…T92\'s end_lesson accepted: the lesson closes on the goodbye', o.t92.closed && o.t92.ends.length === 1 && !/^not /.test(o.t92.ends[0]), o.t92.ends);
   check('the invitation not recorded after the summary (the live T92): the owed line has no summary clause and the refusal never asks for it', o.t92u.facts.includes(V2_CLOSE_INVITE_OWED_GIVEN_LINE) && !SUMMARY_ASK.test(o.t92u.facts) && o.t92u.ends[0] === V2_CLOSE_INVITE_REFUSAL_GIVEN && !SUMMARY_ASK.test(o.t92u.results.join('\n')) && !o.t92u.closed, [o.t92u.ends, o.t92u.results]);
   check('a lesson where the summary was NOT given still asks for it (owed line and refusal as before)', /the reply that gives the summary/.test(o.t92n.facts) && o.t92n.ends[0] === V2_CLOSE_INVITE_REFUSAL && !o.t92n.closed, o.t92n.ends);
+  check('fix round 1 (M1): the Summary page opened with nothing on it is not "given": the owed line and the refusal still ask for the summary', /the reply that gives the summary/.test(o.t92bare.facts) && o.t92bare.ends[0] === V2_CLOSE_INVITE_REFUSAL, o.t92bare.ends);
   check('a stop after the summary ("I have to finish now.", the invitation not recorded): the short goodbye in this reply, end_lesson accepted', v2StopAsked(STOP) && o.stop.facts.includes(V2_SUMMARY_GIVEN_STOP_LINE) && o.stop.closed && !SUMMARY_ASK.test(o.stop.facts), o.stop.ends);
 
   console.log('2  ANSWER_OVER_ASK: an answer over the ask');
   check('T52 cut as the ask began: the record keeps the announcement; the two ask sentences unheard', JSON.stringify(o.t52Unheard) === JSON.stringify(['質問がありますか？', 'それとも、このまま進みますか？']), o.t52Unheard);
-  check('T52\'s lead 「次は Conversation で、…練習です。」 names the part: its own ask holds Conversation (live: nothing held)', o.t52Held?.title === 'Conversation', o.t52Held);
+  check('fix round 1 (I2): T52\'s own ask holds no page (the held-page record keeps the narrower reading, as live)', o.t52Held === null, o.t52Held);
+  check('fix round 1 (I2): a recap lead 「Pronunciation で、たくさん話せました。」 before 「次に進みますか？」 pends and holds no Pronunciation page (the go-on ask as at 74014f96)', o.recap.held?.title !== 'Pronunciation' && !o.recap.pages.includes('Pronunciation'), o.recap);
+  check('fix round 1 (I1): an English ask cut whole (first unheard "Nice work…"), then "Okay, let\'s go to Conversation.": the held page opens as at 74014f96', o.engHeld === 'Conversation' && /^Nice work/.test(o.engUnheard0 ?? '') && JSON.stringify(o.engGo.pages) === '["Conversation"]', [o.engHeld, o.engUnheard0, o.engGo]);
   check('v2UnheardPartAsk reads the reply as written and its ask from the first unheard sentence', !!o.overAskOf && o.overAskOf.ask.includes('質問がありますか？'), o.overAskOf);
   check('T53 "Yes." over the ask: the Conversation page opens as for a heard ask; no "not heard" line (no re-ask)', JSON.stringify(o.yes.pages) === '["Conversation"]' && !/not heard:/.test(o.yes.facts), [o.yes.pages, o.yes.facts.split('\n').filter((l: string) => /not heard/.test(l))]);
   check('a question over the ask ("What is Conversation?"): nothing opens, the ask is in the "not heard" line (as today)', o.q.pages.length === 0 && /not heard:.*質問がありますか？/.test(o.q.facts), o.q.pages);
@@ -185,6 +210,8 @@ async function main() {
 
   console.log('3  PRON_TARGET_SAID: the armed sentence is said');
   check('T82 (lead-in + card only + practise_pronunciation, then an empty call): armed, and the reply ends on the sentence', o.t82.armed === SENTENCE && o.t82.spoken.trim().endsWith(SENTENCE) && o.t82.spoken.startsWith('3番ですね。') && o.t82.events.includes('pronunciation_target_said') && o.t82.stored.includes(SENTENCE), o.t82);
+  check('fix round 1 (I3): a retry arm (attempt 2, "say it once more") gets nothing added', o.retry.attempt === 2 && o.retry.spoken.trim() === 'もう一度言ってみてください。', o.retry);
+  check('fix round 1 (I3): an item partly said (8 of 13 words, over 60 %) gets nothing added', o.partly.spoken.trim() === PART, o.partly.spoken);
   check('…a reply that said the sentence itself gets nothing added (said once)', o.t82said.spoken.split(SENTENCE).length === 2, o.t82said.spoken);
 
   console.log('each switch off alone');
@@ -205,6 +232,7 @@ async function main() {
   }
   {
     const off = child('ANSWER_OVER_ASK');
+    check('ANSWER_OVER_ASK off: the recap lead reads the same as on (deTopic never widens the held-page record)', JSON.stringify(off.recap) === JSON.stringify(o.recap), [off.recap, o.recap]);
     check('ANSWER_OVER_ASK off: as live: no page held at T52; "Yes." over the ask opens nothing and the ask is in the "not heard" line; the invitation re-owed', off.t52Held === null && off.yes.pages.length === 0 && /not heard:.*質問がありますか？/.test(off.yes.facts) && off.noQ.facts.includes(V2_CLOSE_INVITE_UNHEARD_LINE) && others(off, 'ANSWER_OVER_ASK'), off.yes.pages);
   }
   {

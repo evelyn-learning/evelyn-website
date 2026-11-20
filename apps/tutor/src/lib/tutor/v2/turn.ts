@@ -85,6 +85,8 @@ export const V2_UNWRITTEN_WORDS = 30;
  *  can tell the runtime's own line from a question put; re-exported here for its importers). */
 export { V2_CHECK_INS };
 const V2_FIGURE_TOOL_NAMES = new Set(['show_free_body_diagram', 'show_number_line', 'show_function_graph', 'show_table', 'show_timeline', 'show_graphic_organizer', 'show_geometry', 'show_venn_diagram', 'show_tree', 'show_stats', 'show_lewis_constructed', 'show_cycle_diagram', 'show_concept_map', 'show_map', 'show_diagram', 'show_sketch', 'show_circuit', 'show_ray_diagram', 'show_drawn_figure']);
+/** Task 8d fix round 1 (I3): the runtime says an armed item only when less than this share of its words is in the reply. */
+export const V2_PRON_SAID_SHARE = 0.6;
 export const V2_MAX_MODEL_CALLS = 5;
 export const V2_MAX_TOKENS = 8000;
 export const V2_NOTE_MAX_CHARS = 1500;
@@ -548,13 +550,14 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   let released: V2ToolCall | null = null; let releasedFrom = -1;
   // Task 8d (ANSWER_OVER_ASK): their words came over the part ask itself (the first sentence they did not hear is the ask's): the reply
   // is read as written, so a go to it answers it (mic test 10, embed-1795202398886: "Yes." over T52's ask, asked again at T54).
-  // An ask cut whole (the reply was cut before it began) was not heard: their go answers something else, and nothing opens (the facts
-  // name the ask as not heard, and it is asked again), even for a page held for it.
+  // Fix round 1 (I1, ruling): an ask cut whole (not the sentence playing) is as at 74014f96: a go is read on the heard words, and a held
+  // page or an explicit order releases as before.
   const unheardAsk = partFlow && session.plan && input.studentSaid !== null && !state.closed && !closingTurn ? v2UnheardPartAsk(session.plan, state, lastTutorText, askLangs) : null;
   const overAsk = unheardAsk?.playing ? unheardAsk : null;
   const moveText = overAsk?.text ?? lastTutorText;
-  if (partFlow && session.plan && input.studentSaid !== null && !state.closed && !closingTurn && !(unheardAsk && !unheardAsk.playing) && v2MoveAnswer(input.studentSaid, moveText, askLangs, undefined, session.plan) === 'go') {
-    const pending = v2PendingPart(session.plan, state, moveText, input.studentSaid, undefined, askLangs);
+  if (partFlow && session.plan && input.studentSaid !== null && !state.closed && !closingTurn && v2MoveAnswer(input.studentSaid, moveText, askLangs, undefined, session.plan) === 'go') {
+    // Fix round 1 (I2, ruling): 「X で、」 names X only here, choosing the part of the ask the reply ends on.
+    const pending = v2PendingPart(session.plan, state, moveText, input.studentSaid, undefined, askLangs, undefined, TUTOR_V2_ANSWER_OVER_ASK);
     if (pending && !(arrivalOn && state.timeFit?.dropped.includes(session.plan.segments[pending.index]!.id))) {
       const id = `inl_${nowMs.toString(36)}_0`; const args = { title: pending.title }; releasedFrom = state.board.current;
       const o = applyBoard(state.board, id, 'new_page', args);
@@ -1884,10 +1887,12 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   let targetSaid: { type: string; message: string } | null = null;
   if (TUTOR_V2_PRON_TARGET_SAID && session.mode === 'voice' && v2PronunciationOn(session) && !disarmed && !state.closed && !input.signal?.aborted && spoken.length) {
     const arm = state.pronunciation?.armed;
-    if (arm && toolCalls.some((c) => c.name === 'practise_pronunciation' && /^armed/.test(c.outcome))) {
-      const words = (x: string) => ` ${x.toLowerCase().replace(/[’‘]/g, "'").replace(/[^\p{L}\p{N}']+/gu, ' ').trim()} `;
-      const said = words(stripBoardBlocks(spoken.join(' ')));
-      const unsaid = arm.items.map((x) => x.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim()).filter((x) => words(x).trim() && !said.includes(words(x)));
+    // Fix round 1 (I3, ruling): only on the first arm of the item (a retry asks them to say it once more, unmodelled: pronunciation.ts),
+    // and only when under V2_PRON_SAID_SHARE of the item's words are in the reply (a paraphrased or partly said item is not said twice).
+    if (arm && arm.attempt === 1 && toolCalls.some((c) => c.name === 'practise_pronunciation' && /^armed/.test(c.outcome))) {
+      const wordsOf = (x: string) => x.toLowerCase().replace(/[’‘]/g, "'").replace(/[^\p{L}\p{N}']+/gu, ' ').trim().split(' ').filter(Boolean);
+      const said = new Set(wordsOf(stripBoardBlocks(spoken.join(' '))));
+      const unsaid = arm.items.map((x) => x.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim()).filter((x) => { const w = wordsOf(x); return w.length > 0 && w.filter((y) => said.has(y)).length < V2_PRON_SAID_SHARE * w.length; });
       if (unsaid.length) {
         const line = unsaid.map((x) => (/[.!?]["'”’)]*$/.test(x) ? x : `${x}.`)).join(' ');
         input.onText?.(`\n\n${line}`);

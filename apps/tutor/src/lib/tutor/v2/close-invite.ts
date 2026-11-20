@@ -65,9 +65,10 @@ export const V2_CLOSE_INVITE_REFUSAL_GIVEN = 'not ended: there is time for their
 export function v2CloseInviteRefusal(summaryGiven: boolean, enabled: boolean = TUTOR_V2_CLOSE_SUMMARY_ONCE): string {
   return enabled && summaryGiven ? V2_CLOSE_INVITE_REFUSAL_GIVEN : V2_CLOSE_INVITE_REFUSAL;
 }
-/** Task 8d (CLOSE_SUMMARY_ONCE): the summary has been given: its closing page is up, or a summary reply was recorded. */
-export function v2SummaryGiven(state: Pick<V2State, 'summaryBegunAt' | 'board'>): boolean {
-  return typeof state.summaryBegunAt === 'number' || state.board.pages.some((pg) => V2_CLOSING_PAGE.test(pg.title));
+/** Task 8d (CLOSE_SUMMARY_ONCE): the summary has been given: its closing page was opened and holds at least one card or note (fix round 1,
+ *  M1, ruling: a closing page opened with nothing on it, or a summary only recorded by words, still has the summary asked for). */
+export function v2SummaryGiven(state: Pick<V2State, 'board'>): boolean {
+  return state.board.pages.some((pg) => V2_CLOSING_PAGE.test(pg.title) && pg.items.length > 0);
 }
 /** Task 8d (CLOSE_SUMMARY_ONCE): the goodbye after the summary is short. */
 export const V2_SUMMARY_GIVEN_GOODBYE = 'the summary has been given: do not give it again and recap nothing of what went well or what to improve; thank them and say goodbye in one or two sentences';
@@ -93,9 +94,9 @@ export function v2CloseInviteFacts(session: V2Session, state: V2State, ctx: { no
   if (!v2CloseInviteOn(session, ctx.enabled) || state.closed) return [];
   // Final review I3: the summary is part of the close; when no summary has begun (no summary page, no summary reply), it comes
   // first, in a few words.
-  const summaryGiven = v2SummaryGiven(state);
+  const summaryGiven = typeof state.summaryBegunAt === 'number' || state.board.pages.some((pg) => V2_CLOSING_PAGE.test(pg.title));
   // Task 8d (CLOSE_SUMMARY_ONCE): `once`: the summary given is never asked for again, and the goodbye after it is short.
-  const once = (ctx.summaryOnce ?? TUTOR_V2_CLOSE_SUMMARY_ONCE) && summaryGiven;
+  const once = (ctx.summaryOnce ?? TUTOR_V2_CLOSE_SUMMARY_ONCE) && v2SummaryGiven(state);
   // …a learner who asks to finish after the summary gets the goodbye in this reply (end_lesson is never deferred for a stop).
   if (once && ctx.stopAsked) return [V2_SUMMARY_GIVEN_STOP_LINE];
   // Task 7k (CLOSE_REOPENED): the close reopened and no ask given since: no goodbye pressed; after the practice, ask.
