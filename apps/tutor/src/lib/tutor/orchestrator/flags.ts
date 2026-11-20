@@ -2498,3 +2498,27 @@ export const TUTOR_V2_LEVEL_CHECK_PUT = process.env.NEXT_PUBLIC_TUTOR_V2_LEVEL_C
  *  normalised sentence (state.correctedOlder). Mic test 9 (embed-1795132864767: WB76, corrected at T42, pushed out by the conversation's
  *  quiet cards) (Task 8a, item 4). Default ON; NEXT_PUBLIC_TUTOR_V2_CORRECTIONS_ALL_GUARDED=off ⇒ as before. */
 export const TUTOR_V2_CORRECTIONS_ALL_GUARDED = process.env.NEXT_PUBLIC_TUTOR_V2_CORRECTIONS_ALL_GUARDED !== 'off';
+
+/** Tutor brain v2 (v2/learner-card.ts, v2/turn.ts): the board never shows the learner's uncorrected sentence after its correction. A card
+ *  of the reply that corrects their sentence (v2CardCorrects: v2IsCorrectionOf, or half the words each way with stems alike and not
+ *  their words as said) carries it, so no owed-card line is sent for it; the owed-card line asks only for the right sentence; a sentence
+ *  card that is their own sentence of this turn as said is not painted when this reply corrected it (a correction card, a note holding
+ *  the correction, or a recorded correction of it). Mic test 10 (embed-1795202398886: WB26, WB30 written by the board check after the
+ *  corrected card) (Task 8c, item 1). Default ON; NEXT_PUBLIC_TUTOR_V2_OWED_CARD_RIGHT=off ⇒ as before. */
+export const TUTOR_V2_OWED_CARD_RIGHT = process.env.NEXT_PUBLIC_TUTOR_V2_OWED_CARD_RIGHT !== 'off';
+
+/** Tutor brain v2 (v2/adaptive.ts, v2/summary-marks.ts, v2/turn.ts): a correction is kept. The practice pairing prefers the card that
+ *  corrects their sentence over one identical to it, and counts a stem-alike rewrite as a correction (v2CardCorrects); the summary's
+ *  correction record takes it too; a correction the reply wrote only as a note (a clause of a painted note of this reply that corrects
+ *  their sentence, which no card of the reply holds) is recorded and counted. Mic test 10 (embed-1795202398886: turns 19 and 21 scored
+ *  clean, T46's note-only correction never recorded) (Task 8c, item 2). Default ON; NEXT_PUBLIC_TUTOR_V2_CORRECTION_KEPT=off ⇒ as
+ *  before. */
+export const TUTOR_V2_CORRECTION_KEPT = process.env.NEXT_PUBLIC_TUTOR_V2_CORRECTION_KEPT !== 'off';
+
+/** Tutor brain v2 (v2/summary-headings.ts, v2/turn.ts): on the Summary page of a lesson laid out in groups (7u), the runtime writes the
+ *  group headings itself, by state: before the first card of a recorded correction a "To improve" heading, before the first other card
+ *  a "What went well" heading (another card placed above "To improve" when that is up), once each, with the learner-language line where
+ *  the page's cards carry one; a heading the model wrote stands and is not written twice. Mic test 10 (embed-1795202398886, flag 4: no
+ *  headings, two corrections under the spoken "went well") (Task 8c, item 3). Default ON; NEXT_PUBLIC_TUTOR_V2_SUMMARY_HEADINGS=off ⇒ as
+ *  before. */
+export const TUTOR_V2_SUMMARY_HEADINGS = process.env.NEXT_PUBLIC_TUTOR_V2_SUMMARY_HEADINGS !== 'off';

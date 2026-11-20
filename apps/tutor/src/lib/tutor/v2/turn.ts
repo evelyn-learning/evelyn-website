@@ -50,10 +50,11 @@ import { V2_CLOSE_CHECK_REFUSAL, v2CheckCardText, v2CloseCheckOwed, v2CloseCheck
 import { v2NoteOptionalLeave, v2OptionalHold, v2OptionalOneMore } from './optional-hold';
 import { V2_CHECK_INS } from './question-overlap';
 import { v2AdaptAfter, v2AdaptBefore, v2AdaptOn, v2AdaptPart, v2FreeConvAfter, v2FreeConvQuiet, v2PracticePairs, v2QuestionOfReply, v2ReplyQuestions, v2RetestPutAfter } from './adaptive';
-import { LearnerCardWatch, V2_REPLY_MISHEARD, v2CardIsFragment, v2LearnerCardsOn, v2OwedCardCheckLine, v2PracticeAnswerSentences, v2SentenceOnBoard, v2SentencesNotCarded } from './learner-card';
+import { LearnerCardWatch, V2_AS_SAID_REFUSED, V2_REPLY_MISHEARD, v2CardCorrects, v2CardIsAsSaid, v2CardIsFragment, v2CardIsOf, v2LearnerCardsOn, v2LearnerSentences, v2NoteCorrectionOf, v2OwedCardCheckLine, v2PracticeAnswerSentences, v2SentenceOnBoard, v2SentencesNotCarded } from './learner-card';
+import { v2SummaryHeadingPlan, v2SummaryHeadingRepeat } from './summary-headings';
 import { v2StopAsked } from './stop-signal';
 import { V2_CLOSE_INVITE_LINE, V2_CLOSE_INVITE_REFUSAL, V2_CLOSE_INVITE_WAIT, V2_CLOSE_MORE_LINE, V2_CLOSE_REOPEN_REFUSAL, v2CloseInviteOn, v2CloseInviteOwed, v2CloseReopened, v2ReplyAsksMoreOrFinish, v2ReplyInvites } from './close-invite';
-import { TUTOR_V2_LEVEL_CHECK_PUT, TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_NOTE_TARGET_QUOTES, TUTOR_V2_NOTE_TARGET_MARK, TUTOR_V2_NOTE_STRESS_MARK, TUTOR_V2_NO_MARKDOWN_STARS, TUTOR_V2_CARD_GLOSS_SHOW, TUTOR_V2_SUPPORT_STEPS, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_PART_GO_NAMED, TUTOR_V2_PRONUNCIATION_PAGE, TUTOR_V2_FRAGMENT_CARD, TUTOR_V2_CARD_AT_SENTENCE, TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_RETEST_TARGET_CHANGED, TUTOR_V2_OPENING_PAGE_TITLE, TUTOR_V2_FREE_CONVERSATION, TUTOR_V2_REPEAT_THEN_WAIT, TUTOR_V2_OPENING_PAGE_FIRST, TUTOR_V2_UNHEARD_ASK_OWED, TUTOR_V2_REPEAT_NOT_MISHEARD } from '../orchestrator/flags';
+import { TUTOR_V2_LEVEL_CHECK_PUT, TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_NOTE_TARGET_QUOTES, TUTOR_V2_NOTE_TARGET_MARK, TUTOR_V2_NOTE_STRESS_MARK, TUTOR_V2_NO_MARKDOWN_STARS, TUTOR_V2_CARD_GLOSS_SHOW, TUTOR_V2_SUPPORT_STEPS, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_PART_GO_NAMED, TUTOR_V2_PRONUNCIATION_PAGE, TUTOR_V2_FRAGMENT_CARD, TUTOR_V2_CARD_AT_SENTENCE, TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_RETEST_TARGET_CHANGED, TUTOR_V2_OPENING_PAGE_TITLE, TUTOR_V2_FREE_CONVERSATION, TUTOR_V2_REPEAT_THEN_WAIT, TUTOR_V2_OPENING_PAGE_FIRST, TUTOR_V2_UNHEARD_ASK_OWED, TUTOR_V2_REPEAT_NOT_MISHEARD, TUTOR_V2_OWED_CARD_RIGHT, TUTOR_V2_CORRECTION_KEPT } from '../orchestrator/flags';
 import { v2CardGlossOn, v2CleanGloss, v2GlossLevelOn } from './card-gloss';
 import { v2NoteTargetsOn, v2NoteTargetsSection, v2NoteHasTarget, v2NoteStressWords } from './note-targets';
 import { V2StarStrip, v2StripStars } from './markdown-stars';
@@ -649,6 +650,20 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const stored: Anthropic.MessageParam[] = [{ role: 'user', content: [{ type: 'text', text: studentText }] }];
   const spoken: string[] = [];
   const toolCalls: V2ToolCall[] = [];
+  // Task 8c (OWED_CARD_RIGHT, mic test 10, embed-1795202398886 WB26 / WB30): a sentence card that is one of their sentences of this turn as
+  // they said it (numbers as words, fillers out), which this reply corrected, by state: a sentence card of this reply (painted, or pointed
+  // back at) correcting it (v2CardCorrects), or, with CORRECTION_KEPT, a painted note of this reply holding its correction, or a correction
+  // recorded from it in this turn (state.corrections). A right sentence of theirs carded as said is untouched (7b / 7g).
+  const learnerNow = TUTOR_V2_OWED_CARD_RIGHT && session.mode === 'voice' && v2SentenceCardsOn(session) ? v2LearnerSentences(input.studentSaid) : [];
+  const correctionsAtStart = new Set(state.corrections ?? []);
+  const v2AsSaidCorrected = (card: string): boolean => {
+    const s = learnerNow.find((x) => v2CardIsAsSaid(card, x));
+    if (!s) return false;
+    const mine = toolCalls.filter((c) => !/^not /.test(c.outcome) || !!c.pointsAt);
+    if (mine.some((c) => c.name === 'show_sentence' && typeof c.args.sentence === 'string' && !v2CardIsAsSaid(String(c.args.sentence), s) && v2CardCorrects(String(c.args.sentence), s))) return true;
+    if (TUTOR_V2_CORRECTION_KEPT && mine.some((c) => c.name === 'annotate' && typeof c.args.text === 'string' && !!v2NoteCorrectionOf(String(c.args.text), s))) return true;
+    return (state.corrections ?? []).some((c) => !correctionsAtStart.has(c) && v2CardIsAsSaid(c.said, s));
+  };
   const usage: V2TurnResult['usage'] = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0 };
   const t0 = Date.now();
   let firstTextMs: number | null = null;
@@ -755,7 +770,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       if (gloss) args.gloss = gloss; else delete args.gloss;
     }
     const sayWith = typeof sayWithRaw === 'string' && sayWithRaw.trim() ? sayWithRaw.trim() : undefined;
-    let outcome: string; let pointsAt: string | undefined;
+    let outcome: string; let pointsAt: string | undefined; let summaryAbove: string | undefined;
     if (V2_CONTROL_TOOL_NAMES.has(block.name)) {
       // At the opening, and when the last reply ended on a statement and the student has waited, silence is
       // not open to the tutor: a session sat on a blank screen until the student spoke, and a tutor went quiet
@@ -792,9 +807,24 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       // Task 7s (FRAGMENT_CARD, mic test 5, embed-1795050656326 at 13 min): "I am proud of." is the head of the sentence the reply
       // completes, not a sentence: one ending on a preposition or an article where their own sentence goes on past that word.
       const cutShort = TUTOR_V2_FRAGMENT_CARD && !fragment && block.name === 'show_sentence' && (session.languages?.length ?? 0) >= 2 && v2CardIsFragment(String(args.sentence ?? ''), input.studentSaid);
+      // Task 8c (OWED_CARD_RIGHT, mic test 10 flags 1 and 2): their own sentence of this turn as they said it, which this reply corrected
+      // (a card of the reply correcting it, a note of the reply holding its correction, or a recorded correction of it): not painted.
+      const asSaidWrong = block.name === 'show_sentence' && !guarded && TUTOR_V2_OWED_CARD_RIGHT && typeof args.sentence === 'string' ? v2AsSaidCorrected(String(args.sentence)) : false;
+      // Task 8c (SUMMARY_HEADINGS): on the Summary page of a grouped lesson, the card's group heading, written by the runtime right before
+      // it when the page has none (summary-headings.ts); the 7w guard below reads it as this reply's heading.
+      const headingPlan = block.name === 'show_sentence' && !guarded && !asSaidWrong ? v2SummaryHeadingPlan(session, state, args.sentence, toolCalls, cardGloss && v2GlossLevelOn(session, state, input.studentSaid)) : null;
+      const headingRepeat = !guarded ? v2SummaryHeadingRepeat(session, state, block.name, args, toolCalls) : null;
+      let heading: V2ToolCall | null = null;
+      if (headingPlan?.write) {
+        const id = `${block.id}_h`;
+        const o = applyBoard(state.board, id, 'annotate', { ...headingPlan.write });
+        if (o.painted) heading = { id, name: 'annotate', args: { ...headingPlan.write }, outcome: o.detail, ...(sayWith ? { sayWith } : {}), ...(inline && !sayWith ? { inline: true } : {}), ...(markBeforeTurn ? { beforeTurn: true } : {}), ...(inline && inlineTimed ? { timed: inlineTimed } : {}) };
+      }
       // Task 7w (SUMMARY_MARKS): on the Summary page, one of their corrections carries its marks, and never stands under "What went well".
-      const summaryRefused = block.name === 'show_sentence' && !guarded ? v2SummaryCardCheck(session, state, args, toolCalls) : null;
+      const summaryRefused = block.name === 'show_sentence' && !guarded && !asSaidWrong ? v2SummaryCardCheck(session, state, args, heading ? [...toolCalls, heading] : toolCalls) : null;
       if (guarded) outcome = `not painted: ${guarded}`;
+      else if (asSaidWrong) outcome = V2_AS_SAID_REFUSED;
+      else if (headingRepeat) outcome = headingRepeat;
       else if (summaryRefused) outcome = summaryRefused;
       // Task 7u (SUMMARY_GROUPS): the summary page holds at most four sentence cards (summary-layout.ts).
       else if (block.name === 'show_sentence' && v2SummaryCardsFull(session, state)) outcome = V2_SUMMARY_CARDS_FULL;
@@ -818,6 +848,22 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         if ((o.painted || o.pointAt) && block.name === 'show_sentence') v2NoteCorrection(session, state, args.sentence, args.emphasis, input.studentSaid);
         if (!o.painted && o.pointAt && !boardOnly) { pointsAt = o.pointAt; outcome = `not painted again: ${o.detail}; the board has scrolled back to it`; }
       }
+      // Task 8c (SUMMARY_HEADINGS): the heading stays only with its card: written first, then the card; both above "To improve" for a card
+      // of the went-well group written after it (the board check's own placing, placeAbove, takes the heading along).
+      if (heading) {
+        const page = state.board.pages[state.board.current];
+        if (/^not /.test(outcome) || !page) { if (page) page.items = page.items.filter((it) => it.id !== heading!.id); heading = null; }
+        else {
+          const anchor = placeAbove ?? headingPlan?.above;
+          if (anchor) { const h = page.items.find((it) => it.id === heading!.id); if (h) { page.items = page.items.filter((it) => it !== h); const at = page.items.findIndex((it) => it.id === anchor); page.items.splice(at < 0 ? page.items.length : at, 0, h); heading.before = anchor; } }
+          toolCalls.push(heading); input.onToolCall?.(heading);
+        }
+      }
+      if (!placeAbove && headingPlan?.above && !/^not /.test(outcome)) {
+        const page = state.board.pages[state.board.current];
+        const mine = page?.items.find((it) => it.id === block.id);
+        if (page && mine) { page.items = page.items.filter((it) => it !== mine); const at = page.items.findIndex((it) => it.id === headingPlan.above); page.items.splice(at < 0 ? page.items.length : at, 0, mine); summaryAbove = headingPlan.above; }
+      }
     }
     if (outcome === V2_CLOSE_INVITE_REFUSAL || outcome === V2_CLOSE_REOPEN_REFUSAL || outcome === V2_CLOSE_CHECK_REFUSAL) inviteRefused = true;
     if (outcome === V2_CLOSE_CHECK_REFUSAL && typeof state.summaryBegunAt === 'number') checkDeferred = true;
@@ -829,7 +875,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const result: Anthropic.ToolResultBlockParam = { type: 'tool_result', tool_use_id: block.id, content: outcome };
     // The board pass often offers again what the reply already put up; a call of its that did nothing leaves no trace.
     if (boardOnly && /^not /.test(outcome)) return result;
-    const call: V2ToolCall = { id: block.id, name: block.name, args, outcome, ...(sayWith ? { sayWith } : {}), ...(inline && !sayWith ? { inline: true } : {}), ...(replaces && !/^not /.test(outcome) ? { replaces } : {}), ...(markBeforeTurn ? { beforeTurn: true } : {}), ...(placeAbove && !/^not /.test(outcome) ? { before: placeAbove } : {}), ...(pointsAt ? { pointsAt } : {}), ...(block.name === 'new_page' && inline && !/^not /.test(outcome) && pageAgreed ? { agreed: true } : {}), ...(carryNow.length && block.name === 'new_page' && !/^not /.test(outcome) ? { carries: carryNow } : {}), ...(inline && inlineTimed ? { timed: inlineTimed } : {}) };
+    const call: V2ToolCall = { id: block.id, name: block.name, args, outcome, ...(sayWith ? { sayWith } : {}), ...(inline && !sayWith ? { inline: true } : {}), ...(replaces && !/^not /.test(outcome) ? { replaces } : {}), ...(markBeforeTurn ? { beforeTurn: true } : {}), ...((placeAbove ?? summaryAbove) && !/^not /.test(outcome) ? { before: placeAbove ?? summaryAbove } : {}), ...(pointsAt ? { pointsAt } : {}), ...(block.name === 'new_page' && inline && !/^not /.test(outcome) && pageAgreed ? { agreed: true } : {}), ...(carryNow.length && block.name === 'new_page' && !/^not /.test(outcome) ? { carries: carryNow } : {}), ...(inline && inlineTimed ? { timed: inlineTimed } : {}) };
     toolCalls.push(call);
     input.onToolCall?.(call);
     return result;
@@ -1501,7 +1547,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const t = stripBoardBlocks(spoken.join(' '));
     if (!V2_REPLY_MISHEARD.test(t)) return false;
     if (!TUTOR_V2_REPEAT_NOT_MISHEARD || !v2AdaptOn(session) || !v2AsksRepeat(v2ReplySentences(t).pop() ?? '')) return true;
-    return !toolCalls.some((c) => c.name === 'show_sentence' && (!/^not /.test(c.outcome) || !!c.pointsAt) && typeof c.args.sentence === 'string' && answerSentences.some((s) => v2IsCorrectionOf(String(c.args.sentence), s)));
+    return !toolCalls.some((c) => c.name === 'show_sentence' && (!/^not /.test(c.outcome) || !!c.pointsAt) && typeof c.args.sentence === 'string' && answerSentences.some((s) => v2IsCorrectionOf(String(c.args.sentence), s) || (TUTOR_V2_CORRECTION_KEPT && v2CardCorrects(String(c.args.sentence), s))));
   };
   const owedCards = () => {
     if (!answerSentences.length || state.closed || input.signal?.aborted || replyMisheard()) return [];
@@ -1955,10 +2001,26 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Not for a reply that was cut, closed the lesson or did not catch their words (the owed cards' conditions).
   const adaptEvents = [...adaptBefore.events];
   if (disarmed) adaptEvents.push(disarmed);
+  // Task 8c (CORRECTION_KEPT, mic test 10 T46): a sentence of theirs this turn that no sentence card of this reply holds (as said or
+  // corrected) and whose correction a painted note of this reply holds (learner-card.ts v2NoteCorrectionOf: a clause of the note that
+  // corrects it) was corrected by the note: the correction is recorded (summary-marks.ts, as a card's is: whatever the ask before), and an
+  // answer to an ask for a sentence is counted with it (as a card with no stress). By state only: the reply's settled calls and their words.
+  const noteCorrections: Array<{ sentence: string; stress: string[] }> = [];
+  if (TUTOR_V2_CORRECTION_KEPT && session.mode === 'voice' && v2SentenceCardsOn(session) && !state.closed && !input.signal?.aborted && !replyMisheard()) {
+    const cardTexts = toolCalls.filter((c) => c.name === 'show_sentence' && (!/^not /.test(c.outcome) || !!c.pointsAt) && typeof c.args.sentence === 'string').map((c) => String(c.args.sentence));
+    const notes = toolCalls.filter((c) => c.name === 'annotate' && !/^not /.test(c.outcome) && typeof c.args.text === 'string' && c.args.style !== 'heading').map((c) => String(c.args.text));
+    for (const s of notes.length ? v2LearnerSentences(input.studentSaid) : []) {
+      if (cardTexts.some((c) => v2CardIsOf(c, s) || v2CardCorrects(c, s))) continue;
+      const fix = notes.map((n) => v2NoteCorrectionOf(n, s)).find((x): x is string => !!x);
+      if (!fix) continue;
+      v2NoteCorrection(session, state, fix, [], s);
+      if (answerSentences.includes(s)) noteCorrections.push({ sentence: fix, stress: [] });
+    }
+  }
   if (adaptPart && answerSentences.length && !state.closed && !input.signal?.aborted && !replyMisheard()) {
     const cards = toolCalls.filter((c) => c.name === 'show_sentence' && (!/^not /.test(c.outcome) || !!c.pointsAt) && typeof c.args.sentence === 'string')
       .map((c) => ({ sentence: String(c.args.sentence), stress: Array.isArray(c.args.emphasis) ? (c.args.emphasis as unknown[]).filter((x): x is string => typeof x === 'string') : [] }));
-    adaptEvents.push(...v2AdaptAfter(session, state, adaptPart, answerSentences, v2PracticePairs(answerSentences, cards, (adaptFlags.changed ?? TUTOR_V2_RETEST_TARGET_CHANGED) && adaptFlags.retest), adaptFlags, v2QuestionOfReply(lastTutorText)));
+    adaptEvents.push(...v2AdaptAfter(session, state, adaptPart, answerSentences, v2PracticePairs(answerSentences, [...cards, ...noteCorrections], (adaptFlags.changed ?? TUTOR_V2_RETEST_TARGET_CHANGED) && adaptFlags.retest), adaptFlags, v2QuestionOfReply(lastTutorText)));
   }
   // Task 8a (RETEST_ASK_ONCE): the open retest whose line this turn sent is put to them when this reply carried a question.
   if (adaptPart && !input.signal?.aborted && spoken.length) adaptEvents.push(...v2RetestPutAfter(session, state, adaptPart, replyQuestions, adaptFlags));

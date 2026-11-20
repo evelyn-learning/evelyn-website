@@ -23,8 +23,8 @@
  * visit). Keyed on the session, never on a partner. Pure, client-safe.
  */
 import type { LessonPlan } from '../lesson-plan/types';
-import { TUTOR_V2_FREE_CONV_NO_STARTER, TUTOR_V2_FREE_CONV_PARTNER, TUTOR_V2_FREE_CONVERSATION, TUTOR_V2_RETEST_ASK_ONCE, TUTOR_V2_PART_CLOCK, TUTOR_V2_PERSONA_CARD, TUTOR_V2_RETEST_QUESTION, TUTOR_V2_RETEST_ASKED, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_RETEST_SPREAD, TUTOR_V2_RETEST_TARGET_CHANGED, TUTOR_V2_STARTER_IS_ANSWER, TUTOR_V2_SUPPORT_FOLLOWED, TUTOR_V2_SUPPORT_STEPS } from '../orchestrator/flags';
-import { v2AskedForQuestion, v2CardIsOf, v2SentenceWords } from './learner-card';
+import { TUTOR_V2_CORRECTION_KEPT, TUTOR_V2_FREE_CONV_NO_STARTER, TUTOR_V2_FREE_CONV_PARTNER, TUTOR_V2_FREE_CONVERSATION, TUTOR_V2_RETEST_ASK_ONCE, TUTOR_V2_PART_CLOCK, TUTOR_V2_PERSONA_CARD, TUTOR_V2_RETEST_QUESTION, TUTOR_V2_RETEST_ASKED, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_RETEST_SPREAD, TUTOR_V2_RETEST_TARGET_CHANGED, TUTOR_V2_STARTER_IS_ANSWER, TUTOR_V2_SUPPORT_FOLLOWED, TUTOR_V2_SUPPORT_STEPS } from '../orchestrator/flags';
+import { v2AskedForQuestion, v2CardCorrects, v2CardIsOf, v2SentenceWords } from './learner-card';
 import { v2AsksRepeat } from './one-question';
 import { v2NoteTargetsOn } from './note-targets';
 import { v2PartInHand, v2PartViewed, v2PlanLabelled, v2TutorReplies } from './part-flow';
@@ -334,13 +334,17 @@ export interface V2PracticePair { said: string; card: string; corrected: boolean
 
 /** The pairs of this answer: each sentence of theirs with the reply's card of it (each card used once); a sentence with no card
  *  is left out. `cards`: the reply's sentence cards painted or pointed back at, with their stress. */
-export function v2PracticePairs(sentences: readonly string[], cards: ReadonlyArray<{ sentence: string; stress: readonly string[] }>, changed: boolean = TUTOR_V2_RETEST_TARGET_CHANGED && TUTOR_V2_RETEST_MISTAKE): V2PracticePair[] {
+/** Task 8c (CORRECTION_KEPT, `kept`; mic test 10, embed-1795202398886 turns 19 and 21): a card that corrects the sentence (v2CardCorrects)
+ *  is taken before one that is it as said, so a stray as-said card never turns a corrected answer into `clean`; a stem-alike rewrite of
+ *  it counts as a correction. */
+export function v2PracticePairs(sentences: readonly string[], cards: ReadonlyArray<{ sentence: string; stress: readonly string[] }>, changed: boolean = TUTOR_V2_RETEST_TARGET_CHANGED && TUTOR_V2_RETEST_MISTAKE, kept: boolean = TUTOR_V2_CORRECTION_KEPT): V2PracticePair[] {
   const left = [...cards]; const out: V2PracticePair[] = [];
   for (const s of sentences) {
-    const at = left.findIndex((c) => v2CardIsOf(c.sentence, s));
+    let at = kept ? left.findIndex((c) => v2CardCorrects(c.sentence, s)) : -1;
+    if (at < 0) at = left.findIndex((c) => v2CardIsOf(c.sentence, s));
     if (at < 0) continue;
     const c = left.splice(at, 1)[0]!;
-    const corrected = v2IsCorrectionOf(c.sentence, s);
+    const corrected = v2IsCorrectionOf(c.sentence, s) || (kept && v2CardCorrects(c.sentence, s));
     // Task 7v (RETEST_TARGET_CHANGED): the words the correction changed, with one neighbour each.
     if (changed && corrected) { const t = v2ChangedTarget(s, c.sentence, c.stress); if (t.length) { out.push({ said: s.slice(0, MAX_CHARS), card: c.sentence.slice(0, MAX_CHARS), corrected, stress: t }); continue; } }
     let stress = corrected ? v2RetestTarget(c.stress) : [];
