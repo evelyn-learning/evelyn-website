@@ -2500,19 +2500,18 @@ export const TUTOR_V2_LEVEL_CHECK_PUT = process.env.NEXT_PUBLIC_TUTOR_V2_LEVEL_C
 export const TUTOR_V2_CORRECTIONS_ALL_GUARDED = process.env.NEXT_PUBLIC_TUTOR_V2_CORRECTIONS_ALL_GUARDED !== 'off';
 
 /** Tutor brain v2 (v2/learner-card.ts, v2/turn.ts): the board never shows the learner's uncorrected sentence after its correction. A card
- *  of the reply that corrects their sentence (v2CardCorrects: v2IsCorrectionOf, or half the words each way with stems alike and not
- *  their words as said) carries it, so no owed-card line is sent for it; the owed-card line asks only for the right sentence; a sentence
- *  card that is their own sentence of this turn as said is not painted when this reply corrected it (a correction card, a note holding
- *  the correction, or a recorded correction of it). Mic test 10 (embed-1795202398886: WB26, WB30 written by the board check after the
- *  corrected card) (Task 8c, item 1). Default ON; NEXT_PUBLIC_TUTOR_V2_OWED_CARD_RIGHT=off ⇒ as before. */
+ *  of the reply that is a correction of their sentence (v2IsCorrectionOf, the one test; never their sentence itself) and belongs to it
+ *  (not to another sentence of the turn) carries it, so no owed-card line is sent for it; the owed-card line asks only for the right
+ *  sentence; a sentence card that is their own sentence of this turn as said, with words marked, is not painted when a card of this
+ *  reply corrected it. Mic test 10 (embed-1795202398886: WB26, WB30 written by the board check after the corrected card) (Task 8c,
+ *  item 1). Default ON; NEXT_PUBLIC_TUTOR_V2_OWED_CARD_RIGHT=off ⇒ as before. */
 export const TUTOR_V2_OWED_CARD_RIGHT = process.env.NEXT_PUBLIC_TUTOR_V2_OWED_CARD_RIGHT !== 'off';
 
-/** Tutor brain v2 (v2/adaptive.ts, v2/summary-marks.ts, v2/turn.ts): a correction is kept. The practice pairing prefers the card that
- *  corrects their sentence over one identical to it, and counts a stem-alike rewrite as a correction (v2CardCorrects); the summary's
- *  correction record takes it too; a correction the reply wrote only as a note (a clause of a painted note of this reply that corrects
- *  their sentence, which no card of the reply holds) is recorded and counted. Mic test 10 (embed-1795202398886: turns 19 and 21 scored
- *  clean, T46's note-only correction never recorded) (Task 8c, item 2). Default ON; NEXT_PUBLIC_TUTOR_V2_CORRECTION_KEPT=off ⇒ as
- *  before. */
+/** Tutor brain v2 (v2/adaptive.ts): a correction is kept. The practice pairing gives each card to the one sentence of the turn it belongs
+ *  to, and of a sentence's cards takes a right one as said (no marks) first, then a correction (v2IsCorrectionOf), then a marked as-said
+ *  card, so a stray marked as-said card never turns a corrected answer into `clean`. Mic test 10 (embed-1795202398886: turns 19 and 21
+ *  scored clean) (Task 8c, item 2; fix round 1: the note-only recording removed). Default ON; NEXT_PUBLIC_TUTOR_V2_CORRECTION_KEPT=off ⇒
+ *  as before. */
 export const TUTOR_V2_CORRECTION_KEPT = process.env.NEXT_PUBLIC_TUTOR_V2_CORRECTION_KEPT !== 'off';
 
 /** Tutor brain v2 (v2/summary-headings.ts, v2/turn.ts): on the Summary page of a lesson laid out in groups (7u), the runtime writes the
@@ -2546,3 +2545,9 @@ export const TUTOR_V2_ANSWER_OVER_ASK = process.env.NEXT_PUBLIC_TUTOR_V2_ANSWER_
  *  だけです。" then the card; nothing said, 12 s of silence until the idle nudge) (Task 8d, item 3). Default ON;
  *  NEXT_PUBLIC_TUTOR_V2_PRON_TARGET_SAID=off ⇒ as before. */
 export const TUTOR_V2_PRON_TARGET_SAID = process.env.NEXT_PUBLIC_TUTOR_V2_PRON_TARGET_SAID !== 'off';
+
+/** Tutor brain v2 (v2/learner-card.ts): an ask for a sentence is read from the reply's last QUESTION sentence when all that follows it is
+ *  one short sentence that is no question ("…for a long time? Please answer in English."): by shape only. Mic test 10
+ *  (embed-1795202398886 T44 → T45: no practice answer, the re-test put at T44 never scored) (Task 8c fix round 1). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_ASK_LAST_QUESTION=off ⇒ as before. */
+export const TUTOR_V2_ASK_LAST_QUESTION = process.env.NEXT_PUBLIC_TUTOR_V2_ASK_LAST_QUESTION !== 'off';

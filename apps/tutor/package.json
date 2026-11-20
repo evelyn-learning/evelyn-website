@@ -266,7 +266,7 @@
     "test:brain-v2-mic5-7r": "npx tsx scripts/test-brain-v2-mic5-7r.ts",
     "test:brain-v2-mic5-7s": "npx tsx scripts/test-brain-v2-mic5-7s.ts",
     "test:brain-v2-mic6-7u": "npx tsx scripts/test-brain-v2-mic6-7u.ts",
-    "test:brain-v2-mic7-7w": "NEXT_PUBLIC_TUTOR_V2_SUMMARY_HEADINGS=off npx tsx scripts/test-brain-v2-mic7-7w.ts",
+    "test:brain-v2-mic7-7w": "npx tsx scripts/test-brain-v2-mic7-7w.ts",
     "test:brain-v2-mic7-7x": "NEXT_PUBLIC_TUTOR_V2_PART_YES_CHOICES=off npx tsx scripts/test-brain-v2-mic7-7x.ts",
     "test:brain-v2-mic8-7y": "npx tsx scripts/test-brain-v2-mic8-7y.ts",
     "test:brain-v2-mic8-7z": "npx tsx scripts/test-brain-v2-mic8-7z.ts",

@@ -1,18 +1,23 @@
 /// <reference types="node" />
 /**
  * Tutor brain v2 — Task 8c: mic test 10 (embed-1795202398886): the board never shows the learner's wrong sentence after its correction,
- * a correction is kept (also one written as a note only), and the Summary page's headings come from the runtime. The session's plan
+ * a correction is kept, and the Summary page's headings come from the runtime. The session's plan
  * (gdi-work-projects-v1) and its real turns (task-8b-investigation.md). No network, no model, nothing to the speech vendor.
  *   npm run test:brain-v2-mic10-8c
  *
- *  1 OWED_CARD_RIGHT   T31 → T32 and T35 → T36 with the board check: no owed-card line once the corrected card is up (WB25 drops a
- *                      clause of T31, WB29 rewrites T35 with stems alike); the check's as-said card (WB26, WB30) not painted; the owed
- *                      line asks only for the right sentence; a right sentence of theirs is still carded as said
- *  2 CORRECTION_KEPT   T32 and T36 scored as a correction (practice signal wrong), recorded with marks, re-test recorded; the pairing
- *                      prefers the correction card over an as-said one; T45 → T46 (the correction only in note WB37) recorded and counted
+ *  1 OWED_CARD_RIGHT   T31 → T32 with the board check: no owed-card line once the corrected card WB25 is up (v2IsCorrectionOf, the one
+ *                      test; it drops a clause of T31); the check's marked as-said card WB26 not painted; the owed line asks only for
+ *                      the right sentence; T35 → T36: WB29 is no correction of T35 by the one test, so the owed line (the right-sentence
+ *                      wording) is sent (fix round 1, reported); a right sentence beside another right model card still carded, clean;
+ *                      two sentences of one turn never claim one card
+ *  2 CORRECTION_KEPT   T32 scored as a correction (signal wrong), recorded with marks, re-test recorded; the pairing takes the correction
+ *                      over a marked as-said card, and a right unmarked as-said card over a tutor's model card
  *  3 SUMMARY_HEADINGS  T89 (the summary reply, no heading notes): the headings written once each before their first card, corrections
  *                      under "To improve" with their marks, other cards under "What went well" (above "To improve" when it came
- *                      first), rule notes above, the Japanese line on each heading for a beginner, a model-written heading not doubled
+ *                      first), rule notes above, the Japanese line on each heading for a beginner, a model-written heading not doubled;
+ *                      a heading known only by its wording (M1); a card corrected this very turn under "To improve" (M3)
+ *  4 ASK_LAST_QUESTION T44 ("…for a long time? Please answer in English.") is an ask for a sentence: T45 is a practice answer, owed a card;
+ *                      the board check's corrected card scores the re-test put at T44
  *  each switch off alone (a child process per switch); a maths voice lesson and a typed language lesson unchanged.
  */
 import { readFileSync } from 'node:fs';
@@ -24,7 +29,7 @@ import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import { runV2Turn, type V2ModelCall } from '../src/lib/tutor/v2/turn';
 import { newV2State, type V2BoardPage, type V2Retest, type V2Session, type V2State } from '../src/lib/tutor/v2/types';
 import { v2NoteCorrection } from '../src/lib/tutor/v2/summary-marks';
-import { V2_AS_SAID_REFUSED, v2CardCorrects, v2CardIsOf, v2NoteCorrectionOf, v2OwedCardCheckLine } from '../src/lib/tutor/v2/learner-card';
+import { V2_AS_SAID_REFUSED, v2CardCorrects, v2CardIsOf, v2CardSentence, v2LastQuestionOf, v2OwedCardCheckLine } from '../src/lib/tutor/v2/learner-card';
 import { v2PracticePairs } from '../src/lib/tutor/v2/adaptive';
 import { V2_SUMMARY_IMPROVE_HEADING, V2_SUMMARY_WELL_HEADING } from '../src/lib/tutor/v2/summary-headings';
 
@@ -101,22 +106,36 @@ const atT31 = () => base({ board: { pages: structuredClone(PP_PAGES), current: 3
 /** T35's turn: T34 asked the next question (a fresh retest list, so T36's can be recorded: the live part held two already). */
 const atT35 = () => { const s = atT31(); s.retests = []; s.history.push(u(T31), a(T32), u('I worked in sales 3 year before the work before that work as receptionist.'), a(T34)); s.board.pages[3]!.items.push(card('wb25', WB25), card('wb27', 'I worked in sales for three years before that, as a receptionist.'), { id: 'wb28', tool: 'show_problem', summary: 'Question — What is one skill you have learned at Nagoya Corporation?' }); return s; };
 
-// ── Past simple, T44 → T45 → T46 (the correction only in note WB37) ──
+// ── Past simple, T44 → T45 → T46 ──
 const T44 = '正しく言えました。 Let\'s keep going with that one.\n\nNow, have you been with your current company for a long time? Please answer in English.\n\n<board problem gloss="今の会社には長く勤めていますか？英語で答えてください。">Have you been with your current company for a long time?</board>';
 const T45 = 'Yes, I am with uh the current company uh for a long time.';
 const WB37 = 'We use "have been" for experience that continues now: I "have been" with the company for a long time.';
 const T46 = '惜しいです。「I am」は今の状態を表すので、ここでは使いません。今まで続いている経験なので、「have」を使ってください。\n\n'
   + `<board note gloss="今まで続いている経験は「have been」で言います。">${WB37}</board>\n\nもう一度、「Yes, I ...」から言ってみてください。`;
+const WB64 = 'I have been with the company for a long time.';
+/** The board check, told T45 is owed a card, writes the corrected sentence (what the right-sentence owed line asks for). */
+const CHECK_T46 = `1: none\n2: <board sentence stress="have | been" gloss="今の会社に長く勤めています。" with="今まで続いている経験なので">${WB64}</board>\n3: none (nothing to draw)`;
 const PS_PAGES: V2BoardPage[] = [...structuredClone(PP_PAGES), { title: 'Past simple', items: [card('wb32', 'I attended an exhibition last year.'), card('wb34', 'I attended a robotics exhibition in Tokyo two years ago.'), { id: 'wb36', tool: 'show_problem', summary: 'Question — Have you been with your current company for a long time?' }] }];
 const PUT: V2Retest = { part: 'present-perfect', said: 'Yes, I worked at Nagoya uh 5 years ago.', right: 'I have worked at Nagoya Corporation for five years.', target: ['i have', 'corporation for five'], turn: 16, offered: 3, in: 'past-simple', askedAt: 3, lastAt: 5, put: 5, question: 'Have you worked for your current company for a long time?' };
 const atT45 = () => base({ board: { pages: structuredClone(PS_PAGES), current: 4 }, goals: goalsThrough(4), partStart: { part: 'past-simple', at: 8.4 * MIN }, support: { step: 'normal', wrong: 0, clean: 0, part: 'past-simple' }, retests: [structuredClone(PUT)],
   history: [...ppHead, a('<board page>Past simple</board>\n過去形は、終わった出来事に使います。\n\n Did you attend any business events or exhibitions last year?'), u('Yes, I attend robotics exhibition Tokyo 2 year ago.'), a('「attended」にします。<board sentence stress="attended">I attended a robotics exhibition in Tokyo two years ago.</board>もう一度、この文を言ってみてください。'), u('I attended a robotics exhibition in Tokyo 2 years ago.'), a(T44)] });
 
+// ── Fix round 1 (I1) pins ──
+const RIGHT = 'I worked in sales for three years.';
+const MODEL = 'I worked in marketing for five years.';
+/** A right sentence of theirs; the reply writes another model sentence first, then their sentence as said (no marks). */
+const R_MODEL = `That's right. Another example: ${sc0(MODEL)} And yours: ${sc0(RIGHT)} What did you do before that?`;
+function sc0(x: string, stress?: string) { return `<board sentence${stress ? ` stress="${stress}"` : ''}>${x}</board>`; }
+/** Two sentences of one turn with a shared pattern: the first right, the second corrected. */
+const TWO_SAID = 'I worked in Tokyo for two years. I work in Osaka for three year.';
+const S1 = 'I worked in Tokyo for two years.';
+const S2_FIX = 'I have worked in Osaka for three years.';
+const R_TWO = `Your first sentence is right. ${sc0(S2_FIX, 'have | worked | years')} ${sc0(S1, 'worked')} Say the second one again, please.`;
+
 // ── The Summary page, T89 (no heading notes) ──
 const WB61 = 'We use "have worked" for experience that started in the past and continues now.';
 const WB62 = 'We use the past simple, like "attended", for a finished event with a time word such as "last year".';
 const WB63 = 'I worked on a project to collect donations for a climate change project.';
-const WB64 = 'I have been with the company for a long time.';
 const WB65 = 'I have worked at Nagoya Corporation for five years.';
 const WB66 = 'I attended a robotics exhibition in Tokyo two years ago.';
 const sc = (s: string, stress?: string, gloss?: string) => `<board sentence${stress ? ` stress="${stress}"` : ''}${gloss ? ` gloss="${gloss}"` : ''}>${s}</board>`;
@@ -126,15 +145,16 @@ const T89 = (headings: { well?: boolean } = {}) => '今日は、仕事の話を�
   + `${sc(WB65, 'have | corporation | for', 'Nagoya Corporation で五年間働いています。')}\n${sc(WB66, 'attended | two | years | ago', '二年前に東京で展示会に参加しました。')}\n\n`
   + 'では最後に、考えてみてください。Before we finish, can you explain the difference between these two sentences? I have worked here for five years. I worked here five years ago.\n\n<board problem gloss="二つの文の違いを説明してください。">Before we finish, can you explain the difference between these two sentences? I have worked here for five years. I worked here five years ago.</board>';
 const SUM_PAGES: V2BoardPage[] = [...structuredClone(PS_PAGES), { title: 'Conversation', items: [] }, { title: 'Pronunciation', items: [] }, { title: 'Summary', items: [] }];
-/** The lesson's corrections as recorded (said → card): T25, T41, T57, and with 8c T45 (the note). `only`: the ones kept. */
+/** The lesson's corrections as recorded live (said → card): T25, T41, T57. T45's (WB64) was made by a note only and is in no record. */
 const RECORDS: Array<[string, string]> = [
   ['Yes, I worked at Nagoya uh 5 years ago.', WB65],
   ['Yes, I attend robotics exhibition Tokyo 2 year ago.', WB66],
   ['I worked on a project to um to uh uh to collect donation for climate change project.', WB63],
   [T45, WB64],
 ];
-const atT88 = (only: readonly string[]) => {
-  const s = base({ board: { pages: structuredClone(SUM_PAGES), current: 7 }, goals: goalsThrough(7), partStart: { part: 'summary', at: 19.7 * MIN },
+const atT88 = (only: readonly string[], items: V2BoardPage['items'] = []) => {
+  const pages = structuredClone(SUM_PAGES); pages[7]!.items = structuredClone(items);
+  const s = base({ board: { pages, current: 7 }, goals: goalsThrough(7), partStart: { part: 'summary', at: 19.7 * MIN },
     history: [...ppHead, a('Your score for that word was 100 out of 100, and the whole sentence came out at 94 out of 100. Well done. Would you like one more item, or shall we move on to the summary?')] });
   for (const [said, right] of RECORDS) if (only.includes(right)) v2NoteCorrection(lang, s, right, [], said);
   return s;
@@ -147,32 +167,35 @@ async function probe() {
   // A right sentence of theirs (T37 "I have learned how to negotiate with customers.") is carded as said.
   const t38 = await turn(lang, (() => { const s = atT35(); s.history.push(u(T35), a(T36)); s.board.pages[3]!.items.push(card('wb29', WB29)); return s; })(), 'I have learned how to negotiate with customers today at work.',
     [{ text: 'その文は正しいです。\n\n<board sentence>I have learned how to negotiate with customers today at work.</board>\n\nWhat else have you learned?' }, NONE], 8.3);
+  // I1 pins: a right sentence beside another model card; two sentences of one turn.
+  const rModel = await turn(lang, atT31(), RIGHT, [{ text: R_MODEL }, NONE], 6.6);
+  const rTwo = await turn(lang, atT31(), TWO_SAID, [{ text: R_TWO }, NONE], 6.6);
   // The owed line itself, for a sentence the reply carded nowhere.
   const owedLine = v2OwedCardCheckLine(lang, [WB26]);
-  // 2: T45 → T46.
-  const t46 = await turn(lang, atT45(), T45, [{ text: T46 }, NONE], 10.9);
-  // …and with T44's question as its last sentence (an ask for a sentence by the 7g test): the answer is counted too.
-  const t46b = await turn(lang, (() => { const s = atT45(); s.history[s.history.length - 1] = a(T44.replace(' Please answer in English.', '')); return s; })(), T45, [{ text: T46 }, NONE], 10.9);
+  // 4: T45 → T46 (T44 as stored), the board check writing the corrected card the owed line asks for.
+  const t46 = await turn(lang, atT45(), T45, [{ text: T46 }, { text: CHECK_T46 }, NONE], 10.9);
   // 2: the pairing on the live T32 cards (WB26 painted before WB25 was read, as at HEAD).
   const pairs = v2PracticePairs(['I worked in sales 3 year before that work as receptionist.'], [{ sentence: WB26, stress: ['three', 'year'] }, { sentence: WB25, stress: ['for', 'three', 'years'] }]);
-  // 3: T89, (A) the session's records (all four cards corrections), (B) only WB63 and WB64 recorded (the others right), (C) as B with
-  // the model's own "What went well" heading before WB65.
-  const all = [WB63, WB64, WB65, WB66];
-  const sumA = await turn(lang, atT88(all), 'Uh, move on.', [{ text: T89() }, NONE], 19.75, false);
+  // 3: T89. (A) the live records (WB63, WB65, WB66; WB64 corrected by a note only, in no record); (B) only WB63 and WB64 recorded; (C) as
+  // B with the model's own "What went well" heading before WB63; (D) a model heading after the runtime's.
+  const sumA = await turn(lang, atT88([WB63, WB65, WB66]), 'Uh, move on.', [{ text: T89() }, NONE], 19.75, false);
   const sumB = await turn(lang, atT88([WB63, WB64]), 'Uh, move on.', [{ text: T89() }, NONE], 19.75, false);
   const sumC = await turn(lang, atT88([WB63, WB64]), 'Uh, move on.', [{ text: T89({ well: true }) }, NONE], 19.75, false);
-  // D: the runtime's "What went well" up first (WB65 before any heading), then the model writes its own: refused.
   const sumD = await turn(lang, atT88([WB63, WB64]), 'Uh, move on.', [{ text: `${sc(WB65)}\n<board note style="heading">What went well</board>\n${sc(WB66)}\nGood.` }, NONE], 19.75, false);
+  // M1: short rule notes with "good" / "better" up on the page from an earlier reply, and one written now: no heading.
+  const ruleNotes = [{ id: 'r1', tool: 'annotate', summary: 'Good: for + a length of time' }, { id: 'r2', tool: 'annotate', summary: 'Use better word order' }];
+  const sumM1 = await turn(lang, atT88([WB63, WB64], ruleNotes), 'Uh, move on.', [{ text: `<board note>Good: past simple with a time word</board>\n${sc(WB65)}\n${sc(WB63, 'donations | a')}\nGood.` }, NONE], 19.75, false);
+  // M3: a card on the Summary page correcting what they say this very turn (no record before): under "To improve".
+  const sumM3 = await turn(lang, atT88([]), 'I attend robotics exhibition Tokyo 2 year ago.', [{ text: `${sc(WB65)}\n${sc(WB66, 'attended | two | years | ago')}\nGood.` }, NONE], 19.75, false);
   // An intermediate learner: the headings with no Japanese line.
   const sumI = await turn(lang, { ...atT88([WB63, WB64]), workingLevel: { level: 'intermediate', from: 'this_lesson' } }, 'Uh, move on.', [{ text: T89() }, NONE], 19.75, false);
   // Other lessons.
   const typed = await turn(typedLang, atT31(), T31, [{ text: T32 }, { text: CHECK_WB26 }, NONE], 6.6);
   const mathsTurn = await turn(maths, { ...newV2State(0), history: [u('x'), a('What is 3 times 4?')] }, '12', [{ text: 'Yes, 12. <board equation>3 \\times 4 = 12</board> What is 6 × 7?' }, NONE], 18.1);
-  return { t32, t36, t38, owedLine, t46, t46b, pairs, sumA, sumB, sumC, sumD, sumI, typed: { calls: typed.calls, page: typed.page, check: typed.check }, maths: { calls: mathsTurn.calls, page: mathsTurn.page, check: mathsTurn.check } };
+  return { t32, t36, t38, rModel, rTwo, owedLine, t46, pairs, sumA, sumB, sumC, sumD, sumM1, sumM3, sumI, typed: { calls: typed.calls, page: typed.page, check: typed.check }, maths: { calls: mathsTurn.calls, page: mathsTurn.page, check: mathsTurn.check } };
 }
 
 type Probe = Awaited<ReturnType<typeof probe>>;
-const sentenceCalls = (t: Probe['t32']) => t.calls.filter((c) => c.name === 'show_sentence');
 const painted = (t: Probe['t32'], s: string) => t.calls.some((c) => c.name === 'show_sentence' && c.text === s && !/^not /.test(c.outcome));
 const HAS_OWED = /put no card of (?:it|them) on the board/;
 
@@ -181,44 +204,43 @@ async function main() {
   if (CHILD) { console.log(`OFF_JSON ${JSON.stringify(on)}`); return; }
 
   console.log('1  OWED_CARD_RIGHT: never their wrong sentence as a card');
-  check('v2CardCorrects: WB25 corrects T31 (v2CardIsOf did not: it drops "before that work as receptionist"); WB29 corrects T35 (stems alike); their words as said do not', v2CardCorrects(WB25, T31) && !v2CardIsOf(WB25, T31) && v2CardCorrects(WB29, T35) && !v2CardCorrects(WB26, T31) && !v2CardCorrects(WB30, T35));
+  check('the one correction test: WB25 corrects T31 (v2CardIsOf did not: it drops "before that work as receptionist"); their words as said never; WB29 is no correction of T35 (3 of 8 words theirs)', v2CardCorrects(WB25, T31) && !v2CardIsOf(WB25, T31) && !v2CardCorrects(WB26, T31) && !v2CardCorrects(WB30, T35) && !v2CardCorrects(WB29, T35));
   check('T32: the corrected card WB25 painted inline; the board check ran with no owed-card line', painted(on.t32, WB25) && on.t32.check.length > 0 && !HAS_OWED.test(on.t32.check), on.t32.check.slice(-1500));
-  check('…the check\'s WB26 (T31 as said) not painted, with the reason', sentenceCalls(on.t32).every((c) => c.text !== WB26) || on.t32.calls.some((c) => c.text === WB26 && c.outcome === V2_AS_SAID_REFUSED), on.t32.calls);
-  check('…the page holds WB25 and not WB26', on.t32.page.includes(`show_sentence: ${WB25}`) && !on.t32.page.includes(`show_sentence: ${WB26}`), on.t32.page);
-  check('T36: WB29 painted; no owed-card line; WB30 (T35 as said) not painted', painted(on.t36, WB29) && !HAS_OWED.test(on.t36.check) && !painted(on.t36, WB30) && !on.t36.page.includes(`show_sentence: ${WB30}`), [on.t36.calls, on.t36.check.slice(-800)]);
+  check('…the check\'s WB26 (T31 as said, its words marked) not painted, with the reason; the page holds WB25 and not WB26', !painted(on.t32, WB26) && on.t32.page.includes(`show_sentence: ${WB25}`) && !on.t32.page.includes(`show_sentence: ${WB26}`), [on.t32.calls, on.t32.page]);
+  check('T36 (fix round 1, reported): WB29 is no correction by the one test, so T35 is owed and the board check gets the right-sentence line (not "as they said it")', painted(on.t36, WB29) && HAS_OWED.test(on.t36.check) && /Never their sentence with its mistake in it/.test(on.t36.check) && !/wrong word stressed/.test(on.t36.check), on.t36.check.slice(-900));
   check('the owed line asks only for the right sentence (no "as they said it … wrong word stressed"); never their mistake', /the corrected sentence with the changed words stressed/.test(on.owedLine) && /Never their sentence with its mistake in it/.test(on.owedLine) && !/wrong word stressed/.test(on.owedLine), on.owedLine);
   check('a right sentence of theirs is still carded as said (painted)', painted(on.t38, 'I have learned how to negotiate with customers today at work.'), on.t38.calls);
+  check('I1: a right sentence with a different right model card first ("I worked in marketing for five years."): carded as said, scored clean, no re-test', painted(on.rModel, RIGHT) && on.rModel.events.some((e) => /^v2_practice_signal clean/.test(e)) && !on.rModel.events.some((e) => /^v2_retest_recorded/.test(e)), [on.rModel.calls, on.rModel.events]);
+  check('I1: two sentences of one turn: the card correcting the second belongs to it (v2CardSentence), so the first one\'s as-said card is painted (even marked); one right, one corrected', v2CardSentence(S2_FIX, [S1, 'I work in Osaka for three year.']) === 1 && painted(on.rTwo, S1) && painted(on.rTwo, S2_FIX) && on.rTwo.events.some((e) => /^v2_practice_signal wrong .*sentences=2 corrected=1/.test(e)), [on.rTwo.calls, on.rTwo.events]);
 
   console.log('2  CORRECTION_KEPT: a correction is kept');
   check('T32 scored as a correction: practice signal wrong, the correction recorded with its marks (for, three, years), a re-test recorded', on.t32.events.some((e) => /^v2_practice_signal wrong part=present-perfect/.test(e)) && on.t32.corrections.some((c) => c.sentence === WB25 && c.stress.includes('for') && c.stress.some((w) => /^years?$/.test(w))) && on.t32.events.some((e) => /^v2_retest_recorded /.test(e)), [on.t32.events, on.t32.corrections]);
-  check('T36 scored as a correction (WB29, stems alike): signal wrong, recorded with marks, re-test recorded', on.t36.events.some((e) => /^v2_practice_signal wrong part=present-perfect/.test(e)) && on.t36.corrections.some((c) => c.sentence === WB29 && c.stress.length > 0) && on.t36.retests.some((r) => r.right === WB29), [on.t36.events, on.t36.corrections, on.t36.retests]);
-  check('the pairing prefers the correction card (WB25) over the as-said one (WB26) when both are up', on.pairs.length === 1 && on.pairs[0]!.card === WB25 && on.pairs[0]!.corrected, on.pairs);
-  check('v2NoteCorrectionOf: WB37 holds "I have been with the company for a long time." for T45', v2NoteCorrectionOf(WB37, T45) === WB64 && v2NoteCorrectionOf('We use "for" with a length of time.', T45) === null);
-  check('T46 (the correction only in note WB37, no card): recorded (said → WB64, with marks)', on.t46.corrections.some((c) => c.sentence === WB64 && /I am with/.test(c.said) && c.stress.length > 0), [on.t46.events, on.t46.corrections]);
-  check('…T44 as stored ends on "Please answer in English." (no ask for a sentence by the 7g test, as live: no practice signal at T46), so the answer is not counted', !on.t46.events.some((e) => /^v2_practice_signal/.test(e)), on.t46.events);
-  check('…with T44 ending on its question, the answer is counted (signal wrong) and the retest put at T44 is scored missed', on.t46b.events.some((e) => /^v2_practice_signal wrong part=past-simple/.test(e)) && on.t46b.events.some((e) => /^v2_retest_outcome target="i have", "corporation for five" outcome=missed/.test(e)), on.t46b.events);
+  check('the pairing takes the correction card (WB25) over the marked as-said one (WB26) when both are up', on.pairs.length === 1 && on.pairs[0]!.card === WB25 && on.pairs[0]!.corrected, on.pairs);
+  check('I2: no note-only recording: T46\'s note WB37 records nothing by itself (the record comes from the corrected card)', on.t46.corrections.filter((c) => c.sentence === WB64).length === 1 && on.t46.calls.some((c) => c.text === WB64 && !/^not /.test(c.outcome)), on.t46.corrections);
+
+  console.log('4  ASK_LAST_QUESTION: the ask read from the last question');
+  check('v2LastQuestionOf: a question then one short non-question sentence gives the question; a long tail or no question before it gives the last', v2LastQuestionOf(['Now, have you been with your current company for a long time?', 'Please answer in English.']) === 'Now, have you been with your current company for a long time?' && v2LastQuestionOf(['Good.', 'Please answer in English.']) === 'Please answer in English.' && v2LastQuestionOf(['How long have you worked there?', 'I will tell you about my own job first and then we can compare them.']) === 'I will tell you about my own job first and then we can compare them.');
+  check('T44 → T45: a practice answer: T45 owed a card (the board check gets the line), counted (signal wrong) with the corrected card, and the re-test put at T44 scored missed', HAS_OWED.test(on.t46.check) && on.t46.events.some((e) => /^v2_practice_signal wrong part=past-simple/.test(e)) && on.t46.events.some((e) => /^v2_retest_outcome target="i have", "corporation for five" outcome=missed/.test(e)), [on.t46.events, on.t46.check.slice(-600)]);
 
   console.log('3  SUMMARY_HEADINGS: the Summary page\'s headings by the runtime');
   const headings = (t: Probe['sumA']) => t.calls.filter((c) => c.name === 'annotate' && c.style === 'heading' && !/^not /.test(c.outcome));
   const idx = (t: Probe['sumA'], s: string) => t.page.findIndex((x) => x.endsWith(s));
-  // A: every card a recorded correction.
-  check('A (the session\'s records: all four cards corrections): one "To improve" heading, written before WB63; no "What went well"', headings(on.sumA).length === 1 && headings(on.sumA)[0]!.text === V2_SUMMARY_IMPROVE_HEADING && idx(on.sumA, V2_SUMMARY_IMPROVE_HEADING) === idx(on.sumA, WB63) - 1, on.sumA.page);
-  check('A: rule notes above the heading; all four cards painted under it, each with its record\'s marks (WB64 had none)', idx(on.sumA, WB61) < idx(on.sumA, V2_SUMMARY_IMPROVE_HEADING) && idx(on.sumA, WB62) < idx(on.sumA, V2_SUMMARY_IMPROVE_HEADING) && [WB63, WB64, WB65, WB66].every((s) => painted(on.sumA, s) && idx(on.sumA, s) > idx(on.sumA, V2_SUMMARY_IMPROVE_HEADING))
-    && Array.isArray(on.sumA.calls.find((c) => c.text === WB64)?.emphasis) && (on.sumA.calls.find((c) => c.text === WB64)!.emphasis as string[]).length > 0, [on.sumA.page, on.sumA.calls]);
-  check('A: the heading carries the Japanese line for a beginner', headings(on.sumA)[0]?.gloss === 'これから直すところ', headings(on.sumA));
-  // B: WB63, WB64 corrections, WB65, WB66 right.
-  check('B (WB63, WB64 corrections; WB65, WB66 not): each heading written once', headings(on.sumB).map((h) => h.text).sort().join('|') === [V2_SUMMARY_IMPROVE_HEADING, V2_SUMMARY_WELL_HEADING].sort().join('|'), headings(on.sumB));
-  check('B: page order: notes, "What went well", WB65, WB66, "To improve", WB63, WB64, the question card last', (() => { const order = [WB61, WB62, V2_SUMMARY_WELL_HEADING, WB65, WB66, V2_SUMMARY_IMPROVE_HEADING, WB63, WB64].map((s) => idx(on.sumB, s)); return order.every((x, i) => x >= 0 && (i === 0 || x > order[i - 1]!)); })() && /^show_problem/.test(on.sumB.page[on.sumB.page.length - 1] ?? ''), on.sumB.page);
+  const inOrder = (t: Probe['sumA'], xs: string[]) => { const o = xs.map((x) => idx(t, x)); return o.every((x, i) => x >= 0 && (i === 0 || x > o[i - 1]!)); };
+  check('A (the live records: WB63, WB65, WB66 corrections; WB64 in none): notes, "What went well", WB64, "To improve", WB63, WB65, WB66; each heading once', inOrder(on.sumA, [WB61, WB62, V2_SUMMARY_WELL_HEADING, WB64, V2_SUMMARY_IMPROVE_HEADING, WB63, WB65, WB66]) && headings(on.sumA).length === 2, on.sumA.page);
+  check('A: the corrections carry their record\'s marks; the headings carry the Japanese line for a beginner', (on.sumA.calls.find((c) => c.text === WB63)?.emphasis as string[] | null ?? []).length > 0 && headings(on.sumA).find((h) => h.text === V2_SUMMARY_IMPROVE_HEADING)?.gloss === 'これから直すところ' && headings(on.sumA).find((h) => h.text === V2_SUMMARY_WELL_HEADING)?.gloss === '良かったところ', [on.sumA.calls, headings(on.sumA)]);
+  check('B (WB63, WB64 corrections; WB65, WB66 not): notes, "What went well", WB65, WB66, "To improve", WB63, WB64, the question card last', inOrder(on.sumB, [WB61, WB62, V2_SUMMARY_WELL_HEADING, WB65, WB66, V2_SUMMARY_IMPROVE_HEADING, WB63, WB64]) && headings(on.sumB).length === 2 && /^show_problem/.test(on.sumB.page[on.sumB.page.length - 1] ?? ''), on.sumB.page);
   check('B: the cards placed above "To improve" say so to the board (before = the heading); the corrections carry their marks', on.sumB.calls.filter((c) => c.text === WB65 || c.text === WB66 || c.text === V2_SUMMARY_WELL_HEADING).every((c) => c.before === on.sumB.calls.find((h) => h.text === V2_SUMMARY_IMPROVE_HEADING)?.id)
     && (on.sumB.calls.find((c) => c.text === WB64)?.emphasis as string[] | null ?? []).length > 0, on.sumB.calls);
-  check('C (the model wrote "What went well" itself before WB63, as the 7u line asks): not doubled; WB63 (a correction) goes under the runtime\'s "To improve", WB65/WB66 above it, under the model\'s heading', headings(on.sumC).filter((h) => h.text === V2_SUMMARY_WELL_HEADING).length === 1 && headings(on.sumC).filter((h) => h.text === V2_SUMMARY_IMPROVE_HEADING).length === 1
-    && (() => { const order = [V2_SUMMARY_WELL_HEADING, WB65, WB66, V2_SUMMARY_IMPROVE_HEADING, WB63, WB64].map((x) => idx(on.sumC, x)); return order.every((x, i) => x >= 0 && (i === 0 || x > order[i - 1]!)); })(), [on.sumC.page, headings(on.sumC)]);
-  check('C: a second "What went well" heading the model writes after the runtime\'s is not painted (the group\'s heading is up)', on.sumD.calls.filter((c) => c.style === 'heading' && c.text === V2_SUMMARY_WELL_HEADING && /^not painted: the "What went well" heading is on the summary page already/.test(c.outcome)).length === 1 && headings(on.sumD).filter((h) => h.text === V2_SUMMARY_WELL_HEADING).length === 1, on.sumD.calls);
+  check('C (the model wrote "What went well" itself before WB63, as the 7u line asks): not doubled; WB63 under the runtime\'s "To improve", WB65/WB66 above it', headings(on.sumC).filter((h) => h.text === V2_SUMMARY_WELL_HEADING).length === 1 && headings(on.sumC).filter((h) => h.text === V2_SUMMARY_IMPROVE_HEADING).length === 1
+    && inOrder(on.sumC, [V2_SUMMARY_WELL_HEADING, WB65, WB66, V2_SUMMARY_IMPROVE_HEADING, WB63, WB64]), [on.sumC.page, headings(on.sumC)]);
+  check('D: a second "What went well" heading the model writes after the runtime\'s is not painted', on.sumD.calls.filter((c) => c.text === V2_SUMMARY_WELL_HEADING && /^not painted: the "What went well" heading is on the summary page already/.test(c.outcome)).length === 1 && headings(on.sumD).filter((h) => h.text === V2_SUMMARY_WELL_HEADING).length === 1, on.sumD.calls);
+  check('M1: rule notes with "Good" / "better" (earlier and now) are no headings: the runtime still writes both, and the new note is painted', headings(on.sumM1).length === 2 && on.sumM1.calls.some((c) => c.text === 'Good: past simple with a time word' && !/^not /.test(c.outcome)), [on.sumM1.page, on.sumM1.calls]);
+  check('M3: a card correcting their words this very turn (no record before) goes under "To improve"; the other under "What went well"', inOrder(on.sumM3, [V2_SUMMARY_WELL_HEADING, WB65, V2_SUMMARY_IMPROVE_HEADING, WB66]), on.sumM3.page);
   check('no model text cut: the spoken words of T89 are all there (A)', on.sumA.spoken.includes('良かったところは、お客様への説明がよく伝わったことです。') && on.sumA.spoken.includes('直すところは、期間と過去の時を表す言葉です。'), on.sumA.spoken);
   check('an intermediate learner: the headings with no Japanese line', headings(on.sumI).length === 2 && headings(on.sumI).every((h) => h.gloss === null), headings(on.sumI));
 
   console.log('other lessons');
-  check('a typed language lesson: no runtime heading, the as-said card painted as at HEAD (the rule is for spoken lessons)', !on.typed.calls.some((c) => c.outcome === V2_AS_SAID_REFUSED));
+  check('a typed language lesson: no as-said refusal (the rule is for spoken lessons)', !on.typed.calls.some((c) => c.outcome === V2_AS_SAID_REFUSED));
   check('a maths voice lesson: no 8c line, no refusal, no heading', !HAS_OWED.test(on.maths.check) && !on.maths.calls.some((c) => c.outcome === V2_AS_SAID_REFUSED || c.style === 'heading'));
 
   console.log('each switch off alone (a child process per switch): as at 57c71382 for that item');
@@ -230,21 +252,26 @@ async function main() {
   };
   const others = (off: Probe, but: string) => [
     but === 'OWED_CARD_RIGHT' || (!painted(off.t32, WB26) && !HAS_OWED.test(off.t32.check)),
-    but === 'CORRECTION_KEPT' || off.t46.corrections.some((c) => c.sentence === WB64),
+    but === 'CORRECTION_KEPT' || (off.pairs[0]?.card === WB25),
     but === 'SUMMARY_HEADINGS' || headings(off.sumB).length === 2,
+    but === 'ASK_LAST_QUESTION' || off.t46.events.some((e) => /^v2_practice_signal wrong part=past-simple/.test(e)),
   ].every(Boolean);
   {
     const off = child('OWED_CARD_RIGHT');
-    check('OWED_CARD_RIGHT off: the owed line sent at T32 with its "as they said it" branch, and WB26 painted (as live); T36 likewise WB30', HAS_OWED.test(off.t32.check) && /their own sentence as they said it/.test(off.t32.check) && painted(off.t32, WB26) && painted(off.t36, WB30) && /wrong word stressed/.test(off.owedLine) && others(off, 'OWED_CARD_RIGHT'), [off.t32.calls, off.t36.calls]);
-    check('…with CORRECTION_KEPT on, the turn still counts as a correction (the pairing takes WB25 over WB26)', off.t32.events.some((e) => /^v2_practice_signal wrong/.test(e)), off.t32.events);
+    check('OWED_CARD_RIGHT off: the owed line sent at T32 with its "as they said it" branch, and WB26 painted (as live)', HAS_OWED.test(off.t32.check) && /their own sentence as they said it/.test(off.t32.check) && painted(off.t32, WB26) && /wrong word stressed/.test(off.owedLine) && others(off, 'OWED_CARD_RIGHT'), off.t32.calls);
+    check('…with CORRECTION_KEPT on, the turn still counts as a correction (the pairing takes WB25 over the marked WB26)', off.t32.events.some((e) => /^v2_practice_signal wrong/.test(e)), off.t32.events);
   }
   {
     const off = child('CORRECTION_KEPT');
-    check('CORRECTION_KEPT off: T46\'s note-only correction not recorded and no signal; T36 not recorded as a correction (WB29 is no v2IsCorrectionOf); the pairing takes WB26 (clean)', !off.t46.corrections.some((c) => c.sentence === WB64) && !off.t46.events.some((e) => /^v2_practice_signal wrong/.test(e)) && !off.t36.corrections.some((c) => c.sentence === WB29) && off.pairs[0]?.card === WB26 && off.pairs[0]?.corrected === false && others(off, 'CORRECTION_KEPT'), [off.t46.events, off.t36.corrections, off.pairs]);
+    check('CORRECTION_KEPT off: the pairing takes the first card of the sentence (WB26: clean), as live', off.pairs[0]?.card === WB26 && off.pairs[0]?.corrected === false && others(off, 'CORRECTION_KEPT'), off.pairs);
   }
   {
     const off = child('SUMMARY_HEADINGS');
     check('SUMMARY_HEADINGS off: no runtime heading on the Summary page (as live: notes then four unlabelled cards)', headings(off.sumA).length === 0 && headings(off.sumB).length === 0 && others(off, 'SUMMARY_HEADINGS'), off.sumB.page);
+  }
+  {
+    const off = child('ASK_LAST_QUESTION');
+    check('ASK_LAST_QUESTION off: T45 is no practice answer (no signal, no owed line), as live', !off.t46.events.some((e) => /^v2_practice_signal/.test(e)) && !HAS_OWED.test(off.t46.check) && others(off, 'ASK_LAST_QUESTION'), off.t46.events);
   }
 
   console.log(`\n${passed} passed, ${failed} failed`);

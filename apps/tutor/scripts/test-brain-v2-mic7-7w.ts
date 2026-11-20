@@ -211,6 +211,8 @@ async function probe() {
     robotEmphasis: cardOf(live.r, 'The robot that interests me most is the dancing robot.')?.args.emphasis ?? null,
     skillsEmphasis: cardOf(live.r, 'I have learned good negotiation skills from my boss.')?.args.emphasis ?? null,
     wellCard: cardOf(live.r, 'I felt nice when people appreciated me.')?.outcome ?? null,
+    // Task 8c fix round 1 (M4): the Summary page as painted (SUMMARY_HEADINGS on: the runtime's "To improve" before the correction).
+    livePage: (() => { const st = live.r.state; const pg = st.board.pages.find((p) => p.title === 'Summary'); return pg ? pg.items.map((it) => it.summary) : []; })(),
     cleanCard: cardOf(live.r, 'I have worked on this project for one year.') ? { outcome: cardOf(live.r, 'I have worked on this project for one year.')!.outcome, emphasis: cardOf(live.r, 'I have worked on this project for one year.')!.args.emphasis ?? null } : null,
     wrongRobot: cardOf(wrongStress.r, 'The robot that interests me most is the dancing robot.')?.args.emphasis ?? null,
     wrongSkills: cardOf(wrongStress.r, 'I have learned good negotiation skills from my boss.')?.args.emphasis ?? null,
@@ -258,8 +260,12 @@ async function main() {
   check('T86: the negotiation card likewise ("skills")', JSON.stringify(on.skillsEmphasis) === '["skills"]', on.skillsEmphasis);
   check('stress written with words not in the sentence ("are") is replaced by the correction\'s marks; words in it that hold the changed word ("skills | good") are kept', JSON.stringify(on.wrongRobot) === '["robot","interests"]' && JSON.stringify(on.wrongSkills) === '["skills","good"]', [on.wrongRobot, on.wrongSkills]);
   check('fix round 1 (M4): the live in-lesson marks "robot | is" miss a changed word ("interests"): replaced by the correction\'s', JSON.stringify(on.liveMarks) === '["robot","interests"]', on.liveMarks);
-  check('"I felt nice when people appreciated me." (a correction) is refused under "What went well"', /^not painted: this sentence is one of their corrections, so it goes under "To improve"/.test(on.wellCard ?? ''), on.wellCard);
-  check('…and the reason reaches the next turn\'s facts; the sentence he said right first time stays, with no marks added', on.boardProblems.some((x) => /one of their corrections/.test(x)) && /^painted/.test(on.cleanCard?.outcome ?? '') && on.cleanCard?.emphasis === null, [on.boardProblems, on.cleanCard]);
+  // Task 8c fix round 1 (M4): with SUMMARY_HEADINGS (default on) the correction is placed, not refused: the runtime writes "To improve" before
+  // it, and the model's own "To improve" heading after it is not painted (its group's heading is up). The refusal is checked with
+  // SUMMARY_HEADINGS off below.
+  const at = (x: string) => on.livePage.findIndex((y) => y === x);
+  check('"I felt nice when people appreciated me." (a correction, written under the model\'s "What went well") is placed under the runtime\'s "To improve" heading, written right before it', /^painted/.test(on.wellCard ?? '') && at('To improve') >= 0 && at('To improve') === at('I felt nice when people appreciated me.') - 1 && at('What went well') < at('To improve') && on.livePage.filter((x) => x === 'To improve').length === 1, [on.wellCard, on.livePage]);
+  check('…the model\'s own "To improve" heading is not painted (the reason reaches the next turn\'s facts); the sentence he said right first time stays under "What went well", with no marks added', on.boardProblems.some((x) => /"To improve" heading is on the summary page already/.test(x)) && /^painted/.test(on.cleanCard?.outcome ?? '') && on.cleanCard?.emphasis === null && at('I have worked on this project for one year.') < at('To improve'), [on.boardProblems, on.cleanCard, on.livePage]);
   check('the summary facts list the corrections as said → correct (changed: …), the "To improve" source, and the "What went well" rule', /their corrections in this lesson \(said → correct\): "I have learned, uh, good negotiation skill from my boss\." → "I have learned good negotiation skills from my boss\." \(changed: skills\); "I felt nice when people appreciate me\." → "I felt nice when people appreciated me\." \(changed: appreciated\); "The robots that interest me most is the dancing robot\." → "The robot that interests me most is the dancing robot\." \(changed: robot, interests\)\. The "To improve" cards come only from this list.*do not describe an error that is not in it\. A sentence in this list is never put under "What went well"/.test(on.liveFacts), on.liveFacts.split('\n').filter((l) => /corrections in this lesson/.test(l)));
 
   console.log('2  SUMMARY_SPOKEN: the summary is said aloud');
@@ -328,6 +334,11 @@ async function main() {
     const off = child('SUMMARY_MARKS');
     check('SUMMARY_MARKS off: nothing recorded, the summary cards as written (no marks, the corrected one painted under "What went well"), no list', off.t78 === null && off.robotEmphasis === null && /^painted/.test(off.wellCard ?? '') && !/corrections in this lesson/.test(off.liveFacts), [off.t78, off.robotEmphasis, off.wellCard]);
     check('SUMMARY_MARKS off: the other items unchanged', off.liveState.summaryBegunAt === 16.9 * MIN && typeof off.liveState.closeCheck?.askedAt === 'number' && off.layout.includes('Say the summary aloud'));
+  }
+  {
+    // Task 8c fix round 1 (M4): the 7w refusal itself, with the runtime's headings off (as at 57c71382).
+    const off = child('SUMMARY_HEADINGS');
+    check('SUMMARY_HEADINGS off: "I felt nice when people appreciated me." is refused under the model\'s "What went well"; the reason reaches the next turn\'s facts; the right sentence stays, no marks', /^not painted: this sentence is one of their corrections, so it goes under "To improve"/.test(off.wellCard ?? '') && off.boardProblems.some((x) => /one of their corrections/.test(x)) && /^painted/.test(off.cleanCard?.outcome ?? '') && off.cleanCard?.emphasis === null, [off.wellCard, off.boardProblems]);
   }
   {
     const off = child('SUMMARY_SPOKEN');

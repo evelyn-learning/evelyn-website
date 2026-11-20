@@ -36,7 +36,7 @@
  * session): maths and science, one-language lessons, typed lessons, homework and a discussion are unchanged.
  */
 import type Anthropic from '@anthropic-ai/sdk';
-import { TUTOR_V2_ANSWER_SIGNAL, TUTOR_V2_BOARD_LEARNER_SENTENCE, TUTOR_V2_CARD_EVERY_SENTENCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_OWED_CARD_RIGHT, TUTOR_V2_PRACTISED_SENTENCE } from '../orchestrator/flags';
+import { TUTOR_V2_ANSWER_SIGNAL, TUTOR_V2_ASK_LAST_QUESTION, TUTOR_V2_BOARD_LEARNER_SENTENCE, TUTOR_V2_CARD_EVERY_SENTENCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_OWED_CARD_RIGHT, TUTOR_V2_PRACTISED_SENTENCE } from '../orchestrator/flags';
 import { languageNameOf } from '../voice/language-request';
 import { stripBoardBlocks, type InlineBlock, type InlinePart } from './board-inline';
 import { v2IsPracticeAsk } from './languages';
@@ -44,7 +44,7 @@ import { v2IsPartAsk, v2PartInHand, v2PartViewed, v2PlanLabelled } from './part-
 import { v2PartOf } from './plan-map';
 import { v2ReplyInvites } from './close-invite';
 import { v2CorrectionWords, v2IsCorrectionOf, v2SentenceCardsOn, v2SentenceTokens as tokens } from './sentence-cards';
-import { v2SameWord } from './question-overlap';
+import { v2WordsShared } from './question-overlap';
 import type { V2Board, V2Session, V2State } from './types';
 import { v2LevelCheckOn, v2LevelCheckOver } from './working-level';
 import { v2ScoredTurn } from './pronunciation';
@@ -374,7 +374,17 @@ function askedForSentence(history: Anthropic.MessageParam[], wide: boolean = TUT
   // not for a sentence ("Yes, let's go on to the present perfect." got the card line).
   const end = sentences[sentences.length - 1] ?? '';
   if (end && (v2IsPartAsk(end) || v2ReplyInvites(end))) return false;
-  return sentences.some((x) => v2IsPracticeAsk(x) || SENTENCE_REQUEST.test(x) || (wide && SENTENCE_REQUEST_JA.test(x))) || QUESTION_ABOUT_THEM.test(sentences[sentences.length - 1] ?? '');
+  return sentences.some((x) => v2IsPracticeAsk(x) || SENTENCE_REQUEST.test(x) || (wide && SENTENCE_REQUEST_JA.test(x))) || QUESTION_ABOUT_THEM.test(v2LastQuestionOf(sentences));
+}
+/** Task 8c fix round 1 (ASK_LAST_QUESTION): the sentence the reply's ask is read from: its last sentence, or, when that is one short sentence
+ *  with no question mark (at most ASK_TAIL_WORDS words) right after a question, that question (mic test 10, embed-1795202398886 T44: "Now,
+ *  have you been with your current company for a long time? Please answer in English."). Shape only. */
+const ASK_TAIL_WORDS = 8;
+export function v2LastQuestionOf(sentences: readonly string[], enabled: boolean = TUTOR_V2_ASK_LAST_QUESTION): string {
+  const last = sentences[sentences.length - 1] ?? '';
+  const prev = sentences[sentences.length - 2];
+  if (!enabled || prev === undefined || /[?？]/.test(last) || last.split(/\s+/).filter(Boolean).length > ASK_TAIL_WORDS || !/[?？]["'”’」)]*$/.test(prev)) return last;
+  return prev;
 }
 
 /** Task 7v (ANSWER_SIGNAL): an ask to fill a gap ("Next, fill the gap in this sentence and say the whole sentence aloud.") and a question
@@ -466,20 +476,11 @@ export function v2CardIsOf(card: string, sentence: string): boolean {
   return c.filter((w) => inT.has(w)).length / c.length >= 0.5 && t.filter((w) => inC.has(w)).length / t.length >= 0.5;
 }
 
-/** Task 8c (OWED_CARD_RIGHT, CORRECTION_KEPT; mic test 10, embed-1795202398886): a card corrects this sentence of theirs: a correction of
- *  it by v2IsCorrectionOf, or one that rewrites it with stems alike (v2SameWord: "learn" / "learned", "customer" / "customers"): half
- *  the card's words in the sentence and half the sentence's words on the card, at least three words, and not their words as said
- *  (numbers as words, fillers out). WB29 "I have learned how to negotiate with customers." corrects T35 "I learn the skill for negotiate
- *  with customer." (v2IsCorrectionOf: 3 of 8 card words theirs, so false); WB25 "I worked in sales for three years." corrects T31,
- *  dropping its last clause (v2CardIsOf: false). `bothWays`: the half-each-way test only (a note's clause: v2IsCorrectionOf reads one way,
- *  and a rule's words "We use for with a length of time." would pass it). Pure. */
-export function v2CardCorrects(card: string, sentence: string, bothWays: boolean = false): boolean {
-  if (!bothWays && v2IsCorrectionOf(card, sentence)) return true;
-  const c = v2CorrectionWords(card); const t = v2CorrectionWords(sentence);
-  if (c.length < 3 || !t.length) return false;
-  if (` ${t.join(' ')} `.includes(` ${c.join(' ')} `)) return false;
-  const inOther = (xs: string[], ys: string[]) => xs.filter((w) => ys.some((y) => v2SameWord(w, y))).length / xs.length;
-  return inOther(c, t) >= 0.5 && inOther(t, c) >= 0.5;
+/** Task 8c (OWED_CARD_RIGHT, CORRECTION_KEPT; mic test 10, embed-1795202398886), fix round 1 (I1, the controller's ruling): the one
+ *  correction test: v2IsCorrectionOf (sentence-cards.ts, as at 57c71382), and never their sentence itself (v2CardIsAsSaid). WB25 "I worked
+ *  in sales for three years." corrects T31 although it drops "before that work as receptionist" (v2CardIsOf: false). Pure. */
+export function v2CardCorrects(card: string, sentence: string): boolean {
+  return v2IsCorrectionOf(card, sentence) && !v2CardIsAsSaid(card, sentence);
 }
 
 /** Task 8c (OWED_CARD_RIGHT): the card is this sentence of theirs as they said it (numbers as words, fillers, case and punctuation
@@ -489,26 +490,23 @@ export function v2CardIsAsSaid(card: string, sentence: string): boolean {
   return !!c && c === v2CorrectionWords(sentence).join(' ');
 }
 
-/** Task 8c (OWED_CARD_RIGHT): the tool result of a card of their sentence as said that this reply corrected. */
-export const V2_AS_SAID_REFUSED = 'not painted: this is their sentence as they said it, with the mistake your reply corrected; the board shows only the right sentence (the corrected card)';
-
-/** Task 8c (CORRECTION_KEPT, mic test 10 T46): the correction of this sentence of theirs a note holds: a clause of the note (split at
- *  sentence ends, colons and semicolons; quote marks and markdown stars out) that corrects it (v2CardCorrects) and starts with a
- *  capital letter, half its words in the sentence and half the sentence's words in it (stems alike), the one sharing the most words with it. WB37 "We use "have been" for experience that continues now: I "have been"
- *  with the company for a long time." holds "I have been with the company for a long time." for T45 "I am with the current company
- *  for a long time.". By the note's text and their sentence only: no phrase list. Null: none. */
-export function v2NoteCorrectionOf(note: string, sentence: string): string | null {
-  const theirs = v2CorrectionWords(sentence);
-  let best: string | null = null; let bestN = -1;
-  for (const raw of note.replace(/[*_"“”「」『』]/g, '').split(/(?<=[.!?。！？])\s+|[:;：；]\s*|\n+/)) {
-    const piece = raw.replace(/\s+/g, ' ').trim();
-    if (!/^[A-Z]/.test(piece) || !v2CardCorrects(piece, sentence, true)) continue;
-    const words = v2CorrectionWords(piece);
-    const n = words.filter((w) => theirs.includes(w)).length;
-    if (n > bestN) { best = /[.!?]$/.test(piece) ? piece : `${piece}.`; bestN = n; }
-  }
+/** Task 8c fix round 1 (I1): the one sentence of theirs this turn a card belongs to: of those it is as said, is of (v2CardIsOf) or
+ *  corrects (v2CardCorrects), the one sharing the most words with it, stems alike (question-overlap.ts v2WordsShared; the first on a tie); -1 for none. Two sentences of one turn with
+ *  a shared pattern never both claim one card. Pure. */
+export function v2CardSentence(card: string, sentences: readonly string[]): number {
+  const words = [...new Set(v2CorrectionWords(card))];
+  let best = -1; let bestN = -1;
+  sentences.forEach((s, i) => {
+    if (!v2CardIsAsSaid(card, s) && !v2CardIsOf(card, s) && !v2CardCorrects(card, s)) return;
+    // Only to choose among the sentences it already is of or corrects: words alike by stem count ("work" / "worked", "year" / "years").
+    const n = v2WordsShared([...new Set(v2CorrectionWords(s))], words);
+    if (n > bestN) { best = i; bestN = n; }
+  });
   return best;
 }
+
+/** Task 8c (OWED_CARD_RIGHT): the tool result of a card of their sentence as said, with its words marked, that this reply corrected. */
+export const V2_AS_SAID_REFUSED = 'not painted: this is their sentence as they said it, with the mistake your reply corrected; the board shows only the right sentence (the corrected card)';
 
 /** Card words beyond the learner's that a card of their sentence may add (the corrected words: "at", "a", "the"). */
 const COVER_EXTRA_MAX = 3;
@@ -531,13 +529,14 @@ export function v2BoardCardHolds(board: V2Board, sentence: string): boolean {
 /** Task 7g: the sentences of theirs that no card of the reply is of (each card counts for one sentence, the closest first), and
  *  that are not up already. Task 7m (CORRECTION_CARD_NOW): nor held, corrected, by a card on the board (v2BoardCardHolds). */
 /** Task 8c (OWED_CARD_RIGHT, `right`): a card of the reply that corrects the sentence (v2CardCorrects) carries it too, so a corrected card
- *  that drops a clause of theirs ("…before that work as receptionist") or rewrites a phrase leaves nothing owed. */
+ *  that drops a clause of theirs ("…before that work as receptionist") leaves nothing owed; fix round 1 (I1): each card carries only the
+ *  one sentence it belongs to (v2CardSentence). */
 export function v2SentencesNotCarded(sentences: readonly string[], cards: readonly string[], board: V2Board, corrected: readonly string[] = [], held: boolean = TUTOR_V2_CORRECTION_CARD_NOW, right: boolean = TUTOR_V2_OWED_CARD_RIGHT): string[] {
+  const owned = right ? new Set(cards.map((c) => v2CardSentence(c, sentences))) : null;
   const left = [...cards];
-  return sentences.filter((s) => {
-    let at = left.findIndex((c) => v2CardIsOf(c, s));
-    if (at < 0 && right) at = left.findIndex((c) => v2CardCorrects(c, s));
-    if (at >= 0) { left.splice(at, 1); return false; }
+  return sentences.filter((s, i) => {
+    if (owned) { if (owned.has(i)) return false; }
+    else { const at = left.findIndex((c) => v2CardIsOf(c, s)); if (at >= 0) { left.splice(at, 1); return false; } }
     return !v2SentenceCarded(board, s, corrected) && !(held && v2BoardCardHolds(board, s));
   });
 }
