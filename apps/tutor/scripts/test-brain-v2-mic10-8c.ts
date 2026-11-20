@@ -20,6 +20,8 @@
  *                      their right "I enjoy working with customers." is no correction
  *  4 ASK_LAST_QUESTION T44 ("…for a long time? Please answer in English.") is an ask for a sentence: T45 is a practice answer, owed a card;
  *                      the board check's corrected card scores the re-test put at T44
+ *                      fix round 4: the marked WB29 is entered among their corrected sentences; a card's emphasis given as one string
+ *                      is its marks for the pairing too
  *  each switch off alone (a child process per switch); a maths voice lesson and a typed language lesson unchanged.
  */
 import { readFileSync } from 'node:fs';
@@ -42,7 +44,7 @@ const check = (label: string, ok: boolean, detail?: unknown) => {
 };
 const usage = { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } as Anthropic.Usage;
 const msg = (content: unknown[], stop: string): Anthropic.Message => ({ id: 'm', type: 'message', role: 'assistant', model: 'x', content, stop_reason: stop, stop_sequence: null, usage } as unknown as Anthropic.Message);
-type Reply = { text: string };
+type Reply = { text: string; tools?: Array<{ name: string; input: Record<string, unknown> }> };
 /** A scripted model: the replies in order (the last repeated); every user text of every call kept (the facts, the board check). */
 function scripted(replies: Reply[]) {
   const asks: string[] = []; let i = 0;
@@ -51,6 +53,8 @@ function scripted(replies: Reply[]) {
     if (last?.role === 'user') for (const b of (Array.isArray(last.content) ? last.content : [{ type: 'text', text: last.content }]) as Array<{ type: string; text?: string }>) if (b.type === 'text' && b.text) asks.push(b.text);
     const r = replies[Math.min(i, replies.length - 1)]!; i += 1;
     onText?.(r.text);
+    // Fix round 4: a reply may carry structured tool calls (a sentence card written through the tool, its emphasis one string).
+    if (r.tools?.length) return msg([{ type: 'text', text: r.text }, ...r.tools.map((t, k) => ({ type: 'tool_use', id: `tu_${i}_${k}`, name: t.name, input: t.input }))], 'tool_use');
     return msg([{ type: 'text', text: r.text }], 'end_turn');
   };
   return { call, asks };
@@ -76,7 +80,7 @@ async function turn(session: V2Session, state: V2State, said: string | null, rep
   const calls = r.toolCalls.map((c) => ({ id: c.id, name: c.name, text: String(c.args.sentence ?? c.args.text ?? c.args.title ?? ''), style: c.args.style ?? null, gloss: c.args.gloss ?? null, emphasis: c.args.emphasis ?? null, outcome: c.outcome, before: c.before ?? null }));
   const page = r.state.board.pages[r.state.board.current];
   return { calls, asks: m.asks, check: m.asks.find((x) => x.startsWith('[board check')) ?? '', facts: m.asks.filter((x) => x.startsWith('<facts>')).join('\n'), events: (r.events ?? []).map((e) => `${e.type} ${e.message}`),
-    corrections: r.state.corrections ?? [], retests: r.state.retests ?? [], page: page ? page.items.map((it) => `${it.tool}: ${it.summary}`) : [], spoken: r.spoken };
+    corrections: r.state.corrections ?? [], corrected: r.state.correctedSentences ?? [], retests: r.state.retests ?? [], page: page ? page.items.map((it) => `${it.tool}: ${it.summary}`) : [], spoken: r.spoken };
 }
 
 // ── The session's turns (transcript indexes as in the investigation) ──
@@ -167,6 +171,8 @@ async function probe() {
   // 1 + 2: T31 → T32 and T35 → T36, the board check writing the as-said card.
   const t32 = await turn(lang, atT31(), T31, [{ text: T32 }, { text: CHECK_WB26 }, NONE], 6.6);
   const t36 = await turn(lang, atT35(), T35, [{ text: T36 }, { text: CHECK_WB30 }, NONE], 8.1);
+  // Fix round 4 (m-1): the correcting card written through the tool with its emphasis as ONE STRING: marks for the pairing too.
+  const t36s = await turn(lang, atT35(), T35, [{ text: 'スキルの話、いいですね。ただ、「learn」は「have learned」にします。', tools: [{ name: 'show_sentence', input: { sentence: WB29, emphasis: 'learned' } }] }, { text: 'もう一度、この文を言ってみてください。' }, NONE], 8.1);
   // A right sentence of theirs (T37 "I have learned how to negotiate with customers.") is carded as said.
   const t38 = await turn(lang, (() => { const s = atT35(); s.history.push(u(T35), a(T36)); s.board.pages[3]!.items.push(card('wb29', WB29)); return s; })(), 'I have learned how to negotiate with customers today at work.',
     [{ text: 'その文は正しいです。\n\n<board sentence>I have learned how to negotiate with customers today at work.</board>\n\nWhat else have you learned?' }, NONE], 8.3);
@@ -202,7 +208,7 @@ async function probe() {
   // Other lessons.
   const typed = await turn(typedLang, atT31(), T31, [{ text: T32 }, { text: CHECK_WB26 }, NONE], 6.6);
   const mathsTurn = await turn(maths, { ...newV2State(0), history: [u('x'), a('What is 3 times 4?')] }, '12', [{ text: 'Yes, 12. <board equation>3 \\times 4 = 12</board> What is 6 × 7?' }, NONE], 18.1);
-  return { t32, t36, t38, rModel, rInfl, rEnjoy, rEnjoyMarked, rTwo, owedLine, t46, pairs, sumA, sumB, sumC, sumD, sumM1, sumM3, sumI, typed: { calls: typed.calls, page: typed.page, check: typed.check }, maths: { calls: mathsTurn.calls, page: mathsTurn.page, check: mathsTurn.check } };
+  return { t32, t36, t36s, t38, rModel, rInfl, rEnjoy, rEnjoyMarked, rTwo, owedLine, t46, pairs, sumA, sumB, sumC, sumD, sumM1, sumM3, sumI, typed: { calls: typed.calls, page: typed.page, check: typed.check }, maths: { calls: mathsTurn.calls, page: mathsTurn.page, check: mathsTurn.check } };
 }
 
 type Probe = Awaited<ReturnType<typeof probe>>;
@@ -219,11 +225,13 @@ async function main() {
   check('…the check\'s WB26 (T31 as said, its words marked) not painted, with the reason; the page holds WB25 and not WB26', !painted(on.t32, WB26) && on.t32.page.includes(`show_sentence: ${WB25}`) && !on.t32.page.includes(`show_sentence: ${WB26}`), [on.t32.calls, on.t32.page]);
   check('T36 (fix round 2): WB29 painted; no owed-card line; WB30 (T35 as said, marked) not painted', painted(on.t36, WB29) && on.t36.check.length > 0 && !HAS_OWED.test(on.t36.check) && !painted(on.t36, WB30) && !on.t36.page.includes(`show_sentence: ${WB30}`), [on.t36.calls, on.t36.check.slice(-900)]);
   check('T36: scored wrong; the correction recorded with its marks; the re-test recorded', on.t36.events.some((e) => /^v2_practice_signal wrong part=present-perfect/.test(e)) && on.t36.corrections.some((c) => c.sentence === WB29 && c.stress.length > 0) && on.t36.retests.some((r) => r.right === WB29), [on.t36.events, on.t36.corrections, on.t36.retests]);
+  check('fix round 4 (I-1): T36: the marked WB29 is entered among their corrected sentences (the 4c list) for T35, as T32\'s WB25 for T31', on.t36.corrected.includes(WB29) && on.t32.corrected.includes(WB25), [on.t36.corrected, on.t32.corrected]);
+  check('fix round 4 (m-1): WB29 written through the tool with its emphasis as one string ("learned"): painted, paired as a correction (scored wrong, re-test recorded), entered among their corrected sentences', on.t36s.calls.some((c) => c.name === 'show_sentence' && c.text === WB29 && c.emphasis === 'learned' && !/^not /.test(c.outcome)) && on.t36s.events.some((e) => /^v2_practice_signal wrong part=present-perfect/.test(e)) && on.t36s.retests.some((r) => r.right === WB29) && on.t36s.corrected.includes(WB29), [on.t36s.calls, on.t36s.events, on.t36s.retests, on.t36s.corrected]);
   check('the owed line asks only for the right sentence (no "as they said it … wrong word stressed"); never their mistake', /the corrected sentence with the changed words stressed/.test(on.owedLine) && /Never their sentence with its mistake in it/.test(on.owedLine) && !/wrong word stressed/.test(on.owedLine), on.owedLine);
   check('a right sentence of theirs is still carded as said (painted)', painted(on.t38, 'I have learned how to negotiate with customers today at work.'), on.t38.calls);
   check('I1: a right sentence with a different right model card first ("I worked in marketing for five years."): carded as said, scored clean, no re-test', painted(on.rModel, RIGHT) && on.rModel.events.some((e) => /^v2_practice_signal clean/.test(e)) && !on.rModel.events.some((e) => /^v2_retest_recorded/.test(e)), [on.rModel.calls, on.rModel.events]);
   check('fix round 2: a right sentence ("I worked in marketing for five years.") next to a model card sharing an inflected word ("She works in marketing."): carded as said, clean, no re-test', painted(on.rInfl, 'I worked in marketing for five years.') && on.rInfl.events.some((e) => /^v2_practice_signal clean/.test(e)) && !on.rInfl.events.some((e) => /^v2_retest_recorded/.test(e)), [on.rInfl.calls, on.rInfl.events]);
-  check('fix round 3: their right "I enjoy working with customers." with only the UNMARKED model card "She enjoys working with clients." painted: no correction (exact words): still owed its card, not scored wrong, no re-test, nothing recorded', HAS_OWED.test(on.rEnjoy.check) && /I enjoy working with customers/.test(on.rEnjoy.check) && !on.rEnjoy.events.some((e) => /^v2_practice_signal wrong|^v2_retest_recorded/.test(e)) && on.rEnjoy.corrections.length === 0 && !v2CardCorrects('She enjoys working with clients.', ENJOY_SAID) && v2CardCorrects('She enjoys working with clients.', ENJOY_SAID, ['enjoys']), [on.rEnjoy.events, on.rEnjoy.corrections, on.rEnjoy.check.slice(-700)]);
+  check('fix round 3: their right "I enjoy working with customers." with only the UNMARKED model card "She enjoys working with clients." painted: no correction (exact words): still owed its card, not scored wrong, no re-test, nothing recorded', HAS_OWED.test(on.rEnjoy.check) && /I enjoy working with customers/.test(on.rEnjoy.check) && !on.rEnjoy.events.some((e) => /^v2_practice_signal wrong|^v2_retest_recorded/.test(e)) && on.rEnjoy.corrections.length === 0 && on.rEnjoy.corrected.length === 0 && !v2CardCorrects('She enjoys working with clients.', ENJOY_SAID) && v2CardCorrects('She enjoys working with clients.', ENJOY_SAID, ['enjoys']), [on.rEnjoy.events, on.rEnjoy.corrections, on.rEnjoy.check.slice(-700)]);
   console.log(`  · (reported, no rule) the same model card MARKED "enjoys": owed line ${HAS_OWED.test(on.rEnjoyMarked.check) ? 'sent' : 'not sent'}; events ${JSON.stringify(on.rEnjoyMarked.events)}; corrections ${JSON.stringify(on.rEnjoyMarked.corrections)}`);
   check('I1: two sentences of one turn: the card correcting the second belongs to it (v2CardSentence), so the first one\'s as-said card is painted (even marked); one right, one corrected', v2CardSentence(S2_FIX, [S1, 'I work in Osaka for three year.']) === 1 && painted(on.rTwo, S1) && painted(on.rTwo, S2_FIX) && on.rTwo.events.some((e) => /^v2_practice_signal wrong .*sentences=2 corrected=1/.test(e)), [on.rTwo.calls, on.rTwo.events]);
 
@@ -285,7 +293,7 @@ async function main() {
   }
   {
     const off = child('CORRECTION_STEMS');
-    check('CORRECTION_STEMS off: WB29 is no correction of T35 (round 1): T35 owed, WB30 painted, the turn clean', HAS_OWED.test(off.t36.check) && painted(off.t36, WB30) && !off.t36.events.some((e) => /^v2_practice_signal wrong/.test(e)) && others(off, 'CORRECTION_STEMS'), [off.t36.calls, off.t36.events]);
+    check('CORRECTION_STEMS off: WB29 is no correction of T35 (round 1): T35 owed, WB30 painted, the turn clean', HAS_OWED.test(off.t36.check) && painted(off.t36, WB30) && !off.t36.events.some((e) => /^v2_practice_signal wrong/.test(e)) && !off.t36.corrected.includes(WB29) && !off.t36s.corrected.includes(WB29) && others(off, 'CORRECTION_STEMS'), [off.t36.calls, off.t36.events, off.t36.corrected, off.t36s.corrected]);
   }
   {
     const off = child('ASK_LAST_QUESTION');

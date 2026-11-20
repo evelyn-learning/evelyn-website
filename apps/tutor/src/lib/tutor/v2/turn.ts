@@ -864,7 +864,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         if (!o.painted) { if (page && was) page.items.push(was); replaces = undefined; }
         // A card that reworks what the student just said is one of their corrected sentences (the summary's cards), also
         // when the board pointed it at a longer card or note already holding it (review 4c M3): the correction was made.
-        if ((o.painted || o.pointAt) && block.name === 'show_sentence') v2NoteCorrectedSentence(session, state, args.sentence, input.studentSaid);
+        if ((o.painted || o.pointAt) && block.name === 'show_sentence') v2NoteCorrectedSentence(session, state, args.sentence, input.studentSaid, args.emphasis);
         // Task 7w (SUMMARY_MARKS): …with what they said and the words it changed (summary-marks.ts).
         if ((o.painted || o.pointAt) && block.name === 'show_sentence') v2NoteCorrection(session, state, args.sentence, args.emphasis, input.studentSaid);
         if (!o.painted && o.pointAt && !boardOnly) { pointsAt = o.pointAt; outcome = `not painted again: ${o.detail}; the board has scrolled back to it`; }
@@ -2050,12 +2050,13 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   if (owedAfter.length) state.cardsOwed = owedAfter;
   // Task 7q: their answer counted from this reply's sentence cards (a card changing their words = one that needed a correction).
   // Not for a reply that was cut, closed the lesson or did not catch their words (the owed cards' conditions).
+  // Task 8c fix round 4 (re-review 2, m-1): a card's emphasis given as one string is its marks too, as for the owed cards above.
   const adaptEvents = [...adaptBefore.events];
   if (disarmed) adaptEvents.push(disarmed);
   if (targetSaid) adaptEvents.push(targetSaid);
   if (adaptPart && answerSentences.length && !state.closed && !input.signal?.aborted && !replyMisheard()) {
     const cards = toolCalls.filter((c) => c.name === 'show_sentence' && (!/^not /.test(c.outcome) || !!c.pointsAt) && typeof c.args.sentence === 'string')
-      .map((c) => ({ sentence: String(c.args.sentence), stress: Array.isArray(c.args.emphasis) ? (c.args.emphasis as unknown[]).filter((x): x is string => typeof x === 'string') : [] }));
+      .map((c) => ({ sentence: String(c.args.sentence), stress: (Array.isArray(c.args.emphasis) ? (c.args.emphasis as unknown[]) : typeof c.args.emphasis === 'string' ? [c.args.emphasis] : []).filter((x): x is string => typeof x === 'string') }));
     adaptEvents.push(...v2AdaptAfter(session, state, adaptPart, answerSentences, v2PracticePairs(answerSentences, cards, (adaptFlags.changed ?? TUTOR_V2_RETEST_TARGET_CHANGED) && adaptFlags.retest), adaptFlags, v2QuestionOfReply(lastTutorText)));
   }
   // Task 8a (RETEST_ASK_ONCE): the open retest whose line this turn sent is put to them when this reply carried a question.

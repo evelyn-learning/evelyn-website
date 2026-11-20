@@ -105,11 +105,12 @@ export function v2CorrectionStems(marks: unknown, enabled: boolean = TUTOR_V2_CO
   return enabled && (Array.isArray(marks) ? marks : typeof marks === 'string' ? [marks] : []).some((w) => typeof w === 'string' && !!w.trim());
 }
 
-/** After a sentence card has painted, or was pointed at an item already up that holds it: a correction of what the student just said is remembered for the summary. */
-export function v2NoteCorrectedSentence(session: V2Session, state: V2State, sentence: unknown, studentSaid: string | null | undefined): void {
+/** After a sentence card has painted, or was pointed at an item already up that holds it: a correction of what the student just said is remembered for the summary.
+ *  Task 8c fix round 4 (re-review 2, I-1): `marks`, the card's emphasis: stems alike count for a marked card (v2CorrectionStems), as for every other user of the one test. */
+export function v2NoteCorrectedSentence(session: V2Session, state: V2State, sentence: unknown, studentSaid: string | null | undefined, marks?: unknown): void {
   if (!v2SentenceCardsOn(session) || typeof sentence !== 'string') return;
   const s = sentence.replace(/\s+/g, ' ').trim().slice(0, MAX_SENTENCE_CHARS);
-  if (!v2IsCorrectionOf(s, studentSaid)) return;
+  if (!v2IsCorrectionOf(s, studentSaid, undefined, v2CorrectionStems(marks))) return;
   const key = tokens(s).join(' ');
   const kept = (state.correctedSentences ?? []).filter((x) => tokens(x).join(' ') !== key);
   state.correctedSentences = [...kept, s].slice(-V2_MAX_CORRECTED_SENTENCES);
