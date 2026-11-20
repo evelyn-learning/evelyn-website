@@ -2312,7 +2312,10 @@ export function speakCoefficientNames(text: string): string {
     .replace(/(?<![A-Za-z0-9.])(\d+)(ac|ab|a)(?![A-Za-z0-9²³])/g, (_m, d: string, ls: string) => `${d} ${[...ls].map((l) => COEFF_NAME[l]).join(' ')}`)
     .replace(/\b([bc]) and a\b/g, '$1 and ay')
     .replace(/\ba(?=,? (?:b,? )?and [bc]\b)/g, 'ay')
-    .replace(/\ba(?= (?:is|equals|=) (?:[-−]?\d|not\b|positive\b|negative\b|zero\b))/g, 'ay');
+    .replace(/\ba(?= (?:is|equals|=) (?:[-−]?\d|not\b|positive\b|negative\b|zero\b))/g, 'ay')
+    // A lone m or l is a name (line m, slope m): the voice read "lines l and m" as "l and meters" (portal-87303e9f).
+    // After a number it is still a unit ("5 m").
+    .replace(/(?<![A-Za-z0-9'’\-])(?<!\d\s)([ml])(?![A-Za-z0-9'’²³\-])/g, (_m, l: string) => (l === 'm' ? 'em' : 'el'));
 }
 
 /** In a science lesson "O=O" is a double bond between two atoms, and the voice reads it "O equals O"

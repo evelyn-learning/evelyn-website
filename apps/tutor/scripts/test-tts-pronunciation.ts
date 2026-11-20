@@ -1574,6 +1574,7 @@ console.log('OK — tts-pronunciation rewrites validated');
   for (const keep of ['the genre and the acre', 'they are more sure here', 'a fiber and a meter', 'mitre']) assert.equal(speakReEndings(keep), keep);
   assert.equal(speakCoefficientNames('using the b and a from y = ax² + bx + c, over (2a) or 4ac; here a is 1'), 'using the b and ay from y = ay x² + bee x + c, over (2 ay) or 4 ay see; here ay is 1');
   for (const keep of ['Take a box and a ball; a is the first letter.', 'Divide by x, then relax and fix the tax.', '2x + 3y = 12']) assert.equal(speakCoefficientNames(keep), keep);
+  assert.equal(speakCoefficientNames('Lines l and m are parallel; the rope is 5 m long, I\'m sure, and m is the slope.'), 'Lines el and em are parallel; the rope is 5 m long, I\'m sure, and em is the slope.');
   // A unit over seconds is "per second" and one letter over another is "over" (AP Physics 1, embed-1794441323503).
   assert.match(rewriteForTTS(speakSlashes('Yes, ω is 8 rad/s, and L is 8 kg·m²/s.')), /8 radians per second, .*squared per second/);
   assert.equal(speakSlashes('the same rate ω = v/r, so use F/m'), 'the same rate ω = v over r, so use F over m');

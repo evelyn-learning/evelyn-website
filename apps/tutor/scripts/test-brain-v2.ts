@@ -46,6 +46,7 @@ import { mentionsTool, stripToolTalk } from '../src/lib/tutor/v2/tool-talk';
 import { isOwnVoice } from '../src/lib/tutor/v2/own-voice';
 import { ROOM_NOISY_AFTER, afterWords, partialIsConfirmed, partialIsJudged, plainlyTheStudent, repliedBackground, roomCheckMessage, roomVoicesFact, sameWords, studentPart, studentWordsIn, waitsForCheck } from '../src/lib/tutor/v2/room-voices';
 import { foldInterruptedTurn, trimToSpoken, V2_CUT_MARK } from '../src/lib/tutor/v2/interrupted';
+import { SEED_DSAT_U1_LINEAR_INEQUALITIES } from '../src/lib/tutor/lesson-plan/seeds/dsat-u1-linear-inequalities';
 import { brainVersionOverrides, resolvePartnerSessionOptions, v2CanRunSession } from '../src/lib/tutor/portal/partner-session-options';
 
 let passed = 0; let failed = 0;
@@ -853,6 +854,25 @@ async function main() {
   { const hyp = drawFigure('geometry_figure', { shape: 'triangle', sides: [5, 4, 3], vertices: ['O', 'Q', 'P'], sideLabels: ['distance = 5 (hypotenuse)', '4 (up)', '3 (across)'], angleLabels: [null, null, 'right angle'] });
     check('a figure whose label is too long is drawn with the label shortened', 'svg' in hyp && /distance = 5/.test(hyp.svg) && !/hypotenuse\)/.test(hyp.svg), JSON.stringify(hyp).slice(0, 200)); }
   check('a first reading of "another voice" is confirmed on more words', !partialIsConfirmed('So the center here would') && partialIsConfirmed('So the center here would be negative 3 comma 1 and'));
+  // portal-87303e9f (ACT Math, plane geometry).
+  {
+    const sessP = { ...s13, plan: SEED_DSAT_U1_LINEAR_INEQUALITIES } as never;
+    const p1 = await runV2Turn({ session: sessP, state: { ...newV2State(1_000_000), board: { pages: [{ title: 'Page 1', items: [] }, { title: 'One-variable inequalities', items: [] }], current: 1 }, history: [{ role: 'user', content: 'hi' }, { role: 'assistant', content: 'Ready?' }] }, studentSaid: 'yes', nowMs: 1_060_000, callModel: sayR('Here is one.\n\n<board problem>Solve for x: −6x + 5 > 41</board>\n\nTry it.'), boardPass: false });
+    const p2 = await runV2Turn({ session: sessP, state: structuredClone(p1.state), studentSaid: 'x is less than minus 6', nowMs: 1_120_000, callModel: sayR('Yes, x < −6.\n\n<board note style="highlight">Systems of inequalities: a point must pass every one.</board>\n\n<board problem>Which of the following points is a solution to the system y ≤ x + 2 and y > 3x − 4? (2, 5), (0, −5), (1, 3), (3, 1)</board>\n\nWhich point works?'), boardPass: false });
+    check('a problem from the next part of the plan does not go up under the last part\'s problem: the part is offered first', !p2.toolCalls.some((c) => c.name === 'show_problem' && /^painted/.test(c.outcome)) && /Next is systems of inequalities\. Shall we go on/.test(p2.spoken) && p2.state.board.pages.length === 2, [p2.spoken, p2.toolCalls.map((c) => `${c.name}: ${c.outcome}`)]);
+    const p3 = await runV2Turn({ session: sessP, state: structuredClone(p1.state), studentSaid: 'x is less than minus 6', nowMs: 1_120_000, callModel: sayR('Yes, x < −6. One more of the same kind.\n\n<board problem>Solve for x: 7 − 2x ≥ 15</board>\n\nTry it.'), boardPass: false });
+    check('a second problem of the tutor\'s own on the same page is left where it is', p3.toolCalls.some((c) => c.name === 'show_problem' && /^painted/.test(c.outcome)) && !p3.toolCalls.some((c) => c.name === 'new_page'), p3.toolCalls.map((c) => `${c.name}: ${c.outcome}`));
+  }
+  {
+    const stF = { ...newV2State(0), history: [{ role: 'user', content: '120' }, { role: 'assistant', content: 'Yes, 120°. Next is parallel lines cut by a transversal, where one pairing of angles is a common trap. Shall we go on?' }] } as never;
+    check('told that the student agreed to the part just named, so it is not announced again', /named what comes next \("Next is parallel lines[^)]*\) and the student has answered/.test(renderFacts(s13, stF, { nowMs: 60000, heard: 'Uh, yes.' })) && !/named what comes next/.test(renderFacts(s13, stF, { nowMs: 60000, heard: 'Actually can we go back to the circle one because I did not get the sector' })));
+    const circ = drawFigure('geometry_figure', { shape: 'circle', radius: 12, points: [{ name: 'O', at: 0 }, { name: 'P', at: 0 }, { name: 'Q', at: 90 }], angles: [{ vertex: 'center', from: 'P', to: 'Q', label: '90°' }] });
+    check('a circle\'s centre is not also a point on its rim, and an angle at the centre brings its radii', 'svg' in circ && (circ.svg.match(/>O</g) ?? []).length === 1 && (circ.svg.match(/<path d="M[^"]*L[^"]*"/g) ?? []).length >= 2, JSON.stringify(circ).slice(0, 300));
+    const ext = drawFigure('geometry_figure', { shape: 'triangle', asa: [50, 10, 70], vertices: ['A', 'B', 'C'], angleLabels: ['50°', '70°', null], exterior: { at: 2, label: '?' } });
+    check('a triangle can show the exterior angle at a vertex', 'svg' in ext && /stroke-dasharray="5 3"/.test(ext.svg) && />\?</.test(ext.svg), JSON.stringify(ext).slice(0, 200));
+    const folded = foldInterruptedTurn(newV2State(0), 'uh so yeah', 'Yes, 36π.', [{ id: 'q1', name: 'show_problem', args: { statement: 'A circle has a diameter of 18. Find its area.' }, outcome: 'not painted: the student spoke before you reached it, so it never went up' }] as never);
+    check('a board item dropped before it was shown is not in the tutor\'s record of the board, and its result says so', folded.board.pages.every((pg) => pg.items.length === 0) && JSON.stringify(folded.history).includes('never went up'), JSON.stringify(folded.board));
+  }
   const triBlank = drawFigure('geometry_figure', { shape: 'triangle', sides: [3, 4, 5], sideLabels: ['a', 'b', 'c'], angleLabels: ['', '', '90°'] });
   check('an empty label on a triangle is no label, not a refusal (demo check 11-13)', 'svg' in triBlank, JSON.stringify(triBlank).slice(0, 200));
   const cellNamed = drawFigure('cell', { cellType: 'plant', organelles: ['nucleus', 'chloroplasts', 'vacuole', 'cell wall', 'mitochondria', 'lysosome'] });

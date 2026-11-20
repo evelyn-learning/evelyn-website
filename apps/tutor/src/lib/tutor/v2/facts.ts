@@ -10,6 +10,8 @@ import { v2HomeworkFacts, v2HomeworkGuardFacts, v2SheetFacts } from './homework-
 import { renderGoalStatus } from './plan-map';
 import type { V2Session, V2State } from './types';
 import { roomVoicesFact } from './room-voices';
+import { leftOpen } from './part-close';
+import { stripBoardBlocks } from './board-inline';
 import { discussionOf, effectiveMinutes, lastReplyNotes, reflectAsked, reflectAtMinutes, renderThinking, stagePace, untoldCases } from './discussion';
 
 /** After the tutor chose to keep listening: how long the student stays silent before it is told so (TutorVoiceV2).
@@ -94,6 +96,15 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     lines.push(`gaps you have recorded:\n${state.gaps.map((g) => `  - ${g.what}: ${label[g.status] ?? g.status}`).join('\n')}`);
   }
   if (f.roomVoices && session.mode === 'voice') lines.push(roomVoicesFact(f.roomVoices));
+  // The student has said yes to what the last reply named as coming next. Told nothing, the tutor named it again in
+  // the same words: "Next is parallel lines cut by a transversal, where…", "Uh, yes", "Next is parallel lines cut by a
+  // transversal, the line that…" (ACT Math, portal-87303e9f: "sounding a little robotic").
+  if (!discussion && f.heard && f.heard.trim().split(/\s+/).length <= 6) {
+    const last = [...state.history].reverse().find((m) => m.role === 'assistant');
+    const lastText = !last ? '' : typeof last.content === 'string' ? last.content : last.content.map((c) => (c.type === 'text' ? c.text : '')).join(' ');
+    const named = stripBoardBlocks(lastText).split(/(?<=[.?!])\s+/).slice(-3).find((x) => /\bnext (?:is|are|up|comes?)\b/i.test(x));
+    if (named && leftOpen(lastText, f.heard)) lines.push(`your last reply named what comes next ("${named.trim().slice(0, 160)}") and the student has answered. If they agreed, they have heard it named: start on it directly, without announcing it again`);
+  }
   if (f.answerCheck) lines.push(`answer check: ${f.answerCheck}`);
   if (f.notSent) lines.push(`your first draft of this reply was not sent (the student never saw it: do not mention it): ${f.notSent}`);
   // A turn the tutor takes only to speak of the other voices is not a silence of the student's.

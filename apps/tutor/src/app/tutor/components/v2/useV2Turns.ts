@@ -80,6 +80,8 @@ export interface V2TurnsConfig {
   onCut?: () => void;
   /** The voice client's record of what was actually played of the reply being cut short, or null if it has none. */
   heardSoFar?: () => string | null;
+  /** Ids of board items of the reply in hand that were dropped before the student saw them (the voice client). */
+  notShown?: () => Set<string>;
   /** Voice: how many times other voices in the room were left out, while the student is still to be told of it
    *  (room-voices.ts). Asked as each turn is sent. */
   roomVoices?: () => number | undefined;
@@ -369,7 +371,11 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         // second later over the reply: the first half was lost, and "right?" was read as the answer to an earlier
         // "write the inequality" ("I didn't catch the inequality you wrote", Digital SAT, portal-b0efc3c2).
         if (studentSaid && !reached.trim() && settled.length === 0 && pendingRef.current) { unansweredRef.current = studentSaid; p.current.onDebugEvent?.('v2_unanswered_carried', studentSaid.slice(0, 80)); }
-        stateRef.current = foldInterruptedTurn(stateRef.current, studentSaid ?? (stateRef.current.history.length === 0 ? '[The session has just started. The student has joined and is waiting for you to begin the lesson.]' : '[The student has not replied.]'), reached, settled);
+        // An item dropped before it was shown is not on the board, and the tutor is told so: recorded as painted, a
+        // problem the student never saw was "the one on the board" in the next reply (ACT Math, portal-87303e9f).
+        const hidden = p.current.notShown?.() ?? new Set<string>();
+        const asSeen = settled.map((c) => (hidden.has(c.id) ? { ...c, outcome: 'not painted: the student spoke before you reached it, so it never went up' } : c));
+        stateRef.current = foldInterruptedTurn(stateRef.current, studentSaid ?? (stateRef.current.history.length === 0 ? '[The session has just started. The student has joined and is waiting for you to begin the lesson.]' : '[The student has not replied.]'), reached, asSeen);
         p.current.onDebugEvent?.('v2_turn_cut', `${text.trim().split(/\s+/).filter(Boolean).length} words kept, ${settled.length} tool call(s)`);
         if (text.trim()) setTutor(text.trim(), false);
       } else {

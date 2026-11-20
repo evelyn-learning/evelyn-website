@@ -283,7 +283,7 @@ export function cellParams(p: Record<string, unknown>): Record<string, unknown> 
 }
 
 const ENGINE: Record<string, { type: string; draw: (r: Reader, uid: string) => Drawn; prep?: (p: Record<string, unknown>) => Record<string, unknown> }> = {
-  geometry_figure: { type: 'geometric_figure', draw: (r, uid) => renderGeometry(r, uid) },
+  geometry_figure: { type: 'geometric_figure', draw: (r, uid) => renderGeometry(r, uid), prep: geometryParams },
   cladogram: { type: 'phylogenetic_tree', draw: (r) => renderPhyloTree(r) },
   energy_levels: { type: 'energy_levels', draw: (r, uid) => renderEnergyLevels(r, uid) },
   spectrum: { type: 'spectrum', draw: (r) => renderSpectrum(r) },
@@ -296,6 +296,21 @@ const ENGINE: Record<string, { type: string; draw: (r: Reader, uid: string) => D
 
 const FIGURES: Record<string, (p: Record<string, unknown>) => DrawnFigure> = { refraction, apparent_depth: apparentDepth, particles, buoyancy, pipe_flow: pipeFlow, moon_orbit: moonOrbit };
 export const DRAWN_FIGURE_KINDS = [...Object.keys(FIGURES), ...Object.keys(ENGINE)];
+
+/** A circle as a tutor writes it. The centre is the engine's own point: listed among the points on the circle as
+ *  "O", it was drawn on the rim beside P with a second O at the centre, and a central angle came with no radii to
+ *  bound it, an arc floating at the centre of an empty circle (ACT Math, portal-87303e9f). The centre is taken out
+ *  of the points, and an angle at the centre brings its two radii, and the sector between them when one is asked for. */
+function geometryParams(p: Record<string, unknown>): Record<string, unknown> {
+  if (p.shape !== 'circle') return p;
+  const centre = typeof p.center === 'string' && p.center.trim() ? p.center.trim() : 'O';
+  const obj = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is Record<string, unknown> => !!x && typeof x === 'object') : []);
+  const angles = obj(p.angles).map((a) => (a.vertex === centre ? { ...a, vertex: 'center' } : a));
+  const points = obj(p.points).filter((q) => q.name !== centre);
+  const radii = obj(p.radii).filter((x) => x.to !== centre);
+  for (const a of angles) if (a.vertex === 'center') for (const end of [a.from, a.to]) if (typeof end === 'string' && !radii.some((x) => x.to === end)) radii.push({ to: end });
+  return { ...p, ...(p.points !== undefined ? { points } : {}), ...(angles.length ? { angles } : {}), ...(radii.length ? { radii } : {}) };
+}
 
 /** The longest label the figure engine takes on a side or an angle (practice-figure/spec.ts). */
 const LABEL_FITS = 18;
