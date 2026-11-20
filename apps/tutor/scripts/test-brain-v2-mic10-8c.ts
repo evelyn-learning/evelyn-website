@@ -16,6 +16,8 @@
  *                      under "To improve" with their marks, other cards under "What went well" (above "To improve" when it came
  *                      first), rule notes above, the Japanese line on each heading for a beginner, a model-written heading not doubled;
  *                      a heading known only by its wording (M1); a card corrected this very turn under "To improve" (M3)
+ *                      fix round 3: stems alike only for a marked card: an unmarked model card "She enjoys working with clients." beside
+ *                      their right "I enjoy working with customers." is no correction
  *  4 ASK_LAST_QUESTION T44 ("…for a long time? Please answer in English.") is an ask for a sentence: T45 is a practice answer, owed a card;
  *                      the board check's corrected card scores the re-test put at T44
  *  each switch off alone (a child process per switch); a maths voice lesson and a typed language lesson unchanged.
@@ -122,6 +124,7 @@ const atT45 = () => base({ board: { pages: structuredClone(PS_PAGES), current: 4
 
 // ── Fix round 1 (I1) pins ──
 const RIGHT = 'I worked in sales for three years.';
+const ENJOY_SAID = 'I enjoy working with customers.';
 const MODEL = 'I worked in marketing for five years.';
 /** A right sentence of theirs; the reply writes another model sentence first, then their sentence as said (no marks). */
 const R_MODEL = `That's right. Another example: ${sc0(MODEL)} And yours: ${sc0(RIGHT)} What did you do before that?`;
@@ -169,6 +172,11 @@ async function probe() {
     [{ text: 'その文は正しいです。\n\n<board sentence>I have learned how to negotiate with customers today at work.</board>\n\nWhat else have you learned?' }, NONE], 8.3);
   // I1 pins: a right sentence beside another model card; two sentences of one turn.
   const rModel = await turn(lang, atT31(), RIGHT, [{ text: R_MODEL }, NONE], 6.6);
+  // Fix round 3 (ruling): stems only for a marked card. A right answer with only an unmarked model card painted: not a correction.
+  const ENJOY = 'I enjoy working with customers.';
+  const rEnjoy = await turn(lang, atT31(), ENJOY, [{ text: `Nice. ${sc0('She enjoys working with clients.')} What else do you enjoy?` }, NONE], 6.6);
+  // …the same model card with marks (reported, no rule for it).
+  const rEnjoyMarked = await turn(lang, atT31(), ENJOY, [{ text: `Nice. ${sc0('She enjoys working with clients.', 'enjoys')} What else do you enjoy?` }, NONE], 6.6);
   // Fix round 2: a right sentence of theirs next to a tutor model card that shares an inflected word ("She works in marketing.").
   const rInfl = await turn(lang, atT31(), 'I worked in marketing for five years.', [{ text: `That's right. ${sc0('She works in marketing.')} And yours: ${sc0('I worked in marketing for five years.')} What did you do before that?` }, NONE], 6.6);
   const rTwo = await turn(lang, atT31(), TWO_SAID, [{ text: R_TWO }, NONE], 6.6);
@@ -194,7 +202,7 @@ async function probe() {
   // Other lessons.
   const typed = await turn(typedLang, atT31(), T31, [{ text: T32 }, { text: CHECK_WB26 }, NONE], 6.6);
   const mathsTurn = await turn(maths, { ...newV2State(0), history: [u('x'), a('What is 3 times 4?')] }, '12', [{ text: 'Yes, 12. <board equation>3 \\times 4 = 12</board> What is 6 × 7?' }, NONE], 18.1);
-  return { t32, t36, t38, rModel, rInfl, rTwo, owedLine, t46, pairs, sumA, sumB, sumC, sumD, sumM1, sumM3, sumI, typed: { calls: typed.calls, page: typed.page, check: typed.check }, maths: { calls: mathsTurn.calls, page: mathsTurn.page, check: mathsTurn.check } };
+  return { t32, t36, t38, rModel, rInfl, rEnjoy, rEnjoyMarked, rTwo, owedLine, t46, pairs, sumA, sumB, sumC, sumD, sumM1, sumM3, sumI, typed: { calls: typed.calls, page: typed.page, check: typed.check }, maths: { calls: mathsTurn.calls, page: mathsTurn.page, check: mathsTurn.check } };
 }
 
 type Probe = Awaited<ReturnType<typeof probe>>;
@@ -206,7 +214,7 @@ async function main() {
   if (CHILD) { console.log(`OFF_JSON ${JSON.stringify(on)}`); return; }
 
   console.log('1  OWED_CARD_RIGHT: never their wrong sentence as a card');
-  check('the one correction test: WB25 corrects T31 (v2CardIsOf did not: it drops "before that work as receptionist"); fix round 2: WB29 corrects T35 (learned / learn, customers / customer count as shared: 5 of 8); their words as said never', v2CardCorrects(WB25, T31) && !v2CardIsOf(WB25, T31) && v2CardCorrects(WB29, T35) && !v2CardCorrects(WB26, T31) && !v2CardCorrects(WB30, T35));
+  check('the one correction test: WB25 corrects T31 (v2CardIsOf did not: it drops "before that work as receptionist"); fix round 2/3: WB29, marked, corrects T35 (learned / learn, customers / customer count as shared: 5 of 8; unmarked, exact words: 3 of 8, no); their words as said never', v2CardCorrects(WB25, T31) && !v2CardIsOf(WB25, T31) && v2CardCorrects(WB29, T35, ['have', 'learned', 'to', 'negotiate']) && !v2CardCorrects(WB29, T35) && !v2CardCorrects(WB26, T31) && !v2CardCorrects(WB30, T35));
   check('T32: the corrected card WB25 painted inline; the board check ran with no owed-card line', painted(on.t32, WB25) && on.t32.check.length > 0 && !HAS_OWED.test(on.t32.check), on.t32.check.slice(-1500));
   check('…the check\'s WB26 (T31 as said, its words marked) not painted, with the reason; the page holds WB25 and not WB26', !painted(on.t32, WB26) && on.t32.page.includes(`show_sentence: ${WB25}`) && !on.t32.page.includes(`show_sentence: ${WB26}`), [on.t32.calls, on.t32.page]);
   check('T36 (fix round 2): WB29 painted; no owed-card line; WB30 (T35 as said, marked) not painted', painted(on.t36, WB29) && on.t36.check.length > 0 && !HAS_OWED.test(on.t36.check) && !painted(on.t36, WB30) && !on.t36.page.includes(`show_sentence: ${WB30}`), [on.t36.calls, on.t36.check.slice(-900)]);
@@ -215,6 +223,8 @@ async function main() {
   check('a right sentence of theirs is still carded as said (painted)', painted(on.t38, 'I have learned how to negotiate with customers today at work.'), on.t38.calls);
   check('I1: a right sentence with a different right model card first ("I worked in marketing for five years."): carded as said, scored clean, no re-test', painted(on.rModel, RIGHT) && on.rModel.events.some((e) => /^v2_practice_signal clean/.test(e)) && !on.rModel.events.some((e) => /^v2_retest_recorded/.test(e)), [on.rModel.calls, on.rModel.events]);
   check('fix round 2: a right sentence ("I worked in marketing for five years.") next to a model card sharing an inflected word ("She works in marketing."): carded as said, clean, no re-test', painted(on.rInfl, 'I worked in marketing for five years.') && on.rInfl.events.some((e) => /^v2_practice_signal clean/.test(e)) && !on.rInfl.events.some((e) => /^v2_retest_recorded/.test(e)), [on.rInfl.calls, on.rInfl.events]);
+  check('fix round 3: their right "I enjoy working with customers." with only the UNMARKED model card "She enjoys working with clients." painted: no correction (exact words): still owed its card, not scored wrong, no re-test, nothing recorded', HAS_OWED.test(on.rEnjoy.check) && /I enjoy working with customers/.test(on.rEnjoy.check) && !on.rEnjoy.events.some((e) => /^v2_practice_signal wrong|^v2_retest_recorded/.test(e)) && on.rEnjoy.corrections.length === 0 && !v2CardCorrects('She enjoys working with clients.', ENJOY_SAID) && v2CardCorrects('She enjoys working with clients.', ENJOY_SAID, ['enjoys']), [on.rEnjoy.events, on.rEnjoy.corrections, on.rEnjoy.check.slice(-700)]);
+  console.log(`  · (reported, no rule) the same model card MARKED "enjoys": owed line ${HAS_OWED.test(on.rEnjoyMarked.check) ? 'sent' : 'not sent'}; events ${JSON.stringify(on.rEnjoyMarked.events)}; corrections ${JSON.stringify(on.rEnjoyMarked.corrections)}`);
   check('I1: two sentences of one turn: the card correcting the second belongs to it (v2CardSentence), so the first one\'s as-said card is painted (even marked); one right, one corrected', v2CardSentence(S2_FIX, [S1, 'I work in Osaka for three year.']) === 1 && painted(on.rTwo, S1) && painted(on.rTwo, S2_FIX) && on.rTwo.events.some((e) => /^v2_practice_signal wrong .*sentences=2 corrected=1/.test(e)), [on.rTwo.calls, on.rTwo.events]);
 
   console.log('2  CORRECTION_KEPT: a correction is kept');

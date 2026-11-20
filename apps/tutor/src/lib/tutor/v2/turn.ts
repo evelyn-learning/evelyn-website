@@ -42,7 +42,7 @@ import { v2ReadsByClauses } from './language-pack';
 import { v2AsksRepeat, v2AsksTheLearner, v2HandsOver, v2ReplyAsks, v2ReplyHandsOver, v2ReplySentences } from './one-question';
 import { V2_LEVEL_WAIT, V2_LEVEL_WAIT_OVER, V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2MarkLevelKnownParts, v2ReopenLevelCheck, v2WorkingLevelSection } from './working-level';
 import { V2_PRACTISE_PRONUNCIATION_TOOL, v2ArmClosesOnOtherAsk, v2ApplyPractisePronunciation, v2ConsumePronunciation, v2PronunciationOn, v2PronunciationSection, v2ScoredTurn } from './pronunciation';
-import { v2IsCorrectionOf, v2NoteCorrectedSentence, v2SentenceCardsOn, v2SentenceCardsSection } from './sentence-cards';
+import { v2CorrectionStems, v2IsCorrectionOf, v2NoteCorrectedSentence, v2SentenceCardsOn, v2SentenceCardsSection } from './sentence-cards';
 import { V2_SUMMARY_CARDS_FULL, v2SummaryCardsFull, v2SummaryGroupsOn } from './summary-layout';
 import { v2NoteCorrection, v2SummaryCardCheck } from './summary-marks';
 import { v2SummaryOpensCloseOn } from './summary-close';
@@ -678,7 +678,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const k = marked ? learnerNow.findIndex((x) => v2CardIsAsSaid(card, x)) : -1;
     if (k < 0) return false;
     return toolCalls.some((c) => (!/^not /.test(c.outcome) || !!c.pointsAt) && c.name === 'show_sentence' && typeof c.args.sentence === 'string'
-      && v2CardCorrects(String(c.args.sentence), learnerNow[k]!) && v2CardSentence(String(c.args.sentence), learnerNow) === k);
+      && v2CardCorrects(String(c.args.sentence), learnerNow[k]!, c.args.emphasis) && v2CardSentence(String(c.args.sentence), learnerNow, c.args.emphasis) === k);
   };
   const usage: V2TurnResult['usage'] = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0 };
   const t0 = Date.now();
@@ -830,7 +830,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       const asSaidWrong = block.name === 'show_sentence' && !guarded && TUTOR_V2_OWED_CARD_RIGHT && typeof args.sentence === 'string' ? v2AsSaidCorrected(String(args.sentence), (Array.isArray(args.emphasis) ? args.emphasis : typeof args.emphasis === 'string' ? [args.emphasis] : []).some((w) => typeof w === 'string' && !!w.trim())) : false;
       // Task 8c (SUMMARY_HEADINGS): on the Summary page of a grouped lesson, the card's group heading, written by the runtime right before
       // it when the page has none (summary-headings.ts); the 7w guard below reads it as this reply's heading.
-      const headingPlan = block.name === 'show_sentence' && !guarded && !asSaidWrong ? v2SummaryHeadingPlan(session, state, args.sentence, toolCalls, cardGloss && v2GlossLevelOn(session, state, input.studentSaid), input.studentSaid) : null;
+      const headingPlan = block.name === 'show_sentence' && !guarded && !asSaidWrong ? v2SummaryHeadingPlan(session, state, args.sentence, toolCalls, cardGloss && v2GlossLevelOn(session, state, input.studentSaid), input.studentSaid, args.emphasis) : null;
       const headingRepeat = !guarded ? v2SummaryHeadingRepeat(session, state, block.name, args, toolCalls) : null;
       let heading: V2ToolCall | null = null;
       // The 7w guard reads the last heading before the card; with the runtime's headings placed by group, the order on the page (not the
@@ -1570,11 +1570,11 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const t = stripBoardBlocks(spoken.join(' '));
     if (!V2_REPLY_MISHEARD.test(t)) return false;
     if (!TUTOR_V2_REPEAT_NOT_MISHEARD || !v2AdaptOn(session) || !v2AsksRepeat(v2ReplySentences(t).pop() ?? '')) return true;
-    return !toolCalls.some((c) => c.name === 'show_sentence' && (!/^not /.test(c.outcome) || !!c.pointsAt) && typeof c.args.sentence === 'string' && answerSentences.some((s) => v2IsCorrectionOf(String(c.args.sentence), s)));
+    return !toolCalls.some((c) => c.name === 'show_sentence' && (!/^not /.test(c.outcome) || !!c.pointsAt) && typeof c.args.sentence === 'string' && answerSentences.some((s) => v2IsCorrectionOf(String(c.args.sentence), s, undefined, v2CorrectionStems(c.args.emphasis))));
   };
   const owedCards = () => {
     if (!answerSentences.length || state.closed || input.signal?.aborted || replyMisheard()) return [];
-    const cards = toolCalls.filter((c) => c.name === 'show_sentence' && (!/^not /.test(c.outcome) || !!c.pointsAt) && typeof c.args.sentence === 'string').map((c) => String(c.args.sentence));
+    const cards = toolCalls.filter((c) => c.name === 'show_sentence' && (!/^not /.test(c.outcome) || !!c.pointsAt) && typeof c.args.sentence === 'string').map((c) => ({ sentence: String(c.args.sentence), stress: (Array.isArray(c.args.emphasis) ? c.args.emphasis : typeof c.args.emphasis === 'string' ? [c.args.emphasis] : []).filter((x): x is string => typeof x === 'string') }));
     return v2SentencesNotCarded(answerSentences, cards, state.board, state.correctedSentences ?? []);
   };
   const owedBefore = TUTOR_V2_CORRECTION_CARD_NOW ? owedCards() : [];

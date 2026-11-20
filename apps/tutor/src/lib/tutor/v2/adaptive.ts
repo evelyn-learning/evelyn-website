@@ -30,7 +30,7 @@ import { v2NoteTargetsOn } from './note-targets';
 import { v2PartInHand, v2PartViewed, v2PlanLabelled, v2TutorReplies } from './part-flow';
 import { v2FreeConversationPart, v2PartOf } from './plan-map';
 import { v2CjkOverlap, v2ContentWords, v2NormalQuestion, v2WordsShared } from './question-overlap';
-import { v2CorrectionWords, v2IsCorrectionOf } from './sentence-cards';
+import { v2CorrectionStems, v2CorrectionWords, v2IsCorrectionOf } from './sentence-cards';
 import { v2PartClock, v2PracticePart } from './time-fit';
 import type { V2Retest, V2Session, V2State, V2Support, V2SupportStep, V2TurnEvent } from './types';
 
@@ -341,18 +341,20 @@ export interface V2PracticePair { said: string; card: string; corrected: boolean
  *  never turns a corrected answer into `clean`, and a right sentence carded as said stays clean beside a tutor's other model card. */
 export function v2PracticePairs(sentences: readonly string[], cards: ReadonlyArray<{ sentence: string; stress: readonly string[] }>, changed: boolean = TUTOR_V2_RETEST_TARGET_CHANGED && TUTOR_V2_RETEST_MISTAKE, kept: boolean = TUTOR_V2_CORRECTION_KEPT): V2PracticePair[] {
   const left = [...cards]; const out: V2PracticePair[] = [];
-  const rank = (c: { sentence: string; stress: readonly string[] }, s: string) => (v2IsCorrectionOf(c.sentence, s) ? 1 : c.stress.length ? 2 : 0);
+  // Fix round 3: stems alike count only for a marked card (sentence-cards.ts v2CorrectionStems).
+  const corrects = (c: { sentence: string; stress: readonly string[] }, s: string) => v2IsCorrectionOf(c.sentence, s, undefined, v2CorrectionStems(c.stress));
+  const rank = (c: { sentence: string; stress: readonly string[] }, s: string) => (corrects(c, s) ? 1 : c.stress.length ? 2 : 0);
   for (const s of sentences) {
     let at = -1;
     if (kept) {
       const k = sentences.indexOf(s);
-      const mine = left.map((c, i) => ({ c, i })).filter(({ c }) => v2CardSentence(c.sentence, sentences) === k);
+      const mine = left.map((c, i) => ({ c, i })).filter(({ c }) => v2CardSentence(c.sentence, sentences, c.stress) === k);
       mine.sort((x, y) => rank(x.c, s) - rank(y.c, s) || x.i - y.i);
       at = mine[0]?.i ?? -1;
     } else at = left.findIndex((c) => v2CardIsOf(c.sentence, s));
     if (at < 0) continue;
     const c = left.splice(at, 1)[0]!;
-    const corrected = v2IsCorrectionOf(c.sentence, s);
+    const corrected = kept ? corrects(c, s) : v2IsCorrectionOf(c.sentence, s);
     // Task 7v (RETEST_TARGET_CHANGED): the words the correction changed, with one neighbour each.
     if (changed && corrected) { const t = v2ChangedTarget(s, c.sentence, c.stress); if (t.length) { out.push({ said: s.slice(0, MAX_CHARS), card: c.sentence.slice(0, MAX_CHARS), corrected, stress: t }); continue; } }
     let stress = corrected ? v2RetestTarget(c.stress) : [];

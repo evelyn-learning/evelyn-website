@@ -18,28 +18,14 @@
  */
 import { TUTOR_V2_CORRECTIONS_ALL_GUARDED, TUTOR_V2_SUMMARY_HEADINGS } from '../orchestrator/flags';
 import { V2_CLOSING_PAGE } from './part-close';
-import { v2IsCorrectionOf } from './sentence-cards';
+import { v2CorrectionStems, v2IsCorrectionOf } from './sentence-cards';
 import { v2CorrectionFor, v2OlderCorrection } from './summary-marks';
-import { v2SummaryGroupsOn } from './summary-layout';
+import { V2_SUMMARY_HEADING_GLOSS as HEADING_GLOSS, V2_SUMMARY_IMPROVE_HEADING, V2_SUMMARY_WELL_HEADING, v2SummaryGroupsOn, v2SummaryHeadingGroup, type V2SummaryHeadingGroup } from './summary-layout';
+export { V2_SUMMARY_IMPROVE_HEADING, V2_SUMMARY_WELL_HEADING } from './summary-layout';
 import type { V2Session, V2State, V2ToolCall } from './types';
 
-/** The headings' words, as the 7u layout line gives them. */
-export const V2_SUMMARY_WELL_HEADING = 'What went well';
-export const V2_SUMMARY_IMPROVE_HEADING = 'To improve';
-/** The learner-language line under each heading, by the learner's language (the second teaching language). A language with none here
- *  gets the heading with no line. */
-const HEADING_GLOSS: Record<string, { well: string; improve: string }> = {
-  ja: { well: '良かったところ', improve: 'これから直すところ' },
-};
-type Group = 'well' | 'improve';
-/** Fix round 1 (M1): a heading is known only by its wording: the 7u heading or its learner-language line, equal after normalising (case,
- *  spaces, punctuation). A rule note that merely contains "good" or "better" is no heading. */
-const norm = (t: string) => t.toLowerCase().replace(/[\s\p{P}\p{S}]+/gu, '');
-const WORDINGS: Record<Group, Set<string>> = {
-  well: new Set([V2_SUMMARY_WELL_HEADING, ...Object.values(HEADING_GLOSS).map((g) => g.well)].map(norm)),
-  improve: new Set([V2_SUMMARY_IMPROVE_HEADING, ...Object.values(HEADING_GLOSS).map((g) => g.improve)].map(norm)),
-};
-const groupOf = (text: string): Group | null => { const k = norm(text); return WORDINGS.well.has(k) ? 'well' : WORDINGS.improve.has(k) ? 'improve' : null; };
+type Group = V2SummaryHeadingGroup;
+const groupOf = v2SummaryHeadingGroup;
 
 /** On the Summary page in view of a grouped lesson: the page. Else null. */
 function summaryPage(session: V2Session, state: V2State, enabled: boolean) {
@@ -73,10 +59,11 @@ export interface V2SummaryHeadingPlan {
  *  gate at this turn). Null: nothing to do (not the Summary page of a grouped lesson, or its group's heading is up and it goes last). */
 /** Fix round 1 (M3): `heard`: their words this turn; a card that corrects them (v2IsCorrectionOf, the correction the record will take
  *  for it once painted) is a correction too. */
-export function v2SummaryHeadingPlan(session: V2Session, state: V2State, sentence: unknown, calls: readonly V2ToolCall[], glossOn: boolean, heard?: string | null, enabled: boolean = TUTOR_V2_SUMMARY_HEADINGS, guardAll: boolean = TUTOR_V2_CORRECTIONS_ALL_GUARDED): V2SummaryHeadingPlan | null {
+export function v2SummaryHeadingPlan(session: V2Session, state: V2State, sentence: unknown, calls: readonly V2ToolCall[], glossOn: boolean, heard?: string | null, marks?: unknown, enabled: boolean = TUTOR_V2_SUMMARY_HEADINGS, guardAll: boolean = TUTOR_V2_CORRECTIONS_ALL_GUARDED): V2SummaryHeadingPlan | null {
   const page = summaryPage(session, state, enabled);
   if (!page || typeof sentence !== 'string' || !sentence.trim()) return null;
-  const correctedNow = !!heard?.trim() && (heard.split(/(?<=[.!?。！？])\s+/).some((p) => v2IsCorrectionOf(sentence, p)) || v2IsCorrectionOf(sentence, heard));
+  const stems = v2CorrectionStems(marks);
+  const correctedNow = !!heard?.trim() && (heard.split(/(?<=[.!?。！？])\s+/).some((p) => v2IsCorrectionOf(sentence, p, undefined, stems)) || v2IsCorrectionOf(sentence, heard, undefined, stems));
   const correction = correctedNow || !!v2CorrectionFor(state, sentence) || (guardAll && v2OlderCorrection(state, sentence));
   const have = headingsOn(page, calls);
   const lang = (session.languages?.[1] ?? '').toLowerCase().split(/[-_]/)[0]!;

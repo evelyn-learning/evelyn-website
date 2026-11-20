@@ -47,3 +47,25 @@ export function v2SummaryCardsFull(session: V2Session, state: V2State, enabled: 
   return !!page && V2_CLOSING_PAGE.test(page.title) && page.items.filter((it) => it.tool === 'show_sentence').length >= V2_SUMMARY_SENTENCE_CARDS;
 }
 export const V2_SUMMARY_CARDS_FULL = `not painted: the summary page holds at most ${V2_SUMMARY_SENTENCE_CARDS} sentence cards, and it has them; say this one without a card`;
+
+/** Task 8c (SUMMARY_HEADINGS): the 7u headings and how a heading is recognised (summary-headings.ts, summary-marks.ts). */
+/** The headings' words, as the 7u layout line gives them. */
+export const V2_SUMMARY_WELL_HEADING = 'What went well';
+export const V2_SUMMARY_IMPROVE_HEADING = 'To improve';
+/** The learner-language line under each heading, by the learner's language (the second teaching language). A language with none here
+ *  gets the heading with no line. */
+export const V2_SUMMARY_HEADING_GLOSS: Record<string, { well: string; improve: string }> = {
+  ja: { well: '良かったところ', improve: 'これから直すところ' },
+};
+export type V2SummaryHeadingGroup = 'well' | 'improve';
+type Group = V2SummaryHeadingGroup;
+/** Fix round 1 (M1): a heading is known only by its wording: the 7u heading or its learner-language line, equal after normalising (case,
+ *  spaces, punctuation). A rule note that merely contains "good" or "better" is no heading. */
+const norm = (t: string) => t.toLowerCase().replace(/[\s\p{P}\p{S}]+/gu, '');
+const WORDINGS: Record<Group, Set<string>> = {
+  well: new Set([V2_SUMMARY_WELL_HEADING, ...Object.values(V2_SUMMARY_HEADING_GLOSS).map((g) => g.well)].map(norm)),
+  improve: new Set([V2_SUMMARY_IMPROVE_HEADING, ...Object.values(V2_SUMMARY_HEADING_GLOSS).map((g) => g.improve)].map(norm)),
+};
+/** Task 8c (SUMMARY_HEADINGS): the group a heading's wording names, or null (fix round 3, M-3: shared by the runtime's placement and the 7w
+ *  guard). */
+export const v2SummaryHeadingGroup = (text: string): Group | null => { const k = norm(text); return WORDINGS.well.has(k) ? 'well' : WORDINGS.improve.has(k) ? 'improve' : null; };

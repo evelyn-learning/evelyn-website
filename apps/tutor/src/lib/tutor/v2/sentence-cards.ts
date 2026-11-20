@@ -84,11 +84,13 @@ export function v2CorrectionWords(text: string): string[] {
 
 /** Whether a card's sentence reworks what the student said: most of its words are theirs, and it is not their words as they said them.
  *  Task 7u (NUMBER_NOT_CORRECTION): compared with numbers as words and fillers out ("for 2 years" → "for two years" is no correction). */
-/** Task 8c fix round 2 (CORRECTION_STEMS, the controller's ruling; mic test 10, embed-1795202398886 T36): a card word counts as theirs
- *  when it is one of their words with the same stem too (question-overlap.ts v2SameWord: "learned" / "learn", "customers" / "customer"):
+/** Task 8c fix round 2 (CORRECTION_STEMS, the controller's ruling; mic test 10, embed-1795202398886 T36): `stems`: a card word counts as
+ *  theirs when it is one of their words with the same stem too (question-overlap.ts v2SameWord: "learned" / "learn", "customers" / "customer"):
  *  inflection is what a correction changes. WB29 "I have learned how to negotiate with customers." corrects T35 "I learn the skill for
- *  negotiate with customer." (5 of 8; 3 of 8 by exact words). Their sentence as said is still never a correction. */
-export function v2IsCorrectionOf(sentence: string, studentSaid: string | null | undefined, numbers: boolean = TUTOR_V2_NUMBER_NOT_CORRECTION, stems: boolean = TUTOR_V2_CORRECTION_STEMS): boolean {
+ *  negotiate with customer." (5 of 8; 3 of 8 by exact words). Their sentence as said is still never a correction. Fix round 3 (the
+ *  controller's ruling): stems only for a card that carries marks (a correction card is marked by design since 7w; a model example
+ *  sentence usually is not): callers pass v2CorrectionStems(marks); the default is exact words, as at 57c71382. */
+export function v2IsCorrectionOf(sentence: string, studentSaid: string | null | undefined, numbers: boolean = TUTOR_V2_NUMBER_NOT_CORRECTION, stems: boolean = false): boolean {
   const card = numbers ? v2CorrectionWords(sentence) : tokens(sentence);
   const theirs = numbers ? v2CorrectionWords(studentSaid ?? '') : tokens(studentSaid ?? '');
   if (card.length < MIN_WORDS || !theirs.length) return false;
@@ -96,6 +98,11 @@ export function v2IsCorrectionOf(sentence: string, studentSaid: string | null | 
   if (card.filter((w) => have.has(w) || (stems && theirs.some((t) => v2SameWord(w, t)))).length / card.length < CORRECTION_OVERLAP) return false;
   // Their own sentence carded as it stands is an echo, not a correction.
   return !` ${theirs.join(' ')} `.includes(` ${card.join(' ')} `);
+}
+
+/** Task 8c fix round 3: whether a card with these marks (emphasis / stress: a list, or one string) is tested with stems alike. */
+export function v2CorrectionStems(marks: unknown, enabled: boolean = TUTOR_V2_CORRECTION_STEMS): boolean {
+  return enabled && (Array.isArray(marks) ? marks : typeof marks === 'string' ? [marks] : []).some((w) => typeof w === 'string' && !!w.trim());
 }
 
 /** After a sentence card has painted, or was pointed at an item already up that holds it: a correction of what the student just said is remembered for the summary. */

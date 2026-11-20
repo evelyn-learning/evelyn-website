@@ -43,7 +43,7 @@ import { v2IsPracticeAsk } from './languages';
 import { v2IsPartAsk, v2PartInHand, v2PartViewed, v2PlanLabelled } from './part-flow';
 import { v2PartOf } from './plan-map';
 import { v2ReplyInvites } from './close-invite';
-import { v2CorrectionWords, v2IsCorrectionOf, v2SentenceCardsOn, v2SentenceTokens as tokens } from './sentence-cards';
+import { v2CorrectionStems, v2CorrectionWords, v2IsCorrectionOf, v2SentenceCardsOn, v2SentenceTokens as tokens } from './sentence-cards';
 import { v2WordsShared } from './question-overlap';
 import type { V2Board, V2Session, V2State } from './types';
 import { v2LevelCheckOn, v2LevelCheckOver } from './working-level';
@@ -479,8 +479,9 @@ export function v2CardIsOf(card: string, sentence: string): boolean {
 /** Task 8c (OWED_CARD_RIGHT, CORRECTION_KEPT; mic test 10, embed-1795202398886), fix round 1 (I1, the controller's ruling): the one
  *  correction test: v2IsCorrectionOf (sentence-cards.ts, as at 57c71382), and never their sentence itself (v2CardIsAsSaid). WB25 "I worked
  *  in sales for three years." corrects T31 although it drops "before that work as receptionist" (v2CardIsOf: false). Pure. */
-export function v2CardCorrects(card: string, sentence: string): boolean {
-  return v2IsCorrectionOf(card, sentence) && !v2CardIsAsSaid(card, sentence);
+/** Fix round 3: `marks`, the card's emphasis / stress: stems alike count only for a marked card (sentence-cards.ts v2CorrectionStems). */
+export function v2CardCorrects(card: string, sentence: string, marks?: unknown): boolean {
+  return v2IsCorrectionOf(card, sentence, undefined, v2CorrectionStems(marks)) && !v2CardIsAsSaid(card, sentence);
 }
 
 /** Task 8c (OWED_CARD_RIGHT): the card is this sentence of theirs as they said it (numbers as words, fillers, case and punctuation
@@ -493,11 +494,11 @@ export function v2CardIsAsSaid(card: string, sentence: string): boolean {
 /** Task 8c fix round 1 (I1): the one sentence of theirs this turn a card belongs to: of those it is as said, is of (v2CardIsOf) or
  *  corrects (v2CardCorrects), the one sharing the most words with it, stems alike (question-overlap.ts v2WordsShared; the first on a tie); -1 for none. Two sentences of one turn with
  *  a shared pattern never both claim one card. Pure. */
-export function v2CardSentence(card: string, sentences: readonly string[]): number {
+export function v2CardSentence(card: string, sentences: readonly string[], marks?: unknown): number {
   const words = [...new Set(v2CorrectionWords(card))];
   let best = -1; let bestN = -1;
   sentences.forEach((s, i) => {
-    if (!v2CardIsAsSaid(card, s) && !v2CardIsOf(card, s) && !v2CardCorrects(card, s)) return;
+    if (!v2CardIsAsSaid(card, s) && !v2CardIsOf(card, s) && !v2CardCorrects(card, s, marks)) return;
     // Only to choose among the sentences it already is of or corrects: words alike by stem count ("work" / "worked", "year" / "years").
     const n = v2WordsShared([...new Set(v2CorrectionWords(s))], words);
     if (n > bestN) { best = i; bestN = n; }
@@ -531,8 +532,10 @@ export function v2BoardCardHolds(board: V2Board, sentence: string): boolean {
 /** Task 8c (OWED_CARD_RIGHT, `right`): a card of the reply that corrects the sentence (v2CardCorrects) carries it too, so a corrected card
  *  that drops a clause of theirs ("…before that work as receptionist") leaves nothing owed; fix round 1 (I1): each card carries only the
  *  one sentence it belongs to (v2CardSentence). */
-export function v2SentencesNotCarded(sentences: readonly string[], cards: readonly string[], board: V2Board, corrected: readonly string[] = [], held: boolean = TUTOR_V2_CORRECTION_CARD_NOW, right: boolean = TUTOR_V2_OWED_CARD_RIGHT): string[] {
-  const owned = right ? new Set(cards.map((c) => v2CardSentence(c, sentences))) : null;
+export function v2SentencesNotCarded(sentences: readonly string[], cardsIn: ReadonlyArray<string | { sentence: string; stress?: readonly string[] }>, board: V2Board, corrected: readonly string[] = [], held: boolean = TUTOR_V2_CORRECTION_CARD_NOW, right: boolean = TUTOR_V2_OWED_CARD_RIGHT): string[] {
+  // Fix round 3: a card with its marks (stems alike only for a marked card).
+  const cards = cardsIn.map((c) => (typeof c === 'string' ? c : c.sentence));
+  const owned = right ? new Set(cardsIn.map((c) => (typeof c === 'string' ? v2CardSentence(c, sentences) : v2CardSentence(c.sentence, sentences, c.stress)))) : null;
   const left = [...cards];
   return sentences.filter((s, i) => {
     if (owned) { if (owned.has(i)) return false; }

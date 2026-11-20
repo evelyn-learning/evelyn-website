@@ -15,12 +15,13 @@
  * The marks are drawn as on the lesson's correction cards (a sentence card's `emphasis`, WhiteboardCanvas.tsx SentenceCard). Every
  * other lesson: nothing recorded, nothing changed. Pure, client-safe.
  */
-import { TUTOR_V2_CORRECTIONS_ALL_GUARDED, TUTOR_V2_SUMMARY_MARKS } from '../orchestrator/flags';
+import { TUTOR_V2_CORRECTIONS_ALL_GUARDED, TUTOR_V2_SUMMARY_HEADINGS, TUTOR_V2_SUMMARY_MARKS } from '../orchestrator/flags';
+import { v2SummaryHeadingGroup } from './summary-layout';
 import { v2ChangedWords } from './adaptive';
 import { v2NoteTargetsOn } from './note-targets';
 import { V2_CLOSING_PAGE } from './part-close';
 import { v2PlanLabelled } from './part-flow';
-import { v2CorrectionWords, v2IsCorrectionOf, v2SentenceCardsOn, v2SentenceTokens } from './sentence-cards';
+import { v2CorrectionStems, v2CorrectionWords, v2IsCorrectionOf, v2SentenceCardsOn, v2SentenceTokens } from './sentence-cards';
 import type { V2Correction, V2Session, V2State, V2ToolCall } from './types';
 
 /** The corrections the state keeps (the most recent). */
@@ -41,16 +42,17 @@ const clean = (s: string) => s.replace(/\s+/g, ' ').trim().slice(0, MAX_CHARS);
 const stressOf = (raw: unknown): string[] => (Array.isArray(raw) ? raw : typeof raw === 'string' ? raw.split(/\s*[|,]\s*/) : []).filter((x): x is string => typeof x === 'string' && !!x.trim()).map((x) => x.trim());
 
 /** The sentence of theirs a card corrects: the one of their sentences it reworks with the most words in common, else their words whole. */
-function saidFor(card: string, studentSaid: string): string | null {
+/** Task 8c fix round 3: `stems`: the card carries marks (sentence-cards.ts v2CorrectionStems), so stem-alike words count as shared. */
+function saidFor(card: string, studentSaid: string, stems: boolean = false): string | null {
   const parts = studentSaid.split(/(?<=[.!?。！？])\s+/).map((x) => x.trim()).filter(Boolean);
   const cardWords = new Set(key(card).split(' '));
   let best: string | null = null; let bestN = -1;
   for (const p of parts) {
-    if (!v2IsCorrectionOf(card, p)) continue;
+    if (!v2IsCorrectionOf(card, p, undefined, stems)) continue;
     const n = key(p).split(' ').filter((w) => cardWords.has(w)).length;
     if (n > bestN) { best = p; bestN = n; }
   }
-  return best ?? (v2IsCorrectionOf(card, studentSaid) ? studentSaid.trim() : null);
+  return best ?? (v2IsCorrectionOf(card, studentSaid, undefined, stems) ? studentSaid.trim() : null);
 }
 
 /** After a sentence card painted (or pointed back at one holding it): a correction of what they just said is recorded with the words it
@@ -58,7 +60,7 @@ function saidFor(card: string, studentSaid: string): string | null {
 export function v2NoteCorrection(session: V2Session, state: V2State, sentence: unknown, emphasis: unknown, studentSaid: string | null | undefined, enabled: boolean = TUTOR_V2_SUMMARY_MARKS, guardAll: boolean = TUTOR_V2_CORRECTIONS_ALL_GUARDED): void {
   if (!v2SummaryMarksOn(session, enabled) || typeof sentence !== 'string' || !studentSaid?.trim()) return;
   const s = clean(sentence);
-  const said = saidFor(s, studentSaid);
+  const said = saidFor(s, studentSaid, v2CorrectionStems(emphasis));
   if (!said) return;
   // The words the correction changed, one word a mark (the card marks whole words); more than three changed: the card's own stress.
   const changed = v2ChangedWords(said, s).flatMap((p) => p.split(' ')).filter(Boolean);
@@ -98,7 +100,7 @@ export const V2_SUMMARY_WELL_REFUSED = 'not painted: this sentence is one of the
 /** On the Summary page in view: a sentence card that is one of their corrections gets the record's marks where the model wrote none (or
  *  words not in the sentence: mutates `args.emphasis`), and is refused under the "What went well" heading (the reason). `calls`: this
  *  reply's settled calls so far (the headings written on the page in this reply). Null: paint it. */
-export function v2SummaryCardCheck(session: V2Session, state: V2State, args: Record<string, unknown>, calls: readonly V2ToolCall[], enabled: boolean = TUTOR_V2_SUMMARY_MARKS, guardAll: boolean = TUTOR_V2_CORRECTIONS_ALL_GUARDED): string | null {
+export function v2SummaryCardCheck(session: V2Session, state: V2State, args: Record<string, unknown>, calls: readonly V2ToolCall[], enabled: boolean = TUTOR_V2_SUMMARY_MARKS, guardAll: boolean = TUTOR_V2_CORRECTIONS_ALL_GUARDED, exactHeadings: boolean = TUTOR_V2_SUMMARY_HEADINGS): string | null {
   if (!v2SummaryMarksOn(session, enabled) || typeof args.sentence !== 'string') return null;
   const page = state.board.pages[state.board.current];
   if (!page || !V2_CLOSING_PAGE.test(page.title)) return null;
@@ -111,7 +113,9 @@ export function v2SummaryCardCheck(session: V2Session, state: V2State, args: Rec
   const headings = calls.filter((c) => c.name === 'annotate' && c.args.style === 'heading' && !/^not /.test(c.outcome) && onPage.has(c.id)).map((c) => String(c.args.text ?? ''));
   const last = headings[headings.length - 1];
   // Fix round 1 (M3): only a heading that reads as "What went well"; an unrecognised one ("Next steps") is no reason to refuse.
-  const well = last !== undefined && WELL.test(last) && !IMPROVE.test(last);
+  // Task 8c fix round 3 (M-3): with the runtime's headings (SUMMARY_HEADINGS) a heading is recognised as the runtime's placement does, by
+  // the 7u wording (summary-layout.ts v2SummaryHeadingGroup); off: the words as before.
+  const well = last !== undefined && (exactHeadings ? v2SummaryHeadingGroup(last) === 'well' : WELL.test(last) && !IMPROVE.test(last));
   if (well) return V2_SUMMARY_WELL_REFUSED;
   if (!rec) return null;
   const words = new Set(v2SentenceTokens(args.sentence));
