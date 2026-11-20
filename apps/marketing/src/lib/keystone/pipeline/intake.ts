@@ -684,3 +684,13 @@ export function intakeNote(findings: IntakeFinding[]): string {
   }
   return out.join(" ");
 }
+
+/**
+ * The image files the QUESTION itself shows (stem, passage, options / choices), exactly the names intake's
+ * image markers produce: intakeCode without the package resource list. The only images a model ever receives.
+ */
+export function shownImages(item: ItemDoc): string[] {
+  const out: string[] = [];
+  intakeCode({ ...item, qti: item.qti ? { ...item.qti, resources: [] } : undefined }, (f) => { out.push(f); return true; });
+  return [...new Set(out)];
+}

@@ -38,6 +38,27 @@ process.env.KEYSTONE_DATA_DIR = path.join(tmpdir(), "ks-anim-pure");
   assert.ok(p.canSeeAnimation("reviewer", "released"));
   assert.ok(!p.canSeeAnimation(undefined, "review"));
 
+  // whose flag it is, and who may see it (comment, reply, pictures)
+  assert.equal(p.flagSide("reviewer"), "castle-rock");
+  assert.equal(p.flagSide("tech"), "castle-rock");
+  assert.equal(p.flagSide("evelyn"), "owner");
+  assert.equal(p.flagSide(undefined), "owner", "a flag older than the role field is the owner's");
+  assert.equal(p.flagSide("admin"), "owner", "an unknown role is never treated as Castle Rock's");
+  for (const by of ["evelyn", "reviewer", "tech", undefined]) assert.ok(p.canSeeFlag("evelyn", by), `the owner sees a flag by ${by}`);
+  for (const role of ["reviewer", "tech"] as const) {
+    assert.ok(p.canSeeFlag(role, "reviewer") && p.canSeeFlag(role, "tech"), `${role} sees Castle Rock's flags`);
+    assert.ok(!p.canSeeFlag(role, "evelyn"), `${role} never sees an owner flag`);
+    assert.ok(!p.canSeeFlag(role, undefined), `${role} never sees a flag with no role (the owner's)`);
+  }
+  assert.ok(!p.canSeeFlag(undefined, "reviewer"), "nobody signed in sees nothing");
+  assert.equal(p.raisedBy({ createdBy: "julie", createdByName: "Julie May", createdByRole: "reviewer" }), "Julie May · Castle Rock");
+  assert.equal(p.raisedBy({ createdBy: "vance", createdByRole: "tech" }), "vance · Castle Rock");
+  assert.equal(p.raisedBy({ createdBy: "praveen", createdByName: "Praveen", createdByRole: "evelyn" }), "Praveen");
+  assert.equal(p.raisedBy({ createdBy: "praveen" }), "praveen");
+  assert.equal(p.excerpt("  the arrow\n points   the wrong way "), "the arrow points the wrong way");
+  assert.equal(p.excerpt("x".repeat(121)), `${"x".repeat(120)}…`);
+  assert.equal(p.excerpt("x".repeat(120)), "x".repeat(120));
+
   // crop: viewport 1000×800 CSS px captured at 2000×1600 (retina)
   assert.deepEqual(p.cropRect({ left: 100, top: 50, width: 400, height: 300 }, { width: 1000, height: 800 }, { width: 2000, height: 1600 }), { sx: 200, sy: 100, sw: 800, sh: 600 });
   // partly scrolled off the top and the right: clamped to the frame

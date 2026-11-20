@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { Types } from "mongoose";
-import { SECTIONS, STAGE_LABEL, VERDICTS, canJudgeSolution, releasedVersionOf, type SectionKind, type Stage, type Verdict } from "./config";
+import { SECTIONS, STAGE_LABEL, VERDICTS, canJudgeSolution, normaliseCourse, releasedVersionOf, type SectionKind, type Stage, type Verdict } from "./config";
 import { ks, type ActivityDoc, type BatchRow, type Flag, type ItemDoc, type PipelineDoc, type RunDoc, type SectionDoc } from "./db";
 import { renderInline, renderMarkdown } from "./render";
 import { assetUrl, readAsset, saveAsset } from "./assets";
@@ -318,6 +318,48 @@ export async function setPipelineIfUnchanged(itemId: string, pipeline: PipelineD
   if (r.matchedCount !== 1) throw new SupersededError(itemId);
 }
 
+/** Records the level the pipeline read from the question and nothing else (stage and updatedAt unchanged). Only if unchanged (else SupersededError). */
+export async function setLevelIfUnchanged(itemId: string, level: string, why: string, expect: Expect) {
+  const { Item } = await ks();
+  const r = await Item.updateOne(unchangedFilter(itemId, expect), { $set: { course: level, courseSource: "pipeline", levelWhy: why } });
+  if (r.matchedCount !== 1) throw new SupersededError(itemId);
+}
+
+/** The stages at which a person may correct an item's level (afterwards the item is settled: send it back first). */
+export const LEVEL_OPEN_STAGES: Stage[] = ["received", "drafting", "ready", "in_review", "changes_requested", "item_data", "key_query"];
+
+/**
+ * A person corrects the level a solution is written to. The item changes (updatedAt), so a run in flight is
+ * superseded and the next one writes to the new level. A solution the reviewer can see was written to the old
+ * level: it goes back to Evelyn as "Solution changes" with the correction as the note, like any send-back.
+ */
+export async function correctLevel(itemId: string, level: string, note: string, actor: Actor): Promise<Stage> {
+  const { Item } = await ks();
+  const item = await Item.findOne({ itemId }).lean();
+  if (!item) throw new Error(`item ${itemId} not found`);
+  const to = normaliseCourse(level.replace(/\s+/g, " ").trim());
+  if (!to) throw new Error("Please write the level, for example Math 30-1 or Grade 7 Science.");
+  if (Array.from(to).length > 40 || /[<>]/.test(to)) throw new Error("Please keep the level to a short name, for example Math 30-1.");
+  if (!LEVEL_OPEN_STAGES.includes(item.stage)) throw new Error("This item is settled. Send it back first if its level needs to change.");
+  const from = (item.course ?? "").trim();
+  if (to === from && item.courseSource === "person") throw new Error(`The level is already ${to}.`);
+  const now = new Date();
+  // Only a solution Castle Rock can see is sent back; one still being prepared is simply written again.
+  const sendBack = item.stage === "in_review" && !!item.version && canJudgeSolution(item);
+  const stage: Stage = sendBack ? "changes_requested" : item.stage;
+  await Item.updateOne({ itemId }, { $set: { course: to, courseSource: "person", stage, updatedAt: now }, $unset: { levelWhy: "" } });
+  const said = `Level ${from && from !== to ? `changed from ${from} to ${to}` : `set to ${to}`}.${note.trim() ? ` ${note.trim()}` : ""}`;
+  await log({
+    itemId,
+    version: item.version || undefined,
+    ...(sendBack ? { type: "verdict" as const, verdict: "changes" as const, body: `${said} Please write the solution to this level.` } : { type: "comment" as const, body: said }),
+    username: actor.username,
+    name: actor.name,
+    role: actor.role,
+  });
+  return stage;
+}
+
 /** The latest reviewer verdict on an item (pipeline: key confirmed, changes asked). */
 export async function lastVerdict(itemId: string): Promise<Pick<ActivityDoc, "verdict" | "body" | "createdAt"> | null> {
   const { Activity } = await ks();
@@ -404,6 +446,10 @@ export async function sendToReviewByOwner(itemId: string, actor: Actor, now = ne
   const { item } = r;
   if (item.stage !== "ready") return item.stage === "in_review" && canJudgeSolution(item) ? { already: true } : { error: NOT_WAITING };
   if (!r.unreleased) return { error: "There is no unreleased solution to send." };
+  // The animation goes out with the written solution: one approval for both.
+  const { animationBlocksSend, releaseAnimation } = await import("./animreview/store");
+  const blocked = await animationBlocksSend(itemId);
+  if (blocked) return { error: blocked };
   const { Item, Solution } = await ks();
   const moved = await Item.collection.updateOne(
     { itemId, stage: "ready", version: item.version },
@@ -418,6 +464,8 @@ export async function sendToReviewByOwner(itemId: string, actor: Actor, now = ne
   }
   await Solution.updateOne({ itemId, version: item.version, releasedAt: { $exists: false }, staleAt: { $exists: false } }, { $set: { releasedAt: now } });
   await log({ itemId, version: item.version, type: "revision", body: SENT_FOR_REVIEW, username: actor.username, name: actor.name, role: actor.role, createdAt: now });
+  const anim = await releaseAnimation(itemId);
+  if ("error" in anim) return { error: `The solution was sent, but the animation was not attached: ${anim.error}` };
   return { done: true };
 }
 

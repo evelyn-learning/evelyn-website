@@ -8,6 +8,9 @@ export type VendorReply = {
   /** True when the reply stopped at the output token limit. */
   truncated?: boolean;
   tokensIn: number;
+  /** Of tokensIn: tokens written to / read from the prompt cache (Claude; priced 1.25× / 0.1× the input rate). */
+  cacheWriteTokens?: number;
+  cacheReadTokens?: number;
   /** Output tokens as billed, reasoning/thinking included. */
   tokensOut: number;
   /** The model that actually served the reply, when the vendor says. */

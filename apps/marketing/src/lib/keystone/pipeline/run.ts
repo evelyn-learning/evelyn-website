@@ -29,6 +29,7 @@ import {
   saveRun as storeSaveRun,
   saveSolution as storeSaveSolution,
   setPipelineIfUnchanged,
+  setLevelIfUnchanged,
   solutionRunId,
   type Actor,
   type Expect,
@@ -36,14 +37,15 @@ import {
 import { readKey, type Answer, type Decision } from "./answers";
 import { calcCheck, type CalcFinding } from "./calc";
 import { bannedWordsIn, renderCheck, rulesAudit, workingCheck, type CheckResult, type Finding, type RenderCheckOpts } from "./checks";
-import { intakeCode, intakeModel, intakeNote, lastSegment, type IntakeFinding } from "./intake";
+import { intakeCode, intakeModel, intakeNote, lastSegment, shownImages, type IntakeFinding } from "./intake";
+import { levelModel } from "./level";
 import { callModel, redact } from "./models";
 import { suggestFor } from "./outbox";
 import { releaseAt, sampleAfterRun } from "./release";
 import { answerFromText } from "./retro";
 import { ownWriteState, type OwnWrite } from "./ownwrite";
 import { agreeOnAnswer, type Solves } from "./solve";
-import type { ModelDeps, ModelImage, ModelReply } from "./types";
+import { BatchPending, type ModelDeps, type ModelImage, type ModelReply } from "./types";
 import type { ImageType } from "./vendors/common";
 import { loadRules, writeSolution, type Draft, type Rule, type WriteOpts } from "./write";
 
@@ -79,6 +81,8 @@ export interface Writer {
     expect: Expect,
   ): Promise<number>;
   setPipeline(itemId: string, pipeline: PipelineDoc, expect: Expect): Promise<void>;
+  /** The level read from the question, stored on the item (stage and updatedAt unchanged, so the run goes on). */
+  setLevel(itemId: string, level: string, why: string, expect: Expect): Promise<void>;
   suggest(kind: SuggestKind, itemIds: string[], batchId?: string): Promise<void>;
   /**
    * Records the send-back as a lesson, unless one exists for the same item and version (upsert-if-absent):
@@ -92,6 +96,7 @@ export interface Writer {
 /** The model-backed and code steps, injected so tests call no model. */
 export type Steps = {
   intakeModel(item: ItemDoc, images: ModelImage[]): Promise<{ complete: boolean; missing: string[]; cost?: number; model?: string } | { failed: string; cost?: number; model?: string; transient?: boolean }>;
+  setLevel(item: ItemDoc, images: ModelImage[]): Promise<{ level: string; why: string; cost?: number; model?: string } | { failed: string; cost?: number; model?: string; transient?: boolean }>;
   agreeOnAnswer(item: ItemDoc, images: ModelImage[], course: string, hint?: string): Promise<{ decision: Decision; solves: Solves; cost: number }>;
   writeSolution(item: ItemDoc, course: string, answer: Answer, opts: WriteOpts): Promise<ModelReply<Draft>>;
   calcCheck(draft: Draft, answer: Answer, item: ItemDoc): Promise<CalcFinding[]>;
@@ -113,6 +118,8 @@ export type Deps = {
   assetExists?: (itemId: string, file: string) => boolean;
   now?: () => Date;
   dryRun?: boolean;
+  /** Bulk mode (bulk.ts), one per item: told when a step starts, and asked afterwards which of its model calls went through a vendor batch (recorded on the step). */
+  bulk?: { begin(): void; end(): RunStep["batch"] | undefined };
 };
 
 const UNVERIFIED_KINDS = ["match", "gapMatch", "order", "inlineChoice"];
@@ -150,6 +157,24 @@ const NEVER_TOUCH = ["approved", "delivered"];
 export const takenState = (i: Pick<ItemDoc, "stage" | "pipeline" | "keyQuery">) =>
   i.stage === "received" || i.stage === "changes_requested" || (i.stage === "drafting" && !!i.keyQuery?.answeredAt) || ownerSentBack(i);
 const CHECKS = ["calc", "working", "audit", "render"] as const;
+
+/** KEYSTONE_STYLE_CORRECTION=off: back to one correction of any kind (read at call time). */
+const styleCorrectionOn = () => process.env.KEYSTONE_STYLE_CORRECTION !== "off";
+/** Audited rules that are about content or integrity, not style: breaking one is never "style only". */
+export const CONTENT_RULES: readonly string[] = ["R-answer-agreed", "R-answer-first", "R-question-untouched", "R-no-making-of", "R-no-other-solution", "R-short-present", "R-diploma-present"];
+/** Findings from code that are about form only (wording, closing sentence, maths markup, alt text). */
+const STYLE_CODES: readonly string[] = ["banned_word", "closing_missing", "katex", "unbalanced_math", "image_alt_missing"];
+/**
+ * True when every finding is about style: an audited rule outside CONTENT_RULES, or a form-only code. One
+ * finding about the answer, the working, a missing picture or section, or how the solution was made, and the
+ * item is held for the owner as before. An empty list is not "style only". Pure.
+ */
+export function styleOnly(findings: readonly Pick<Finding, "check" | "code" | "ruleId">[]): boolean {
+  return (
+    findings.length > 0 &&
+    findings.every((f) => (f.check === "audit" && f.code === "rule_broken" ? !!f.ruleId && !CONTENT_RULES.includes(f.ruleId) : (f.check === "audit" || f.check === "render") && STYLE_CODES.includes(f.code)))
+  );
+}
 type CheckStep = (typeof CHECKS)[number];
 type CheckOutput = { findings: Finding[] } | { failed: string };
 
@@ -190,7 +215,7 @@ export function acceptTopic(raw: string | undefined | null): string | undefined 
 const sameFrom = (a: Expect, i: ItemDoc) =>
   a.stage === i.stage && a.version === (i.version || 0) && new Date(a.updatedAt).getTime() === new Date(i.updatedAt).getTime();
 
-const fromOf = (i: ItemDoc): Expect => ({ stage: i.stage, version: i.version || 0, updatedAt: new Date(i.updatedAt) });
+export const fromOf = (i: ItemDoc): Expect => ({ stage: i.stage, version: i.version || 0, updatedAt: new Date(i.updatedAt) });
 
 function modeOf(item: ItemDoc, verdict: { verdict?: string; createdAt: Date } | null): RunDoc["mode"] {
   if (item.stage === "changes_requested") return "changes";
@@ -261,6 +286,18 @@ export async function processItem(itemId: string, runId: string, deps: Deps, opt
   try {
     await flow(first, run, deps, now);
   } catch (e) {
+    if (e instanceof BatchPending) {
+      // Bulk mode: a model call is out in a vendor batch. Not a failure and not a decision: the run is saved as it
+      // stands, unfinished, with every finished step on it; a later invocation continues it (nothing is redone).
+      delete run.result;
+      delete run.error;
+      delete run.finishedAt;
+      run.flags = [];
+      run.waitingOnBatch = run.waitingOnBatch ?? now();
+      run.cost = run.steps.reduce((s, x) => s + (x.cost || 0), 0);
+      await deps.writer.saveRun(run);
+      return run;
+    }
     if (e instanceof SupersededError) run.result = "superseded";
     else if (!(e instanceof Done)) {
       run.result = "failed";
@@ -282,6 +319,7 @@ export async function processItem(itemId: string, runId: string, deps: Deps, opt
     }
   }
   run.finishedAt = now();
+  delete run.waitingOnBatch;
   run.cost = run.steps.reduce((s, x) => s + (x.cost || 0), 0);
   // The attempt cap (selectItems) counts these: a failed run resumed again and again adds one each time.
   const ended = run.result as RunDoc["result"];
@@ -333,15 +371,9 @@ export function sniffImage(data: Uint8Array): ImageType | null {
   return null;
 }
 
-/**
- * The image files the QUESTION itself shows (stem, passage, options / choices), exactly the names intake's
- * image markers produce: intakeCode without the package resource list. The only images a model ever receives.
- */
-export function shownImages(item: ItemDoc): string[] {
-  const out: string[] = [];
-  intakeCode({ ...item, qti: item.qti ? { ...item.qti, resources: [] } : undefined }, (f) => { out.push(f); return true; });
-  return [...new Set(out)];
-}
+// shownImages lives in intake.ts (beside intakeCode) so the server build of animated solutions can use it without
+// loading this module, which reaches calc.ts and cannot load inside the Next bundle.
+export { shownImages };
 
 const srcFiles = (html: string) =>
   [...html.matchAll(/<(?:[\w-]+:)?(?:img|object|embed)\b[^>]*?\b(?:src|data)\s*=\s*(?:"([^"]*)"|'([^']*)')/gi)].map((m) => lastSegment(m[1] ?? m[2] ?? "")).filter(Boolean);
@@ -381,8 +413,13 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
     const key = `${name}#${n}`;
     const done = run.steps.find((s) => s.key === key);
     if (done) return { ok: done.ok, output: done.output as T };
+    deps.bulk?.begin();
     const r = await fn();
-    const entry: RunStep = { step: name, key, at: now(), ok: r.ok, output: r.output, cost: r.cost ?? 0, ...(r.model ? { model: r.model } : {}), ...(!r.ok && r.transient ? { transient: true } : {}) };
+    const viaBatch = deps.bulk?.end();
+    const entry: RunStep = {
+      step: name, key, at: now(), ok: r.ok, output: r.output, cost: r.cost ?? 0, ...(r.model ? { model: r.model } : {}), ...(!r.ok && r.transient ? { transient: true } : {}),
+      ...(viaBatch ? { batch: viaBatch } : {}),
+    };
     run.steps.push(entry);
     run.cost = run.steps.reduce((s, x) => s + (x.cost || 0), 0);
     await writer.saveRun(run);
@@ -471,20 +508,11 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
     });
     const output = { findings: r.findings, assetsChecked: !!deps.assetExists };
     const entry: RunStep = { step: "intake", key: "intake#code", at: now(), ok: true, output, cost: 0 };
-    run.steps = [...run.steps.filter((x) => x.key !== "intake#code"), entry];
+    // Replaced where it stands (first, on a new run), so a run continued over several invocations keeps its step order.
+    const at = run.steps.findIndex((x) => x.key === "intake#code");
+    run.steps = at < 0 ? [...run.steps, entry] : run.steps.map((x, k) => (k === at ? entry : x));
     if (r.findings.length) return toItemData(r.findings);
   }
-
-  // [2] Course: only a spreadsheet course counts.
-  const sheetCourse = item.courseSource === "sheet" && item.course?.trim() ? item.course.trim() : null;
-  await step("course", async () => ({ ok: !!sheetCourse, output: { course: sheetCourse } }));
-  if (!sheetCourse) {
-    await guard();
-    await writer.suggest("course_missing", [itemId], item.batchId);
-    return finish("course_missing");
-  }
-  const course = sheetCourse;
-  if (!sectionTitle("diploma", course)) return hold(["section_title_unset"]);
 
   // Images: never solve an image item blind, and never let a figure go out missing or broken.
   // The question's own images (stem, passages, options, choices): intakeCode without the package resource list.
@@ -530,6 +558,27 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
     const out = m.output as { complete: boolean; missing: string[] };
     if (!out.complete) return toItemData(out.missing.map((detail) => ({ code: "model_missing" as const, detail })));
   }
+
+  // [2] Level. The client sends no course (2026-11-19), so the level is read from the question. A level already
+  // on the item is used as it is: one a person set on the item page, one from a spreadsheet, or one an earlier
+  // run read (so a rewrite stays at the level the reviewer saw). The file's own course data never counts.
+  const known = item.courseSource && item.courseSource !== "metadata" && item.course?.trim() ? item.course.trim() : null;
+  type LevelOut = { course: string; source: string; why?: string } | { failed: string };
+  const lv = await step<LevelOut>("course", async () => {
+    if (known) return { ok: true, output: { course: known, source: item.courseSource! } };
+    const r = await steps.setLevel(item, images);
+    if ("failed" in r) return { ok: false, output: { failed: r.failed }, cost: r.cost, model: r.model, transient: r.transient };
+    return { ok: true, output: { course: r.level, source: "pipeline", why: r.why }, cost: r.cost, model: r.model };
+  });
+  if (!lv.ok || !("course" in lv.output) || !lv.output.course) return hold(["step_failed"]);
+  const course = lv.output.course;
+  if (lv.output.source === "pipeline" && !(item.courseSource === "pipeline" && item.course === course)) {
+    // Stored at once, so the item page shows it even when the run later holds or raises a query.
+    await writer.setLevel(itemId, course, lv.output.why ?? "", expect);
+    item.course = course;
+    item.courseSource = "pipeline";
+  }
+  if (!sectionTitle("diploma", course)) return hold(["section_title_unset"]);
 
   // changes_requested: what the reviewer's note asks for.
   let fixNote: string | undefined;
@@ -637,7 +686,7 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
     let draft = w.output as Draft;
     const theAnswer: Answer = answer;
 
-    // [5]–[8] Checks, with one automatic correction.
+    // [5]–[8] Checks, with one automatic correction, and a second one for style only.
     const runCheck = (name: CheckStep, d: Draft) =>
       step<CheckOutput>(name, async () => {
         if (name === "calc") {
@@ -670,7 +719,11 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
         break;
       }
       if (findings.length) {
-        if (run.corrections >= 1) {
+        // One correction for anything. A second one only for style: the draft has just passed the calculation
+        // and working checks, and every finding left is a formatting or wording rule (styleOnly). After it
+        // ALL four checks run again on the new draft, from the first, so nothing a rewrite touched goes unchecked.
+        const styleAgain = run.corrections === 1 && styleCorrectionOn() && i >= CHECKS.indexOf("audit") && styleOnly(findings);
+        if (run.corrections >= 1 && !styleAgain) {
           flags.add("second_failure");
           return saveDraft(draft, theAnswer, false);
         }
@@ -678,7 +731,8 @@ async function flow(item: ItemDoc, run: RunDoc, deps: Deps, now: () => Date): Pr
         const w2 = await write({ fixNote, findings: findings.map(findingText), previous: draft });
         if (!w2.ok) return hold(["step_failed"]);
         draft = w2.output as Draft;
-        continue; // the failed check and everything after it run again
+        if (styleAgain) i = 0;
+        continue; // the failed check and everything after it run again (every check, after a style correction)
       }
       i++;
     }
@@ -829,7 +883,7 @@ export function asReceivedReader(reader: Reader, ids: string[]): Reader {
 
 // --- writers -----------------------------------------------------------------------------------
 
-export type DryAction = { itemId: string; action: "flagItemData" | "raiseKeyQuery" | "saveSolution" | "setPipeline" | "suggest" | "saveLesson"; detail: Record<string, unknown> };
+export type DryAction = { itemId: string; action: "flagItemData" | "raiseKeyQuery" | "saveSolution" | "setPipeline" | "setLevel" | "suggest" | "saveLesson"; detail: Record<string, unknown> };
 
 /** Records what a run would write; writes nothing. */
 export class DryRunWriter implements Writer {
@@ -843,6 +897,7 @@ export class DryRunWriter implements Writer {
     return expect.version + 1;
   }
   async setPipeline(itemId: string, pipeline: PipelineDoc) { this.actions.push({ itemId, action: "setPipeline", detail: { pipeline } }); }
+  async setLevel(itemId: string, level: string, why: string) { this.actions.push({ itemId, action: "setLevel", detail: { level, why } }); }
   async suggest(kind: SuggestKind, itemIds: string[], batchId?: string) {
     for (const itemId of itemIds) this.actions.push({ itemId, action: "suggest", detail: { kind, batchId } });
   }
@@ -895,6 +950,7 @@ export function mongoWriter(actor: Actor): Writer {
         set: { evelynAnswer: s.evelynAnswer, pipeline: s.pipeline, ...(s.topic ? { topic: s.topic } : {}) },
       }),
     setPipeline: (itemId, pipeline, expect) => setPipelineIfUnchanged(itemId, pipeline, expect),
+    setLevel: (itemId, level, why, expect) => setLevelIfUnchanged(itemId, level, why, expect),
     suggest: (kind, itemIds, batchId) => suggestFor(kind, { itemIds }, batchId),
     saveLesson: (lesson) => saveLesson(lesson),
     sample: async (batchIds, unbatched) => { await sampleAfterRun(batchIds, unbatched); },
@@ -957,6 +1013,7 @@ const CAUSE_SCHEMA = {
 export function realSteps(modelDeps: ModelDeps = {}): Steps {
   return {
     intakeModel: (item, images) => intakeModel(item, images, modelDeps),
+    setLevel: (item, images) => levelModel(item, images, modelDeps),
     agreeOnAnswer: (item, images, course, hint) => agreeOnAnswer(item, images, course, hint, modelDeps),
     writeSolution: (item, course, answer, opts) => writeSolution(item, course, answer, opts, modelDeps),
     calcCheck: (draft, answer, item) => calcCheck(draft, answer, item),
@@ -1021,6 +1078,10 @@ export type RunArgs = {
   assetsDir?: string;
   /** Stop taking new items once this invocation has spent this much (USD). Default DEFAULT_MAX_COST. */
   maxCost?: number;
+  /** Bulk mode (bulk.ts): the model calls that can go through the vendors' batch endpoints do (half price, hours later). */
+  bulk?: boolean;
+  /** Bulk mode with --dry-run: the local JSON file that keeps the bulk state between invocations (nothing goes to the database). */
+  state?: string;
 };
 
 export const DEFAULT_MAX_COST = 25;
@@ -1040,7 +1101,14 @@ export function parseArgs(argv: string[]): RunArgs {
         a.only = value(i++, o).split(",").map((s) => s.trim()).filter(Boolean);
         if (!a.only.length) throw new Error("--only names no item");
         break;
-      case "--batch": a.batch = value(i++, o); break;
+      case "--batch": {
+        const v = argv[i + 1];
+        if (v === undefined || v.startsWith("--")) throw new Error("--batch needs a batch id (the client's batch). For the bulk-priced mode use --bulk");
+        a.batch = value(i++, o);
+        break;
+      }
+      case "--bulk": a.bulk = true; break;
+      case "--state": a.state = value(i++, o); break;
       case "--limit": {
         const n = Number(value(i++, o));
         if (!Number.isInteger(n) || n < 1) throw new Error("--limit needs a whole number of at least 1");
@@ -1063,6 +1131,9 @@ export function parseArgs(argv: string[]): RunArgs {
   }
   if (a.asReceived && !a.dryRun) throw new Error("--as-received is allowed only together with --dry-run");
   if (a.asReceived && !a.only?.length) throw new Error("--as-received needs --only <ids>");
+  if (a.state && !(a.bulk && a.dryRun)) throw new Error("--state is for --bulk together with --dry-run (a writing bulk run keeps its state in the database)");
+  if (a.bulk && a.dryRun && !a.state) throw new Error("--bulk with --dry-run needs --state <file>: a dry run writes nothing to the database, so the bulk state is kept in that file between invocations");
+  if (a.bulk && a.runId) throw new Error("--run-id is not used with --bulk (each item continues its own unfinished run)");
   return a;
 }
 

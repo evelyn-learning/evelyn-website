@@ -2,11 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/keystone/auth";
 import { ksBase } from "@/lib/keystone/paths";
-import { ITEM_TYPE_LABEL, OWNER_LABEL, SECTION_TITLE, STAGES, STAGE_HELP, STAGE_LABEL, STAGE_OWNER, can, releasedVersionOf, sectionTitle } from "@/lib/keystone/config";
+import { DIPLOMA_COURSES, ITEM_TYPE_LABEL, LEVEL_SOURCE_LABEL, OWNER_LABEL, SECTION_TITLE, STAGES, STAGE_HELP, STAGE_LABEL, STAGE_OWNER, can, releasedVersionOf, sectionTitle } from "@/lib/keystone/config";
 import { getItem, holdReasons, itemChecks, neighbours, reviewQueue } from "@/lib/keystone/queries";
 import { pacificTime } from "@/lib/keystone/pipeline/status";
-import type { OwnerPipeline } from "@/lib/keystone/store";
-import { setStageAction } from "../../actions";
+import { LEVEL_OPEN_STAGES, type OwnerPipeline } from "@/lib/keystone/store";
+import { askForAnimationAction, setLevelAction, setStageAction } from "../../actions";
+import { ActionForm } from "../../_components/ActionForm";
+import { NO_ANIMATION_DEFAULT } from "@/lib/keystone/animreview/store";
 import { TopBar } from "../../_components/TopBar";
 import { Feed, Note, StageChip, ago } from "../../_components/ui";
 import { ReviewBar } from "./ReviewBar";
@@ -17,10 +19,34 @@ import { InteractionView } from "./InteractionView";
 import { ChecksPanel } from "../../_components/ChecksPanel";
 import { DoneNote, HeldControls, HoldControl } from "../../_components/OwnerControls";
 import { OwnerKeys } from "../../_components/OwnerKeys";
+import { getReview, type Flag } from "@/lib/keystone/animreview/store";
+import { animatedUrl, flagSide, parseVersion, raisedBy } from "@/lib/keystone/animreview/pure";
+import { AnimReview, type FlagView } from "../../animated/[itemId]/AnimReview";
 
 export const dynamic = "force-dynamic";
 
 const viewingOldFor = (solution: { version: number } | null, item: { version: number }) => !!solution && solution.version !== item.version;
+
+// `owner`: the owner's labels say whose flag it is ("Name · Castle Rock"); Castle Rock just see their colleague's name.
+const flagView = (f: Flag, owner: boolean): FlagView => ({
+  id: f.id,
+  version: f.version,
+  step: f.step ?? null,
+  line: f.line ?? null,
+  timeMs: f.timeMs ?? null,
+  comment: f.comment,
+  spoken: !!f.spoken,
+  shots: f.shots ?? [],
+  status: f.status,
+  fixedInVersion: f.fixedInVersion ?? null,
+  reply: f.reply ?? null,
+  reopenOf: f.reopenOf ?? null,
+  createdBy: f.createdBy,
+  createdAt: new Date(f.createdAt).toISOString(),
+  by: owner ? raisedBy(f) : f.createdByName || f.createdBy,
+  castleRock: flagSide(f.createdByRole) === "castle-rock",
+  pending: !!f.pending,
+});
 
 export async function generateMetadata({ params }: { params: Promise<{ itemId: string }> }) {
   return { title: `Item ${(await params).itemId}` };
@@ -51,6 +77,10 @@ export default async function ItemPage({
   // Evelyn only, decided here on the server: the hold, its reasons and the Checks panel are never rendered for
   // Castle Rock (for them `item.stage` is never "ready" and itemChecks returns null).
   const forOwner = user.role === "evelyn";
+  // The animated version with its flag panel (flag, speak, snap), on the same page as the written solution.
+  // The owner reviews any version (?av=). Castle Rock get the released version only, with Castle Rock's flags
+  // only: getReview decides that from the role and ignores the version for them, so ?av= is not even passed.
+  const anim = await getReview(itemId, forOwner && sp.av !== undefined ? parseVersion(sp.av) : null, user.role);
   const pipe = forOwner ? (item.pipeline as OwnerPipeline | undefined) : undefined;
   // Something to send: the current version's solution row exists and is unreleased (the actions check this again).
   const sendable = !!solution && solution.version === item.version && !solution.releasedAt && releasedVersionOf(item) < item.version;
@@ -93,7 +123,13 @@ export default async function ItemPage({
               Item {item.itemId} {item.showcase && <span className="ks-chip">Showcase</span>}
             </h1>
             <div className="ks-meta">
-              <span>{item.subject}</span>·<span>{item.course}</span>·<span>{ITEM_TYPE_LABEL[item.itemType] ?? item.itemType}</span>
+              <span>{item.subject}</span>·
+              <span title={item.levelWhy || undefined}>
+                {/* The file's own course data is not a level we write to: shown only once a level is set. */}
+                {item.courseSource === "metadata" ? "Level not set yet" : <>Level: <b>{item.course || "not set yet"}</b></>}
+                {item.courseSource && LEVEL_SOURCE_LABEL[item.courseSource] && <span style={{ fontSize: 12 }}> ({LEVEL_SOURCE_LABEL[item.courseSource]})</span>}
+              </span>
+              ·<span>{ITEM_TYPE_LABEL[item.itemType] ?? item.itemType}</span>
               {item.topic && (
                 <>
                   ·<span>{item.topic}</span>
@@ -102,6 +138,30 @@ export default async function ItemPage({
             </div>
           </div>
           <div className="ks-meta">
+            {can.review(user.role) && LEVEL_OPEN_STAGES.includes(item.stage) && (
+              <details className="ks-level">
+                <summary>Change level</summary>
+                <ActionForm action={setLevelAction} className="ks-level-form">
+                  <input type="hidden" name="itemId" value={item.itemId} />
+                  <label>
+                    Level the solution should be written to
+                    <input name="level" list="ks-levels" defaultValue={item.courseSource === "metadata" ? "" : item.course} maxLength={40} required placeholder="Math 30-1" />
+                  </label>
+                  <datalist id="ks-levels">
+                    {DIPLOMA_COURSES.map((c) => (
+                      <option key={c} value={c} />
+                    ))}
+                  </datalist>
+                  <label>
+                    Note (optional)
+                    <input name="note" maxLength={300} />
+                  </label>
+                  {item.levelWhy && <p className="ks-level-why">Why this level: {item.levelWhy}</p>}
+                  {item.stage === "in_review" && <p className="ks-level-why">The solution will come back to you rewritten to the new level.</p>}
+                  <button className="ks-btn" type="submit">Save level</button>
+                </ActionForm>
+              </details>
+            )}
             <StageChip stage={item.stage} role={user.role} />
             {versions.length > 0 && !keyQuery && (
               <span>
@@ -270,6 +330,16 @@ export default async function ItemPage({
                   />
                 )}
               </div>
+              {!item.player && item.animate?.route === "none" && solution && (
+                <form action={askForAnimationAction} className="ks-note info ks-noanim">
+                  <input type="hidden" name="itemId" value={itemId} />
+                  <b>No animated version.</b> {item.animate.reason || NO_ANIMATION_DEFAULT} If you would like one,{" "}
+                  <button className="ks-linkbtn">ask for an animation</button>.
+                </form>
+              )}
+              {!item.player && item.animate?.askedBy && item.animate.route !== "none" && (
+                <div className="ks-note info ks-noanim">An animated version has been asked for and is on Evelyn&apos;s list.</div>
+              )}
               {solution ? (
                 solution.sections.map((s, i) => (
                   <div key={s.kind} className="ks-section">
@@ -286,6 +356,30 @@ export default async function ItemPage({
             </section>
           )}
         </div>
+
+        {anim && (
+          <section className="ks-card ks-anim" id="animated" style={{ marginTop: 16 }}>
+            <AnimReview
+              key={`${anim.animation.itemId}-${anim.animation.version}`}
+              embedded
+              viewer={anim.viewer}
+              base={base}
+              me={user.username}
+              itemId={anim.animation.itemId}
+              version={anim.animation.version}
+              status={anim.animation.status}
+              voice={anim.animation.voice ?? null}
+              notes={anim.animation.notes ?? null}
+              src={animatedUrl(anim.animation.itemId, anim.animation.version, anim.animation.entry || "solution.html")}
+              height={anim.animation.height || 900}
+              versions={anim.versions.map((x) => ({ version: x.version, status: x.status }))}
+              flags={anim.flags.map((f) => flagView(f, forOwner))}
+              fixedHere={anim.fixedHere.map((f) => flagView(f, forOwner))}
+              stillOpen={anim.stillOpen.map((f) => flagView(f, forOwner))}
+              canAccept={anim.canAccept}
+            />
+          </section>
+        )}
 
         {forOwner && <ChecksPanel run={checks} itemKey={item.key || (item.keySource === "evelyn" ? "none supplied" : "–")} />}
 

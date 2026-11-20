@@ -80,6 +80,9 @@ export interface V2TurnsConfig {
   onCut?: () => void;
   /** The voice client's record of what was actually played of the reply being cut short, or null if it has none. */
   heardSoFar?: () => string | null;
+  /** Voice: how many times other voices in the room were left out, while the student is still to be told of it
+   *  (room-voices.ts). Asked as each turn is sent. */
+  roomVoices?: () => number | undefined;
   /** How long after the closing words the session ends. Voice passes a function that waits for the speech to finish. */
   closeDelayMs?: number | (() => Promise<void>);
 }
@@ -251,11 +254,13 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     };
     let text = '';
     const settled: V2ToolCall[] = [];
+    const roomVoices = p.current.roomVoices?.();
     try {
       const done = await streamV2Turn({
         session, state: stateRef.current, studentSaid, embedToken: p.current.embedToken, signal: abort.signal,
         ...(silenceSeconds ? { silenceSeconds } : {}),
         ...(timeCheck ? { timeCheck: true } : {}),
+        ...(roomVoices ? { roomVoices } : {}),
         ...(resumeTurnRef.current ? { resumed: true } : {}),
         onText: (delta) => {
           // Typed sessions: once the reply is appearing, the shell's "Thinking…" state is over.

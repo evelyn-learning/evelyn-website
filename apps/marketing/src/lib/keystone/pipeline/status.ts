@@ -31,6 +31,8 @@ export type Status = {
   credit: CreditRow[];
   /** About the section as a whole (e.g. steps whose model id is unknown, left out of every vendor's spend). */
   creditNote?: string;
+  /** Animated solutions: what needs the owner (animreview/store.ts animationDigest). Absent on older callers. */
+  animations?: import("../animreview/store").AnimationDigest;
 };
 
 export type CreditRow = {
@@ -71,6 +73,9 @@ const FINISHED_GROUP = "Nobody (finished)";
 const CASTLE_ROCK_ROLES: Role[] = ["reviewer", "tech"];
 const NOTE_MAX = 200;
 const HOUR = 3_600_000;
+/** A bulk run that has waited on its batch this long is reported: the batch is over by then (24 h at the vendors) and nobody collected it. */
+export const BULK_LATE_HOURS = 26;
+export const bulkLateLine = (n: number) => `${n} item(s) have waited more than ${BULK_LATE_HOURS} hours on a bulk run: run the pipeline with --bulk to collect and continue them`;
 const DAY = 24 * HOUR;
 
 export const itemUrl = (itemId: string) => `${KEYSTONE_URL}/item/${encodeURIComponent(itemId)}`;
@@ -487,11 +492,15 @@ export async function buildStatus(now: Date, opts: { env?: Record<string, string
     failures.push(`Run failed on item ${r.itemId}${at ? ` (${pacificTime(new Date(at))})` : ""}: ${(r.error || "no error recorded").slice(0, NOTE_MAX)}`);
   }
   const stopped = await Run.find(
-    { dryRun: { $ne: true }, result: { $exists: false }, finishedAt: { $exists: false }, startedAt: { $gt: dayAgo, $lte: new Date(now.getTime() - 2 * HOUR) } },
+    // A bulk run waiting on a vendor batch (waitingOnBatch) is unfinished by design, not stopped: reported below only when it has waited too long.
+    { dryRun: { $ne: true }, result: { $exists: false }, finishedAt: { $exists: false }, waitingOnBatch: { $exists: false }, startedAt: { $gt: dayAgo, $lte: new Date(now.getTime() - 2 * HOUR) } },
     { itemId: 1, runId: 1, startedAt: 1, intent: 1 },
   )
     .sort({ startedAt: 1 })
     .lean();
+  // Bulk runs whose batch should long be back (the vendors end a batch within 24 h): someone has to run the pipeline with --bulk again.
+  const bulkLate = await Run.countDocuments({ dryRun: { $ne: true }, result: { $exists: false }, waitingOnBatch: { $lte: new Date(now.getTime() - BULK_LATE_HOURS * HOUR) } });
+  if (bulkLate) failures.push(bulkLateLine(bulkLate));
   // An unfinished run whose own final write landed (its intent is what the item shows now, by the run's own test)
   // only missed its bookkeeping (the next run finishes it): not a failure.
   const stoppedItems = stopped.length
@@ -529,6 +538,7 @@ export async function buildStatus(now: Date, opts: { env?: Record<string, string
     blocked,
     credit,
     ...(creditNote ? { creditNote } : {}),
+    animations: await (await import("../animreview/store")).animationDigest(new Date(now.getTime() - 24 * 3600 * 1000)),
   };
 }
 
@@ -554,7 +564,12 @@ export function creditLine(c: CreditRow): string {
 const countOf = (s: Status, stage: Stage) => s.byOwner.flatMap((g) => g.rows).find((r) => r.label === STAGE_LABEL[stage])?.n ?? 0;
 
 export function renderStatusEmail(s: Status, now: Date): { subject: string; html: string; text: string } {
-  const subject = `Keystone: ${s.waitingOnPraveen.length} waiting on you, ${countOf(s, "in_review")} in review, ${countOf(s, "approved")} approved`;
+  const an = s.animations;
+  const failedBuilds = an?.failedBuilds ?? [];
+  // Castle Rock's open flags on a released animation need the owner as much as a version to review does.
+  const crFlags = an?.castleRock ?? [];
+  const animN = an ? an.toReview.length + an.undecided.length + crFlags.length + failedBuilds.length + (an.capReached ? 1 : 0) : 0;
+  const subject = `Keystone: ${s.waitingOnPraveen.length} waiting on you, ${an ? `${plural(an.toReview.length, "animation")} to review, ${an.undecided.length} to decide, ${crFlags.length ? `${crFlags.length} flagged by Castle Rock, ` : ""}` : ""}${countOf(s, "in_review")} in review, ${countOf(s, "approved")} approved`;
   const when = pacificTime(now);
   const t: string[] = [`Keystone status, ${when}`, ""];
   const h: string[] = [];
@@ -591,6 +606,63 @@ export function renderStatusEmail(s: Status, now: Date): { subject: string; html
   t.push(`WAITING ON YOU (${s.waitingOnPraveen.length})`);
   t.push(...(s.waitingOnPraveen.length ? s.waitingOnPraveen.flatMap((w) => [`- ${w.itemId}: ${w.why}`, `  ${itemUrl(w.itemId)}`]) : ["- nothing"]), "");
   h.push(`<h3 ${H3}>Waiting on you (${s.waitingOnPraveen.length})</h3>`, list(s.waitingOnPraveen.map((w) => `${link(w.itemId)}: ${esc(w.why)}`), "Nothing."));
+
+  if (an) {
+    const QUEUE = `${KEYSTONE_URL}/queue#animate`;
+    const alink = (itemId: string) => `<a href="${esc(itemUrl(itemId))}#animated" style="color:#1a56db">${esc(itemId)}</a>`;
+    const ids = (xs: string[]) => xs.join(", ");
+    const review = an.toReview.map((r) => ({ id: r.itemId, line: `v${r.version}${r.fixes ? `: ${plural(r.fixes, "fix", "fixes")} to confirm` : r.version > 1 ? ": new version" : ": new"}` }));
+    const decide = an.undecided.map((u) => ({ id: u.itemId, line: u.askedBy ? `asked for by Castle Rock (${u.askedBy})` : "" }));
+    const queued = [
+      ...(an.queuedApi.length ? [`API credits (${an.queuedApi.length}), ${an.serverBuilds ? "built by the server by itself" : "built when you start a session and say so"}: ${ids(an.queuedApi)}`] : []),
+      ...(an.queuedHand.length ? [`By hand (${an.queuedHand.length}), built when you start a session and say so: ${ids(an.queuedHand)}`] : []),
+    ];
+    const usd = (n: number) => `$${n.toFixed(2)}`;
+    const capLine = an.capReached
+      ? `Today's limit for builds with API credits is reached (${usd(an.capReached.spent)} of ${usd(an.capReached.cap)}): ${plural(an.capReached.waiting.length, "item")} wait until tomorrow (${ids(an.capReached.waiting)})`
+      : "";
+    const needN = failedBuilds.length + (capLine ? 1 : 0);
+    const crLine = (f: (typeof crFlags)[number]) => `v${f.version}, ${f.who}${f.role ? ` (${f.role})` : ""}: ${f.comment || "(no comment)"}`;
+    t.push(`ANIMATIONS (${animN} need you)`);
+    if (crFlags.length)
+      t.push(`Flagged by Castle Rock (${crFlags.length}): on an animation they can see; it stays open for them until a new version that addresses it is released`, ...crFlags.flatMap((f) => [`- ${f.itemId} ${crLine(f)}`, `  ${itemUrl(f.itemId)}#animated`]));
+    t.push(`To review (${review.length}): open the item, play it, flag or accept`, ...(review.length ? review.flatMap((r) => [`- ${r.id} ${r.line}`, `  ${itemUrl(r.id)}#animated`]) : ["- nothing"]));
+    t.push(`To decide (${decide.length}): choose API credits, by hand, or no animation at ${QUEUE}`, ...(decide.length ? decide.map((d) => `- ${d.id}${d.line ? `: ${d.line}` : ""}`) : ["- nothing"]));
+    if (needN) {
+      t.push(`Builds that need you (${needN}): a failed build is now on the by-hand list at ${QUEUE}`);
+      t.push(...failedBuilds.map((f) => `- ${f.itemId}: build failed: ${f.reason}`), ...(capLine ? [`- ${capLine}`] : []));
+    }
+    if (queued.length) t.push("Chosen, not built yet", ...queued.map((q) => `- ${q}`));
+    if (an.beingFixed.length) t.push(`Being fixed, nothing for you (${an.beingFixed.length})`, ...an.beingFixed.map((b) => `- ${b.itemId} v${b.version}: ${plural(b.openFlags, "open flag")}`));
+    if (an.newlySkipped.length) t.push(`Marked "No animation needed" in the last 24 hours (${an.newlySkipped.length}): put any back at ${QUEUE}`, ...an.newlySkipped.map((k) => `- ${k.itemId} (${k.by}): ${k.reason}`));
+    t.push("");
+    const P = `style="margin:8px 0 2px;color:#333"`;
+    h.push(
+      `<h3 ${H3}>Animations (${animN} need you)</h3>`,
+      ...(crFlags.length
+        ? [
+            `<p ${P}><strong>Flagged by Castle Rock (${crFlags.length})</strong>: on an animation they can see; it stays open for them until a new version that addresses it is released</p>`,
+            list(crFlags.map((f) => `${alink(f.itemId)} ${esc(crLine(f))}`), ""),
+          ]
+        : []),
+      `<p ${P}><strong>To review (${review.length})</strong>: open the item, play it, flag or accept</p>`,
+      list(review.map((r) => `${alink(r.id)} ${esc(r.line)}`), "Nothing."),
+      `<p ${P}><strong>To decide (${decide.length})</strong>: choose API credits, by hand, or no animation on <a href="${esc(QUEUE)}" style="color:#1a56db">your To animate list</a></p>`,
+      list(decide.map((d) => `${link(d.id)}${d.line ? `: <strong>${esc(d.line)}</strong>` : ""}`), "Nothing."),
+    );
+    if (needN)
+      h.push(
+        `<p ${P}><strong style="color:#a11">Builds that need you (${needN})</strong>: a failed build is now on the by-hand list on <a href="${esc(QUEUE)}" style="color:#1a56db">your To animate list</a></p>`,
+        list([...failedBuilds.map((f) => `${link(f.itemId)}: build failed: ${esc(f.reason)}`), ...(capLine ? [esc(capLine)] : [])], ""),
+      );
+    if (queued.length) h.push(`<p ${P}><strong>Chosen, not built yet</strong></p>`, list(queued.map(esc), ""));
+    if (an.beingFixed.length) h.push(`<p ${P}><strong>Being fixed, nothing for you (${an.beingFixed.length})</strong></p>`, list(an.beingFixed.map((b) => `${alink(b.itemId)} v${b.version}: ${esc(plural(b.openFlags, "open flag"))}`), ""));
+    if (an.newlySkipped.length)
+      h.push(
+        `<p ${P}><strong>Marked "No animation needed" in the last 24 hours (${an.newlySkipped.length})</strong>: put any back on <a href="${esc(QUEUE)}" style="color:#1a56db">the list</a></p>`,
+        list(an.newlySkipped.map((k) => `${link(k.itemId)} (${esc(k.by)}): ${esc(k.reason)}`), ""),
+      );
+  }
 
   const going = `${plural(s.releasingToday, "solution")} to Castle Rock's review`;
   t.push(`GOING OUT TODAY: ${going}`, "");

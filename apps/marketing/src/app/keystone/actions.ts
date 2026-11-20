@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { can, SECTIONS, STAGES, STAGE_LABEL, VERDICTS, type SectionKind, type Stage, type Verdict } from "@/lib/keystone/config";
 import { changePassword, requireUser, signIn } from "@/lib/keystone/auth";
 import { ksHref } from "@/lib/keystone/paths";
@@ -8,6 +9,7 @@ import { ks } from "@/lib/keystone/db";
 import {
   addComment,
   clearHoldByOwner,
+  correctLevel,
   holdByOwner,
   keepHoldingByOwner,
   releaseIfHeld,
@@ -154,6 +156,19 @@ async function ownerAction(form: FormData, run: (itemId: string, user: Awaited<R
   return { go: await ownerBack(form, itemId, "already" in out ? "already" : done) };
 }
 
+/** The reviewer (or Evelyn) corrects the level the solution is written to. A solution in review goes back to Evelyn to be rewritten. */
+export async function setLevelAction(_prev: ReviewResult, form: FormData): Promise<ReviewResult> {
+  const user = await requireUser();
+  if (!can.review(user.role)) return { error: "Only the reviewer can change the level." };
+  try {
+    await correctLevel(String(form.get("itemId")), String(form.get("level") || ""), String(form.get("note") || ""), user);
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+  revalidatePath("/keystone", "layout");
+  return { ok: Date.now() };
+}
+
 /** Send to review: the held solution goes to Castle Rock as an ordinary "Sent for review". A second call is harmless. */
 export async function sendToReviewAction(_prev: ReviewResult, form: FormData): Promise<ReviewResult> {
   return ownerAction(form, (itemId, user) => sendToReviewByOwner(itemId, user), "sent");
@@ -177,4 +192,42 @@ export async function holdAction(_prev: ReviewResult, form: FormData): Promise<R
 /** Seen: clear an information-only hold (a question re-sent mid-review or after approval). Flags stay as history. */
 export async function clearHoldAction(_prev: ReviewResult, form: FormData): Promise<ReviewResult> {
   return ownerAction(form, (itemId) => clearHoldByOwner(itemId), "cleared");
+}
+
+/** Runs after the response: builds what is queued for API credits. Never throws (there is no one to catch it). */
+async function startAnimatedBuild() {
+  try {
+    const { buildQueued } = await import("@/lib/keystone/animated/serverbuild");
+    await buildQueued();
+  } catch (e) {
+    console.error(`[keystone animated build] stopped: ${e instanceof Error ? e.message : String(e)}`);
+  }
+}
+
+/** The owner's "To animate" list: queue the ticked items for the API build, or take them back to the by-hand list. */
+export async function setAnimateRouteAction(form: FormData) {
+  const user = await requireUser();
+  if (user.role !== "evelyn") return;
+  const { setAnimateRoute } = await import("@/lib/keystone/animreview/store");
+  const asked = String(form.get("route"));
+  const route = asked === "api" || asked === "hand" || asked === "none" ? asked : "undecided";
+  const r = await setAnimateRoute(form.getAll("itemId").map(String), route, { username: user.username, role: user.role }, String(form.get("reason") || ""));
+  // "Build with API credits" starts the server's build by itself, after this response is sent (the request does
+  // not wait for it). A build already running picks the new items up; KEYSTONE_ANIM_SERVER_BUILD=off leaves the
+  // button marking the item only.
+  if (route === "api" && "ok" in r) {
+    const { serverBuildOn } = await import("@/lib/keystone/animated/buildstate");
+    if (serverBuildOn()) after(startAnimatedBuild);
+  }
+  revalidatePath("/keystone", "layout");
+}
+
+/** Any signed-in user, on an item marked "No animation needed": ask for an animated version (it returns to the owner's list). */
+export async function askForAnimationAction(form: FormData) {
+  const user = await requireUser();
+  const itemId = String(form.get("itemId") || "");
+  const { askForAnimation } = await import("@/lib/keystone/animreview/store");
+  const r = await askForAnimation(itemId, { username: user.username, role: user.role });
+  if ("ok" in r) await addComment(itemId, "Asked for an animated version of this solution.", user);
+  revalidatePath("/keystone", "layout");
 }

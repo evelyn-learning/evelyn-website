@@ -218,7 +218,7 @@ async function passageTests() {
 // section title by course
 {
   assert.equal(sectionTitle("diploma", "Math 30-1"), "Diploma-style answer");
-  assert.equal(sectionTitle("diploma", "Science, Grade 7"), null);
+  assert.equal(sectionTitle("diploma", "Science, Grade 7"), "Worked answer");
   assert.equal(sectionTitle("short", "Science, Grade 7"), "Short answer");
   assert.equal(sectionTitle("diploma", "  mathematics 30\u20131 "), "Diploma-style answer");
   assert.equal(normaliseCourse("Math 30\u20132"), "Math 30-2");
@@ -227,8 +227,8 @@ async function passageTests() {
   assert.equal(normaliseCourse("PHYSICS 30"), "Physics 30");
   assert.equal(normaliseCourse("Science, Grade 7"), "Science, Grade 7");
   assert.equal(sectionTitle("diploma", "Science 30"), "Diploma-style answer");
-  assert.equal(sectionTitle("diploma", ""), null);
-  assert.equal(sectionTitle("diploma", undefined as unknown as string), null);
+  assert.equal(sectionTitle("diploma", ""), "Worked answer");
+  assert.equal(sectionTitle("diploma", undefined as unknown as string), "Worked answer");
 }
 
 /** Minimal well-formedness check: every open tag closed in order, no bare named entities. */

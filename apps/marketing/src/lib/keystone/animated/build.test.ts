@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildItem, inlineSvg, renderPage } from "./build";
+import { assetDirs, buildItem, inlineSvg, readBeside, renderPage } from "./build";
 import { BOARD_JS, SVG, spec } from "./testkit";
 
 const ok = (value: unknown, message: string) => assert.ok(value, message);
@@ -62,6 +62,20 @@ const css = readFileSync(join(HERE, "player.css"), "utf8");
 const classes = [...css.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/\.([a-zA-Z][\w-]*)/g)].map((x) => x[1]).filter((c) => !/^\d/.test(c));
 assert.deepEqual([...new Set(classes.filter((c) => c !== "ai-solution" && !c.startsWith("es-")))], [], "every class in player.css is es- or ai-solution");
 ok(!/@import|@font-face|url\(/.test(css), "player.css loads nothing");
+
+// --- the files beside the module are found from source and from the bundled server ---
+{
+  ok(assetDirs()[0] === HERE, "from source: beside the module first");
+  ok(readBeside("player.css") === css, "player.css read from beside the module");
+  // The bundled Next server has nothing beside its compiled chunk: the source tree under the working directory serves.
+  const app = join(HERE, "..", "..", "..", "..");
+  const fromCwd = assetDirs(app).slice(1);
+  ok(fromCwd[0] === HERE, `the app's working directory leads to the same folder (${fromCwd[0]})`);
+  ok(readBeside("player.js", ["/nonexistent/.next/server/chunks", ...fromCwd]).includes("esBoard"), "falls back to <cwd>/src/lib/keystone/animated");
+  ok(readBeside("AUTHORING.md", ["/nonexistent", ...assetDirs(join(app, "..", "..")).slice(1)]).length > 1000, "and to apps/marketing/src/… from the repository root");
+  assert.throws(() => readBeside("player.js", ["/nonexistent/a", "/nonexistent/b"]), /player\.js not found \(looked in \/nonexistent\/a, \/nonexistent\/b\)/, "a clear error names where it looked");
+  ok(renderPage({ spec: spec(), svg: SVG }).includes("esBoard.boot();"), "renderPage finds the player without being handed it");
+}
 
 // --- buildItem from a folder ---
 const dir = mkdtempSync(join(tmpdir(), "es-build-"));

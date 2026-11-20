@@ -561,12 +561,13 @@ async function main() {
     ok(!oldShape.ok && oldShape.reason === "shape", "a prose statedAnswer is outside the schema");
   }
 
-  // a course with no second-section title short-circuits without a model call
+  // a level outside the diploma courses is written under the neutral second-section title
   {
     const f = fake(good);
     const r = await writeSolution(item(), "Math 31", A, {}, f.deps);
-    assert.deepEqual(r, { ok: false, reason: "shape", detail: "no section title for this course", cost: 0, model: "" });
-    assert.equal(f.seen.length, 0);
+    assert.equal(r.ok, true);
+    assert.equal(f.seen.length, 1);
+    assert.ok(JSON.stringify(f.seen[0]).includes("Worked answer (the second section)"), "the author is given the neutral title for the second section");
     assert.equal((await run(good, A, item(), "math 30 - 1")).ok, true, "a course name written differently is normalised");
   }
 

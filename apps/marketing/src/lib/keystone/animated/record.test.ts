@@ -222,6 +222,28 @@ async function main() {
     assert.ok(head.toString("latin1") === "ID3" || head[0] === 0xff, "mp3 header");
   }
 
+  // the stand-in voice: only on a _smoke database, and through the real recording path without ffmpeg or network
+  {
+    const rec = await import("./record");
+    assert.equal(rec.fakeVoiceOn({ KEYSTONE_ANIM_FAKE_VOICE: "1" }, "castle_rock_review_smoke"), true);
+    assert.equal(rec.fakeVoiceOn({ KEYSTONE_ANIM_FAKE_VOICE: "1" }, "castle_rock_review"), false, "never on production's database");
+    assert.equal(rec.fakeVoiceOn({ KEYSTONE_ANIM_FAKE_VOICE: "1" }, "castle_rock_review_smoke_2"), false, "the name must END in _smoke");
+    assert.equal(rec.fakeVoiceOn({}, "x_smoke"), false, "off without the switch");
+    assert.equal(rec.fakeVoiceOn({ KEYSTONE_ANIM_FAKE_VOICE: "true" }, "x_smoke"), false, "only the value 1");
+    const clip = rec.silentMp3(1000);
+    assert.ok(clip[0] === 0xff && clip[1] === 0xfb && clip.length === 39 * 208, "about a second of mp3 frames");
+    const src3 = path.join(dir, "standin");
+    await mkdir(src3, { recursive: true });
+    await writeFile(path.join(src3, "spec.json"), JSON.stringify({ itemId: "77", voice: "Mr. Joseph", steps: [{ title: "One", lines: [{ say: "The answer is 12 newtons." }, { say: "Force is mass times acceleration." }] }, { title: "Two", lines: [{ say: "So it is option B." }] }] }));
+    const r = await rec.recordItem(src3, { live: true, apiKey: "stand-in", fetch: rec.fakeVoiceFetch(), encode: rec.silentEncode, log: () => {} });
+    assert.deepEqual(r.recorded, [1, 2]);
+    const t = JSON.parse(await readFile(path.join(src3, "timing.json"), "utf8")) as TimingFile;
+    assert.deepEqual(t.steps.map((s) => [s!.timing, s!.starts.length, s!.starts[0]]), [["aligned", 2, 0], ["aligned", 1, 0]], "timing.json as a real recording writes it");
+    assert.ok(t.steps[0]!.starts[1] > 0 && t.steps[0]!.starts[1] < t.steps[0]!.durationMs, "the second line starts inside the clip");
+    assert.ok((await stat(path.join(src3, "audio", "step-2.mp3"))).size >= 416, "a clip per step");
+    assert.equal(rec.VOICE_USD_PER_CHAR, 0.00005);
+  }
+
   await rm(dir, { recursive: true, force: true });
   console.log("record.test.ts ok");
 }

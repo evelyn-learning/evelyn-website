@@ -13,7 +13,7 @@
  * KEYSTONE_MONGODB_URI must be set explicitly (MONGODB_URI is never used). Production writes need Praveen's go.
  */
 import { execFileSync } from "node:child_process";
-import { cp, mkdir, readFile, stat } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { explicitTarget } from "../src/lib/keystone/dbtarget";
 
@@ -79,10 +79,7 @@ async function main() {
     }
 
     if (local) {
-      if (await stat(dest).catch(() => null)) throw new Error(`${dest} already exists`);
-      await mkdir(path.dirname(dest), { recursive: true });
-      const root = path.resolve(outDir);
-      await cp(root, dest, { recursive: true, filter: (src) => !["shots", "spec.json"].includes(path.relative(root, src).split(path.sep)[0]) });
+      await (await import("../src/lib/keystone/animated/output")).placeBuilt(outDir, dest);
     } else {
       // Copied beside the final folder first (vN.tmp, reused and brought up to date by a retry), and moved into
       // place only after the row is written: a copy that fails part-way never leaves a vN that blocks the next try.

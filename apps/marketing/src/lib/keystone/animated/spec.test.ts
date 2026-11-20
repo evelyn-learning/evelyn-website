@@ -67,6 +67,12 @@ has(check(edit((s) => (s.practice = { kind: "custom" }))), /needs solve\(api\)/,
 assert.deepEqual(check(edit((s) => (s.practice = { kind: "custom" })), SVG, `esBoard.define({ actions: { push: function () {} }, practice: function () {}, solve: function () {} });`), [], "valid custom practice");
 has(check(edit((s) => (s.practice = { kind: "quiz" } as never))), /unknown kind "quiz"/, "practice kind");
 
+// allowLetters
+assert.deepEqual(check(edit((s) => (s.allowLetters = ["dee", "En"]))), [], "allowLetters: a list of spellings is valid");
+has(check(edit((s) => ((s as unknown as { allowLetters: unknown }).allowLetters = "dee"))), /"allowLetters" must be a list/, "allowLetters not a list");
+has(check(edit((s) => (s.allowLetters = ["dee", ""]))), /allowLetters 2: needs a letter spelling/, "allowLetters empty entry");
+has(check(edit((s) => (s.allowLetters = ["d = 4"]))), /allowLetters 1: needs a letter spelling/, "allowLetters entry is one word");
+
 // allowNumbers
 has(check(edit((s) => (s.allowNumbers = [{ n: "7", reason: "" }]))), /allowNumbers 1: needs "n".*"reason"/, "allowNumbers reason");
 

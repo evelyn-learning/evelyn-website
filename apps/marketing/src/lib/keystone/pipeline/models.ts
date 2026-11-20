@@ -3,7 +3,8 @@
 // failure. Later pipeline steps never talk to a vendor SDK directly.
 // No `next/*` imports: this runs from tsx scripts on a laptop too.
 
-import type { ModelCall, ModelDeps, ModelFailureReason, ModelReply, ModelSpec, Role, Vendor } from "./types";
+import type { BatchServe, ModelCall, ModelDeps, ModelFailureReason, ModelReply, ModelSpec, Role, TokenUse, Vendor } from "./types";
+import { batchBody, pollBatch, submitBatch, type BatchPoll, type BatchRequest, type BatchVendor } from "./vendors/batch";
 import { assertSchemaSupported, parseJsonReply, validate } from "./schema";
 import { IMAGE_TYPES, TransportError, UnreadableReply, retryableStatus, type VendorReply } from "./vendors/common";
 import { callAnthropic } from "./vendors/anthropic";
@@ -85,6 +86,8 @@ export const MODEL_FOR: Record<Role, ModelSpec> = {
   solver3Image: GEMINI,
   compare: GEMINI,
   intake: GEMINI,
+  // Animated solutions: writes one item's spec.json + figure.svg (+ board.js) (animated/author.ts).
+  animator: CLAUDE,
 };
 
 const ALL_ROLES = Object.keys(MODEL_FOR) as Role[];
@@ -159,9 +162,29 @@ export function pricesAt(spec: ModelSpec, now: Date = new Date()): { pricePerMTo
   return p;
 }
 
-export function costOf(spec: ModelSpec, tokensIn: number, tokensOut: number, now?: Date): number {
+/** Prompt-cache multipliers on the input rate (Claude, 5-minute cache): a write costs 1.25×, a read 0.1×.
+ * Checked 2026-11-18: https://platform.claude.com/docs/en/build-with-claude/prompt-caching */
+export const CACHE_WRITE_RATE = 1.25;
+export const CACHE_READ_RATE = 0.1;
+
+/**
+ * What a call made through a vendor's batch endpoint costs, as a share of the standard price: half, on both vendors
+ * bulk mode uses, input and output alike. On Claude the prompt-cache multipliers stack with it.
+ * Checked 2026-11-18: https://platform.claude.com/docs/en/build-with-claude/batch-processing ("All usage is charged
+ * at 50 percent of the standard API prices"; "The pricing discounts from prompt caching and Message Batches can
+ * stack") and https://developers.openai.com/api/docs/guides/batch ("50% cost discount compared to synchronous APIs").
+ */
+export const BATCH_RATE = 0.5;
+
+/** `tokensIn` is every input token; `cache` says how many of them were cache writes / reads (none by default);
+ * `batch`: the call ran in a vendor batch (BATCH_RATE). */
+export function costOf(spec: ModelSpec, tokensIn: number, tokensOut: number, now?: Date, cache: { write?: number; read?: number } = {}, opts: { batch?: boolean } = {}): number {
   const p = pricesAt(spec, now);
-  return (tokensIn / 1e6) * p.pricePerMTokIn + (tokensOut / 1e6) * p.pricePerMTokOut;
+  const write = cache.write ?? 0;
+  const read = cache.read ?? 0;
+  const billedIn = tokensIn - write - read + write * CACHE_WRITE_RATE + read * CACHE_READ_RATE;
+  const list = (billedIn / 1e6) * p.pricePerMTokIn + (tokensOut / 1e6) * p.pricePerMTokOut;
+  return opts.batch ? list * BATCH_RATE : list;
 }
 
 /** Remove configured key values, and key-shaped tokens (sk-…, AIza…, Bearer …),
@@ -175,6 +198,29 @@ export function redact(text: string): string {
     }
   }
   return out.replace(/\b(?:sk-|AIza)[A-Za-z0-9_*.-]{8,}/g, "[redacted]").replace(/\bBearer\s+\S+/gi, "[redacted]");
+}
+
+/** The spec a recorded model id was called with (the roles' specs and the two tiers), else undefined. */
+export function specOfModel(model: string): ModelSpec | undefined {
+  return [...Object.values(MODEL_FOR), ANTHROPIC, OPENAI, OPUS, SOL].find((spec) => spec.model === model);
+}
+
+function bulkKey(vendor: BatchVendor, deps: ModelDeps): string {
+  if (process.env.KEYSTONE_PIPELINE_LIVE !== "1" && !deps.fetch) throw new Error("live model calls are off");
+  const key = keyFor(vendor);
+  if (!key) throw new Error(`missing API key env: ${KEY_ENV[vendor].join(" or ")}`);
+  return key;
+}
+
+/** Bulk mode: submits one vendor batch (vendors/batch.ts). Throws TransportError when the vendor cannot be reached or refuses it. */
+export function submitBulk(vendor: BatchVendor, requests: BatchRequest[], deps: ModelDeps = {}): Promise<{ vendorBatchId: string }> {
+  return submitBatch(vendor, requests, bulkKey(vendor, deps), deps.fetch);
+}
+
+/** Bulk mode: where a submitted vendor batch stands and, once over, each request's outcome. */
+export function pollBulk(vendor: BatchVendor, model: string, vendorBatchId: string, deps: ModelDeps = {}): Promise<BatchPoll> {
+  const spec = specOfModel(model) ?? { vendor, model, pricePerMTokIn: 0, pricePerMTokOut: 0 };
+  return pollBatch(vendor, spec, vendorBatchId, bulkKey(vendor, deps), deps.fetch);
 }
 
 const realSleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -218,8 +264,12 @@ export async function callModel<T>(call: ModelCall, deps: ModelDeps = {}): Promi
   assertKeys([call.role]);
   const key = keyFor(spec.vendor)!;
 
+  let tokens: TokenUse | undefined;
+  // Bulk mode: set below once the batch has been asked. `extra` is what the batch charged before a live call replaced it.
+  let served: BatchServe | undefined;
+  let fromBatch = false;
   const failed = (reason: ModelFailureReason, detail: string, cost = 0, model = spec.model): ModelReply<T> =>
-    ({ ok: false, reason, detail: redact(detail), cost, model });
+    ({ ok: false, reason, detail: redact(detail), cost: cost + (served?.extraCost ?? 0), model, ...(tokens ? { tokens } : {}), ...(fromBatch ? { batch: true } : {}) });
 
   if (call.images?.length) {
     if (spec.vendor === "deepseek") return failed("shape", "this model cannot read images");
@@ -230,7 +280,16 @@ export async function callModel<T>(call: ModelCall, deps: ModelDeps = {}): Promi
   const started = Date.now();
   const sleep = deps.sleep ?? realSleep;
   let reply: VendorReply | undefined;
-  for (let attempt = 0; ; attempt++) {
+  // Bulk mode: the same request, answered from a vendor batch. serve() throws BatchPending while the batch is out
+  // (the run stops there, unfinished); it says "live" when the batch gave nothing usable, and the call below is made once.
+  if (deps.batch?.takes(call.role, spec.vendor)) {
+    served = deps.batch.serve(call.role, spec, batchBody(spec, call));
+    if (served.kind === "reply") {
+      reply = served.reply;
+      fromBatch = served.pricing === "batch";
+    }
+  }
+  for (let attempt = 0; !reply; attempt++) {
     try {
       reply = await send(spec, call, key, deps.fetch);
       break;
@@ -253,8 +312,17 @@ export async function callModel<T>(call: ModelCall, deps: ModelDeps = {}): Promi
 
   const model = reply.model || spec.model;
   const fellBack = reply.fellBack ?? false;
-  const served = fellBack ? CLAUDE_FALLBACK_PRICES[model] : undefined;
-  const cost = costOf(served ? { ...spec, ...served, priceChanges: undefined } : spec, reply.tokensIn, reply.tokensOut, deps.now);
+  const servedBy = fellBack ? CLAUDE_FALLBACK_PRICES[model] : undefined;
+  const cache = { write: reply.cacheWriteTokens ?? 0, read: reply.cacheReadTokens ?? 0 };
+  const priced = servedBy ? { ...spec, ...servedBy, priceChanges: undefined } : spec;
+  const listCost = costOf(priced, reply.tokensIn, reply.tokensOut, deps.now, cache);
+  const own = fromBatch ? costOf(priced, reply.tokensIn, reply.tokensOut, deps.now, cache, { batch: true }) : listCost;
+  if (served?.kind === "live") await served.settle(reply, own);
+  if (served) deps.batch!.record({ id: served.id, batch: fromBatch, saved: listCost - own });
+  // The item's record carries what was paid: the batch rate for a batch reply, plus (added by `failed` and on the
+  // last line) anything the batch charged before a live call replaced it.
+  const cost = own;
+  tokens = { in: reply.tokensIn, out: reply.tokensOut, cacheWrite: cache.write, cacheRead: cache.read };
 
   if (reply.refusal !== undefined) return failed("refusal", reply.refusal || "refused", cost, model);
   if (!reply.text.trim()) return failed("empty", reply.truncated ? "no text before the output token limit" : "no text in reply", cost, model);
@@ -262,5 +330,5 @@ export async function callModel<T>(call: ModelCall, deps: ModelDeps = {}): Promi
   if (!parsed.ok) return failed("shape", reply.truncated ? `${parsed.detail} (hit the output token limit)` : parsed.detail, cost, model);
   const err = validate(parsed.value, call.schema);
   if (err) return failed("shape", err, cost, model);
-  return { ok: true, value: parsed.value as T, cost, model, ms: Date.now() - started, fellBack };
+  return { ok: true, value: parsed.value as T, cost: cost + (served?.extraCost ?? 0), model, ms: Date.now() - started, fellBack, tokens, ...(fromBatch ? { batch: true } : {}) };
 }

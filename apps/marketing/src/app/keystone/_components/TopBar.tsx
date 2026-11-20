@@ -10,7 +10,6 @@ export async function TopBar({ user, on }: { user: KsUser; on?: "home" | "queue"
     { key: "home", href: b || "/", label: "Overview" },
     // Evelyn only (decided here on the server; the count query also returns 0 for any other role).
     ...(user.role === "evelyn" ? [{ key: "queue" as const, href: `${b}/queue`, label: `Queue · ${await waitingForOwnerCount(user.role)}` }] : []),
-    ...(user.role === "evelyn" ? [{ key: "animated" as const, href: `${b}/animated`, label: "Animated" }] : []),
     { key: "items", href: `${b}/items`, label: "All items" },
     { key: "upload", href: `${b}/upload`, label: "Upload items" },
   ];

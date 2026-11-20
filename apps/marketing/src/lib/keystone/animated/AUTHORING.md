@@ -68,6 +68,7 @@ open) and each one looks right.
   "answer": { "text": "8.3 m/s at 42° South of East", "letter": "A" },
   "question": "<p>…the stem…</p>",
   "allowNumbers": [ { "n": "41.8", "reason": "the angle before rounding to 42" } ],
+  "allowLetters": [],
   "board": { "fresh": [], "readoutFresh": "…", "readoutPractice": "…", "readoutEnd": "…", "buttons": [ … ] },
   "steps": [ { "title": "…", "lines": [ { "say": "…", "speak": "…", "cues": [ … ] } ], "body": "…" } ],
   "boxes": [ … ],
@@ -83,6 +84,7 @@ open) and each one looks right.
 | `answer.text` | the answer statement (HTML allowed, e.g. `<var>`). `answer.letter` only for multiple choice |
 | `question` | HTML of the stem; shown in a closed "Show the question" fold. `""` leaves it out |
 | `allowNumbers` | numbers that are not in the written solution or question, each with the reason (see §8) |
+| `allowLetters` | optional. Letter spellings the ear check lets through in the voice text (`["dee"]`): only for a variable that has no name (see `speak` below) |
 | `board.fresh` | cues applied at once on top of figure.svg to make the Fresh board. Usually `[]` |
 | `board.readoutFresh` | the line under the board before play ("Press play. The board draws as the tutor speaks.") |
 | `board.readoutPractice` | the practice instruction, starting "Now you: …" |
@@ -100,6 +102,12 @@ open) and each one looks right.
   Part 5 of the playbook: units spelled out and American ("meters per second"), no symbols, "car A" never a
   bare letter, "sine/cosine/tangent", never three numbers in a row. `say` and `speak` of a line must have the
   same number of sentences.
+- **Name the quantity; do not spell its letter.** A letter symbol is never written by its sound: not "dee",
+  "en", "el", "em", "vee", "kay" (the full list is in §8). A recorded voice read "dee" as "day". Say what the
+  letter stands for: "the slit separation" (not "dee"), "the number of moles" (not "en"), "the speed" (not
+  "vee"), "the mass" (not "em"). This overrides the playbook's "dee why over dee ex" respellings. "ex" and
+  "why" for the math variables x and y are fine (heard and accepted). Only when a variable has no name at all
+  (a bare parameter called d in the question) list its spelling in `allowLetters` and use it.
 - `cues` are what the board does when the line starts. A line with no cue is a pause.
 - The first line of step 1 is "The answer is … Here's why." The last line of the last step states the answer
   and carries `{ "do": "answer" }`.
@@ -262,7 +270,7 @@ formed and every `id` present in figure.svg; every `call` and button action defi
 does nothing at load but `esBoard.define`; required boxes present (selfcheck, sanity, slip, takeaway,
 diploma); at least one fold in a step body; `beforeStep` in range; choice answers match a choice; a try-one
 box has a fold; an explore box has `explore(api)`; practice ids exist; figure 240 wide, ids unique and not
-`es-…`; each `allowNumbers` entry has a reason.
+`es-…`; each `allowNumbers` entry has a reason; each `allowLetters` entry is one word.
 
 **Build: numbers** (fails unless `--lenient`): every number in the answer, `say`, `speak`, ink, step titles
 and bodies, boxes, readouts and practice texts must occur in the written solution or the question. Compared by
@@ -276,7 +284,9 @@ answer.
 **Build: ear** (fails unless `--lenient`), on `speak` (or `say` where a line has no `speak`): no symbols
 (`= + × ÷ / ° ² ³ √ ^ _ % · → ≈ < > −` and Greek letters); no unit abbreviation after a number (`14 m`, `400 kg`);
 no `sin` / `cos` / `tan`; no three numbers in a row (a spaced number such as `56 360 000` counts as three);
-`say` and `speak` have the same number of sentences.
+no letter symbol spelled by its sound as a whole word, in any case (`ay`, `cee`, `dee`, `eff`, `aitch`, `kay`,
+`el`, `em`, `en`, `ess`, `vee`, `zee`, `zed`; `ex` and `why` are allowed) unless the spelling is listed in
+`allowLetters`; `say` and `speak` have the same number of sentences.
 
 **Build: packaging** (fails the build): no outside address anywhere; no `<details>`, `<link>`, `@import`,
 `@font-face`, frame or form; no file reference other than `audio/step-N.mp3`; no storage, cookie or network
@@ -297,6 +307,7 @@ the right edge; no console error; no request but the page and its clips.
 - An ink line too long for the strip: it wraps and is hard to read. Keep ink lines short (look at the step pictures).
 - An action sets something inside `setTimeout`: Listen on a later step shows a different board. Use `api.after`.
 - `speak` left out on a line whose `say` has `m/s`, `°` or `=`: the ear check fails. Write the `speak`.
+- A letter spelled out in `speak` ("dee equals…"): the voice may read another word. Name the quantity.
 - A number rounded differently in `speak` than in the written solution: the numbers check reports it. Say the
   written value.
 - A moved element has a rotate in its transform: `move` replaces the whole transform. Rotate an inner `<g>`.

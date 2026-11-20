@@ -10,11 +10,11 @@ import type { Draft } from "./write";
 import type { CheckResult, Finding } from "./checks";
 import type { CalcFinding } from "./calc";
 import type { ModelReply } from "./types";
-import { visibleStage } from "../config";
+import { sectionTitle, visibleStage } from "../config";
 import type { ModelImage } from "./types";
 import { releaseAt } from "./release";
 import { agreeOnAnswer } from "./solve";
-import { sniffImage, parseArgs, processItem, runPipeline, selectItems, type Deps, type Reader, type Steps, type Writer } from "./run";
+import { sniffImage, parseArgs, processItem, runPipeline, selectItems, styleOnly, type Deps, type Reader, type Steps, type Writer } from "./run";
 
 /** assert.ok with a message always: without one, Node re-parses the transformed source to build it, which stalls under tsx. */
 const ok = (value: unknown, message: string) => assert.ok(value, message);
@@ -96,6 +96,10 @@ class FakeStore implements Reader, Writer {
     this.itemWrites++;
     i.pipeline = pipeline;
   }
+  async setLevel(id: string, level: string, why: string, e: Expect) {
+    const i = this.unchanged(id, e);
+    Object.assign(i, { course: level, courseSource: "pipeline", levelWhy: why });
+  }
   async suggest(kind: "items_need_data" | "keys_queried" | "course_missing", itemIds: string[], batchId?: string) { this.suggestions.push({ kind, itemIds, batchId }); }
   lessons: LessonDoc[] = [];
   lessonCalls = 0;
@@ -126,9 +130,10 @@ type Calls = Record<keyof Steps, number> & { hints: (string | undefined)[]; writ
 
 /** Steps that pass by default; each can be replaced. Counts every call. */
 function steps(over: Partial<Steps> = {}): { steps: Steps; calls: Calls } {
-  const calls = { intakeModel: 0, agreeOnAnswer: 0, writeSolution: 0, calcCheck: 0, workingCheck: 0, rulesAudit: 0, renderCheck: 0, classifyCause: 0, hints: [], writeOpts: [] } as Calls;
+  const calls = { intakeModel: 0, setLevel: 0, agreeOnAnswer: 0, writeSolution: 0, calcCheck: 0, workingCheck: 0, rulesAudit: 0, renderCheck: 0, classifyCause: 0, hints: [], writeOpts: [] } as Calls;
   const base: Steps = {
     intakeModel: async () => ({ complete: true, missing: [] }),
+    setLevel: async () => ({ level: "Math 30-1", why: "logarithms", cost: 0.001, model: "m-intake" }),
     agreeOnAnswer: async () => ({ decision: { outcome: "pass", answer: B, confirm: false }, solves: solves(B), cost: 0.2 }),
     writeSolution: async () => okReply(draft(), 0.1, "m-author"),
     calcCheck: async () => [],
@@ -154,7 +159,8 @@ function deps(store: FakeStore, s: Steps, extra: Partial<Deps> = {}): Deps {
 }
 
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13]);
-const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", code: "rule_broken", ruleId: "R-x", detail: `broken ${n}`, quote: "Short 1" } as Finding], cost: 0.05, model: "m-audit" });
+// A content rule: never "style only", so a second failure on it is held (the one-correction rule).
+const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", code: "rule_broken", ruleId: "R-answer-agreed", detail: `broken ${n}`, quote: "Short 1" } as Finding], cost: 0.05, model: "m-audit" });
 
 (async () => {
   // --- happy path ---
@@ -235,6 +241,55 @@ const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", co
     equal(calls.renderCheck, 1, "render ran once after");
   }
 
+  // --- a second correction for style only ---
+  {
+    const styleFail = (n: number): CheckResult => ({ findings: [{ check: "audit", code: "rule_broken", ruleId: "R-canadian-spelling", detail: `spelling ${n}`, quote: "Short 1" } as Finding], cost: 0.05, model: "m-audit" });
+    const found = (r: CheckResult): Finding[] => ("findings" in r ? r.findings : []);
+    ok(styleOnly(found(styleFail(1))) && !styleOnly(found(auditFail(1))) && !styleOnly([]), "styleOnly: a style rule yes, a content rule no, nothing no");
+    ok(!styleOnly([...found(styleFail(1)), { check: "working", code: "line_does_not_follow", detail: "x" } as Finding]), "one content finding among style ones: not style only");
+    ok(styleOnly([{ check: "render", code: "katex", detail: "x" } as Finding]) && !styleOnly([{ check: "render", code: "missing_image", detail: "x" } as Finding]) && !styleOnly([{ check: "audit", code: "rule_broken", detail: "no rule id" } as Finding]), "form codes yes; a missing picture or an unnamed rule no");
+
+    // style fails twice, then passes: two corrections, every check re-run on the last draft, ready with no flag
+    let n = 0;
+    const a = steps({ rulesAudit: async () => (n++ < 2 ? styleFail(n) : { findings: [], cost: 0.05, model: "m-audit" }) });
+    const store = new FakeStore([item()]);
+    const run = await processItem("100", "r1", deps(store, a.steps));
+    equal(run.result, "ready", "style corrected twice → ready");
+    equal(run.corrections, 2, "two corrections");
+    deepEqual(run.flags, [], "no flag");
+    equal(a.calls.writeSolution, 3, "author called three times");
+    equal(a.calls.calcCheck, 2, "calc re-run after the style correction");
+    equal(a.calls.workingCheck, 2, "working re-run after the style correction");
+    equal(a.calls.rulesAudit, 3, "audit ran three times");
+
+    // style fails a third time: held, as before
+    const b = steps({ rulesAudit: async () => styleFail(9) });
+    const store2 = new FakeStore([item()]);
+    const run2 = await processItem("100", "r1", deps(store2, b.steps));
+    equal(run2.result, "held", "style fails three times → held");
+    deepEqual(run2.flags, ["second_failure"], "second_failure");
+    equal(b.calls.writeSolution, 3, "no third correction");
+
+    // the working check fails on the style-corrected draft: held, no further correction
+    let w = 0, au = 0;
+    const c = steps({
+      rulesAudit: async () => (au++ < 2 ? styleFail(au) : { findings: [], cost: 0.05, model: "m-audit" }),
+      workingCheck: async () => (w++ === 0 ? { findings: [], cost: 0.05, model: "m-work" } : { findings: [{ check: "working", code: "line_does_not_follow", detail: "broken by the rewrite" } as Finding], cost: 0.05, model: "m-work" }),
+    });
+    const run3 = await processItem("100", "r1", deps(new FakeStore([item()]), c.steps));
+    equal(run3.result, "held", "a rewrite that breaks the working is caught and held");
+    deepEqual(run3.flags, ["second_failure"], "second_failure");
+    equal(c.calls.writeSolution, 3, "and not corrected again");
+
+    // the switch: off = one correction of any kind
+    process.env.KEYSTONE_STYLE_CORRECTION = "off";
+    const d = steps({ rulesAudit: async () => styleFail(2) });
+    const run4 = await processItem("100", "r1", deps(new FakeStore([item()]), d.steps));
+    delete process.env.KEYSTONE_STYLE_CORRECTION;
+    equal(run4.result, "held", "switched off → held after one correction");
+    equal(d.calls.writeSolution, 2, "one correction only");
+  }
+
   // --- audit fails twice → held second_failure, stage ready ---
   {
     const store = new FakeStore([item()]);
@@ -249,30 +304,54 @@ const auditFail = (n: number): CheckResult => ({ findings: [{ check: "audit", co
     equal(store.solutions.length, 1, "draft kept as a held solution");
   }
 
-  // --- course from metadata only → item untouched, course_missing ---
+  // --- no course with the item (the file's own data never counts) → the level is read from the question ---
   {
-    const store = new FakeStore([item({ courseSource: "metadata" })]);
-    const before = structuredClone(store.items.get("100"));
-    const { steps: s, calls } = steps();
+    const store = new FakeStore([item({ course: "Pure Math 30", courseSource: "metadata" })]);
+    const seen: string[] = [];
+    const { steps: s, calls } = steps({
+      setLevel: async () => ({ level: "Math 30-2", why: "odds", cost: 0.001, model: "m-intake" }),
+      agreeOnAnswer: async (_i, _im, course) => { seen.push(course); return { decision: { outcome: "pass", answer: B, confirm: false }, solves: solves(B), cost: 0.2 }; },
+    });
     const run = await processItem("100", "r1", deps(store, s));
-    equal(run.result, "course_missing", "course missing");
-    deepEqual(store.items.get("100"), before, "item untouched");
-    deepEqual(store.suggestions.map((x) => x.kind), ["course_missing"], "course_missing suggested");
-    equal(calls.intakeModel + calls.agreeOnAnswer, 0, "no model spend");
+    equal(run.result, "ready", "solved without a course from the client");
+    const it = store.items.get("100")!;
+    equal(it.course, "Math 30-2", "level stored on the item");
+    equal(it.courseSource, "pipeline", "marked as read from the question");
+    equal(it.levelWhy, "odds", "reason kept");
+    deepEqual(seen, ["Math 30-2"], "the solvers were given the level");
+    equal(calls.setLevel, 1, "one level call");
+    deepEqual(store.suggestions.map((x) => x.kind), [], "the client is not asked for a course");
   }
 
-  // --- sectionTitle null → section_title_unset, no model ---
-  {
-    const store = new FakeStore([item({ course: "Physics 20" })]);
+  // --- a level a person set on the item page, or one an earlier run read, is used as it is ---
+  for (const courseSource of ["person", "pipeline", "sheet"] as const) {
+    const store = new FakeStore([item({ course: "Math 30-2", courseSource })]);
     const { steps: s, calls } = steps();
     const run = await processItem("100", "r1", deps(store, s));
+    equal(run.result, "ready", `${courseSource}: solved`);
+    equal(calls.setLevel, 0, `${courseSource}: no level call`);
+    equal(store.items.get("100")!.course, "Math 30-2", `${courseSource}: level kept`);
+  }
+
+  // --- the level cannot be read → held for Praveen, nothing solved ---
+  {
+    const store = new FakeStore([item({ courseSource: "metadata" })]);
+    const { steps: s, calls } = steps({ setLevel: async () => ({ failed: "network: down", cost: 0, model: "m-intake" }) });
+    const run = await processItem("100", "r1", deps(store, s));
     equal(run.result, "held", "held");
-    deepEqual(run.flags, ["section_title_unset"], "flag");
-    const it = store.items.get("100")!;
-    equal(it.stage, "received", "stage unchanged");
-    equal(it.pipeline?.heldFor, "praveen", "heldFor");
-    deepEqual(it.pipeline?.flags, ["section_title_unset"], "flags on the item");
-    equal(Object.values(calls).filter((v) => typeof v === "number").reduce((a, b) => (a as number) + (b as number), 0), 0, "no model call at all");
+    deepEqual(run.flags, ["step_failed"], "step_failed");
+    equal(calls.agreeOnAnswer, 0, "not solved");
+    equal(store.items.get("100")!.courseSource, "metadata", "no level stored");
+  }
+
+  // --- a level outside the diploma courses is written too, under the neutral section name ---
+  {
+    const store = new FakeStore([item({ course: "Physics 20" })]);
+    const { steps: s } = steps();
+    const run = await processItem("100", "r1", deps(store, s));
+    equal(run.result, "ready", "solved");
+    equal(sectionTitle("diploma", "Physics 20"), "Worked answer", "neutral section name");
+    equal(sectionTitle("diploma", "Mathematics 30–1"), "Diploma-style answer", "diploma name kept for diploma courses");
   }
 
   // --- kill after solve, run again → solvers not called again ---

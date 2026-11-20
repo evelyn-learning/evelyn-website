@@ -530,6 +530,13 @@ export async function acquireLock(name: string, owner: string, now: Date, ttlMs:
   }
 }
 
+/** Extends a lock this owner still holds to now + ttlMs. False when it is no longer ours (expired and taken). */
+export async function renewLock(name: string, owner: string, now: Date, ttlMs: number): Promise<boolean> {
+  const { Lock } = await ks();
+  const r = await Lock.updateOne({ _id: name, owner }, { $set: { expiresAt: new Date(now.getTime() + ttlMs) } });
+  return r.matchedCount === 1;
+}
+
 export async function releaseLock(name: string, owner: string): Promise<void> {
   const { Lock } = await ks();
   await Lock.deleteOne({ _id: name, owner });

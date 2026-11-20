@@ -95,6 +95,14 @@ export type RunStep = {
   model?: string;
   /** ok false and the cause was transient (network error, 429 / 5xx after every retry): the next run retries it. */
   transient?: boolean;
+  /**
+   * Bulk mode only (pipeline/bulk.ts): this step's model calls that went through a vendor batch. `ids`: their
+   * request ids (BulkCallDoc.customId); `calls`: how many were answered by the batch and so are in `cost` at the
+   * batch rate (half price); `live`: how many were made as live calls instead (the batch gave nothing usable), at the
+   * standard price; `saved`: standard price minus batch price over the batch-answered calls (cost + saved = what a
+   * live run would have paid for this step).
+   */
+  batch?: { ids: string[]; calls: number; live: number; saved: number };
 };
 
 /** One pipeline run of one item. Internal record (may carry model ids); never shown to the client. */
@@ -131,6 +139,82 @@ export type RunDoc = {
   warnings?: string[];
   /** Times this run ended "failed" or held with step_failed (a resumed run adds to it): the attempt cap counts these. */
   failedAttempts?: number;
+  /** Bulk mode: the run stopped, unfinished, at a model call that is out in a vendor batch; since when. Removed when the run ends. */
+  waitingOnBatch?: Date;
+};
+
+/** A reply as a vendor adapter returned it (pipeline/types.ts StoredReply). */
+type BulkReply = { text: string; refusal?: string; truncated?: boolean; tokensIn: number; cacheWriteTokens?: number; cacheReadTokens?: number; tokensOut: number; model?: string; fellBack?: boolean };
+
+/**
+ * Bulk mode (pipeline/bulk.ts): one submission to a vendor's batch endpoint. Internal; never shown to the client.
+ * status: submitting (saved just before the vendor call; found again later it means the call's outcome is unknown,
+ * and the job is marked lost) → submitted → ended | expired | failed | canceled (the vendor's outcome, collected) | lost.
+ */
+export type BulkJobDoc = {
+  jobId: string;
+  vendor: "anthropic" | "openai";
+  model: string;
+  vendorBatchId?: string;
+  status: "submitting" | "submitted" | "ended" | "expired" | "failed" | "canceled" | "lost";
+  /** The waves its requests belong to: 1 the two blind solves, 2 the write, 3 working check + audit, 4 the correction and its re-check (0: the cause of a send-back). */
+  waves: number[];
+  itemIds: string[];
+  /** The exact custom ids sent, one per request (each is a BulkCallDoc). */
+  customIds: string[];
+  createdAt: Date;
+  submittedAt?: Date;
+  /** When the vendor finished it (the vendor's own time when given). */
+  finishedAt?: Date;
+  collectedAt?: Date;
+  detail?: string;
+  dryRun?: boolean;
+};
+
+/** Bulk mode: one model request sent in a batch, and what came back for it. Internal. */
+export type BulkCallDoc = {
+  /** The request's id at the vendor: "ks-<48 hex of sha256(item, run, vendor, model, request body)>-<n>". */
+  customId: string;
+  jobId: string;
+  itemId: string;
+  runId: string;
+  role: string;
+  vendor: "anthropic" | "openai";
+  model: string;
+  wave: number;
+  hash: string;
+  state: "pending" | "succeeded" | "errored" | "expired" | "canceled" | "lost";
+  detail?: string;
+  /** The batch's reply (state succeeded). */
+  reply?: BulkReply;
+  /** What the batch charged for it (batch rate), and the same tokens at the standard price. 0 when not billed. */
+  cost: number;
+  listCost: number;
+  /** The live call made in its place (errored, expired, canceled, lost, or refused in the batch), made once and kept. */
+  live?: { why: string; reply: BulkReply; cost: number; at: Date };
+  createdAt: Date;
+  collectedAt?: Date;
+  dryRun?: boolean;
+};
+
+/**
+ * Where the server's own build of an item's animation stands (animated/serverbuild.ts), for the owner's To animate
+ * list. queued: waiting for the build; building: being built since startedAt; failed: not built (the item's route
+ * is then "hand" and `failure` says why in plain words); built: published for the owner's review.
+ */
+export type AnimateBuildState = "queued" | "building" | "failed" | "built";
+export type AnimateBuild = {
+  state: AnimateBuildState;
+  startedAt?: Date;
+  finishedAt?: Date;
+  /** Why it failed, one short sentence the owner reads. */
+  failure?: string;
+  /** Dollars spent on this item's builds so far (model calls + voice). */
+  cost?: number;
+  /** Correction calls the author needed (0 or 1). */
+  corrections?: number;
+  /** Times a build of this item was started (an interrupted build is retried once). */
+  attempts?: number;
 };
 
 export type ItemDoc = {
@@ -156,7 +240,9 @@ export type ItemDoc = {
   /** Original QTI XML (items that arrived as QTI); resource paths as used in the XML. */
   qti?: { apip: string; metadata: string; resources: string[]; passages?: { file: string; xml: string }[] };
   /** Animated (voiced) player attached to the item: files under assets/<itemId>/player/. */
-  player?: { entry: string; voice?: string; height: number; note?: string; attachedAt: Date };
+  player?: { entry: string; voice?: string; height: number; note?: string; attachedAt: Date; version?: number };
+  /** The owner's decision on this item's animation: build with API credits, build by hand in a session, or none needed. Absent: not decided. */
+  animate?: { route: "api" | "hand" | "none" | "wanted"; requestedAt: Date; requestedBy: string; reason?: string; askedBy?: string; build?: AnimateBuild };
   stage: Stage;
   /** The latest key query (kept for the record once answered). Undefined on items never queried. */
   keyQuery?: KeyQueryDoc;
@@ -165,8 +251,14 @@ export type ItemDoc = {
   releasedVersion?: number;
   /** evelynAnswer as it was when the solution was released; what Castle Rock sees. */
   releasedAnswer?: string;
-  /** Where `course` came from: only a spreadsheet value counts (QTI metadata is unreliable). Undefined on older rows. */
-  courseSource?: "sheet" | "metadata";
+  /**
+   * Where `course` (the level the solution is written to) came from. "metadata" (the file's own data, unreliable) is
+   * never written to: the pipeline reads the level from the question ("pipeline"); a spreadsheet course ("sheet") or
+   * one a person set on the item page ("person") is used as it is. Undefined on older rows.
+   */
+  courseSource?: "sheet" | "metadata" | "pipeline" | "person";
+  /** One sentence on what in the question decided a "pipeline" level. */
+  levelWhy?: string;
   batchId?: string;
   /** When the item (or its spreadsheet row) last arrived, whichever is later. */
   receivedAt?: Date;
@@ -299,7 +391,11 @@ export type AnimationDoc = {
   createdBy: string;
 };
 
-/** A problem the owner flagged while watching one version of an animated solution. */
+/**
+ * A problem flagged while watching one version of an animated solution: by the owner (any version, during his
+ * review) or by a Castle Rock user (the released version only). The two sides never see each other's flags
+ * except that the owner sees Castle Rock's.
+ */
 export type AnimFlagStatus = "open" | "fixed" | "confirmed" | "reopened";
 export type AnimFlagDoc = {
   itemId: string;
@@ -318,8 +414,27 @@ export type AnimFlagDoc = {
   /** Set on the open flag created by a Reopen: the earlier flag it continues. */
   reopenOf?: string;
   createdBy: string;
+  /** Role of the person who raised it. Absent on flags older than Castle Rock's flag tool: those are the owner's. */
+  createdByRole?: "reviewer" | "tech" | "evelyn";
+  /** Display name of the person who raised it (for the owner's labels and the status email). */
+  createdByName?: string;
   createdAt: Date;
   updatedAt: Date;
+};
+
+/** One server build attempt of an item's animation: the record the daily spend cap is counted from. */
+export type AnimBuildDoc = {
+  itemId: string;
+  startedAt: Date;
+  finishedAt?: Date;
+  result?: "built" | "failed" | "dropped";
+  /** Dollars: model calls + voice characters. */
+  cost: number;
+  modelCost?: number;
+  voiceChars?: number;
+  corrections?: number;
+  failure?: string;
+  version?: number;
 };
 
 type Models = {
@@ -327,6 +442,8 @@ type Models = {
   Heartbeat: Model<HeartbeatDoc>;
   Lock: Model<LockDoc>;
   Run: Model<RunDoc>;
+  BulkJob: Model<BulkJobDoc>;
+  BulkCall: Model<BulkCallDoc>;
   Outbox: Model<OutboxDoc & { openKey?: string }>;
   Batch: Model<BatchDoc>;
   User: Model<UserDoc>;
@@ -337,6 +454,7 @@ type Models = {
   Upload: Model<UploadDoc>;
   Animation: Model<AnimationDoc>;
   AnimFlag: Model<AnimFlagDoc>;
+  AnimBuild: Model<AnimBuildDoc>;
 };
 
 type Cache = { conn: Connection | null; promise: Promise<Connection> | null; models: Models | null };
@@ -428,7 +546,21 @@ function defineModels(conn: Connection): Models {
       required: false,
     },
     player: {
-      type: new Schema({ entry: String, voice: String, height: Number, note: String, attachedAt: Date }, { _id: false }),
+      type: new Schema({ entry: String, voice: String, height: Number, note: String, attachedAt: Date, version: Number }, { _id: false }),
+      required: false,
+    },
+    animate: {
+      type: new Schema(
+        {
+          route: String,
+          requestedAt: Date,
+          requestedBy: String,
+          reason: String,
+          askedBy: String,
+          build: { type: new Schema({ state: String, startedAt: Date, finishedAt: Date, failure: String, cost: Number, corrections: Number, attempts: Number }, { _id: false }), required: false },
+        },
+        { _id: false },
+      ),
       required: false,
     },
     stage: { type: String, index: true },
@@ -440,6 +572,7 @@ function defineModels(conn: Connection): Models {
     releasedVersion: Number,
     releasedAnswer: String,
     courseSource: String,
+    levelWhy: String,
     batchId: String,
     receivedAt: Date,
     pipeline: {
@@ -551,9 +684,51 @@ function defineModels(conn: Connection): Models {
     ownWriteLanded: Boolean,
     warnings: [String],
     failedAttempts: Number,
+    waitingOnBatch: Date,
   });
   Run.index({ itemId: 1, runId: 1 }, { unique: true });
   Run.index({ itemId: 1, startedAt: -1 });
+  const BulkJob = new Schema<BulkJobDoc>({
+    jobId: { type: String, required: true },
+    vendor: { type: String, required: true },
+    model: String,
+    vendorBatchId: String,
+    status: { type: String, required: true },
+    waves: [Number],
+    itemIds: [String],
+    customIds: [String],
+    createdAt: Date,
+    submittedAt: Date,
+    finishedAt: Date,
+    collectedAt: Date,
+    detail: String,
+    dryRun: Boolean,
+  });
+  BulkJob.index({ jobId: 1 }, { unique: true });
+  BulkJob.index({ status: 1 });
+  const BulkCall = new Schema<BulkCallDoc>({
+    customId: { type: String, required: true },
+    jobId: { type: String, required: true },
+    itemId: { type: String, required: true },
+    runId: { type: String, required: true },
+    role: String,
+    vendor: String,
+    model: String,
+    wave: Number,
+    hash: String,
+    state: { type: String, required: true },
+    detail: String,
+    reply: { type: Schema.Types.Mixed },
+    cost: { type: Number, default: 0 },
+    listCost: { type: Number, default: 0 },
+    live: { type: Schema.Types.Mixed },
+    createdAt: Date,
+    collectedAt: Date,
+    dryRun: Boolean,
+  });
+  BulkCall.index({ customId: 1 }, { unique: true });
+  BulkCall.index({ itemId: 1, runId: 1 });
+  BulkCall.index({ jobId: 1 });
   const Lesson = new Schema<LessonDoc>({
     itemId: { type: String, required: true },
     version: { type: Number, required: true },
@@ -593,17 +768,34 @@ function defineModels(conn: Connection): Models {
     reply: String,
     reopenOf: String,
     createdBy: String,
+    createdByRole: String,
+    createdByName: String,
     createdAt: { type: Date, default: () => new Date() },
     updatedAt: { type: Date, default: () => new Date() },
   });
   AnimFlag.index({ itemId: 1, version: 1 });
   AnimFlag.index({ status: 1 });
-  if (isReadOnly()) for (const schema of [Lesson, Heartbeat, Lock, Run, Outbox, Batch, User, Session, Item, Solution, Activity, Upload, Animation, AnimFlag]) blockWrites(schema as Schema);
+  const AnimBuild = new Schema<AnimBuildDoc>({
+    itemId: { type: String, required: true },
+    startedAt: { type: Date, required: true },
+    finishedAt: Date,
+    result: String,
+    cost: { type: Number, default: 0 },
+    modelCost: Number,
+    voiceChars: Number,
+    corrections: Number,
+    failure: String,
+    version: Number,
+  });
+  AnimBuild.index({ startedAt: -1 });
+  if (isReadOnly()) for (const schema of [Lesson, Heartbeat, Lock, Run, BulkJob, BulkCall, Outbox, Batch, User, Session, Item, Solution, Activity, Upload, Animation, AnimFlag, AnimBuild]) blockWrites(schema as Schema);
   return {
     Lesson: conn.model<LessonDoc>("Lesson", Lesson, "lessons"),
     Heartbeat: conn.model<HeartbeatDoc>("Heartbeat", Heartbeat, "heartbeats"),
     Lock: conn.model<LockDoc>("Lock", Lock, "locks"),
     Run: conn.model<RunDoc>("Run", Run, "runs"),
+    BulkJob: conn.model<BulkJobDoc>("BulkJob", BulkJob, "bulkjobs"),
+    BulkCall: conn.model<BulkCallDoc>("BulkCall", BulkCall, "bulkcalls"),
     Outbox: conn.model<OutboxDoc & { openKey?: string }>("Outbox", Outbox, "outbox"),
     Batch: conn.model<BatchDoc>("Batch", Batch, "batches"),
     User: conn.model<UserDoc>("User", User, "users"),
@@ -614,6 +806,7 @@ function defineModels(conn: Connection): Models {
     Upload: conn.model<UploadDoc>("Upload", Upload, "uploads"),
     Animation: conn.model<AnimationDoc>("Animation", Animation, "animations"),
     AnimFlag: conn.model<AnimFlagDoc>("AnimFlag", AnimFlag, "animflags"),
+    AnimBuild: conn.model<AnimBuildDoc>("AnimBuild", AnimBuild, "animbuilds"),
   };
 }
 
