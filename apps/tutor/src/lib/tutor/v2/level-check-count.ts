@@ -189,8 +189,8 @@ export function v2LevelQuestionOf(reply: string): string | null {
   const cut = /\[cut off[^\]]*\]/i.test(reply);
   const heard = stripBoardBlocks(reply).replace(/\[cut off[^\]]*\]/gi, ' ').replace(/\s+/g, ' ').trim();
   const sentences = heard.split(/(?<=[.!?。！？]["'”’」)]*)\s*/).map((x) => x.trim()).filter(Boolean);
-  // M1: the runtime appends its check-in last, word for word.
-  if (sentences.length && V2_CHECK_INS.includes(sentences[sentences.length - 1]!)) sentences.pop();
+  // M1: the runtime's check-in, word for word (fix round 2: wherever it stands, as replies of one turn are joined).
+  for (let i = sentences.length - 1; i >= 0; i--) if (V2_CHECK_INS.includes(sentences[i]!)) sentences.splice(i, 1);
   const latinFirst = (xs: string[]) => { const l = xs.filter(v2LatinOnly); return (l.length ? l : xs).pop() ?? null; };
   const asks = sentences.filter((x) => /[?？]["'”’」)]*$/.test(x) && !NOT_LEVEL.test(x));
   if (asks.length) return latinFirst(asks);

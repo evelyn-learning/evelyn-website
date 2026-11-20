@@ -13,8 +13,19 @@ const SMALL = new Set(('the and you your you\'d you\'re can could would will wha
   + 'not but our out get got let let\'s ever if so').split(/\s+/));
 /** The Latin-script content words of a text (three letters or more, small words out), once each. */
 export const v2ContentWords = (t: string): string[] => [...new Set((t.toLowerCase().replace(/[’]/g, "'").match(/[a-z]+(?:'[a-z]+)?/g) ?? []).filter((w) => w.length >= 3 && !SMALL.has(w)))];
-/** Two words alike: the same, or the same first five letters (a stem: "uses" / "use" are not, "websites" / "website" are). */
-export const v2SameWord = (a: string, b: string): boolean => a === b || (a.length >= 5 && b.length >= 5 && a.slice(0, 5) === b.slice(0, 5));
+/** Task 8a fix round 2 (M1): a word's stem: an ending -ing / -ed / -es / -s off, then a final "e", each only when three letters or more
+ *  stay ("living" / "live" → "liv", "worked" → "work", "making" / "make" → "mak", "uses" / "use" → "use"; "using" stays "using"). */
+export function v2WordStem(w: string): string {
+  let x = w;
+  for (const end of ['ing', 'ed', 'es', 's']) if (x.endsWith(end) && x.length - end.length >= 3) { x = x.slice(0, -end.length); break; }
+  if (x.endsWith('e') && x.length - 1 >= 3) x = x.slice(0, -1);
+  return x;
+}
+/** Two words alike: the same, the same stem (v2WordStem, fix round 2 M1: "live" / "living", "work" / "worked"), or the same first five
+ *  letters ("websites" / "website"). Unrelated short words stay apart ("work" / "word"). */
+export const v2SameWord = (a: string, b: string): boolean => a === b || v2WordStem(a) === v2WordStem(b) || (a.length >= 5 && b.length >= 5 && a.slice(0, 5) === b.slice(0, 5));
+/** Task 8a fix round 2 (M3): a question with its case, quotes, punctuation and spacing normalised (identical questions compare equal). */
+export const v2NormalQuestion = (t: string): string => t.toLowerCase().replace(/[’]/g, "'").replace(/[^\p{L}\p{N}' ]+/gu, ' ').replace(/\s+/g, ' ').trim();
 /** How many of `want` have a like word in `have`. */
 export const v2WordsShared = (want: readonly string[], have: readonly string[]): number => want.filter((w) => have.some((x) => v2SameWord(w, x))).length;
 
@@ -38,9 +49,11 @@ export const v2LatinOnly = (t: string): boolean => /[A-Za-z]/.test(t) && !V2_CJK
 
 /** The same question asked again. Latin script: two thirds of the shorter's content words alike, and at least two content words on each
  *  side (fix round 1, M2: with fewer there is too little to compare, and they count as different questions: the count fails towards setting
- *  the level, not towards never setting it). Japanese only: half the smaller bigram set shared, at least three bigrams each. A Latin and a
+ *  the level, not towards never setting it; fix round 2, M3: unless they are identical once normalised). Japanese only: half the smaller bigram set shared, at least three bigrams each. A Latin and a
  *  Japanese-only question: different. */
 export function v2SameQuestion(a: string, b: string): boolean {
+  // Fix round 2 (M3): identical questions (normalised) are the same, however short.
+  if (v2NormalQuestion(a) && v2NormalQuestion(a) === v2NormalQuestion(b)) return true;
   const la = v2LatinOnly(a); const lb = v2LatinOnly(b);
   if (la && lb) {
     const x = v2ContentWords(a); const y = v2ContentWords(b);

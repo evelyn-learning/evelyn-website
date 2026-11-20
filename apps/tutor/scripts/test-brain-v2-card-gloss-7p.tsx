@@ -66,6 +66,9 @@ const TODAY: V2BoardPage = { title: 'Today\'s lesson', items: [{ id: 't1', tool:
 const PS: V2BoardPage = { title: 'Past simple', items: [{ id: 's1', tool: 'show_sentence', summary: 'I attended a robotics exhibition in Beijing two months ago.' }] };
 const goalsAt = { overview: { status: 'shown' as const, at: 0 }, 'level-check': { status: 'demonstrated' as const, at: 0 }, 'topic-intro': { status: 'shown' as const, at: 0 }, 'present-perfect': { status: 'demonstrated' as const, at: 0 } };
 type Level = 'beginner' | 'intermediate' | 'advanced' | null;
+/** Task 8a (LEVEL_CHECK_PUT): the level is set after three questions the check put and they answered, so each reply before an answer puts
+ *  its own question (the fixture's tutor said "Okay." each time, which puts none, and the level would now wait). */
+const CHECK_PUT = ['Can you tell me a little about your job?', 'Who are your main customers at work?', 'Which products do you sell most often?'].flatMap((q, i) => [a(q), u(`I work in sales number ${i}.`)]).concat([a('Thank you. What do you sell to your customers?')]);
 const at = (level: Level, extra: Partial<V2State> = {}): V2State => ({ ...newV2State(0), ...(level ? { workingLevel: { level, from: 'this_lesson' as const } } : {}), board: { pages: structuredClone([TODAY, PS]), current: 1 }, goals: goalsAt, timeFit: { dropped: [], byArrival: true }, practiceSaid: { 'topic-intro': 3, 'present-perfect': 3, 'past-simple': 2 }, history: [u('x'), a('Good. Next, the past simple.')], ...extra });
 const run = (session: V2Session, st: V2State, said: string | null, steps: Step[], nowMin: number) => {
   const heard: string[] = []; const m = scripted(steps);
@@ -100,10 +103,10 @@ async function probe() {
   const notePlain = await run(lang, at('beginner'), 'I have worked Nagoya Corporation 6 years.', [{ text: noteReply(null) }], 5.45);
   const noteInter = await run(lang, at('intermediate'), 'I have worked Nagoya Corporation 6 years.', [{ text: noteReply(B_GLOSS) }], 5.45);
   // The level set in this very reply (set_working_level, then the card): the card follows the level at that turn.
-  const setNow = await run(lang, at(null, { history: Array.from({ length: 3 }, (_, i) => [u(`I work in sales number ${i}.`), a('Okay.')]).flat(), goals: {} }), 'I sell washing machines to customers.', [{ text: '', after: [{ type: 'tool_use', id: 'lv', name: 'set_working_level', input: { level: 'intermediate', evidence: 'full sentences' } }] }, { text: E_REPLY_GLOSSED }], 3.0);
+  const setNow = await run(lang, at(null, { history: CHECK_PUT, goals: {} }), 'I sell washing machines to customers.', [{ text: '', after: [{ type: 'tool_use', id: 'lv', name: 'set_working_level', input: { level: 'intermediate', evidence: 'full sentences' } }] }, { text: E_REPLY_GLOSSED }], 3.0);
   // The order the prompt recommends (LEVEL_WITH_WORDS: the tool after the words, in the same response): the card, written before
   // the tool, keeps its gloss; the level is intermediate from then on.
-  const setAfter = await run(lang, at(null, { history: Array.from({ length: 3 }, (_, i) => [u(`I work in sales number ${i}.`), a('Okay.')]).flat(), goals: {} }), 'I sell washing machines to customers.', [{ text: E_REPLY_GLOSSED, after: [{ type: 'tool_use', id: 'lv', name: 'set_working_level', input: { level: 'intermediate', evidence: 'full sentences' } }] }, { text: '' }], 3.0);
+  const setAfter = await run(lang, at(null, { history: CHECK_PUT, goals: {} }), 'I sell washing machines to customers.', [{ text: E_REPLY_GLOSSED, after: [{ type: 'tool_use', id: 'lv', name: 'set_working_level', input: { level: 'intermediate', evidence: 'full sentences' } }] }, { text: '' }], 3.0);
   // Fix round 1 (I1): a straight double quote inside the gloss (note and card), and a gloss that cannot be read.
   const quotedNote = await run(lang, at('beginner'), 'I have worked Nagoya Corporation 6 years.', [{ text: 'ここがポイントです。 <board note style="highlight" gloss="期間は "for" を使います">For a period of time, use "for" + the number of years.</board> では、言ってみてください。' }], 5.45);
   const quotedCard = await run(lang, at('beginner'), E_SAID, [{ text: 'わかりました。 <board problem gloss="先週、"work" で何をしましたか？">What did you do last week at work?</board> まず、答えてみてください。' }], 14.93);

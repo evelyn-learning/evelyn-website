@@ -28,7 +28,7 @@ import { v2ReadClientState } from '../src/lib/tutor/v2/client-state';
 import { v2ScopeCarried } from '../src/lib/tutor/v2/state-carry';
 import { trimToSpoken } from '../src/lib/tutor/v2/interrupted';
 import { V2_FREE_CONV_NO_STARTER_LINE, V2_FREE_CONV_PARTNER_LINE, v2FreeConvPartnerLine, v2RetestAskOf } from '../src/lib/tutor/v2/adaptive';
-import { v2SameQuestion } from '../src/lib/tutor/v2/question-overlap';
+import { v2SameQuestion, v2SameWord } from '../src/lib/tutor/v2/question-overlap';
 import { V2_CHECK_INS } from '../src/lib/tutor/v2/turn';
 import { V2_LEVEL_WAIT, v2AnswerHasContent, v2LevelSetTooEarly } from '../src/lib/tutor/v2/working-level';
 import { v2LevelQuestionOf, v2LevelQuestionsPut } from '../src/lib/tutor/v2/level-check-count';
@@ -187,6 +187,9 @@ async function probe() {
   // 2: the retest in the Conversation part, turns 30–33 (T49 … T55).
   const t30 = await turn(lang, atT49(), 'Uh, go on.', [{ text: T50 }], 8.9);
   const t31 = await turn(lang, t30.r.state, T51, [{ text: T52 }], 9.2);
+  // Fix round 2 (ruling): send 1 answered with a question of the part that shares only the topic word.
+  const topicOnly = await turn(lang, atT49(), 'Uh, go on.', [{ text: 'Let\'s talk a little more about your work. Do you like JavaScript?' }], 8.9);
+  const topicNext = await turn(lang, topicOnly.r.state, 'Yes, I like JavaScript very much.', [{ text: 'Good. Why do you like it?' }], 9.2);
   const t32 = await turn(lang, t31.r.state, T53, [{ text: T54 }], 9.4);
   const t33 = await turn(lang, t32.r.state, T55, [{ text: T56 }], 9.7);
   // A first send whose reply asks nothing (a correction and a repeat ask only): the line is sent 3 times, then no more.
@@ -255,6 +258,7 @@ async function probe() {
   const whoOf = (s: V2State) => (s.retests ?? []).find((r) => r.right === WHO.right) ?? null;
   return {
     convFacts: conv.facts, convNoCardFacts: convNoCard.facts, convHelpFacts: convHelp.facts, ppFacts: pp.facts,
+    topicOnly: { retest: retestOf(topicOnly.r.state) }, topicNext: { facts: topicNext.facts, retest: retestOf(topicNext.r.state) },
     t30: { facts: t30.facts, events: t30.events, retest: retestOf(t30.r.state) }, t31: { facts: t31.facts, retest: retestOf(t31.r.state) }, t32: { facts: t32.facts, retest: retestOf(t32.r.state) }, t33: { facts: t33.facts, retest: retestOf(t33.r.state) },
     n: [n1, n2, n3, n4].map((x) => ({ facts: x.facts, events: x.events, retest: retestOf(x.r.state), spoken: x.r.spoken })),
     t19: { events: t19.events, retest: whoOf(t19.r.state) }, t25: { events: t25.events, retest: whoOf(t25.r.state) },
@@ -289,7 +293,9 @@ async function main() {
   check('turn 30 (T49 → T50): the line sent (send 1), and T50 asked a question: the retest is put (state, turn 30)', on.t30.facts.includes(RETEST_LINE) && on.t30.retest?.put === on.t30.retest?.lastAt && typeof on.t30.retest?.put === 'number' && on.t30.events.some((e) => /^v2_retest_put .*send=1\/3/.test(e)), [on.t30.retest, on.t30.events]);
   check('fix round 1 (ruling): turn 17, T26 ends on the part\'s own question ("Now, have you worked…?"), not the retest\'s: not put; the line is sent again at turn 18 and 19', on.s17.events.some((e) => /^v2_retest_offered target="who study at home" .*send=1\/3/.test(e)) && on.s17.retest?.put === undefined && on.s18.facts.includes(WHO_LINE) && on.s19.facts.includes(WHO_LINE), [on.s17.retest, on.s18.retest]);
   check('…T30 ("Who are the people who use the websites you make?") is the retest\'s question: put at send 3', typeof on.s19.retest?.put === 'number' && on.s19.retest?.offered === 3 && on.s19.events.some((e) => /^v2_retest_put .*send=3\/3/.test(e)), on.s19.retest);
-  check('v2RetestAskOf: shared words with the stored question or the target, Japanese by characters; another question is not', v2RetestAskOf('How many years have you used JavaScript?', JS) && !v2RetestAskOf('Now, have you worked for your current company for a long time?', WHO) && v2RetestAskOf('Who are the people who use the websites you make?', WHO)
+  check('fix round 2 (ruling): a question of the part that shares only the topic word ("Do you like JavaScript?") is not put: the line is sent again on the next turn', on.topicOnly.retest?.put === undefined && on.topicNext.facts.includes(RETEST_LINE) && on.topicNext.retest?.offered === 2, [on.topicOnly.retest, on.topicNext.retest]);
+  check('v2RetestAskOf: two shared words and a third of the stored question\'s (all of a 1–2 word one), identical always, Japanese by characters; the topic word or a target word alone is not', v2RetestAskOf('How many years have you used JavaScript?', JS) && !v2RetestAskOf('Do you like JavaScript?', JS) && !v2RetestAskOf('Have you worked here long?', { target: ['i have worked'], question: 'What do you sell?' }) && !v2RetestAskOf('Now, have you worked for your current company for a long time?', WHO) && v2RetestAskOf('Who are the people who use the websites you make?', WHO)
+    && v2RetestAskOf('Where do you live?', { target: ['x'], question: 'Where do you live?' }) && v2RetestAskOf('Where are you living now?', { target: ['x'], question: 'Where do you live?' }) && !v2RetestAskOf('What do you like?', { target: ['x'], question: 'Where do you live?' })
     && v2RetestAskOf('どんな人があなたのウェブサイトを使っていますか？', { target: ['x'], question: 'あなたのウェブサイトを使うのはどんな人ですか？' }) && !v2RetestAskOf('今日は何をしましたか？', { target: ['x'], question: 'あなたのウェブサイトを使うのはどんな人ですか？' }));
   check('turn 31 (T51 → T52) and turn 32 (T53 → T54): the line not sent again; the retest stays open, sent once', !on.t31.facts.includes(RETEST_LINE) && !on.t32.facts.includes(RETEST_LINE) && !on.t33.facts.includes(RETEST_LINE) && on.t32.retest?.offered === 1 && !on.t32.retest?.outcome, [on.t31.retest, on.t32.retest]);
   check('T55 (T53 said again, no "have worked"): no outcome by turns; the outcome waits for the part to end', !on.t33.retest?.outcome || on.t33.retest.outcome === 'missed', on.t33.retest);
@@ -307,7 +313,9 @@ async function main() {
   check('fix round 1 (I1): English ask + Japanese gloss: the English ask is the question; T10 asking it again with another gloss is no new one (T7, T9 count, T11 does not)', v2LevelQuestionOf(`${T6}`) !== null && v2LevelQuestionOf('That\'s clear, thank you. What kind of products do you sell? 「どんな製品を売っていますか？」') === 'What kind of products do you sell?' && JSON.stringify(on.biPut.slice(-3)) === '[true,true,false]', on.biPut);
   check('…Japanese-only questions compared by characters: the same question in other words is no new one', JSON.stringify(on.jaPut.slice(-3)) === '[true,true,false]' && v2SameQuestion('どんな製品を売っていますか？', 'どんな製品を販売していますか？') && !v2SameQuestion('どんな製品を売っていますか？', '英語で何を改善したいですか？'), on.jaPut);
   check('fix round 1 (M1): the runtime\'s check-in ("Are you with me so far?") after a reply that asked nothing is no question put', on.checkInPut[on.checkInPut.length - 1] === false && V2_CHECK_INS.every((x) => v2LevelQuestionOf(`Good. ${x}`) === null), on.checkInPut);
-  check('fix round 1 (M2): two questions with too little to compare (one content word or none) are different questions', !v2SameQuestion('What is your job?', 'Where do you do your job?') && !v2SameQuestion('What do you do?', 'What do you do?') && v2SameQuestion('What kind of products do you sell?', 'What products do you sell?'));
+  check('fix round 1 (M2): two questions with too little to compare (one content word or none) are different questions', !v2SameQuestion('What is your job?', 'Where do you do your job?') && v2SameQuestion('What kind of products do you sell?', 'What products do you sell?'));
+  check('fix round 2 (M3): two identical short questions (normalised) are the same question', v2SameQuestion('Where do you work?', 'where do you work') && v2SameQuestion('What do you do?', 'What do you do?') && !v2SameQuestion('Where do you work?', 'What do you do?'));
+  check('fix round 2 (M1): stems: live / living, work / worked, use / uses alike; work / word, sell / sold not', v2SameWord('live', 'living') && v2SameWord('work', 'worked') && v2SameWord('use', 'uses') && !v2SameWord('work', 'word') && !v2SameWord('sell', 'sold'));
   check('the check\'s 3 minutes up at T11 (2 put): the facts say its time is up, and the level is set', on.lvTime.level?.level === 'beginner' && /level check: its time is up/.test(on.lvTime.facts), [on.lvTime.results, on.lvTime.facts.split('\n').filter((l) => /level check/.test(l))]);
 
   console.log('4  CORRECTIONS_ALL_GUARDED: a corrected sentence never goes under "What went well"');

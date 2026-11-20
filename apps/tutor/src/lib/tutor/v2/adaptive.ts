@@ -29,7 +29,7 @@ import { v2AsksRepeat } from './one-question';
 import { v2NoteTargetsOn } from './note-targets';
 import { v2PartInHand, v2PartViewed, v2PlanLabelled, v2TutorReplies } from './part-flow';
 import { v2FreeConversationPart, v2PartOf } from './plan-map';
-import { v2CjkOverlap, v2ContentWords, v2WordsShared } from './question-overlap';
+import { v2CjkOverlap, v2ContentWords, v2NormalQuestion, v2WordsShared } from './question-overlap';
 import { v2CorrectionWords, v2IsCorrectionOf } from './sentence-cards';
 import { v2PartClock, v2PracticePart } from './time-fit';
 import type { V2Retest, V2Session, V2State, V2Support, V2SupportStep, V2TurnEvent } from './types';
@@ -410,17 +410,24 @@ export function v2AdaptAfter(session: V2Session, state: V2State, part: { index: 
   return events;
 }
 
-/** Task 8a fix round 1 (the controller's ruling): a question of the reply is the retest's when it shares words with the stored question
- *  (at least one content word, and a third of the stored question's) or with the target phrases (one content word), Japanese by
- *  characters (half the smaller bigram set, at least three). Informs the retest bookkeeping only. Mic test 9: T26 "Now, have you worked
- *  for your current company for a long time?" (the part's own question) is not "Who uses your websites?"; T30 "Who are the people who use
- *  the websites you make?" is; T50 "How many years have you used JavaScript?" is "How long have you worked with JavaScript?". */
+/** Task 8a fix rounds 1–2 (the controller's rulings): a question of the reply is the retest's stored question asked again when it is
+ *  identical to it (normalised), or shares at least two of its words AND a third of them (a stored question of one or two words: all of
+ *  them); its words are its content words plus its question word (what / which / when / where / who / whose / why / how), stems alike
+ *  (question-overlap.ts v2SameWord). A shared target word alone is not enough, nor a topic word alone. Japanese by characters (half the
+ *  smaller bigram set, at least three). Informs the retest bookkeeping only. Mic test 9: T50 "How many years have you used JavaScript?"
+ *  is "How long have you worked with JavaScript?" (how, JavaScript); "Do you like JavaScript?" is not (the topic word only); T26 "Now,
+ *  have you worked for your current company for a long time?" is not "Who uses your websites?"; T30 "Who are the people who use the
+ *  websites you make?" is (who, use, websites). */
+const QWORD = /^(?:[^a-z]*\b(?:so|okay|ok|now|and|then|first|well|great|good)\b[,.!]?\s+)*(what|which|when|where|who|whose|why|how)\b/i;
+const askWords = (q: string): string[] => { const w = QWORD.exec(q.trim())?.[1]?.toLowerCase(); return [...new Set([...(w ? [w] : []), ...v2ContentWords(q)])]; };
 export function v2RetestAskOf(question: string, r: Pick<V2Retest, 'question' | 'target'>): boolean {
-  const have = v2ContentWords(question);
-  if (have.length && v2WordsShared(v2ContentWords(r.target.join(' ')), have) >= 1) return true;
   if (!r.question) return false;
-  const want = v2ContentWords(r.question);
-  if (want.length && have.length && v2WordsShared(want, have) >= Math.max(1, Math.ceil(want.length / 3))) return true;
+  if (v2NormalQuestion(question) && v2NormalQuestion(question) === v2NormalQuestion(r.question)) return true;
+  const want = askWords(r.question); const have = askWords(question);
+  if (want.length && have.length) {
+    const n = v2WordsShared(want, have);
+    if (want.length <= 2 ? n === want.length : n >= 2 && n >= Math.ceil(want.length / 3)) return true;
+  }
   const o = v2CjkOverlap(question, r.question);
   return o.min >= 3 && o.share >= 0.5;
 }
