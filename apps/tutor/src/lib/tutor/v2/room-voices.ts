@@ -71,6 +71,18 @@ export function repliedBackground(raw: string): boolean {
   return /^\W*background\b/i.test(raw.trim());
 }
 
+/** How the check is asked of a given model. The older small models take a temperature; the newer ones reject it
+ *  and think by default, which spends the few tokens of a one-word verdict on thinking and returns no text. */
+export function roomModelParams(model: string): Record<string, unknown> {
+  if (/(?:haiku|sonnet|opus)-4/.test(model)) return { temperature: 0 };
+  if (/sonnet-5-5/.test(model)) return { thinking: { type: 'between_tools' }, output_config: { effort: 'low' } };
+  return { thinking: { type: 'disabled' }, output_config: { effort: 'low' } };
+}
+/** The words of a reply, wherever its text block sits. */
+export function roomReplyText(msg: { content: Array<{ type: string; text?: string }> }): string {
+  return msg.content.find((b) => b.type === 'text')?.text ?? '';
+}
+
 const WHO = `STUDENT: one person speaking to the tutor, about anything at all.
 - An answer or an attempt at one, however short, wrong or hesitant. A question about the lesson.
 - The recogniser mishears. Speech that picks up the tutor's own words or numbers, even turned into soundalikes that make no sense as written, is the student answering.
