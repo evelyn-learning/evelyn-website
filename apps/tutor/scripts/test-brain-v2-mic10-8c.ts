@@ -7,8 +7,8 @@
  *
  *  1 OWED_CARD_RIGHT   T31 → T32 with the board check: no owed-card line once the corrected card WB25 is up (v2IsCorrectionOf, the one
  *                      test; it drops a clause of T31); the check's marked as-said card WB26 not painted; the owed line asks only for
- *                      the right sentence; T35 → T36: WB29 is no correction of T35 by the one test, so the owed line (the right-sentence
- *                      wording) is sent (fix round 1, reported); a right sentence beside another right model card still carded, clean;
+ *                      the right sentence; T35 → T36: WB29 corrects T35 (fix round 2: stems alike count as shared), so no owed line
+ *                      and the marked WB30 refused; a right sentence beside another right model card still carded, clean;
  *                      two sentences of one turn never claim one card
  *  2 CORRECTION_KEPT   T32 scored as a correction (signal wrong), recorded with marks, re-test recorded; the pairing takes the correction
  *                      over a marked as-said card, and a right unmarked as-said card over a tutor's model card
@@ -169,6 +169,8 @@ async function probe() {
     [{ text: 'その文は正しいです。\n\n<board sentence>I have learned how to negotiate with customers today at work.</board>\n\nWhat else have you learned?' }, NONE], 8.3);
   // I1 pins: a right sentence beside another model card; two sentences of one turn.
   const rModel = await turn(lang, atT31(), RIGHT, [{ text: R_MODEL }, NONE], 6.6);
+  // Fix round 2: a right sentence of theirs next to a tutor model card that shares an inflected word ("She works in marketing.").
+  const rInfl = await turn(lang, atT31(), 'I worked in marketing for five years.', [{ text: `That's right. ${sc0('She works in marketing.')} And yours: ${sc0('I worked in marketing for five years.')} What did you do before that?` }, NONE], 6.6);
   const rTwo = await turn(lang, atT31(), TWO_SAID, [{ text: R_TWO }, NONE], 6.6);
   // The owed line itself, for a sentence the reply carded nowhere.
   const owedLine = v2OwedCardCheckLine(lang, [WB26]);
@@ -192,7 +194,7 @@ async function probe() {
   // Other lessons.
   const typed = await turn(typedLang, atT31(), T31, [{ text: T32 }, { text: CHECK_WB26 }, NONE], 6.6);
   const mathsTurn = await turn(maths, { ...newV2State(0), history: [u('x'), a('What is 3 times 4?')] }, '12', [{ text: 'Yes, 12. <board equation>3 \\times 4 = 12</board> What is 6 × 7?' }, NONE], 18.1);
-  return { t32, t36, t38, rModel, rTwo, owedLine, t46, pairs, sumA, sumB, sumC, sumD, sumM1, sumM3, sumI, typed: { calls: typed.calls, page: typed.page, check: typed.check }, maths: { calls: mathsTurn.calls, page: mathsTurn.page, check: mathsTurn.check } };
+  return { t32, t36, t38, rModel, rInfl, rTwo, owedLine, t46, pairs, sumA, sumB, sumC, sumD, sumM1, sumM3, sumI, typed: { calls: typed.calls, page: typed.page, check: typed.check }, maths: { calls: mathsTurn.calls, page: mathsTurn.page, check: mathsTurn.check } };
 }
 
 type Probe = Awaited<ReturnType<typeof probe>>;
@@ -204,13 +206,15 @@ async function main() {
   if (CHILD) { console.log(`OFF_JSON ${JSON.stringify(on)}`); return; }
 
   console.log('1  OWED_CARD_RIGHT: never their wrong sentence as a card');
-  check('the one correction test: WB25 corrects T31 (v2CardIsOf did not: it drops "before that work as receptionist"); their words as said never; WB29 is no correction of T35 (3 of 8 words theirs)', v2CardCorrects(WB25, T31) && !v2CardIsOf(WB25, T31) && !v2CardCorrects(WB26, T31) && !v2CardCorrects(WB30, T35) && !v2CardCorrects(WB29, T35));
+  check('the one correction test: WB25 corrects T31 (v2CardIsOf did not: it drops "before that work as receptionist"); fix round 2: WB29 corrects T35 (learned / learn, customers / customer count as shared: 5 of 8); their words as said never', v2CardCorrects(WB25, T31) && !v2CardIsOf(WB25, T31) && v2CardCorrects(WB29, T35) && !v2CardCorrects(WB26, T31) && !v2CardCorrects(WB30, T35));
   check('T32: the corrected card WB25 painted inline; the board check ran with no owed-card line', painted(on.t32, WB25) && on.t32.check.length > 0 && !HAS_OWED.test(on.t32.check), on.t32.check.slice(-1500));
   check('…the check\'s WB26 (T31 as said, its words marked) not painted, with the reason; the page holds WB25 and not WB26', !painted(on.t32, WB26) && on.t32.page.includes(`show_sentence: ${WB25}`) && !on.t32.page.includes(`show_sentence: ${WB26}`), [on.t32.calls, on.t32.page]);
-  check('T36 (fix round 1, reported): WB29 is no correction by the one test, so T35 is owed and the board check gets the right-sentence line (not "as they said it")', painted(on.t36, WB29) && HAS_OWED.test(on.t36.check) && /Never their sentence with its mistake in it/.test(on.t36.check) && !/wrong word stressed/.test(on.t36.check), on.t36.check.slice(-900));
+  check('T36 (fix round 2): WB29 painted; no owed-card line; WB30 (T35 as said, marked) not painted', painted(on.t36, WB29) && on.t36.check.length > 0 && !HAS_OWED.test(on.t36.check) && !painted(on.t36, WB30) && !on.t36.page.includes(`show_sentence: ${WB30}`), [on.t36.calls, on.t36.check.slice(-900)]);
+  check('T36: scored wrong; the correction recorded with its marks; the re-test recorded', on.t36.events.some((e) => /^v2_practice_signal wrong part=present-perfect/.test(e)) && on.t36.corrections.some((c) => c.sentence === WB29 && c.stress.length > 0) && on.t36.retests.some((r) => r.right === WB29), [on.t36.events, on.t36.corrections, on.t36.retests]);
   check('the owed line asks only for the right sentence (no "as they said it … wrong word stressed"); never their mistake', /the corrected sentence with the changed words stressed/.test(on.owedLine) && /Never their sentence with its mistake in it/.test(on.owedLine) && !/wrong word stressed/.test(on.owedLine), on.owedLine);
   check('a right sentence of theirs is still carded as said (painted)', painted(on.t38, 'I have learned how to negotiate with customers today at work.'), on.t38.calls);
   check('I1: a right sentence with a different right model card first ("I worked in marketing for five years."): carded as said, scored clean, no re-test', painted(on.rModel, RIGHT) && on.rModel.events.some((e) => /^v2_practice_signal clean/.test(e)) && !on.rModel.events.some((e) => /^v2_retest_recorded/.test(e)), [on.rModel.calls, on.rModel.events]);
+  check('fix round 2: a right sentence ("I worked in marketing for five years.") next to a model card sharing an inflected word ("She works in marketing."): carded as said, clean, no re-test', painted(on.rInfl, 'I worked in marketing for five years.') && on.rInfl.events.some((e) => /^v2_practice_signal clean/.test(e)) && !on.rInfl.events.some((e) => /^v2_retest_recorded/.test(e)), [on.rInfl.calls, on.rInfl.events]);
   check('I1: two sentences of one turn: the card correcting the second belongs to it (v2CardSentence), so the first one\'s as-said card is painted (even marked); one right, one corrected', v2CardSentence(S2_FIX, [S1, 'I work in Osaka for three year.']) === 1 && painted(on.rTwo, S1) && painted(on.rTwo, S2_FIX) && on.rTwo.events.some((e) => /^v2_practice_signal wrong .*sentences=2 corrected=1/.test(e)), [on.rTwo.calls, on.rTwo.events]);
 
   console.log('2  CORRECTION_KEPT: a correction is kept');
@@ -268,6 +272,10 @@ async function main() {
   {
     const off = child('SUMMARY_HEADINGS');
     check('SUMMARY_HEADINGS off: no runtime heading on the Summary page (as live: notes then four unlabelled cards)', headings(off.sumA).length === 0 && headings(off.sumB).length === 0 && others(off, 'SUMMARY_HEADINGS'), off.sumB.page);
+  }
+  {
+    const off = child('CORRECTION_STEMS');
+    check('CORRECTION_STEMS off: WB29 is no correction of T35 (round 1): T35 owed, WB30 painted, the turn clean', HAS_OWED.test(off.t36.check) && painted(off.t36, WB30) && !off.t36.events.some((e) => /^v2_practice_signal wrong/.test(e)) && others(off, 'CORRECTION_STEMS'), [off.t36.calls, off.t36.events]);
   }
   {
     const off = child('ASK_LAST_QUESTION');

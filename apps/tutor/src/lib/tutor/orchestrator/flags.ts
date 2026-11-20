@@ -2551,3 +2551,9 @@ export const TUTOR_V2_PRON_TARGET_SAID = process.env.NEXT_PUBLIC_TUTOR_V2_PRON_T
  *  (embed-1795202398886 T44 → T45: no practice answer, the re-test put at T44 never scored) (Task 8c fix round 1). Default ON;
  *  NEXT_PUBLIC_TUTOR_V2_ASK_LAST_QUESTION=off ⇒ as before. */
 export const TUTOR_V2_ASK_LAST_QUESTION = process.env.NEXT_PUBLIC_TUTOR_V2_ASK_LAST_QUESTION !== 'off';
+
+/** Tutor brain v2 (v2/sentence-cards.ts v2IsCorrectionOf, the one correction test: the owed-card test, the as-said refusal, the pairing, the
+ *  7w record): a card word counts as the learner's when it has the same stem as one of theirs (learn / learned, customer / customers).
+ *  Mic test 10 (embed-1795202398886 T36: WB29 was no correction of T35 by exact words, so WB30, their sentence as said, went up) (Task 8c
+ *  fix round 2). Default ON; NEXT_PUBLIC_TUTOR_V2_CORRECTION_STEMS=off ⇒ as before. */
+export const TUTOR_V2_CORRECTION_STEMS = process.env.NEXT_PUBLIC_TUTOR_V2_CORRECTION_STEMS !== 'off';

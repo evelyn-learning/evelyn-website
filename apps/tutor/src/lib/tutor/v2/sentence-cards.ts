@@ -18,7 +18,8 @@
  * language, and a lesson without one has nothing to gloss in. Under the TUTOR_V2_SENTENCE_CARDS kill switch. A session
  * without it gets a byte-identical session part and facts. Pure, client-safe.
  */
-import { TUTOR_V2_NUMBER_NOT_CORRECTION, TUTOR_V2_SENTENCE_CARDS, TUTOR_V2_SUMMARY_GROUPS } from '../orchestrator/flags';
+import { TUTOR_V2_CORRECTION_STEMS, TUTOR_V2_NUMBER_NOT_CORRECTION, TUTOR_V2_SENTENCE_CARDS, TUTOR_V2_SUMMARY_GROUPS } from '../orchestrator/flags';
+import { v2SameWord } from './question-overlap';
 import { languageNameOf } from '../voice/language-request';
 import { discussionOf } from './discussion';
 import type { V2Session, V2State } from './types';
@@ -83,12 +84,16 @@ export function v2CorrectionWords(text: string): string[] {
 
 /** Whether a card's sentence reworks what the student said: most of its words are theirs, and it is not their words as they said them.
  *  Task 7u (NUMBER_NOT_CORRECTION): compared with numbers as words and fillers out ("for 2 years" → "for two years" is no correction). */
-export function v2IsCorrectionOf(sentence: string, studentSaid: string | null | undefined, numbers: boolean = TUTOR_V2_NUMBER_NOT_CORRECTION): boolean {
+/** Task 8c fix round 2 (CORRECTION_STEMS, the controller's ruling; mic test 10, embed-1795202398886 T36): a card word counts as theirs
+ *  when it is one of their words with the same stem too (question-overlap.ts v2SameWord: "learned" / "learn", "customers" / "customer"):
+ *  inflection is what a correction changes. WB29 "I have learned how to negotiate with customers." corrects T35 "I learn the skill for
+ *  negotiate with customer." (5 of 8; 3 of 8 by exact words). Their sentence as said is still never a correction. */
+export function v2IsCorrectionOf(sentence: string, studentSaid: string | null | undefined, numbers: boolean = TUTOR_V2_NUMBER_NOT_CORRECTION, stems: boolean = TUTOR_V2_CORRECTION_STEMS): boolean {
   const card = numbers ? v2CorrectionWords(sentence) : tokens(sentence);
   const theirs = numbers ? v2CorrectionWords(studentSaid ?? '') : tokens(studentSaid ?? '');
   if (card.length < MIN_WORDS || !theirs.length) return false;
   const have = new Set(theirs);
-  if (card.filter((w) => have.has(w)).length / card.length < CORRECTION_OVERLAP) return false;
+  if (card.filter((w) => have.has(w) || (stems && theirs.some((t) => v2SameWord(w, t)))).length / card.length < CORRECTION_OVERLAP) return false;
   // Their own sentence carded as it stands is an echo, not a correction.
   return !` ${theirs.join(' ')} `.includes(` ${card.join(' ')} `);
 }
