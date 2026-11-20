@@ -35,7 +35,7 @@ import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
 import { V2_CLOSING_PAGE, endsAsking, leftOpen, mayOpenPart, namesPart, partOffer, v2FrameDue } from './part-close';
 import { ReplyGate, isGoodbye, isPartFrame } from './reply-gate';
-import { V2_JA_SCRIPT, v2AnswerAsksOrDeclines, v2GoForPart, v2AskedParts, v2OptionalAhead, v2OptionalDeclined, v2SummaryAsked, v2SummaryGo, v2AskRepeats, v2AsksPartChange, v2EndingPartAsk, v2HeldPageOwed, v2HeldPartWaiting, v2IsPartAsk, v2MoveAnswer, v2NextPart, v2PageForPart, v2PartAskLine, v2PartChangeAsked, v2PartInHand, v2PartNamedLate, v2PartOfPage, v2PartViewed, v2PageTurnNote, v2PositionPage, v2PendingPart, v2PlanLabelled, v2TutorReplies } from './part-flow';
+import { V2_JA_SCRIPT, v2AnswerAsksOrDeclines, v2GoForPart, v2AskedParts, v2OptionalAhead, v2OptionalDeclined, v2SummaryAsked, v2SummaryGo, v2AskRepeats, v2AsksPartChange, v2EndingPartAsk, v2HeldPageOwed, v2HeldPartWaiting, v2IsPartAsk, v2MoveAnswer, v2NextPart, v2PageForPart, v2PartAskLine, v2PartChangeAsked, v2PartInHand, v2PartNamedLate, v2PartOfPage, v2PartViewed, v2PageTurnNote, v2PositionPage, v2PendingPart, v2PlanLabelled, v2TutorReplies, v2UnheardPartAsk } from './part-flow';
 import { heardAsWords } from './heard';
 import { v2IsPracticeAsk, v2LanguagesSection } from './languages';
 import { v2ReadsByClauses } from './language-pack';
@@ -46,15 +46,15 @@ import { v2IsCorrectionOf, v2NoteCorrectedSentence, v2SentenceCardsOn, v2Sentenc
 import { V2_SUMMARY_CARDS_FULL, v2SummaryCardsFull, v2SummaryGroupsOn } from './summary-layout';
 import { v2NoteCorrection, v2SummaryCardCheck } from './summary-marks';
 import { v2SummaryOpensCloseOn } from './summary-close';
-import { V2_CLOSE_CHECK_REFUSAL, v2CheckCardText, v2CloseCheckOwed, v2CloseCheckPending, v2PlanCheckQuestion, v2NoteCloseAskLast, v2UnheardCloseAsks } from './close-check';
+import { V2_CLOSE_CHECK_REFUSAL, V2_CLOSE_CHECK_REFUSAL_GIVEN, v2CheckCardText, v2CloseCheckRefusal, v2CloseCheckOwed, v2CloseCheckPending, v2PlanCheckQuestion, v2NoteCloseAskLast, v2UnheardCloseAsks } from './close-check';
 import { v2NoteOptionalLeave, v2OptionalHold, v2OptionalOneMore } from './optional-hold';
 import { V2_CHECK_INS } from './question-overlap';
 import { v2AdaptAfter, v2AdaptBefore, v2AdaptOn, v2AdaptPart, v2FreeConvAfter, v2FreeConvQuiet, v2PracticePairs, v2QuestionOfReply, v2ReplyQuestions, v2RetestPutAfter } from './adaptive';
 import { LearnerCardWatch, V2_AS_SAID_REFUSED, V2_REPLY_MISHEARD, v2CardCorrects, v2CardIsAsSaid, v2CardIsFragment, v2CardIsOf, v2LearnerCardsOn, v2LearnerSentences, v2NoteCorrectionOf, v2OwedCardCheckLine, v2PracticeAnswerSentences, v2SentenceOnBoard, v2SentencesNotCarded } from './learner-card';
 import { v2SummaryHeadingPlan, v2SummaryHeadingRepeat } from './summary-headings';
 import { v2StopAsked } from './stop-signal';
-import { V2_CLOSE_INVITE_LINE, V2_CLOSE_INVITE_REFUSAL, V2_CLOSE_INVITE_WAIT, V2_CLOSE_MORE_LINE, V2_CLOSE_REOPEN_REFUSAL, v2CloseInviteOn, v2CloseInviteOwed, v2CloseReopened, v2ReplyAsksMoreOrFinish, v2ReplyInvites } from './close-invite';
-import { TUTOR_V2_LEVEL_CHECK_PUT, TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_NOTE_TARGET_QUOTES, TUTOR_V2_NOTE_TARGET_MARK, TUTOR_V2_NOTE_STRESS_MARK, TUTOR_V2_NO_MARKDOWN_STARS, TUTOR_V2_CARD_GLOSS_SHOW, TUTOR_V2_SUPPORT_STEPS, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_PART_GO_NAMED, TUTOR_V2_PRONUNCIATION_PAGE, TUTOR_V2_FRAGMENT_CARD, TUTOR_V2_CARD_AT_SENTENCE, TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_RETEST_TARGET_CHANGED, TUTOR_V2_OPENING_PAGE_TITLE, TUTOR_V2_FREE_CONVERSATION, TUTOR_V2_REPEAT_THEN_WAIT, TUTOR_V2_OPENING_PAGE_FIRST, TUTOR_V2_UNHEARD_ASK_OWED, TUTOR_V2_REPEAT_NOT_MISHEARD, TUTOR_V2_OWED_CARD_RIGHT, TUTOR_V2_CORRECTION_KEPT } from '../orchestrator/flags';
+import { V2_CLOSE_INVITE_LINE, V2_CLOSE_INVITE_REFUSAL, V2_CLOSE_INVITE_REFUSAL_GIVEN, V2_CLOSE_INVITE_WAIT, v2CloseInviteRefusal, v2InviteOfReply, v2SummaryGiven, V2_CLOSE_MORE_LINE, V2_CLOSE_REOPEN_REFUSAL, v2CloseInviteOn, v2CloseInviteOwed, v2CloseReopened, v2ReplyAsksMoreOrFinish, v2ReplyInvites } from './close-invite';
+import { TUTOR_V2_LEVEL_CHECK_PUT, TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_NOTE_TARGET_QUOTES, TUTOR_V2_NOTE_TARGET_MARK, TUTOR_V2_NOTE_STRESS_MARK, TUTOR_V2_NO_MARKDOWN_STARS, TUTOR_V2_CARD_GLOSS_SHOW, TUTOR_V2_SUPPORT_STEPS, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_PART_GO_NAMED, TUTOR_V2_PRONUNCIATION_PAGE, TUTOR_V2_FRAGMENT_CARD, TUTOR_V2_CARD_AT_SENTENCE, TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_RETEST_TARGET_CHANGED, TUTOR_V2_OPENING_PAGE_TITLE, TUTOR_V2_FREE_CONVERSATION, TUTOR_V2_REPEAT_THEN_WAIT, TUTOR_V2_OPENING_PAGE_FIRST, TUTOR_V2_UNHEARD_ASK_OWED, TUTOR_V2_REPEAT_NOT_MISHEARD, TUTOR_V2_OWED_CARD_RIGHT, TUTOR_V2_CORRECTION_KEPT, TUTOR_V2_PRON_TARGET_SAID, TUTOR_V2_ANSWER_OVER_ASK } from '../orchestrator/flags';
 import { v2CardGlossOn, v2CleanGloss, v2GlossLevelOn } from './card-gloss';
 import { v2NoteTargetsOn, v2NoteTargetsSection, v2NoteHasTarget, v2NoteStressWords } from './note-targets';
 import { V2StarStrip, v2StripStars } from './markdown-stars';
@@ -471,7 +471,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Task 7z (UNHEARD_ASK_OWED): a close step whose ask the learner did not hear (state.unheard: they spoke over it) is not counted as
   // given and is owed again: the invitation (closeInvitedAt clears) or the check question (owed in this reply). Mic test 8
   // (embed-1795115593161, T103–T105). Read before inviteOwed / checkOwed below.
-  const unheardAsks = v2UnheardCloseAsks(session, state, { nowMs, stopAsked });
+  // Task 8d (CLOSE_SUMMARY_ONCE): the summary was given by an earlier reply (its page up or its reply recorded), as the turn began.
+  const summaryGivenBefore = v2SummaryGiven(state);
+  const unheardAsks = v2UnheardCloseAsks(session, state, { nowMs, stopAsked, said: input.studentSaid, languages: askLangs });
   const reopened = v2CloseReopened(state);
   // …and after the invitation, their words asking for more practice or another part (recognising only: the facts allow it, and
   // an end_lesson in this reply is never refused for it, 7f E). The close is reopened after the reply, only if the reply did
@@ -544,12 +546,25 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // pronunciation, taken up after the offer, ran on the conversation's page (mic test 1, embed-1794882458629). Opened before
   // the facts, so the board they show is the board the reply speaks over.
   let released: V2ToolCall | null = null; let releasedFrom = -1;
-  if (partFlow && session.plan && input.studentSaid !== null && !state.closed && !closingTurn && v2MoveAnswer(input.studentSaid, lastTutorText, askLangs, undefined, session.plan) === 'go') {
-    const pending = v2PendingPart(session.plan, state, lastTutorText, input.studentSaid, undefined, askLangs);
+  // Task 8d (ANSWER_OVER_ASK): their words came over the part ask itself (the first sentence they did not hear is the ask's): the reply
+  // is read as written, so a go to it answers it (mic test 10, embed-1795202398886: "Yes." over T52's ask, asked again at T54).
+  // An ask cut whole (the reply was cut before it began) was not heard: their go answers something else, and nothing opens (the facts
+  // name the ask as not heard, and it is asked again), even for a page held for it.
+  const unheardAsk = partFlow && session.plan && input.studentSaid !== null && !state.closed && !closingTurn ? v2UnheardPartAsk(session.plan, state, lastTutorText, askLangs) : null;
+  const overAsk = unheardAsk?.playing ? unheardAsk : null;
+  const moveText = overAsk?.text ?? lastTutorText;
+  if (partFlow && session.plan && input.studentSaid !== null && !state.closed && !closingTurn && !(unheardAsk && !unheardAsk.playing) && v2MoveAnswer(input.studentSaid, moveText, askLangs, undefined, session.plan) === 'go') {
+    const pending = v2PendingPart(session.plan, state, moveText, input.studentSaid, undefined, askLangs);
     if (pending && !(arrivalOn && state.timeFit?.dropped.includes(session.plan.segments[pending.index]!.id))) {
       const id = `inl_${nowMs.toString(36)}_0`; const args = { title: pending.title }; releasedFrom = state.board.current;
       const o = applyBoard(state.board, id, 'new_page', args);
       if (o.painted) released = { id, name: 'new_page', args, outcome: o.detail, inline: true, agreed: true };
+      // …heard and answered: the ask leaves the "not heard" line (the facts would ask it again).
+      if (released && overAsk) {
+        const key = (x: string) => x.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim(); const asked = new Set(overAsk.ask.map(key));
+        const rest = (state.unheard ?? []).filter((x) => !asked.has(key(x)));
+        if (rest.length) state.unheard = rest; else delete state.unheard;
+      }
     }
   }
   // Task 7k (PRACTICE_ON_PART_PAGE): practice they asked for of another part is done on that part's page: the board turns to it
@@ -790,7 +805,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         // Final review I2: a reply whose last sentence said is already the invitation waits for their answer: told to ask again,
         // the model asked a second invitation straight after the first.
         // Task 7k (CLOSE_REOPENED): reopened, the ask is "more, or finish?", and a reply already ending on it waits too.
-        : block.name === 'end_lesson' && inviteOwed && args.because !== 'student_asked' ? (inviteRefused || v2ReplyInvites(lastSentences(stripBoardBlocks(saidNow), 1)) || (reopened && v2ReplyAsksMoreOrFinish(lastSentences(stripBoardBlocks(saidNow), 1))) ? V2_CLOSE_INVITE_WAIT : reopened ? V2_CLOSE_REOPEN_REFUSAL : checkOwed ? V2_CLOSE_CHECK_REFUSAL : V2_CLOSE_INVITE_REFUSAL)
+        // Task 8d (CLOSE_SUMMARY_ONCE): the reply's last question sentence is the invitation (a statement may follow it), and once the
+        // summary has been given (by an earlier reply: summaryGivenBefore) the refusal never asks for it again.
+        : block.name === 'end_lesson' && inviteOwed && args.because !== 'student_asked' ? (inviteRefused || !!v2InviteOfReply(saidNow) || (reopened && v2ReplyAsksMoreOrFinish(lastSentences(stripBoardBlocks(saidNow), 1))) ? V2_CLOSE_INVITE_WAIT : reopened ? V2_CLOSE_REOPEN_REFUSAL : checkOwed ? v2CloseCheckRefusal(summaryGivenBefore) : v2CloseInviteRefusal(summaryGivenBefore))
         : applyControlTool(state, session, block.name, args, nowMs, input.studentSaid, { tf, practiceHold: practiceShort, ...(heldWrap ? { heldWrap } : {}) });
     } else {
       // An object written as its JSON text is the object: a tree's root arrived as a string and the board drew
@@ -865,8 +882,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         if (page && mine) { page.items = page.items.filter((it) => it !== mine); const at = page.items.findIndex((it) => it.id === headingPlan.above); page.items.splice(at < 0 ? page.items.length : at, 0, mine); summaryAbove = headingPlan.above; }
       }
     }
-    if (outcome === V2_CLOSE_INVITE_REFUSAL || outcome === V2_CLOSE_REOPEN_REFUSAL || outcome === V2_CLOSE_CHECK_REFUSAL) inviteRefused = true;
-    if (outcome === V2_CLOSE_CHECK_REFUSAL && typeof state.summaryBegunAt === 'number') checkDeferred = true;
+    if (outcome === V2_CLOSE_INVITE_REFUSAL || outcome === V2_CLOSE_INVITE_REFUSAL_GIVEN || outcome === V2_CLOSE_REOPEN_REFUSAL || outcome === V2_CLOSE_CHECK_REFUSAL || outcome === V2_CLOSE_CHECK_REFUSAL_GIVEN) inviteRefused = true;
+    if ((outcome === V2_CLOSE_CHECK_REFUSAL || outcome === V2_CLOSE_CHECK_REFUSAL_GIVEN) && typeof state.summaryBegunAt === 'number') checkDeferred = true;
     if (block.name === 'end_lesson' && /^not ended: the session goes on\./.test(outcome)) menuGiven = true;
     if (outcome === V2_CLOSE_INVITE_WAIT) inviteWait = true;
     // Task 7s (PRONUNCIATION_PAGE): each item they are to say goes on the pronunciation page in view as a card (by the runtime, from
@@ -1005,7 +1022,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const seg = session.plan.segments[i]!;
     const sentences = v2ReplySentences(stripBoardBlocks(said));
     const naming = sentences.find((x) => v2PartNamedIn(seg, x));
-    if (!naming || v2AsksPartChange(session.plan, sentences[sentences.length - 1] ?? '')) return false;
+    // Task 8d (ANSWER_OVER_ASK): nor one that ends on the part ask read by position in the lesson's languages (「次は Conversation で、…。
+    // 質問がありますか？それとも、このまま進みますか？」 asks again; it does not move in).
+    if (!naming || v2AsksPartChange(session.plan, sentences[sentences.length - 1] ?? '') || (TUTOR_V2_ANSWER_OVER_ASK && !!v2EndingPartAsk(said, session.plan, askLangs))) return false;
     const id = `inl_${nowMs.toString(36)}_movein`; const args = { title: state.heldPage!.title }; const from = state.board.current;
     const o = applyBoard(state.board, id, 'new_page', args);
     if (!o.painted) return false;
@@ -1352,7 +1371,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // line naming an optional part that was not reached, when the reply has not named it (gdi-real-josh's stop goodbye).
     if (gate.holdsGoodbye) {
       const ended = toolCalls.slice(callsBefore).find((c) => c.name === 'end_lesson');
-      if (ended && /^not /.test(ended.outcome) && (TUTOR_V2_CLOSE_ONE_QUESTION || ended.outcome === V2_CLOSE_INVITE_REFUSAL || ended.outcome === V2_CLOSE_INVITE_WAIT)) gate.dropHeld();
+      if (ended && /^not /.test(ended.outcome) && (TUTOR_V2_CLOSE_ONE_QUESTION || ended.outcome === V2_CLOSE_INVITE_REFUSAL || ended.outcome === V2_CLOSE_INVITE_REFUSAL_GIVEN || ended.outcome === V2_CLOSE_INVITE_WAIT)) gate.dropHeld();
       else {
         // Fix round 2 (N1): only a goodbye that closes the lesson (a close accepted now, or a closing turn) gets the line.
         const closing = closingTurn || (!!ended && !/^not /.test(ended.outcome));
@@ -1857,6 +1876,28 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       disarmed = { type: 'pronunciation_disarmed', message: `the reply closed on another question after arming "${arm.reference.slice(0, 60)}"` };
     }
   }
+  // Task 8d (PRON_TARGET_SAID): a reply that armed a recording says what it armed. The model may put the sentence only on its card and
+  // announce it with a lead-in the card reader does not take ("まず聞いてください。最後の文は英語だけです。" + the card, mic test 10,
+  // embed-1795202398886 T82): the card is not read aloud, nothing was said, and the learner waited 12 s for the idle nudge. By state:
+  // the armed items whose words are in nothing this reply said are said by the runtime as its last sentence (spoken and stored).
+  let targetSaid: { type: string; message: string } | null = null;
+  if (TUTOR_V2_PRON_TARGET_SAID && session.mode === 'voice' && v2PronunciationOn(session) && !disarmed && !state.closed && !input.signal?.aborted && spoken.length) {
+    const arm = state.pronunciation?.armed;
+    if (arm && toolCalls.some((c) => c.name === 'practise_pronunciation' && /^armed/.test(c.outcome))) {
+      const words = (x: string) => ` ${x.toLowerCase().replace(/[’‘]/g, "'").replace(/[^\p{L}\p{N}']+/gu, ' ').trim()} `;
+      const said = words(stripBoardBlocks(spoken.join(' ')));
+      const unsaid = arm.items.map((x) => x.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim()).filter((x) => words(x).trim() && !said.includes(words(x)));
+      if (unsaid.length) {
+        const line = unsaid.map((x) => (/[.!?]["'”’)]*$/.test(x) ? x : `${x}.`)).join(' ');
+        input.onText?.(`\n\n${line}`);
+        spoken.push(line);
+        const holder = [...stored].reverse().find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));
+        const textBlock = [...((holder?.content as Anthropic.ContentBlockParam[] | undefined) ?? [])].reverse().find((c): c is Anthropic.TextBlockParam => c.type === 'text');
+        if (textBlock) textBlock.text = `${textBlock.text}\n\n${line}`; else stored.push({ role: 'assistant', content: [{ type: 'text', text: line }] });
+        targetSaid = { type: 'pronunciation_target_said', message: `the reply armed "${arm.reference.slice(0, 60)}" without saying it: said by the runtime` };
+      }
+    }
+  }
   // A session never begins on a bare board (embed-1794362141944, embed-1794376295543). When the opening reply
   // and the check after it both wrote nothing, the lesson's heading and what it is for go up.
   // Not in homework: the problem is in its panel beside the chat, and the plan's title is only "Problem 3".
@@ -1911,7 +1952,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const menuThenSummary = opensClose && summaryNow && menuGiven;
   if (inviteOwed && (inviteRefused || inviteWait || menuThenSummary) && !state.closed && !heldAt && !input.signal?.aborted && checkQ) {
     const last = lastSentences(stripBoardBlocks(spoken.join(' ')), 1);
-    if (!v2ReplyInvites(last) && !endsAsking(last, true)) {
+    if (!v2InviteOfReply(spoken.join(' ')) && !endsAsking(last, true)) {
       const q = checkQ.replace(/[<>]/g, '');
       // Fix round 2 (b): the card holds the question and the sentences it asks about; the spoken line keeps the plan's whole wording.
       const b = boardBlocksIn(`<board problem>${v2CheckCardText(q)}</board>`)[0];
@@ -1926,7 +1967,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     }
   } else if (inviteOwed && (inviteRefused || inviteWait || menuThenSummary) && !state.closed && !heldAt && !input.signal?.aborted) {
     const last = lastSentences(stripBoardBlocks(spoken.join(' ')), 1);
-    if (!v2ReplyInvites(last) && !endsAsking(last, true)) {
+    if (!v2InviteOfReply(spoken.join(' ')) && !endsAsking(last, true)) {
       // Task 7k (CLOSE_REOPENED): reopened, the runtime's ask is "more, or finish?".
       const line = reopened ? V2_CLOSE_MORE_LINE : V2_CLOSE_INVITE_LINE;
       input.onText?.(spoken.length ? `\n\n${line}` : line);
@@ -1944,21 +1985,24 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Task 7k (CLOSE_REOPENED): reopened, the ask "more, or finish?" (or an invitation) is the ask the lesson may end on; recorded,
   // the reopening is over until they ask for more again.
   const lastSaid = lastSentences(stripBoardBlocks(spoken.join(' ')), 1);
+  // Task 8d (CLOSE_SUMMARY_ONCE): the invitation is the reply's last QUESTION sentence (position), not only its last sentence: T91 of mic
+  // test 10 (embed-1795202398886) ended 「何か質問はありますか？なければ、ここで終わりにします。」 and was not recorded.
+  const inviteSaid = v2InviteOfReply(spoken.join(' '));
   // Fix round 1 (I2): an ask "more, or finish?" is marked (closeAsk), so the turn that answers it is read by state.
   const asksMore = v2ReplyAsksMoreOrFinish(lastSaid) || lastSaid.trim() === V2_CLOSE_MORE_LINE;
-  if (inviteOwed && !state.closed && (reopened ? v2ReplyInvites(lastSaid) || asksMore : summaryGiven && v2ReplyInvites(lastSaid))) { state.closeInvitedAt = nowMs; delete state.closeReopened; if (reopened && asksMore) state.closeAsk = 'more'; else delete state.closeAsk; }
+  if (inviteOwed && !state.closed && (reopened ? !!inviteSaid || asksMore : summaryGiven && !!inviteSaid)) { state.closeInvitedAt = nowMs; delete state.closeReopened; if (reopened && asksMore) state.closeAsk = 'more'; else delete state.closeAsk; }
   // A reply that took their request up already ending on that ask (or an invitation) is the ask: not reopened, so their answer
   // is not met by a second ask.
   // Fix round 1 (I2): …and so does a reply to the ask "more, or finish?" that goes on (more practice, not a goodbye).
   else if ((reopenAsked || answersMoreAsk) && !state.closed && !input.signal?.aborted) {
-    if (v2ReplyInvites(lastSaid) || asksMore) { state.closeInvitedAt = nowMs; if (asksMore) state.closeAsk = 'more'; else delete state.closeAsk; }
+    if (inviteSaid || asksMore) { state.closeInvitedAt = nowMs; if (asksMore) state.closeAsk = 'more'; else delete state.closeAsk; }
     else if (!v2ReplySentences(stripBoardBlocks(spoken.join(' '))).slice(-2).some((x) => isGoodbye(x))) { state.closeReopened = nowMs; delete state.closeInvitedAt; delete state.closeAsk; }
   }
   // Task 7u (CLOSE_CHECK): the summary reply that ended on the plan's check question (a question card painted, or its last sentence a
   // question that is not the invitation) records it asked; the turn of their next words records it answered (close-check.ts).
   // Task 7w (SUMMARY_OPENS_CLOSE): the runtime's own check-in ("Is that clear, or shall I go over it again?") is no check question.
   if (checkOwed && !state.closed && typeof state.closeInvitedAt !== 'number' && summaryGiven && !heldAt && !input.signal?.aborted
-    && (toolCalls.some((c) => c.name === 'show_problem' && !/^not /.test(c.outcome)) || (endsAsking(lastSaid, true) && !v2ReplyInvites(lastSaid) && !(opensClose && V2_CHECK_INS.includes(lastSaid.trim()))))) state.closeCheck = { askedAt: nowMs };
+    && (toolCalls.some((c) => c.name === 'show_problem' && !/^not /.test(c.outcome)) || (endsAsking(lastSaid, true) && !inviteSaid && !(opensClose && V2_CHECK_INS.includes(lastSaid.trim()))))) state.closeCheck = { askedAt: nowMs };
   else if (checkPending && state.closeCheck && !!input.studentSaid?.trim() && !input.signal?.aborted) state.closeCheck = { ...state.closeCheck, answeredAt: nowMs };
   // Task 7w (SUMMARY_OPENS_CLOSE): a summary reply that did not end on the check (nor on the invitation) owes it on the next reply, once;
   // that reply uses it up, asked or not.
@@ -1969,7 +2013,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     else if (summaryNow && checkOwed && !checkDeferred && !state.closeCheck && !state.closed && typeof state.closeInvitedAt !== 'number') state.closeCheckLate = nowMs;
   }
   // Task 7z fix round 1 (I2): the close step this reply recorded, with its last sentence, for the next turn (by position, not words).
-  if (!input.signal?.aborted) v2NoteCloseAskLast(state, nowMs, lastSaid);
+  // Task 8d: the invitation's own sentence, when it was the step recorded (a statement after it is not the ask).
+  if (!input.signal?.aborted) v2NoteCloseAskLast(state, nowMs, inviteSaid && state.closeInvitedAt === nowMs && !asksMore ? inviteSaid : lastSaid);
   state.history = [...state.history, ...stored];
   // Task 7f B: the parts left out for time are told once (a reply names them, or the facts have asked twice).
   if (tf.noSqueeze && state.timeFit && !input.signal?.aborted) v2TimeFitAfterReply(session.plan, state, spoken.join(' '));
@@ -2001,6 +2046,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Not for a reply that was cut, closed the lesson or did not catch their words (the owed cards' conditions).
   const adaptEvents = [...adaptBefore.events];
   if (disarmed) adaptEvents.push(disarmed);
+  if (targetSaid) adaptEvents.push(targetSaid);
   // Task 8c (CORRECTION_KEPT, mic test 10 T46): a sentence of theirs this turn that no sentence card of this reply holds (as said or
   // corrected) and whose correction a painted note of this reply holds (learner-card.ts v2NoteCorrectionOf: a clause of the note that
   // corrects it) was corrected by the note: the correction is recorded (summary-marks.ts, as a card's is: whatever the ask before), and an

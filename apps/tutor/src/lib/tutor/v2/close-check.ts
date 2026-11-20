@@ -17,11 +17,11 @@
  *    before. Nothing here ends or keeps the lesson open by itself: end_lesson is never refused for the check alone.
  * Spoken lessons that teach a language with a labelled plan, where 7d applies. Pure, client-safe.
  */
-import { TUTOR_V2_CLOSE_CHECK, TUTOR_V2_UNHEARD_ASK_OWED } from '../orchestrator/flags';
+import { TUTOR_V2_ANSWER_OVER_ASK, TUTOR_V2_CLOSE_CHECK, TUTOR_V2_CLOSE_SUMMARY_ONCE, TUTOR_V2_UNHEARD_ASK_OWED } from '../orchestrator/flags';
 import type { LessonPlan } from '../lesson-plan/types';
 import { v2CloseInviteOn, v2CloseInviteOwed } from './close-invite';
 import { v2NoteTargetsOn } from './note-targets';
-import { v2PlanLabelled } from './part-flow';
+import { v2NoMoreAnswer, v2PlanLabelled } from './part-flow';
 import { v2SummaryOpensCloseOn } from './summary-close';
 import { V2_TIME_UP_MIN, v2LeftToStopMin } from './time-box';
 import type { V2Session, V2State } from './types';
@@ -74,6 +74,11 @@ export const V2_CLOSE_CHECK_READ_BACK = 'Reading the card\'s sentences back is n
 export const v2CloseCheckAnswerLine = (enabled: boolean = TUTOR_V2_UNHEARD_ASK_OWED) => (enabled ? `${V2_CLOSE_CHECK_ANSWER_LINE}. ${V2_CLOSE_CHECK_READ_BACK}` : V2_CLOSE_CHECK_ANSWER_LINE);
 /** An end_lesson refused while the check is owed (7d's refusal, with the check in place of the invitation). */
 export const V2_CLOSE_CHECK_REFUSAL = 'not ended: there is time for the check question. Say nothing of this message or of the clock, and say no goodbye now. If you have not given the summary, give it; then end this reply with the plan\'s check question on a question card, without its answer. Close after their answer and your questions invitation.';
+/** Task 8d (CLOSE_SUMMARY_ONCE): the check's refusal once the summary has been given: it never asks for the summary again. */
+export const V2_CLOSE_CHECK_REFUSAL_GIVEN = 'not ended: there is time for the check question. Say nothing of this message or of the clock, and say no goodbye now. The summary has been given: do not give it again or recap it. End this reply with the plan\'s check question on a question card, without its answer. Close after their answer and your questions invitation.';
+export function v2CloseCheckRefusal(summaryGiven: boolean, enabled: boolean = TUTOR_V2_CLOSE_SUMMARY_ONCE): string {
+  return enabled && summaryGiven ? V2_CLOSE_CHECK_REFUSAL_GIVEN : V2_CLOSE_CHECK_REFUSAL;
+}
 
 /** The facts for the check, and whether they stand in place of the 7d invitation line this turn. `heard`: their words this turn
  *  (null or empty on a silence turn). */
@@ -132,13 +137,21 @@ export function v2ReadCloseCheckDeferred(raw: unknown): number | undefined {
  *  Fix round 1 (I1, ruling): each step is owed again at most once (closeReowed); after its second ask it counts as given, heard or not.
  *  Never when their words ask to stop. Mic test 8 (embed-1795115593161, T103: the invitation cut 0.8 s in, counted asked; the next reply
  *  said goodbye). `closeAskLast` is used up here every turn. Returns what it re-owed. */
-export function v2UnheardCloseAsks(session: V2Session, state: V2State, ctx: { nowMs: number; stopAsked: boolean; enabled?: boolean }): { invite: boolean; check: boolean } {
+/** Task 8d (ANSWER_OVER_ASK, `said` / `overAsk`): the invitation was the sentence playing when they cut in (the first unheard sentence) and
+ *  their words are a plain "no questions" (part-flow.ts v2NoMoreAnswer): it counts as heard and answered, is not owed again, and the
+ *  "not heard" line is not sent (state.unheard clears: the invitation and what followed it). Any other answer, or an invitation that was not the sentence playing, as before. */
+export function v2UnheardCloseAsks(session: V2Session, state: V2State, ctx: { nowMs: number; stopAsked: boolean; enabled?: boolean; said?: string | null; languages?: readonly string[]; overAsk?: boolean }): { invite: boolean; check: boolean } {
   const none = { invite: false, check: false };
   const last = state.closeAskLast; delete state.closeAskLast;
   if (!(ctx.enabled ?? TUTOR_V2_UNHEARD_ASK_OWED) || !last || ctx.stopAsked || state.closed || !state.unheard?.length || !v2CloseInviteOn(session)) return none;
   if ((state.closeReowed ?? []).includes(last.step)) return none;
   const key = (x: string) => x.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
   if (!key(last.last) || !state.unheard.some((x) => key(x) === key(last.last))) return none;
+  if ((ctx.overAsk ?? TUTOR_V2_ANSWER_OVER_ASK) && last.step === 'invite' && typeof state.closeInvitedAt === 'number' && key(state.unheard[0]!) === key(last.last) && v2NoMoreAnswer(ctx.said ?? null, ctx.languages)) {
+    // The invitation was the first sentence they did not hear: it and whatever followed it ("if not, we'll finish here") are answered.
+    delete state.unheard;
+    return none;
+  }
   if (last.step === 'invite' && typeof state.closeInvitedAt === 'number') {
     delete state.closeInvitedAt; delete state.closeAsk;
     state.closeReowed = [...(state.closeReowed ?? []), 'invite'];

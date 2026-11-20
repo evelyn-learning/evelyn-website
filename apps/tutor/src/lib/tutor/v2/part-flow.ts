@@ -18,10 +18,11 @@ import { PART_OFFERS, V2_CLOSING_PAGE, endsAsking } from './part-close';
 import { V2_OFFER_SHAPE, v2IsPageOfPart, v2PartEntered, v2PartIsOptional, v2PartNamedIn, v2PartOf, v2PageHoldsWork } from './plan-map';
 import { V2_PART_FRAME_JA, isPartFrame } from './reply-gate';
 import type { V2Board, V2State } from './types';
-import { TUTOR_V2_LEVEL_CHECK_CHIP, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PART_ASK_LANGS, TUTOR_V2_PART_ASK_NAMED, TUTOR_V2_PART_GO_NAMED, TUTOR_V2_PART_ASK_CLAUSES, TUTOR_V2_PART_ENTERED, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PRACTICE_ON_PART_PAGE } from '../orchestrator/flags';
+import { TUTOR_V2_ANSWER_OVER_ASK, TUTOR_V2_LEVEL_CHECK_CHIP, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PART_ASK_LANGS, TUTOR_V2_PART_ASK_NAMED, TUTOR_V2_PART_GO_NAMED, TUTOR_V2_PART_ASK_CLAUSES, TUTOR_V2_PART_ENTERED, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PRACTICE_ON_PART_PAGE } from '../orchestrator/flags';
 import { v2LevelCheckBegun } from './level-check-count';
 import { v2PartFirstStepLine } from './optional-hold';
 import { V2_LANGUAGE_PACKS, v2EndingAsk, v2IsAskLead, v2WithoutFillers } from './language-pack';
+import { V2_CUT_MARK } from './interrupted';
 
 /** `history` (Task 7g, LEVEL_CHECK_CHIP): when present, a level check under way lights its chip before any goal is marked. */
 type View = Pick<V2State, 'board' | 'goals' | 'workingLevel'> & { closed?: boolean; history?: V2State['history'] } & Partial<Pick<V2State, 'practiceSaid' | 'timeFit' | 'summaryBegunAt' | 'visitPages'>>;
@@ -281,6 +282,35 @@ export function v2MoveAnswer(said: string | null, lastTutor: string = '', langua
   if (QUESTION.test(s)) return 'question';
   return GO.test(s) || GO_JA.test(s) ? 'go' : 'other';
 }
+/** Task 8d (ANSWER_OVER_ASK): a plain "no questions" / "nothing more" ("No.", "Uh, no question.", "No, thank you.", "Nothing.", 「質問は
+ *  ありません。」), with no request after it (READY_BUT): the answer the close reads to its invitation. Informs state only by position
+ *  (close-check.ts v2UnheardCloseAsks). */
+export function v2NoMoreAnswer(said: string | null, languages?: readonly string[]): boolean {
+  const s = v2WithoutFillers((said ?? '').trim(), languages).trim();
+  return !!s && !READY_BUT.test(s) && (BARE_NO.test(s) || NO_QUESTIONS.test(s) || NO_QUESTIONS_READY.test(s) || NO_QUESTIONS_READY_JA.test(s));
+}
+
+/** Task 8d (ANSWER_OVER_ASK): the last reply as written (its heard words, then the sentences the learner did not hear: state.unheard),
+ *  when the part ask it ends on began at the sentence playing as they cut in (the first unheard sentence is one of the ask's sentences:
+ *  an English part-ask frame as its last sentence, or the ask read by position in the lesson's languages, v2EndingPartAsk). Their go to
+ *  it then answers that ask (turn.ts reads the release on this text). Null otherwise: nothing unheard, no part ask, or the ask was not
+ *  the sentence playing (a reply cut before the ask began: `playing` false). Mic test 10 (embed-1795202398886, T52–T53). */
+/** `playing`: the first unheard sentence is one of the ask's (their words came over the ask itself); false: the ask was cut whole, after
+ *  the sentence playing (a reply cut before its ask began): a go then answers no ask it heard, and opens nothing (turn.ts). */
+export function v2UnheardPartAsk(plan: LessonPlan, state: Pick<V2State, 'unheard'>, lastTutor: string, languages?: readonly string[], enabled: boolean = TUTOR_V2_ANSWER_OVER_ASK): { text: string; ask: string[]; playing: boolean } | null {
+  const unheard = (state.unheard ?? []).map((x) => x.trim()).filter(Boolean);
+  if (!enabled || !unheard.length) return null;
+  const heard = stripBoardBlocks(lastTutor).split(V2_CUT_MARK).join(' ').trim();
+  const text = `${heard} ${unheard.join(' ')}`.trim();
+  const sentences = text.split(SENTENCES).map((x) => x.trim()).filter(Boolean);
+  const last = sentences[sentences.length - 1] ?? '';
+  const ending = last && v2IsPartAsk(last) ? null : v2EndingPartAsk(text, plan, languages);
+  const ask = last && v2IsPartAsk(last) ? [last] : ending ? ending.ask.split(SENTENCES).map((x) => x.trim()).filter(Boolean) : [];
+  const key = (x: string) => x.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  if (!ask.length || !ask.some((x) => unheard.some((y) => key(x) === key(y)))) return null;
+  return { text, ask, playing: ask.some((x) => key(x) === key(unheard[0]!)) };
+}
+
 /** Whether the part ask a reply ends on offers a question first (an English frame with a questions clause, or an ask read by
  *  position / clause in the lesson's languages that holds one): there a no is "no questions". */
 export function v2OffersQuestionFirst(lastTutor: string, plan?: LessonPlan, languages?: readonly string[], langs: boolean = TUTOR_V2_PART_ASK_LANGS): boolean {
@@ -569,7 +599,10 @@ export function v2PendingPart(plan: LessonPlan, state: View & Pick<V2State, 'his
       return index >= 0 && index !== cur && index < plan.segments.length - 1 && !paged(plan, state.board, index) ? { index, title: v2PartOf(plan.segments[index]!).label! } : null;
     }
     // Two parts named ("pronunciation, or shall we move on to the summary?"): only the one their words name.
-    const pickNow = others.length > 1 ? others.find(({ seg }) => !!said && v2PartNamedIn(seg, said)) ?? null : others[0] ?? null;
+    // Task 8d (ANSWER_OVER_ASK): …else the one part the lead names as its topic (「次は Conversation で、仕事について…」 also names "Your
+    // job" by its Japanese name 仕事, in passing; mic test 10, embed-1795202398886, T52).
+    const topicOnly = TUTOR_V2_ANSWER_OVER_ASK && ending?.lead && others.length > 1 ? others.filter(({ seg }) => v2PartIsTopic(seg, ending.lead)) : [];
+    const pickNow = others.length > 1 ? others.find(({ seg }) => !!said && v2PartNamedIn(seg, said)) ?? (topicOnly.length === 1 ? topicOnly[0]! : null) : others[0] ?? null;
     if (others.length > 1 && !pickNow) return null;
     // Fix rounds 2–3: the part after the one in hand only for a frame about the lesson moving on (movesOn), never for a bare
     // "shall we"/"ready"/"go on": "Shall we try another sentence?", "Can you go on?" are practice asks, and a yes to them
@@ -628,9 +661,11 @@ const partNames = (seg: LessonPlan['segments'][number]) => { const p = v2PartOf(
 const NAME_TAIL = `[」』"”]?\\s*(?:[（(][^）)]*[）)])?\\s*(?:の(?:練習|部分|パート|ところ))?\\s*`;
 /** Fix round 2 (n4): a lead names a part as its topic (「次は会話の練習です。」, 「次に、会話の練習をします。」, 「次は「present perfect」に進みます。」,
  *  「発音の練習もできます。」), not in passing (「次は過去形と比べてみましょう。」); an English lead by its words ("Next is past simple."). */
-export function v2PartIsTopic(seg: LessonPlan['segments'][number], lead: string): boolean {
+/** Task 8d (ANSWER_OVER_ASK, `deTopic`): 「次は Conversation で、仕事について自由に話す練習です。」 names it too (the name, then で and a
+ *  comma: "next is X, where…"): mic test 10 (embed-1795202398886, T52 / T54) read as no part ask, so even heard, its yes opened nothing. */
+export function v2PartIsTopic(seg: LessonPlan['segments'][number], lead: string, deTopic: boolean = TUTOR_V2_ANSWER_OVER_ASK): boolean {
   if (!V2_JA_SCRIPT.test(lead)) return v2PartNamedIn(seg, lead);
-  return partNames(seg).some((n) => new RegExp(`${escapeRe(n)}${NAME_TAIL}(?:です|になります|に|へ|を|も|。|、|$)`, 'iu').test(lead));
+  return partNames(seg).some((n) => new RegExp(`${escapeRe(n)}${NAME_TAIL}(?:です|になります|に|へ|を|も|。|、|${deTopic ? '\\s*で[、,]|' : ''}$)`, 'iu').test(lead));
 }
 
 /** A part's name as said in a sentence ("Your job" → "your job"; a name that starts with a proper noun keeps it). */

@@ -2522,3 +2522,27 @@ export const TUTOR_V2_CORRECTION_KEPT = process.env.NEXT_PUBLIC_TUTOR_V2_CORRECT
  *  headings, two corrections under the spoken "went well") (Task 8c, item 3). Default ON; NEXT_PUBLIC_TUTOR_V2_SUMMARY_HEADINGS=off ⇒ as
  *  before. */
 export const TUTOR_V2_SUMMARY_HEADINGS = process.env.NEXT_PUBLIC_TUTOR_V2_SUMMARY_HEADINGS !== 'off';
+
+/** Tutor brain v2 (v2/close-invite.ts, v2/close-check.ts, v2/turn.ts): the summary is given once. The questions invitation is recorded
+ *  from the reply's last QUESTION sentence (a statement after it, "if not, we'll finish here", does not undo it); once the summary has
+ *  been given (state.summaryBegunAt, or a closing page) no facts line or end_lesson result asks for it again; after it, the goodbye
+ *  facts say thank them and say goodbye in one or two sentences with no recap (also when they ask to stop). Mic test 10
+ *  (embed-1795202398886, flags 5 and 6: T91's invitation not recorded, the summary given again at T93 and recapped at T95) (Task 8d,
+ *  item 1). Default ON; NEXT_PUBLIC_TUTOR_V2_CLOSE_SUMMARY_ONCE=off ⇒ as before. */
+export const TUTOR_V2_CLOSE_SUMMARY_ONCE = process.env.NEXT_PUBLIC_TUTOR_V2_CLOSE_SUMMARY_ONCE !== 'off';
+
+/** Tutor brain v2 (v2/part-flow.ts, v2/close-check.ts, v2/turn.ts): an answer said over the ask moves on. When the learner cut in while
+ *  the reply's part ask was the sentence playing (the first unheard sentence of the reply that made it, state.unheard) and their words
+ *  are a go to it, the ask counts as heard and answered: the part is released as for a heard ask and the ask is left out of the "not
+ *  heard" line. The same for the close invitation answered with a plain "no questions": it is not owed again. By state and position;
+ *  an answer that is not a go, or an ask that was not the sentence playing, keeps the behaviour before. Mic test 10
+ *  (embed-1795202398886, flag 3: "Yes." over T52's ask, the same ask again at T54) (Task 8d, item 2). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_ANSWER_OVER_ASK=off ⇒ as before. */
+export const TUTOR_V2_ANSWER_OVER_ASK = process.env.NEXT_PUBLIC_TUTOR_V2_ANSWER_OVER_ASK !== 'off';
+
+/** Tutor brain v2 (v2/turn.ts): a reply that armed a pronunciation recording says what it armed. When the armed item's words are not in
+ *  the reply's spoken words (the model put the sentence only on a card, which is not read aloud after a lead-in the card reader does not
+ *  know), the runtime says it as the reply's last sentence. Mic test 10 (embed-1795202398886, T82: "まず聞いてください。最後の文は英語
+ *  だけです。" then the card; nothing said, 12 s of silence until the idle nudge) (Task 8d, item 3). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_PRON_TARGET_SAID=off ⇒ as before. */
+export const TUTOR_V2_PRON_TARGET_SAID = process.env.NEXT_PUBLIC_TUTOR_V2_PRON_TARGET_SAID !== 'off';
