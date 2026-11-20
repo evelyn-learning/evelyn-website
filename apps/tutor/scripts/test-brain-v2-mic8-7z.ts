@@ -31,7 +31,10 @@ import { trimToSpoken } from '../src/lib/tutor/v2/interrupted';
 import { v2PartFirstStepLine, v2PartYesChoices } from '../src/lib/tutor/v2/optional-hold';
 import { V2_CLOSE_INVITE_UNHEARD_LINE } from '../src/lib/tutor/v2/close-invite';
 import { V2_CLOSE_CHECK_READ_BACK } from '../src/lib/tutor/v2/close-check';
-import { V2_FREE_CONV_NO_STARTER_LINE, v2QuestionOfReply } from '../src/lib/tutor/v2/adaptive';
+import { V2_FREE_CONV_NO_STARTER_LINE, V2_FREE_CONV_PARTNER_LINE, v2QuestionOfReply } from '../src/lib/tutor/v2/adaptive';
+/** Task 8a (FREE_CONV_PARTNER): the 7z positive line is now sent as the partner line, which keeps its rules (one question, no starter
+ *  unless silent or asked for help); either is the free-conversation line here. */
+const hasFreeLine = (facts: string) => facts.includes(V2_FREE_CONV_NO_STARTER_LINE) || facts.includes(V2_FREE_CONV_PARTNER_LINE);
 import { V2_STARTER_LINE } from '../src/lib/tutor/v2/practice-facts';
 import { qpinAskUnheard, shouldClearQpinOnAnswer } from '../src/lib/tutor/qpin-behavior';
 import { v2DropSaidLead } from '../src/lib/tutor/v2/board-timing';
@@ -285,12 +288,12 @@ async function main() {
   check('a real mishear ("Sorry, I didn\'t catch that. Could you say it again?", no card): nothing counted, as before', on.mishear.events.length === 0 && on.mishear.retests.length === 0, on.mishear);
 
   console.log('3  FREE_CONV_NO_STARTER: no starter unless asked; the corrections-spent line where the model reads it');
-  check('an ordinary answer in the conversation: the positive line (ask and stop), and no general starter line', on.convPlain.includes(V2_FREE_CONV_NO_STARTER_LINE) && !on.convPlain.includes(V2_STARTER_LINE), on.convPlain.split('\n').filter((l) => /starter|free conversation/.test(l)));
-  check('after a request for help, or a silence turn: no such line (a starter may be given)', !on.convHelp.includes(V2_FREE_CONV_NO_STARTER_LINE) && !on.convSilence.includes(V2_FREE_CONV_NO_STARTER_LINE));
+  check('an ordinary answer in the conversation: the positive line (ask and stop), and no general starter line', hasFreeLine(on.convPlain) && !on.convPlain.includes(V2_STARTER_LINE), on.convPlain.split('\n').filter((l) => /starter|free conversation/.test(l)));
+  check('after a request for help, or a silence turn: no such line (a starter may be given)', !hasFreeLine(on.convHelp) && !hasFreeLine(on.convSilence));
   const tl = on.convThird.split('\n');
   const aloudAt = tl.findIndex((l) => NO_ALOUD.test(l)); const cardAt = tl.findIndex((l) => /^their answer just now had/.test(l));
   check('T70 with two corrections made: the "no more aloud" line is sent, right before the card line of their answer', aloudAt >= 0 && cardAt === aloudAt + 1, tl.slice(Math.max(0, aloudAt - 1), aloudAt + 2));
-  check('a part that is no free conversation (Present perfect) has no such line', !on.pp1Facts.includes(V2_FREE_CONV_NO_STARTER_LINE));
+  check('a part that is no free conversation (Present perfect) has no such line', !hasFreeLine(on.pp1Facts));
 
   console.log('4  OPENING_PAGE_FIRST: page 1 is the overview page with the plan title');
   check('the opening reply with its own note: one page "Overview", the plan title heading first, the note under it', JSON.stringify(on.open.pages.map((p) => p.title)) === '["Overview"]' && on.open.pages[0]!.items.length === 2 && /^annotate:Talking About Your Work and Recent Projects/.test(on.open.pages[0]!.items[0]!) && /present perfect/.test(on.open.pages[0]!.items[1]!), on.open);
@@ -310,7 +313,7 @@ async function main() {
   check('…not once its own minutes are spent, not after they ask to move on, not while held (the hold line says it)', !ONE_MORE.test(on.liftedLateFacts) && !ONE_MORE.test(on.liftedLeaveFacts) && !ONE_MORE.test(on.heldOneFacts) && HOLD.test(on.heldOneFacts));
 
   console.log('other lessons');
-  check('a typed language lesson and a maths voice lesson: no 7z lines', ![V2_FREE_CONV_NO_STARTER_LINE, V2_CLOSE_INVITE_UNHEARD_LINE, V2_CLOSE_CHECK_READ_BACK].some((x) => on.typedFacts.includes(x) || on.mathsFacts.includes(x)) && !ONE_MORE.test(on.mathsFacts));
+  check('a typed language lesson and a maths voice lesson: no 7z lines', ![V2_FREE_CONV_NO_STARTER_LINE, V2_FREE_CONV_PARTNER_LINE, V2_CLOSE_INVITE_UNHEARD_LINE, V2_CLOSE_CHECK_READ_BACK].some((x) => on.typedFacts.includes(x) || on.mathsFacts.includes(x)) && !ONE_MORE.test(on.mathsFacts));
 
   console.log('each switch off alone (a child process per switch): as at 6a5f3c8b for that item');
   const child = (flag: string) => {
@@ -322,7 +325,7 @@ async function main() {
   const others = (off: Awaited<ReturnType<typeof probe>>, but: string) => [
     but === 'PART_YES_CHOICES' || YES_LINE.test(off.entryFacts),
     but === 'UNHEARD_ASK_OWED' || off.unheard.facts.includes(V2_CLOSE_INVITE_UNHEARD_LINE),
-    but === 'FREE_CONV_NO_STARTER' || off.convPlain.includes(V2_FREE_CONV_NO_STARTER_LINE),
+    but === 'FREE_CONV_NO_STARTER' || hasFreeLine(off.convPlain),
     but === 'OPENING_PAGE_FIRST' || off.open.pages[0]?.title === 'Overview',
     but === 'RETEST_QUESTION' || off.pp1Facts.includes(RETEST_Q),
     but === 'OPTIONAL_ONE_MORE' || ONE_MORE.test(off.liftedFacts),
@@ -340,7 +343,7 @@ async function main() {
   {
     const off = child('FREE_CONV_NO_STARTER');
     const ot = off.convThird.split('\n'); const oa = ot.findIndex((l) => NO_ALOUD.test(l));
-    check('FREE_CONV_NO_STARTER off: no positive line; the starter line as before; the corrections line among the next question\'s lines', !off.convPlain.includes(V2_FREE_CONV_NO_STARTER_LINE) && off.convPlain.includes(V2_STARTER_LINE) && oa >= 0 && ot.findIndex((l) => /^their answer just now had/.test(l)) !== oa + 1 && others(off, 'FREE_CONV_NO_STARTER'));
+    check('FREE_CONV_NO_STARTER off: no positive line; the starter line as before; the corrections line among the next question\'s lines', !hasFreeLine(off.convPlain) && off.convPlain.includes(V2_STARTER_LINE) && oa >= 0 && ot.findIndex((l) => /^their answer just now had/.test(l)) !== oa + 1 && others(off, 'FREE_CONV_NO_STARTER'));
   }
   {
     const off = child('OPENING_PAGE_FIRST');

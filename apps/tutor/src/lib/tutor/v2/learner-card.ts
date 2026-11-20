@@ -319,7 +319,10 @@ export class LearnerCardWatch {
 /** The tutor's last reply asked them for a sentence: an ask to say or try one, a request for one ("Tell me in one
  *  sentence", "start with …"), or a question about them (fix round 1, M3: not every answer of four words or more). */
 const SENTENCE_REQUEST = /\b(?:tell me|answer with|in (?:one|a|two|full|a full|one or two) (?:or two )?sentences?|start(?:ing)? with|begin(?:ning)? with|make a sentence|describe)\b|文で|言ってみて/i;
-const QUESTION_ABOUT_THEM = /^(?:what|how|where|when|why|which|who|have you|has your|did you|do you|are you|were you|can you|could you|would you)\b[^?]*\?["'”’]*$/i;
+// Task 8a (mic test 9, embed-1795132864767 T26 → T28, turn 18): a short lead word before the question ("Now, have you worked for your
+// current company for a long time?") hid the ask, so their answer was owed no card and its correction was never counted (no practice
+// signal, no re-test). The lead words are the level check's (level-check-count.ts ABOUT_THEM).
+const QUESTION_ABOUT_THEM = /^(?:(?:so|okay|ok|now|and|then|next|well|great|good|first|let'?s (?:begin|start)|to start)[,.!]?\s+)*(?:what|how|where|when|why|which|who|have you|has your|did you|do you|are you|were you|can you|could you|would you)\b[^?]*\?["'”’]*$/i;
 /** Task 7s (PRACTISED_SENTENCE, `wide`): an ask to answer in given words or to say one after the tutor, in Japanese: 「"Did you
  *  enjoy..." で答えてみてください。」, 「考えて答えてみてください。」, 「私の後に繰り返してください。」 (mic test 5, embed-1795050656326: the
  *  asks before n2 and n5 were read as no ask for a sentence). */

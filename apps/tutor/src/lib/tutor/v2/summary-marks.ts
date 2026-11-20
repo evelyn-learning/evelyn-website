@@ -15,7 +15,7 @@
  * The marks are drawn as on the lesson's correction cards (a sentence card's `emphasis`, WhiteboardCanvas.tsx SentenceCard). Every
  * other lesson: nothing recorded, nothing changed. Pure, client-safe.
  */
-import { TUTOR_V2_SUMMARY_MARKS } from '../orchestrator/flags';
+import { TUTOR_V2_CORRECTIONS_ALL_GUARDED, TUTOR_V2_SUMMARY_MARKS } from '../orchestrator/flags';
 import { v2ChangedWords } from './adaptive';
 import { v2NoteTargetsOn } from './note-targets';
 import { V2_CLOSING_PAGE } from './part-close';
@@ -25,6 +25,9 @@ import type { V2Correction, V2Session, V2State, V2ToolCall } from './types';
 
 /** The corrections the state keeps (the most recent). */
 export const V2_MAX_CORRECTIONS = 12;
+/** Task 8a (CORRECTIONS_ALL_GUARDED): the older corrections kept as their normalised sentence only (a 25-minute lesson made 19). */
+export const V2_MAX_CORRECTED_OLDER = 60;
+const OLDER_CHARS = 160;
 const MAX_CHARS = 200;
 const MAX_STRESS = 6;
 
@@ -52,7 +55,7 @@ function saidFor(card: string, studentSaid: string): string | null {
 
 /** After a sentence card painted (or pointed back at one holding it): a correction of what they just said is recorded with the words it
  *  changed. `emphasis`: the card's own stress. Mutates. */
-export function v2NoteCorrection(session: V2Session, state: V2State, sentence: unknown, emphasis: unknown, studentSaid: string | null | undefined, enabled: boolean = TUTOR_V2_SUMMARY_MARKS): void {
+export function v2NoteCorrection(session: V2Session, state: V2State, sentence: unknown, emphasis: unknown, studentSaid: string | null | undefined, enabled: boolean = TUTOR_V2_SUMMARY_MARKS, guardAll: boolean = TUTOR_V2_CORRECTIONS_ALL_GUARDED): void {
   if (!v2SummaryMarksOn(session, enabled) || typeof sentence !== 'string' || !studentSaid?.trim()) return;
   const s = clean(sentence);
   const said = saidFor(s, studentSaid);
@@ -62,13 +65,29 @@ export function v2NoteCorrection(session: V2Session, state: V2State, sentence: u
   const stress = (changed.length ? changed : stressOf(emphasis)).slice(0, MAX_STRESS);
   const k = key(s);
   const kept = (state.corrections ?? []).filter((c) => key(c.sentence) !== k);
-  state.corrections = [...kept, { said: clean(said), sentence: s, stress }].slice(-V2_MAX_CORRECTIONS);
+  const all = [...kept, { said: clean(said), sentence: s, stress }];
+  state.corrections = all.slice(-V2_MAX_CORRECTIONS);
+  // Task 8a (CORRECTIONS_ALL_GUARDED, mic test 9, embed-1795132864767: WB76 "I attended a robotics exhibition in Tokyo last year.", corrected
+  // at T42, was pushed out by 14 later corrections and painted under "What went well"): those pushed out are kept as their normalised
+  // sentence, for the guard; one recorded again in full leaves the older list.
+  if (guardAll) {
+    const out = all.slice(0, Math.max(0, all.length - V2_MAX_CORRECTIONS)).map((c) => key(c.sentence).slice(0, OLDER_CHARS)).filter(Boolean);
+    const inFull = new Set(state.corrections.map((c) => key(c.sentence)));
+    const older = [...(state.correctedOlder ?? []).filter((x) => !inFull.has(x) && !out.includes(x)), ...out].slice(-V2_MAX_CORRECTED_OLDER);
+    if (older.length) state.correctedOlder = older; else delete state.correctedOlder;
+  }
 }
 
 /** The recorded correction a sentence is (words compared as 7u does), or undefined. */
 export function v2CorrectionFor(state: Pick<V2State, 'corrections'>, sentence: string): V2Correction | undefined {
   const k = key(sentence);
   return k ? [...(state.corrections ?? [])].reverse().find((c) => key(c.sentence) === k) : undefined;
+}
+
+/** Task 8a (CORRECTIONS_ALL_GUARDED): the sentence is one of the older corrections (state.correctedOlder, normalised as `key`). */
+export function v2OlderCorrection(state: Pick<V2State, 'correctedOlder'>, sentence: string): boolean {
+  const k = key(sentence).slice(0, OLDER_CHARS);
+  return !!k && (state.correctedOlder ?? []).includes(k);
 }
 
 /** The heading groups of the summary page: "What went well" (or the first heading) and "To improve" (or the second). */
@@ -79,12 +98,14 @@ export const V2_SUMMARY_WELL_REFUSED = 'not painted: this sentence is one of the
 /** On the Summary page in view: a sentence card that is one of their corrections gets the record's marks where the model wrote none (or
  *  words not in the sentence: mutates `args.emphasis`), and is refused under the "What went well" heading (the reason). `calls`: this
  *  reply's settled calls so far (the headings written on the page in this reply). Null: paint it. */
-export function v2SummaryCardCheck(session: V2Session, state: V2State, args: Record<string, unknown>, calls: readonly V2ToolCall[], enabled: boolean = TUTOR_V2_SUMMARY_MARKS): string | null {
+export function v2SummaryCardCheck(session: V2Session, state: V2State, args: Record<string, unknown>, calls: readonly V2ToolCall[], enabled: boolean = TUTOR_V2_SUMMARY_MARKS, guardAll: boolean = TUTOR_V2_CORRECTIONS_ALL_GUARDED): string | null {
   if (!v2SummaryMarksOn(session, enabled) || typeof args.sentence !== 'string') return null;
   const page = state.board.pages[state.board.current];
   if (!page || !V2_CLOSING_PAGE.test(page.title)) return null;
   const rec = v2CorrectionFor(state, args.sentence);
-  if (!rec) return null;
+  // Task 8a (CORRECTIONS_ALL_GUARDED): an older correction (its sentence only) is refused under "What went well" too; it has no marks.
+  const older = !rec && guardAll && v2OlderCorrection(state, args.sentence);
+  if (!rec && !older) return null;
   // The group the card is written under: the last heading note on this page (this reply's, as written; else the page's record).
   const onPage = new Set(page.items.map((it) => it.id));
   const headings = calls.filter((c) => c.name === 'annotate' && c.args.style === 'heading' && !/^not /.test(c.outcome) && onPage.has(c.id)).map((c) => String(c.args.text ?? ''));
@@ -92,6 +113,7 @@ export function v2SummaryCardCheck(session: V2Session, state: V2State, args: Rec
   // Fix round 1 (M3): only a heading that reads as "What went well"; an unrecognised one ("Next steps") is no reason to refuse.
   const well = last !== undefined && WELL.test(last) && !IMPROVE.test(last);
   if (well) return V2_SUMMARY_WELL_REFUSED;
+  if (!rec) return null;
   const words = new Set(v2SentenceTokens(args.sentence));
   const given = stressOf(args.emphasis);
   // Fix round 1 (M4): the model's marks stand only when they are words of the sentence and include every word the correction changed
@@ -117,5 +139,12 @@ export function v2ReadCorrections(raw: unknown): V2Correction[] | undefined {
   const out = raw.filter((c): c is V2Correction => !!c && typeof c === 'object' && typeof (c as V2Correction).said === 'string' && typeof (c as V2Correction).sentence === 'string' && !!(c as V2Correction).sentence.trim())
     .slice(-V2_MAX_CORRECTIONS)
     .map((c) => ({ said: clean(c.said), sentence: clean(c.sentence), stress: (Array.isArray(c.stress) ? c.stress : []).filter((x): x is string => typeof x === 'string' && !!x.trim()).slice(0, MAX_STRESS).map((x) => x.trim().slice(0, 40)) }));
+  return out.length ? out : undefined;
+}
+
+/** Task 8a (CORRECTIONS_ALL_GUARDED): the route's reading of the older corrections: strings only, trimmed and bounded. */
+export function v2ReadCorrectedOlder(raw: unknown): string[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const out = raw.filter((x): x is string => typeof x === 'string' && !!x.trim()).slice(-V2_MAX_CORRECTED_OLDER).map((x) => x.trim().slice(0, OLDER_CHARS));
   return out.length ? out : undefined;
 }

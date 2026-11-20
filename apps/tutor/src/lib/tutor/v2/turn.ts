@@ -28,7 +28,7 @@ import { cardQuestion, v2DropSaidLead, saidCovers, sentenceCardToSay, unsaidAsk,
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, v2AskEveryOn, v2SummaryBegun, V2_NO_ASK_RECHECK_S, V2_TIME_UP_MIN, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
 import { v2CloseOpen, v2LeftToStopMin, v2LessonNowMs, v2OverrunMin, v2PlanContentDone, v2TimeFlags, v2WrapDue, v2WrapMin, type V2TimeFlags } from './time-box';
-import { V2_MIN_PRACTICE, V2_MORE_PRACTICE_MIN_LEFT, v2ArrivalDrops, v2LeaveOutByChoice, v2AsksMorePractice, v2CountPractice, v2PartPracticeAsked, v2DroppedMentioned, v2TakeEnteredDropped, v2PartsToDrop, v2PracticeMoreLine, v2PracticeShort, v2TimeFitAfterReply, v2TimeFitDue, v2TimeFitUpFront, v2MarkPartStart, v2OptionalAskedAtClose, v2OptionalWrapMin } from './time-fit';
+import { V2_MIN_PRACTICE, V2_MORE_PRACTICE_MIN_LEFT, v2LevelCheckTimeUp, v2ArrivalDrops, v2LeaveOutByChoice, v2AsksMorePractice, v2CountPractice, v2PartPracticeAsked, v2DroppedMentioned, v2TakeEnteredDropped, v2PartsToDrop, v2PracticeMoreLine, v2PracticeShort, v2TimeFitAfterReply, v2TimeFitDue, v2TimeFitUpFront, v2MarkPartStart, v2OptionalAskedAtClose, v2OptionalWrapMin } from './time-fit';
 import { planGoalIds, renderPlanMap, v2NextTimeAllLine, v2PagePartLabel, v2NextTimeLine, v2PartIsOptional, v2PartNamedIn, v2PartOf, v2PartOffers, v2UnreachedOffer } from './plan-map';
 import { stripToolTalk } from './tool-talk';
 import { gradeOfLevel } from './session-kind';
@@ -48,11 +48,11 @@ import { v2NoteCorrection, v2SummaryCardCheck } from './summary-marks';
 import { v2SummaryOpensCloseOn } from './summary-close';
 import { V2_CLOSE_CHECK_REFUSAL, v2CheckCardText, v2CloseCheckOwed, v2CloseCheckPending, v2PlanCheckQuestion, v2NoteCloseAskLast, v2UnheardCloseAsks } from './close-check';
 import { v2NoteOptionalLeave, v2OptionalHold, v2OptionalOneMore } from './optional-hold';
-import { v2AdaptAfter, v2AdaptBefore, v2AdaptOn, v2AdaptPart, v2FreeConvAfter, v2FreeConvQuiet, v2PracticePairs, v2QuestionOfReply } from './adaptive';
+import { v2AdaptAfter, v2AdaptBefore, v2AdaptOn, v2AdaptPart, v2FreeConvAfter, v2FreeConvQuiet, v2PracticePairs, v2QuestionOfReply, v2RetestPutAfter } from './adaptive';
 import { LearnerCardWatch, V2_REPLY_MISHEARD, v2CardIsFragment, v2LearnerCardsOn, v2OwedCardCheckLine, v2PracticeAnswerSentences, v2SentenceOnBoard, v2SentencesNotCarded } from './learner-card';
 import { v2StopAsked } from './stop-signal';
 import { V2_CLOSE_INVITE_LINE, V2_CLOSE_INVITE_REFUSAL, V2_CLOSE_INVITE_WAIT, V2_CLOSE_MORE_LINE, V2_CLOSE_REOPEN_REFUSAL, v2CloseInviteOn, v2CloseInviteOwed, v2CloseReopened, v2ReplyAsksMoreOrFinish, v2ReplyInvites } from './close-invite';
-import { TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_NOTE_TARGET_QUOTES, TUTOR_V2_NOTE_TARGET_MARK, TUTOR_V2_NOTE_STRESS_MARK, TUTOR_V2_NO_MARKDOWN_STARS, TUTOR_V2_CARD_GLOSS_SHOW, TUTOR_V2_SUPPORT_STEPS, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_PART_GO_NAMED, TUTOR_V2_PRONUNCIATION_PAGE, TUTOR_V2_FRAGMENT_CARD, TUTOR_V2_CARD_AT_SENTENCE, TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_RETEST_TARGET_CHANGED, TUTOR_V2_OPENING_PAGE_TITLE, TUTOR_V2_FREE_CONVERSATION, TUTOR_V2_REPEAT_THEN_WAIT, TUTOR_V2_OPENING_PAGE_FIRST, TUTOR_V2_UNHEARD_ASK_OWED, TUTOR_V2_REPEAT_NOT_MISHEARD } from '../orchestrator/flags';
+import { TUTOR_V2_LEVEL_CHECK_PUT, TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_NOTE_TARGET_QUOTES, TUTOR_V2_NOTE_TARGET_MARK, TUTOR_V2_NOTE_STRESS_MARK, TUTOR_V2_NO_MARKDOWN_STARS, TUTOR_V2_CARD_GLOSS_SHOW, TUTOR_V2_SUPPORT_STEPS, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_PART_GO_NAMED, TUTOR_V2_PRONUNCIATION_PAGE, TUTOR_V2_FRAGMENT_CARD, TUTOR_V2_CARD_AT_SENTENCE, TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_RETEST_TARGET_CHANGED, TUTOR_V2_OPENING_PAGE_TITLE, TUTOR_V2_FREE_CONVERSATION, TUTOR_V2_REPEAT_THEN_WAIT, TUTOR_V2_OPENING_PAGE_FIRST, TUTOR_V2_UNHEARD_ASK_OWED, TUTOR_V2_REPEAT_NOT_MISHEARD } from '../orchestrator/flags';
 import { v2CardGlossOn, v2CleanGloss, v2GlossLevelOn } from './card-gloss';
 import { v2NoteTargetsOn, v2NoteTargetsSection, v2NoteHasTarget, v2NoteStressWords } from './note-targets';
 import { V2StarStrip, v2StripStars } from './markdown-stars';
@@ -285,7 +285,7 @@ function applyControlTool(state: V2State, session: V2Session, name: string, args
   // to ask what they would like next, a new question to a student who is leaving (stop-signal.ts).
   const asked = args.because === 'student_asked' || (TUTOR_V2_STOP_SIGNAL && v2StopAsked(studentSaid));
   const discussion = discussionOf(session.plan);
-  if (name === 'set_working_level') return v2LevelCheckOn(session) ? v2ApplySetWorkingLevel(state, args, { session, heard: studentSaid, timeUp: !!session.timeBoxMinutes && v2LeftToStopMin(session, state, nowMs, ctx.tf.overrun) <= V2_TIME_UP_MIN }) : 'unknown tool set_working_level';
+  if (name === 'set_working_level') return v2LevelCheckOn(session) ? v2ApplySetWorkingLevel(state, args, { session, heard: studentSaid, timeUp: (!!session.timeBoxMinutes && v2LeftToStopMin(session, state, nowMs, ctx.tf.overrun) <= V2_TIME_UP_MIN) || (TUTOR_V2_LEVEL_CHECK_PUT && v2LevelCheckTimeUp(session, state, nowMs)) }) : 'unknown tool set_working_level';
   if (name === 'practise_pronunciation') return v2PronunciationOn(session) ? v2ApplyPractisePronunciation(state, args) : 'unknown tool practise_pronunciation';
   if (name === 'record_thinking') return discussion ? recordThinking(state, args) : 'unknown tool record_thinking';
   if (name === 'end_lesson' && discussion) {
@@ -1782,6 +1782,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // makes sense." was scored as the attempt), nor, in one taught through a second language, after a reply that asks them to repeat
   // or say something (one-question.ts v2AsksTheLearner: 「私の後に繰り返してください。 international」 got "Does that make sense?", mic
   // test 5, embed-1795050656326), widening 7c's ASK_NO_CHECKIN test (off with it). An English-only lesson keeps its rule (v2ReplyAsks).
+  // Task 8a (RETEST_ASK_ONCE): whether the reply carried a question of its own, before the runtime's check-in below is added (a check-in
+  // is no question put to them).
+  const replyPutQuestion = spoken.length > 0 && v2QuestionOfReply(spoken.join(' ')) !== null;
   const pronAsks = TUTOR_V2_PRONUNCIATION_PAGE && noteTargets && spoken.length > 0 && (toolCalls.some((c) => c.name === 'practise_pronunciation' && /^armed/.test(c.outcome)) || (TUTOR_V2_ASK_NO_CHECKIN && (session.languages?.length ?? 0) >= 2 && v2AsksTheLearner(stripBoardBlocks(spoken.join(' ')))));
   if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && spoken.length && !framesDropped && !toolCalls.some((c) => c.name === 'keep_listening' || c.name === 'end_lesson') && !replyAsks && !pronAsks && !saysGoodbye && !endsOnRepeat(spoken.join(' '))) {
     const ins = discussion ? DISCUSSION_CHECK_INS : V2_CHECK_INS;
@@ -1955,6 +1958,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       .map((c) => ({ sentence: String(c.args.sentence), stress: Array.isArray(c.args.emphasis) ? (c.args.emphasis as unknown[]).filter((x): x is string => typeof x === 'string') : [] }));
     adaptEvents.push(...v2AdaptAfter(session, state, adaptPart, answerSentences, v2PracticePairs(answerSentences, cards, (adaptFlags.changed ?? TUTOR_V2_RETEST_TARGET_CHANGED) && adaptFlags.retest), adaptFlags, v2QuestionOfReply(lastTutorText)));
   }
+  // Task 8a (RETEST_ASK_ONCE): the open retest whose line this turn sent is put to them when this reply carried a question.
+  if (adaptPart && !input.signal?.aborted && spoken.length) adaptEvents.push(...v2RetestPutAfter(session, state, adaptPart, replyPutQuestion, adaptFlags));
   // Task 7x (FREE_CONVERSATION): a reply in a free-conversation part that asked them to make a question of their own gave the invitation.
   if (adaptPart && !input.signal?.aborted && spoken.length) v2FreeConvAfter(session, state, adaptPart, spoken.join(' '), adaptFlags.free ?? TUTOR_V2_FREE_CONVERSATION);
   // Task 7v (PART_CLOCK): a part this reply opened begins now.

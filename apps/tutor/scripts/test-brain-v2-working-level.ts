@@ -52,9 +52,12 @@ const bilingual: V2Session = { ...checked, languages: ['en', 'ja'] };
 const factsOf = (session: V2Session, state: V2State, heard: string | null = null) => renderFacts(session, state, { nowMs: state.startedAtMs + 60000, heard });
 const withLevel = (level: V2State['workingLevel']): V2State => ({ ...newV2State(1000), ...(level ? { workingLevel: level } : {}) });
 /** A history in which the student has replied `n` times. */
+/** Task 8a (LEVEL_CHECK_PUT): the gate counts questions put and answered, so each tutor reply in these fixtures puts its own question
+ *  (they said "Good." / the same "Next question?" every time, which now puts none / the same one). */
+const QS = ['What do you do at work?', 'Where is your office?', 'Who are your customers?', 'How do you use English at work?', 'Which tools do you use every day?', 'Why did you choose this job?', 'When does your day start?', 'Have you travelled abroad for work?', 'What did you do yesterday?', 'Which languages do your customers speak?'];
 function replied(state: V2State, n: number): V2State {
   const history: Anthropic.MessageParam[] = [{ role: 'user', content: [{ type: 'text', text: '[The session has just started.]' }] }, { role: 'assistant', content: [{ type: 'text', text: 'Hello! How are you today?' }] }];
-  for (let i = 0; i < n; i++) history.push({ role: 'user', content: [{ type: 'text', text: `I am fine ${i}` }] }, { role: 'assistant', content: [{ type: 'text', text: 'Good.' }] });
+  for (let i = 0; i < n; i++) history.push({ role: 'user', content: [{ type: 'text', text: `I am fine ${i}` }] }, { role: 'assistant', content: [{ type: 'text', text: `Good. ${QS[i % QS.length]}` }] });
   return { ...state, history };
 }
 
@@ -156,7 +159,7 @@ async function main() {
     for (const none of ['Yes.', 'No.', 'Yes, I\'m ready.', 'Yes, thank you. That sounds good.', 'Yes, that sounds good. Thank you for the lesson today.', 'Please, could you please rephrase that, please?', 'Uh, sorry. I don\'t understand.', 'No, I haven\'t.', 'Oh, yes.', 'はい', '[The student has not replied.]']) check(`no answer in it: "${none}"`, !v2AnswerHasContent(none));
     for (const some of ['I work as admin at the company. Could you explain that in Japanese?', 'I\'m checking emails and sorting out some paperwork.', 'Make car.', 'I\'m engineer.', 'Yes, I went swimming.', '仕事で、メールとミーティングで英語を使います']) check(`an answer: "${some}"`, v2AnswerHasContent(some));
     // real-t2: the job, the tasks, then "No." twice to two questions: the level was set there (Task 6, D7).
-    const t2 = (said: string[]): V2State => ({ ...newV2State(0), history: said.flatMap((x) => [{ role: 'user' as const, content: [{ type: 'text' as const, text: x }] }, { role: 'assistant' as const, content: [{ type: 'text' as const, text: 'Thank you. Next question?' }] }]) });
+    const t2 = (said: string[]): V2State => ({ ...newV2State(0), history: said.flatMap((x, i) => [{ role: 'user' as const, content: [{ type: 'text' as const, text: x }] }, { role: 'assistant' as const, content: [{ type: 'text' as const, text: `Thank you. ${QS[i % QS.length]}` }] }]) });
     const before = t2(['[The session has just started.]', 'Yes, thank you. That sounds good.', 'Yes, I\'m ready.', 'Please, could you please rephrase that, please?', 'I work as admin at the company. Could you explain that in Japanese?', 'I\'m checking emails and sorting out some paperwork.', 'No.']);
     const early = v2LevelSetTooEarly(before, 'No.');
     check('real-t2 after two "No."s: refused, with the count and what to do', !!early && early.startsWith(V2_LEVEL_WAIT) && /answered 2 of the level check's 3 questions/.test(early) && /ask your next level-check question/.test(early) && /If your reply already asks them a question, that is the next one: ask nothing more now/.test(early), early);

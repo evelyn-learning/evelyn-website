@@ -25,6 +25,7 @@ import type Anthropic from '@anthropic-ai/sdk';
 import type { LessonPlan } from '../lesson-plan/types';
 import { stripBoardBlocks } from './board-inline';
 import { v2PartOf } from './plan-map';
+import { TUTOR_V2_LEVEL_CHECK_PUT } from '../orchestrator/flags';
 
 /** Plan questions the check asks. */
 export const V2_LEVEL_CHECK_QUESTIONS = 3;
@@ -69,6 +70,8 @@ export interface V2LevelCheckCount {
   done: boolean;
   /** The plan's questions could be told apart from follow-ups (false: every answer counted as a question). */
   classified: boolean;
+  /** Task 8a (LEVEL_CHECK_PUT): done because the level-check part has had its minutes, not by the count. */
+  timeUp?: true;
 }
 
 /** Final review M4: a question about them, not the overview's "Does that sound good?" / "Are you ready?": the level check has
@@ -81,13 +84,25 @@ const isOwnWords = (m: Anthropic.MessageParam) => m.role === 'user' && !textOf(m
 
 /** The count, with `heard` (the learner's words this turn) as the newest answer. `hasContent`: working-level.ts
  *  v2AnswerHasContent (passed in: that module reads this one). */
-export function v2CountLevelCheck(plan: LessonPlan | null | undefined, history: Anthropic.MessageParam[], heard: string | null | undefined, hasContent: (text: string) => boolean): V2LevelCheckCount {
+/** Task 8a (LEVEL_CHECK_PUT, `put`): an answer counts only where it answers a question put (v2LevelQuestionsPut: not words that go on
+ *  with an answer after a cut reply, not the same question asked again), and the count is never above the gate's (v2LevelQuestionsAnswered),
+ *  so the facts never say "set it now" while set_working_level is refused. `timeUp`: the level-check part has had its minutes (time-fit.ts
+ *  v2LevelCheckTimeUp): done. */
+export function v2CountLevelCheck(plan: LessonPlan | null | undefined, history: Anthropic.MessageParam[], heard: string | null | undefined, hasContent: (text: string) => boolean, opts: { put?: boolean; timeUp?: boolean } = {}): V2LevelCheckCount {
+  const put = opts.put ?? TUTOR_V2_LEVEL_CHECK_PUT;
+  const c = countLevelCheck(plan, history, heard, hasContent, put);
+  if (!put) return c;
+  const n = Math.min(c.answered, v2LevelQuestionsAnswered(history, heard, hasContent));
+  const timeUp = !!opts.timeUp && n < V2_LEVEL_CHECK_QUESTIONS;
+  return { ...c, answered: n, done: n >= V2_LEVEL_CHECK_QUESTIONS || timeUp, ...(timeUp ? { timeUp: true } : {}) };
+}
+function countLevelCheck(plan: LessonPlan | null | undefined, history: Anthropic.MessageParam[], heard: string | null | undefined, hasContent: (text: string) => boolean, put: boolean): V2LevelCheckCount {
   const questions = v2LevelCheckQuestions(plan);
   // Each of the learner's replies with the tutor's reply just before it.
   // `begun` (final review M4): the level check had begun when the tutor asked it: a reply after the one that marked a part
   // before the check (the overview), or a reply that asks a question about them. Small talk before it ("Sounds good, I'm a
   // little nervous today." to the opener) is no answer to a level question.
-  const pairs: Array<{ tutor: string; said: string; begun: boolean }> = [];
+  const pairs: Array<{ tutor: string; said: string; begun: boolean; fresh?: boolean }> = [];
   const levelAt = plan ? plan.segments.findIndex((seg) => v2PartOf(seg).skipWhenLevelKnown) : -1;
   const before = new Set(levelAt > 0 ? plan!.segments.slice(0, levelAt).map((seg) => seg.id) : []);
   let tutor = ''; let begun = false; let markedBefore = false;
@@ -104,10 +119,13 @@ export function v2CountLevelCheck(plan: LessonPlan | null | undefined, history: 
     }
   }
   if (heard) { if (ABOUT_THEM.test(lastOf(tutor)) && !NOT_LEVEL.test(lastOf(tutor))) begun = true; pairs.push({ tutor, said: heard, begun }); }
+  // Task 8a (LEVEL_CHECK_PUT): each answer marked as answering a question put, or not (v2LevelQuestionsPut, on the same history).
+  if (put) { const fresh = v2LevelQuestionsPut(history, heard, hasContent); pairs.forEach((p, i) => { p.fresh = fresh[i] ?? false; }); }
+  const counts = (p: { said: string; fresh?: boolean }) => hasContent(p.said) && (!put || !!p.fresh);
   const all = questions.map((_, i) => i);
   const start = questions.length ? pairs.findIndex((p) => v2MatchLevelQuestion(p.tutor, questions, all) >= 0) : -1;
   if (start < 0) {
-    const n = pairs.filter((p) => hasContent(p.said)).length;
+    const n = pairs.filter(counts).length;
     return { answered: Math.min(n, V2_LEVEL_CHECK_QUESTIONS), followUp: false, done: n >= V2_LEVEL_CHECK_QUESTIONS, classified: false };
   }
   const answered = new Set<number>(); let pending: number | null = null; let followUp = false; let extra = 0;
@@ -115,13 +133,13 @@ export function v2CountLevelCheck(plan: LessonPlan | null | undefined, history: 
     const m = v2MatchLevelQuestion(p.tutor, questions, all.filter((i) => !answered.has(i)));
     if (m >= 0) pending = m;
     // A reply with no answer in it leaves the question open: the next reply re-asks it, in whatever words.
-    if (!hasContent(p.said)) continue;
+    if (!counts(p)) continue;
     if (pending !== null) { answered.add(pending); pending = null; } else if (!followUp) followUp = true; else extra += 1;
   }
   // Fix round 1 (M4): answers before the first question in the plan's words answered the check's questions in other words:
   // counted as questions, as the gate counts them, so the check is never done only after five answers.
   // Final review M4: only from when the check began (not the overview's small talk).
-  const earlier = pairs.slice(0, start).filter((p) => p.begun && hasContent(p.said)).length;
+  const earlier = pairs.slice(0, start).filter((p) => p.begun && counts(p)).length;
   const n = Math.min(answered.size + extra + earlier, V2_LEVEL_CHECK_QUESTIONS);
   return { answered: n, followUp, done: n >= V2_LEVEL_CHECK_QUESTIONS, classified: true };
 }
@@ -148,7 +166,66 @@ export function v2LevelCheckBegun(plan: LessonPlan | null | undefined, history: 
 /** The facts line for the count (in place of "find it with three questions"). */
 export function v2LevelCheckCountLine(c: V2LevelCheckCount): string {
   const of = V2_LEVEL_CHECK_QUESTIONS;
+  // Task 8a (LEVEL_CHECK_PUT): the check's time is up before the count.
+  if (c.done && c.timeUp) return `level check: its time is up (${c.answered} of ${of} questions asked and answered): the check is done. Call set_working_level now, in this reply, from what they have said, and move on to the lesson; ask no more level questions`;
   if (c.done) return `level check: all ${of} questions answered${c.followUp ? ', and the one follow-up' : ''}: the check is done. Call set_working_level now, in this reply, and move on to the lesson; ask no more level questions`;
   const follow = !c.classified ? '' : c.followUp ? ', the one follow-up used: no more follow-ups' : ', no follow-up yet (at most one in the whole check, not one per question)';
   return `level check: ${c.answered} of ${of} questions asked and answered${follow}; a question asked again because they did not understand it is still the same question`;
+}
+
+/** Task 8a (LEVEL_CHECK_PUT): a last sentence that asks for an answer with no question mark ("Tell me about the work you do, please."). */
+const TELL_ME = /^(?:(?:so|okay|ok|now|first|great|good|then)[,.!]?\s+)*(?:please\s+)?(?:tell me|describe|talk (?:to me )?about)\b/i;
+/** Task 8a (LEVEL_CHECK_PUT): the question a tutor reply put, as stored in the history: the last sentence of its heard words that ends on a
+ *  question mark (an ask whether they are ready or have a question is none), or a last heard sentence that asks for an answer without one
+ *  (TELL_ME), else the question of a question card it wrote inline (only when the reply was not cut: a cut reply's card was not reached).
+ *  Null: it put none. */
+export function v2LevelQuestionOf(reply: string): string | null {
+  const cut = /\[cut off[^\]]*\]/i.test(reply);
+  const heard = stripBoardBlocks(reply).replace(/\[cut off[^\]]*\]/gi, ' ').replace(/\s+/g, ' ').trim();
+  const asks = heard.split(/(?<=[.!?。！？]["'”’」)]*)\s*/).map((x) => x.trim()).filter((x) => /[?？]["'”’」)]*$/.test(x) && !NOT_LEVEL.test(x));
+  if (asks.length) return asks[asks.length - 1]!;
+  // An ask for an answer with no question mark ("Tell me about the work you do, please."), as its last heard sentence.
+  const last = heard.split(/(?<=[.!?。！？]["'”’」)]*)\s*/).map((x) => x.trim()).filter(Boolean).pop() ?? '';
+  if (TELL_ME.test(last)) return last;
+  if (cut) return null;
+  const cards = [...reply.matchAll(/<board\s+problem\b[^>]*>([\s\S]*?)<\/board>/g)].map((m) => m[1]!.trim()).filter((x) => /[?？]/.test(x));
+  return cards.length ? cards[cards.length - 1]! : null;
+}
+
+/** Two questions are the same question: most of the content words of the shorter are in the other. */
+function sameQuestion(a: string, b: string): boolean {
+  const x = contentWords(a); const y = contentWords(b);
+  if (!x.length || !y.length) return a.trim().toLowerCase() === b.trim().toLowerCase();
+  const [short, long] = x.length <= y.length ? [x, y] : [y, x];
+  return short.filter((w) => long.some((v) => same(w, v))).length / short.length >= 2 / 3;
+}
+
+/** Task 8a (LEVEL_CHECK_PUT): for each of the learner's replies in their own words (and `heard` last), whether it answers a question the
+ *  check put: the tutor's words since their reply before (all its messages in that turn) put a question (v2LevelQuestionOf), the reply has
+ *  content, and that question is not the one their last counted answer answered. Words that go on with an answer over a reply cut before
+ *  its question (mic test 9, embed-1795132864767 T9), and an answer to the same question asked again (T10 after T8), are no new one. */
+export function v2LevelQuestionsPut(history: Anthropic.MessageParam[], heard: string | null | undefined, hasContent: (text: string) => boolean): boolean[] {
+  const out: boolean[] = [];
+  let tutor = ''; let last: string | null = null;
+  const take = (said: string) => {
+    const q = v2LevelQuestionOf(tutor);
+    const fresh = !!q && hasContent(said) && !(last !== null && sameQuestion(q, last));
+    if (fresh) last = q;
+    out.push(fresh); tutor = '';
+  };
+  for (const m of history) {
+    const t = textOf(m);
+    if (m.role === 'assistant') { if (t.trim()) tutor = tutor ? `${tutor}\n${t}` : t; continue; }
+    // Tool results only: no answer (kept in the list, as v2CountLevelCheck's pairs keep it), and the tutor's words run on.
+    if (!t.trim()) { if (isOwnWords(m)) out.push(false); continue; }
+    if (isOwnWords(m)) take(t);
+    else if (/^\[The (?:student|session)\b/.test(t.trim())) tutor = '';
+  }
+  if (heard) take(heard);
+  return out;
+}
+
+/** Task 8a (LEVEL_CHECK_PUT): the questions the check put that the learner answered (v2LevelQuestionsPut), `heard` the newest answer. */
+export function v2LevelQuestionsAnswered(history: Anthropic.MessageParam[], heard: string | null | undefined, hasContent: (text: string) => boolean): number {
+  return v2LevelQuestionsPut(history, heard, hasContent).filter(Boolean).length;
 }

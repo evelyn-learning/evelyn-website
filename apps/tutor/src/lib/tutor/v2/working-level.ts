@@ -20,8 +20,8 @@ import { discussionOf } from './discussion';
 import { v2PartOf } from './plan-map';
 import { v2Progress } from './progress';
 import type { V2Session, V2State, V2WorkingLevel } from './types';
-import { TUTOR_V2_LEVEL_CHECK_CAP, TUTOR_V2_LEVEL_CHECK_MIN_ANSWERS, TUTOR_V2_LEVEL_NO_NUMBER, TUTOR_V2_LEVEL_RECONFIRM, TUTOR_V2_LEVEL_WITH_WORDS } from '../orchestrator/flags';
-import { v2CountLevelCheck, v2LevelCheckCountLine, v2LevelCheckPart } from './level-check-count';
+import { TUTOR_V2_LEVEL_CHECK_CAP, TUTOR_V2_LEVEL_CHECK_MIN_ANSWERS, TUTOR_V2_LEVEL_CHECK_PUT, TUTOR_V2_LEVEL_NO_NUMBER, TUTOR_V2_LEVEL_RECONFIRM, TUTOR_V2_LEVEL_WITH_WORDS } from '../orchestrator/flags';
+import { v2CountLevelCheck, v2LevelCheckCountLine, v2LevelCheckPart, v2LevelQuestionsAnswered } from './level-check-count';
 
 const SKIPPED_FOR_LEVEL = 'working level known from an earlier lesson';
 
@@ -71,21 +71,26 @@ const studentTexts = (state: V2State) => state.history.filter(isStudentReply).ma
 /** Why set_working_level must wait, or null when it may go ahead (D7: levels were set after two questions, one of them
  *  answered "No." twice). It waits until the learner has given three answers with content in this lesson, unless they
  *  asked to skip the check or the time is up. A remembered level's revision is not held. */
-export function v2LevelSetTooEarly(state: V2State, heard: string | null | undefined, opts: { timeUp?: boolean; enabled?: boolean; over?: boolean } = {}): string | null {
+/** Task 8a (LEVEL_CHECK_PUT, `put`): it counts the questions the check put that they answered (level-check-count.ts
+ *  v2LevelQuestionsAnswered), not their answers: mic test 9 (embed-1795132864767) set the level after a barge-in continuation and an
+ *  answer to the same follow-up asked again, with 1 of the plan's 3 questions asked. `timeUp` then also covers the check's own minutes
+ *  (turn.ts). */
+export function v2LevelSetTooEarly(state: V2State, heard: string | null | undefined, opts: { timeUp?: boolean; enabled?: boolean; over?: boolean; put?: boolean } = {}): string | null {
   if (!(opts.enabled ?? TUTOR_V2_LEVEL_CHECK_MIN_ANSWERS) || state.workingLevel || opts.timeUp) return null;
   const said = [...studentTexts(state), ...(heard ? [heard] : [])];
   if (said.some((x) => SKIP.test(x))) return null;
   // Not the reply budget (V2_LEVEL_CHECK_MAX_REPLIES): it counts the overview's replies too, and real-t2 had spent it
   // (two overview replies, a rephrase, two answers, two "No."s) at the very call this gate is for. Past the budget the
   // facts still stop asking for the check (v2LevelCheckOver); a level set later waits for answers with content.
-  const n = said.filter(v2AnswerHasContent).length;
+  const put = opts.put ?? TUTOR_V2_LEVEL_CHECK_PUT;
+  const n = put ? v2LevelQuestionsAnswered(state.history, heard, v2AnswerHasContent) : said.filter(v2AnswerHasContent).length;
   if (n >= V2_LEVEL_CHECK_MIN_ANSWERS) return null;
   // The check is over (`over`, as the facts say it): the refusal asks for no level question, so it and the facts agree
   // (review I3).
   if (opts.over) return `${V2_LEVEL_WAIT_OVER} the level check is over, and their answers so far (${n} with content) do not show a level yet. Say nothing of this message and ask no level question: go on with the lesson, and set the level once their answers show it.`;
   // A reply that already asks them something has asked the next question: the turn ends there (turn.ts), and this result
   // says so, so the next reply does not ask a second one (review I3).
-  return `${V2_LEVEL_WAIT} they have answered ${n} of the level check's ${V2_LEVEL_CHECK_MIN_ANSWERS} questions (a yes, a no or a request to repeat is not an answer). Say nothing of this message. If your reply already asks them a question, that is the next one: ask nothing more now. Otherwise ask your next level-check question, one short conversational question. Set the level once they have answered ${V2_LEVEL_CHECK_MIN_ANSWERS}.`;
+  return `${V2_LEVEL_WAIT} they have answered ${n} of the level check's ${V2_LEVEL_CHECK_MIN_ANSWERS} questions (a yes, a no or a request to repeat is not an answer${put ? '; more words on the same answer, or an answer to the same question asked again, is not a new one' : ''}). Say nothing of this message. If your reply already asks them a question, that is the next one: ask nothing more now. Otherwise ask your next level-check question, one short conversational question. Set the level once they have answered ${V2_LEVEL_CHECK_MIN_ANSWERS}.`;
 }
 
 /** How a refusal of set_working_level for too few answers begins (turn.ts reads it). */
@@ -152,7 +157,9 @@ export function v2LevelNoNumberOn(session: V2Session, enabled: boolean = TUTOR_V
 
 /** The facts lines for the working level (levelCheck sessions only). `heard` is the student's words this turn;
  *  `reopened`: their words just now said the remembered level does not fit (v2ReopenLevelCheck). */
-export function v2WorkingLevelFacts(session: V2Session, state: V2State, heard: string | null | undefined, opts: { reopened?: boolean; reconfirm?: boolean; cap?: boolean; noNumber?: boolean } = {}): string[] {
+/** Task 8a (LEVEL_CHECK_PUT): `checkTimeUp`, the level-check part has had its own minutes (time-fit.ts v2LevelCheckTimeUp): the count
+ *  says the check is done. */
+export function v2WorkingLevelFacts(session: V2Session, state: V2State, heard: string | null | undefined, opts: { reopened?: boolean; reconfirm?: boolean; cap?: boolean; noNumber?: boolean; checkTimeUp?: boolean; put?: boolean } = {}): string[] {
   if (!v2LevelCheckOn(session)) return [];
   const wl = state.workingLevel;
   const reconfirm = opts.reconfirm ?? TUTOR_V2_LEVEL_RECONFIRM;
@@ -164,7 +171,7 @@ export function v2WorkingLevelFacts(session: V2Session, state: V2State, heard: s
     const support = session.languages && session.languages.length > 1 ? `a few words of ${languageNameOf(session.languages[1]!)}` : 'an example';
     // Task 7d (LEVEL_CHECK_CAP, mic test 1: six turns and five questions where the plan says three): the check counted, where
     // the plan has a level-check part (level-check-count.ts).
-    const count = (opts.cap ?? TUTOR_V2_LEVEL_CHECK_CAP) && v2LevelCheckPart(session.plan) ? v2CountLevelCheck(session.plan, state.history, heard, v2AnswerHasContent) : null;
+    const count = (opts.cap ?? TUTOR_V2_LEVEL_CHECK_CAP) && v2LevelCheckPart(session.plan) ? v2CountLevelCheck(session.plan, state.history, heard, v2AnswerHasContent, { put: opts.put ?? TUTOR_V2_LEVEL_CHECK_PUT, timeUp: !!opts.checkTimeUp }) : null;
     if (count?.done) return [...reopened, `working level: not known yet. ${v2LevelCheckCountLine(count)}`];
     return [
       ...reopened,

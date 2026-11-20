@@ -217,6 +217,9 @@ export interface V2State {
   /** Task 7w (SUMMARY_MARKS), spoken language lessons with a labelled plan: each correction made in the lesson, the most recent last
    *  (summary-marks.ts): what they said, the corrected sentence, and the words it changed (the marks its summary card carries). */
   corrections?: V2Correction[];
+  /** Task 8a (CORRECTIONS_ALL_GUARDED): the corrections pushed out of `corrections`, as their normalised sentence only (summary-marks.ts
+   *  key), the most recent last: the "What went well" guard still knows them. */
+  correctedOlder?: string[];
   /** Task 7w (SUMMARY_OPENS_CLOSE): the summary reply did not end on the plan's check question: the next reply owes it, once
    *  (close-check.ts). When it was found missing (lesson clock ms). */
   closeCheckLate?: number;
@@ -240,9 +243,11 @@ export interface V2Support { step: V2SupportStep; wrong: number; clean: number; 
  *  `target`: the card's stress words; `turn`: tutor replies so far when it was made; `offered`: turns the facts asked for it;
  *  `in`: the part it was asked in; `outcome` once known; `praised`: the praise line was given. */
 /** Fix round 1 (I1, I2): `askedAt` / `lastAt`: the turns (tutor reply numbers) of the first and the last send. */
-export interface V2Retest { part: string; said: string; right: string; target: string[]; turn: number; offered?: number; in?: string; askedAt?: number; lastAt?: number; outcome?: 'passed' | 'missed' | 'not_asked'; praised?: true;
+export interface V2Retest { part: string; said: string; right: string; target: string[]; turn: number; offered?: number; in?: string; askedAt?: number; lastAt?: number; outcome?: 'passed' | 'missed' | 'not_asked' | 'not_used'; praised?: true;
   /** Task 7z (RETEST_QUESTION): the tutor question their corrected answer replied to. */
-  question?: string }
+  question?: string;
+  /** Task 8a (RETEST_ASK_ONCE): the turn whose reply, sent the retest line, carried a question: the line is not sent again. */
+  put?: number }
 
 /** A working level and where it came from: an earlier lesson (may be revised once, case 11) or this lesson (final). */
 export interface V2WorkingLevel { level: WorkingLevel; from: 'earlier_lesson' | 'this_lesson' }

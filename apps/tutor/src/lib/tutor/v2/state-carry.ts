@@ -103,6 +103,6 @@ export function v2ScopeCarried(state: V2State, session: Pick<V2Session, 'mode' |
   // Task 7q: the support step and the recorded corrections only for the lessons they run in (adaptive.ts v2AdaptOn).
   if (!v2AdaptOn(session as V2Session)) { delete state.support; delete state.retests; delete state.freeConv; delete state.optionalLeft; }
   // Task 7w (SUMMARY_MARKS): the corrections with their marks only for the lessons they are recorded in.
-  if (!v2SummaryMarksOn(session as V2Session)) delete state.corrections;
+  if (!v2SummaryMarksOn(session as V2Session)) { delete state.corrections; delete state.correctedOlder; }
   return state;
 }

@@ -20,10 +20,10 @@ import type { LessonPlan, Segment } from '../lesson-plan/types';
 import { stripBoardBlocks } from './board-inline';
 import { v2LearnerSentence } from './learner-card';
 import { v2AsksPartChange, v2EndingPartAsk, v2MoveAnswer, v2NextPart, v2OpenPagePart, v2PartInHand, v2PartViewed, v2PlanLabelled } from './part-flow';
-import { v2IsPageOfPart, v2OfferedOut, v2PartEntered, v2PartIsOptional, v2PartNamedIn, v2PartOf } from './plan-map';
+import { v2FreeConversationPart, v2IsPageOfPart, v2OfferedOut, v2PartEntered, v2PartIsOptional, v2PartNamedIn, v2PartOf } from './plan-map';
 import { v2OverrunMin, v2Taught, v2WrapMin } from './time-box';
 import { v2WithoutFillers } from './language-pack';
-import { TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_PART_ASK_LANGS, TUTOR_V2_PART_CLOCK, TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART, TUTOR_V2_TIME_NO_SQUEEZE, TUTOR_V2_OVERLONG_QUIET } from '../orchestrator/flags';
+import { TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FREE_CONV_PARTNER, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_PART_ASK_LANGS, TUTOR_V2_PART_CLOCK, TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART, TUTOR_V2_TIME_NO_SQUEEZE, TUTOR_V2_OVERLONG_QUIET } from '../orchestrator/flags';
 import type { V2Session, V2State } from './types';
 
 /** The practice sentences of their own a practice part needs before it closes (Task 7f C). */
@@ -166,7 +166,9 @@ export function v2LeaveOutByChoice(state: V2State, ids: readonly string[]): stri
  *  under the plan minutes of the parts before it plus half its own): how many of its minutes are left, and to go on with it.
  *  Facts only: no hold, no refusal. Mic test 3 (embed-1794967959470, flag 6): the summary began at 12.6 of 20 minutes after one
  *  exchange of the five-minute conversation. Spoken lessons with labelled plans; null otherwise. */
-export function v2StayInPartLine(session: V2Session, state: V2State, nowMs: number, on: boolean = TUTOR_V2_STAY_IN_PART, clockOn: boolean = TUTOR_V2_PART_CLOCK): string | null {
+/** Task 8a (FREE_CONV_PARTNER, `partner`): in a free-conversation part (adaptive.ts v2FreeConversationPart) "go on" means letting them say
+ *  more, not another question (mic test 9, embed-1795132864767: 23 questions in the 6.8-minute conversation). */
+export function v2StayInPartLine(session: V2Session, state: V2State, nowMs: number, on: boolean = TUTOR_V2_STAY_IN_PART, clockOn: boolean = TUTOR_V2_PART_CLOCK, partner: boolean = TUTOR_V2_FREE_CONV_PARTNER): string | null {
   const plan = session.plan;
   if (!on || !plan || !session.timeBoxMinutes || session.mode !== 'voice' || !v2Taught(session) || !v2PlanLabelled(plan) || state.closed) return null;
   const cur = v2PartInHand(plan, state);
@@ -174,14 +176,15 @@ export function v2StayInPartLine(session: V2Session, state: V2State, nowMs: numb
   if (!seg || !v2PracticePart(plan, cur) || v2PartIsOptional(seg) || (state.moveOnAsked ?? []).includes(seg.id)) return null;
   // Task 7v (PART_CLOCK): measured from when the lesson entered the part, against its own minutes.
   const own = v2PartOf(seg).minutes;
+  const goOn = partner && v2FreeConversationPart(seg) ? 'go on with it: let them say more (a follow-up that asks for a reason, an example or what happened)' : 'go on with it (another question, or a follow-up on their answer)';
   const pace = v2PartPace(session, state, nowMs, clockOn);
   if (pace) {
     if (!pace.stay) return null;
     const left = Math.max(1, Math.round(pace.left));
     const howLong = pace.left < 1 ? 'less than a minute' : `about ${left} minute${left === 1 ? '' : 's'}`;
     return pace.core
-      ? `this part (${pace.label}) is the lesson's main practice and has ${howLong} left${pace.saved ? ` (its own ${pace.own}, and the time the earlier parts saved)` : ''}: there is time, so go on with it (another question, or a follow-up on their answer) rather than offering the next part`
-      : `this part (${pace.label}) has about ${Math.min(left, pace.own)} of its ${pace.own} minutes left by the plan: there is time, so go on with it (another question, or a follow-up on their answer) rather than offering the next part`;
+      ? `this part (${pace.label}) is the lesson's main practice and has ${howLong} left${pace.saved ? ` (its own ${pace.own}, and the time the earlier parts saved)` : ''}: there is time, so ${goOn} rather than offering the next part`
+      : `this part (${pace.label}) has about ${Math.min(left, pace.own)} of its ${pace.own} minutes left by the plan: there is time, so ${goOn} rather than offering the next part`;
   }
   const before = plan.segments.slice(0, cur).filter((x) => counts(x, state));
   if (!own || before.some((x) => !v2PartOf(x).minutes)) return null;
@@ -189,7 +192,7 @@ export function v2StayInPartLine(session: V2Session, state: V2State, nowMs: numb
   const used = (nowMs - state.startedAtMs) / 60000;
   if (used >= start + own / 2) return null;
   const left = Math.max(1, Math.round(start + own - used));
-  return `this part (${v2PartOf(seg).label ?? seg.id}) has about ${Math.min(left, own)} of its ${own} minutes left by the plan: there is time, so go on with it (another question, or a follow-up on their answer) rather than offering the next part`;
+  return `this part (${v2PartOf(seg).label ?? seg.id}) has about ${Math.min(left, own)} of its ${own} minutes left by the plan: there is time, so ${goOn} rather than offering the next part`;
 }
 
 /** Task 7v (PART_CLOCK): the lessons the part clock runs in: spoken, timed, taught, with a labelled plan, not closed. */
@@ -224,6 +227,13 @@ export function v2PartClock(session: V2Session, state: V2State, nowMs: number, o
   const own = seg ? v2PartOf(seg).minutes : undefined;
   if (!seg || !own || state.partStart?.part !== seg.id) return null;
   return { index, id: seg.id, label: v2PartOf(seg).label ?? seg.id, own, used: Math.max(0, (nowMs - state.partStart.at) / 60000) };
+}
+
+/** Task 8a (LEVEL_CHECK_PUT): the level-check part (the one marked to skip when the level is known) is in hand and has had its own
+ *  plan minutes on the part clock: the check's time is up. False where the part clock does not run. */
+export function v2LevelCheckTimeUp(session: V2Session, state: V2State, nowMs: number, on: boolean = TUTOR_V2_PART_CLOCK): boolean {
+  const c = v2PartClock(session, state, nowMs, on);
+  return !!c && !!v2PartOf(session.plan!.segments[c.index]!).skipWhenLevelKnown && c.used >= c.own;
 }
 
 /** Task 7v (PART_CLOCK): the time line's addition once a teaching part has had its own plan minutes: offer the next part when its

@@ -2469,3 +2469,32 @@ export const TUTOR_V2_OPTIONAL_ONE_MORE = process.env.NEXT_PUBLIC_TUTOR_V2_OPTIO
  *  that" (no correction card) still is. Mic test 8 (embed-1795115593161, T12: the washing-machines correction never recorded) (Task 7z fix
  *  round 1). Default ON; NEXT_PUBLIC_TUTOR_V2_REPEAT_NOT_MISHEARD=off ⇒ as before. */
 export const TUTOR_V2_REPEAT_NOT_MISHEARD = process.env.NEXT_PUBLIC_TUTOR_V2_REPEAT_NOT_MISHEARD !== 'off';
+
+/** Tutor brain v2 (v2/adaptive.ts, v2/time-fit.ts): in a free-conversation part the facts make the tutor a conversation partner, not an
+ *  interviewer: now and then a short thought or experience of its own before its question, open questions that need more than one
+ *  sentence, and after a one-sentence answer a request for more on the same point before a new subject (still one question a reply, the
+ *  corrections-aloud limit, the no-starter rule and the one invitation); the part's time line says "let them say more" rather than
+ *  "another question". Mic test 9 (embed-1795132864767: 23 narrow questions in 6.8 minutes, answers of 9 words on average) (Task 8a,
+ *  item 1). Default ON; NEXT_PUBLIC_TUTOR_V2_FREE_CONV_PARTNER=off ⇒ as before. */
+export const TUTOR_V2_FREE_CONV_PARTNER = process.env.NEXT_PUBLIC_TUTOR_V2_FREE_CONV_PARTNER !== 'off';
+
+/** Tutor brain v2 (v2/adaptive.ts, v2/turn.ts): the retest line is sent only until a reply on a turn it was sent on carried a question
+ *  (state: the retest's `put`, the turn); then it waits for the outcome. The send limit stays for replies that asked nothing. A retest
+ *  put that way and left with no outcome when the part ends is `not_used`, never `not_asked`. Mic test 9 (embed-1795132864767: the same
+ *  question asked at T50 and T54 and a near-copy at T56; T30's retest scored not asked) (Task 8a, item 2). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_RETEST_ASK_ONCE=off ⇒ as before. */
+export const TUTOR_V2_RETEST_ASK_ONCE = process.env.NEXT_PUBLIC_TUTOR_V2_RETEST_ASK_ONCE !== 'off';
+
+/** Tutor brain v2 (v2/working-level.ts, v2/level-check-count.ts, v2/facts.ts, v2/turn.ts): the level check counts the questions it put
+ *  that the learner answered (a tutor reply whose heard words, or its question card, put a question; words that go on with an answer
+ *  after a cut reply, and the same question asked again, are no new one), not the learner's answers; the level is set after three, or
+ *  once the level-check part has had its own minutes. Mic test 9 (embed-1795132864767: a barge-in continuation and a re-asked follow-up
+ *  made three answers; 1 of the plan's 3 questions asked) (Task 8a, item 3). Default ON; NEXT_PUBLIC_TUTOR_V2_LEVEL_CHECK_PUT=off ⇒ as
+ *  before. */
+export const TUTOR_V2_LEVEL_CHECK_PUT = process.env.NEXT_PUBLIC_TUTOR_V2_LEVEL_CHECK_PUT !== 'off';
+
+/** Tutor brain v2 (v2/summary-marks.ts, v2/client-state.ts, v2/state-carry.ts): every correction of the lesson stays known to the summary
+ *  guard (a corrected sentence is never painted under "What went well"): those pushed out of the 12 kept in full are kept as their
+ *  normalised sentence (state.correctedOlder). Mic test 9 (embed-1795132864767: WB76, corrected at T42, pushed out by the conversation's
+ *  quiet cards) (Task 8a, item 4). Default ON; NEXT_PUBLIC_TUTOR_V2_CORRECTIONS_ALL_GUARDED=off ⇒ as before. */
+export const TUTOR_V2_CORRECTIONS_ALL_GUARDED = process.env.NEXT_PUBLIC_TUTOR_V2_CORRECTIONS_ALL_GUARDED !== 'off';

@@ -10,7 +10,7 @@ import { v2ReadPronunciation } from './pronunciation';
 import { v2ReadCorrectedSentences } from './sentence-cards';
 import { v2ReadCarried } from './state-carry';
 import { v2ReadAdaptive } from './adaptive';
-import { v2ReadCorrections } from './summary-marks';
+import { v2ReadCorrectedOlder, v2ReadCorrections } from './summary-marks';
 import type { V2State } from './types';
 
 export function v2ReadClientState(raw: unknown, carry: boolean = TUTOR_V2_STATE_CARRY): V2State | null {
@@ -36,9 +36,11 @@ export function v2ReadClientState(raw: unknown, carry: boolean = TUTOR_V2_STATE_
   const correctedSentences = v2ReadCorrectedSentences(s.correctedSentences);
   // Task 7w (SUMMARY_MARKS): the corrections with what they said and the words changed (scope in v2ScopeCarried).
   const corrections = v2ReadCorrections(s.corrections);
+  // Task 8a (CORRECTIONS_ALL_GUARDED): the older corrections, sentence only (older states have none).
+  const correctedOlder = v2ReadCorrectedOlder(s.correctedOlder);
   // Task 7a (and its fix round 1): the held page, when the summary began, replies since the board, what was not painted.
   const carried = v2ReadCarried(s, carry);
   // Task 7q (SUPPORT_STEPS, RETEST_MISTAKE): the support step and the recorded corrections (adaptive.ts; scope in v2ScopeCarried).
   const adaptive = v2ReadAdaptive(s as Partial<Record<keyof V2State, unknown>>);
-  return { ...carried, ...adaptive, ...(workingLevel ? { workingLevel } : {}), ...(pronunciation ? { pronunciation } : {}), ...(correctedSentences ? { correctedSentences } : {}), ...(corrections ? { corrections } : {}), history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), ...(thinking ? { thinking } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}), ...(homework ? { homework } : {}) };
+  return { ...carried, ...adaptive, ...(workingLevel ? { workingLevel } : {}), ...(pronunciation ? { pronunciation } : {}), ...(correctedSentences ? { correctedSentences } : {}), ...(corrections ? { corrections } : {}), ...(correctedOlder ? { correctedOlder } : {}), history: s.history, note: s.note, goals: s.goals, ...(gaps ? { gaps } : {}), ...(thinking ? { thinking } : {}), board: s.board, startedAtMs: s.startedAtMs, closed: s.closed === true, ...(typeof s.closeSummary === 'string' ? { closeSummary: s.closeSummary } : {}), ...(homework ? { homework } : {}) };
 }

@@ -22,7 +22,7 @@ import { v2CardsOwedFacts, v2LearnerSentenceFacts } from './learner-card';
 import { v2PracticeAskFacts, v2RetryFacts } from './languages';
 import { v2PracticeFactLines } from './practice-facts';
 import { V2_TIME_UP_MIN, v2CloseOpen, v2PlanContentDone, v2LeftToStopMin, v2LessonTimeLine, v2OverrunMin, v2PartDueFact, v2TimeFlags, v2WrapDue, type V2TimeFlags } from './time-box';
-import { V2_MORE_PRACTICE_MIN_LEFT, v2MorePracticeFacts, v2OptionalFits, v2OptionalHeldLine, v2PartClock, v2PartTimeUpLine, v2PracticeFacts, v2StayInPartLine, v2TimeFitFacts } from './time-fit';
+import { V2_MORE_PRACTICE_MIN_LEFT, v2LevelCheckTimeUp, v2MorePracticeFacts, v2OptionalFits, v2OptionalHeldLine, v2PartClock, v2PartTimeUpLine, v2PracticeFacts, v2StayInPartLine, v2TimeFitFacts } from './time-fit';
 import { TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART, TUTOR_V2_SUPPORT_FOLLOWED } from '../orchestrator/flags';
 import { v2CloseInviteFacts, v2CloseReopened, v2MoreAskAnswered } from './close-invite';
 import { v2CloseCheckFacts, v2CloseCheckSummaryLine } from './close-check';
@@ -34,7 +34,7 @@ import { SentenceStream } from './sentences';
 import { v2OptionalHoldLine, v2OptionalOneMoreLine, v2PartOpeningQuestion, type V2OptionalHold } from './optional-hold';
 import { V2_STARTER_LINE } from './practice-facts';
 import { v2AdaptOn } from './adaptive';
-import { TUTOR_V2_PART_FIRST_STEP } from '../orchestrator/flags';
+import { TUTOR_V2_LEVEL_CHECK_PUT, TUTOR_V2_PART_FIRST_STEP } from '../orchestrator/flags';
 import { V2_CORRECT_THEN_REPEAT_LINE } from './one-question';
 import { asksAnywhere } from './board-timing';
 
@@ -323,7 +323,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // line at the time up or the wrap stays).
   if (partDue && !(v2PartClock(session, state, f.nowMs) && !/every part's time has passed$/.test(partDue))) lines.push(partDue);
   // The working level, every turn, so the language, questions and corrections stay at it (working-level.ts).
-  lines.push(...v2WorkingLevelFacts(session, state, f.heard, { reopened: f.levelReopened }));
+  // Task 8a (LEVEL_CHECK_PUT): the level-check part's own minutes are up: the count says the check is done.
+  lines.push(...v2WorkingLevelFacts(session, state, f.heard, { reopened: f.levelReopened, checkTimeUp: TUTOR_V2_LEVEL_CHECK_PUT && v2LevelCheckTimeUp(session, state, f.nowMs) }));
   // A measured score, or that there is none: the only ground for a word on how they sounded (pronunciation.ts).
   lines.push(...v2PronunciationFacts(session, state, f.heard));
   // A typed language lesson: nothing is heard, so nothing is said about how it sounded (pronunciation.ts).

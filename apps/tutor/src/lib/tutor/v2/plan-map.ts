@@ -388,3 +388,17 @@ export function v2PartOfferFacts(plan: LessonPlan | undefined, state: V2State, e
   }
   return lines;
 }
+
+/** Task 7v (SUPPORT_FOLLOWED; moved here from adaptive.ts in Task 8a): a part the plan marks as free conversation: the opening sentence of its note, aim or script calls it an
+ *  open / free conversation, or the note makes the tutor a conversation partner. No part name is fixed in the engine. */
+const FREE_CONVERSATION = /\b(?:open|free)[- ]conversation\b|\bconversation partner\b/i;
+export function v2FreeConversationPart(seg: Segment | undefined): boolean {
+  if (!seg) return false;
+  const x = seg as unknown as Record<string, unknown>;
+  // The opening sentence of its note, aim or script says what the part is ("Open conversation practice."); a note that only names
+  // the next part ("…advance to the open conversation.") does not. A conversation partner anywhere in it.
+  const texts = ['teacherNote', 'goal', 'script'].map((k) => (typeof x[k] === 'string' ? x[k] as string : '')).filter(Boolean);
+  // Fix round 1 (m4): the plan's own text only; no name keyword ("Conversation drills" is no free conversation). The plan schema has
+  // no field for it (kind, response format and goals say nothing of free speaking).
+  return texts.some((t) => FREE_CONVERSATION.test(t.split(/(?<=[.!?:])\s/)[0] ?? '') || /\bconversation partner\b/i.test(t));
+}
