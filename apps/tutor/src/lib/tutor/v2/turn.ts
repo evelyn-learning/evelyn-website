@@ -433,6 +433,19 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         }
       }
     }
+    // A point outside the window is not on the graph: (2, 6) on axes that stop at 5 showed as a label at the top
+    // edge with no dot (Digital SAT, portal-b0efc3c2). The window grows to take in every point and segment end.
+    if (block.name === 'show_function_graph') {
+      const spots = [...(Array.isArray(args.points) ? args.points as Array<{ x?: unknown; y?: unknown }> : []), ...(Array.isArray(args.segments) ? (args.segments as Array<{ from?: { x?: unknown; y?: unknown }; to?: { x?: unknown; y?: unknown } }>).flatMap((sg) => [sg.from ?? {}, sg.to ?? {}]) : [])];
+      for (const [k, axis] of [['xRange', 'x'], ['yRange', 'y']] as const) {
+        const r = args[k];
+        if (!Array.isArray(r) || r.length !== 2 || !r.every((n) => typeof n === 'number' && Number.isFinite(n))) continue;
+        const vals = spots.map((sp) => sp[axis]).filter((n): n is number => typeof n === 'number' && Number.isFinite(n));
+        if (!vals.length) continue;
+        const lo = Math.min(...vals); const hi = Math.max(...vals);
+        args[k] = [lo <= (r[0] as number) ? Math.floor(lo) - 1 : r[0], hi >= (r[1] as number) ? Math.ceil(hi) + 1 : r[1]];
+      }
+    }
     // A note that says again what a note from this same reply says is its second draft, and takes its place:
     // "Walking around the loop" went up with the answers in it and again, under it, with question marks
     // (AP Physics, embed-1794493438983).

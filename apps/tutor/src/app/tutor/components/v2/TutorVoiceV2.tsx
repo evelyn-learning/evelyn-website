@@ -492,6 +492,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
         if (trimmed !== st) { turnsRef.current!.stateRef.current = trimmed; p.current.onDebugEvent?.('v2_unheard_trimmed', `${turnSentencesRef.current.length - heardCount} sentence(s) not fully heard; the record keeps ${heardCount}`); }
       }
     }
+    // Nothing queued or playing, and the reply still being written: what was heard is the sentences that played.
+    else if (turnsRef.current?.busy && cutHeardRef.current === null) cutHeardRef.current = turnSentencesRef.current.slice(0, startedCountRef.current).join(' ');
     dropBoard();
     realtimeRef.current?.resumeSpeech();
     silenceStepRef.current = 0;
