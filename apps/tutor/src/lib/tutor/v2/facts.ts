@@ -105,6 +105,8 @@ export interface V2TurnFacts {
    *  whether the general starter line is left out this turn. */
   freeConv?: string[];
   noStarter?: boolean;
+  /** Task 8a fix round 1 (M4): the free-conversation partner line is sent this turn (adaptive.ts): the stay line says "let them say more". */
+  freePartner?: boolean;
   /** Task 7z (OPTIONAL_ONE_MORE): the optional part taken, its hold lifted, with minutes of its own left (optional-hold.ts). */
   optionalOneMore?: { label: string; left: number };
 }
@@ -232,7 +234,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   const moreAsked = !discussion && v2MoreAskAnswered(state) && leftStop > V2_MORE_PRACTICE_MIN_LEFT && !f.stopAsked;
   // Task 7i (STAY_IN_PART): ahead of the plan in a required practice part, the time line says to go on with it. Not once the
   // close is open, the summary has begun, or more practice was asked for at the close.
-  const stay = !discussion && !session.homework && !session.homeworkSheet && !closeOpen && !summaryBegun && !morePracticeAllowed ? v2StayInPartLine(session, state, f.nowMs) : null;
+  const stay = !discussion && !session.homework && !session.homeworkSheet && !closeOpen && !summaryBegun && !morePracticeAllowed ? v2StayInPartLine(session, state, f.nowMs, undefined, undefined, !!f.freePartner) : null;
   // Task 7v (PART_CLOCK): the part in hand has had its own plan minutes (measured from when the lesson entered it): offer the next.
   const partUp = !discussion && !stay && !closeOpen && !summaryBegun && !morePracticeAllowed ? v2PartTimeUpLine(session, state, f.nowMs) : null;
   // Task 7v (OPTIONAL_FIT): the wrap is held for an optional part that fits.

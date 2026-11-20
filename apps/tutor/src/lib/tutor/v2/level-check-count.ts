@@ -26,15 +26,17 @@ import type { LessonPlan } from '../lesson-plan/types';
 import { stripBoardBlocks } from './board-inline';
 import { v2PartOf } from './plan-map';
 import { TUTOR_V2_LEVEL_CHECK_PUT } from '../orchestrator/flags';
+import { V2_CHECK_INS, v2ContentWords, v2LatinOnly, v2SameQuestion, v2SameWord } from './question-overlap';
 
+/** Task 8a fix round 1 (M3): the level set when the check's time is up with no answer (the plan gives no starting level; the facts' "over"
+ *  line pitches at intermediate too, working-level.ts). */
+export const V2_LEVEL_CHECK_DEFAULT = 'intermediate';
 /** Plan questions the check asks. */
 export const V2_LEVEL_CHECK_QUESTIONS = 3;
 
-const SMALL = new Set(('the and you your you\'d you\'re can could would will what which when where who how why about that this these those with have has had '
-  + 'are was were for any one some me more like into from them they their there here then than just also very much does did do is it its '
-  + 'not but our out get got let let\'s ever if so').split(/\s+/));
-const contentWords = (t: string) => [...new Set((t.toLowerCase().replace(/[’]/g, "'").match(/[a-z]+(?:'[a-z]+)?/g) ?? []).filter((w) => w.length >= 3 && !SMALL.has(w)))];
-const same = (a: string, b: string) => a === b || (a.length >= 5 && b.length >= 5 && a.slice(0, 5) === b.slice(0, 5));
+// Task 8a fix round 1: the content words and the stem rule moved to question-overlap.ts (the re-test bookkeeping reads them too).
+const contentWords = v2ContentWords;
+const same = v2SameWord;
 
 /** The plan's level-check part (the part marked to skip when the level is known), or null. */
 export function v2LevelCheckPart(plan: LessonPlan | null | undefined): LessonPlan['segments'][number] | null {
@@ -167,6 +169,8 @@ export function v2LevelCheckBegun(plan: LessonPlan | null | undefined, history: 
 export function v2LevelCheckCountLine(c: V2LevelCheckCount): string {
   const of = V2_LEVEL_CHECK_QUESTIONS;
   // Task 8a (LEVEL_CHECK_PUT): the check's time is up before the count.
+  // Fix round 1 (M3): no answer to judge from: the default starting level, not a level "from what they have said".
+  if (c.done && c.timeUp && c.answered === 0) return `level check: its time is up and no question of it has been answered, so there is nothing to judge a level from: call set_working_level now, in this reply, with ${V2_LEVEL_CHECK_DEFAULT} (the default starting level; it says so in its evidence), adjust your pitch to how they speak, and move on to the lesson; ask no more level questions`;
   if (c.done && c.timeUp) return `level check: its time is up (${c.answered} of ${of} questions asked and answered): the check is done. Call set_working_level now, in this reply, from what they have said, and move on to the lesson; ask no more level questions`;
   if (c.done) return `level check: all ${of} questions answered${c.followUp ? ', and the one follow-up' : ''}: the check is done. Call set_working_level now, in this reply, and move on to the lesson; ask no more level questions`;
   const follow = !c.classified ? '' : c.followUp ? ', the one follow-up used: no more follow-ups' : ', no follow-up yet (at most one in the whole check, not one per question)';
@@ -178,27 +182,29 @@ const TELL_ME = /^(?:(?:so|okay|ok|now|first|great|good|then)[,.!]?\s+)*(?:pleas
 /** Task 8a (LEVEL_CHECK_PUT): the question a tutor reply put, as stored in the history: the last sentence of its heard words that ends on a
  *  question mark (an ask whether they are ready or have a question is none), or a last heard sentence that asks for an answer without one
  *  (TELL_ME), else the question of a question card it wrote inline (only when the reply was not cut: a cut reply's card was not reached).
- *  Null: it put none. */
+ *  Null: it put none. Fix round 1 (I1): a Latin-script ask first when the reply has one (in a bilingual check the last "?" sentence is
+ *  often the Japanese gloss of the English ask); (M1) the runtime's own check-in (V2_CHECK_INS, appended by turn.ts to a reply that asked
+ *  nothing) is never a question put. */
 export function v2LevelQuestionOf(reply: string): string | null {
   const cut = /\[cut off[^\]]*\]/i.test(reply);
   const heard = stripBoardBlocks(reply).replace(/\[cut off[^\]]*\]/gi, ' ').replace(/\s+/g, ' ').trim();
-  const asks = heard.split(/(?<=[.!?。！？]["'”’」)]*)\s*/).map((x) => x.trim()).filter((x) => /[?？]["'”’」)]*$/.test(x) && !NOT_LEVEL.test(x));
-  if (asks.length) return asks[asks.length - 1]!;
+  const sentences = heard.split(/(?<=[.!?。！？]["'”’」)]*)\s*/).map((x) => x.trim()).filter(Boolean);
+  // M1: the runtime appends its check-in last, word for word.
+  if (sentences.length && V2_CHECK_INS.includes(sentences[sentences.length - 1]!)) sentences.pop();
+  const latinFirst = (xs: string[]) => { const l = xs.filter(v2LatinOnly); return (l.length ? l : xs).pop() ?? null; };
+  const asks = sentences.filter((x) => /[?？]["'”’」)]*$/.test(x) && !NOT_LEVEL.test(x));
+  if (asks.length) return latinFirst(asks);
   // An ask for an answer with no question mark ("Tell me about the work you do, please."), as its last heard sentence.
-  const last = heard.split(/(?<=[.!?。！？]["'”’」)]*)\s*/).map((x) => x.trim()).filter(Boolean).pop() ?? '';
+  const last = sentences[sentences.length - 1] ?? '';
   if (TELL_ME.test(last)) return last;
   if (cut) return null;
   const cards = [...reply.matchAll(/<board\s+problem\b[^>]*>([\s\S]*?)<\/board>/g)].map((m) => m[1]!.trim()).filter((x) => /[?？]/.test(x));
   return cards.length ? cards[cards.length - 1]! : null;
 }
 
-/** Two questions are the same question: most of the content words of the shorter are in the other. */
-function sameQuestion(a: string, b: string): boolean {
-  const x = contentWords(a); const y = contentWords(b);
-  if (!x.length || !y.length) return a.trim().toLowerCase() === b.trim().toLowerCase();
-  const [short, long] = x.length <= y.length ? [x, y] : [y, x];
-  return short.filter((w) => long.some((v) => same(w, v))).length / short.length >= 2 / 3;
-}
+/** Two questions are the same question (question-overlap.ts v2SameQuestion: fix round 1, I1 Japanese by characters, M2 too little to
+ *  compare = different). */
+const sameQuestion = v2SameQuestion;
 
 /** Task 8a (LEVEL_CHECK_PUT): for each of the learner's replies in their own words (and `heard` last), whether it answers a question the
  *  check put: the tutor's words since their reply before (all its messages in that turn) put a question (v2LevelQuestionOf), the reply has

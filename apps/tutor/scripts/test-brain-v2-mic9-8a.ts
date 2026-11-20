@@ -27,7 +27,9 @@ import { newV2State, type V2BoardPage, type V2Retest, type V2Session, type V2Sta
 import { v2ReadClientState } from '../src/lib/tutor/v2/client-state';
 import { v2ScopeCarried } from '../src/lib/tutor/v2/state-carry';
 import { trimToSpoken } from '../src/lib/tutor/v2/interrupted';
-import { V2_FREE_CONV_NO_STARTER_LINE, V2_FREE_CONV_PARTNER_LINE } from '../src/lib/tutor/v2/adaptive';
+import { V2_FREE_CONV_NO_STARTER_LINE, V2_FREE_CONV_PARTNER_LINE, v2FreeConvPartnerLine, v2RetestAskOf } from '../src/lib/tutor/v2/adaptive';
+import { v2SameQuestion } from '../src/lib/tutor/v2/question-overlap';
+import { V2_CHECK_INS } from '../src/lib/tutor/v2/turn';
 import { V2_LEVEL_WAIT, v2AnswerHasContent, v2LevelSetTooEarly } from '../src/lib/tutor/v2/working-level';
 import { v2LevelQuestionOf, v2LevelQuestionsPut } from '../src/lib/tutor/v2/level-check-count';
 import { V2_MAX_CORRECTIONS, V2_SUMMARY_WELL_REFUSED, v2NoteCorrection, v2SummaryCardCheck } from '../src/lib/tutor/v2/summary-marks';
@@ -59,7 +61,9 @@ function scripted(replies: Reply[]) {
 
 const repoRoot = join(__dirname, '..', '..', '..');
 const GDI = parseLessonPlan(JSON.parse(readFileSync(join(repoRoot, 'docs', 'whitelabel', 'gdi', 'plans', 'gdi-work-projects-v1.json'), 'utf8'))) as LessonPlan;
-const lang: V2Session = { studentName: 'Praveen', subject: 'English', level: 'adult', mode: 'voice', timeBoxMinutes: 20, wrapMinutes: 18, languages: ['en', 'ja'], levelCheck: true, plan: GDI, pronunciation: true };
+const lang: V2Session = { studentName: 'Praveen', subject: 'English', level: 'adult', mode: 'voice', timeBoxMinutes: 20, wrapMinutes: 18, languages: ['en', 'ja'], levelCheck: true, plan: GDI, pronunciation: true,
+  teacher: { name: 'Ryota', background: 'I help Japanese professionals speak English at work, and I taught English in Nagoya for about eight years.' } };
+const noCard: V2Session = { ...lang, teacher: { name: 'Ryota' } };
 const maths: V2Session = { studentName: 'Sam', subject: 'Maths', level: 'Grade 8', mode: 'voice', timeBoxMinutes: 20 };
 const typedLang: V2Session = { ...lang, mode: 'text' };
 const MIN = 60000;
@@ -114,6 +118,13 @@ const T29 = 'I have worked at Microsoft for 5 years.';
 const T30 = 'Yes, that\'s right. "I have worked at Microsoft for five years." 「for」で期間を言えています。\n\n Who are the people who use the websites you make?';
 const WHO: V2Retest = { part: 'topic-intro', said: 'Students use websites who study home.', right: 'Students who study at home use my websites.', target: ['who study at home'], turn: 14, offered: 2, in: 'present-perfect', askedAt: 17, lastAt: 18, question: 'Who uses your websites?' };
 const atT29 = () => { const s = atT27(); s.history.push(u(T27), a(T28)); s.retests = [structuredClone(WHO)]; return s; };
+// Turn 17 (T25 "Yes." → T26): Your job done, the Present perfect page held for their yes; "who study at home" recorded (turn 14), not yet
+// offered.
+const T24 = 'That\'s right, you said it clearly and completely. 「仕事について」はここまでです。Next is Present perfect, which talks about experience that continues now.\n\nReady to go on, or would you like to ask something first?';
+const atT25 = () => base({ board: { pages: structuredClone(PP_PAGES).slice(0, 3), current: 2 }, goals: goalsThrough(3), partStart: { part: 'topic-intro', at: 2.0 * MIN }, heldPage: { title: 'Present perfect', part: 'present-perfect', at: 4 },
+  support: { step: 'normal', wrong: 0, clean: 0, part: 'topic-intro' }, retests: [{ ...structuredClone(WHO), offered: undefined, in: undefined, askedAt: undefined, lastAt: undefined }],
+  history: [u(START), a(T0), u('Yes.'), a(T12), u('I\'m ready.'), a(T14), u('Uh students use websites who study home.'), a('Good. <board sentence stress="who study at home">Students who study at home use my websites.</board> Please say this sentence once more.'), u('Students who study at home use my websites.'), a(T24)] });
+const WHO_LINE = 'ask them "Who uses your websites?" again in fresh words';
 // Past simple begins (turn 25): the retest left behind.
 const T38 = 'Yes, "I have worked with JavaScript for three years" is correct. Present perfect is done. Next is Past simple, for things that finished at a specific time. Ready to go on, or do you have a question first?';
 const T40 = '<board page>Past simple</board>\n過去の特定の時に終わった出来事は、過去形を使います。\n\n Did you attend any business events or exhibitions last year?\n\nPlease answer in one or two sentences.';
@@ -165,8 +176,13 @@ const WB76 = 'I attended a robotics exhibition in Tokyo last year.';
 async function probe() {
   // 1: T86 → T87 at lesson 14.0 (two corrections aloud spent, the invitation given at T68).
   const conv = await turn(lang, inConv([...convHead, a(T50), u(T51), a(T86)], { freeConv: { part: 'open-conversation', corrected: 2, invited: true }, retests: [...structuredClone(OTHERS), { ...structuredClone(JS), offered: 3, in: 'open-conversation', askedAt: 30, lastAt: 32, outcome: 'missed' }] }), T87, [{ text: T88 }], 14.0);
+  const convNoCard = await turn(noCard, inConv([...convHead, a(T50), u(T51), a(T86)], { freeConv: { part: 'open-conversation', corrected: 2, invited: true }, retests: [...structuredClone(OTHERS), { ...structuredClone(JS), offered: 3, in: 'open-conversation', askedAt: 30, lastAt: 32, outcome: 'missed' }] }), T87, [{ text: T88 }], 14.0);
   const convHelp = await turn(lang, inConv([...convHead, a(T86)], { freeConv: { part: 'open-conversation', corrected: 2, invited: true } }), 'How do I say what I learned?', [{ text: 'You can say: I learned…' }], 14.0);
   const pp = await turn(lang, atT29(), T29, [{ text: T30 }], 5.1);
+  // Fix round 1 (ruling): the session's turns 17–19: T26 ends on the part's own question (not the retest's), T30 asks the retest's.
+  const s17 = await turn(lang, atT25(), 'Yes.', [{ text: T26.replace('<board page>Present perfect</board>\n', '') }], 4.3);
+  const s18 = await turn(lang, s17.r.state, T27, [{ text: T28 }], 4.6);
+  const s19 = await turn(lang, s18.r.state, T29, [{ text: T30 }], 5.1);
 
   // 2: the retest in the Conversation part, turns 30–33 (T49 … T55).
   const t30 = await turn(lang, atT49(), 'Uh, go on.', [{ text: T50 }], 8.9);
@@ -198,6 +214,16 @@ async function probe() {
   const lv11 = await turn(lang, atT11(), T11, [{ text: T12, tools: [SET] }, { text: 'Okay.' }], 1.8);
   const lvThree = await turn(lang, (() => { const s = atT11(); s.history.push(u(T11), a(Q2)); return s; })(), A2, [{ text: 'Thank you, that\'s clear. Next is Your job. Are you ready?', tools: [SET] }, { text: 'Okay.' }], 2.4);
   const lvTime = await turn(lang, atT11(), T11, [{ text: T12, tools: [SET] }, { text: 'Okay.' }], CHECK_AT + 3.05);
+  // Fix round 1 (M3): time up with no answer counted.
+  const lvTime0 = await turn(lang, checkState([...pre]), 'Yes.', [{ text: 'Okay.', tools: [{ name: 'set_working_level', input: { level: 'intermediate', evidence: 'default: no answers' } }] }, { text: 'Okay.' }], CHECK_AT + 3.05);
+  // Fix round 1 (I1): bilingual replies shaped as this session's (English ask + Japanese gloss), T8 heard this time; T10 asks the same
+  // question again with another gloss.
+  const B8 = 'That\'s clear, thank you. What kind of products do you sell? 「どんな製品を売っていますか？」';
+  const B10 = 'Thank you, that\'s clear. What kind of products do you sell? 「何を売っていますか？」';
+  const biPut = v2LevelQuestionsPut([...pre, u(T7), a(B8), u(T9), a(B10)], T11, v2AnswerHasContent);
+  const jaPut = v2LevelQuestionsPut([...pre, u(T7), a('ありがとうございます。どんな製品を売っていますか？'), u(T9), a('なるほど。どんな製品を販売していますか？')], T11, v2AnswerHasContent);
+  // Fix round 1 (M1): the runtime's check-in after a reply that asked nothing is no question put.
+  const checkInPut = v2LevelQuestionsPut([...pre, u(T7), a(`That's clear, thank you.\n\n${V2_CHECK_INS[1]}`)], 'Yes, I use English at work every day.', v2AnswerHasContent);
 
   // 4: the corrections, one card each after its answer.
   const st4 = base({ board: { pages: [...structuredClone(CONV_PAGES), { title: 'Summary', items: [{ id: 'h1', tool: 'annotate', summary: 'What went well' }] }], current: 6 } });
@@ -228,11 +254,14 @@ async function probe() {
   const retestOf = (s: V2State) => (s.retests ?? []).find((r) => r.right === JS.right) ?? null;
   const whoOf = (s: V2State) => (s.retests ?? []).find((r) => r.right === WHO.right) ?? null;
   return {
-    convFacts: conv.facts, convHelpFacts: convHelp.facts, ppFacts: pp.facts,
+    convFacts: conv.facts, convNoCardFacts: convNoCard.facts, convHelpFacts: convHelp.facts, ppFacts: pp.facts,
     t30: { facts: t30.facts, events: t30.events, retest: retestOf(t30.r.state) }, t31: { facts: t31.facts, retest: retestOf(t31.r.state) }, t32: { facts: t32.facts, retest: retestOf(t32.r.state) }, t33: { facts: t33.facts, retest: retestOf(t33.r.state) },
     n: [n1, n2, n3, n4].map((x) => ({ facts: x.facts, events: x.events, retest: retestOf(x.r.state), spoken: x.r.spoken })),
     t19: { events: t19.events, retest: whoOf(t19.r.state) }, t25: { events: t25.events, retest: whoOf(t25.r.state) },
     readPut: retestOf(read ?? newV2State(0))?.put ?? null, scopedPut: retestOf(scoped ?? newV2State(0))?.put ?? null,
+    s17: { facts: s17.facts, events: s17.events, retest: whoOf(s17.r.state) }, s18: { facts: s18.facts, retest: whoOf(s18.r.state) }, s19: { facts: s19.facts, events: s19.events, retest: whoOf(s19.r.state) },
+    lvTime0: { facts: lvTime0.facts, level: lvTime0.r.state.workingLevel ?? null }, biPut, jaPut, checkInPut,
+    convHelpTime: convHelp.facts,
     gate, lv11: { results: [...lv11.results, ...lv11.r.toolCalls.filter((c) => c.name === 'set_working_level').map((c) => c.outcome)], level: lv11.r.state.workingLevel ?? null, facts: lv11.facts }, lvThree: { results: lvThree.results, level: lvThree.r.state.workingLevel ?? null }, lvTime: { results: lvTime.results, level: lvTime.r.state.workingLevel ?? null, facts: lvTime.facts },
     guard, readOlder: read4?.correctedOlder ?? null, scopedOlder: scoped4?.correctedOlder ?? null, readOld: { corrections: readOld?.corrections?.length ?? 0, older: readOld?.correctedOlder ?? null },
     t18: { events: t18.events, retests: t18.r.state.retests ?? [], facts: t18.facts }, owed,
@@ -251,10 +280,17 @@ async function main() {
   check('the line names no part, topic or tenant', !/conversation part \(|robot|JavaScript|Microsoft|work|GDI|Nagoya/i.test(V2_FREE_CONV_PARTNER_LINE.replace(/conversation partner/, '')));
   check('the core part\'s time line (the Conversation, saved time): "let them say more", not "another question"', on.convFacts.includes(LET_MORE) && !on.convFacts.includes(ANOTHER), on.convFacts.split('\n').filter((l) => /^time:|this part \(/.test(l)));
   check('the help asked: no partner line (a starter may be given), as 7z', !on.convHelpFacts.includes(V2_FREE_CONV_PARTNER_LINE));
+  check('fix round 1 (M4): no persona card in the session: the line names no persona card (a short thought of its own about what they said)', /one short thought of your own about what they said/.test(on.convNoCardFacts) && !/persona card/.test(on.convNoCardFacts.split('\n').find((l) => l.startsWith('free conversation:')) ?? 'persona card'), on.convNoCardFacts.split('\n').filter((l) => l.startsWith('free conversation:')));
+  check('fix round 1 (M4): the help asked (no partner line this turn): the time line keeps "another question"', on.convHelpTime.includes(ANOTHER) && !on.convHelpTime.includes(LET_MORE), on.convHelpTime.split('\n').filter((l) => /this part \(/.test(l)));
+  check('fix round 1 (M4): on the turn the retest line is sent (T49 → T50), the partner line\'s "ask for more" yields to it', on.t30.facts.includes(v2FreeConvPartnerLine({ personaCard: true, retest: true })) && !on.t30.facts.includes(V2_FREE_CONV_PARTNER_LINE) && /This reply's next question is the retest line's/.test(on.t30.facts));
   check('Present perfect (no free conversation): no partner line; its time line keeps "another question"', !on.ppFacts.includes(V2_FREE_CONV_PARTNER_LINE) && on.ppFacts.includes(ANOTHER), on.ppFacts.split('\n').filter((l) => /this part \(/.test(l)));
 
   console.log('2  RETEST_ASK_ONCE: a re-test question is asked once');
   check('turn 30 (T49 → T50): the line sent (send 1), and T50 asked a question: the retest is put (state, turn 30)', on.t30.facts.includes(RETEST_LINE) && on.t30.retest?.put === on.t30.retest?.lastAt && typeof on.t30.retest?.put === 'number' && on.t30.events.some((e) => /^v2_retest_put .*send=1\/3/.test(e)), [on.t30.retest, on.t30.events]);
+  check('fix round 1 (ruling): turn 17, T26 ends on the part\'s own question ("Now, have you worked…?"), not the retest\'s: not put; the line is sent again at turn 18 and 19', on.s17.events.some((e) => /^v2_retest_offered target="who study at home" .*send=1\/3/.test(e)) && on.s17.retest?.put === undefined && on.s18.facts.includes(WHO_LINE) && on.s19.facts.includes(WHO_LINE), [on.s17.retest, on.s18.retest]);
+  check('…T30 ("Who are the people who use the websites you make?") is the retest\'s question: put at send 3', typeof on.s19.retest?.put === 'number' && on.s19.retest?.offered === 3 && on.s19.events.some((e) => /^v2_retest_put .*send=3\/3/.test(e)), on.s19.retest);
+  check('v2RetestAskOf: shared words with the stored question or the target, Japanese by characters; another question is not', v2RetestAskOf('How many years have you used JavaScript?', JS) && !v2RetestAskOf('Now, have you worked for your current company for a long time?', WHO) && v2RetestAskOf('Who are the people who use the websites you make?', WHO)
+    && v2RetestAskOf('どんな人があなたのウェブサイトを使っていますか？', { target: ['x'], question: 'あなたのウェブサイトを使うのはどんな人ですか？' }) && !v2RetestAskOf('今日は何をしましたか？', { target: ['x'], question: 'あなたのウェブサイトを使うのはどんな人ですか？' }));
   check('turn 31 (T51 → T52) and turn 32 (T53 → T54): the line not sent again; the retest stays open, sent once', !on.t31.facts.includes(RETEST_LINE) && !on.t32.facts.includes(RETEST_LINE) && !on.t33.facts.includes(RETEST_LINE) && on.t32.retest?.offered === 1 && !on.t32.retest?.outcome, [on.t31.retest, on.t32.retest]);
   check('T55 (T53 said again, no "have worked"): no outcome by turns; the outcome waits for the part to end', !on.t33.retest?.outcome || on.t33.retest.outcome === 'missed', on.t33.retest);
   check('a first send whose reply asks nothing: the line is sent on 3 turns (sends 1–3), then no more', on.n[0]!.facts.includes(RETEST_LINE) && on.n[1]!.facts.includes(RETEST_LINE) && on.n[2]!.facts.includes(RETEST_LINE) && !on.n[3]!.facts.includes(RETEST_LINE) && on.n[2]!.retest?.offered === 3 && on.n.every((x) => x.retest?.put === undefined), on.n.map((x) => x.retest));
@@ -267,6 +303,11 @@ async function main() {
   check('not set after 1 question (T7) nor after T9; at T11 (2 put) still not set: set_working_level refused (wait)', [on.gate.t7, on.gate.t9, on.gate.t11].every((x) => !!x && x.startsWith(V2_LEVEL_WAIT)) && /answered 2 of/.test(on.gate.t11 ?? ''), on.gate.t11);
   check('the live turn at T11: refused, no level; the facts count 2 of 3 (not "call set_working_level now")', on.lv11.results.some((x) => x.startsWith(V2_LEVEL_WAIT)) && on.lv11.level === null && /level check: 2 of 3 questions asked and answered/.test(on.lv11.facts) && !/Call set_working_level now/.test(on.lv11.facts), [on.lv11.results, on.lv11.facts.split('\n').filter((l) => /level check/.test(l))]);
   check('the plan\'s question 2 put and answered: 3, set', on.gate.three === null && on.lvThree.level?.level === 'beginner', [on.gate.three, on.lvThree]);
+  check('fix round 1 (M3): the check\'s time up with no answer counted: the default starting level (intermediate), not "from what they have said"', /level check: its time is up and no question of it has been answered/.test(on.lvTime0.facts) && /with intermediate \(the default starting level/.test(on.lvTime0.facts) && !/from what they have said/.test(on.lvTime0.facts) && on.lvTime0.level?.level === 'intermediate', on.lvTime0.facts.split('\n').filter((l) => /level check/.test(l)));
+  check('fix round 1 (I1): English ask + Japanese gloss: the English ask is the question; T10 asking it again with another gloss is no new one (T7, T9 count, T11 does not)', v2LevelQuestionOf(`${T6}`) !== null && v2LevelQuestionOf('That\'s clear, thank you. What kind of products do you sell? 「どんな製品を売っていますか？」') === 'What kind of products do you sell?' && JSON.stringify(on.biPut.slice(-3)) === '[true,true,false]', on.biPut);
+  check('…Japanese-only questions compared by characters: the same question in other words is no new one', JSON.stringify(on.jaPut.slice(-3)) === '[true,true,false]' && v2SameQuestion('どんな製品を売っていますか？', 'どんな製品を販売していますか？') && !v2SameQuestion('どんな製品を売っていますか？', '英語で何を改善したいですか？'), on.jaPut);
+  check('fix round 1 (M1): the runtime\'s check-in ("Are you with me so far?") after a reply that asked nothing is no question put', on.checkInPut[on.checkInPut.length - 1] === false && V2_CHECK_INS.every((x) => v2LevelQuestionOf(`Good. ${x}`) === null), on.checkInPut);
+  check('fix round 1 (M2): two questions with too little to compare (one content word or none) are different questions', !v2SameQuestion('What is your job?', 'Where do you do your job?') && !v2SameQuestion('What do you do?', 'What do you do?') && v2SameQuestion('What kind of products do you sell?', 'What products do you sell?'));
   check('the check\'s 3 minutes up at T11 (2 put): the facts say its time is up, and the level is set', on.lvTime.level?.level === 'beginner' && /level check: its time is up/.test(on.lvTime.facts), [on.lvTime.results, on.lvTime.facts.split('\n').filter((l) => /level check/.test(l))]);
 
   console.log('4  CORRECTIONS_ALL_GUARDED: a corrected sentence never goes under "What went well"');

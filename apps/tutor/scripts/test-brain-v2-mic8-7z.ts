@@ -31,10 +31,11 @@ import { trimToSpoken } from '../src/lib/tutor/v2/interrupted';
 import { v2PartFirstStepLine, v2PartYesChoices } from '../src/lib/tutor/v2/optional-hold';
 import { V2_CLOSE_INVITE_UNHEARD_LINE } from '../src/lib/tutor/v2/close-invite';
 import { V2_CLOSE_CHECK_READ_BACK } from '../src/lib/tutor/v2/close-check';
-import { V2_FREE_CONV_NO_STARTER_LINE, V2_FREE_CONV_PARTNER_LINE, v2QuestionOfReply } from '../src/lib/tutor/v2/adaptive';
+import { V2_FREE_CONV_NO_STARTER_LINE, V2_FREE_CONV_PARTNER_LINE, v2FreeConvPartnerLine, v2QuestionOfReply } from '../src/lib/tutor/v2/adaptive';
 /** Task 8a (FREE_CONV_PARTNER): the 7z positive line is now sent as the partner line, which keeps its rules (one question, no starter
  *  unless silent or asked for help); either is the free-conversation line here. */
-const hasFreeLine = (facts: string) => facts.includes(V2_FREE_CONV_NO_STARTER_LINE) || facts.includes(V2_FREE_CONV_PARTNER_LINE);
+// Fix round 1 (M4): the partner line names a persona card only when the session has one (this suite's has none): either variant.
+const hasFreeLine = (facts: string) => facts.includes(V2_FREE_CONV_NO_STARTER_LINE) || [true, false].some((personaCard) => facts.includes(v2FreeConvPartnerLine({ personaCard, retest: false })));
 import { V2_STARTER_LINE } from '../src/lib/tutor/v2/practice-facts';
 import { qpinAskUnheard, shouldClearQpinOnAnswer } from '../src/lib/tutor/qpin-behavior';
 import { v2DropSaidLead } from '../src/lib/tutor/v2/board-timing';

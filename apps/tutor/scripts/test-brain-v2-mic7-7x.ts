@@ -279,14 +279,12 @@ async function main() {
   const at = lines1.findIndex((l) => RETEST.test(l));
   check('the retest line is the next question\'s instruction (one imperative sentence, its aim)', at >= 0, lines1.filter((l) => /retest/.test(l)));
   check('…placed with the next-question block: right after the practice facts, before the sentence-card and learner-card lines', at > lines1.findIndex((l) => /^board: a question the learner must answer/.test(l)) && at < lines1.findIndex((l) => /their (?:answer|words) just now/.test(l)), lines1.slice(Math.max(0, at - 2), at + 2));
-  // Task 8a (RETEST_ASK_ONCE): every reply here asks a question, so the line stops after the first send's reply asked one (the 3-send
-  // window stays for replies that ask nothing: test-brain-v2-mic9-8a.ts).
-  check('sent on turn 1; its reply asked a question (put), so not sent on turns 2–4 (8a: asked once)', RETEST.test(p1!.facts) && !RETEST.test(p2!.facts) && !RETEST.test(p3!.facts) && !RETEST.test(p4!.facts) && p3!.retest?.offered === 1 && typeof p1!.retest?.put === 'number');
+  check('sent for 3 turns (turns 1–3 in the part), not a 4th', RETEST.test(p1!.facts) && RETEST.test(p2!.facts) && RETEST.test(p3!.facts) && !RETEST.test(p4!.facts) && p3!.retest?.offered === 3);
   check('…and still open after it (no "not asked" by turns)', !p4!.retest?.outcome && !p4!.events.some((e) => /outcome=not_asked/.test(e)), p4!.retest);
   check('T33: "I have sold more washing machines to customers." in that part = passed', p5!.retest?.outcome === 'passed' && p5!.events.some((e) => /v2_retest_outcome target="washing machines", "to customers" outcome=passed/.test(e)), [p5!.retest, p5!.events]);
   check('fix round 1 (ruling): "I have talked to customers every day." (only "to customers") does not pass; still open, no praise line', !on.falsePass?.outcome && !/retest: their answer just now uses/.test(on.falsePassFacts), on.falsePass);
   check('re-review N2: "at Tokyo → in Tokyo": "I have been in a meeting all day." does not pass (no praise of "in Tokyo"); "I have worked in Tokyo…" does', !on.tokyoIn?.outcome && !/retest: their answer just now uses/.test(on.tokyoInFacts) && on.tokyoTokyo?.outcome === 'passed', [on.tokyoIn, on.tokyoTokyo]);
-  check('the part left with it open: asked and its target not used (8a: not_used, never not_asked once put)', on.left.retest?.outcome === 'not_used', on.left);
+  check('the part left with it open: not asked', on.left.retest?.outcome === 'not_asked', on.left);
   check('a new correction on the target: missed', on.missed?.outcome === 'missed', on.missed);
 
   console.log('state round trip; other lessons');

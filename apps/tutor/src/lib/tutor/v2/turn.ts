@@ -48,7 +48,8 @@ import { v2NoteCorrection, v2SummaryCardCheck } from './summary-marks';
 import { v2SummaryOpensCloseOn } from './summary-close';
 import { V2_CLOSE_CHECK_REFUSAL, v2CheckCardText, v2CloseCheckOwed, v2CloseCheckPending, v2PlanCheckQuestion, v2NoteCloseAskLast, v2UnheardCloseAsks } from './close-check';
 import { v2NoteOptionalLeave, v2OptionalHold, v2OptionalOneMore } from './optional-hold';
-import { v2AdaptAfter, v2AdaptBefore, v2AdaptOn, v2AdaptPart, v2FreeConvAfter, v2FreeConvQuiet, v2PracticePairs, v2QuestionOfReply, v2RetestPutAfter } from './adaptive';
+import { V2_CHECK_INS } from './question-overlap';
+import { v2AdaptAfter, v2AdaptBefore, v2AdaptOn, v2AdaptPart, v2FreeConvAfter, v2FreeConvQuiet, v2PracticePairs, v2QuestionOfReply, v2ReplyQuestions, v2RetestPutAfter } from './adaptive';
 import { LearnerCardWatch, V2_REPLY_MISHEARD, v2CardIsFragment, v2LearnerCardsOn, v2OwedCardCheckLine, v2PracticeAnswerSentences, v2SentenceOnBoard, v2SentencesNotCarded } from './learner-card';
 import { v2StopAsked } from './stop-signal';
 import { V2_CLOSE_INVITE_LINE, V2_CLOSE_INVITE_REFUSAL, V2_CLOSE_INVITE_WAIT, V2_CLOSE_MORE_LINE, V2_CLOSE_REOPEN_REFUSAL, v2CloseInviteOn, v2CloseInviteOwed, v2CloseReopened, v2ReplyAsksMoreOrFinish, v2ReplyInvites } from './close-invite';
@@ -79,8 +80,9 @@ export const lastSentences = (text: string, n: number) => text.trim().split(/(?<
 /** A spoken reply of at least this many words that wrote nothing is put to the board check. */
 export const V2_UNWRITTEN_WORDS = 30;
 /** Board calls that draw a figure, as opposed to writing words or mathematics. */
-/** How a reply that asked nothing hands the turn to the student. Rotated, so it is not one phrase every time. */
-export const V2_CHECK_INS = ['Does that make sense so far?', 'Are you with me so far?', 'Is that clear, or shall I go over it again?', 'Does that make sense?'];
+/** How a reply that asked nothing hands the turn to the student (Task 8a fix round 1: defined in question-overlap.ts, so the level check
+ *  can tell the runtime's own line from a question put; re-exported here for its importers). */
+export { V2_CHECK_INS };
 const V2_FIGURE_TOOL_NAMES = new Set(['show_free_body_diagram', 'show_number_line', 'show_function_graph', 'show_table', 'show_timeline', 'show_graphic_organizer', 'show_geometry', 'show_venn_diagram', 'show_tree', 'show_stats', 'show_lewis_constructed', 'show_cycle_diagram', 'show_concept_map', 'show_map', 'show_diagram', 'show_sketch', 'show_circuit', 'show_ray_diagram', 'show_drawn_figure']);
 export const V2_MAX_MODEL_CALLS = 5;
 export const V2_MAX_TOKENS = 8000;
@@ -612,7 +614,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const optionalHold = !closingTurn && !discussion ? v2OptionalHold(session, state, nowMs, marginMin) : null;
   // Task 7z (OPTIONAL_ONE_MORE): the hold lifted, minutes of the part left: the facts ask "one more, or move on?" first.
   const optionalOneMore = !closingTurn && !discussion && !optionalHold && !stopAsked ? v2OptionalOneMore(session, state, nowMs, marginMin) : null;
-  const facts = renderFacts(session, state, { ...input.facts, nowMs, ...(adaptBefore.lines.length ? { adaptive: adaptBefore.lines } : {}), heard: input.studentSaid, time: tf, ...(practiceShort ? { practiceShort } : {}), ...(morePractice !== undefined ? { morePractice } : {}), ...(stopAsked ? { stopAsked: true } : {}), ...(levelReopened ? { levelReopened: true } : {}), ...(released ? { partOpened: String(released.args.title) } : {}), ...(input.partFlags?.askEvery !== undefined ? { partAskEvery: input.partFlags.askEvery } : {}), ...(droppedAsked ? { droppedAsked } : {}), ...(partVisit ? { partVisit } : {}), ...(partAhead ? { partAhead } : {}), ...(reopenAsked ? { reopenAsked: true } : {}), ...(optionalHeld && !closingTurn ? { optionalHeld } : {}), ...(repeatWaitOn && !v2FreeConvQuiet(session, state, adaptPart, adaptFlags.free) ? { repeatWait: true } : {}), ...(optionalHold ? { optionalHold } : {}), ...(unheardAsks.invite ? { inviteUnheard: true } : {}), ...(adaptBefore.free ? { freeConv: adaptBefore.free } : {}), ...(adaptBefore.noStarter ? { noStarter: true } : {}), ...(optionalOneMore ? { optionalOneMore } : {}) });
+  const facts = renderFacts(session, state, { ...input.facts, nowMs, ...(adaptBefore.lines.length ? { adaptive: adaptBefore.lines } : {}), heard: input.studentSaid, time: tf, ...(practiceShort ? { practiceShort } : {}), ...(morePractice !== undefined ? { morePractice } : {}), ...(stopAsked ? { stopAsked: true } : {}), ...(levelReopened ? { levelReopened: true } : {}), ...(released ? { partOpened: String(released.args.title) } : {}), ...(input.partFlags?.askEvery !== undefined ? { partAskEvery: input.partFlags.askEvery } : {}), ...(droppedAsked ? { droppedAsked } : {}), ...(partVisit ? { partVisit } : {}), ...(partAhead ? { partAhead } : {}), ...(reopenAsked ? { reopenAsked: true } : {}), ...(optionalHeld && !closingTurn ? { optionalHeld } : {}), ...(repeatWaitOn && !v2FreeConvQuiet(session, state, adaptPart, adaptFlags.free) ? { repeatWait: true } : {}), ...(optionalHold ? { optionalHold } : {}), ...(unheardAsks.invite ? { inviteUnheard: true } : {}), ...(adaptBefore.free ? { freeConv: adaptBefore.free } : {}), ...(adaptBefore.noStarter ? { noStarter: true } : {}), ...(adaptBefore.partner ? { freePartner: true } : {}), ...(optionalOneMore ? { optionalOneMore } : {}) });
   // Task 7i (STAY_IN_PART): the unheard sentences are named in these facts once.
   delete state.unheard;
   // A reply that closes the session: the student's words ask to stop, or the time is up (V2_TIME_UP_MIN, as the facts
@@ -1782,9 +1784,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // makes sense." was scored as the attempt), nor, in one taught through a second language, after a reply that asks them to repeat
   // or say something (one-question.ts v2AsksTheLearner: 「私の後に繰り返してください。 international」 got "Does that make sense?", mic
   // test 5, embed-1795050656326), widening 7c's ASK_NO_CHECKIN test (off with it). An English-only lesson keeps its rule (v2ReplyAsks).
-  // Task 8a (RETEST_ASK_ONCE): whether the reply carried a question of its own, before the runtime's check-in below is added (a check-in
-  // is no question put to them).
-  const replyPutQuestion = spoken.length > 0 && v2QuestionOfReply(spoken.join(' ')) !== null;
+  // Task 8a (RETEST_ASK_ONCE): the reply's own questions, read before the runtime's check-in below is added (a check-in is no question
+  // put to them); fix round 1: only one that is the retest's counts (adaptive.ts v2RetestAskOf).
+  const replyQuestions = spoken.length > 0 ? v2ReplyQuestions(spoken.join(' ')) : [];
   const pronAsks = TUTOR_V2_PRONUNCIATION_PAGE && noteTargets && spoken.length > 0 && (toolCalls.some((c) => c.name === 'practise_pronunciation' && /^armed/.test(c.outcome)) || (TUTOR_V2_ASK_NO_CHECKIN && (session.languages?.length ?? 0) >= 2 && v2AsksTheLearner(stripBoardBlocks(spoken.join(' ')))));
   if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && spoken.length && !framesDropped && !toolCalls.some((c) => c.name === 'keep_listening' || c.name === 'end_lesson') && !replyAsks && !pronAsks && !saysGoodbye && !endsOnRepeat(spoken.join(' '))) {
     const ins = discussion ? DISCUSSION_CHECK_INS : V2_CHECK_INS;
@@ -1959,7 +1961,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     adaptEvents.push(...v2AdaptAfter(session, state, adaptPart, answerSentences, v2PracticePairs(answerSentences, cards, (adaptFlags.changed ?? TUTOR_V2_RETEST_TARGET_CHANGED) && adaptFlags.retest), adaptFlags, v2QuestionOfReply(lastTutorText)));
   }
   // Task 8a (RETEST_ASK_ONCE): the open retest whose line this turn sent is put to them when this reply carried a question.
-  if (adaptPart && !input.signal?.aborted && spoken.length) adaptEvents.push(...v2RetestPutAfter(session, state, adaptPart, replyPutQuestion, adaptFlags));
+  if (adaptPart && !input.signal?.aborted && spoken.length) adaptEvents.push(...v2RetestPutAfter(session, state, adaptPart, replyQuestions, adaptFlags));
   // Task 7x (FREE_CONVERSATION): a reply in a free-conversation part that asked them to make a question of their own gave the invitation.
   if (adaptPart && !input.signal?.aborted && spoken.length) v2FreeConvAfter(session, state, adaptPart, spoken.join(' '), adaptFlags.free ?? TUTOR_V2_FREE_CONVERSATION);
   // Task 7v (PART_CLOCK): a part this reply opened begins now.

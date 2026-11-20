@@ -23,7 +23,7 @@ import { v2AsksPartChange, v2EndingPartAsk, v2MoveAnswer, v2NextPart, v2OpenPage
 import { v2FreeConversationPart, v2IsPageOfPart, v2OfferedOut, v2PartEntered, v2PartIsOptional, v2PartNamedIn, v2PartOf } from './plan-map';
 import { v2OverrunMin, v2Taught, v2WrapMin } from './time-box';
 import { v2WithoutFillers } from './language-pack';
-import { TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FREE_CONV_PARTNER, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_PART_ASK_LANGS, TUTOR_V2_PART_CLOCK, TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART, TUTOR_V2_TIME_NO_SQUEEZE, TUTOR_V2_OVERLONG_QUIET } from '../orchestrator/flags';
+import { TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_PART_ASK_LANGS, TUTOR_V2_PART_CLOCK, TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART, TUTOR_V2_TIME_NO_SQUEEZE, TUTOR_V2_OVERLONG_QUIET } from '../orchestrator/flags';
 import type { V2Session, V2State } from './types';
 
 /** The practice sentences of their own a practice part needs before it closes (Task 7f C). */
@@ -167,8 +167,9 @@ export function v2LeaveOutByChoice(state: V2State, ids: readonly string[]): stri
  *  Facts only: no hold, no refusal. Mic test 3 (embed-1794967959470, flag 6): the summary began at 12.6 of 20 minutes after one
  *  exchange of the five-minute conversation. Spoken lessons with labelled plans; null otherwise. */
 /** Task 8a (FREE_CONV_PARTNER, `partner`): in a free-conversation part (adaptive.ts v2FreeConversationPart) "go on" means letting them say
- *  more, not another question (mic test 9, embed-1795132864767: 23 questions in the 6.8-minute conversation). */
-export function v2StayInPartLine(session: V2Session, state: V2State, nowMs: number, on: boolean = TUTOR_V2_STAY_IN_PART, clockOn: boolean = TUTOR_V2_PART_CLOCK, partner: boolean = TUTOR_V2_FREE_CONV_PARTNER): string | null {
+ *  more, not another question (mic test 9, embed-1795132864767: 23 questions in the 6.8-minute conversation). Fix round 1 (M4): `partner`
+ *  is whether the partner line is sent this turn (facts.ts, from v2AdaptBefore), so the two never disagree. */
+export function v2StayInPartLine(session: V2Session, state: V2State, nowMs: number, on: boolean = TUTOR_V2_STAY_IN_PART, clockOn: boolean = TUTOR_V2_PART_CLOCK, partner: boolean = false): string | null {
   const plan = session.plan;
   if (!on || !plan || !session.timeBoxMinutes || session.mode !== 'voice' || !v2Taught(session) || !v2PlanLabelled(plan) || state.closed) return null;
   const cur = v2PartInHand(plan, state);
