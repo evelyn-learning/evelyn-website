@@ -261,13 +261,17 @@ async function main() {
     const r1 = await run(maths, s, 'Okay, thanks.', [{ text: 'You did really well today. Can you try this one: 3x + 2 = 11?' }], 17.0);
     check('6g live: the facts say the summary has begun (no new practice) and how long since the board was written', r1.m.facts.some((x) => /the summary has begun: from here, no new practice/.test(x)) && r1.m.facts.some((x) => /board last written on: 2 replies ago/.test(x)), r1.m.facts[0]);
     check('…a practice ask the model writes anyway waits to the reply\'s end and, nothing closing after it, goes out (the facts are the guard here)', r1.heard.endsWith('Can you try this one: 3x + 2 = 11?'), r1.heard);
-    const r1b = await run(maths, wire(st0, maths), 'Okay, thanks.', [{ text: 'Great work today, Sam. Can you try this one: 3x + 2 = 11? See you next time!', after: end() }], 17.0);
+    // Task 8h (ruling 1): a maths lesson closes by main's rule (two minutes before the box: 18 of 20), not by its content; the
+    // accepted closes below run at 18.1 / 18.4 (were 17.0 / 17.4, when the content opened the close), and at 17.0 it is refused.
+    const r1a = await run(maths, wire(st0, maths), 'Okay, thanks.', [{ text: 'Great work today, Sam. See you next time!', after: end() }], 17.0);
+    check('8h: in a maths lesson with every part shown and the summary begun, a close at 17 of 20 is refused (main\'s clock rule)', !r1a.r.state.closed && /^not ended/.test(r1a.end[0] ?? ''), r1a.end);
+    const r1b = await run(maths, wire(st0, maths), 'Okay, thanks.', [{ text: 'Great work today, Sam. Can you try this one: 3x + 2 = 11? See you next time!', after: end() }], 18.1);
     check('…one followed straight by the goodbye, with an accepted close, is dropped, heard and stored: the lesson ends on no unanswerable question', r1b.r.state.closed && !/3x \+ 2 = 11/.test(r1b.heard) && !/3x \+ 2 = 11/.test(lastAssistantText(r1b.r.state.history)) && /See you next time/.test(r1b.heard), r1b.heard);
-    const r1c = await run(maths, wire(st0, maths), 'Okay, thanks.', [{ text: 'Can you solve 3x + 2 = 11 for me? Great work today, Sam. See you next time!', after: end() }], 17.0);
+    const r1c = await run(maths, wire(st0, maths), 'Okay, thanks.', [{ text: 'Can you solve 3x + 2 = 11 for me? Great work today, Sam. See you next time!', after: end() }], 18.1);
     check('…a maths question not in a practice ask\'s words ("Can you solve…") is not one of 6g\'s: said, before the goodbye, as before', r1c.r.state.closed && /Can you solve 3x \+ 2 = 11 for me\? Great work today/.test(r1c.heard), r1c.heard);
     check('…and none of 7d: no "questions before the close" facts, nothing recorded, no invitation said', !r1.m.facts.some((x) => /questions before the close/.test(x)) && r1.r.state.closeInvitedAt === undefined && !r1.heard.includes(V2_CLOSE_INVITE_LINE), r1.m.facts[0]?.match(/questions before[^\n]*/));
     s = wire(r1.r.state, maths);
-    const r2 = await run(maths, s, 'No, I am good.', [{ text: 'Great work today, Sam. See you next time!', after: end() }], 17.4);
+    const r2 = await run(maths, s, 'No, I am good.', [{ text: 'Great work today, Sam. See you next time!', after: end() }], 18.4);
     check('…and the close is accepted in one reply, with its goodbye, as before 7d', r2.r.state.closed && r2.end[0] === 'the session is ending' && /See you next time/.test(r2.heard) && !r2.heard.includes(V2_CLOSE_INVITE_LINE), r2.end);
   }
 

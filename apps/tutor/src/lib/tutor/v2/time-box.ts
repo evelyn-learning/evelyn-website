@@ -19,6 +19,7 @@ import type { LessonPlan } from '../lesson-plan/types';
 import { TUTOR_V2_CLOCK_FROM_START, TUTOR_V2_CLOSE_BY_CONTENT, TUTOR_V2_FLAG_CLOCK_PAUSE, TUTOR_V2_MORE_PRACTICE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_OVERRUN_MIN, TUTOR_V2_PART_ENTERED, TUTOR_V2_PART_MIN_PRACTICE, TUTOR_V2_TIME_BOX, TUTOR_V2_TIME_NO_SQUEEZE, TUTOR_V2_TIME_OVERRUN } from '../orchestrator/flags';
 import { discussionOf } from './discussion';
 import { closeDueMinutes } from './close-heard';
+import { v2PlanLabelled } from './part-flow';
 import { v2IsPageOfPart, v2OfferedOut, v2PartEntered, v2PartIsOptional, v2PartOf } from './plan-map';
 import { v2SummaryOpensClose } from './summary-close';
 import type { V2Session, V2State } from './types';
@@ -60,10 +61,13 @@ export function v2HardStopDelayMs(stopMin: number, state: Pick<V2State, 'started
 
 /** Task 7f's switches, B to F, as one value: each its own flag (default on); tests pass some off for one turn. */
 export interface V2TimeFlags { noSqueeze: boolean; minPractice: boolean; closeByContent: boolean; morePractice: boolean; overrun: boolean }
-export function v2TimeFlags(o: Partial<V2TimeFlags> = {}): V2TimeFlags {
+/** `session` (Task 8h, ruling 1): the close by content (D) is a rule of the part-flow lesson (v2PartFlowLesson); for any other
+ *  session it is off whatever the flag or a test says, and the close is main's (v2CloseOpenByClock). */
+export function v2TimeFlags(o: Partial<V2TimeFlags> = {}, session?: Pick<V2Session, 'mode' | 'homework' | 'homeworkSheet' | 'plan'>): V2TimeFlags {
+  const scoped = !session || v2PartFlowLesson(session);
   return {
     noSqueeze: o.noSqueeze ?? TUTOR_V2_TIME_NO_SQUEEZE, minPractice: o.minPractice ?? TUTOR_V2_PART_MIN_PRACTICE,
-    closeByContent: o.closeByContent ?? TUTOR_V2_CLOSE_BY_CONTENT, morePractice: o.morePractice ?? TUTOR_V2_MORE_PRACTICE, overrun: o.overrun ?? TUTOR_V2_TIME_OVERRUN,
+    closeByContent: scoped && (o.closeByContent ?? TUTOR_V2_CLOSE_BY_CONTENT), morePractice: o.morePractice ?? TUTOR_V2_MORE_PRACTICE, overrun: o.overrun ?? TUTOR_V2_TIME_OVERRUN,
   };
 }
 
@@ -80,6 +84,13 @@ export function v2HardStopMinutes(boxMin: number, ceilingMin?: number, on: boole
 /** A taught lesson: not homework, not a discussion (they keep their own time lines; the margin reaches only their hard stop). */
 export const v2Taught = (session: Pick<V2Session, 'homework' | 'homeworkSheet' | 'plan'>) => !session.homework && !session.homeworkSheet && !discussionOf(session.plan);
 
+/** Task 8h (final review I1, ruling 1): the part-flow lesson: a spoken taught lesson on a plan whose every part has an authored
+ *  name (turn.ts `partFlow`, time-fit.ts and facts.ts v2AskEveryOn gate the same way). The lesson the close by content, the
+ *  wrap minute were built and tested for. Every other session (a maths or science lesson, a
+ *  typed lesson, a plan without part names, homework, a discussion) keeps main's close: by the clock alone, two minutes before
+ *  the box (close-heard.ts closeDueMinutes), with main's time line and no wrap minute. */
+export const v2PartFlowLesson = (session: Pick<V2Session, 'mode' | 'homework' | 'homeworkSheet' | 'plan'>) => session.mode === 'voice' && v2Taught(session) && v2PlanLabelled(session.plan);
+
 /** Minutes left to the time-up reference: a taught lesson's box plus the overrun margin (Task 7f F: "the time is up" moves to
  *  target + margin), homework's and a discussion's box. Infinity with no box. */
 export function v2LeftToStopMin(session: Pick<V2Session, 'timeBoxMinutes' | 'homework' | 'homeworkSheet' | 'plan'>, state: Pick<V2State, 'startedAtMs'>, nowMs: number, overrun: boolean = TUTOR_V2_TIME_OVERRUN): number {
@@ -88,9 +99,11 @@ export function v2LeftToStopMin(session: Pick<V2Session, 'timeBoxMinutes' | 'hom
 }
 
 /** The wrap minute: the host's, else (Task 7f D, CLOSE_BY_CONTENT) two before the box, so the close by the clock still has a
- *  minute to come at. Undefined with no box, or no host wrap and the switch off (as before). */
-export function v2WrapMin(session: Pick<V2Session, 'wrapMinutes' | 'timeBoxMinutes'>, fallback: boolean = TUTOR_V2_CLOSE_BY_CONTENT): number | undefined {
-  if (!session.timeBoxMinutes) return undefined;
+ *  minute to come at. Undefined with no box, or no host wrap and the switch off (as before).
+ *  Task 8h (ruling 1): a part-flow lesson only. On main no v2 session has a wrap minute (the host's reached v1 alone); with one,
+ *  the wrap line stood in place of main's two-minute line (18bf8177) in every embedded lesson. */
+export function v2WrapMin(session: Pick<V2Session, 'wrapMinutes' | 'timeBoxMinutes' | 'mode' | 'homework' | 'homeworkSheet' | 'plan'>, fallback: boolean = TUTOR_V2_CLOSE_BY_CONTENT): number | undefined {
+  if (!session.timeBoxMinutes || !v2PartFlowLesson(session)) return undefined;
   if (typeof session.wrapMinutes === 'number' && session.wrapMinutes > 0) return session.wrapMinutes;
   return fallback ? Math.max(1, session.timeBoxMinutes - 2) : undefined;
 }
@@ -133,15 +146,16 @@ export function v2PlanContentDone(plan: LessonPlan | undefined, state: Pick<V2St
 }
 
 /** Task 7f D: the tutor may begin the summary or end the lesson by itself: no box; the wrap minute reached (v2WrapMin); or the
- *  plan's content done (v2PlanContentDone). Homework keeps the last fifth (its own time line). `on` off: the last fifth, as
- *  before (v2CloseOpenByClock). Read by turn.ts (applyControlTool's end_lesson rule, the summary detection, the held summary
+ *  plan's content done (v2PlanContentDone). In a part-flow lesson only (v2PartFlowLesson, Task 8h); any other session, and `on`
+ *  off: main's clock rule (v2CloseOpenByClock). Read by turn.ts (applyControlTool's end_lesson rule, the summary detection, the held summary
  *  page), close-invite.ts and facts.ts. */
 export function v2CloseOpen(session: V2Session, state: Pick<V2State, 'startedAtMs' | 'goals' | 'board' | 'workingLevel' | 'history' | 'timeFit'> & Partial<Pick<V2State, 'practiceSaid' | 'summaryBegunAt' | 'closed'>>, nowMs: number, on: boolean = TUTOR_V2_CLOSE_BY_CONTENT): boolean {
   // Task 7w (SUMMARY_OPENS_CLOSE): once the tutor has begun the summary, the close is open, whatever the wrap minute (summary-close.ts).
   // Fix round 1 (I3): only once every required part before the summary has been reached (the facts' "near"): an early summary page
   // never lets the tutor end the lesson by itself.
   if (v2SummaryOpensClose(session, state) && v2PlanContentDone(session.plan, state, true)) return true;
-  if (!on || session.homework || session.homeworkSheet) return v2CloseOpenByClock(session, state, nowMs);
+  // Task 8h (ruling 1): by content only in a part-flow lesson; every other session closes by main's clock rule.
+  if (!on || !v2PartFlowLesson(session)) return v2CloseOpenByClock(session, state, nowMs);
   if (!session.timeBoxMinutes) return true;
   if (v2WrapDue(session, (nowMs - state.startedAtMs) / 60000, true, true)) return true;
   return v2PlanContentDone(session.plan, state);
@@ -152,7 +166,7 @@ export function v2CloseOpen(session: V2Session, state: Pick<V2State, 'startedAtM
 export const V2_HARD_STOP_TAIL_MAX_MS = 20000;
 
 /** The session is past its wrap minute (the host's `sessionWrapMinutes`, two before the box). */
-export function v2WrapDue(session: Pick<V2Session, 'wrapMinutes' | 'timeBoxMinutes'>, usedMin: number, on: boolean = TUTOR_V2_TIME_BOX, fallback: boolean = TUTOR_V2_CLOSE_BY_CONTENT): boolean {
+export function v2WrapDue(session: Pick<V2Session, 'wrapMinutes' | 'timeBoxMinutes' | 'mode' | 'homework' | 'homeworkSheet' | 'plan'>, usedMin: number, on: boolean = TUTOR_V2_TIME_BOX, fallback: boolean = TUTOR_V2_CLOSE_BY_CONTENT): boolean {
   const wrap = v2WrapMin(session, fallback);
   return on && wrap !== undefined && usedMin >= wrap;
 }

@@ -30,7 +30,7 @@ import { speaksMaths, unwrittenEquations } from './spoken-maths';
 import { cardQuestion, v2DropSaidLead, saidCovers, sentenceCardToSay, unsaidAsk, unsaidBoardItem, asksAnywhere, noteSentencesToSay, pointsBackAtBoard } from './board-timing';
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, v2AskEveryOn, v2SummaryBegun, V2_NO_ASK_RECHECK_S, V2_TIME_UP_MIN, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
-import { v2CloseOpen, v2LeftToStopMin, v2LessonNowMs, v2OverrunMin, v2PlanContentDone, v2TimeFlags, v2WrapDue, v2WrapMin, type V2TimeFlags } from './time-box';
+import { v2CloseOpen, v2LeftToStopMin, v2LessonNowMs, v2OverrunMin, v2PartFlowLesson, v2PlanContentDone, v2TimeFlags, v2WrapDue, v2WrapMin, type V2TimeFlags } from './time-box';
 import { V2_MIN_PRACTICE, V2_MORE_PRACTICE_MIN_LEFT, v2LevelCheckTimeUp, v2ArrivalDrops, v2LeaveOutByChoice, v2AsksMorePractice, v2CountPractice, v2PartPracticeAsked, v2DroppedMentioned, v2TakeEnteredDropped, v2PartsToDrop, v2PracticeMoreLine, v2PracticeShort, v2TimeFitAfterReply, v2TimeFitDue, v2TimeFitUpFront, v2MarkPartStart, v2OptionalAskedAtClose, v2OptionalWrapMin } from './time-fit';
 import { planGoalIds, renderPlanMap, v2NextTimeAllLine, v2PagePartLabel, v2NextTimeLine, v2PartIsOptional, v2PartNamedIn, v2PartOf, v2PartOffers, v2UnreachedOffer } from './plan-map';
 import { stripToolTalk } from './tool-talk';
@@ -480,7 +480,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const discussion = !!discussionOf(session.plan);
   const studentText = v2StudentBlock(input.studentSaid, state, input.facts?.silenceSeconds, input.facts?.resumed, session, input.facts?.timeCheck, input.facts?.roomVoices);
   // Task 7f: the time switches for this turn. A taught lesson's time is up at the box plus the overrun margin (F).
-  const tf = v2TimeFlags(input.timeFlags);
+  const tf = v2TimeFlags(input.timeFlags, session);
   // Task 7n (PART_ASK_LANGS): the lesson's teaching languages, whose language packs read its part asks and answers.
   const askLangs: readonly string[] = session.languages?.length ? session.languages : ['en'];
   // Merge with main (Task 8e): without main's note on a cut reply (interrupted.ts): the system's, not the tutor's words.
@@ -1013,8 +1013,11 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           // it: a whole lesson ran with the phases showing Hook, because no progress was recorded until the
           // close (Algebra 1, portal-50a1e584). Gone back to while still open, it is the part in hand again.
           const g = state.goals[planGoal];
-          if (!g) state.goals[planGoal] = { status: 'shown', at: nowMs };
-          else if (g.status === 'shown' && !o.painted) state.goals[planGoal] = { ...g, at: nowMs };
+          // Task 8h (final review I1, ruling 1b): not in a part-flow lesson (time-box.ts v2PartFlowLesson). There a part is done by
+          // the lesson having entered and taught it (Task 7i) and its chip follows its page (part-flow.ts); marked shown as its card
+          // went up, the last practice part was "done" before the learner had answered, and the close opened on that card.
+          if (!g && !v2PartFlowLesson(session)) state.goals[planGoal] = { status: 'shown', at: nowMs };
+          else if (g?.status === 'shown' && !o.painted) state.goals[planGoal] = { ...g, at: nowMs };
         }
         // A page headed for a part of the plan, or that part's passage, is the lesson on that part.
         if (session.plan && !discussion && o.painted && (block.name === 'new_page' || block.name === 'show_passage')) {

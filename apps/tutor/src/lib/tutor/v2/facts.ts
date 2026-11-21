@@ -226,7 +226,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   const box = discussion ? effectiveMinutes(session.timeBoxMinutes, state.thinking) : session.timeBoxMinutes;
   const left = box ? box - (f.nowMs - state.startedAtMs) / 60000 : 0;
   // Task 7f: the time switches; "the time is up" at the box plus the margin for a taught lesson (F); the close by content (D).
-  const tf = v2TimeFlags(f.time);
+  const tf = v2TimeFlags(f.time, session);
   const leftStop = discussion ? left : v2LeftToStopMin(session, state, f.nowMs, tf.overrun);
   // Task 7x (PART_FIRST_STEP): while the optional part taken is held (optional-hold.ts), nothing in the facts says the summary may begin.
   const optHold = !discussion && !f.stopAsked ? f.optionalHold ?? null : null;

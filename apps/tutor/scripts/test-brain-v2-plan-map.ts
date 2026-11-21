@@ -156,7 +156,8 @@ function main() {
     const facts = renderFacts(lesson, summary, { nowMs: 12 * 60000, heard: 'ok' });
     check('the facts carry it under the plan line', facts.includes('plan: ') && facts.indexOf('The Pronunciation part was not offered') > facts.indexOf('plan: '), facts.slice(0, 700));
     check('not when the student asks to stop, or the time is up', !renderFacts(lesson, summary, { nowMs: 12 * 60000, heard: 'I have to go', stopAsked: true }).includes('was not offered') && !renderFacts(lesson, summary, { nowMs: 29 * 60000, heard: 'ok' }).includes('was not offered'));
-    check('not past the host\'s wrap minute', !renderFacts({ ...lesson, wrapMinutes: 10 }, summary, { nowMs: 12 * 60000, heard: 'ok' }).includes('was not offered'));
+    // Task 8h (ruling 1): the host's wrap minute is a spoken part-flow lesson's (time-box.ts v2WrapMin); a typed lesson has none, as on main.
+    check('not past the host\'s wrap minute', !renderFacts({ ...lesson, mode: 'voice', wrapMinutes: 10 }, summary, { nowMs: 12 * 60000, heard: 'ok' }).includes('was not offered'));
 
     // Fix round 1 (I1): false alarms on plans written for other lessons.
     const UNLABELLED = { ...GDI, segments: GDI.segments.map((x) => ({ ...x, metadata: { ...(x.metadata ?? {}), label: undefined } })) } as LessonPlan;
