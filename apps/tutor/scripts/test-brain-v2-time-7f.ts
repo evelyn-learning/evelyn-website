@@ -91,7 +91,7 @@ async function main() {
     console.log(`OFF_JSON ${JSON.stringify({
       tf, due19: v2PartDueNow(GDI, {}, 19, 20), dropped: drop.r.state.timeFit ?? null,
       pageOpened: short.r.state.board.pages.some((p) => p.title === 'Past simple'), moreLine: isMore(short.heard),
-      closed16: sixteen.r.state.closed, moreFacts: /more practice: their words may be a request/.test(more.facts), stop: v2HardStopMinutes(20), leftStop: v2LeftToStopMin(lang, { startedAtMs: 0 }, 20 * MIN),
+      closed16: sixteen.r.state.closed, open14: v2CloseOpen(lang, at(FIVE, { goals: allDone, timeFit: { dropped: ['pronunciation'], told: true }, history: [u('x'), a('Tell me about your project.')] }), 14 * MIN), moreFacts: /more practice: their words may be a request/.test(more.facts), stop: v2HardStopMinutes(20), leftStop: v2LeftToStopMin(lang, { startedAtMs: 0 }, 20 * MIN),
     })}`);
     return;
   }
@@ -188,7 +188,8 @@ async function main() {
     const m16 = await run(lang, notDone, 'I visited a customer in Canada.', [{ text: 'Good. Here is a quick summary of today. See you next time!', after: end() }, { text: 'What would you like to do next?' }], 16);
     check('minute 16, the conversation not done: no close (refused), the facts say time for more, no "close is near"', !m16.r.state.closed && m16.calls.some((c) => /^end_lesson: not ended/.test(c)) && /about 4 left, which is time for more/.test(m16.facts) && !/close is near/.test(m16.facts), [m16.calls, m16.facts.slice(0, 300)]);
     check('…and its summary words do not begin the summary', typeof m16.r.state.summaryBegunAt !== 'number');
-    check('v2CloseOpen at 16: false; the last fifth (switch off): true', !v2CloseOpen(lang, notDone, 16 * MIN) && v2CloseOpen(lang, notDone, 16 * MIN, false));
+    // Task 8e fix round 1 (ruling 1): with the switch off the clock rule is main's two minutes (was: the last fifth, open at 16).
+    check('v2CloseOpen at 16: false; switch off, main\'s two-minute rule: false at 16 and 17.9, true at 18', !v2CloseOpen(lang, notDone, 16 * MIN) && !v2CloseOpen(lang, notDone, 16 * MIN, false) && !v2CloseOpen(lang, notDone, 17.9 * MIN, false) && v2CloseOpen(lang, notDone, 18 * MIN, false));
     const done = at(FIVE, { goals: allDone, timeFit: { dropped: ['pronunciation'], told: true }, history: [u('x'), a('Tell me about your project.')] });
     check('every required part done, pronunciation left out: the content is done, the close open at minute 14', v2PlanContentDone(GDI, done) && v2CloseOpen(lang, done, 14 * MIN));
     const f14 = renderFacts(lang, done, { nowMs: 14 * MIN });
@@ -207,9 +208,12 @@ async function main() {
     const sci: V2Session = { studentName: 'Sam', subject: 'Biology', level: 'Grade 9', mode: 'voice', timeBoxMinutes: 20, topic: 'Cells' };
     check('a timed lesson with no plan: only the wrap minute (never "content done")', !v2CloseOpen(sci, newV2State(0), 17 * MIN) && v2CloseOpen(sci, newV2State(0), 18 * MIN) && v2CloseOpen({ ...sci, timeBoxMinutes: undefined }, newV2State(0), 1 * MIN));
     const hw: V2Session = { ...lang, homework: { text: 'Solve 2x = 6.', verified: false, hasFigure: false } };
-    check('homework keeps the last fifth', v2CloseOpen(hw, newV2State(0), 16.5 * MIN) && !v2CloseOpen(hw, newV2State(0), 15 * MIN));
+    // Task 8e fix round 1 (ruling 1): homework closes by the clock at main's two minutes (was: the last fifth, 16.5 open).
+    check('homework keeps the clock rule (main\'s two minutes), never the content', v2CloseOpen(hw, newV2State(0), 18 * MIN) && !v2CloseOpen(hw, newV2State(0), 17.5 * MIN) && !v2CloseOpen(hw, done, 14 * MIN));
+    // Task 8e fix round 1 (ruling 1): re-timed from minute 16 (the last fifth) to 18.2 (main's two minutes); at 16 the clock opens nothing.
     const m16off = await run(lang, notDone, 'I visited a customer in Canada.', [{ text: 'Good. Here is a quick summary. Any questions before we finish?' }], 16, { closeByContent: false });
-    check('the switch off for the turn: the last fifth opens the close at 16, as before (the invitation is recorded)', typeof m16off.r.state.closeInvitedAt === 'number' && /close is near|summary/.test(m16off.facts), m16off.r.state);
+    const m18off = await run(lang, notDone, 'I visited a customer in Canada.', [{ text: 'Good. Here is a quick summary. Any questions before we finish?' }], 18.2, { closeByContent: false });
+    check('the switch off for the turn: the clock opens the close two minutes before the box (the invitation is recorded at 18.2, not at 16)', typeof m16off.r.state.closeInvitedAt !== 'number' && typeof m18off.r.state.closeInvitedAt === 'number' && /close is near|summary/.test(m18off.facts), [m16off.r.state.closeInvitedAt, m18off.r.state.closeInvitedAt, m18off.facts.slice(0, 200)]);
   }
 
   console.log('E. more practice at the close');
@@ -352,7 +356,9 @@ async function main() {
     const c = child('PART_MIN_PRACTICE');
     check('PART_MIN_PRACTICE off: the next part\'s page held for the part ask, as in 7a (no ask for another sentence); the rest as on', c.tf?.minPractice === false && !c.moreLine && arrival(c) && !c.closed16 && c.stop === 25, c);
     const d = child('CLOSE_BY_CONTENT');
-    check('CLOSE_BY_CONTENT off: the last fifth: closed at minute 16 with parts not done, as before; the rest as on', d.tf?.closeByContent === false && d.closed16 === true && arrival(d) && d.stop === 25, d);
+    // Task 8e fix round 1 (ruling 1): was `closed16 === true` (the last fifth). By main's two-minute rule minute 16 closes nothing; what the
+    // switch decides is the close by content (open at 14 with every part done: on; not with it off).
+    check('CLOSE_BY_CONTENT off: no close by content (minute 14, every part done: not open) and main\'s two-minute clock (not closed at 16); the rest as on', d.tf?.closeByContent === false && d.closed16 === false && d.open14 === false && on.open14 === true && arrival(d) && d.stop === 25, d);
     const e = child('MORE_PRACTICE');
     check('MORE_PRACTICE off: no more-practice line; the rest as on', e.tf?.morePractice === false && !e.moreFacts && !e.closed16 && e.stop === 25, e);
     const f = child('TIME_OVERRUN');

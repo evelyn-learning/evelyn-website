@@ -74,7 +74,10 @@ const levelFacts = (history: H, heard: string | null, cap?: boolean) => v2Workin
 const B = ['Lesson overview', 'Your job', 'Present perfect', 'Past simple', 'Your project'];
 const goalsB = { overview: { status: 'shown' as const, at: 0 }, 'topic-intro': { status: 'shown' as const, at: 0 }, 'present-perfect': { status: 'demonstrated' as const, at: 0 }, 'past-simple': { status: 'demonstrated' as const, at: 0 }, 'open-conversation': { status: 'shown' as const, at: 0 }, pronunciation: { status: 'skipped' as const, at: 0 } };
 const closeState = (extra: Partial<V2State> = {}): V2State => ({ ...newV2State(0), board: { pages: B.map((title) => ({ title, items: [] })), current: B.length - 1 }, goals: goalsB, workingLevel: { level: 'intermediate', from: 'this_lesson' }, history: [u('x'), a('Try the whole sentence again, and say "was" clearly.')], ...extra });
-// 17.57: the reply as it came, summary page and all.
+// Task 8e fix round 1 (ruling 1): this suite runs with CLOSE_BY_CONTENT off, where the clock now lets the tutor close two minutes before
+// the box (main's rule) and no longer in the last fifth. Its replays of the close were re-timed into that window, above the 1.5 min of
+// "the time is up": 17.57 → 18.17, 17 → 18.1, 17.6 → 18.3, 16.2 → 18.2, 16.5 → 18.1. The words and the expectations are unchanged.
+// 17.57 in the session (run here at 18.17): the reply as it came, summary page and all.
 const T1757 = 'That\'s right: "I was responsible for communicating with our customers." <board page>Summary</board> Before we finish, here is what you did well. You used the past simple correctly for your finished project. Keep working on "I have worked…" for things that started in the past and continue now. Thank you for today\'s lesson, Ken. See you next time!';
 const INVITE = 'Do you have any questions before we finish?';
 const min = (m: number) => m * 60000;
@@ -85,7 +88,7 @@ const run = (session: V2Session, state: V2State, said: string | null, steps: Ste
 
 async function offChild() {
   const capLine = levelFacts(session7, S[5]!);
-  const r = await run(lang, closeState(), 'I was responsible for communicating with our customers.', [{ text: T1757, after: end() }], 17.57);
+  const r = await run(lang, closeState(), 'I was responsible for communicating with our customers.', [{ text: T1757, after: end() }], 18.17);
   console.log(`OFF_JSON ${JSON.stringify({ flags: [TUTOR_V2_LEVEL_CHECK_CAP, TUTOR_V2_CLOSE_INVITES_QUESTIONS], count: /level check: /.test(capLine), closed: r.r.state.closed, end: r.end, invited: typeof r.r.state.closeInvitedAt === 'number', bye: /See you next time!/.test(r.heard) })}`);
 }
 
@@ -148,8 +151,8 @@ async function main() {
   {
     // Root cause G: the close was accepted at 17.57 because the box's last fifth had begun (applyControlTool); section 6's
     // kill-switch run shows the same reply closing as before.
-    const r = await run(lang, closeState(), 'I was responsible for communicating with our customers.', [{ text: T1757, after: end() }, { text: INVITE }], 17.57);
-    check('17.57 (2.4 min left): end_lesson in the summary reply is refused with what to do instead', r.end.length === 1 && r.end[0] === V2_CLOSE_INVITE_REFUSAL && !r.r.state.closed, r.end);
+    const r = await run(lang, closeState(), 'I was responsible for communicating with our customers.', [{ text: T1757, after: end() }, { text: INVITE }], 18.17);
+    check('18.17 (1.8 min left; 17.57 in the session): end_lesson in the summary reply is refused with what to do instead', r.end.length === 1 && r.end[0] === V2_CLOSE_INVITE_REFUSAL && !r.r.state.closed, r.end);
     check('…the refusal is the model\'s next step, not a word for the learner', /^not ended: /.test(V2_CLOSE_INVITE_REFUSAL) && /Say nothing of this message/.test(V2_CLOSE_INVITE_REFUSAL) && /no goodbye/.test(V2_CLOSE_INVITE_REFUSAL));
     check('…the summary is said, the goodbye is not, and the reply ends with the invitation', /here is what you did well/.test(r.heard) && !/See you next time!|Thank you for today's lesson/.test(r.heard) && r.heard.trim().endsWith(INVITE), r.heard);
     check('…nor stored', !/See you next time!/.test(JSON.stringify(r.r.state.history.slice(-4))) && JSON.stringify(r.r.state.history.slice(-4)).includes(INVITE));
@@ -157,8 +160,8 @@ async function main() {
     check('…no next-time line on the summary reply (it goes on the reply that closes)', !/We didn't get to/.test(r.heard), r.heard);
 
     // The facts a minute earlier, and in the summary reply's turn.
-    const f17 = renderFacts(lang, closeState(), { nowMs: min(17), heard: 'I was responsible.' });
-    check('near the close (3 min left): the facts say the summary reply ends with the invitation and does not close', /questions before the close: there is time for their questions, so the reply that gives the summary does not end the lesson: it ends with one question/.test(f17), f17);
+    const f17 = renderFacts(lang, closeState(), { nowMs: min(18.1), heard: 'I was responsible.' });
+    check('near the close (1.9 min left): the facts say the summary reply ends with the invitation and does not close', /questions before the close: there is time for their questions, so the reply that gives the summary does not end the lesson: it ends with one question/.test(f17), f17);
     check('…beside the one-question rule (the invitation is that one question)', /at the close: at most one question in a reply/.test(f17));
     check('…not with time for more (8 min left)', !/questions before the close/.test(renderFacts(lang, closeState(), { nowMs: min(12), heard: 'x' })));
 
@@ -180,28 +183,28 @@ async function main() {
     check('…nor in any later turn', !on.r.state.closed && later.r.state.closed && later.end[0] === 'the session is ending', later.end);
 
     // The model invites by itself (the facts asked it to): no refusal, no extra model call.
-    const own = await run(lang, closeState(), 'I was responsible for communicating with our customers.', [{ text: 'That\'s right. Here is a quick summary. <board page>Summary</board> You talked about your work and used the past simple well. Any questions before we finish?' }], 17.57);
+    const own = await run(lang, closeState(), 'I was responsible for communicating with our customers.', [{ text: 'That\'s right. Here is a quick summary. <board page>Summary</board> You talked about your work and used the past simple well. Any questions before we finish?' }], 18.17);
     check('the summary reply that invites by itself: not closed, no refusal, the invitation recorded', !own.r.state.closed && !own.end.length && typeof own.r.state.closeInvitedAt === 'number' && own.m.calls() === 1, [own.heard, own.end, own.r.state.closeInvitedAt, own.m.calls()]);
     // Fix round 1 (M3): the invitation's shape only, as the reply's last sentence.
     const yes = [INVITE, 'Any questions before we finish?', 'Do you have any other questions?', 'Okay. Any last questions for me?', 'Is there anything you\'d like to ask?', '何か質問はありますか？', 'ほかに質問はありますか。'];
     const notInvites = ['Can you say it once more?', 'Any questions are welcome.', 'Can you answer a question for me about your project?', 'I have a question for you: what did you sell?', 'Did your customer have any questions about the price?', 'Any questions so far?'];
     check('M3: an invitation is the any-questions shape; a question about their project, a practice ask or a statement is not', yes.every(v2ReplyInvites) && !notInvites.some(v2ReplyInvites), { missed: yes.filter((x) => !v2ReplyInvites(x)), caught: notInvites.filter(v2ReplyInvites) });
-    const proj = await run(lang, closeState(), 'I worked on a project.', [{ text: 'Good. Can you answer a question for me about your project?' }], 16.5);
-    check('…so "a question for me about your project" at 16.5 records nothing', proj.r.state.closeInvitedAt === undefined);
+    const proj = await run(lang, closeState(), 'I worked on a project.', [{ text: 'Good. Can you answer a question for me about your project?' }], 18.1);
+    check('…so "a question for me about your project" at 18.1 records nothing', proj.r.state.closeInvitedAt === undefined);
 
     // Fix round 1 (I2): a second end_lesson in the same reply ends the turn there, open, on the invitation.
-    const stubborn = await run(lang, closeState(), 'I was responsible for communicating with our customers.', [{ text: T1757, after: end() }, { text: INVITE, after: end() }, { text: 'never reached' }], 17.57);
+    const stubborn = await run(lang, closeState(), 'I was responsible for communicating with our customers.', [{ text: T1757, after: end() }, { text: INVITE, after: end() }, { text: 'never reached' }], 18.17);
     check('I2: a second end_lesson in the same reply: the lesson is not ended, no third model call', !stubborn.r.state.closed && stubborn.end[0] === V2_CLOSE_INVITE_REFUSAL && stubborn.end[1] === V2_CLOSE_INVITE_WAIT && stubborn.m.calls() === 2 && !/never reached/.test(stubborn.heard), [stubborn.end, stubborn.m.calls()]);
     check('…the summary said once, and the invitation is the last sentence said', (stubborn.heard.match(/here is what you did well/g) ?? []).length === 1 && stubborn.heard.trim().endsWith(INVITE) && !/See you next time!/.test(stubborn.heard), stubborn.heard);
     check('…the invitation recorded, so the next turn closes', typeof stubborn.r.state.closeInvitedAt === 'number');
     const after2 = await run(lang, stubborn.r.state, 'No.', [{ text: 'See you next time!', after: end() }], 18.0);
     check('…and it does', after2.r.state.closed && after2.end[0] === 'the session is ending');
-    const goodbyeAgain = await run(lang, closeState(), 'I was responsible for communicating with our customers.', [{ text: T1757, after: end() }, { text: `${INVITE} See you next time!`, after: end() }], 17.57);
+    const goodbyeAgain = await run(lang, closeState(), 'I was responsible for communicating with our customers.', [{ text: T1757, after: end() }, { text: `${INVITE} See you next time!`, after: end() }], 18.17);
     check('…a goodbye after the invitation in the second call is held back and dropped', !goodbyeAgain.r.state.closed && goodbyeAgain.heard.trim().endsWith(INVITE) && !/See you next time!/.test(JSON.stringify(goodbyeAgain.r.state.history.slice(-4))), goodbyeAgain.heard);
 
     // Fix round 1 (M9): 6g's t54 shape (a retry ask, the summary page, a thank-you, end_lesson at 16.2) with the invitation owed.
     const t54 = 'The one thing to fix is "have," which is followed by "worked," not "working." Please say this sentence once more. <board sentence>I have worked with international customers.</board><board page>Summary</board> Today you described your job, a project and your experience. Thank you for today\'s lesson, and well done! Keep practising these grammar points.';
-    const m9 = await run(lang, closeState(), 'Yes, I have working with the international customer for sometimes.', [{ text: t54, after: end() }, { text: INVITE }], 16.2);
+    const m9 = await run(lang, closeState(), 'Yes, I have working with the international customer for sometimes.', [{ text: t54, after: end() }, { text: INVITE }], 18.2);
     const stored9 = JSON.stringify(m9.r.state.history.slice(-4));
     check('M9: t54 with the invitation owed: refused, the retry ask dropped (said and stored), nothing of the goodbye stored, ends on the invitation', m9.end[0] === V2_CLOSE_INVITE_REFUSAL && !m9.r.state.closed && !/Please say this sentence once more/.test(m9.heard) && !/Please say this sentence once more/.test(stored9) && !/Thank you for today's lesson|Keep practising these grammar/.test(stored9) && m9.heard.trim().endsWith(INVITE), [m9.heard, stored9]);
   }
@@ -215,12 +218,12 @@ async function main() {
     check('13 min, their question: no "end the lesson in this reply" line; the close refused by the rule as it was before this task', !B.m.facts.some((x) => /questions before the close/.test(x)) && B.end.length === 1 && /^not ended: the session goes on\./.test(B.end[0]!) && !B.r.state.closed && B.r.state.closeInvitedAt === undefined, [B.end, B.m.facts[0]?.match(/questions before the close[^\n]*/)]);
     const C = await run(lang, B.r.state, 'No, nothing else.', [{ text: 'All right. See you next time!', after: end() }, { text: 'Would you like to stop here?' }], 14);
     check('14 min, "No, nothing else.": the same as before this task (refused by the clock rule, no 7d line, nothing recorded)', !C.m.facts.some((x) => /questions before the close/.test(x)) && C.end.every((x) => /^not ended: the session goes on\./.test(x)) && C.r.state.closeInvitedAt === undefined, C.end);
-    // The same walk at 17 min closes on the answer.
-    const A17 = await run(lang, closeState(), 'I worked on a project.', [{ text: SUM12 }], 17);
-    check('17 min: the same summary records the invitation', typeof A17.r.state.closeInvitedAt === 'number' && !A17.r.state.closed);
-    const B17 = await run(lang, A17.r.state, 'When do I use "for" and "since"?', [{ text: 'We use "for" with a length of time and "since" with a starting point. Thank you for today\'s lesson, Ken. See you next time!', after: end() }], 17.6);
+    // The same walk at 18.1 min (was 17) closes on the answer.
+    const A17 = await run(lang, closeState(), 'I worked on a project.', [{ text: SUM12 }], 18.1);
+    check('18.1 min: the same summary records the invitation', typeof A17.r.state.closeInvitedAt === 'number' && !A17.r.state.closed);
+    const B17 = await run(lang, A17.r.state, 'When do I use "for" and "since"?', [{ text: 'We use "for" with a length of time and "since" with a starting point. Thank you for today\'s lesson, Ken. See you next time!', after: end() }], 18.3);
     check('…their question answered, then goodbye: closed on their answer, the facts said so', B17.r.state.closed && B17.end[0] === 'the session is ending' && B17.m.facts.some((x) => /you have asked whether they have any questions before you finish/.test(x)));
-    const N17 = await run(lang, A17.r.state, 'No, nothing else.', [{ text: 'All right. See you next time!', after: end() }], 17.6);
+    const N17 = await run(lang, A17.r.state, 'No, nothing else.', [{ text: 'All right. See you next time!', after: end() }], 18.3);
     check('…or "No, nothing else.": closed', N17.r.state.closed);
     // A summary begun early (8 min left; 6f tester B T60): as before this task, the page opens and the line is said there.
     const t60 = 'Good work today. Before we finish, here is a quick summary. <board page>Summary</board><board note>You practised the present perfect and the past simple.</board> You used "have worked" well.';
@@ -245,11 +248,11 @@ async function main() {
   {
     const mathsPlan = { ...GDI, segments: GDI.segments.filter((x) => x.id !== 'level-check') } as LessonPlan;
     const mathsDemo: V2Session = { studentName: 'Sam', subject: 'Mathematics', level: 'Grade 8', mode: 'voice', timeBoxMinutes: 20, plan: mathsPlan };
-    const m = await run(mathsDemo, closeState(), 'x = 4', [{ text: 'Right, x = 4. Here is a quick summary: you solved two-step equations. See you next time!', after: end() }], 17.57);
-    check('a maths voice lesson (one language) at 17.57: closed in the same reply, as before', m.r.state.closed && m.end[0] === 'the session is ending' && !m.m.facts.some((x) => /questions before the close/.test(x)), m.end);
-    const science = await run({ studentName: 'Sam', subject: 'Biology', level: 'Grade 9', mode: 'voice', timeBoxMinutes: 20, topic: 'Cells' }, closeState(), 'Mitochondria.', [{ text: 'Yes. See you next time!', after: end() }], 17.57);
+    const m = await run(mathsDemo, closeState(), 'x = 4', [{ text: 'Right, x = 4. Here is a quick summary: you solved two-step equations. See you next time!', after: end() }], 18.17);
+    check('a maths voice lesson (one language) at 18.17: closed in the same reply, as before', m.r.state.closed && m.end[0] === 'the session is ending' && !m.m.facts.some((x) => /questions before the close/.test(x)), m.end);
+    const science = await run({ studentName: 'Sam', subject: 'Biology', level: 'Grade 9', mode: 'voice', timeBoxMinutes: 20, topic: 'Cells' }, closeState(), 'Mitochondria.', [{ text: 'Yes. See you next time!', after: end() }], 18.17);
     check('a voice demo with no plan: closed, as before', science.r.state.closed);
-    const typed = await run({ ...lang, mode: 'text' }, closeState(), 'I was responsible for communicating with our customers.', [{ text: T1757, after: end() }], 17.57);
+    const typed = await run({ ...lang, mode: 'text' }, closeState(), 'I was responsible for communicating with our customers.', [{ text: T1757, after: end() }], 18.17);
     check('a typed language lesson: closed, as before', typed.r.state.closed);
     check('where it applies: spoken, plan-led, second-language (or pronunciation) lessons only', v2CloseInviteOn(lang) && v2CloseInviteOn({ ...lang, languages: undefined, pronunciation: true }) && !v2CloseInviteOn(mathsDemo) && !v2CloseInviteOn({ ...lang, mode: 'text' }) && !v2CloseInviteOn({ ...lang, plan: undefined }) && !v2CloseInviteOn({ ...lang, homework: { statement: 'x' } as unknown as V2Session['homework'] }) && !v2CloseInviteOn(lang, false));
   }
@@ -270,7 +273,7 @@ async function main() {
     const r = spawnSync(process.execPath, [...process.execArgv, __filename], { env: { ...process.env, NEXT_PUBLIC_TUTOR_V2_LEVEL_CHECK_CAP: 'off', NEXT_PUBLIC_TUTOR_V2_CLOSE_INVITES_QUESTIONS: 'off', CLOSE_7D_OFF_CHILD: '1' }, encoding: 'utf8' });
     const line = (r.stdout ?? '').split('\n').find((l) => l.startsWith('OFF_JSON '));
     const off = line ? JSON.parse(line.slice('OFF_JSON '.length)) : null;
-    check('both off: no count; the summary reply at 17.57 closes with its goodbye, as before', !!off && off.flags[0] === false && off.flags[1] === false && off.count === false && off.closed === true && off.end[0] === 'the session is ending' && off.invited === false && off.bye === true, off ?? r.stderr);
+    check('both off: no count; the summary reply at 18.17 closes with its goodbye, as before', !!off && off.flags[0] === false && off.flags[1] === false && off.count === false && off.closed === true && off.end[0] === 'the session is ending' && off.invited === false && off.bye === true, off ?? r.stderr);
   }
 
   console.log(`\n${passed} passed, ${failed} failed`);

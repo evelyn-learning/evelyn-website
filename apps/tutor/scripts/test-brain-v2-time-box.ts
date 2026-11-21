@@ -87,7 +87,8 @@ async function main() {
     const up = renderFacts(lesson, at(18.6).state, { nowMs: at(18.6).nowMs });
     check('inside the time-up window (1.4 min left): the time is up, as before', /the time is up/.test(up) && !/finish this exchange/.test(up), up);
     const noWrap = renderFacts({ ...lesson, wrapMinutes: undefined }, at(18.2).state, { nowMs: at(18.2).nowMs });
-    check('no wrap minute from the host: "the close is near", as before', /about 2 left: the close is near/.test(noWrap) && !/finish this exchange/.test(noWrap), noWrap);
+    // Task 8e fix round 1 (ruling 1): with CLOSE_BY_CONTENT off the line is main's (18bf8177); was /about 2 left: the close is near/.
+    check('no wrap minute from the host: main\'s line, "tell the student so now" (no "finish this exchange")', /about 2 left: tell the student so now, once and in a few words/.test(noWrap) && !/finish this exchange/.test(noWrap) && !/the close is near/.test(noWrap), noWrap);
     check('before the wrap minute: no wrap', !/finish this exchange/.test(renderFacts(lesson, at(17.5).state, { nowMs: at(17.5).nowMs })));
     const fitted = renderFacts({ ...lesson, plan: LONG }, at(19).state, { nowMs: at(19).nowMs });
     check('a fitted plan says so', fitted.includes('the plan\'s 26 minutes fitted to the 20-minute box'), fitted);
@@ -148,11 +149,15 @@ async function main() {
       return runV2Turn({ session, state: showcase(), studentSaid: 'Yes, thank you. That is very clear now.', callModel: call, onText: (t) => streamed.push(t), boardPass: false, mathsCheck: false, nowMs: nowMin * MIN }).then((r) => ({ r, streamed: streamed.join('') }));
     };
     const showcaseSession: V2Session = { ...lesson, mode: 'text', trial: true };
-    const { r, streamed } = await run(showcaseSession, 16.13, closing(T77));
-    check('t77 (3.9 min left, the box\'s last fifth): the summary page opens, the summary is said, no offer, and the session ends', r.state.closed && r.state.board.pages.at(-1)?.title === 'Summary: talking about the past' && /Today you used four ways/.test(r.spoken) && !/Shall we go on/.test(r.spoken) && !r.toolCalls.some((c) => /not opened yet/.test(c.outcome)) && r.toolCalls.some((c) => c.name === 'end_lesson' && c.outcome === 'the session is ending'), [r.toolCalls.map((c) => `${c.name} ${c.outcome}`), r.spoken]);
+    // Task 8e fix round 1 (ruling 1): the clock lets the tutor close two minutes before the box (main), no longer in the last fifth. The
+    // replays that need the close open by the clock, and not yet a closing turn, run at LATE (1.87 min left: inside the two minutes,
+    // above the 1.5 of "the time is up") in a session with no host wrap (at the wrap minute every page opens: the block above). Was 16.13.
+    const LATE = 18.13; const lateSession: V2Session = { ...showcaseSession, wrapMinutes: undefined };
+    const { r, streamed } = await run(lateSession, LATE, closing(T77));
+    check('t77 re-timed (1.9 min left, the close open by the clock): the summary page opens, the summary is said, no offer, and the session ends', r.state.closed && r.state.board.pages.at(-1)?.title === 'Summary: talking about the past' && /Today you used four ways/.test(r.spoken) && !/Shall we go on/.test(r.spoken) && !r.toolCalls.some((c) => /not opened yet/.test(c.outcome)) && r.toolCalls.some((c) => c.name === 'end_lesson' && c.outcome === 'the session is ending'), [r.toolCalls.map((c) => `${c.name} ${c.outcome}`), r.spoken]);
     check('…and what was streamed is the summary, with no offer in it', /Goodbye, Aya!/.test(streamed) && !/Shall we go on/.test(streamed), streamed);
-    const { r: r2, streamed: s2 } = await run(showcaseSession, 16.13, notClosing(T77));
-    check('the same reply without end_lesson in the last fifth: the page is held, as before, with the offer', !r2.state.closed && r2.state.board.pages.length === 6 && /Next is summary: talking about the past\. Shall we go on/.test(r2.spoken) && /Shall we go on/.test(s2) && !/Today you used/.test(s2), [r2.spoken, s2]);
+    const { r: r2, streamed: s2 } = await run(lateSession, LATE, notClosing(T77));
+    check('the same reply without end_lesson in the last two minutes: the page is held, as before, with the offer', !r2.state.closed && r2.state.board.pages.length === 6 && /Next is summary: talking about the past\. Shall we go on/.test(r2.spoken) && /Shall we go on/.test(s2) && !/Today you used/.test(s2), [r2.spoken, s2]);
     const { r: r3 } = await run(showcaseSession, 10, closing(T77));
     check('10 min left: end_lesson is refused for time, and the page is held as before', !r3.state.closed && r3.state.board.pages.length === 6 && /Shall we go on/.test(r3.spoken), [r3.toolCalls.map((c) => `${c.name} ${c.outcome}`), r3.spoken]);
     const { r: r4 } = await run({ ...showcaseSession, timeBoxMinutes: undefined, wrapMinutes: undefined }, 16.13, closing(T77));
@@ -168,17 +173,17 @@ async function main() {
       return { id: 'm', type: 'message', role: 'assistant', model: 'x', content: [{ type: 'text', text: t }], stop_reason: 'end_turn', stop_sequence: null, usage } as unknown as Anthropic.Message;
     }; };
     const MID = '<board page>Irregular verbs</board>Now pick the right tense in each sentence. First one: I ___ to Osaka last week.';
-    const rMid = await runV2Turn({ session: showcaseSession, state: showcase(), studentSaid: 'Yes, thank you. That is very clear now.', callModel: tracked(MID), onText: (t) => { if (/Shall we go on/.test(t)) order.push('offer streamed'); }, onToolCall: (c) => { if (/not opened yet/.test(c.outcome)) order.push('held'); }, boardPass: false, mathsCheck: false, nowMs: 16.13 * MIN });
-    check('the last fifth, a page that is not the summary: held at once, the offer streamed while the model still writes, as before', JSON.stringify(order) === JSON.stringify(['offer streamed', 'held', 'model done']) && /Next is irregular verbs\. Shall we go on/.test(rMid.spoken), [order, rMid.spoken]);
+    const rMid = await runV2Turn({ session: lateSession, state: showcase(), studentSaid: 'Yes, thank you. That is very clear now.', callModel: tracked(MID), onText: (t) => { if (/Shall we go on/.test(t)) order.push('offer streamed'); }, onToolCall: (c) => { if (/not opened yet/.test(c.outcome)) order.push('held'); }, boardPass: false, mathsCheck: false, nowMs: LATE * MIN });
+    check('the last two minutes, a page that is not the summary: held at once, the offer streamed while the model still writes, as before', JSON.stringify(order) === JSON.stringify(['offer streamed', 'held', 'model done']) && /Next is irregular verbs\. Shall we go on/.test(rMid.spoken), [order, rMid.spoken]);
     order.length = 0;
-    await runV2Turn({ session: showcaseSession, state: showcase(), studentSaid: 'Yes, thank you. That is very clear now.', callModel: tracked(T77), onText: (t) => { if (/Shall we go on/.test(t)) order.push('offer streamed'); }, onToolCall: (c) => { if (/not opened yet/.test(c.outcome)) order.push('held'); }, boardPass: false, mathsCheck: false, nowMs: 16.13 * MIN });
+    await runV2Turn({ session: lateSession, state: showcase(), studentSaid: 'Yes, thank you. That is very clear now.', callModel: tracked(T77), onText: (t) => { if (/Shall we go on/.test(t)) order.push('offer streamed'); }, onToolCall: (c) => { if (/not opened yet/.test(c.outcome)) order.push('held'); }, boardPass: false, mathsCheck: false, nowMs: LATE * MIN });
     check('…a summary page without end_lesson waits for the reply to end, then is held', JSON.stringify(order) === JSON.stringify(['model done', 'offer streamed', 'held']), order);
     // A plan whose last part is not called a summary: its page closes the lesson too.
     const NEXT = { ...PLAN, segments: [...PLAN.segments.slice(0, -1), { id: 'next-steps', kind: 'recap', goal: 'Next steps', estimatedMinutes: 2, metadata: { label: 'Your next steps' } }] } as unknown as LessonPlan;
-    const { r: rNext } = await run({ ...showcaseSession, plan: NEXT }, 16.13, closing('<board page>Your next steps</board>You worked well today. Goodbye, Aya!'));
+    const { r: rNext } = await run({ ...lateSession, plan: NEXT }, LATE, closing('<board page>Your next steps</board>You worked well today. Goodbye, Aya!'));
     check('the plan\'s last part, by its name, is a closing page: opened with the close', rNext.state.closed && rNext.state.board.pages.at(-1)?.title === 'Your next steps' && !/Shall we go on/.test(rNext.spoken), [rNext.toolCalls.map((c) => `${c.name} ${c.outcome}`), rNext.spoken]);
-    const { r: rOther } = await run(showcaseSession, 16.13, closing('<board page>Irregular verbs</board>One more set. Goodbye!'));
-    check('a non-closing page with end_lesson in the last fifth: held at once, and the end_lesson refused (no close on an unanswered offer)', !rOther.state.closed && /Shall we go on/.test(rOther.spoken) && rOther.toolCalls.some((c) => c.name === 'end_lesson' && /^not ended/.test(c.outcome)), [rOther.toolCalls.map((c) => `${c.name} ${c.outcome}`), rOther.spoken]);
+    const { r: rOther } = await run(lateSession, LATE, closing('<board page>Irregular verbs</board>One more set. Goodbye!'));
+    check('a non-closing page with end_lesson in the last two minutes: held at once, and the end_lesson refused (no close on an unanswered offer)', !rOther.state.closed && /Shall we go on/.test(rOther.spoken) && rOther.toolCalls.some((c) => c.name === 'end_lesson' && /^not ended/.test(c.outcome)), [rOther.toolCalls.map((c) => `${c.name} ${c.outcome}`), rOther.spoken]);
   }
 
   console.log('the stop at the box');
