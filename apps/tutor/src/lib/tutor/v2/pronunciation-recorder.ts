@@ -24,6 +24,9 @@ const ASSESS_TIMEOUT_MS = 15000;
 /** Task 8g (PRON_ONSET_GRACE): an onset heard while the tutor's voice plays is their attempt when the voice ends within this long after it
  *  (the model sentence was at its end). The capture's pre-roll (CLIP_PRE_ROLL_MS, longer than this) holds the onset. */
 export const V2_PRON_ONSET_GRACE_MS = 500;
+/** Task 8g fix round 1 (I3): a capture opened at the voice's end is kept only if their speech is still going this long after the end; a
+ *  stop sooner is the tail of the tutor's own voice (an echo), and the clip is dropped unsent, the arm kept. */
+export const V2_PRON_ONSET_CONFIRM_MS = 400;
 
 export class V2PronunciationRecorder {
   private readonly capture = new ClipCapture({ maxMs: CLIP_MAX_MS, sampleRate: CLIP_SAMPLE_RATE, preRollMs: CLIP_PRE_ROLL_MS, minMs: CLIP_MIN_MS });
@@ -33,6 +36,9 @@ export class V2PronunciationRecorder {
   private ready: V2PronunciationHeard | null = null;
   /** Task 8g: when an onset was heard over the tutor's voice and their speech has not stopped since (null: none). */
   private onsetOverVoiceAt: number | null = null;
+  /** Task 8g fix round 1 (I3): a capture opened at the voice's end is provisional until this time (null: none). */
+  private provisionalUntil: number | null = null;
+  private reference = '';
   private readonly fetchImpl: typeof fetch;
   private readonly now: () => number;
   private readonly log: (type: string, message: string) => void;
@@ -48,7 +54,7 @@ export class V2PronunciationRecorder {
     if (seq === this.seq && this.capture.isArmed()) return;
     // A new arm starts a new clip: ClipCapture keeps buffered audio across a re-arm, which here belongs to the old item.
     this.capture.disarm();
-    this.onsetOverVoiceAt = null;
+    this.onsetOverVoiceAt = null; this.provisionalUntil = null; this.reference = reference;
     this.capture.arm(reference);
     this.seq = seq; this.armedAt = this.now();
     this.log('pronunciation_armed', `#${seq} "${reference.slice(0, 80)}" (v2)`);
@@ -71,7 +77,8 @@ export class V2PronunciationRecorder {
     // v1: an onset while the model line plays is its echo, not the repeat; the capture stays armed for the real one.
     if (tutorSpeaking) {
       this.log('pronunciation_start_ignored_tutor_speaking', `#${this.seq} (v2)`);
-      if (this.opts.onsetGrace ?? TUTOR_V2_PRON_ONSET_GRACE) this.onsetOverVoiceAt = this.now();
+      // Fix round 1 (I3): the earliest onset is kept (a recogniser that fires start again does not move it later).
+      if ((this.opts.onsetGrace ?? TUTOR_V2_PRON_ONSET_GRACE) && this.onsetOverVoiceAt === null) this.onsetOverVoiceAt = this.now();
       return;
     }
     this.onsetOverVoiceAt = null;
@@ -81,19 +88,32 @@ export class V2PronunciationRecorder {
   /** Task 8g (PRON_ONSET_GRACE; mic test 11, embed-1795220913119 16:52.59: he began about 50 ms before the voice ended and the attempt was
    *  never recorded): the tutor's voice has finished playing. An onset heard over it within V2_PRON_ONSET_GRACE_MS before now, their speech
    *  still going (no stop since), is their attempt: the capture opens now, its pre-roll holding the onset. An onset earlier in the
-   *  sentence is left as before (an echo, or speech over the tutor): the capture waits for a new onset. */
-  tutorVoiceEnded(): void {
+   *  sentence is left as before (an echo, or speech over the tutor): the capture waits for a new onset.
+   *  Fix round 1 (I3): `final`: the reply has finished (its last sentence played), not a drain between streamed sentences of the same
+   *  reply, which changes nothing. The capture opened here is provisional: kept only if their speech is still going
+   *  V2_PRON_ONSET_CONFIRM_MS after the end (speechStop). */
+  tutorVoiceEnded(final: boolean = true): void {
+    if (!final) return;
     const at = this.onsetOverVoiceAt; this.onsetOverVoiceAt = null;
     if (at === null || !(this.opts.onsetGrace ?? TUTOR_V2_PRON_ONSET_GRACE) || !this.capture.isArmed() || this.capture.isCapturing()) return;
     const after = this.now() - at;
     if (after > V2_PRON_ONSET_GRACE_MS) return;
     this.capture.onSpeechStart();
+    this.provisionalUntil = this.now() + V2_PRON_ONSET_CONFIRM_MS;
     this.log('pronunciation_start_at_voice_end', `#${this.seq} onset ${after} ms before the voice ended (v2)`);
   }
 
   /** The recogniser's speech stop (Ink's eager end): the clip, when one is open, is sent. */
   speechStop(): void {
     this.onsetOverVoiceAt = null;
+    const provisional = this.provisionalUntil; this.provisionalUntil = null;
+    // Fix round 1 (I3): their speech stopped within V2_PRON_ONSET_CONFIRM_MS of the voice's end: the tail of the tutor's voice. The clip
+    // is dropped unsent; the arm stays for their real attempt (a fresh capture: its pre-roll held the tutor's voice).
+    if (provisional !== null && this.now() < provisional && this.capture.isCapturing()) {
+      this.capture.disarm(); this.capture.arm(this.reference);
+      this.log('pronunciation_voice_end_echo_dropped', `#${this.seq} speech stopped within ${V2_PRON_ONSET_CONFIRM_MS} ms of the voice end (v2)`);
+      return;
+    }
     const clip = this.capture.onSpeechStop();
     if (clip) this.send(clip);
   }

@@ -8,15 +8,15 @@
  *  - its board as the row's `whiteboardCommands`: each sentence card (`showSentence`, `data.sentence`, `data.emphasis` = the marks of a
  *    correction) with `sourceMessageIndex`, the transcript index of the tutor reply that wrote it; pages (`newPage`, `data.title`);
  *  - its transcript (role / text).
- * So everything the summary needs is on the row at session end: nothing new is stored. The corrections are the marked cards, each with
- * the sentence of theirs (in the student lines just before the reply) it reworks by the one correction test (sentence-cards.ts
- * v2IsCorrectionOf, stems alike for a marked card): the same pairing the 7w record makes during the lesson. Cards on a closing page
- * (the summary recaps) are no correction of the line before them. The sentences they said right are those the tutor carded as said,
- * with no word marked. Pure.
+ * So everything the summary needs is on the row at session end: nothing new is stored. The corrections are the sentence cards (marked or
+ * not) that rework a sentence of theirs in the student lines just before the reply, by the one correction test (sentence-cards.ts
+ * v2IsCorrectionOf, stems alike for a marked card): the same pairing the 7w record makes during the lesson; a card that pairs with none
+ * is left out. Cards on a closing page (the summary recaps) are no correction of the line before them. The sentences they said right
+ * are those the tutor carded exactly as said, with no word marked. Pure.
  */
 import { V2_CLOSING_PAGE } from '../v2/part-close';
 import { v2CorrectionStems, v2CorrectionWords, v2IsCorrectionOf } from '../v2/sentence-cards';
-import { v2CardIsAsSaid, v2CardIsOf, v2CardSentence } from '../v2/learner-card';
+import { v2CardIsAsSaid } from '../v2/learner-card';
 
 export type V2SummaryInput = {
   transcript: Array<{ role: string; text: string }>;
@@ -68,7 +68,7 @@ export function v2PronunciationArmedCount(events: ReadonlyArray<{ type: string; 
   return texts.size;
 }
 
-type Card = { sentence: string; marked: boolean; stems: boolean; marks: unknown; at: number };
+type Card = { sentence: string; marked: boolean; stems: boolean; at: number };
 
 /** The row's sentence cards with the transcript index of the reply that wrote each, closing pages' cards left out. */
 function cardsOf(commands: ReadonlyArray<Record<string, unknown>>): Card[] {
@@ -81,7 +81,7 @@ function cardsOf(commands: ReadonlyArray<Record<string, unknown>>): Card[] {
     const at = indexOf(c.sourceMessageIndex);
     if (at < 0) continue;
     const marked = Array.isArray(data.emphasis) && data.emphasis.some((w) => typeof w === 'string' && w.trim());
-    out.push({ sentence: clean(data.sentence), marked, stems: v2CorrectionStems(data.emphasis), marks: data.emphasis, at });
+    out.push({ sentence: clean(data.sentence), marked, stems: v2CorrectionStems(data.emphasis), at });
   }
   return out;
 }
@@ -92,16 +92,9 @@ function answerBefore(transcript: V2SummaryInput['transcript'], at: number): str
   for (let k = Math.min(at, transcript.length) - 1; k >= 0 && isStudent(transcript[k]!.role); k -= 1) lines.unshift(String(transcript[k]!.text ?? ''));
   return clean(lines.join(' ')).split(SPLIT).map((x) => x.trim()).filter(Boolean);
 }
-/** The student lines right after the tutor line at `at`. A card painted early in a reply can carry the index of the tutor line before
- *  (embed-1795220913119: WB37, the correction of T56 written in T57, has sourceMessageIndex 55). */
-function answerAfter(transcript: V2SummaryInput['transcript'], at: number): string[] {
-  const lines: string[] = [];
-  for (let k = at + 1; k < transcript.length && isStudent(transcript[k]!.role); k += 1) lines.push(String(transcript[k]!.text ?? ''));
-  return clean(lines.join(' ')).split(SPLIT).map((x) => x.trim()).filter(Boolean);
-}
-
-/** The sentence of theirs a marked card reworks: the one the correction test pairs it with sharing the most words, else the one it
- *  belongs to (learner-card.ts v2CardSentence, as the practice pairing reads it) when it is not that sentence as said; or null. */
+/** The sentence of theirs a card reworks by the one correction test (sentence-cards.ts v2IsCorrectionOf, stems alike only for a
+ *  marked card, as the engine reads it): of those it pairs with, the one sharing the most words; or null. Fix round 1 (I2): never paired
+ *  without the test. */
 function saidFor(card: Card, sentences: readonly string[]): string | null {
   const cardWords = new Set(key(card.sentence).split(' '));
   let best: string | null = null; let bestN = -1;
@@ -110,38 +103,38 @@ function saidFor(card: Card, sentences: readonly string[]): string | null {
     const n = key(s).split(' ').filter((w) => cardWords.has(w)).length;
     if (n > bestN) { best = s; bestN = n; }
   }
-  if (best) return best;
-  const k = v2CardSentence(card.sentence, sentences, card.marks);
-  return k >= 0 && !v2CardIsAsSaid(card.sentence, sentences[k]!) ? sentences[k]! : null;
+  return best;
 }
 
-/** The lesson's corrections, what they said → the corrected sentence, in lesson order, one per sentence of theirs (its last card). */
+/** The lesson's corrections, what they said → the corrected sentence, in lesson order, one per sentence of theirs (its last card).
+ *  Fix round 1 (I1): a card is a correction by the test, marked or not ("He buy it." → an unmarked "He bought it." is one). Fix round 1
+ *  (I2): only the student lines right before the reply that wrote it are read; a card that pairs with none of them is left out. */
 export function v2CorrectionsFromRow(input: V2SummaryInput, max: number): Array<{ student: string; corrected: string }> {
   const transcript = input.transcript ?? [];
   const bySaid = new Map<string, { student: string; corrected: string }>();
   for (const card of cardsOf(input.whiteboardCommands ?? [])) {
-    if (!card.marked) continue;
-    const said = saidFor(card, answerBefore(transcript, card.at)) ?? saidFor(card, answerAfter(transcript, card.at));
+    const said = saidFor(card, answerBefore(transcript, card.at));
     // A second card for the same sentence of theirs (a shorter one, then the whole) replaces the first, in its place.
     if (said) bySaid.set(key(said), { student: clean(said), corrected: card.sentence });
   }
   return [...bySaid.values()].slice(0, max);
 }
 
-/** The sentences they said right: those the tutor carded as they said them with no word marked (an as-said card, learner-card.ts
- *  v2CardIsAsSaid / v2CardIsOf and no correction), never one a correction reworks. A sentence the tutor did not correct is not taken
- *  as right on that alone (the level check corrects nothing). The last `max`, once each, as carded. */
+/** The sentences they said right: an unmarked card that IS a sentence of theirs as they said it (learner-card.ts v2CardIsAsSaid:
+ *  numbers as words, fillers, case and punctuation aside), in the student lines right before the reply that wrote it, and never one a
+ *  correction reworks or a corrected sentence (fix round 1, I1). A sentence the tutor did not correct is not taken as right on that
+ *  alone (the level check corrects nothing). The last `max`, once each, as carded. */
 export function v2SentencesSaidRight(input: V2SummaryInput, max: number): string[] {
   const transcript = input.transcript ?? [];
-  const correctedSaid = new Set(v2CorrectionsFromRow(input, Number.MAX_SAFE_INTEGER).map((c) => key(c.student)));
-  const corrected = new Set(v2CorrectionsFromRow(input, Number.MAX_SAFE_INTEGER).map((c) => key(c.corrected)));
+  const corrections = v2CorrectionsFromRow(input, Number.MAX_SAFE_INTEGER);
+  const correctedSaid = new Set(corrections.map((c) => key(c.student)));
+  const corrected = new Set(corrections.map((c) => key(c.corrected)));
   const out: string[] = []; const seen = new Set<string>();
   for (const card of cardsOf(input.whiteboardCommands ?? [])) {
     if (card.marked) continue;
     const k = key(card.sentence);
     if (!k || seen.has(k) || corrected.has(k)) continue;
-    const theirs = [...answerBefore(transcript, card.at), ...answerAfter(transcript, card.at)];
-    const of = theirs.find((x) => v2CardIsAsSaid(card.sentence, x) || (v2CardIsOf(card.sentence, x) && !v2IsCorrectionOf(card.sentence, x, undefined, card.stems)));
+    const of = answerBefore(transcript, card.at).find((x) => v2CardIsAsSaid(card.sentence, x));
     if (!of || correctedSaid.has(key(of))) continue;
     seen.add(k); out.push(card.sentence);
   }

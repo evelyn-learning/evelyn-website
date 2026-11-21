@@ -1029,6 +1029,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         if (!o.painted) { if (page && was) page.items.push(was); replaces = undefined; }
         // A card that reworks what the student just said is one of their corrected sentences (the summary's cards), also
         // when the board pointed it at a longer card or note already holding it (review 4c M3): the correction was made.
+        // Task 8g fix round 1 (I4): left as before, unlike the pairing and the 7w record: the list guards the summary's "What went well"
+        // and the owed-card checks, and a sentence corrected by pointing at an earlier turn's longer card holding it (4c M3) must stay in it.
         if ((o.painted || o.pointAt) && block.name === 'show_sentence') v2NoteCorrectedSentence(session, state, args.sentence, input.studentSaid, args.emphasis);
         // Task 7w (SUMMARY_MARKS): …with what they said and the words it changed (summary-marks.ts).
         // Task 8g (PAIR_PAINTED_ONLY): not for a card of an earlier turn pointed back at.

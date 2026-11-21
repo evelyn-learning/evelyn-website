@@ -56,7 +56,7 @@ const goalsThrough = (n: number) => Object.fromEntries(ids.slice(0, n).map((id) 
 const base = (extra: Partial<V2State>): V2State => ({ ...newV2State(0), workingLevel: { level: 'beginner', from: 'this_lesson' }, timeFit: { dropped: [], byArrival: true }, ...extra });
 async function turn(state: V2State, said: string, reply: string, atMin: number) {
   const r = await runV2Turn({ session: lang, state: structuredClone(state), studentSaid: said, callModel: scripted([reply, '1: none\n2: none\n3: none (nothing to draw)']), boardPass: false, mathsCheck: false, nowMs: atMin * MIN });
-  return { events: (r.events ?? []).map((e) => `${e.type} ${e.message}`), retests: r.state.retests ?? [], corrections: r.state.corrections ?? [], calls: r.toolCalls.map((c) => `${c.name}: ${c.outcome}`) };
+  return { events: (r.events ?? []).map((e) => `${e.type} ${e.message}`), retests: r.state.retests ?? [], corrections: r.state.corrections ?? [], corrected: r.state.correctedSentences ?? [], calls: r.toolCalls.map((c) => `${c.name}: ${c.outcome}`) };
 }
 
 const offFlag = CHILD ?? '';
@@ -84,8 +84,9 @@ async function summary() {
     check('corrections: T13 once, with the whole card WB11', all.filter((c) => c.student === 'I work at home appliance division at Nagoya Corporation.').map((c) => c.corrected).join('|') === 'I work in the home appliance division at Nagoya Corporation.', all);
     check('corrections: the Summary page card WB66 is no correction of the pronunciation attempt T86', !all.some((c) => c.corrected === 'I have worked here for six years.'), all);
     check('corrections: unmarked as-said cards (WB48, WB54, WB57) are none', !all.some((c) => /meeting new people|came back to thank|His wife likes it/.test(c.corrected)), all);
-    // The investigation counted 22 wrong sentences (20 recorded live, T29 and T70's "He buy it." not): all 22, each a genuine correction.
-    check('corrections: all 22 of the lesson listed for the prompt, the first 6 stored', all.length === 22 && facts.corrections.length === 6 && s.assessment.corrections.length === 6, { n: all.length, stored: facts.corrections });
+    // The investigation counted 22 wrong sentences (20 recorded live, T29 and T70's "He buy it." not). Fix round 1 (I2): 21 pair by the
+    // correction test; WB37 (T56 "the most about my job…" → "The best part of my job…") reworks too much to pass it and is left out.
+    check('corrections: the 21 that pass the correction test listed for the prompt, the first 6 stored', all.length === 21 && facts.corrections.length === 6 && s.assessment.corrections.length === 6, { n: all.length, stored: facts.corrections });
     check('prompt lists "He buy it." -> "He bought it."', prompt.includes('- "He buy it." -> "He bought it."'), prompt);
     const right = facts.v2?.saidRight ?? [];
     check('"He bought it" / "He buy it" not among the sentences said right', !right.some((x) => /\bhe (?:bought|buy) it\b/i.test(x)), right);
@@ -94,6 +95,22 @@ async function summary() {
     check('sentences said right listed, with the rule', right.length > 0 && prompt.includes('Sentences they said right (no correction needed):') && prompt.includes('Call a sentence of theirs correct only if it is listed'), { right, prompt });
   } else {
     check('switch off: as at HEAD (no score, two sentences armed, no corrections)', facts.pronunciation.length === 0 && facts.pronunciationArmed === 2 && facts.corrections.length === 0 && !facts.v2 && !prompt.includes('Sentences they said right'), facts);
+  }
+  if (on('TUTOR_V2_LEARNER_SUMMARY')) {
+    // Fix round 1 (I1, I2): synthetic v2 rows.
+    const row = (transcript: Array<{ role: string; text: string }>, cards: Array<[string, string[] | undefined, number]>): SessionFactsInput => ({
+      subject: 'languages', topic: 'x', duration: 600, tutorLanguages: ['en', 'ja'], transcript,
+      whiteboardCommands: cards.map(([sentence, emphasis, at]) => ({ action: 'showSentence', data: { sentence, ...(emphasis ? { emphasis } : {}) }, sourceMessageIndex: at })),
+      debugEvents: [{ type: 'start_v2', message: 'tutor opens (voice)' }],
+    });
+    const unmarked = buildSessionFacts(row([{ role: 'tutor', text: 'What did he do?' }, { role: 'student', text: 'He buy it.' }, { role: 'tutor', text: 'He bought it. What else?' }], [['He bought it.', undefined, 2]]), null);
+    check('I1: an UNMARKED correction card ("He buy it." → "He bought it.") is a correction', JSON.stringify(unmarked.v2?.corrections) === JSON.stringify([{ student: 'He buy it.', corrected: 'He bought it.' }]), unmarked.v2);
+    check('I1: …and never said right', !(unmarked.v2?.saidRight ?? []).some((x) => /bought|buy/i.test(x)), unmarked.v2);
+    const asSaid = buildSessionFacts(row([{ role: 'tutor', text: 'Why?' }, { role: 'student', text: 'Uh, I like meeting new people.' }, { role: 'tutor', text: 'Nice.' }], [['I like meeting new people.', undefined, 2]]), null);
+    check('I1: an unmarked card equal to what they said is said right', JSON.stringify(asSaid.v2?.saidRight) === JSON.stringify(['I like meeting new people.']) && asSaid.v2?.corrections.length === 0, asSaid.v2);
+    const repeat = buildSessionFacts(row([{ role: 'tutor', text: 'Ready?' }, { role: 'student', text: 'Yes.' }, { role: 'tutor', text: 'Say this after me.' }, { role: 'student', text: 'I work here six years.' }, { role: 'tutor', text: 'Good.' }],
+      [['I have worked here for six years.', ['have', 'worked', 'for'], 2]]), null);
+    check('I2: a marked model card followed by their imperfect repeat is no correction of that repeat', (repeat.v2?.corrections ?? []).length === 0, repeat.v2);
   }
   // A v1 session (no start_v2): the same facts and prompt with the switch on and off, and its row board ignored.
   const v1: SessionFactsInput = {
@@ -120,31 +137,36 @@ async function summary() {
 async function onset() {
   console.log('2 PRON_ONSET_GRACE (16:52.59: onset about 50 ms before the voice ended)');
   const REF = 'I have worked with international customers for several years.';
-  const run = (onsetBeforeEndMs: number, stopFirst = false) => {
+  /** Frames of 20 ms; `script`: the speech starts over the voice, then the events in order. */
+  const run = (steps: Array<['frames', number] | ['start'] | ['stop'] | ['drain', boolean]>) => {
     let t = 1000; const log: string[] = []; let posted = 0;
     const fetchImpl = (async () => { posted += 1; return { ok: true, status: 200, json: async () => ({ status: 'measured', overall: 84 }) }; }) as unknown as typeof fetch;
     const rec = new V2PronunciationRecorder({ sessionId: 's', now: () => t, fetchImpl, log: (type, m) => log.push(`${type} ${m}`) });
     const frame = (ms: number) => { for (let k = 0; k < ms / 20; k += 1) { rec.frame(new Float32Array(480).fill(0.2)); t += 20; } };
     rec.arm(2, REF);
     frame(1000);
-    rec.speechStart(true);
-    if (stopFirst) { frame(100); rec.speechStop(); }
-    frame(onsetBeforeEndMs);
-    rec.tutorVoiceEnded();
-    frame(3000);
-    rec.speechStop();
-    return { log, posted };
+    for (const st of steps) {
+      if (st[0] === 'frames') frame(st[1]); else if (st[0] === 'start') rec.speechStart(true); else if (st[0] === 'stop') rec.speechStop(); else rec.tutorVoiceEnded(st[1]);
+    }
+    return { log, posted, sent: log.some((x) => x.startsWith('pronunciation_clip_sent')), opened: log.some((x) => x.startsWith('pronunciation_start_at_voice_end')) };
   };
-  const at50 = run(50);
-  const mid = run(2000);
-  const echo = run(300, true);
+  // The session: he began about 50 ms before the reply's last sentence ended and kept speaking.
+  const at50 = run([['start'], ['frames', 60], ['drain', true], ['frames', 3000], ['stop']]);
+  const mid = run([['start'], ['frames', 2000], ['drain', true], ['frames', 3000], ['stop']]);
+  const stoppedFirst = run([['start'], ['frames', 100], ['stop'], ['frames', 200], ['drain', true], ['frames', 3000], ['stop']]);
+  const tailEcho = run([['start'], ['frames', 60], ['drain', true], ['frames', 200], ['stop']]);
+  const midReply = run([['start'], ['frames', 60], ['drain', false], ['frames', 3000], ['stop']]);
+  const earliest = run([['start'], ['frames', 1500], ['start'], ['frames', 60], ['drain', true], ['frames', 3000], ['stop']]);
   if (on('NEXT_PUBLIC_TUTOR_V2_PRON_ONSET_GRACE')) {
-    check('onset 50 ms before the voice end: recorded, the clip sent', at50.log.some((x) => x.startsWith('pronunciation_start_at_voice_end #2')) && at50.log.some((x) => x.startsWith('pronunciation_clip_sent #2')) && at50.posted === 1, at50.log);
+    check('the session: onset ~50 ms before the final drain, speech going on: recorded, the clip sent', at50.opened && at50.sent && at50.posted === 1, at50.log);
+    check('I3: a tail echo that stops within 400 ms of the final drain: nothing sent, the arm kept', tailEcho.opened && !tailEcho.sent && tailEcho.log.some((x) => x.startsWith('pronunciation_voice_end_echo_dropped #2')), tailEcho.log);
   } else {
-    check('switch off: the 50 ms onset is not recorded (as at HEAD)', !at50.log.some((x) => x.startsWith('pronunciation_clip_sent')) && at50.posted === 0, at50.log);
+    check('switch off: the 50 ms onset is not recorded (as at HEAD)', !at50.sent && at50.posted === 0, at50.log);
   }
-  check('onset mid-sentence (2 s before the end): not recorded', !mid.log.some((x) => x.startsWith('pronunciation_clip_sent')) && mid.log.some((x) => x.startsWith('pronunciation_start_ignored_tutor_speaking')), mid.log);
-  check('speech stopped before the voice ended (an echo): not recorded', !echo.log.some((x) => x.startsWith('pronunciation_clip_sent') || x.startsWith('pronunciation_start_at_voice_end')), echo.log);
+  check('I3: a drain between streamed sentences of the reply opens nothing', !midReply.opened && !midReply.sent, midReply.log);
+  check('I3: the earliest onset is kept (a later start does not move it into the grace)', !earliest.opened && !earliest.sent, earliest.log);
+  check('onset mid-sentence (2 s before the end): not recorded', !mid.sent && mid.log.some((x) => x.startsWith('pronunciation_start_ignored_tutor_speaking')), mid.log);
+  check('speech stopped before the voice ended (an echo): not recorded', !stoppedFirst.sent && !stoppedFirst.opened, stoppedFirst.log);
 }
 
 // ── 3 PAIR_PAINTED_ONLY: T53 → T54 → T55 (Conversation) ──
@@ -170,6 +192,8 @@ async function t54() {
     check('no correction scored: no wrong signal', !r.events.some((e) => e.startsWith('v2_practice_signal wrong')), r.events);
     check('the "attended" re-test kept, none replaced', !r.events.some((e) => e.startsWith('v2_retest_replaced')) && r.retests.some((x) => x.target.join() === 'attended'), { events: r.events, retests: r.retests });
     check('the 7w record of WB34 keeps what they said at T52', r.corrections.find((c) => c.sentence === WB34)?.said === 'Um, I work Nagoya Corporation uh 7 year.', r.corrections);
+    // Fix round 1 (I4): v2NoteCorrectedSentence is left as before (4c M3, test-brain-v2-sentence-cards): the sentence stays listed.
+    check('I4: the corrected-sentences list unchanged by the pointed-back card', JSON.stringify(r.corrected) === JSON.stringify([WB34]), r.corrected);
   } else {
     check('switch off: scored wrong and "attended" replaced (as at HEAD)', r.events.some((e) => e.startsWith('v2_practice_signal wrong')) && r.events.some((e) => e.startsWith('v2_retest_replaced target="attended"')), r.events);
   }
@@ -193,6 +217,14 @@ async function t29() {
     check('a practice signal: wrong', r.events.some((e) => e.startsWith('v2_practice_signal wrong part=present-perfect')), r.events);
     check('the re-test recorded', r.events.some((e) => e.startsWith('v2_retest_recorded')) && r.retests.some((x) => x.right === WB21), r.events);
     check('the correction recorded (7w)', r.corrections.some((c) => c.sentence === WB21 && /6 year/.test(c.said)), r.corrections);
+    // Fix round 1 (I5): a question card holding a part ask, or a choice among options, with an unrelated spoken tail.
+    for (const [label, cardQ] of [['a part ask', 'Do you want to go on to the past simple, or do you have a question first?'], ['a three-choice menu', 'Would you like to practise words, a sentence, or speaking more naturally?']] as const) {
+      const st = structuredClone(state);
+      st.board.pages[3]!.items.push({ id: `q_${label.length}`, tool: 'show_problem', summary: `Question — ${cardQ}` });
+      st.history[st.history.length - 1] = a(`いいですね。\n\n<board problem>${cardQ}</board>`);
+      const x = await turn(st, 'I have been a sales manager for 6 year.', reply, 6.3);
+      check(`I5: a question card holding ${label} does not make the next line a practice answer`, !x.events.some((e) => e.startsWith('v2_practice_signal')), x.events);
+    }
   } else {
     check('switch off: no practice signal, nothing recorded (as at HEAD)', !r.events.some((e) => e.startsWith('v2_practice_signal')) && !r.events.some((e) => e.startsWith('v2_retest_recorded')), r.events);
   }

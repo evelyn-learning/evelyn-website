@@ -129,7 +129,7 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // clip sent and then nothing: the no_vendor answer was logged and dropped by this list.
   'pronunciation_scored', 'pronunciation_failed', 'pronunciation_disarmed',
   // Task 8g (PRON_ONSET_GRACE): an attempt begun just before the tutor's voice ended, recorded.
-  'pronunciation_start_at_voice_end',
+  'pronunciation_start_at_voice_end', 'pronunciation_voice_end_echo_dropped',
   // Fix waves 9–10 (W9-B3 rearm, 23 §G2 redelivery, W10-3c re-plant): the next trial dump must show them.
   'pronunciation_rearmed', 'pronunciation_note_redelivered', 'pronunciation_note_replanted',
   'recap_sentences_boarded', 'pronunciation_note_dropped_menu_pick',

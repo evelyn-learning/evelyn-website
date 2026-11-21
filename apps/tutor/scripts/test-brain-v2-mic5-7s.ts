@@ -5,8 +5,6 @@
  * real turns (the session record's transcript and whiteboard commands, quoted in task-7r-investigation.md B, D, E, F, G).
  * No network, no model, nothing to the speech vendor.
  *   npm run test:brain-v2-mic5-7s
- *   (run with NEXT_PUBLIC_TUTOR_V2_ASK_QUESTION_CARD=off, Task 8g: item 1's "live record" check pins the ask read without the stored
- *   question; 8g also reads it from the question card. Run with it on, only that regression-record check differs.)
  *
  *  1 QUESTION_ONCE fix    a card question the runtime speaks is stored after its card, once: the six corrected answers after a
  *                         question (#6, #16, #20, #31, #50, #56) each give a v2_practice_signal through runV2Turn
@@ -18,6 +16,7 @@
  *  6 small                header timers leave out flag time; "I am proud of." is not carded; #64 reported
  *  each switch off alone (a child process per switch): the behaviour at dcdf5430 for that item.
  */
+import { TUTOR_V2_ASK_QUESTION_CARD } from '../src/lib/tutor/orchestrator/flags';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -229,7 +228,9 @@ async function main() {
   }
   check('all 6 corrected answers counted', on.item1.every((x) => x.signal.some((s) => /^wrong /.test(s))));
   const blind = on.item1.filter((x) => !x.own && x.sentencesBefore === 0).map((x) => x.k);
-  check('without the stored question (the live record), the 5 runtime-asked answers give no practice sentences (the regression)', blind.length === 5 && on.item1.filter((x) => !x.own).every((x) => x.sentencesNow > 0), on.item1.map((x) => [x.k, x.sentencesBefore, x.sentencesNow]));
+  // Task 8g fix round 1 (M2): with ASK_QUESTION_CARD on (default), 4 of the 5 are read from their question card even without the stored
+  // question; only #5→#6 stays blind. Off: the 5 of the live record.
+  check('without the stored question (the live record), the runtime-asked answers give no practice sentences (the regression; 8g reads 4 of them from their card)', (TUTOR_V2_ASK_QUESTION_CARD ? blind.join() === '#5→#6' : blind.length === 5) && on.item1.filter((x) => !x.own).every((x) => x.sentencesNow > 0), on.item1.map((x) => [x.k, x.sentencesBefore, x.sentencesNow]));
 
   console.log('2  PRACTISED_SENTENCE: a sentence they were asked to make or say is practice');
   check('#36 「"Did you enjoy..." で答えてみてください。」 and #59 are asks for a sentence', on.asked36 && on.asked59);

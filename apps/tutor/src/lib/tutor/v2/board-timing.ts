@@ -235,6 +235,11 @@ const ABOUT_SENTENCE = /\b(?:say|repeat|read|try|practi[sc]e|copy)\b[^.?!]*\b(?:
  *  menu asked as "What would you like to practise?" or "Would you like words or a sentence?", which the bare keyword
  *  list missed. */
 const ABOUT_OPTIONS = /\bwhich(?: one| of (?:these|them|those|the \w+))?\s*\?|\bwhich\b(?: one| of (?:these|them|those))?[^.?!]*\b(?:would you|do you|shall|should we|want|like|prefer|choose|pick|start|try)\b|\b(?:choose|pick|select)\b|\b(?:the|a|its) number\b|\boptions?\b|\bwould you (?:like|prefer|rather)\b[^.?!]*\bor\b|\bwhat would you like to (?:practi[sc]e|do|try|work on|start with|focus on)\b|どれ|どちら|番号/i;
+/** Task 8g fix round 1 (I5): a question asking the learner to pick among options (ABOUT_OPTIONS), or one holding a numbered menu of two
+ *  options or more ("1) words, 2) a sentence, 3) …"). Shape only. */
+export function v2AsksToChoose(question: string): boolean {
+  return ABOUT_OPTIONS.test(question) || (question.match(/(?:^|[\s(])\d{1,2}[.)]\s/g) ?? []).length >= 2;
+}
 
 /** In a spoken lesson, a sentence card or a numbered list of options the reply asks the learner to act on must also be
  *  heard (D2, gdi-on-v2 Task 6): "Which one would you like? Just say the number." went with a menu only on the board

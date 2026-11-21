@@ -43,7 +43,8 @@ import { stripBoardBlocks, type InlineBlock, type InlinePart } from './board-inl
 import { v2IsPracticeAsk } from './languages';
 import { v2IsPartAsk, v2PartInHand, v2PartViewed, v2PlanLabelled } from './part-flow';
 import { v2PartOf } from './plan-map';
-import { v2ReplyInvites } from './close-invite';
+import { v2ReplyAsksMoreOrFinish, v2ReplyInvites } from './close-invite';
+import { v2AsksToChoose } from './board-timing';
 import { v2CorrectionStems, v2CorrectionWords, v2IsCorrectionOf, v2SentenceCardsOn, v2SentenceTokens as tokens } from './sentence-cards';
 import { v2WordsShared } from './question-overlap';
 import type { V2Board, V2Session, V2State } from './types';
@@ -431,7 +432,10 @@ function askedForAnswer(state: Pick<V2State, 'history' | 'unheard'> & Partial<Pi
       const last = [...state.history].reverse().find((h) => h.role === 'assistant');
       const said = last ? stripBoardBlocks(textOf(last)).split(/(?<=[.!?。！？]["'”’」)]*)\s+/).map((x) => x.trim()).filter(Boolean) : [];
       const end = said[said.length - 1] ?? '';
-      if (!end || !(v2IsPartAsk(end) || v2ReplyInvites(end))) return true;
+      // Fix round 1 (I5): the card's own question is read by the same tests: a part ask, the close's invitation or its more-or-finish
+      // step, or a choice among options is no ask for a sentence, whatever the spoken tail says.
+      const notPractice = (x: string) => v2IsPartAsk(x) || v2ReplyInvites(x) || v2ReplyAsksMoreOrFinish(x) || v2AsksToChoose(x);
+      if (!notPractice(q) && (!end || !(v2IsPartAsk(end) || v2ReplyInvites(end)))) return true;
     }
   }
   if (!signal) return false;
