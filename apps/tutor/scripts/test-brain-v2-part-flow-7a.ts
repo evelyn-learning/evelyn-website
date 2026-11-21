@@ -73,7 +73,9 @@ async function main() {
   {
     const at376 = { ...newV2State(0), goals: { overview: { status: 'shown' as const, at: 1 }, 'level-check': { status: 'shown' as const, at: 2 }, 'topic-intro': { status: 'shown' as const, at: 3 } }, board: { pages: [{ title: 'Lesson overview', items: [] }, { title: 'Your job', items: [] }], current: 1 }, workingLevel: { level: 'intermediate' as const, from: 'this_lesson' as const } };
     const old = v2Progress(GDI, at376.goals);
-    check('goals only (as before): "Your job" green and "Present perfect" lit at once, the level check grey (flags 2–3)', old.currentSegmentId === 'present-perfect' && old.completedSegmentIds.includes('topic-intro') && !old.completedSegmentIds.includes('level-check'), old);
+    // Task 8e fix round 1 (ruling 4): by goals alone the chips are main's (e1610ef7: a part the lesson was on and has left shows done), so
+    // the level check, marked shown and left, is green too; the fault this task fixed is unchanged ("Your job" green and "Present perfect" lit).
+    check('goals only (main\'s chips): "Your job" green and "Present perfect" lit at once; the level check, left behind, green (flags 2–3)', old.currentSegmentId === 'present-perfect' && old.completedSegmentIds.includes('topic-intro') && old.completedSegmentIds.includes('level-check'), old);
     const now = chips(at376);
     check('now: "Your job" lit (its page is open), not green; the level check green (the level is set)', now.lit === 'topic-intro' && !now.green.includes('topic-intro') && now.green.includes('level-check') && now.green.includes('overview'), now);
     check('kill switch off: as before', JSON.stringify(v2Progress(GDI, at376.goals, at376, false)) === JSON.stringify(old));
