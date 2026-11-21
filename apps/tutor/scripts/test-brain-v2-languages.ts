@@ -58,7 +58,7 @@ async function main() {
     check('no line at the opening, in a discussion, or with the kill switch off', v2OpenerFact(bilingual, newV2State(0)).length === 0 && v2OpenerFact(bilingual, h('Correct.'), false).length === 0 && TUTOR_V2_OPENER_FACT === true);
     check('an English-only maths lesson gets it too (generic)', v2OpenerFact({ ...bilingual, languages: undefined, subject: 'math' }, h('Yes, 8 volts.')).length === 1);
   }
-  check('the constitution: without a persona card the tutor has no job or life story of its own (D4, Task 6c ruling 2)', /Unless this session gives you a persona card, you have no job, projects or life story of your own: if they ask about yours, say so in a few words and turn back to them/.test(V2_CONSTITUTION) && TUTOR_V2_PERSONA_CARD === true);
+  check('the constitution: without a persona card the tutor has no job or life story of its own (D4, Task 6c ruling 2)', /Unless this session gives you a persona card, you have no job, projects or life story of your own: if asked, say so briefly and turn back to them/.test(V2_CONSTITUTION) && TUTOR_V2_PERSONA_CARD === true);
 
   console.log('a practice sentence is right only when fully right (Task 6c, ruling 1)');
   {
