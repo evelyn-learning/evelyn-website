@@ -780,7 +780,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     // The wait chosen when the reply ended (a short one after a reply with no question) still stands once its
     // speech has finished: arming the plain 75 s here threw the short wait away, and a tutor who had stopped
     // without a question sat silent (embed-1794374818774, embed-1794376295543).
-    if (event === 'drain') { echoRef.current.stopped(Date.now()); captionsRef.current.drain(); if (!turnsRef.current?.busy) { releaseBoard(); armSilence(soonAfterSpeechRef.current); if (roomNoticeOwedRef.current) sayRoomNotice(); } }
+    // Task 8g (PRON_ONSET_GRACE): an armed attempt begun just before the voice ended is recorded (pronunciation-recorder.ts).
+    if (event === 'drain') { echoRef.current.stopped(Date.now()); captionsRef.current.drain(); pronRef.current?.tutorVoiceEnded(); if (!turnsRef.current?.busy) { releaseBoard(); armSilence(soonAfterSpeechRef.current); if (roomNoticeOwedRef.current) sayRoomNotice(); } }
   }, [armSilence, releaseBoard, sayRoomNotice]);
   const onRelayTranscript = useCallback((transcript: string, opts?: { typed?: boolean }) => heard(transcript, opts), [heard]);
   const languagesKey = (props.tutorLanguages ?? []).join(',');

@@ -6,6 +6,8 @@
  */
 import type { ReplySchema } from './grade-free-response';
 import type { WorkingLevel } from '../level/working-level';
+import { TUTOR_V2_LEARNER_SUMMARY } from '../orchestrator/flags';
+import { isV2SummarySession, v2CorrectionsFromRow, v2PronunciationArmedCount, v2PronunciationScores, v2SentencesSaidRight } from './learner-summary-v2';
 
 // v1 field names keep the `_ja` suffix: each `*_ja` field is the support-language line.
 export type LearnerSummaryV1 = {
@@ -30,12 +32,17 @@ export type SessionFacts = {
   transcriptExcerpt: string;
   /** BCP-47 code of the support language (the session's tutorLanguages[1]), or null. */
   supportLanguage: string | null;
+  /** Task 8g (TUTOR_V2_LEARNER_SUMMARY): a session that ran on tutor brain v2 (learner-summary-v2.ts): every correction of the lesson
+   *  for the prompt (the stored list keeps MAX_CORRECTIONS), and the sentences they said right. Absent for every other session. */
+  v2?: { corrections: LearnerSummaryV1['assessment']['corrections']; saidRight: string[] };
 };
 
 export type SessionFactsInput = {
   subject?: string; topic?: string; duration?: number;
   transcript: Array<{ role: string; text: string; whiteboardCommands?: Array<Record<string, unknown>> }>;
   debugEvents?: Array<{ type: string; message: string }>;
+  /** The row's board (a v2 session's cards live here, with `sourceMessageIndex`). */
+  whiteboardCommands?: Array<Record<string, unknown>>;
   lessonProgress?: { completedSegmentIds?: string[] };
   tutorLanguages?: string[];
 };
@@ -46,6 +53,9 @@ type ModelReply = {
 };
 
 const MAX_CORRECTIONS = 6;
+/** Task 8g: a v2 session's corrections in the prompt, and its sentences said right. */
+const V2_PROMPT_CORRECTIONS = 30;
+const V2_SAID_RIGHT = 8;
 const MAX_TURNS = 40;
 const MAX_TURN_CHARS = 160;
 const MAX_FIELD = 400;
@@ -147,6 +157,7 @@ function clip(s: string, n: number): string {
 export function buildSessionFacts(
   input: SessionFactsInput,
   profileLevel: { level: WorkingLevel; setAt: number } | null,
+  v2Summary: boolean = TUTOR_V2_LEARNER_SUMMARY,
 ): SessionFacts {
   const events = input.debugEvents ?? [];
   const langs = Array.isArray(input.tutorLanguages) ? input.tutorLanguages : [];
@@ -174,6 +185,25 @@ export function buildSessionFacts(
   const transcriptExcerpt = turns
     .map((t) => `${t.role === 'student' || t.role === 'user' ? 'Student' : 'Tutor'}: ${clip(String(t.text), MAX_TURN_CHARS)}`)
     .join('\n');
+
+  // Task 8g (TUTOR_V2_LEARNER_SUMMARY; mic test 11, embed-1795220913119): a v2 session's scores, corrections and right sentences come
+  // from what v2 records (learner-summary-v2.ts); the v1 reads above find nothing there.
+  if (v2Summary && isV2SummarySession(events)) {
+    const v2Input = { transcript: input.transcript ?? [], whiteboardCommands: input.whiteboardCommands, debugEvents: events };
+    const all = v2CorrectionsFromRow(v2Input, V2_PROMPT_CORRECTIONS);
+    return {
+      lessonTitle: [input.subject, input.topic].filter(Boolean).join(' — '),
+      durationMin: Math.round(((input.duration ?? 0) / 60) * 10) / 10,
+      partsCompleted: [...(input.lessonProgress?.completedSegmentIds ?? [])],
+      level,
+      corrections: all.slice(0, MAX_CORRECTIONS),
+      pronunciation: v2PronunciationScores(events),
+      pronunciationArmed: v2PronunciationArmedCount(events),
+      transcriptExcerpt,
+      supportLanguage,
+      v2: { corrections: all, saidRight: v2SentencesSaidRight(v2Input, V2_SAID_RIGHT) },
+    };
+  }
 
   return {
     lessonTitle: [input.subject, input.topic].filter(Boolean).join(' — '),
@@ -219,10 +249,16 @@ export function renderSummaryPrompt(facts: SessionFacts): { system: string; user
     `Parts completed: ${facts.partsCompleted.length ? facts.partsCompleted.join(', ') : 'none recorded'}`,
     `Level: ${facts.level.value ?? 'not assessed'} (${facts.level.source})${facts.level.evidence_en ? ` — ${facts.level.evidence_en}` : ''}`,
     'Corrections made in the lesson:',
-    ...(facts.corrections.length ? facts.corrections.map((c) => `- "${c.student}" -> "${c.corrected}"`) : ['- none']),
+    ...((facts.v2?.corrections ?? facts.corrections).length ? (facts.v2?.corrections ?? facts.corrections).map((c) => `- "${c.student}" -> "${c.corrected}"`) : ['- none']),
+    // Task 8g: a v2 session's sentences said right; only those may be called correct.
+    ...(facts.v2 ? [
+      'Sentences they said right (no correction needed):',
+      ...(facts.v2.saidRight.length ? facts.v2.saidRight.map((x) => `- "${x}"`) : ['- none recorded']),
+      'Call a sentence of theirs correct only if it is listed under "Sentences they said right". A corrected sentence above is the tutor\'s correction of what they said, not their own sentence.',
+    ] : []),
     'Pronunciation measured:',
     ...(facts.pronunciation.length
-      ? facts.pronunciation.map((p) => `- "${p.sentence}" overall ${p.overall}/100, prosody ${p.prosody ?? 'n/a'}${p.weak.length ? `, weak words: ${p.weak.join(', ')}` : ', no weak words'}`)
+      ? facts.pronunciation.map((p) => `- "${p.sentence}" overall ${p.overall}/100${facts.v2 ? ' (word scores not kept)' : `, prosody ${p.prosody ?? 'n/a'}${p.weak.length ? `, weak words: ${p.weak.join(', ')}` : ', no weak words'}`}`)
       : facts.pronunciationArmed > 0
         ? [`- none measured (${facts.pronunciationArmed} sentence${facts.pronunciationArmed === 1 ? '' : 's'} practised, no score could be measured)`]
         : ['- none (not practised)']),

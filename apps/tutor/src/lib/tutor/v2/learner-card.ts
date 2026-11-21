@@ -37,7 +37,7 @@
  */
 import type Anthropic from '@anthropic-ai/sdk';
 import { v2WithoutCutBoardNote } from './interrupted';
-import { TUTOR_V2_ANSWER_SIGNAL, TUTOR_V2_ASK_LAST_QUESTION, TUTOR_V2_BOARD_LEARNER_SENTENCE, TUTOR_V2_CARD_EVERY_SENTENCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_OWED_CARD_RIGHT, TUTOR_V2_PRACTISED_SENTENCE } from '../orchestrator/flags';
+import { TUTOR_V2_ANSWER_SIGNAL, TUTOR_V2_ASK_LAST_QUESTION, TUTOR_V2_BOARD_LEARNER_SENTENCE, TUTOR_V2_CARD_EVERY_SENTENCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_OWED_CARD_RIGHT, TUTOR_V2_PRACTISED_SENTENCE, TUTOR_V2_ASK_QUESTION_CARD } from '../orchestrator/flags';
 import { languageNameOf } from '../voice/language-request';
 import { stripBoardBlocks, type InlineBlock, type InlinePart } from './board-inline';
 import { v2IsPracticeAsk } from './languages';
@@ -396,8 +396,44 @@ export function v2LastQuestionOf(sentences: readonly string[], enabled: boolean 
 const GAP_ASK = /\bfill (?:in )?(?:the|this|each|a|that) (?:gap|blank)s?\b|空欄を埋めて|空欄に[^。！？]{0,30}?入れて[、,]?[^。！？]{0,20}?(?:ください|みて)/i;
 const GAP_CARD = /<board\s+problem\b[^>]*>[^<]*_{2,}/i;
 const textOf = (m: Anthropic.MessageParam) => (typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '));
-function askedForAnswer(state: Pick<V2State, 'history' | 'unheard'>, wide: boolean = TUTOR_V2_PRACTISED_SENTENCE, signal: boolean = TUTOR_V2_ANSWER_SIGNAL): boolean {
+/** Task 8g (ASK_QUESTION_CARD; mic test 11, embed-1795220913119 T28: a Japanese instruction and a question card only, so T29 "…for 6 year."
+ *  was no practice answer: no signal, no re-test): the question of the last question card the reply wrote (a `<board problem>` block, or a
+ *  `show_problem` call) that is on the board (it was painted, or already up), when it holds a question; else ''. By shape and state. */
+const PROBLEM_BLOCK = /<board\s+problem\b[^>]*>([\s\S]*?)<\/board>/gi;
+const cardKey = (x: string) => x.toLowerCase().replace(/[^\p{L}\p{N}?？]+/gu, ' ').trim();
+export function v2QuestionCardOf(state: Pick<V2State, 'history' | 'board'>): string {
+  const last = [...state.history].reverse().find((h) => h.role === 'assistant');
+  if (!last) return '';
+  const found: string[] = [];
+  for (const m of textOf(last).matchAll(PROBLEM_BLOCK)) found.push(m[1] ?? '');
+  if (Array.isArray(last.content)) for (const c of last.content) {
+    if (c.type !== 'tool_use' || c.name !== 'show_problem') continue;
+    const input = (c.input ?? {}) as Record<string, unknown>; const pr = (input.problem ?? {}) as Record<string, unknown>;
+    const q = [pr.statement, input.statement, input.problem, input.text].find((v) => typeof v === 'string' && v.trim());
+    if (typeof q === 'string') found.push(q);
+  }
+  const items = state.board.pages.flatMap((pg) => pg.items).filter((it) => it.tool === 'show_problem').map((it) => cardKey(it.summary));
+  for (const raw of found.reverse()) {
+    const q = raw.replace(/\s+/g, ' ').trim();
+    if (!/[?？]["'”’」)]*$/.test(q)) continue;
+    const k = cardKey(q);
+    if (k && items.some((it) => it.includes(k))) return q;
+  }
+  return '';
+}
+function askedForAnswer(state: Pick<V2State, 'history' | 'unheard'> & Partial<Pick<V2State, 'board'>>, wide: boolean = TUTOR_V2_PRACTISED_SENTENCE, signal: boolean = TUTOR_V2_ANSWER_SIGNAL, cardAsk: boolean = TUTOR_V2_ASK_QUESTION_CARD): boolean {
   if (askedForSentence(state.history, wide)) return true;
+  // Task 8g (ASK_QUESTION_CARD): the reply's question card read as its ask, as the spoken last question is (QUESTION_ABOUT_THEM); not
+  // when the reply ends on a part ask or the close's invitation.
+  if (cardAsk && state.board) {
+    const q = v2QuestionCardOf({ history: state.history, board: state.board });
+    if (q && QUESTION_ABOUT_THEM.test(q)) {
+      const last = [...state.history].reverse().find((h) => h.role === 'assistant');
+      const said = last ? stripBoardBlocks(textOf(last)).split(/(?<=[.!?。！？]["'”’」)]*)\s+/).map((x) => x.trim()).filter(Boolean) : [];
+      const end = said[said.length - 1] ?? '';
+      if (!end || !(v2IsPartAsk(end) || v2ReplyInvites(end))) return true;
+    }
+  }
   if (!signal) return false;
   const last = [...state.history].reverse().find((h) => h.role === 'assistant');
   if (!last) return false;

@@ -267,7 +267,10 @@ async function main() {
 
   console.log('each switch off alone (a child process per switch): as at 57c71382 for that item');
   const child = (flag: string) => {
-    const res = spawnSync(process.execPath, [...process.execArgv, __filename], { env: { ...process.env, [`NEXT_PUBLIC_TUTOR_V2_${flag}`]: 'off', MIC10_8C_CHILD: '1' }, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    // Task 8g: the ask is also read from the reply's question card (ASK_QUESTION_CARD); T44 carries one, so the live record of
+    // ASK_LAST_QUESTION off is reproduced with that switch off too.
+    const extra = flag === 'ASK_LAST_QUESTION' ? { NEXT_PUBLIC_TUTOR_V2_ASK_QUESTION_CARD: 'off' } : {};
+    const res = spawnSync(process.execPath, [...process.execArgv, __filename], { env: { ...process.env, [`NEXT_PUBLIC_TUTOR_V2_${flag}`]: 'off', ...extra, MIC10_8C_CHILD: '1' }, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
     const line = (res.stdout ?? '').split('\n').find((l) => l.startsWith('OFF_JSON '));
     if (!line) { console.log(res.stdout, res.stderr); throw new Error(`child ${flag} gave no result`); }
     return JSON.parse(line.slice('OFF_JSON '.length)) as Probe;

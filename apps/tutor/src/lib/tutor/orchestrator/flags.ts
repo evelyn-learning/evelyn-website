@@ -2566,3 +2566,30 @@ export const TUTOR_V2_CORRECTION_STEMS = process.env.NEXT_PUBLIC_TUTOR_V2_CORREC
  *  discussions are as on main (Task 8e fix round 1, ruling 2). Default ON; NEXT_PUBLIC_TUTOR_V2_OWN_KEY_NOT_LANGUAGE=off ⇒ the key
  *  is worked in every lesson, as on main. (Main's own switch TUTOR_V2_OWN_KEY=off still turns the key off everywhere.) */
 export const TUTOR_V2_OWN_KEY_NOT_LANGUAGE = process.env.NEXT_PUBLIC_TUTOR_V2_OWN_KEY_NOT_LANGUAGE !== 'off';
+
+/** Learner summary (portal/learner-summary.ts, server only): for a session that ran on tutor brain v2 (its `start_v2` event), the summary's
+ *  facts come from what v2 records: the pronunciation scores (`pronunciation_scored` with the sentence of its `pronunciation_armed`), the
+ *  lesson's corrections (the row's marked sentence cards, each with the sentence of theirs it reworks, by the one correction test), and the
+ *  sentences they said right (theirs that no card corrected). v1 read data only v1 writes: mic test 11 (embed-1795220913119) was told no
+ *  score was measured (it was 84), listed no corrections, and praised a sentence they had said wrong (Task 8g, item 1). Default ON;
+ *  TUTOR_V2_LEARNER_SUMMARY=off ⇒ as before. v1 sessions are unchanged either way. */
+export const TUTOR_V2_LEARNER_SUMMARY = process.env.TUTOR_V2_LEARNER_SUMMARY !== 'off';
+
+/** Tutor brain v2 (v2/pronunciation-recorder.ts): a learner's onset heard while the tutor's voice still plays is recorded when that voice
+ *  ends within V2_PRON_ONSET_GRACE_MS of it (the model sentence was at its end): the capture opens then, its pre-roll holding the onset.
+ *  Mic test 11 (embed-1795220913119, 16:52.59: he began about 50 ms before the voice ended; the attempt was never recorded and he had to
+ *  say it again) (Task 8g, item 2). Default ON; NEXT_PUBLIC_TUTOR_V2_PRON_ONSET_GRACE=off ⇒ as before. */
+export const TUTOR_V2_PRON_ONSET_GRACE = process.env.NEXT_PUBLIC_TUTOR_V2_PRON_ONSET_GRACE !== 'off';
+
+/** Tutor brain v2 (v2/turn.ts, the practice pairing and the 7w record): a correction of this turn is a sentence card this reply painted (or
+ *  pointed at an item this reply painted); a card of an earlier turn the reply points back at is not. By state: the item ids on the board
+ *  when the turn began. Mic test 11 (embed-1795220913119, T54: a praised repeat scored wrong from the card of T53 it pointed back to, a
+ *  false correction recorded and a live re-test replaced) (Task 8g, item 3). Default ON; NEXT_PUBLIC_TUTOR_V2_PAIR_PAINTED_ONLY=off ⇒ as
+ *  before. */
+export const TUTOR_V2_PAIR_PAINTED_ONLY = process.env.NEXT_PUBLIC_TUTOR_V2_PAIR_PAINTED_ONLY !== 'off';
+
+/** Tutor brain v2 (v2/learner-card.ts, the ask for an answer): a question card the last reply painted (a `<board problem>` block or a
+ *  `show_problem` call, on the board) asks for a sentence when its question is a question about them, as the spoken last question is read.
+ *  Mic test 11 (embed-1795220913119, T28: a Japanese instruction and a question card only; T29 "…for 6 year." got no practice signal, its
+ *  correction no re-test) (Task 8g, item 4). Default ON; NEXT_PUBLIC_TUTOR_V2_ASK_QUESTION_CARD=off ⇒ as before. */
+export const TUTOR_V2_ASK_QUESTION_CARD = process.env.NEXT_PUBLIC_TUTOR_V2_ASK_QUESTION_CARD !== 'off';

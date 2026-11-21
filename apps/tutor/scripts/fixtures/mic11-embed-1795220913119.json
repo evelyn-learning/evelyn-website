@@ -1,0 +1,1401 @@
+{
+ "sessionId": "embed-1795220913119",
+ "note": "Mic test 11 (Task 8f/8g): the row read from evelyn.tutorsessions (read only), trimmed to what the learner summary reads.",
+ "subject": "languages",
+ "topic": "Work projects",
+ "duration": 1163,
+ "tutorLanguages": [
+  "en",
+  "ja"
+ ],
+ "lessonProgress": {
+  "completedSegmentIds": [
+   "overview",
+   "level-check",
+   "topic-intro",
+   "present-perfect",
+   "past-simple",
+   "open-conversation",
+   "pronunciation",
+   "summary"
+  ]
+ },
+ "transcript": [
+  {
+   "role": "tutor",
+   "text": "Hello, I'm Ryota, and welcome to your English lesson! Today we'll talk about your work and a recent project, practise the present perfect and the past simple, and finish with some conversation. Does that sound good to you?"
+  },
+  {
+   "role": "student",
+   "text": "Yeah, sure."
+  },
+  {
+   "role": "tutor",
+   "text": "Great, let's begin. Today you'll talk about your job and a project you're proud of, and we'll practise two grammar points: the \"present perfect\" for experience that continues now, and the \"past simple\" for things that finished at a specific time. I'll correct your mistakes, explain them, and give you a chance to try again. At the end you can practise your pronunciation if you like. First comes a short, one-time level check, so I can adjust the lesson for you. Are you ready?"
+  },
+  {
+   "role": "student",
+   "text": "Uh, yes."
+  },
+  {
+   "role": "tutor",
+   "text": "First, a short, friendly chat so I can see what you can already do. Please answer in English, and don't worry about mistakes."
+  },
+  {
+   "role": "student",
+   "text": "Uh, I sales manager, Nagoya Corporation, sell washing machine."
+  },
+  {
+   "role": "tutor",
+   "text": "Thank you. You sell washing machines for Nagoya Corporation. Now, next question: have you ever worked with a customer from another country? If so, tell me a little about it. If not, that's fine too."
+  },
+  {
+   "role": "student",
+   "text": "Yes, I work with uh Canada customer, sell 25 washing machine."
+  },
+  {
+   "role": "tutor",
+   "text": "That's a good result, 25 washing machines for a Canadian customer! Next question: what is one skill you'd like to improve in your English, and why is it important to you?"
+  },
+  {
+   "role": "student",
+   "text": "I want uh talk to international customer fluent English uh improve communication."
+  },
+  {
+   "role": "tutor",
+   "text": "Talking with international customers more smoothly is a very useful goal. Today we'll make your sentences clearer and more natural. ここまでで、レベル確認は終わりです。次は「Your job」、仕事について話す練習です。質問がありますか、それとも次に進みましょうか。"
+  },
+  {
+   "role": "student",
+   "text": "Yes."
+  },
+  {
+   "role": "tutor",
+   "text": "仕事について話すときは、短い文を使いましょう。「I work in…」は「私は…で働いています」という意味です。\n\n例えば「I work in sales.」は「私は営業で働いています」です。では、あなたの仕事について、一文か二文で言ってみてください。最初は「I work…」から始めてみましょう。\n\n What do you do at work?"
+  },
+  {
+   "role": "student",
+   "text": "I work at home appliance division at Nagoya Corporation."
+  },
+  {
+   "role": "tutor",
+   "text": "「the」が抜けています。「I work in the home appliance division」と言います。 もう一度言ってみてください。"
+  },
+  {
+   "role": "student",
+   "text": "I work in the home appliance division at Nagoya Corporation."
+  },
+  {
+   "role": "tutor",
+   "text": "そうです、正しく言えました。「I work in the home appliance division at Nagoya Corporation.」です。\n\nNext, let's talk about what you sell. Please say one sentence, starting with \"I sell\".\n\nWhat do you sell at Nagoya Corporation?"
+  },
+  {
+   "role": "student",
+   "text": "I I sell washing machine at Nagoya Corporation."
+  },
+  {
+   "role": "tutor",
+   "text": "「washing machine」は、数が複数のときは「machines」と最後に s を付けます。 もう一度言ってみてください。"
+  },
+  {
+   "role": "student",
+   "text": "I sell washing machines at Nagoya Corporation."
+  },
+  {
+   "role": "tutor",
+   "text": "そうです、正しく言えました。 I sell washing machines at Nagoya Corporation. 仕事について話す練習は、ここまでです。次は「Present perfect」、現在完了です。質問がありますか。それとも、次に進みましょうか。"
+  },
+  {
+   "role": "student",
+   "text": "Yes."
+  },
+  {
+   "role": "tutor",
+   "text": "現在完了は、過去に始まって今も続いている経験や期間を話すときに使います。形は「have / has + 過去分詞」です。\n\nそれでは、質問です。\n\nHave you worked for your current company for a long time?"
+  },
+  {
+   "role": "student",
+   "text": "Uh, yes, I work here at Nagoya Corporation 6 years."
+  },
+  {
+   "role": "tutor",
+   "text": "「I work here」だと今の状態だけになります。六年前から今も働いているので、現在完了を使います。「I have worked here at Nagoya Corporation for six years.」と言いましょう。\n\nでは、この文をもう一度言ってみてください。"
+  },
+  {
+   "role": "student",
+   "text": "I have worked here at Nagoya Corporation for 6 years."
+  },
+  {
+   "role": "tutor",
+   "text": "そうです、正しく言えました。 I have worked here at Nagoya Corporation for six years. 六年前から今も続いているので、現在完了です。\n\nでは、別の言い方で聞きます。あなたの仕事は何ですか。\n\nWhat is your job at Nagoya Corporation?"
+  },
+  {
+   "role": "student",
+   "text": "Uh, my job is uh sales manager uh and sell washing machines."
+  },
+  {
+   "role": "tutor",
+   "text": "「and I sell」と、「I」を入れます。\n\n次は現在完了で質問します。「あなたは営業マネージャーになってどのくらいですか」という質問です。答えは「I have been a sales manager for…」で始めてみてください。"
+  },
+  {
+   "role": "student",
+   "text": "I have been a sales manager for 6 year."
+  },
+  {
+   "role": "tutor",
+   "text": "「have been」と現在完了を正しく使えました。ただ、「6 year」は「6 years」と複数にします。\n\nもう一度、言ってみてください。"
+  },
+  {
+   "role": "student",
+   "text": "I have been a sales manager for 6 years."
+  },
+  {
+   "role": "tutor",
+   "text": "そうです、正しく言えました。\"I have been a sales manager for six years.\" は、今も続いている経験の文です。\n\n現在完了の練習はここまでです。次は「Past simple」、過去形です。質問がありますか。"
+  },
+  {
+   "role": "student",
+   "text": "Yes."
+  },
+  {
+   "role": "tutor",
+   "text": "過去形は、終わった出来事を、「yesterday」や「last year」のような時を表す言葉と一緒に話すときに使います。では質問です。\n\nDid you attend any business events or exhibitions last year?"
+  },
+  {
+   "role": "student",
+   "text": "Yes. I attend robotics exhibition in Tokyo. last year."
+  },
+  {
+   "role": "tutor",
+   "text": "「last year」があるので過去形を使います。「attend」は「attended」になります。 もう一度言ってみてください。"
+  },
+  {
+   "role": "student",
+   "text": "I attended a robotics exhibition in Tokyo last year."
+  },
+  {
+   "role": "tutor",
+   "text": "Yes, that's right. You used the past simple with \"last year.\"\n\n質問です。去年、どんな製品を売りましたか。答えは「I sold…」で始めてみてください。\n\n What products did you sell last year?"
+  },
+  {
+   "role": "student",
+   "text": "I sell uh washing machine and hair dryer last year."
+  },
+  {
+   "role": "tutor",
+   "text": "「sell」の過去形は「sold」です。 もう一度、言ってみてください。"
+  },
+  {
+   "role": "student",
+   "text": "Ah, I sold washing machines and hair dryers last year."
+  },
+  {
+   "role": "tutor",
+   "text": "Yes, that's right. You used the past simple with \"last year\" correctly. 去年の話なので、過去形ですね。\n\n When did you first meet your Canadian customer?\n\nStart with: \"I first met…\""
+  },
+  {
+   "role": "student",
+   "text": "I first met uh Canadian customer um 6 month ago."
+  },
+  {
+   "role": "student",
+   "text": "at airport."
+  },
+  {
+   "role": "tutor",
+   "text": "すばらしいです！ \"I first met\" と過去形を正しく使えています。 「6 month」は「6 months」と、複数の s を付けます。\n\nでは、次の質問です。そのお客様と何について話しましたか。「We discussed…」で始めてみてください。\n\n What did you discuss with the customer?\nStart with: \"We discussed…\""
+  },
+  {
+   "role": "student",
+   "text": "We discussed how to sell washing machines to Canada customers."
+  },
+  {
+   "role": "tutor",
+   "text": "「We discussed」は過去形で正しく言えています。「カナダのお客様」は「Canadian customers」と言います。\n\nこれで過去形の練習は終わりです。次は「Conversation」、会話の練習です。質問がありますか。"
+  },
+  {
+   "role": "student",
+   "text": "Canadian customers."
+  },
+  {
+   "role": "tutor",
+   "text": "そうです、\"Canadian customers\" と言えています。これで過去形の練習は終わりです。次は「Conversation」、会話の練習です。\n\nReady to go on, or would you like to ask something first?"
+  },
+  {
+   "role": "student",
+   "text": "Uh, yes."
+  },
+  {
+   "role": "tutor",
+   "text": "では、会話の練習をしましょう。質問に、英語で答えてください。\n\nHow long have you been at Nagoya Corporation?"
+  },
+  {
+   "role": "student",
+   "text": "Um, I work Nagoya Corporation uh 7 year."
+  },
+  {
+   "role": "tutor",
+   "text": "「I work」だと今の仕事だけになります。七年前から今も続いているので、「have worked」を使います。\n\nもう一度、言ってみてください。"
+  },
+  {
+   "role": "student",
+   "text": "I have worked at Nagoya Corporation"
+  },
+  {
+   "role": "tutor",
+   "text": "そうです、正しく言えました。期間を入れると、さらに分かりやすくなります。\n\n仕事で一番好きなことは何ですか。\n\n What do you like most about your job?"
+  },
+  {
+   "role": "student",
+   "text": "Uh, the most about my job is um talking international customer world over."
+  },
+  {
+   "role": "tutor",
+   "text": "世界中のお客様と話せるのは、いいですね。どうしてそれが一番好きなのですか。\n\n Why do you like talking with international customers?"
+  },
+  {
+   "role": "student",
+   "text": "Uh, give me um international exposure and growth."
+  },
+  {
+   "role": "tutor",
+   "text": "International experience helps you grow, and that's a good reason to enjoy your work. We say \"It gives me…\" when the subject is a thing or idea.\n\n It gives me international exposure and growth.\n\nCan you tell me about one thing you learned from an international customer?"
+  },
+  {
+   "role": "student",
+   "text": "I learn how to drive car. Canadian customer, teach me."
+  },
+  {
+   "role": "tutor",
+   "text": "Wow, a Canadian customer taught you to drive! That's a story I'd like to hear more about.\n\nWhat was it like learning to drive with your customer?"
+  },
+  {
+   "role": "student",
+   "text": "Uh, it was good. Uh, I showed him Tokyo and he liked very much."
+  },
+  {
+   "role": "tutor",
+   "text": "That sounds like a great day out. Tokyo is a big city, so I can imagine how much he enjoyed it.\n\nWhat did he enjoy most in Tokyo, and how did you show him around?"
+  },
+  {
+   "role": "student",
+   "text": "Uh, he liked the Tokyo zoo and the uh animals and Panda."
+  },
+  {
+   "role": "tutor",
+   "text": "Pandas are a favourite for many visitors, and I like zoos too. On weekends I often go hiking near Gifu, and I see animals there as well.\n\nNow it's your turn to ask me a question about work or your experience. What would you like to know?"
+  },
+  {
+   "role": "student",
+   "text": "Uh, I want to know about your family and what you do."
+  },
+  {
+   "role": "tutor",
+   "text": "I'm happy to tell you about my work. I have taught English in Nagoya for about eight years, and I help Japanese professionals speak English. I'd like to keep my family private, though. 家族の話は控えさせてください。\n\nWhy did you choose to work in sales?"
+  },
+  {
+   "role": "student",
+   "text": "I like meeting new people and helping them."
+  },
+  {
+   "role": "tutor",
+   "text": "That's a lovely reason, and it's clear. \"I like meeting new people and helping them\" is a complete, natural sentence.\n\nCan you tell me about a time when you helped a new customer? What happened?"
+  },
+  {
+   "role": "student",
+   "text": "Uh, yes. Um, one Mr. Kenji wanted top load machine. I tell him front load better saves electricity. He buy it."
+  },
+  {
+   "role": "tutor",
+   "text": "Mr. Kenji wanted a top-load machine, and you told him about the electricity savings. He bought it.\n\nDid he use the machine at home? What did he say about it?"
+  },
+  {
+   "role": "student",
+   "text": "Yes, he use machine at home. Uh, he came back to thank me for it."
+  },
+  {
+   "role": "tutor",
+   "text": "That's a kind thing for him to do, and it's a good story about your work.\n\nWhat did he say to you when he came back?"
+  },
+  {
+   "role": "student",
+   "text": "He tell me that he has uh good experience with machine. His wife likes it."
+  },
+  {
+   "role": "tutor",
+   "text": "Good to hear it worked so well for him, and that his wife likes it too.\n\nWhat does his wife like about the machine, and why?"
+  },
+  {
+   "role": "student",
+   "text": "Um, his wife say the clothes dry fast and clothes are cleaner."
+  },
+  {
+   "role": "tutor",
+   "text": "Quick drying and cleaner clothes are two good reasons to buy a machine. Conversation practice is done. Next is Pronunciation, which is optional. Would you like to practise it, or go straight to the summary? Or do you have a question first?"
+  },
+  {
+   "role": "student",
+   "text": "Yes."
+  },
+  {
+   "role": "tutor",
+   "text": "Okay, conversation is done. Next is pronunciation. Shall we go on, or do you have a question first?"
+  },
+  {
+   "role": "student",
+   "text": "Yes."
+  },
+  {
+   "role": "tutor",
+   "text": "発音の練習を始めましょう。次の四つから選んでください。\n\nどれにしますか。番号か、言葉で答えてください。\n\nYou can choose: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue."
+  },
+  {
+   "role": "student",
+   "text": "Complete sentence."
+  },
+  {
+   "role": "tutor",
+   "text": "いいですね、一文の練習にしましょう。まず私が言うので、あとに続けて言ってください。\n\nI have worked with international customers for several years."
+  },
+  {
+   "role": "student",
+   "text": "I have worked with international customers for several years."
+  },
+  {
+   "role": "tutor",
+   "text": "もう一度、ゆっくり言ってみてください。"
+  },
+  {
+   "role": "student",
+   "text": "I have worked with international customers for several years."
+  },
+  {
+   "role": "tutor",
+   "text": "Your second try scored 84 out of 100. The weakest sounds were \"with\" and \"for\", so keep those short and clear. Here is the whole sentence from me once more: I have worked with international customers for several years.\n\nGreat work today! You talked about your job, your responsibilities and your experience. One thing you did well was \"I have worked at Nagoya Corporation for seven years\", which uses the present perfect correctly. One thing to improve is the number of years: you said \"6 year\", and we say \"six years\".\n\n I have worked here for six years.\n\nBefore we finish, can you explain the difference between these two sentences? I have worked here for five years. I worked here five years ago. Take your time, and I'll help if you need it."
+  },
+  {
+   "role": "student",
+   "text": "I have worked here for 5 years, means I still work here and the other one means I don't work here anymore."
+  },
+  {
+   "role": "tutor",
+   "text": "そうです、その通りです。一つ目は今も働いている意味で、二つ目は五年前に働いていて、今は終わったという意味です。ひとつだけ、「5 years」は「five years」と書きます。\n\nここまでで、何か質問はありますか。"
+  },
+  {
+   "role": "student",
+   "text": "Uh, no question."
+  },
+  {
+   "role": "tutor",
+   "text": "Thank you, Praveen. You talked about your job and a project you're proud of, and you used the present perfect and past simple well. Keep practising \"I have worked here for…\" when you talk about your experience. Goodbye, and see you next time!"
+  }
+ ],
+ "whiteboardCommands": [
+  {
+   "action": "newPage",
+   "data": {
+    "title": "Overview",
+    "id": "inl_mwpo6paz_1"
+   }
+  },
+  {
+   "action": "annotate",
+   "data": {
+    "text": "Talking About Your Work and Recent Projects",
+    "style": "heading",
+    "rich": true,
+    "targets": true,
+    "id": "inl_mwpo6paz_2"
+   }
+  },
+  {
+   "action": "annotate",
+   "data": {
+    "text": "\"present perfect\" for experience up to now; \"past simple\" for a finished event",
+    "style": "default",
+    "rich": true,
+    "targets": true,
+    "gloss": "現在完了: 過去から今も続く経験。過去形: 終わった出来事。",
+    "id": "inl_mwpo73km_1"
+   },
+   "sourceMessageIndex": 2
+  },
+  {
+   "action": "newPage",
+   "data": {
+    "title": "Level check",
+    "id": "inl_mwpo8cpz_1"
+   },
+   "sourceMessageIndex": 2
+  },
+  {
+   "action": "showProblem",
+   "data": {
+    "problem": {
+     "title": "Question",
+     "statement": "Can you tell me a little about your job? What do you do?",
+     "format": "free-response",
+     "rich": true,
+     "gloss": "あなたの仕事について教えてください。"
+    },
+    "id": "inl_mwpo8cpz_2"
+   },
+   "sourceMessageIndex": 4
+  },
+  {
+   "action": "showProblem",
+   "data": {
+    "problem": {
+     "title": "Question",
+     "statement": "Have you ever worked with a customer from another country? If so, can you tell me about the experience?",
+     "format": "free-response",
+     "rich": true,
+     "gloss": "海外のお客様と仕事をしたことはありますか。"
+    },
+    "id": "inl_mwpo8qyc_1"
+   },
+   "sourceMessageIndex": 6
+  },
+  {
+   "action": "showProblem",
+   "data": {
+    "problem": {
+     "title": "Question",
+     "statement": "What is one skill you'd like to improve in your English, and why is it important to you?",
+     "format": "free-response",
+     "rich": true,
+     "gloss": "英語で改善したいスキルは何ですか。なぜ大切ですか。"
+    },
+    "id": "inl_mwpo9bw5_1"
+   },
+   "sourceMessageIndex": 8
+  },
+  {
+   "action": "newPage",
+   "data": {
+    "title": "Your job",
+    "id": "inl_mwpoafxc_0"
+   },
+   "sourceMessageIndex": 10
+  },
+  {
+   "action": "annotate",
+   "data": {
+    "text": "\"I work in\" sales. / \"I help\" customers. / \"I work with\" international clients.",
+    "style": "default",
+    "rich": true,
+    "targets": true,
+    "gloss": "仕事を説明する短い文の例",
+    "id": "inl_mwpoafxc_1"
+   },
+   "sourceMessageIndex": 12
+  },
+  {
+   "action": "showProblem",
+   "data": {
+    "problem": {
+     "title": "Question",
+     "statement": "What do you do at work? Answer with one or two sentences.",
+     "format": "free-response",
+     "rich": true,
+     "gloss": "仕事では何をしていますか。一、二文で答えてください。"
+    },
+    "id": "inl_mwpoafxc_2"
+   },
+   "sourceMessageIndex": 12
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "I work in the home appliance division.",
+    "emphasis": [
+     "in",
+     "the"
+    ],
+    "id": "inl_mwpob84o_1"
+   },
+   "sourceMessageIndex": 14
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "I work in the home appliance division at Nagoya Corporation.",
+    "emphasis": [
+     "in",
+     "the"
+    ],
+    "gloss": "「the」を入れると「その部署で」という意味になります。",
+    "id": "inl_mwpob84o_2"
+   },
+   "sourceMessageIndex": 14
+  },
+  {
+   "action": "showProblem",
+   "data": {
+    "problem": {
+     "title": "Question",
+     "statement": "What do you sell at Nagoya Corporation?",
+     "format": "free-response",
+     "rich": true,
+     "gloss": "会社で何を売っていますか。「I sell」で始めて一文で言ってください。"
+    },
+    "id": "inl_mwpoblph_1"
+   },
+   "sourceMessageIndex": 16
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "I sell washing machines at Nagoya Corporation.",
+    "emphasis": [
+     "machines"
+    ],
+    "gloss": "機械が複数なので「machines」と s を付けます。",
+    "id": "inl_mwpoc1zv_1"
+   },
+   "sourceMessageIndex": 18
+  },
+  {
+   "action": "newPage",
+   "data": {
+    "title": "Present perfect",
+    "id": "inl_mwpod0do_0"
+   },
+   "sourceMessageIndex": 20
+  },
+  {
+   "action": "annotate",
+   "data": {
+    "text": "\"I have worked\" here for five years. I \"have worked\" with customers for a long time.",
+    "style": "default",
+    "rich": true,
+    "targets": true,
+    "gloss": "過去から今も続いている期間を話すとき、have/has と過去分詞を使います。",
+    "id": "inl_mwpod0do_1"
+   },
+   "sourceMessageIndex": 22
+  },
+  {
+   "action": "showProblem",
+   "data": {
+    "problem": {
+     "title": "Question",
+     "statement": "Have you worked for your current company for a long time?",
+     "format": "free-response",
+     "rich": true,
+     "gloss": "今の会社で長く働いていますか。"
+    },
+    "id": "inl_mwpod0do_2"
+   },
+   "sourceMessageIndex": 22
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "I have worked here at Nagoya Corporation for six years.",
+    "emphasis": [
+     "have",
+     "worked",
+     "for"
+    ],
+    "gloss": "六年前から今も続いている期間は、have worked と for を使います。",
+    "id": "inl_mwpodm83_1"
+   },
+   "sourceMessageIndex": 24
+  },
+  {
+   "action": "showProblem",
+   "data": {
+    "problem": {
+     "title": "Question",
+     "statement": "What is your job at Nagoya Corporation?",
+     "format": "free-response",
+     "rich": true,
+     "gloss": "別の言い方で、あなたの仕事を教えてください。"
+    },
+    "id": "inl_mwpoe0la_1"
+   },
+   "sourceMessageIndex": 26
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "I am a sales manager, and I sell washing machines.",
+    "emphasis": [
+     "I",
+     "sell"
+    ],
+    "gloss": "「and」のあとも主語の「I」が必要です。",
+    "id": "inl_mwpoeoof_1"
+   },
+   "sourceMessageIndex": 28
+  },
+  {
+   "action": "showProblem",
+   "data": {
+    "problem": {
+     "title": "Question",
+     "statement": "How long have you been a sales manager?",
+     "format": "free-response",
+     "rich": true,
+     "gloss": "営業マネージャーになってどのくらいですか。"
+    },
+    "id": "inl_mwpoeoof_2"
+   },
+   "sourceMessageIndex": 28
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "I have been a sales manager for six years.",
+    "emphasis": [
+     "years"
+    ],
+    "gloss": "数が一つより多いときは、year に s を付けます。",
+    "id": "inl_mwpofomv_1"
+   },
+   "sourceMessageIndex": 30
+  },
+  {
+   "action": "newPage",
+   "data": {
+    "title": "Past simple",
+    "id": "inl_mwpogkmr_0"
+   },
+   "sourceMessageIndex": 32
+  },
+  {
+   "action": "annotate",
+   "data": {
+    "text": "\"Past simple\" for a finished event at a specific time: I \"attended\" an exhibition last year.",
+    "style": "default",
+    "rich": true,
+    "targets": true,
+    "gloss": "特定の過去の時（last year など）があるときは過去形を使います。",
+    "id": "inl_mwpogkmr_1"
+   },
+   "sourceMessageIndex": 34
+  },
+  {
+   "action": "showProblem",
+   "data": {
+    "problem": {
+     "title": "Question",
+     "statement": "Did you attend any business events or exhibitions last year?",
+     "format": "free-response",
+     "rich": true,
+     "gloss": "去年、ビジネスのイベントや展示会に参加しましたか。"
+    },
+    "id": "inl_mwpogkmr_2"
+   },
+   "sourceMessageIndex": 34
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "I attended a robotics exhibition in Tokyo last year.",
+    "emphasis": [
+     "attended"
+    ],
+    "gloss": "「last year」のような過去の時を表す言葉があるとき、動詞は過去形にします。",
+    "id": "inl_mwpoh37b_1"
+   },
+   "sourceMessageIndex": 36
+  },
+  {
+   "action": "showProblem",
+   "data": {
+    "problem": {
+     "title": "Question",
+     "statement": "What products did you sell last year?",
+     "format": "free-response",
+     "rich": true,
+     "gloss": "去年、どんな製品を売りましたか。「I sold…」で始めてください。"
+    },
+    "id": "inl_mwpohc2o_1"
+   },
+   "sourceMessageIndex": 38
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "I sold washing machines and hair dryers last year.",
+    "emphasis": [
+     "sold",
+     "washing",
+     "machines",
+     "and",
+     "hair",
+     "dryers"
+    ],
+    "gloss": "過去形の sold と、複数の machines と dryers に注意します。",
+    "id": "inl_mwpohw61_1"
+   },
+   "sourceMessageIndex": 40
+  },
+  {
+   "action": "showProblem",
+   "data": {
+    "problem": {
+     "title": "Question",
+     "statement": "When did you first meet your Canadian customer?",
+     "format": "free-response",
+     "rich": true,
+     "gloss": "カナダのお客様とはいつ初めて会いましたか。「I first met…」で始めてください。"
+    },
+    "id": "inl_mwpoi42u_1"
+   },
+   "sourceMessageIndex": 42
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "I first met a Canadian customer six months ago at the airport.",
+    "emphasis": [
+     "months"
+    ],
+    "gloss": "「6か月」は複数なので months です。",
+    "id": "inl_mwpoipfc_1"
+   },
+   "sourceMessageIndex": 45
+  },
+  {
+   "action": "showProblem",
+   "data": {
+    "problem": {
+     "title": "Question",
+     "statement": "What did you discuss with the customer?",
+     "format": "free-response",
+     "rich": true,
+     "gloss": "そのお客様と何について話しましたか。「We discussed…」で始めてください。"
+    },
+    "id": "inl_mwpoipfc_2"
+   },
+   "sourceMessageIndex": 45
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "We discussed how to sell washing machines to Canadian customers.",
+    "emphasis": [
+     "Canadian"
+    ],
+    "gloss": "国の名前 Canada を形容詞 Canadian にすると「カナダの」という意味になります。",
+    "id": "inl_mwpojimo_1"
+   },
+   "sourceMessageIndex": 47
+  },
+  {
+   "action": "newPage",
+   "data": {
+    "title": "Conversation",
+    "id": "inl_mwpok5h0_0"
+   },
+   "sourceMessageIndex": 49
+  },
+  {
+   "action": "showProblem",
+   "data": {
+    "problem": {
+     "title": "Question",
+     "statement": "How long have you been at Nagoya Corporation?",
+     "format": "free-response",
+     "rich": true,
+     "gloss": "ナゴヤ・コーポレーションでどのくらい働いていますか。"
+    },
+    "id": "inl_mwpok5h0_1"
+   },
+   "sourceMessageIndex": 51
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "I have worked at Nagoya Corporation for seven years.",
+    "emphasis": [
+     "have",
+     "worked",
+     "for",
+     "seven",
+     "years"
+    ],
+    "gloss": "七年前から今も続いている期間は、have worked と for を使います。",
+    "id": "inl_mwpokkv8_1"
+   },
+   "sourceMessageIndex": 53
+  },
+  {
+   "action": "scrollTo",
+   "data": {
+    "target": "item",
+    "targetId": "inl_mwpokkv8_1",
+    "pulse": true
+   },
+   "sourceMessageIndex": 55
+  },
+  {
+   "action": "showProblem",
+   "data": {
+    "problem": {
+     "title": "Question",
+     "statement": "What do you like most about your job?",
+     "format": "free-response",
+     "rich": true,
+     "gloss": "仕事で一番好きなことは何ですか。"
+    },
+    "id": "inl_mwpokuqk_2"
+   },
+   "sourceMessageIndex": 55
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "The best part of my job is talking with international customers all over the world.",
+    "emphasis": [
+     "best",
+     "part",
+     "all",
+     "over",
+     "the",
+     "world"
+    ],
+    "gloss": "「仕事で一番好きなこと」は The best part of my job です。「all over the world」で世界中という意味です。",
+    "id": "inl_mwpolgmb_1"
+   },
+   "sourceMessageIndex": 55
+  },
+  {
+   "action": "showProblem",
+   "data": {
+    "problem": {
+     "title": "Question",
+     "statement": "Why do you like talking with international customers?",
+     "format": "free-response",
+     "rich": true,
+     "gloss": "なぜ世界中のお客様と話すのが好きなのですか。"
+    },
+    "id": "inl_mwpolgmb_2"
+   },
+   "sourceMessageIndex": 57
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "It gives me international exposure and growth.",
+    "emphasis": [
+     "It",
+     "gives",
+     "me"
+    ],
+    "gloss": "主語の It を入れると、文になります。",
+    "id": "inl_mwpom20z_1"
+   },
+   "sourceMessageIndex": 59
+  },
+  {
+   "action": "showProblem",
+   "data": {
+    "problem": {
+     "title": "Question",
+     "statement": "Can you tell me about one thing you learned from an international customer?",
+     "format": "free-response",
+     "rich": true,
+     "gloss": "海外のお客様から学んだことを一つ教えてください。"
+    },
+    "id": "inl_mwpom20z_2"
+   },
+   "sourceMessageIndex": 59
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "I learned how to drive a car.",
+    "emphasis": [
+     "learned",
+     "a",
+     "car"
+    ],
+    "gloss": "「learn」の過去形は「learned」です。「a car」と冠詞も付けます。",
+    "id": "inl_mwpomom5_1"
+   },
+   "sourceMessageIndex": 61
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "A Canadian customer taught me.",
+    "emphasis": [
+     "taught",
+     "me"
+    ],
+    "gloss": "「teach」の過去形は「taught」です。過去の出来事なので過去形を使います。",
+    "id": "inl_mwpomom5_2"
+   },
+   "sourceMessageIndex": 61
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "I showed him Tokyo, and he liked it very much.",
+    "emphasis": [
+     "it"
+    ],
+    "gloss": "「like」の目的語には「it」を入れます。「very much」で「とても」という意味です。",
+    "id": "inl_mwpon3hc_1"
+   },
+   "sourceMessageIndex": 63
+  },
+  {
+   "action": "showProblem",
+   "data": {
+    "problem": {
+     "title": "Question",
+     "statement": "What did he enjoy most in Tokyo, and how did you show him around?",
+     "format": "free-response",
+     "rich": true,
+     "gloss": "東京で彼は何が一番気に入りましたか。どのように案内しましたか。"
+    },
+    "id": "inl_mwpon3hc_2"
+   },
+   "sourceMessageIndex": 63
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "He liked the Tokyo zoo and the animals, especially the pandas.",
+    "emphasis": [
+     "pandas"
+    ],
+    "gloss": "パンダは複数の話なので pandas と s を付けます。",
+    "id": "inl_mwponlpn_1"
+   },
+   "sourceMessageIndex": 65
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "I want to know about your family and what you do.",
+    "emphasis": [
+     "family",
+     "what",
+     "you",
+     "do"
+    ],
+    "gloss": "「～について知りたい」は I want to know about ～ です。",
+    "id": "inl_mwpoo3rs_1"
+   },
+   "sourceMessageIndex": 65
+  },
+  {
+   "action": "showProblem",
+   "data": {
+    "problem": {
+     "title": "Question",
+     "statement": "Why did you choose to work in sales?",
+     "format": "free-response",
+     "rich": true,
+     "gloss": "なぜ営業の仕事を選びましたか。"
+    },
+    "id": "inl_mwpoo3rs_2"
+   },
+   "sourceMessageIndex": 67
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "I like meeting new people and helping them.",
+    "gloss": "「新しい人に会って、手助けするのが好きです」という意味です。",
+    "id": "inl_mwpooo1h_1"
+   },
+   "sourceMessageIndex": 69
+  },
+  {
+   "action": "showProblem",
+   "data": {
+    "problem": {
+     "title": "Question",
+     "statement": "Can you tell me about a time when you helped a new customer? What happened?",
+     "format": "free-response",
+     "rich": true,
+     "gloss": "新しいお客様を手伝った時のことを教えてください。何が起きましたか。"
+    },
+    "id": "inl_mwpooo1h_2"
+   },
+   "sourceMessageIndex": 69
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "Mr. Kenji wanted a top-load machine.",
+    "emphasis": [
+     "top-load"
+    ],
+    "gloss": "「top-load」の前に a を付けます。",
+    "id": "inl_mwpopcr1_1"
+   },
+   "sourceMessageIndex": 71
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "I told him front-load machines save more electricity.",
+    "emphasis": [
+     "told",
+     "save"
+    ],
+    "gloss": "「tell」の過去形は told です。過去の出来事なので過去形を使います。",
+    "id": "inl_mwpopcr1_2"
+   },
+   "sourceMessageIndex": 71
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "He bought it.",
+    "emphasis": [
+     "bought"
+    ],
+    "gloss": "「buy」の過去形は bought です。",
+    "id": "inl_mwpopcr1_3"
+   },
+   "sourceMessageIndex": 71
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "He used the machine at home.",
+    "emphasis": [
+     "used"
+    ],
+    "gloss": "過去の出来事なので、use は過去形 used にします。",
+    "id": "inl_mwpopuz1_1"
+   },
+   "sourceMessageIndex": 73
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "He came back to thank me for it.",
+    "gloss": "「戻ってきて、お礼を言いました」という意味です。",
+    "id": "inl_mwpopuz1_2"
+   },
+   "sourceMessageIndex": 73
+  },
+  {
+   "action": "showProblem",
+   "data": {
+    "problem": {
+     "title": "Question",
+     "statement": "What did he say to you when he came back?",
+     "format": "free-response",
+     "rich": true,
+     "gloss": "彼はあなたに何と言いましたか。"
+    },
+    "id": "inl_mwpopuz1_3"
+   },
+   "sourceMessageIndex": 73
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "He told me that he has good experience with the machine.",
+    "emphasis": [
+     "told"
+    ],
+    "gloss": "「tell」の過去形は told です。過去の出来事なので過去形にします。",
+    "id": "inl_mwpoqdn5_1"
+   },
+   "sourceMessageIndex": 75
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "His wife likes it.",
+    "gloss": "奥さんがその機械を気に入っている、という意味です。",
+    "id": "inl_mwpoqdn5_2"
+   },
+   "sourceMessageIndex": 75
+  },
+  {
+   "action": "showProblem",
+   "data": {
+    "problem": {
+     "title": "Question",
+     "statement": "What does his wife like about the machine, and why?",
+     "format": "free-response",
+     "rich": true,
+     "gloss": "奥さんはその機械のどこが気に入っていますか。また、それはなぜですか。"
+    },
+    "id": "inl_mwpoqdn5_3"
+   },
+   "sourceMessageIndex": 75
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "His wife says the clothes dry fast, and they are cleaner.",
+    "emphasis": [
+     "says"
+    ],
+    "gloss": "主語が3人称単数（his wife）のとき、動詞に s を付けます。",
+    "id": "inl_mwpoqv1o_1"
+   },
+   "sourceMessageIndex": 77
+  },
+  {
+   "action": "newPage",
+   "data": {
+    "title": "Pronunciation",
+    "id": "inl_mwporfh0_0"
+   },
+   "sourceMessageIndex": 79
+  },
+  {
+   "action": "showProblem",
+   "data": {
+    "problem": {
+     "title": "Question",
+     "statement": "You can choose: 1) individual words, 2) a complete sentence, 3) speaking more naturally, or 4) skip and continue.",
+     "format": "free-response",
+     "rich": true,
+     "gloss": "1は単語、2は一文、3は自然な話し方、4はスキップです。"
+    },
+    "id": "inl_mwporfh0_1"
+   },
+   "sourceMessageIndex": 81
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "I have worked with international customers for several years.",
+    "emphasis": [
+     "worked",
+     "international",
+     "several",
+     "years"
+    ],
+    "gloss": "「worked」「international」「several years」を少し強く言います。",
+    "id": "inl_mwporwli_1"
+   },
+   "sourceMessageIndex": 83
+  },
+  {
+   "action": "newPage",
+   "data": {
+    "title": "Summary",
+    "id": "inl_mwposuy7_1"
+   },
+   "sourceMessageIndex": 87
+  },
+  {
+   "action": "annotate",
+   "data": {
+    "text": "\"Present perfect\": experience that continues now, \"I have worked with customers for three years.\" \"Past simple\": a finished event at a specific time, \"I attended an exhibition last year.\"",
+    "style": "highlight",
+    "rich": true,
+    "targets": true,
+    "gloss": "現在完了は今も続く経験、過去形は終わった出来事です。",
+    "id": "inl_mwposuy7_2"
+   },
+   "sourceMessageIndex": 87
+  },
+  {
+   "action": "annotate",
+   "data": {
+    "text": "To improve",
+    "style": "heading",
+    "gloss": "これから直すところ",
+    "id": "inl_mwposuy7_3_h"
+   },
+   "sourceMessageIndex": 87
+  },
+  {
+   "action": "showSentence",
+   "data": {
+    "sentence": "I have worked here for six years.",
+    "emphasis": [
+     "six",
+     "years"
+    ],
+    "gloss": "「年」が複数のときは years と s を付けます。",
+    "id": "inl_mwposuy7_3"
+   },
+   "sourceMessageIndex": 87
+  },
+  {
+   "action": "showProblem",
+   "data": {
+    "problem": {
+     "title": "Question",
+     "statement": "I have worked here for five years. / I worked here five years ago.",
+     "format": "free-response",
+     "rich": true,
+     "gloss": "二つの文の違いを説明してください。"
+    },
+    "id": "inl_mwposuy7_4"
+   },
+   "sourceMessageIndex": 87
+  },
+  {
+   "action": "annotate",
+   "data": {
+    "text": "\"I have worked here for five years.\" (still working) / \"I worked here five years ago.\" (finished)",
+    "style": "highlight",
+    "rich": true,
+    "targets": true,
+    "gloss": "今も続く場合は現在完了、終わった時点を言う場合は過去形です。",
+    "id": "inl_mwpoub5m_1"
+   },
+   "sourceMessageIndex": 89
+  }
+ ],
+ "debugEvents": [
+  {
+   "type": "start_v2",
+   "message": "tutor opens (voice)"
+  },
+  {
+   "type": "working_level_set",
+   "message": "beginner (v2)"
+  },
+  {
+   "type": "v2_practice_signal",
+   "message": "wrong part=topic-intro turn=9 sentences=1 corrected=1 stress=in the home"
+  },
+  {
+   "type": "v2_retest_recorded",
+   "message": "target=\"in the home\" part=topic-intro turn=9"
+  },
+  {
+   "type": "v2_practice_signal",
+   "message": "wrong part=topic-intro turn=11 sentences=1 corrected=1 stress=washing machines"
+  },
+  {
+   "type": "v2_retest_recorded",
+   "message": "target=\"washing machines\" part=topic-intro turn=11"
+  },
+  {
+   "type": "v2_practice_signal",
+   "message": "wrong part=present-perfect turn=14 sentences=1 corrected=1 stress=i have worked/for six"
+  },
+  {
+   "type": "v2_retest_recorded",
+   "message": "target=\"i have worked\", \"for six\" part=present-perfect turn=14"
+  },
+  {
+   "type": "v2_practice_signal",
+   "message": "wrong part=present-perfect turn=16 sentences=1 corrected=1 stress=I/sell"
+  },
+  {
+   "type": "v2_practice_signal",
+   "message": "wrong part=past-simple turn=20 sentences=1 corrected=1 stress=attended"
+  },
+  {
+   "type": "v2_retest_recorded",
+   "message": "target=\"attended\" part=past-simple turn=20"
+  },
+  {
+   "type": "v2_practice_signal",
+   "message": "wrong part=past-simple turn=22 sentences=1 corrected=1 stress=i sold/washing machines/hair dryers"
+  },
+  {
+   "type": "v2_practice_signal",
+   "message": "wrong part=past-simple turn=24 sentences=1 corrected=1 stress=months"
+  },
+  {
+   "type": "v2_retest_recorded",
+   "message": "target=\"months\" part=past-simple turn=24"
+  },
+  {
+   "type": "v2_practice_signal",
+   "message": "wrong part=past-simple turn=25 sentences=1 corrected=1 stress=to canadian"
+  },
+  {
+   "type": "v2_practice_signal",
+   "message": "wrong part=open-conversation turn=28 sentences=1 corrected=1 stress=have worked/for seven years"
+  },
+  {
+   "type": "v2_practice_signal",
+   "message": "wrong part=open-conversation turn=29 sentences=1 corrected=1 stress=corporation for seven years"
+  },
+  {
+   "type": "v2_retest_replaced",
+   "message": "target=\"attended\" part=past-simple by=\"corporation for seven years\" turn=29"
+  },
+  {
+   "type": "v2_retest_recorded",
+   "message": "target=\"corporation for seven years\" part=open-conversation turn=29"
+  },
+  {
+   "type": "v2_practice_signal",
+   "message": "wrong part=open-conversation turn=30 sentences=1 corrected=1 stress=the best part/all over/world"
+  },
+  {
+   "type": "v2_retest_replaced",
+   "message": "target=\"months\" part=past-simple by=\"the best part\", \"all over\", \"world\" turn=30"
+  },
+  {
+   "type": "v2_retest_recorded",
+   "message": "target=\"the best part\", \"all over\", \"world\" part=open-conversation turn=30"
+  },
+  {
+   "type": "v2_practice_signal",
+   "message": "wrong part=open-conversation turn=31 sentences=1 corrected=1 stress=it gives me"
+  },
+  {
+   "type": "v2_practice_signal",
+   "message": "wrong part=open-conversation turn=32 sentences=2 corrected=2 stress=i learned/a car;a canadian/customer taught"
+  },
+  {
+   "type": "v2_practice_signal",
+   "message": "wrong part=open-conversation turn=33 sentences=1 corrected=1 stress=it very"
+  },
+  {
+   "type": "v2_practice_signal",
+   "message": "wrong part=open-conversation turn=34 sentences=1 corrected=1 stress=animals especially the pandas"
+  },
+  {
+   "type": "v2_practice_signal",
+   "message": "clean part=open-conversation turn=35 sentences=1"
+  },
+  {
+   "type": "v2_practice_signal",
+   "message": "clean part=open-conversation turn=36 sentences=1"
+  },
+  {
+   "type": "v2_practice_signal",
+   "message": "wrong part=open-conversation turn=37 sentences=2 corrected=2 stress=mr kenji/a top;told/save"
+  },
+  {
+   "type": "v2_practice_signal",
+   "message": "wrong part=open-conversation turn=38 sentences=2 corrected=1 stress=used the machine"
+  },
+  {
+   "type": "v2_practice_signal",
+   "message": "wrong part=open-conversation turn=39 sentences=2 corrected=1 stress=he told/the machine"
+  },
+  {
+   "type": "v2_practice_signal",
+   "message": "wrong part=open-conversation turn=40 sentences=1 corrected=1 stress=wife says/they are"
+  },
+  {
+   "type": "pronunciation_armed",
+   "message": "#1 \"I have worked with international customers for several years.\" (v2)"
+  },
+  {
+   "type": "pronunciation_start_ignored_tutor_speaking",
+   "message": "#1 (v2)"
+  },
+  {
+   "type": "pronunciation_armed",
+   "message": "#2 \"I have worked with international customers for several years.\" (v2)"
+  },
+  {
+   "type": "pronunciation_clip_sent",
+   "message": "#2 6656ms peak=-4.1dBFS \"I have worked with international customers for several years.\" (v2)"
+  },
+  {
+   "type": "pronunciation_scored",
+   "message": "#2 measured 84/100 (v2)"
+  }
+ ]
+}

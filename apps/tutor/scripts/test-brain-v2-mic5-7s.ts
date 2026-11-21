@@ -5,6 +5,8 @@
  * real turns (the session record's transcript and whiteboard commands, quoted in task-7r-investigation.md B, D, E, F, G).
  * No network, no model, nothing to the speech vendor.
  *   npm run test:brain-v2-mic5-7s
+ *   (run with NEXT_PUBLIC_TUTOR_V2_ASK_QUESTION_CARD=off, Task 8g: item 1's "live record" check pins the ask read without the stored
+ *   question; 8g also reads it from the question card. Run with it on, only that regression-record check differs.)
  *
  *  1 QUESTION_ONCE fix    a card question the runtime speaks is stored after its card, once: the six corrected answers after a
  *                         question (#6, #16, #20, #31, #50, #56) each give a v2_practice_signal through runV2Turn
