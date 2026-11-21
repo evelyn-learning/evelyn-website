@@ -57,7 +57,7 @@ import { LearnerCardWatch, V2_AS_SAID_REFUSED, V2_REPLY_MISHEARD, v2CardCorrects
 import { v2SummaryHeadingPlan, v2SummaryHeadingRepeat } from './summary-headings';
 import { v2StopAsked } from './stop-signal';
 import { V2_CLOSE_INVITE_LINE, V2_CLOSE_INVITE_REFUSAL, V2_CLOSE_INVITE_REFUSAL_GIVEN, V2_CLOSE_INVITE_WAIT, v2CloseInviteRefusal, v2InviteOfReply, v2SummaryGiven, V2_CLOSE_MORE_LINE, V2_CLOSE_REOPEN_REFUSAL, v2CloseInviteOn, v2CloseInviteOwed, v2CloseReopened, v2ReplyAsksMoreOrFinish, v2ReplyInvites } from './close-invite';
-import { TUTOR_V2_LEVEL_CHECK_PUT, TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_NOTE_TARGET_QUOTES, TUTOR_V2_NOTE_TARGET_MARK, TUTOR_V2_NOTE_STRESS_MARK, TUTOR_V2_NO_MARKDOWN_STARS, TUTOR_V2_CARD_GLOSS_SHOW, TUTOR_V2_SUPPORT_STEPS, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_PART_GO_NAMED, TUTOR_V2_PRONUNCIATION_PAGE, TUTOR_V2_FRAGMENT_CARD, TUTOR_V2_CARD_AT_SENTENCE, TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_RETEST_TARGET_CHANGED, TUTOR_V2_OPENING_PAGE_TITLE, TUTOR_V2_FREE_CONVERSATION, TUTOR_V2_REPEAT_THEN_WAIT, TUTOR_V2_OPENING_PAGE_FIRST, TUTOR_V2_UNHEARD_ASK_OWED, TUTOR_V2_REPEAT_NOT_MISHEARD, TUTOR_V2_OWED_CARD_RIGHT, TUTOR_V2_SUMMARY_HEADINGS, TUTOR_V2_PRON_TARGET_SAID, TUTOR_V2_ANSWER_OVER_ASK } from '../orchestrator/flags';
+import { TUTOR_V2_LEVEL_CHECK_PUT, TUTOR_V2_OWN_KEY_NOT_LANGUAGE, TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_NOTE_TARGET_QUOTES, TUTOR_V2_NOTE_TARGET_MARK, TUTOR_V2_NOTE_STRESS_MARK, TUTOR_V2_NO_MARKDOWN_STARS, TUTOR_V2_CARD_GLOSS_SHOW, TUTOR_V2_SUPPORT_STEPS, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_PART_GO_NAMED, TUTOR_V2_PRONUNCIATION_PAGE, TUTOR_V2_FRAGMENT_CARD, TUTOR_V2_CARD_AT_SENTENCE, TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_RETEST_TARGET_CHANGED, TUTOR_V2_OPENING_PAGE_TITLE, TUTOR_V2_FREE_CONVERSATION, TUTOR_V2_REPEAT_THEN_WAIT, TUTOR_V2_OPENING_PAGE_FIRST, TUTOR_V2_UNHEARD_ASK_OWED, TUTOR_V2_REPEAT_NOT_MISHEARD, TUTOR_V2_OWED_CARD_RIGHT, TUTOR_V2_SUMMARY_HEADINGS, TUTOR_V2_PRON_TARGET_SAID, TUTOR_V2_ANSWER_OVER_ASK } from '../orchestrator/flags';
 import { v2CardGlossOn, v2CleanGloss, v2GlossLevelOn } from './card-gloss';
 import { v2NoteTargetsOn, v2NoteTargetsSection, v2NoteHasTarget, v2NoteStressWords } from './note-targets';
 import { V2StarStrip, v2StripStars } from './markdown-stars';
@@ -147,6 +147,8 @@ export interface V2TurnInput {
   mathsCheck?: boolean;
   /** Work out, after the reply, a problem the tutor set that is not the plan's. Default: on for real model calls, off for a stubbed one. */
   ownKey?: boolean;
+  /** Task 8e fix round 1, tests only: OWN_KEY_NOT_LANGUAGE for this turn (default: the flag). */
+  ownKeyNotLanguage?: boolean;
   /** Work out the answer to a question asked aloud (default: on for real model calls, off for stubs). */
   askedKey?: boolean;
   callModel?: V2ModelCall;
@@ -507,6 +509,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Task 7g (QUESTION_CARD): spoken lessons that teach a language (two teaching languages, or pronunciation measured).
   // Task 7o: spoken lessons that teach a language (note-targets.ts): the target of a note is marked on the board.
   const noteTargets = v2NoteTargetsOn(session);
+  // Task 8e fix round 1 (OWN_KEY_NOT_LANGUAGE): in such a lesson a question card is no problem with an answer to work out: main's
+  // worked key (below, ownKeys) is neither recorded for it nor worked.
+  const noOwnKey = (input.ownKeyNotLanguage ?? TUTOR_V2_OWN_KEY_NOT_LANGUAGE) && noteTargets;
   // Task 7p: spoken lessons taught through the learner's own language (card-gloss.ts).
   const cardGloss = v2CardGlossOn(session);
   const questionCards = TUTOR_V2_QUESTION_CARD && session.mode === 'voice' && !discussion && !session.homework && !session.homeworkSheet && ((session.languages?.length ?? 0) >= 2 || !!session.pronunciation);
@@ -997,7 +1002,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         // Merge with main (Task 8e): …and then not main's "look back" (as at the runtime's own turn to a visit, above).
         if (o.painted && block.name === 'go_to_page' && partFlow && session.plan) { const note = v2PageTurnNote(session.plan, state); if (note) { outcome = note; delete state.board.look; } }
         // A problem of the tutor's own making has no answer in the plan: it is worked out apart, after this reply.
-        if (put && !planGoal && o.painted) state.ownKeys = { ...(state.ownKeys ?? {}), [block.id]: '' };
+        if (put && !planGoal && o.painted && !noOwnKey) state.ownKeys = { ...(state.ownKeys ?? {}), [block.id]: '' };
         if (planGoal) {
           if (o.painted && !partAlone) state.problemCards = { ...(state.problemCards ?? {}), [planGoal]: block.id };
           // A problem of the plan on the board is that part of the plan begun, whether or not the tutor records
@@ -1956,7 +1961,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // such problem is solved once on a clean page while the student is reading it, and the result is a fact from the
   // next turn on (facts.ts). Left unworked by an interrupted turn, it is worked at the end of the next.
   const unworked = Object.entries(state.ownKeys ?? {}).filter(([id, key]) => !key && state.board.pages.some((pg) => pg.items.some((it) => it.id === id))).slice(-2);
-  const ownKeys: Promise<Array<[string, string]>> = (input.ownKey ?? (!input.callModel && process.env.TUTOR_V2_OWN_KEY !== 'off')) && unworked.length && !state.closed && !input.signal?.aborted
+  const ownKeys: Promise<Array<[string, string]>> = (input.ownKey ?? (!input.callModel && process.env.TUTOR_V2_OWN_KEY !== 'off')) && !noOwnKey && unworked.length && !state.closed && !input.signal?.aborted
     ? Promise.all(unworked.map(([id]) => {
       const item = state.board.pages.flatMap((pg) => pg.items).find((it) => it.id === id);
       return callModel({

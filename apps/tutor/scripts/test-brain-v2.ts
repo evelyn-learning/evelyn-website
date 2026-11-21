@@ -9,7 +9,7 @@ import { mayOpenPart, partOffer } from '../src/lib/tutor/v2/part-close';
 import { mentionsTool } from '../src/lib/tutor/v2/tool-talk';
 import { applyToModelBoard, renderBoard, boardMisfit, spacedRoman, taskOnly, wordsAsText, stackedRow } from '../src/lib/tutor/v2/board';
 import { anchorSentenceFinal, anchorSentenceIndex, asksAloud, inlineSentenceIndex, saidCovers, unsaidAsk, unsaidBoardItem, asksAnywhere } from '../src/lib/tutor/v2/board-timing';
-import { TUTOR_V2_CLOSE_BY_CONTENT, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM } from '../src/lib/tutor/orchestrator/flags';
+import { TUTOR_V2_CLOSE_BY_CONTENT, TUTOR_V2_OWN_KEY_NOT_LANGUAGE, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM } from '../src/lib/tutor/orchestrator/flags';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
 import { speaksMaths, unwrittenEquations } from '../src/lib/tutor/v2/spoken-maths';
 import { renderFacts, V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S } from '../src/lib/tutor/v2/facts';
@@ -1163,6 +1163,23 @@ async function main() {
     check('its worked answer is a fact while its card is on the page in view', /you set yourself[\s\S]*x = −1 and x = 1/.test(renderFacts(ownVoice, ro.state, { nowMs: 1_060_000 })));
     const away = structuredClone(ro.state); away.board.pages.push({ title: 'Next', items: [] }); away.board.current = away.board.pages.length - 1;
     check('and not once the board has moved to another page', !/you set yourself/.test(renderFacts(ownVoice, away, { nowMs: 1_060_000 })));
+    {
+      // Task 8e fix round 1 (OWN_KEY_NOT_LANGUAGE): a question card in a spoken lesson that teaches a language starts no second call.
+      const cardText = 'Good. <board problem>What kind of products do you sell?</board> Tell me in one sentence.';
+      const run = async (s: V2Session, notLanguage?: boolean) => {
+        const seen: Anthropic.MessageCreateParamsNonStreaming[] = [];
+        const call: V2ModelCall = async (p, onText) => { seen.push(structuredClone(p)); if (seen.length === 1) { onText?.(cardText); return msg([{ type: 'text', text: cardText }], 'end_turn'); } return msg([{ type: 'text', text: 'No single answer.' }], 'end_turn'); };
+        const r = await runV2Turn({ session: s, state: newV2State(1_000_000), studentSaid: 'ok', callModel: call, boardPass: false, ownKey: true, ...(notLanguage === undefined ? {} : { ownKeyNotLanguage: notLanguage }) });
+        return { calls: seen.length, keys: Object.keys(r.state.ownKeys ?? {}).length, carded: r.state.board.pages.some((pg) => pg.items.some((it) => it.tool === 'show_problem')) };
+      };
+      const lang: V2Session = { ...session, mode: 'voice', subject: 'English', languages: ['en', 'ja'] };
+      const langOn = await run(lang); const langOff = await run(lang, false);
+      const maths = await run(ownVoice); const typedLang = await run({ ...lang, mode: 'text' }); const pron = await run({ ...session, mode: 'voice', subject: 'English', pronunciation: true });
+      check('a question card in a spoken language lesson starts no second call and records no key', langOn.carded && langOn.calls === 1 && langOn.keys === 0, langOn);
+      check('…nor in one with measured pronunciation', pron.carded && pron.calls === 1 && pron.keys === 0, pron);
+      check('in a maths lesson the same card is worked, as on main; a typed language lesson too', maths.carded && maths.calls === 2 && maths.keys === 1 && typedLang.calls === 2 && typedLang.keys === 1, [maths, typedLang]);
+      check('OWN_KEY_NOT_LANGUAGE off alone: worked in the language lesson, as on main', langOff.calls === 2 && langOff.keys === 1 && TUTOR_V2_OWN_KEY_NOT_LANGUAGE === true, langOff);
+    }
     // Interrupted before it was worked: the next turn works it.
     const left = structuredClone(ro.state); left.ownKeys = { [keys[0]?.[0] ?? 'x']: '' };
     const again = stub([msg([{ type: 'text', text: 'Take your time.' }], 'end_turn'), msg([{ type: 'text', text: 'x = −1 and x = 1; max 18.' }], 'end_turn')]);

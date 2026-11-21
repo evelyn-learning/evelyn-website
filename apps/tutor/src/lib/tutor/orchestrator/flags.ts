@@ -2557,3 +2557,12 @@ export const TUTOR_V2_ASK_LAST_QUESTION = process.env.NEXT_PUBLIC_TUTOR_V2_ASK_L
  *  Mic test 10 (embed-1795202398886 T36: WB29 was no correction of T35 by exact words, so WB30, their sentence as said, went up) (Task 8c
  *  fix round 2). Default ON; NEXT_PUBLIC_TUTOR_V2_CORRECTION_STEMS=off ⇒ as before. */
 export const TUTOR_V2_CORRECTION_STEMS = process.env.NEXT_PUBLIC_TUTOR_V2_CORRECTION_STEMS !== 'off';
+
+/** Tutor brain v2 (v2/turn.ts, the worked answer key of main's 0015a7fa): a problem the tutor sets that is not the plan's is worked out
+ *  apart by a second model call after the reply, for the tutor to check answers by. In a spoken lesson that teaches a language
+ *  (note-targets.ts v2NoteTargetsOn: two teaching languages or measured pronunciation, the gate of the target marks) every question
+ *  card is such a "problem" ("What kind of products do you sell?"): there is no answer to work out, and each card held the turn open
+ *  for a second call. There the key is not recorded and not worked. Maths and science lessons, typed lessons, homework and
+ *  discussions are as on main (Task 8e fix round 1, ruling 2). Default ON; NEXT_PUBLIC_TUTOR_V2_OWN_KEY_NOT_LANGUAGE=off ⇒ the key
+ *  is worked in every lesson, as on main. (Main's own switch TUTOR_V2_OWN_KEY=off still turns the key off everywhere.) */
+export const TUTOR_V2_OWN_KEY_NOT_LANGUAGE = process.env.NEXT_PUBLIC_TUTOR_V2_OWN_KEY_NOT_LANGUAGE !== 'off';
