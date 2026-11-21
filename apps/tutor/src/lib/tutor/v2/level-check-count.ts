@@ -22,6 +22,7 @@
  * Pure, client-safe.
  */
 import type Anthropic from '@anthropic-ai/sdk';
+import { v2WithoutCutBoardNote } from './interrupted';
 import type { LessonPlan } from '../lesson-plan/types';
 import { stripBoardBlocks } from './board-inline';
 import { v2PartOf } from './plan-map';
@@ -187,7 +188,7 @@ const TELL_ME = /^(?:(?:so|okay|ok|now|first|great|good|then)[,.!]?\s+)*(?:pleas
  *  nothing) is never a question put. */
 export function v2LevelQuestionOf(reply: string): string | null {
   const cut = /\[cut off[^\]]*\]/i.test(reply);
-  const heard = stripBoardBlocks(reply).replace(/\[cut off[^\]]*\]/gi, ' ').replace(/\s+/g, ' ').trim();
+  const heard = stripBoardBlocks(v2WithoutCutBoardNote(reply)).replace(/\[cut off[^\]]*\]/gi, ' ').replace(/\s+/g, ' ').trim();
   const sentences = heard.split(/(?<=[.!?。！？]["'”’」)]*)\s*/).map((x) => x.trim()).filter(Boolean);
   // M1: the runtime's check-in, word for word (fix round 2: wherever it stands, as replies of one turn are joined).
   for (let i = sentences.length - 1; i >= 0; i--) if (V2_CHECK_INS.includes(sentences[i]!)) sentences.splice(i, 1);

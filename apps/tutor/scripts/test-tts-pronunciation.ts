@@ -3,7 +3,7 @@
 // em-dash normalization, math-variable letter respelling.
 import assert from 'node:assert';
 import { speechRateForLevel } from '../src/lib/tutor/voice/speech-rate';
-import { outsideMathSpans, rewriteForTTS, speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakNumberPlurals, speakPhonemeSlashes, speakSlashes, speakLessonNotation, speakLetterUnits } from '../src/lib/tutor/voice/tts-pronunciation';
+import { outsideMathSpans, rewriteForTTS, speakBonds, speakCoefficientLetters, speakCoefficientNames, speakDataRuns, speakFormulas, speakNumberPlurals, speakPhonemeSlashes, speakReEndings, speakSlashes, speakLessonNotation, speakLetterUnits } from '../src/lib/tutor/voice/tts-pronunciation';
 
 // --- Slash-pair whitelist -----------------------------------------
 assert.strictEqual(
@@ -1515,8 +1515,14 @@ console.log('OK — tts-pronunciation rewrites validated');
   // Mathematics typed in a sentence gets its words (embed-1794336536781: "one x", "fef aye", "infinity over zeroth").
   const say = (x: string) => rewriteForTTS(x);
   assert.match(say("what's left is f'(a) over g'(a)"), /f prime of a over g prime of a/i);
-  assert.match(say('the derivative of 1/x is -1/x².'), /1 over x is -1 over x squared/);
-  assert.match(say('simplify (1/x) divided by (-1/x²)'), /\(1 over x\) divided by \(-1 over x squared/);
+  assert.match(say('the derivative of 1/x is -1/x².'), /1 over x is negative 1 over x squared/);
+  // The keyboard minus and a closed interval (AP Calculus BC, portal-8e2d86f3).
+  assert.match(say('For f(x) = x^3 - 3x on the closed interval [-2, 3], find the maximum.'), /x cubed minus 3x on the closed interval from negative 2 to 3,/);
+  assert.match(say("Your arithmetic on -27 + 36 is right, but the test needs f'(-3)."), /on negative 27 \+ 36 is right.*f prime of negative 3/);
+  assert.match(say('Find the max of x⁴ − 8x² + 1 on [-3, 2].'), /on the interval from negative 3 to 2\./);
+  assert.match(say('A well-known range of 10-15, from 2019 - 2021.'), /well-known range of 10-15, from 2019 - 2021/);
+  assert.match(say('$x^3 - 3x$ on $[-2, 3]$'), /x cubed minus 3x on the interval from minus 2 to 3/);
+  assert.match(say('simplify (1/x) divided by (-1/x²)'), /\(1 over x\) divided by \(negative 1 over x squared/);
   assert.match(say("Here's an ∞⁰ form"), /infinity to the power 0 form/);
   assert.match(say('a 1^∞ form'), /1 to the power infinity form/);
   assert.match(say('x/2 and 3x/4 and x/y'), /x over 2 and 3x over 4 and x over (y|why)/);
@@ -1563,6 +1569,12 @@ console.log('OK — tts-pronunciation rewrites validated');
   assert.equal(speakDataRuns('for these heights, 165, 170, 168, 172, 175, 180, 178, 169, 173, 171, 177, 182, 179, 174, 176, suggest a bin width'), 'for these heights, the 15 values on the board, suggest a bin width');
   assert.equal(speakNumberPlurals('the two 4s and the 5, three 10s, the 1s cancel, two 25s'), "the two fours and the 5, three tens, the ones cancel, two 25's");
   assert.equal(speakNumberPlurals('it took 4s to fall'), 'it took 4s to fall');
+  // portal-e8640e11: "a thick band of fibres" was said "fibrase".
+  assert.equal(speakReEndings('a thick band of fibres, 3 metres from the Centre; a centred lens, 2 litres, a fibre'), 'a thick band of fibers, 3 meters from the Center; a centered lens, 2 liters, a fiber');
+  for (const keep of ['the genre and the acre', 'they are more sure here', 'a fiber and a meter', 'mitre']) assert.equal(speakReEndings(keep), keep);
+  assert.equal(speakCoefficientNames('using the b and a from y = ax² + bx + c, over (2a) or 4ac; here a is 1'), 'using the b and ay from y = ay x² + bee x + c, over (2 ay) or 4 ay see; here ay is 1');
+  for (const keep of ['Take a box and a ball; a is the first letter.', 'Divide by x, then relax and fix the tax.', '2x + 3y = 12']) assert.equal(speakCoefficientNames(keep), keep);
+  assert.equal(speakCoefficientNames('Lines l and m are parallel; the rope is 5 m long, I\'m sure, and m is the slope.'), 'Lines el and em are parallel; the rope is 5 m long, I\'m sure, and em is the slope.');
   // A unit over seconds is "per second" and one letter over another is "over" (AP Physics 1, embed-1794441323503).
   assert.match(rewriteForTTS(speakSlashes('Yes, ω is 8 rad/s, and L is 8 kg·m²/s.')), /8 radians per second, .*squared per second/);
   assert.equal(speakSlashes('the same rate ω = v/r, so use F/m'), 'the same rate ω = v over r, so use F over m');
@@ -1590,6 +1602,12 @@ console.log('OK — tts-pronunciation rewrites validated');
   assert.equal(maths9('The minus sign stays attached to the $5$.'), 'The minus sign stays attached to the 5.');
   assert.equal(maths9('It costs $5 and $3.'), 'It costs 5 dollars and 3 dollars.');
   assert.equal(speechRateForLevel('7'), 0.78); assert.equal(speechRateForLevel('9-10'), 0.88); assert.equal(speechRateForLevel('grade 4'), 0.7);
-  for (const full of ['12', 'ap', 'college', undefined]) assert.equal(speechRateForLevel(full), undefined);
+  // An AP lesson at the full rate was "a little fast" (Praveen, AP US Government, portal-ddf273bf): the oldest
+  // students and levels with no grade number are spoken to a little slower than the voice's own pace too.
+  for (const full of ['12', 'ap', 'college', undefined]) assert.equal(speechRateForLevel(full), 0.88);
+  assert.match(rewriteForTTS('Federalist No. 51 is one of those essays.'), /Federalist Number 51/);
+  assert.match(rewriteForTTS('See Nos. 10 and 51.'), /Numbers 10 and 51/);
+  assert.match(rewriteForTTS('Use the no. 3 on the list.'), /the number 3 on the list/);
+  assert.match(rewriteForTTS('No. That is not right. No 5 is there.'), /^No\. That is not right\. No 5 is there\.$/);
   for (const keep of ['The scores are 62, 66, 70, 73, 75.', 'In 1492, 1519, and 1550 to 1551.', 'It cost 1,250,000 dollars.']) assert.equal(speakDataRuns(keep), keep);
 }

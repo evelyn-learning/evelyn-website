@@ -47,6 +47,11 @@ const AUDIO_CONSTRAINTS: MediaTrackConstraints = {
   echoCancellation: true,
   noiseSuppression: true,
   autoGainControl: true,
+  // Keep the nearest voice and drop other people's (a television in the room was taken for the student, ECS,
+  // embed-1795049380206). A preference, not a requirement: a browser that does not know the setting ignores
+  // it, and few apply it yet, so the words are also checked (v2/room-voices.ts).
+  // NEXT_PUBLIC_TUTOR_ROOM_VOICES=off removes it.
+  ...(process.env.NEXT_PUBLIC_TUTOR_ROOM_VOICES !== 'off' ? ({ voiceIsolation: true } as MediaTrackConstraints) : {}),
 };
 
 let sharedStream: MediaStream | null = null;
@@ -152,6 +157,7 @@ export async function acquireSharedMicStream(consumer: string): Promise<MediaStr
         `echoCancellation=${(settings as MediaTrackSettings).echoCancellation} ` +
         `noiseSuppression=${(settings as MediaTrackSettings).noiseSuppression} ` +
         `autoGainControl=${(settings as MediaTrackSettings).autoGainControl} ` +
+        `voiceIsolation=${String((settings as MediaTrackSettings & { voiceIsolation?: boolean }).voiceIsolation)} ` +
         `sampleRate=${(settings as MediaTrackSettings).sampleRate}` +
         (label ? ` device="${label.slice(0, 60)}"` : '');
       console.warn(`[shared-mic] opened for ${[...holders].join('+')} — ${summary}`);

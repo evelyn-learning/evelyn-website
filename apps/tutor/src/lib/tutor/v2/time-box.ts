@@ -18,6 +18,7 @@
 import type { LessonPlan } from '../lesson-plan/types';
 import { TUTOR_V2_CLOCK_FROM_START, TUTOR_V2_CLOSE_BY_CONTENT, TUTOR_V2_FLAG_CLOCK_PAUSE, TUTOR_V2_MORE_PRACTICE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_OVERRUN_MIN, TUTOR_V2_PART_ENTERED, TUTOR_V2_PART_MIN_PRACTICE, TUTOR_V2_TIME_BOX, TUTOR_V2_TIME_NO_SQUEEZE, TUTOR_V2_TIME_OVERRUN } from '../orchestrator/flags';
 import { discussionOf } from './discussion';
+import { closeDueMinutes } from './close-heard';
 import { v2IsPageOfPart, v2OfferedOut, v2PartEntered, v2PartIsOptional, v2PartOf } from './plan-map';
 import { v2SummaryOpensClose } from './summary-close';
 import type { V2Session, V2State } from './types';
@@ -98,11 +99,14 @@ export function v2WrapMin(session: Pick<V2Session, 'wrapMinutes' | 'timeBoxMinut
  *  closing reply opens is never held (turn.ts). Here, a leaf module, so close-invite.ts reads it too (facts.ts re-exports it). */
 export const V2_TIME_UP_MIN = 1.5;
 
-/** The clock lets the tutor close by itself: no box, or the box's last fifth (turn.ts applyControlTool's end_lesson rule; a
- *  student's request or a finished homework close at any time). Task 7d: the invitation to ask questions lives only here. */
+/** The clock lets the tutor close by itself: no box, or the close is due (close-heard.ts closeDueMinutes: the box's last fifth,
+ *  and never more than two minutes; turn.ts applyControlTool's end_lesson rule; a student's request or a finished homework close
+ *  at any time). Task 7d: the invitation to ask questions lives only here.
+ *  Merge with main (Task 8e): main moved this rule from the last fifth to closeDueMinutes (9efef789, 18bf8177: a lesson closed
+ *  at 24:21 of 30:00); it is read here, where this branch had moved the rule. */
 export function v2CloseOpenByClock(session: Pick<V2Session, 'timeBoxMinutes'>, state: Pick<V2State, 'startedAtMs'>, nowMs: number): boolean {
   if (!session.timeBoxMinutes) return true;
-  return session.timeBoxMinutes - (nowMs - state.startedAtMs) / 60000 <= session.timeBoxMinutes * 0.2;
+  return session.timeBoxMinutes - (nowMs - state.startedAtMs) / 60000 <= closeDueMinutes(session.timeBoxMinutes);
 }
 
 /** Task 7f D (CLOSE_BY_CONTENT): the plan's content is done: every part before the last (the close's own) is done: a goal
@@ -209,21 +213,31 @@ export function v2PartDueFact(session: V2Session, state: V2State, nowMs: number,
   return `${head}: [${due.id}]${due.label ? ` ${due.label}` : ''} would be running now (part ${due.n} of ${due.of}, minutes ${due.fromMin}–${due.toMin}${within})`;
 }
 
+/** Main's words for the close being due (18bf8177), said in the time line when the close is by the clock alone. */
+const V2_CLOSE_DUE_LINE = 'tell the student so now, once and in a few words, then use what is left for the one thing that matters most (finish the step in hand, or say what to take away), and close when that is done. Do not start anything new';
+
 /** The lesson's time line in the facts, after "time: N min used of about B; " (facts.ts). Task 7f: "the time is up" at the box
- *  plus the margin (F); the close by content or the wrap minute, never the box's last fifth (D). Both off: as before. */
+ *  plus the margin (F); the close by content or the wrap minute, never the box's last fifth (D). Both off: as before.
+ *  Merge with main (Task 8e): "as before" is now main's line (18bf8177): time for more until the close is due (closeDueMinutes),
+ *  then "tell the student so now…", and with no margin "the time is up: close now" under 45 seconds. */
 export function v2LessonTimeLine(session: V2Session, state: Pick<V2State, 'startedAtMs'>, nowMs: number, o: { summaryBegun: boolean; closeOpen: boolean; tf: V2TimeFlags }): string {
   const box = session.timeBoxMinutes!;
   const used = (nowMs - state.startedAtMs) / 60000;
   const left = box - used;
   const leftStop = left + (o.tf.overrun ? v2OverrunMin(true) : 0);
   const n = Math.round(left);
+  const wrapDue = v2WrapDue(session, used, TUTOR_V2_TIME_BOX, o.tf.closeByContent);
+  if (!o.tf.closeByContent && !o.tf.overrun && !wrapDue) {
+    if (left > closeDueMinutes(box)) return o.summaryBegun ? `about ${n} left` : `about ${n} left, which is time for more: the lesson is not at its close unless the student asks to stop`;
+    return left > 0.75 ? `about ${Math.max(1, n)} left: ${V2_CLOSE_DUE_LINE}` : 'the time is up: close now, in a sentence or two';
+  }
   if (leftStop <= V2_TIME_UP_MIN) return 'the time is up';
-  if (v2WrapDue(session, used, TUTOR_V2_TIME_BOX, o.tf.closeByContent)) {
+  if (wrapDue) {
     return left > 0.5 ? `about ${Math.max(1, n)} minutes left: finish this exchange, then summary` : 'the planned time is reached: finish this exchange properly, then summary (there are a few minutes past it to finish well, not for new work)';
   }
   if (!o.tf.closeByContent) {
-    if (left > box * 0.2) return o.summaryBegun ? `about ${n} left` : `about ${n} left, which is time for more: the lesson is not at its close unless the student asks to stop`;
-    return left > 0.5 ? `about ${n} left: the close is near` : 'the planned time is reached: the close is near';
+    if (left > closeDueMinutes(box)) return o.summaryBegun ? `about ${n} left` : `about ${n} left, which is time for more: the lesson is not at its close unless the student asks to stop`;
+    return left > 0.5 ? `about ${Math.max(1, n)} left: ${V2_CLOSE_DUE_LINE}` : 'the planned time is reached: the close is near';
   }
   if (o.summaryBegun) return `about ${n} left`;
   if (o.closeOpen) return `about ${n} left; the plan's parts are done, so the summary may begin`;

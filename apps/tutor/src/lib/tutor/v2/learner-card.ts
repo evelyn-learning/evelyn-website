@@ -36,6 +36,7 @@
  * session): maths and science, one-language lessons, typed lessons, homework and a discussion are unchanged.
  */
 import type Anthropic from '@anthropic-ai/sdk';
+import { v2WithoutCutBoardNote } from './interrupted';
 import { TUTOR_V2_ANSWER_SIGNAL, TUTOR_V2_ASK_LAST_QUESTION, TUTOR_V2_BOARD_LEARNER_SENTENCE, TUTOR_V2_CARD_EVERY_SENTENCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_OWED_CARD_RIGHT, TUTOR_V2_PRACTISED_SENTENCE } from '../orchestrator/flags';
 import { languageNameOf } from '../voice/language-request';
 import { stripBoardBlocks, type InlineBlock, type InlinePart } from './board-inline';
@@ -401,7 +402,7 @@ function askedForAnswer(state: Pick<V2State, 'history' | 'unheard'>, wide: boole
   const last = [...state.history].reverse().find((h) => h.role === 'assistant');
   if (!last) return false;
   const raw = textOf(last);
-  const heardPart = stripBoardBlocks(raw).replace(/\[cut off[^\]]*\]/gi, ' ');
+  const heardPart = stripBoardBlocks(v2WithoutCutBoardNote(raw)).replace(/\[cut off[^\]]*\]/gi, ' ');
   const sentences = [...heardPart.split(/(?<=[.!?。！？]["'”’」)]*)\s+/), ...(state.unheard ?? [])].map((x) => x.trim()).filter(Boolean);
   const end = sentences[sentences.length - 1] ?? '';
   if (end && (v2IsPartAsk(end) || v2ReplyInvites(end))) return false;

@@ -14,6 +14,12 @@ import type { V2State, V2ToolCall } from './types';
 import { TUTOR_V2_SELF_CORRECTION, TUTOR_V2_STAY_IN_PART } from '../orchestrator/flags';
 
 export const V2_CUT_MARK = '[cut off here: the student began to speak]';
+/** Merge with main (Task 8e): main's note on a cut reply (trimToSpoken: "[this reply had already put on the board, where the student
+ *  can read it: the problem "…"]") is the system's, as the cut mark is. This branch's readers of the tutor's own words (the last
+ *  reply's asks, questions put, openers) take it out as they take the mark out: left in, the quoted problem read as a question the
+ *  cut reply had asked aloud (the level check counted a question as put by a reply cut before it, 8a). */
+export const V2_CUT_BOARD_NOTE = /\s*\[this reply had already put on the board, where the student can read it: [\s\S]*?"\](?=\s|$)/g;
+export const v2WithoutCutBoardNote = (text: string): string => text.replace(V2_CUT_BOARD_NOTE, '');
 
 export function foldInterruptedTurn(state: V2State, studentBlock: string, heard: string, toolCalls: V2ToolCall[]): V2State {
   const said = heard.trim();
@@ -60,11 +66,28 @@ export function trimToSpoken(state: V2State, sentences: string[], started: numbe
   const blocks: Anthropic.ContentBlockParam[] = typeof msg.content === 'string' ? [{ type: 'text', text: msg.content }] : [...(msg.content as Anthropic.ContentBlockParam[])];
   const said = sentences.slice(0, Math.max(0, started)).join(' ').trim();
   const others = blocks.filter((b) => b.type !== 'text');
+  // A problem this reply put on the board is on the board, heard or not, and the student may go on to answer it.
+  // With its sentence struck from the record the tutor did not know it had set it: the student solved it, and was
+  // then told "the next one is already on the board" and given the same problem again (ACT Math, portal-3d431436).
+  const whole = blocks.map((b) => (b.type === 'text' ? b.text : '')).join('\n');
+  const cards = [...whole.matchAll(/<board problem[^>]*>([\s\S]*?)<\/board>/g)].map((m) => m[1].replace(/\s+/g, ' ').trim()).filter(Boolean);
+  const onBoard = cards.length ? ` [this reply had already put on the board, where the student can read it: ${cards.map((c) => `the problem "${c.slice(0, 300)}"`).join('; ')}]` : '';
   const next: V2State = structuredClone(state);
-  next.history[i] = { role: 'assistant', content: [{ type: 'text', text: said ? `${said} ${V2_CUT_MARK}` : V2_CUT_MARK }, ...others] };
+  next.history[i] = { role: 'assistant', content: [{ type: 'text', text: `${said ? `${said} ${V2_CUT_MARK}` : V2_CUT_MARK}${onBoard}` }, ...others] };
   const unheard = sentences.slice(Math.max(0, started)).map((x) => x.trim()).filter(Boolean).slice(0, 4);
   if (keepUnheard && unheard.length) next.unheard = unheard;
   return next;
+}
+
+/** The student came in over the last sentence of a reply, a question, with a brief answer to it: they heard it.
+ *  Counted as unheard, "Shall we go on, or do you have a question first?" answered "Yeah." a moment before it
+ *  ended was struck from the record, and the tutor asked it again (AP Macroeconomics, portal-a4f66d55, twice).
+ *  Anything longer, or said over an earlier sentence, is still a cut: the question may not have got through. */
+const BRIEF_ANSWER = /^\s*(?:(?:oh|um|uh|well|so)[, ]+)*(?:yes|yeah|yep|yup|ya|ok|okay|sure|alright|all right|mhm|uh[- ]?huh|no|nope|nah|not yet|go on|go ahead|let'?s (?:go|go on|move on|do it|continue)|i do|i don'?t|got it|makes sense)\b/i;
+export function answeredAsItEnded(studentSaid: string, sentences: string[], started: number): boolean {
+  if (!sentences.length || started !== sentences.length) return false;
+  const words = studentSaid.trim().split(/\s+/).filter(Boolean);
+  return /\?["')\]]*$/.test(sentences[sentences.length - 1].trim()) && words.length > 0 && words.length <= 6 && BRIEF_ANSWER.test(studentSaid);
 }
 
 /** Task 7v (SELF_CORRECTION): the learner's words of a turn cut before anything of the reply reached them (no words heard, no board

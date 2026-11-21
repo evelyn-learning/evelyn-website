@@ -21,6 +21,7 @@
 import { isCodeBody, typesetMaths, unfoldCode } from './rich-text';
 import { toolFigureCall } from './figure-catalogue';
 import { TUTOR_V2_CARD_GLOSS_SHOW, TUTOR_V2_SENTENCE_CARDS } from '../orchestrator/flags';
+import { parseXYRelation } from '../whiteboard/graph-inequalities';
 
 export type InlineKind = 'equation' | 'note' | 'problem' | 'table' | 'timeline' | 'compare' | 'steps' | 'quote' | 'forces' | 'numberline' | 'graph' | 'cycle' | 'web' | 'map' | 'chart' | 'ranks' | 'code' | 'sketch' | 'figure' | 'page' | 'sentence';
 export interface InlineBlock { kind: InlineKind; attrs: Record<string, string>; body: string; raw: string }
@@ -134,6 +135,23 @@ function pipedPoints(body: string): boolean {
 /** The language of a listing nobody named: enough to head the card, never shown as fact about syntax. */
 function codeLanguage(code: string): string {
   return /\b(?:public|private|static|void|String|System\.)\b|\bint\s+\w+\s*[(=;]/.test(code) ? 'java' : /^\s*def\s|:\s*$|\bprint\(/m.test(code) ? 'python' : /\b(?:const|let|function)\b|=>/.test(code) ? 'javascript' : 'code';
+}
+
+/** The shaded stretches of a number line, from its marked values and the way each is shaded.
+ *  A value shaded to the right and a larger one shaded to the left are the two ends of one stretch: "-2 < x ≤ 3".
+ *  Drawn as two rays, each to the end of the line, they covered each other and the whole line from -6 to 7 was
+ *  shaded (compound inequalities, portal-02fd8638). A ray runs on past the end of the line: it has no end to mark,
+ *  and the filled dot it was given at the edge read as "up to 7, and 7 is included". */
+export function numberLineIntervals(marks: Array<{ value: number; included: boolean; right: boolean }>, lo: number, hi: number): Array<{ from: number; to: number; fromInclusive: boolean; toInclusive: boolean; color: string; fromOpenEnded?: boolean; toOpenEnded?: boolean }> {
+  const sorted = [...marks].sort((a, b) => a.value - b.value);
+  const out: ReturnType<typeof numberLineIntervals> = [];
+  for (let i = 0; i < sorted.length; i++) {
+    const m = sorted[i]; const next = sorted[i + 1];
+    if (m.right && next && !next.right && next.value > m.value) { out.push({ from: m.value, to: next.value, fromInclusive: m.included, toInclusive: next.included, color: 'blue' }); i += 1; }
+    else if (m.right) out.push({ from: m.value, to: hi, fromInclusive: m.included, toInclusive: false, toOpenEnded: true, color: 'blue' });
+    else out.push({ from: lo, to: m.value, fromInclusive: false, toInclusive: m.included, fromOpenEnded: true, color: 'blue' });
+  }
+  return out;
 }
 
 export function inlineToolCall(b: InlineBlock): { name: string; args: Record<string, unknown> } {
@@ -282,12 +300,15 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
     return { name: 'show_number_line', args: {
       ...(b.attrs.title ? { title: b.attrs.title } : {}), min: lo, max: hi, step,
       points: rows.map((c) => ({ value: num(c[0]), label: c[0], style: open(c) ? 'open' : 'filled' })),
-      intervals: rows.filter((c) => /right|left|greater|less|above|below/i.test(c[2] ?? '')).map((c) => (/right|greater|above/i.test(c[2]) ? { from: num(c[0]), to: hi, fromInclusive: !open(c), toInclusive: true, color: 'blue' } : { from: lo, to: num(c[0]), fromInclusive: true, toInclusive: !open(c), color: 'blue' })),
+      intervals: numberLineIntervals(rows.filter((c) => /right|left|greater|less|above|below/i.test(c[2] ?? '')).map((c) => ({ value: num(c[0]), included: !open(c), right: /right|greater|above/i.test(c[2]) })), lo, hi),
     } };
   }
   if (b.kind === 'graph') {
     const range = (v: string | undefined) => { const m = String(v ?? '').replace(/−/g, '-').match(/(-?\d+(?:\.\d+)?)\s*(?:\.\.|to|,)\s*(-?\d+(?:\.\d+)?)/); return m ? [Number(m[1]), Number(m[2])] : undefined; };
     const x = range(b.attrs.x); const y = range(b.attrs.y);
+    const curveLines = lines.filter((l) => !POINT_RE.test(l) && !SEGMENT_RE.test(l) && !SHADE_RE.test(l));
+    const isInequality = (l: string) => { const first = cells(l)[0].replace(/^\$|\$$/g, ''); if (!/[<>≤≥⩽⩾]|\\(?:leq?|geq?|lt|gt|leqslant|geqslant)(?![a-zA-Z])/.test(first)) return false; const r = parseXYRelation(first); return r.ok && r.relation.isInequality; };
+    const several = curveLines.length >= 2;
     return { name: 'show_function_graph', args: {
       ...(b.attrs.title ? { title: b.attrs.title } : {}), ...(x ? { xRange: x } : {}), ...(y ? { yRange: y } : {}),
       // What each axis measures, when it measures something: a charging curve went up on bare axes and the
@@ -298,8 +319,15 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
       ...(lines.some((l) => SEGMENT_RE.test(l)) ? { segments: lines.filter((l) => SEGMENT_RE.test(l)).map((l) => { const m = l.replace(/−/g, '-').match(SEGMENT_RE)!; const label = cells(l)[1]; return { from: { x: Number(m[1]), y: Number(m[2]) }, to: { x: Number(m[3]), y: Number(m[4]) }, ...(label ? { label } : {}) }; }) } : {}),
       // The area between two curves over an interval: "shade between x^2 and 2x from 0 to 2" (under one curve: "… and 0 …").
       ...(lines.some((l) => SHADE_RE.test(l)) ? (() => { const m = lines.find((l) => SHADE_RE.test(l))!.replace(/−/g, '-').match(SHADE_RE)!; const clean = (e: string) => e.replace(/^\$|\$$/g, '').replace(/^\s*(?:y|f\s*\(\s*x\s*\))\s*=\s*/i, '').replace(/^the x-?axis$/i, '0').trim(); return { shadedRegion: { axis: 'x', between: [clean(m[1]), clean(m[2])], from: Number(m[3]), to: Number(m[4]) } }; })() : {}),
-      functions: lines.filter((l) => !POINT_RE.test(l) && !SEGMENT_RE.test(l) && !SHADE_RE.test(l)).map((l) => {
-        const [expr, label, ...more] = cells(l);
+      // An inequality in x and y is a region: the board shades the side where it holds and dashes the boundary of
+      // a strict one. Written as its boundary line alone, "2x - 1 | dashed", a lesson on inequalities had graphs with
+      // no shading at all, a solid line whose legend read "dashed", and a student asking where the shading their
+      // teacher drew had gone (Digital SAT, portal-a9b9b4d4).
+      ...(curveLines.some(isInequality) ? { inequalities: curveLines.filter(isInequality).map((l) => { const [expr, label] = cells(l); return { expr: expr.replace(/^\$|\$$/g, '').trim(), ...(label && !STYLE_ONLY.test(label) ? { label } : {}) }; }) } : {}),
+      functions: curveLines.filter((l) => !isInequality(l)).map((l) => {
+        const [expr, named, ...rest] = cells(l);
+        // A second cell that only says how the line is drawn is not its name.
+        const label = named && STYLE_ONLY.test(named) ? '' : named; const more = named && STYLE_ONLY.test(named) ? [named, ...rest] : rest;
         // Further cells say how the curve is drawn: dashed (an asymptote, a boundary), and over which stretch of x (a
         // piece of a piecewise function). Without them a rational function went up with no asymptote to be seen and a
         // piecewise one could not be drawn at all (audit, 2026-11-13).
@@ -307,7 +335,10 @@ export function inlineToolCall(b: InlineBlock): { name: string; args: Record<str
         const span = how.match(new RegExp(`${num}\\s*(?:to|\\.\\.|<=?\\s*x\\s*<=?)\\s*${num}`)); const side = span ? null : how.match(new RegExp(`x\\s*(<=?|>=?)\\s*${num}`));
         const lo = x?.[0] ?? -50; const hi = x?.[1] ?? 50;
         const domain = span ? [Number(span[1]), Number(span[2])] : side ? (side[1].startsWith('<') ? [lo, Number(side[2])] : [Number(side[2]), hi]) : undefined;
-        return { expr: expr.replace(/^\$|\$$/g, '').replace(/^\s*(?:y|f\s*\(\s*x\s*\))\s*=\s*(?![^=]*=)/i, ''), ...(label ? { label } : {}), ...(/dash|dotted/i.test(how) || /asymptote/i.test(`${label ?? ''} ${how}`) ? { lineStyle: 'dashed', color: '#64748b' } : {}), ...(domain && domain[0] < domain[1] ? { domain } : {}) };
+        const bare = expr.replace(/^\$|\$$/g, '').replace(/^\s*(?:y|f\s*\(\s*x\s*\))\s*=\s*(?![^=]*=)/i, '');
+        // Two curves and no names: the legend says which is which by its equation (one of two lines had no legend).
+        const legend = !label && several && bare ? `$${/=/.test(bare) ? bare : `y = ${bare}`}$` : '';
+        return { expr: bare, ...(label ? { label } : {}), ...(legend ? { legend } : {}), ...(/dash|dotted/i.test(how) || /asymptote/i.test(`${label ?? ''} ${how}`) ? { lineStyle: 'dashed', color: '#64748b' } : {}), ...(domain && domain[0] < domain[1] ? { domain } : {}) };
       }).filter((f) => f.expr),
       ...(lines.some((l) => POINT_RE.test(l)) ? { points: lines.filter((l) => POINT_RE.test(l)).map((l) => { const m = l.replace(/−/g, '-').match(POINT_RE)!; const label = cells(l)[1]; return { x: Number(m[1]), y: Number(m[2]), ...(label ? { label } : {}), ...(/open|hollow/i.test(m[3] ?? '') || (!m[3] && OPEN_POINT.test(label ?? '')) ? { open: true } : {}) }; }) } : {}),
     } };
@@ -327,6 +358,8 @@ const SEGMENT_RE = /^\s*\$?\(\s*([-−]?\d+(?:\.\d+)?)\s*,\s*([-−]?\d+(?:\.\d+
 const POINT_RE = /^\s*\$?\(\s*([-−]?\d+(?:\.\d+)?)\s*,\s*([-−]?\d+(?:\.\d+)?)\s*\)\$?\s*(open|hollow|closed|filled)?\s*(?:\||$)/i;
 /** A point the curve leaves out is drawn hollow: written `open`, or named as a hole or an excluded value. A hole
  *  at x = −2 went up as a solid dot (algebra, embed-1794595194384). */
+/** A cell that says only how a line is drawn. */
+const STYLE_ONLY = /^(?:an?\s+)?(?:dashed|dotted|solid)(?:\s+(?:line|boundary|curve))?$/i;
 const OPEN_POINT = /\b(?:hole|excluded|not included|open circle|removed|undefined|not defined)\b/i;
 
 /** Splits streamed text into words and blocks, holding back anything that may be the start of a block. */

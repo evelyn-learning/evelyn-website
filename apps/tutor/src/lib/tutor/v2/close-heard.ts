@@ -7,10 +7,25 @@
  * (AP US Government, portal-1115afec: closed at 24:21 of 30:00, the student trying to speak).
  */
 
-/** Minutes left at which a lesson's close becomes due. A fifth of the session, and never more than three minutes:
- *  with more than that left the student is asked what they would like next. */
+/** Minutes left at which a lesson's close becomes due: a fifth of the session, and never more than two minutes.
+ *  Until then the tutor may not close by itself; with more time than that left and the plan done, the student is
+ *  asked what they would like next. When it is reached the tutor says so and uses what is left for the one thing
+ *  that matters most (facts.ts), and the client makes sure that turn happens even if no one is speaking (useV2Turns). */
+export const V2_CLOSE_DUE_MAX_MINUTES = 2;
 export function closeDueMinutes(timeBoxMinutes: number): number {
-  return Math.min(timeBoxMinutes * 0.2, 3);
+  return Math.min(timeBoxMinutes * 0.2, V2_CLOSE_DUE_MAX_MINUTES);
+}
+
+/** The student asks the tutor to wait: "pause for a second", "hold on", "give me a minute". A tutor that agreed
+ *  and then heard two seconds of silence was told the student was waiting for it, and went on with the lesson
+ *  (Algebra 1, portal-50a1e584). A question is not a request to wait ("wait, why is it negative?"). */
+export function asksToWait(said: string): boolean {
+  const s = said.toLowerCase().replace(/[’]/g, "'");
+  const WAIT = /\b(?:pause|hold on|hang on|bear with me|be right back|brb|(?:give me|wait|just|one)\s+(?:(?:a|one)\s+)?(?:sec(?:ond)?|min(?:ute)?|moment)s?)\b/;
+  // "Can you give me a second, please?" is the request itself, written down with a question mark; the tutor
+  // answered it by explaining the answer five seconds later (portal-84f8660d).
+  if (s.includes('?')) return s.split(/(?<=\?)/).every((part) => !part.includes('?') || (WAIT.test(part) && /\b(?:can|could|would|will|may|mind)\b/.test(part) && !/\b(?:why|what|how|when|where|who|which)\b/.test(part)));
+  return /\b(?:pause|hold on|hang on|bear with me|be right back|brb|(?:give me|wait|just|one)\s+(?:(?:a|one)\s+)?(?:sec(?:ond)?|min(?:ute)?|moment)s?)\b/.test(s);
 }
 
 const PARTING = /\b(?:ok(?:ay)?|yes|yeah|yep|sure|alright|all right|right|great|cool|nice|good|perfect|awesome|got it|sounds good|will do|i will|thanks?(?: you)?(?: (?:so|very) much)?(?: a lot)?|(?:good)?bye(?:[- ]bye)?|see you(?: (?:later|soon|next time|then))?|good ?night|take care|you too|have a (?:good|nice|great) (?:one|day|night|evening|weekend)|mr|mrs|ms|miss|sir|ma'?am)\b/gi;

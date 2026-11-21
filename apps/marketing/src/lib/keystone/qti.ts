@@ -1,11 +1,14 @@
 import JSZip from "jszip";
 import { sanitize } from "./render";
+import { keyFor, parseInteractions, stemWithoutInteractions, type Interaction } from "./qti-interactions";
 
 // Reads SOLARO's QTI 2.1 export (Vance Schamehorn, 2026-10-29 sample): one
 // folder per item holding item_<id>_apip.xml (stem, options, key, their
 // solution as modalFeedback), item_<id>_metadata.xml (SYSTEM_* fields) and
 // resources/ images. Uploads may be one zip per item, one zip of folders, or
-// a zip of zips. MathML stays inline: browsers render it natively.
+// a zip of zips. MathML stays inline: browsers render it natively. A reading
+// passage (rubricBlock class="passage" → passage_<id>.xml beside the item) is
+// shown above the stem: the question cannot be reviewed without it.
 
 export type QtiItem = {
   itemId: string;
@@ -18,11 +21,15 @@ export type QtiItem = {
   topic: string;
   questionHtml: string;
   options: { label: string; html: string }[];
+  /** Every interaction in the item (drop-downs, matching, drag and drop, order, written response, numerical), read-only. */
+  interactions: Interaction[];
+  /** responseId → correct values, in document order. */
+  keys: Record<string, string[]>;
   castleRockSolutionHtml: string;
   /** Files referenced by the item, keyed by the path used in the XML (e.g. "resources/Image_1.jpg"). */
   resources: Map<string, Uint8Array>;
   /** The original XML, kept so the approved solution can go back as a QTI package. */
-  raw: { apip: string; metadata: string };
+  raw: { apip: string; metadata: string; passages: { file: string; xml: string }[] };
 };
 
 const SUBJECT: Record<string, string> = {
@@ -48,7 +55,7 @@ function tag(xml: string, name: string): string {
   return m ? decode(m[1].trim()) : "";
 }
 
-function decode(s: string): string {
+export function decode(s: string): string {
   return s
     .replace(/&#x([0-9a-f]+);/gi, (_m, h: string) => String.fromCodePoint(parseInt(h, 16)))
     .replace(/&#(\d+);/g, (_m, d: string) => String.fromCodePoint(Number(d)))
@@ -68,7 +75,7 @@ function course(code: string, subject: string, grade?: number): string {
 }
 
 /** Turns a QTI fragment into plain HTML: drops ids/namespaces, keeps MathML. */
-function toHtml(xml: string): string {
+export function toHtml(xml: string): string {
   return sanitize(
     xml
       .replace(/<rubricBlock\b[\s\S]*?<\/rubricBlock>/g, "")
@@ -78,7 +85,21 @@ function toHtml(xml: string): string {
   );
 }
 
-export function parseQtiItem(apip: string, metadata: string): Omit<QtiItem, "resources" | "raw"> & { imageRefs: string[] } {
+/** A passage file (div.passage > div.title + div.content) as HTML for the question panel. */
+export function passageHtml(xml: string): string {
+  return toHtml(
+    xml
+      .replace(/<\?xml[^>]*\?>/g, "")
+      .replace(/\slabel="[^"]*"/g, "")
+      .replace(/<div class="passage"/g, '<div class="cr-passage"')
+      .replace(/<div class="title"/g, '<div class="cr-passage-title"'),
+  );
+}
+
+export function parseQtiItem(
+  apip: string,
+  metadata: string,
+): Omit<QtiItem, "resources" | "raw"> & { imageRefs: string[]; passageRefs: string[] } {
   const itemId =
     tag(metadata, "SYSTEM_ItemID") || (apip.match(/identifier="item_(\d+)"/)?.[1] ?? "");
   if (!itemId) throw new Error("item id not found");
@@ -96,18 +117,26 @@ export function parseQtiItem(apip: string, metadata: string): Omit<QtiItem, "res
   for (const m of metadata.matchAll(/<Standard>([\s\S]*?)<\/Standard>/g)) {
     const code = tag(m[1], "Code");
     const desc = tag(m[1], "Description");
-    if (code || desc) standards.push([code, desc].filter(Boolean).join(" "));
+    // Descriptions arrive wrapped in <p>; the standards list is plain text.
+    const text = desc.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    if (code || text) standards.push([code, text].filter(Boolean).join(" "));
   }
 
   const body = apip.match(/<itemBody>([\s\S]*?)<\/itemBody>/)?.[1] ?? "";
   const options: { label: string; html: string }[] = [];
-  for (const m of body.matchAll(/<simpleChoice\b[^>]*identifier="([^"]+)"[^>]*>([\s\S]*?)<\/simpleChoice>/g)) {
-    options.push({ label: m[1], html: toHtml(m[2]) });
+  // Only choiceInteraction's simpleChoice count: orderInteraction has them too and is shown from `interactions`.
+  for (const ci of body.matchAll(/<choiceInteraction\b[\s\S]*?<\/choiceInteraction>/g)) {
+    for (const m of ci[0].matchAll(/<simpleChoice\b[^>]*identifier="([^"]+)"[^>]*>([\s\S]*?)<\/simpleChoice>/g)) {
+      options.push({ label: m[1], html: toHtml(m[2]) });
+    }
   }
-  const stem = body.replace(/<choiceInteraction\b[\s\S]*?<\/choiceInteraction>/g, "");
+  const stem = stemWithoutInteractions(body);
   const solution = apip.match(/<modalFeedback\b[^>]*identifier="solution"[^>]*>([\s\S]*?)<\/modalFeedback>/)?.[1] ?? "";
 
   const imageRefs = [...apip.matchAll(/<img\b[^>]*\bsrc="([^"]+)"/g)].map((m) => m[1]);
+  const passageRefs = [...body.matchAll(/<rubricBlock\b[^>]*class="passage"[^>]*>([\s\S]*?)<\/rubricBlock>/g)].flatMap((m) =>
+    [...m[1].matchAll(/<object\b[^>]*\bdata="([^"]+)"/g)].map((o) => o[1]),
+  );
 
   return {
     itemId,
@@ -120,8 +149,11 @@ export function parseQtiItem(apip: string, metadata: string): Omit<QtiItem, "res
     topic: tag(metadata, "keyword"),
     questionHtml: toHtml(stem),
     options,
+    interactions: parseInteractions(body),
+    keys: keyFor(apip),
     castleRockSolutionHtml: solution ? toHtml(solution) : "",
     imageRefs,
+    passageRefs,
   };
 }
 
@@ -147,8 +179,15 @@ export async function readQtiZip(data: Uint8Array | ArrayBuffer, depth = 0): Pro
         if (rf) resources.set(ref, await rf.async("uint8array"));
         else messages.push(`Item ${id}: image ${ref} is referenced but not in the zip.`);
       }
-      const { imageRefs: _ignored, ...rest } = parsed;
-      items.push({ ...rest, resources, raw: { apip, metadata } });
+      const passages: { file: string; xml: string }[] = [];
+      for (const ref of parsed.passageRefs) {
+        const pf = zip.file(`${dir}${ref}`);
+        if (pf) passages.push({ file: ref, xml: await pf.async("string") });
+        else messages.push(`Item ${id}: passage ${ref} is referenced but not in the zip; the question is shown without it.`);
+      }
+      const { imageRefs: _ignored, passageRefs: _refs, ...rest } = parsed;
+      const questionHtml = passages.map((p) => passageHtml(p.xml)).join("") + rest.questionHtml;
+      items.push({ ...rest, questionHtml, resources, raw: { apip, metadata, passages } });
     } catch (e) {
       messages.push(`Item ${id}: could not be read (${(e as Error).message}).`);
     }

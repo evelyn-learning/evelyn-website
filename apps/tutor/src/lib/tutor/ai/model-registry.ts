@@ -30,6 +30,7 @@ export type ModelRole =
   | 'judge'            // end-of-turn groundedness judge
   | 'perception'       // student-utterance intent classifier
   | 'gist'             // question gist / pin extraction
+  | 'room-voices'      // was this speech said to the tutor, or is it a television in the room (v2/room-voices.ts)
   | 'repair'           // Rule-8 render repair
   | 'recap'            // end-of-session summary (legacy NOTES_MODEL)
   | 'sketch'           // whiteboard doodler
@@ -60,6 +61,7 @@ const DEFAULT_MODEL: Record<ModelRole, string> = {
   judge: 'claude-haiku-4-5-20251001',
   perception: 'claude-haiku-4-5-20251001',
   gist: 'claude-haiku-4-5-20251001',
+  'room-voices': 'claude-haiku-4-5-20251001',
   repair: 'claude-haiku-4-5-20251001',
   recap: 'claude-haiku-4-5-20251001',
   sketch: 'claude-haiku-4-5-20251001',

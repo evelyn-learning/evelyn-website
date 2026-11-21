@@ -1,10 +1,27 @@
 import Link from "next/link";
-import { ITEM_TYPE_LABEL, STAGE_LABEL, type Stage } from "@/lib/keystone/config";
+import { ITEM_TYPE_LABEL, OWNER_LABEL, STAGE_LABEL, STAGE_OWNER, VERDICTS, visibleStage, type Role, type Stage, type Verdict } from "@/lib/keystone/config";
 import type { ActivityDoc } from "@/lib/keystone/db";
 import type { ItemRow } from "@/lib/keystone/queries";
+import { splitNote } from "@/lib/keystone/note";
+import { NoteBody } from "./NoteBody";
 
-export function StageChip({ stage }: { stage: Stage }) {
-  return <span className={`ks-chip s-${stage}`}>{STAGE_LABEL[stage]}</span>;
+/** The status as `role` sees it, and under it whose move it is ("with Evelyn"), so nobody has to guess. */
+export function StageChip({ stage: raw, role }: { stage: Stage; role?: Role }) {
+  const stage = role ? visibleStage(raw, role) : raw;
+  const owner = STAGE_OWNER[stage];
+  return (
+    <span className="ks-stage">
+      <span className={`ks-chip s-${stage}`}>{STAGE_LABEL[stage] ?? stage}</span>
+      {owner && <span className="ks-with">with {OWNER_LABEL[owner]}</span>}
+    </span>
+  );
+}
+
+/** A review note: closed at a few lines when long, pasted markup shown as what it stands for. */
+export function Note({ body }: { body?: string }) {
+  const n = splitNote(body);
+  if (!n.text && !n.html) return null;
+  return <NoteBody text={n.text} html={n.html} long={n.long} />;
 }
 
 export function ago(d: Date | string | undefined): string {
@@ -31,6 +48,7 @@ export function ItemsTable({
   verdicts,
   showStage = true,
   linkQuery = "",
+  role,
 }: {
   rows: ItemRow[];
   base: string;
@@ -38,6 +56,8 @@ export function ItemsTable({
   linkQuery?: string;
   verdicts?: Map<string, { verdict: string; body?: string }>;
   showStage?: boolean;
+  /** Whose eyes: stage chips read through visibleStage. */
+  role?: Role;
 }) {
   if (!rows.length) return <div className="ks-empty">Nothing here.</div>;
   return (
@@ -87,13 +107,13 @@ export function ItemsTable({
                 </td>
                 {showStage && (
                   <td>
-                    <StageChip stage={r.stage} />
+                    <StageChip stage={r.stage} role={role} />
                   </td>
                 )}
                 <td>{r.version ? `v${r.version}` : "–"}</td>
                 {verdicts && (
                   <td style={{ maxWidth: 280, color: "var(--muted)", fontSize: 13 }}>
-                    {v?.body ? v.body.slice(0, 140) + (v.body.length > 140 ? "…" : "") : "–"}
+                    {v?.body ? <div className="ks-clamp3">{splitNote(v.body).plain}</div> : "–"}
                   </td>
                 )}
                 <td style={{ color: "var(--muted)", fontSize: 13, whiteSpace: "nowrap" }}>{ago(r.lastActivityAt)}</td>
@@ -122,22 +142,26 @@ export function Feed({ rows, base, empty = "No activity yet." }: { rows: Activit
         <li key={i}>
           <b>{a.name}</b>{" "}
           {a.type === "verdict"
-            ? a.verdict === "approved"
-              ? "approved"
-              : "asked for changes on"
+            ? (VERDICTS[a.verdict as Verdict]?.verb ?? "reviewed")
+            : a.type === "upload" && a.body?.startsWith("Item re-sent")
+              ? "re-sent, now back with Evelyn:"
+              : a.type === "upload" && a.body?.startsWith("Question refreshed")
+                ? "refreshed the question of"
             : a.type === "revision" && a.version === 1
               ? "wrote the solution for"
+              : a.type === "stage" && a.stage === "key_query" && a.body?.startsWith("Queried the key")
+                ? "queried the key of"
               : a.type === "stage" && a.body?.startsWith("Downloaded")
                 ? "downloaded"
                 : a.type === "stage" && a.body?.startsWith("Delivered")
                   ? "marked as delivered to SOLARO"
                   : a.type === "stage" && a.body
-                    ? `${a.body.replace(/\.$/, "").replace(/^Stage set to/, "set the status to").toLowerCase()} on`
+                    ? `${a.body.replace(/\.$/, "").replace(/^(Stage|Status) set to/, "set the status to").toLowerCase()} on`
                     : VERB[a.type]}{" "}
           <Link href={`${base}/item/${a.itemId}`}>item {a.itemId}</Link>
           {a.version ? <span style={{ color: "var(--muted)" }}> (v{a.version})</span> : null}{" "}
           <span className="when">· {ago(a.createdAt)}</span>
-          {a.body && (a.type === "verdict" || a.type === "comment") && <div className="ks-quote">{a.body}</div>}
+          {a.body && (a.type === "verdict" || a.type === "comment") && <Note body={a.body} />}
         </li>
       ))}
     </ul>

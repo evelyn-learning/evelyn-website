@@ -125,12 +125,19 @@ check('host filter', (buildSessionFilter({ host: 'https://retail.example' }) as 
 check('audio=1 → hasAudio true', (buildSessionFilter({ audio: '1' }) as { hasAudio?: boolean }).hasAudio === true);
 check('audio other value ignored (defaults to students)', Object.keys(buildSessionFilter({ audio: '0' })).length === 1);
 {
-  const f = buildSessionFilter({ range: '7d' }, NOW) as { startedAt?: { $gte: Date } };
-  check('range=7d → startedAt $gte 7 days back', f.startedAt?.$gte.getTime() === NOW.getTime() - 7 * 86_400_000);
+  // A session picked up again months later belongs to the day it was last sat down to (portal-1115afec: first
+  // opened 24 July, taken on 16 November, and missing from the list).
+  const f = buildSessionFilter({ range: '7d' }, NOW) as { $and?: Array<{ $or: Array<Record<string, { $gte: Date }>> }> };
+  const or = f.$and?.[f.$and.length - 1]?.$or ?? [];
+  check('range=7d → started, or last picked up, in the last 7 days', or.length === 2 && or[0].startedAt?.$gte.getTime() === NOW.getTime() - 7 * 86_400_000 && or[1].lastStartedAt?.$gte.getTime() === NOW.getTime() - 7 * 86_400_000);
+  const both = buildSessionFilter({ range: '7d', src: 'test' }, NOW) as { $and?: unknown[] };
+  check('the range sits beside the test-session clause, not over it', both.$and?.length === 2);
+  const dated = buildSessionFilter({ range: '7d', q: 'July 24' }, NOW) as { $and?: unknown[]; $or?: Array<Record<string, unknown>> };
+  check('a typed date replaces the range and looks at both starts', !dated.$and && dated.$or?.length === 2 && 'startedAt' in dated.$or[0] && 'lastStartedAt' in dated.$or[1]);
 }
 {
-  const f = buildSessionFilter({ range: 'today' }, NOW) as { startedAt?: { $gte: Date } };
-  check('range=today → startedAt $gte 24h back', f.startedAt?.$gte.getTime() === NOW.getTime() - 86_400_000);
+  const f = buildSessionFilter({ range: 'today' }, NOW) as { $and?: Array<{ $or: Array<Record<string, { $gte: Date }>> }> };
+  check('range=today → startedAt $gte 24h back', f.$and?.[0]?.$or[0].startedAt?.$gte.getTime() === NOW.getTime() - 86_400_000);
 }
 check('invalid range ignored (defaults to students)', Object.keys(buildSessionFilter({ range: 'always' })).length === 1);
 {

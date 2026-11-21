@@ -7,17 +7,42 @@ import type { Stage } from "@/lib/keystone/config";
 import { reviewAction, type ReviewResult } from "../../actions";
 
 /**
- * Fixed bar at the bottom of every item: comment box, Approve / Needs changes,
- * and next / previous. Keys (when not typing): A approve, C needs changes,
+ * Fixed bar at the bottom of every item: comment box, Approve, the three ways
+ * to send an item back, and next / previous. Sending back names whose job it
+ * is: Fix solution → Evelyn; Item data → Castle Rock technical (the question
+ * as exported is incomplete or wrong); Reject → the item is withdrawn.
+ * Keys (when not typing): A approve, R the key is right, C fix solution, D item data, X reject,
  * J next, K previous. After a verdict the server moves on to the next item
  * waiting for review.
+ *
+ * A key query (stage key_query) is not a solution: the bar offers The key is
+ * right (R), Item data, Reject item and Comment; no Approve, no Fix solution.
  */
+const SEND_BACK = [
+  { intent: "changes", key: "c", label: "Fix solution", needsSolution: true, title: "The solution needs changes. Goes back to Evelyn." },
+  { intent: "item_data", key: "d", label: "Item data", needsSolution: false, title: "The question is incomplete or wrong as exported. Goes to Castle Rock technical to re-send; then back to Evelyn." },
+  { intent: "rejected", key: "x", label: "Reject item", needsSolution: false, title: "The item itself is wrong or withdrawn. No solution needed." },
+] as const;
+
+const KEY_RIGHT = {
+  intent: "key_right",
+  key: "r",
+  label: "The key is right",
+  needsSolution: false,
+  title: "Our working is wrong and the key stands. Goes back to Evelyn to write the solution.",
+} as const;
+
+/** The decisions after Approve: on a key query, confirming the key replaces the solution ones. */
+const decisionsFor = (stage: Stage) => (stage === "key_query" ? [KEY_RIGHT, ...SEND_BACK.filter((b) => !b.needsSolution)] : SEND_BACK);
+
 export function ReviewBar(props: {
   itemId: string;
   base: string;
   /** The list being browsed ("?stage=approved…"), so the next item after a verdict comes from the same list. */
   ctx: string;
   canReview: boolean;
+  /** Approve and Fix solution need a solution; an item can be flagged or rejected without one. */
+  hasSolution: boolean;
   stage: Stage;
   position: string;
   nextHref: string | null;
@@ -27,6 +52,7 @@ export function ReviewBar(props: {
   const form = useRef<HTMLFormElement>(null);
   const box = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
+  const keyQuery = props.stage === "key_query";
 
   useEffect(() => {
     if (state.go) router.push(state.go);
@@ -53,17 +79,21 @@ export function ReviewBar(props: {
       const k = e.key.toLowerCase();
       if (k === "j" && props.nextHref) router.push(props.nextHref);
       else if (k === "k" && props.prevHref) router.push(props.prevHref);
-      else if (k === "a" && props.canReview) submit("approve");
-      else if (k === "c" && props.canReview) {
+      else if (k === "a" && props.canReview) {
+        if (props.stage !== "key_query") submit("approve");
+      } else if (props.canReview) {
+        const back = decisionsFor(props.stage).find((b) => b.key === k);
+        if (!back) return;
+        // Sending back needs its reason: with an empty box the key puts the cursor there.
         if (box.current && !box.current.value.trim()) {
           e.preventDefault();
           box.current.focus();
-        } else submit("changes");
+        } else submit(back.intent);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [props.nextHref, props.prevHref, props.canReview, router]);
+  }, [props.nextHref, props.prevHref, props.canReview, props.stage, router]);
 
   return (
     <div className="ks-bar">
@@ -73,17 +103,28 @@ export function ReviewBar(props: {
         <textarea
           ref={box}
           name="comment"
-          placeholder={props.canReview ? "Comment, or what needs to change (required for Needs changes)" : "Add a comment"}
+          placeholder={props.canReview ? "Comment, or the reason (required to send an item back)" : "Add a comment"}
           disabled={pending}
         />
         {props.canReview && (
           <>
-            <button className="ks-btn ok" name="intent" value="approve" disabled={pending}>
-              Approve <kbd>A</kbd>
-            </button>
-            <button className="ks-btn warn" name="intent" value="changes" disabled={pending}>
-              Needs changes <kbd>C</kbd>
-            </button>
+            {!keyQuery && (
+              <button className="ks-btn ok" name="intent" value="approve" disabled={pending || !props.hasSolution}>
+                Approve <kbd>A</kbd>
+              </button>
+            )}
+            {decisionsFor(props.stage).map((b) => (
+              <button
+                key={b.intent}
+                className={`ks-btn ${b.intent === "rejected" ? "bad" : b.intent === "key_right" ? "ok" : "warn"}`}
+                name="intent"
+                value={b.intent}
+                title={b.title}
+                disabled={pending || (b.needsSolution && !props.hasSolution)}
+              >
+                {b.label} <kbd>{b.key.toUpperCase()}</kbd>
+              </button>
+            ))}
           </>
         )}
         <button className="ks-btn" name="intent" value="comment" disabled={pending}>

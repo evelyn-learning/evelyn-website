@@ -24,12 +24,13 @@ export function parseSpeechRate(raw: unknown): number | undefined {
  *  was spoken at the pace of an AP lesson (Praveen, algebra 1, embed-1794537652738). The values are sonic-3
  *  `generation_config.speed`; measured, 0.85 is about 5% slower and 0.7 about 15 to 23% slower, so the steps
  *  are larger than they look. Levels come as "7", "9-10", "grade 4", "k", "ap", "college": the first number
- *  decides; a level with no number (AP, college, test prep) is spoken at the normal rate. */
+ *  decides; a level with no number (AP, college, test prep) is spoken as the oldest grades are. */
 export function speechRateForLevel(level: string | undefined): number | undefined {
   const grade = gradeOfLevel(level);
-  if (grade === undefined) return undefined;
+  // The oldest students, and levels with no number (AP, college, test prep), were left at the voice's own rate,
+  // and an AP lesson was "a little fast" (Praveen, AP US Government, portal-ddf273bf). They get the gentlest step.
+  if (grade === undefined) return 0.88;
   if (grade <= 5) return 0.7;
   if (grade <= 8) return 0.78;
-  if (grade <= 10) return 0.88;
-  return undefined;
+  return 0.88;
 }

@@ -23,6 +23,7 @@
  * visit). Keyed on the session, never on a partner. Pure, client-safe.
  */
 import type { LessonPlan } from '../lesson-plan/types';
+import { v2WithoutCutBoardNote } from './interrupted';
 import { TUTOR_V2_CORRECTION_KEPT, TUTOR_V2_FREE_CONV_NO_STARTER, TUTOR_V2_FREE_CONV_PARTNER, TUTOR_V2_FREE_CONVERSATION, TUTOR_V2_RETEST_ASK_ONCE, TUTOR_V2_PART_CLOCK, TUTOR_V2_PERSONA_CARD, TUTOR_V2_RETEST_QUESTION, TUTOR_V2_RETEST_ASKED, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_RETEST_SPREAD, TUTOR_V2_RETEST_TARGET_CHANGED, TUTOR_V2_STARTER_IS_ANSWER, TUTOR_V2_SUPPORT_FOLLOWED, TUTOR_V2_SUPPORT_STEPS } from '../orchestrator/flags';
 import { v2AskedForQuestion, v2CardIsOf, v2CardSentence, v2SentenceWords } from './learner-card';
 import { v2AsksRepeat } from './one-question';
@@ -535,7 +536,7 @@ export function v2RetestQuestionLine(r: V2Retest): string {
  *  ("?" / "？"), a Latin-script one first (the language taught); null when it asked none. */
 /** Task 8a fix round 1: every question sentence of a reply (boards and the cut mark out), in order; never an ask to say a sentence again. */
 export function v2ReplyQuestions(text: string): string[] {
-  const flat = text.replace(/<board[\s\S]*?<\/board>/g, ' ').replace(/\[cut off[^\]]*\]/gi, ' ').replace(/\s+/g, ' ').trim();
+  const flat = v2WithoutCutBoardNote(text).replace(/<board[\s\S]*?<\/board>/g, ' ').replace(/\[cut off[^\]]*\]/gi, ' ').replace(/\s+/g, ' ').trim();
   return flat.split(/(?<=[.!?。！？]["'”’」)]*)\s*/).map((x) => x.trim()).filter((x) => /[?？]["'”’」)]*$/.test(x) && !v2AsksRepeat(x));
 }
 export function v2QuestionOfReply(text: string): string | null {

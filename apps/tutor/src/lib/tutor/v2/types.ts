@@ -102,7 +102,7 @@ export interface V2HomeworkState {
 
 export interface V2BoardItem { id: string; tool: string; summary: string; /** The content alone, normalised, for spotting repeats (board.ts). */ core?: string; /** A graph keeps what it plots, so a later graph on the same page can be drawn as one picture with it (turn.ts). */ args?: Record<string, unknown> }
 export interface V2BoardPage { title: string; items: V2BoardItem[] }
-export interface V2Board { pages: V2BoardPage[]; current: number }
+export interface V2Board { pages: V2BoardPage[]; current: number; /** The tutor turned back to the page in view for a look; the work in progress is on the last page (board.ts, turn.ts). */ look?: boolean }
 
 /** What a board tool call did. Goes back to the model as the tool result and stays in the history. */
 export interface V2BoardOutcome { painted: boolean; detail: string; /** The item already on the page in view that this call repeats. */ pointAt?: string }
@@ -113,6 +113,17 @@ export interface V2State {
   note: string;
   /** `at`: when the goal was last marked, so the part in hand can be told from one left open earlier (progress.ts). */
   goals: Record<string, { status: GoalStatus; why?: string; at?: number }>;
+  /** The board card of each plan problem that has been put up: goal id → item id (turn.ts). */
+  problemCards?: Record<string, string>;
+  /** When the board last showed each part of the plan to be the one in hand (progress.ts). */
+  partsSeen?: Record<string, number>;
+  /** Problems the tutor set that are not the plan's: board item id → the problem worked out apart from the lesson,
+   *  for the tutor to check answers by ('' until it has been worked). The plan's problems carry their answers;
+   *  these had none, and the tutor agreed with a wrong answer (AP Calculus BC, portal-8e2d86f3). */
+  ownKeys?: Record<string, string>;
+  /** The question the tutor last asked aloud, when it has an answer that can be worked out: that answer, worked apart
+   *  from the lesson while the student thinks, for the tutor to check their reply by. Replaced or dropped by the next reply. */
+  askedKey?: { q: string; key: string };
   /** Gaps the tutor has found in what the student knows, with how far each has been worked on. Optional: older states have none. */
   gaps?: V2Gap[];
   board: V2Board;
@@ -133,6 +144,8 @@ export interface V2State {
     justComplicated?: boolean;
     /** The direction they named, once they have. */
     direction?: string;
+    /** They said they felt led to an answer: no more cases or consequences that point away from their view. */
+    steered?: boolean;
   };
   /** Discussion sessions: the direction the person chose to explore next, given with end_lesson. */
   nextDirection?: string;
@@ -270,6 +283,8 @@ export interface V2ToolCall {
   carries?: string[];
   /** Not painted: it repeats this item on the page in view, and the board scrolls back to it. */
   pointsAt?: string;
+  /** Not painted: the item it repeats is on another page, and the board turns back to that page (its index). */
+  turnsTo?: number;
   /** Task 7k fix round 2 (m1): a page a practice visit opened (state.visitPages): kept marked when the reply is cut. */
   visit?: true;
   /** Task 7u (CARD_AT_SENTENCE): a board item of a spoken lesson that teaches a language. 'next': its words are the next sentence

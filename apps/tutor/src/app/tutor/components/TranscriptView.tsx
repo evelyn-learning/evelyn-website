@@ -20,6 +20,7 @@ import { STUCK_TEXT, SKIP_TEXT } from '@/lib/tutor/quick-actions';
 // Round-20: bubble math rendering — see renderBubbleText.
 import { segment, normalizeSentenceGaps, prepareBubbleText } from '@/lib/tutor/whiteboard/inline-math';
 import { InlineMathText } from './whiteboard/InlineMathText';
+import { typesetMaths } from '@/lib/tutor/v2/rich-text';
 import { TUTOR_BUBBLE_MATH } from '@/lib/tutor/orchestrator/flags';
 // R38 task 13: renderInlineEmphasis hoisted to a shared module so the
 // replay TranscriptBubble (ReplayPlayer.tsx) can reuse it too — see
@@ -91,6 +92,8 @@ function renderBubbleText(text: string): React.ReactNode {
   // Round-23: fix "1.So" / "$.Now" sentence run-ons on the display side
   // (speech side got the same normalization in round 21).
   text = normalizeSentenceGaps(text);
+  // Words spoken with a formula typed plainly in them ("f'(x) = 3x^2 - 3") are set as the board sets them.
+  if (text && TUTOR_BUBBLE_MATH && !text.includes('$')) text = typesetMaths(text);
   if (text && TUTOR_BUBBLE_MATH) text = prepareBubbleText(text);
   if (!text || !text.includes('$')) return renderInlineEmphasis(text);
   const parts = segment(text);

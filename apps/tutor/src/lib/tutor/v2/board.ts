@@ -21,7 +21,7 @@ export function summariseBoardCall(name: string, args: Record<string, unknown>):
   const fns = Array.isArray(args.functions) ? (args.functions as Array<Record<string, unknown>>).map((f) => text(f.expression) || text(f.latex)).filter(Boolean).join(', ') : '';
   // Tables, timelines and organisers: their cells, in reading order.
   const flat = (v: unknown): string[] => (Array.isArray(v) ? v.flatMap(flat) : v && typeof v === 'object' ? Object.values(v as Record<string, unknown>).flatMap(flat) : typeof v === 'string' && v.trim() ? [v.trim()] : []);
-  const structured = [args.params, args.components, args.leftHeader, args.rightHeader, args.headers, args.rows, args.events, args.leftItems, args.rightItems, args.steps, args.source, args.object, args.forces, args.functions, Array.isArray(args.points) ? (args.points as Array<Record<string, unknown>>).map((p) => String(p.label ?? p.value ?? '')) : []].flatMap(flat).join(' · ');
+  const structured = [args.params, args.components, args.leftHeader, args.rightHeader, args.headers, args.rows, args.events, args.leftItems, args.rightItems, args.steps, args.source, args.object, args.forces, args.inequalities, args.functions, Array.isArray(args.points) ? (args.points as Array<Record<string, unknown>>).map((p) => String(p.label ?? p.value ?? '')) : []].flatMap(flat).join(' · ');
   // (A circuit is its components and how they are wired: with none of that in its summary, every untitled
   // circuit read "(no text)" and a parallel pair was refused as the series loop already up, embed-1794500923861.)
   // A catalogue figure is its numbers as much as its words: two solids of revolution with different profiles
@@ -62,15 +62,48 @@ export function taskOnly(statement: string): { statement: string; cut: string[] 
 /** Ordinary words typed straight into LaTeX are set as a run of italic variables with no spaces: "and at x = 3"
  *  appeared on the board as "andatx = 3" (embed-1794361050464). They are wrapped in \text{}. */
 const PLAIN_WORDS = 'and|at|so|then|gives|give|when|if|for|the|is|are|or|to|of|with|which|because|since|that|we|get|you|becomes|means|where|from|into|but|not|both|each|by|on|in|as|now|after|before|times|plus|minus|equals|over|per|total|answer|check|left|right|east|west|north|south|toward|away|net|force';
+/** Names of functions written without their backslash ("sinx", "logx"): mathematics, not words. */
+const MATHS_NAME = /^(?:(?:arc)?(?:sin|cos|tan|sec|csc|cot)h?[a-z]?|(?:log|exp|lim|max|min|det|sqrt|frac|mod|gcd|lcm)[a-z]?)$/i;
 /** \\mathrm{…} is roman type for symbols and drops the spaces between words: "(usable by plants)" came out
  *  "(usablebyplants)" (embed-1794376956230). Words inside it get their spaces back. */
 export function spacedRoman(latex: string): string {
   return latex.replace(/\\mathrm\s*\{((?:[^{}]|\{[^{}]*\})*)\}/g, (_m, body: string) => `\\mathrm{${body.replace(/(?<=[A-Za-z,)])[ ]+(?=[A-Za-z(])/g, '\\ ')}}`);
 }
+/** Several statements typed as one row, with \quad between them, wrap wherever the row runs out, in the middle
+ *  of a statement: "f(−3) = 81 − 72 + 1 = 10, f(−2) = 16 − 32 + 1" broke before "= −15" (AP Calculus BC,
+ *  portal-8e2d86f3). Three or more, or two long ones, go up one to a line. */
+export function stackedRow(latex: string): string {
+  if (/\\\\|\\begin\s*\{/.test(latex)) return latex;
+  const parts = latex.split(/\s*,?\s*\\q?quad\s*/).map((x) => x.trim().replace(/,$/, '').trim()).filter(Boolean);
+  const balanced = (x: string) => x.split('{').length === x.split('}').length && x.split('\\left').length === x.split('\\right').length;
+  if (parts.length < 2 || !parts.every((x) => balanced(x) && /=|<|>|\\(?:approx|le|ge|neq|implies|to)\b/.test(x))) return latex;
+  if (parts.length < 3 && latex.replace(/\\[A-Za-z]+|[{}\s]/g, '').length <= 48) return latex;
+  return `\\begin{aligned} ${parts.map((x) => `&${x}`).join(' \\\\ ')} \\end{aligned}`;
+}
 export function wordsAsText(latex: string): string {
-  const re = new RegExp(String.raw`(?<![\\A-Za-z])(?:${PLAIN_WORDS})(?![A-Za-z])(?:\s+(?:${PLAIN_WORDS})(?![A-Za-z]))*`, 'gi');
-  // Leave what is already inside \text{…} (and its relatives) alone.
-  return latex.split(/(\\(?:text|textrm|textbf|textit|mathrm|operatorname)\s*\{[^{}]*\})/).map((part, i) => (i % 2 ? part : part.replace(re, (w) => `\\text{ ${w} }`))).join('');
+  const plain = new RegExp(`^(?:${PLAIN_WORDS})$`, 'i');
+  // An English word is one of the short words above, or four letters and more written as a word is: a variable
+  // is a letter or two, and a product of four in a row is rare. Only "so" and "the" of "so (0, -3) fails the test"
+  // were on the list, and the rest was set as mathematics, in italics with no spaces (Digital SAT, portal-a9b9b4d4).
+  const isWord = (w: string) => plain.test(w) || (/^[A-Za-z][a-z]{3,}$/.test(w) && !MATHS_NAME.test(w));
+  const run = /(?<![\\A-Za-z])[A-Za-z]+(?![A-Za-z])(?:\s+[A-Za-z]+(?![A-Za-z]))*/g;
+  // Leave what is already inside \text{…} (and its relatives) alone, and the names an environment or a colour takes.
+  return latex.split(/(\\(?:text|textrm|textbf|textit|mathrm|mathbf|mathit|mathsf|mathtt|mathbb|mathcal|operatorname|begin|end|color|textcolor|tag|label)\s*\{[^{}]*\})/).map((part, i) => (i % 2 ? part : part.replace(run, (found: string, at: number) => {
+    // Inside a subscript or a braced argument the words stand close: no space either side.
+    const tight = /[{_^]$/.test(part.slice(0, at));
+    let out = ''; let gap = ''; const held: string[] = [];
+    const flush = () => { if (held.length) { out += tight ? `\\text{${held.join(' ')}}` : `\\text{ ${held.join(' ')} }`; held.length = 0; } };
+    const pieces = found.split(/(\s+)/);
+    for (let k = 0; k < pieces.length; k++) {
+      const piece = pieces[k];
+      if (!piece) continue;
+      if (/^\s+$/.test(piece)) { if (held.length) gap = piece; else out += piece; continue; }
+      // "a" between two words is the article, not a variable.
+      if (isWord(piece) || (piece === 'a' && held.length > 0 && isWord(pieces[k + 2] ?? ''))) { held.push(piece); gap = ''; } else { flush(); out += gap + piece; gap = ''; }
+    }
+    flush();
+    return out + gap;
+  }))).join('');
 }
 
 /** Why a board call would not sit well on the board, or null. An equation card is one centred line of
@@ -80,7 +113,7 @@ export function boardMisfit(name: string, args: Record<string, unknown>): string
   // A figure with nothing in it is worse than no figure (an empty graph grid titled "Tug-of-war" opened a
   // forces lesson, embed-1794363148240).
   const count = (v: unknown) => (Array.isArray(v) ? v.length : 0);
-  if (name === 'show_function_graph' && count(args.functions) + count(args.functionsOfY) + count(args.points) + count(args.segments) === 0) return 'a graph needs at least one function or point to plot; for anything else use the form that fits it';
+  if (name === 'show_function_graph' && count(args.functions) + count(args.functionsOfY) + count(args.inequalities) + count(args.points) + count(args.segments) === 0) return 'a graph needs at least one function or point to plot; for anything else use the form that fits it';
   if (name === 'show_free_body_diagram' && count(args.forces) === 0) return 'a forces diagram needs at least one force: name | direction | size';
   // A figure tool called with nothing in it paints an empty frame (an empty Venn diagram opened a statistics
   // lesson, browser run 2026-11-11).
@@ -139,18 +172,19 @@ export function applyToModelBoard(board: V2Board, id: string, name: string, args
     const here = board.pages[board.current];
     if (here && norm(here.title) === norm(text(args.title)) && here.items.length < 3) return { painted: false, detail: `already on the page "${here.title}"` };
     board.pages.push({ title: text(args.title) || `Page ${board.pages.length + 1}`, items: [] });
-    board.current = board.pages.length - 1;
+    board.current = board.pages.length - 1; delete board.look;
     return { painted: true, detail: `new page ${board.current + 1} "${board.pages[board.current].title}"` };
   }
   if (name === 'go_to_page') {
     const want = typeof args.pageIndex === 'number' ? args.pageIndex : board.pages.findIndex((p) => norm(p.title) === norm(text(args.title) || text(args.pageTitle)));
     if (want < 0 || want >= board.pages.length) return { painted: false, detail: 'no such page' };
     board.current = want;
+    if (want < board.pages.length - 1) board.look = true; else delete board.look;
     // Turned back for a look, the work in progress is still on the last page. The tutor is told so: asked one
     // question about an earlier problem, it then wrote the rest of the current problem's working on that
     // earlier page (Crimsora, portal-21fa1dea, and an AP Lang session before it).
     const last = board.pages.length - 1;
-    return { painted: true, detail: `now on page ${want + 1} "${board.pages[want].title}"${want < last ? `. The work in progress stays on page ${last + 1} "${board.pages[last].title}": when you carry on with it, turn to that page first (its page block)` : ''}` };
+    return { painted: true, detail: `now on page ${want + 1} "${board.pages[want].title}"${want < last ? `. The work in progress stays on page ${last + 1} "${board.pages[last].title}": what you write in this reply goes on the page in view; from your next reply on, what you write goes back on page ${last + 1}, and the board turns to it` : ''}` };
   }
   if (board.current < 0) { board.pages.push({ title: 'Page 1', items: [] }); board.current = 0; }
   if (name === 'highlight') return { painted: true, detail: 'highlighted' };
@@ -166,7 +200,11 @@ export function applyToModelBoard(board: V2Board, id: string, name: string, args
     // The same thing in another form is not a repeat: a cycle drawn from stages already listed as steps was
     // refused, and the tutor said "here is the loop" over nothing (browser run, 2026-11-11).
     const items = board.pages[p].items;
-    const at = items.findIndex((it) => { if (FIGURE_FORMS.has(name) && it.tool !== name) return false; if (sentenceOwnForm && it.tool !== 'show_sentence') return false; const exact = name === 'show_equation' && it.tool === 'show_equation'; const have = exact ? it.core ?? norm(it.summary) : (it.core ?? norm(it.summary)).toLowerCase(); const mine = exact ? core : core.toLowerCase(); return have === mine || (mine.length >= 12 && have.includes(mine)) || (have.length >= 24 && mine.includes(have) && mine.length < have.length * 1.15); });
+    let at = items.findIndex((it) => { if (FIGURE_FORMS.has(name) && it.tool !== name) return false; if (sentenceOwnForm && it.tool !== 'show_sentence') return false; const exact = name === 'show_equation' && it.tool === 'show_equation'; const have = exact ? it.core ?? norm(it.summary) : (it.core ?? norm(it.summary)).toLowerCase(); const mine = exact ? core : core.toLowerCase(); return have === mine || (mine.length >= 12 && have.includes(mine)) || (have.length >= 24 && mine.includes(have) && mine.length < have.length * 1.15); });
+    // The same card in slightly other words is the same card: a problem went up twice on one page with "a
+    // president" changed to "the President", and a three-line note again with its last line left as a question
+    // mark (AP US Government, portal-84f8660d).
+    if (at < 0 && p === board.current && (name === 'show_problem' || name === 'annotate')) at = items.findIndex((it) => it.tool === name && nearlySame(name, it.summary, summary));
     if (at < 0) continue;
     // A problem the student is sent back to must be where they can see it. One set many items ago, or on
     // another page, is put up again: "try the problem already on your board" pointed at a card twenty items
@@ -179,8 +217,27 @@ export function applyToModelBoard(board: V2Board, id: string, name: string, args
     // On the page in view, writing a thing again points at it: the board scrolls back to it.
     return { painted: false, detail: `already on the board (page ${p + 1})`, ...(p === board.current ? { pointAt: items[at].id } : {}) };
   }
-  board.pages[board.current].items.push({ id, tool: name, summary, core, ...(name === 'show_function_graph' ? { args: { functions: args.functions, points: args.points, segments: args.segments, xRange: args.xRange, yRange: args.yRange, title: args.title } } : {}) });
+  // A problem set on a page the tutor turned back to makes that page the one being worked on: the look is over.
+  // Taken back to the one-variable page for one more problem, the student worked it there and the board jumped to
+  // the last page to write their working (Digital SAT, portal-b0efc3c2).
+  if (name === 'show_problem') delete board.look;
+  board.pages[board.current].items.push({ id, tool: name, summary, core, ...(name === 'show_function_graph' ? { args: { functions: args.functions, inequalities: args.inequalities, points: args.points, segments: args.segments, xRange: args.xRange, yRange: args.yRange, title: args.title } } : {}) });
   return { painted: true, detail: `painted on page ${board.current + 1}` };
+}
+
+function nearlySame(name: string, have: string, mine: string): boolean {
+  if (name === 'annotate') {
+    const lines = (x: string) => x.split('\n').map((l) => norm(l)).filter((l) => l.length >= 12);
+    const a = lines(have); const b = lines(mine);
+    if (a.length < 2 || b.length < 2) return false;
+    const same = b.filter((l) => a.includes(l)).length;
+    return same >= 2 && same / b.length >= 0.6;
+  }
+  const pairs = (x: string) => { const t = x.toLowerCase().match(/[a-z]+|\d+(?:\.\d+)?/g) ?? []; return new Set(t.slice(0, -1).map((w, i) => `${w} ${t[i + 1]}`)); };
+  const a = pairs(have); const b = pairs(mine);
+  if (a.size < 8 || b.size < 8) return false;
+  const both = [...b].filter((x) => a.has(x)).length;
+  return both / Math.max(a.size, b.size) >= 0.85;
 }
 
 /** The board, for the facts block: the current page in full, earlier pages by title and item count. */
@@ -188,8 +245,8 @@ export function renderBoard(board: V2Board): string {
   if (!board.pages.length) return 'empty';
   return board.pages.map((p, i) => {
     const last = board.pages.length - 1;
-    const turnedBack = board.current < last;
-    const head = `page ${i + 1} "${p.title}"${i === board.current ? (turnedBack ? ' (in view: turned back to for a look)' : ' (in view)') : turnedBack && i === last ? ' (the work in progress: turn to this page before writing more of it)' : ''}`;
+    const turnedBack = board.current < last && !!board.look;
+    const head = `page ${i + 1} "${p.title}"${i === board.current ? (turnedBack ? ' (in view: turned back to for a look)' : ' (in view)') : turnedBack && i === last ? ' (the work in progress: what you write next goes here, and the board turns back to it; to write on the page in view instead, begin with that page\'s page block)' : ''}`;
     if (i !== board.current && i !== board.current - 1 && !(turnedBack && i === last)) return `${head}: ${p.items.length} item(s)`;
     return `${head}: ${p.items.length ? p.items.map((it) => `${it.tool.replace(/^show_|^tutor_/, '')} "${it.summary}"`).join('; ') : 'blank'}`;
   }).join('\n  ');

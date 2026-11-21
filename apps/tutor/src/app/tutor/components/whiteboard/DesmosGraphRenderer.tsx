@@ -612,10 +612,13 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
                 <span><InlineMathText text={prettyMathLabel(ineq.label || ineq.pretty)} /></span>
               </div>
             ))}
-            {(data.functions || []).filter(f => f.label).map((fn, i) => (
+            {/* A curve's legend is its name, or failing that the equation given for the legend alone (never drawn on
+                the curve). Its colour is the curve's own: counted over the named curves only, the legend of a second
+                line took the first line's colour. */}
+            {(data.functions || []).map((fn, i) => ({ fn, i, text: fn.label || (fn as { legend?: string }).legend })).filter(({ text }) => !!text).map(({ fn, i, text }) => (
               <div key={`fn-${i}`} className="flex items-center gap-2 text-sm">
                 <div className="w-4 h-1 rounded" style={{ backgroundColor: fn.color || COLORS[i % COLORS.length] }} />
-                <span><InlineMathText text={prettyMathLabel(fn.label!)} /></span>
+                <span><InlineMathText text={prettyMathLabel(text!)} /></span>
               </div>
             ))}
             {(data.functionsOfY || []).filter(f => f.label).map((fn, i) => (

@@ -8,6 +8,9 @@
  *   npx tsx apps/marketing/scripts/keystone-e2e.ts
  *
  * Leaves the test item in the database; remove it with keystone-remove-item.ts.
+ * ⚠ KS_ZIP must be an item that is NOT a real one on the target site: the walk
+ * rewrites its solution and the clean-up deletes it (146799 is real on prod
+ * since 2026-11-17). For prod use keystone-routing-e2e.ts, which makes its own item.
  */
 import { chromium, type Page } from "playwright";
 import { mkdir, readFile } from "node:fs/promises";
@@ -90,7 +93,7 @@ async function main() {
   await page.waitForSelector(".ks-feed li:has-text('E2E TEST comment')");
   ok(true, "comment appears in the history");
   await page.fill(".ks-bar textarea", "E2E TEST change: please shorten the short answer.");
-  await Promise.all([page.waitForURL((u) => !u.pathname.endsWith(`/item/${ITEM}`) || u.search.length > 0), page.click(".ks-bar button:has-text('Needs changes')")]);
+  await Promise.all([page.waitForURL((u) => !u.pathname.endsWith(`/item/${ITEM}`) || u.search.length > 0), page.click(".ks-bar button:has-text('Fix solution')")]);
   console.log(`  after Needs changes → ${page.url()}`);
 
   // 3b. Reviewer: back links, and the animated player on an item that has one.

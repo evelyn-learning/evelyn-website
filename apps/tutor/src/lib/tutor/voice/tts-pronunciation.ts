@@ -2301,6 +2301,23 @@ export function speakCoefficientLetters(text: string): string {
   return text.replace(/(\d)([gmlhk])(?![A-Za-z0-9²³])/g, (_m, d: string, l: string) => `${d} ${UNIT_LETTER[l]}`);
 }
 
+/** The coefficients of a general form, said as letters. "y = ax² + bx + c" went to the voice as written and came
+ *  out "y equals x squared plus…", the a lost (heard as the article, or not at all); "the b and a from", "(2a)" and
+ *  "a is 1" the same way (ACT Math, portal-3d431436). Only in a mathematics lesson, and only where the letter can
+ *  be nothing else: written against x, against a number, or named beside b and c or given a value. */
+const COEFF_NAME: Record<string, string> = { a: 'ay', b: 'bee', c: 'see' };
+export function speakCoefficientNames(text: string): string {
+  return text
+    .replace(/(?<![A-Za-z])(\d*)([abc])x([²³]?)(?![A-Za-z])/g, (_m, d: string, l: string, p: string) => `${d ? `${d} ` : ''}${COEFF_NAME[l]} x${p}`)
+    .replace(/(?<![A-Za-z0-9.])(\d+)(ac|ab|a)(?![A-Za-z0-9²³])/g, (_m, d: string, ls: string) => `${d} ${[...ls].map((l) => COEFF_NAME[l]).join(' ')}`)
+    .replace(/\b([bc]) and a\b/g, '$1 and ay')
+    .replace(/\ba(?=,? (?:b,? )?and [bc]\b)/g, 'ay')
+    .replace(/\ba(?= (?:is|equals|=) (?:[-−]?\d|not\b|positive\b|negative\b|zero\b))/g, 'ay')
+    // A lone m or l is a name (line m, slope m): the voice read "lines l and m" as "l and meters" (portal-87303e9f).
+    // After a number it is still a unit ("5 m").
+    .replace(/(?<![A-Za-z0-9'’\-])(?<!\d\s)([ml])(?![A-Za-z0-9'’²³\-])/g, (_m, l: string) => (l === 'm' ? 'em' : 'el'));
+}
+
 /** In a science lesson "O=O" is a double bond between two atoms, and the voice reads it "O equals O"
  *  (embed-1794372328590). Only between the atoms that form multiple bonds, written with no spaces, and only
  *  where the caller knows the subject: "C=N" in an algebra lesson is an equation. */
@@ -2467,6 +2484,13 @@ export function speakGroups(text: string): string {
   });
 }
 
+/** Words spelt with a final -re are said as written by the voice: "a thick band of fibres" came out
+ *  "fibrase" (AP Psychology, portal-e8640e11). For speech only they take the -er spelling; the board and
+ *  the transcript keep the tutor's own. */
+export function speakReEndings(text: string): string {
+  return text.replace(/\b((?:kilo|centi|milli|micro|nano)?(?:met|lit)|fib|cent|theat|calib|somb|lust|spect|sab|meag|goit|tit)re(s|d)?\b/gi, (_m, stem: string, end: string | undefined) => `${stem}${stem === stem.toUpperCase() && stem.length > 1 ? 'ER' : 'er'}${end ? (end.toLowerCase() === 'd' ? `e${end}` : end) : ''}`);
+}
+
 export function speakNumberPlurals(text: string): string {
   return text.replace(/\b(the|these|those|both|all|of|and|or|no|many|few|several|two|three|four|five|six|seven|eight|nine|ten|\d+)(\s+)(\d{1,3})s\b(?!')/gi, (_m, cue: string, gap: string, n: string) => `${cue}${gap}${NUMBER_PLURAL[Number(n)] ?? `${n}'s`}`);
 }
@@ -2480,8 +2504,19 @@ export function speakTypedMaths(text: string): string {
   // or a ratio it is "1 over 52" (embed-1794364217274). Halves to twelfths keep their everyday reading.
   t = t.replace(/(?<![\d./:])(\d{1,3})\/(\d{2,4})(?![\d/]|\.\d|\s*\/)/g, (m, a: string, b: string) => (Number(b) >= 13 && a !== b ? `${a} over ${b}` : m));
   // f'(a) → f prime of a; f''(x) → f double prime of x; a bare f' → f prime.
-  t = t.replace(/(?<![A-Za-z])([A-Za-z])(''?|′′?)\(([A-Za-z0-9]{1,3})\)/g, (_m, f: string, p: string, a: string) => `${f} ${p.length > 1 ? 'double prime' : 'prime'} of ${a}`);
+  t = t.replace(/(?<![A-Za-z])([A-Za-z])(''?|′′?)\(([-−]?)([A-Za-z0-9]{1,3})\)/g, (_m, f: string, p: string, neg: string, a: string) => `${f} ${p.length > 1 ? 'double prime' : 'prime'} of ${neg ? 'negative ' : ''}${a}`);
   t = t.replace(/(?<![A-Za-z])([f-hF-Hy])(''?|′′?)(?![A-Za-z'’(])/g, (_m, f: string, p: string) => `${f} ${p.length > 1 ? 'double prime' : 'prime'}`);
+  // A closed interval after a word that places something on it: "+ 1 on [-3, 2]" was heard as one run, "one on
+  // minus three two" (AP Calculus BC, portal-8e2d86f3). Only after such a word: "[1, 2]" elsewhere may be a list.
+  const END = String.raw`[-−]?(?:\d+(?:\.\d+)?|[a-z]|π|√\d+)`;
+  // (Text between dollar signs has its own reader further down, which knows both.)
+  t = outsideMathSpans(t, (w) => w
+    .replace(new RegExp(String.raw`\b(on|over|outside|inside|within|interval)\s+\[\s*(${END})\s*,\s*(${END})\s*\]`, 'g'), (_m, wd: string, lo: string, hi: string) => `${wd === 'interval' ? 'interval' : `${wd} the interval`} from ${lo} to ${hi}`)
+    .replace(/(?<=[\d)²³⁴⁵⁶⁷⁸⁹]|(?<![A-Za-z])[a-z])(?<!\b\d{4}) - (?=\d|\(|√|[a-z](?![A-Za-z]))/g, ' minus ')
+    .replace(/(?<=^|[\s(=,\[])-(?=\d|√)/g, 'negative '));
+  // The minus typed on a keyboard. The voice dropped it between terms ("x^3 - 3x" was heard as "x cube 3x") and
+  // said "minus 27" for a number below zero (same session). Between two terms it is "minus"; in front of a lone
+  // number it is "negative". Never inside a word or a range ("well-known", "10-15", "2019 - 2021").
   // eˣ, xⁿ: a raised letter ("e true", embed-1794342128162). 3! is a factorial. A typed "lim" is "the limit of",
   // and a middle dot is a product.
   const SUPL: Record<string, string> = { 'ˣ': 'x', 'ʸ': 'y', 'ⁿ': 'n', 'ᵗ': 't', 'ᵏ': 'k', 'ⁱ': 'i' };
@@ -2508,6 +2543,9 @@ export function speakTypedMaths(text: string): string {
 export function rewriteForTTS(raw: string, opts?: RewriteForTTSOptions): string {
   let t = raw;
   t = speakTypedMaths(t);
+  // "No. 51" is "number 51": the voice read "Federalist No. 51" as "Federalist no 51" (AP US Government,
+  // portal-ddf273bf). Only before a numeral, and not at the start of a sentence, where "No." is the answer no.
+  t = t.replace(/(?<=[A-Za-z,;:(]\s)(N|n)os\.\s*(?=\d)/g, (_m, c: string) => `${c}umbers `).replace(/(?<=[A-Za-z,;:(]\s)(N|n)o\.\s*(?=\d)/g, (_m, c: string) => `${c}umber `);
   // A fraction over zero has no everyday reading, so the voice invents one: "0/0" was spoken as
   // "zero zeroths" (Praveen, embed-1794328944377, L'Hôpital). It is always "N over zero"; the same
   // goes for the infinity form, whose slash was otherwise left for the voice to guess at.

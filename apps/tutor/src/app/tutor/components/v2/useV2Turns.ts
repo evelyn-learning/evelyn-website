@@ -21,6 +21,7 @@ import { mapFunctionCallToCommand } from '@/app/tutor/hooks/toolDefinitions';
 import type { TranscriptEntry } from '@/lib/tutor/types';
 import { paintsOnBoard, streamV2Turn, type V2ClientSession } from '@/lib/tutor/v2/client';
 import { foldInterruptedTurn, v2CutWordsCarried, v2WithCarried } from '@/lib/tutor/v2/interrupted';
+import { closeDueMinutes } from '@/lib/tutor/v2/close-heard';
 import { KEYED_VERDICT_DEBUG_TYPE, formatKeyedVerdictDebug } from '@/lib/tutor/voice/keyed-verdict';
 import { SentenceStream } from '@/lib/tutor/v2/sentences';
 import { V2_UNHEARD_SAID } from '@/lib/tutor/v2/heard';
@@ -111,6 +112,11 @@ export interface V2TurnsConfig {
   onCut?: () => void;
   /** The voice client's record of what was actually played of the reply being cut short, or null if it has none. */
   heardSoFar?: () => string | null;
+  /** Ids of board items of the reply in hand that were dropped before the student saw them (the voice client). */
+  notShown?: () => Set<string>;
+  /** Voice: how many times other voices in the room were left out, while the student is still to be told of it
+   *  (room-voices.ts). Asked as each turn is sent. */
+  roomVoices?: () => number | undefined;
   /** How long after the closing words the session ends. Voice passes a function that waits for the speech to finish. */
   closeDelayMs?: number | (() => Promise<void>);
   /** Voice, at the box: resolves once the tutor's speech under way has finished (true), or at `maxMs` with it still
@@ -145,6 +151,8 @@ export interface V2Turns {
   /** This page load picked up an earlier session (resume.ts). */
   resumedRef: MutableRefObject<boolean>;
   stateRef: MutableRefObject<V2State>;
+  /** The last reply handed the floor to the student (keep_listening). */
+  keptListeningRef: MutableRefObject<boolean>;
 }
 
 interface SketchCommand { concept?: string; labels?: string[]; title?: string; primitives?: unknown[]; fallbackCard?: { title?: string; concept: string; labels: string[] } }
@@ -211,6 +219,8 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   const pendingOpenRef = useRef(false);
   const openedRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
+  /** The student's words from a turn that never reached them (see the cut branch of runTurn). */
+  const unansweredRef = useRef<string | null>(null);
   const endingRef = useRef(false);
   // onEndSession has been called (the close, the box, the End button or the host), or the page has gone: nothing ends
   // the session a second time (review 5a I1).
@@ -218,6 +228,10 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   const endOnce = (reason?: 'time_limit') => { if (endedRef.current) return; endedRef.current = true; p.current.onEndSession?.(reason); };
   /** Task 7h: the closing words of a spoken close, still being said (v2/close-mic.ts). */
   const closingRef = useRef(new V2ClosingWords());
+  /** The last reply handed the floor to the student (keep_listening), with or without words of its own. */
+  const keptListeningRef = useRef(false);
+  /** The tutor has been told, by a turn's facts or by the timer, that the session is nearly out of time. */
+  const timeCheckedRef = useRef(false);
   const homeworkDoneRecordedRef = useRef(false);
   const [busy, setBusy] = useState(false);
   const [closed, setClosed] = useState(false);
@@ -252,7 +266,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       .catch((e) => c.onDebugEvent?.('working_level_estimate_failed', String((e as Error)?.message ?? e).slice(0, 80)));
   };
 
-  const runTurn = useCallback(async (studentSaid: string | null, silenceSeconds?: number, unheard?: boolean) => {
+  const runTurn = useCallback(async (studentSaid: string | null, silenceSeconds?: number, unheard?: boolean, timeCheck?: boolean) => {
     // Task 7h (CLOSE_HEARS): the closing words are still being said. Words of the student's over them call the close off
     // and the lesson goes on from them; thanks, a goodbye or a silence check let it end (v2/close-mic.ts).
     const overClose = endingRef.current ? 'not-closing' : closingRef.current.heard(unheard ? null : studentSaid);
@@ -276,6 +290,13 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       return;
     }
     busyRef.current = true; setBusy(true); p.current.onTutorBusy?.(true);
+    keptListeningRef.current = false;
+    // What the student said just before, when no word of its reply reached them, is part of what they are saying now.
+    // Merge with main (Task 8e): they go to the brain with these words (brainSaid, below); the transcript keeps each as it was said.
+    const unanswered = studentSaid && !unheard ? unansweredRef.current : null;
+    if (studentSaid && !unheard) unansweredRef.current = null;
+    // A turn that starts inside the last minutes is told of the time by its facts: the timer need not say it again.
+    { const box = p.current.sessionMaxMinutes; if (box && openedRef.current && box - (Date.now() - stateRef.current.startedAtMs) / 60000 <= closeDueMinutes(box)) timeCheckedRef.current = true; }
     const stamp = Date.now();
     // Noise is not stored as their words: 5,000 characters of 、 and 号 went into the session's transcript (Task 6e).
     // Task 7z (UNHEARD_ASK_OWED): the entry keeps the sentences of the last reply these words came over unheard (the barge-in record), so a
@@ -285,7 +306,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     // Task 7v (SELF_CORRECTION): their words of a turn cut before anything reached them go to the brain with the words that cut it
     // (the transcript already holds them): "for senior bosses." reached it alone and was corrected as a fragment (embed-1795067373124).
     const carried = carriedSaidRef.current; carriedSaidRef.current = null;
-    const brainSaid = v2WithCarried(carried, studentSaid);
+    const brainSaid = v2WithCarried(carried, unanswered && studentSaid ? `${unanswered} ${studentSaid}` : studentSaid);
     const tutorId = `tutor-${stamp}`;
     publish();
     // The tutor's entry appears with its first words: the session save refuses an entry with no text.
@@ -338,10 +359,13 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     // Task 7n (CHIP_ON_PAINT): this reply's page calls held for their sentence; the chip moves when the last is painted.
     const turnNo = pagesHeldRef.current.begin(stateRef.current.board);
     const pageShown = () => { if (pagesHeldRef.current.painted(turnNo)) reportProgress(); };
+    const roomVoices = p.current.roomVoices?.();
     try {
       const done = await streamV2Turn({
         session, state: stateRef.current, studentSaid: brainSaid, embedToken: p.current.embedToken, signal: abort.signal,
         ...(silenceSeconds ? { silenceSeconds } : {}),
+        ...(timeCheck ? { timeCheck: true } : {}),
+        ...(roomVoices ? { roomVoices } : {}),
         ...(resumeTurnRef.current ? { resumed: true } : {}),
         onText: (delta) => {
           // Typed sessions: once the reply is appearing, the shell's "Thinking…" state is over.
@@ -365,10 +389,15 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         },
         onToolCall: (call) => {
           settled.push(call); p.current.onBoardCallArrived?.(call);
-          p.current.onDebugEvent?.('tool_call', `${call.name} → ${call.outcome}${call.sayWith ? ` · with "${call.sayWith}"` : ''}${call.inline ? ' · inline' : ''}`);
+          p.current.onDebugEvent?.('tool_call', `${call.name}${call.name === 'set_goal_status' ? ` ${String(call.args.goal ?? '')}=${String(call.args.status ?? '')}` : call.name === 'end_lesson' ? ` because=${String(call.args.because ?? '')}` : ''} → ${call.outcome}${call.sayWith ? ` · with "${call.sayWith}"` : ''}${call.inline ? ' · inline' : ''}`);
           // Written again, a thing already on the page is pointed at: the board glides back to it and marks it
           // ("it would have been awesome had it slowly scrolled up and showed me that problem", AP Precalculus).
-          if (call.pointsAt) { p.current.onWhiteboardCommand([{ action: 'scrollTo', target: 'item', targetId: call.pointsAt, pulse: true } as unknown as WhiteboardCommand]); return; }
+          if (call.pointsAt) {
+            // On another page: the board turns back to it first, and what is written next goes there.
+            const turn = call.turnsTo !== undefined ? [{ ...(mapFunctionCallToCommand('go_to_page', { pageIndex: call.turnsTo, page: call.turnsTo + 1, title: stateRef.current.board.pages[call.turnsTo]?.title }) as unknown as Record<string, unknown>), writesThere: true } as unknown as WhiteboardCommand] : [];
+            p.current.onWhiteboardCommand([...turn, { action: 'scrollTo', target: 'item', targetId: call.pointsAt, pulse: true } as unknown as WhiteboardCommand]);
+            return;
+          }
           if (!paintsOnBoard(call, V2_CONTROL_TOOL_NAMES)) return;
           const cmd = mapFunctionCallToCommand(call.name, call.args as Record<string, unknown>);
           // The words written before and after a tool call are separate paragraphs.
@@ -407,6 +436,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       pagesHeldRef.current.done(turnNo);
       if (p.current.pronunciation) { const a = done.state.pronunciation?.armed; p.current.onPronunciationArm?.(a ? { seq: a.seq, reference: a.reference } : null); }
       requestLevelEstimate();
+      keptListeningRef.current = settled.some((c) => c.name === 'keep_listening' && !/^not /.test(c.outcome));
       reportSheet();
       if (done.state.closed) clearV2State(p.current.sessionId); else saveV2State(p.current.sessionId, done.state);
       reportProgress();
@@ -460,7 +490,15 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         // Task 7v (SELF_CORRECTION): nothing of the reply reached them: the record keeps no trace of the turn, so their words go on to
         // the next turn with the words that cut it.
         carriedSaidRef.current = v2CutWordsCarried(brainSaid, reached, settled.length, pendingRef.current);
-        stateRef.current = foldInterruptedTurn(stateRef.current, brainSaid ?? (stateRef.current.history.length === 0 ? '[The session has just started. The student has joined and is waiting for you to begin the lesson.]' : '[The student has not replied.]'), reached, settled);
+        // Merge with main (Task 8e): main carries the same words by its own ref (211dfda8: "Oh, at most means less than or equal
+        // to", then "right?" over the reply, Digital SAT, portal-b0efc3c2). One carry only: with SELF_CORRECTION on the words are in
+        // carriedSaidRef (joined on a new line for the brain); with it off, main's ref holds them (joined into brainSaid in runTurn's head).
+        if (!carriedSaidRef.current && brainSaid && studentSaid && !unheard && !reached.trim() && settled.length === 0 && pendingRef.current) { unansweredRef.current = brainSaid; p.current.onDebugEvent?.('v2_unanswered_carried', brainSaid.slice(0, 80)); }
+        // An item dropped before it was shown is not on the board, and the tutor is told so: recorded as painted, a
+        // problem the student never saw was "the one on the board" in the next reply (ACT Math, portal-87303e9f).
+        const hidden = p.current.notShown?.() ?? new Set<string>();
+        const asSeen = settled.map((c) => (hidden.has(c.id) ? { ...c, outcome: 'not painted: the student spoke before you reached it, so it never went up' } : c));
+        stateRef.current = foldInterruptedTurn(stateRef.current, brainSaid ?? (stateRef.current.history.length === 0 ? '[The session has just started. The student has joined and is waiting for you to begin the lesson.]' : '[The student has not replied.]'), reached, asSeen);
         p.current.onDebugEvent?.('v2_turn_cut', `${text.trim().split(/\s+/).filter(Boolean).length} words kept, ${settled.length} tool call(s)`);
         if (text.trim()) setTutor(text.trim(), false);
       } else {
@@ -552,12 +590,34 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   // tutor's speech under way (v2/time-box.ts): v2 ended mid-sentence with none. Task 7f F: the box is the target; the stop
   // is at the box plus the overrun margin, never past the ceiling the host gives (a partner pool's remaining balance).
   const hardStopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timeCheckRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const runTurnRef = useRef<typeof runTurn | null>(null);
+  runTurnRef.current = runTurn;
   // Task 7n (FLAG_CLOCK_PAUSE): `afterPause`: re-armed after the flag panel held the clock, at the lesson time left.
   const armHardStop = useCallback((afterPause?: boolean) => {
     const minutes = p.current.sessionMaxMinutes;
     if (!minutes || hardStopRef.current) return;
     // Task 7f F (TIME_OVERRUN): the box is the target; the stop is at the box plus the margin, never past the pool's balance.
     const stopMin = v2HardStopMinutes(minutes, p.current.sessionStopCeilingMinutes);
+    // Two minutes before the end the tutor says so and uses what is left well (facts.ts). A turn that happens
+    // then is told by its facts; when no one is speaking, this makes the turn happen. Without it a quiet
+    // student met the end of the session with no warning.
+    // Merge with main (Task 8e): re-armed after the flag panel held the clock (7n), the check is timed by the lesson clock as the
+    // stop is, and an earlier timer is dropped. Measured to the box, not the stop (7f F): the close is due two minutes before the box.
+    if (timeCheckRef.current) { clearTimeout(timeCheckRef.current); timeCheckRef.current = null; }
+    const checkMin = minutes - closeDueMinutes(minutes);
+    const dueMs = afterPause || (TUTOR_V2_FLAG_CLOCK_PAUSE && resumedRef.current) ? v2HardStopDelayMs(checkMin, stateRef.current, Date.now()) : checkMin * 60000 - (resumedRef.current ? Date.now() - stateRef.current.startedAtMs : 0);
+    if (dueMs > 5000) {
+      let tries = 0;
+      const check = () => {
+        if (endingRef.current || closingRef.current.active || stateRef.current.closed || timeCheckedRef.current) return;
+        if (busyRef.current) { if (++tries <= 8) timeCheckRef.current = setTimeout(check, 4000); return; }
+        timeCheckedRef.current = true;
+        p.current.onDebugEvent?.('v2_time_check', `${closeDueMinutes(minutes)} min left of ${minutes}`);
+        void runTurnRef.current?.(null, undefined, false, true);
+      };
+      timeCheckRef.current = setTimeout(check, dueMs);
+    }
     hardStopRef.current = setTimeout(() => {
       if (endingRef.current) return;
       // Task 7h: a close still being said when the box comes is not interruptible either: the microphone closes, and
@@ -605,7 +665,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   }, []);
   // Unmounted: a stop under way (waiting on the last words or the goodbye) does nothing more.
   // (Set false on mount: React's development double mount runs this clean-up once before the real mount.)
-  useEffect(() => { endedRef.current = false; return () => { endedRef.current = true; if (hardStopRef.current) clearTimeout(hardStopRef.current); }; }, []);
+  useEffect(() => { endedRef.current = false; return () => { endedRef.current = true; if (hardStopRef.current) clearTimeout(hardStopRef.current); if (timeCheckRef.current) clearTimeout(timeCheckRef.current); }; }, []);
 
   // A resume (resume.ts): the transcript and the board go back up as the page loads, and the state is the one
   // kept in this browser or, failing that, one rebuilt from the host's checkpoint.
@@ -673,5 +733,5 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     armHardStop(true);
   }, [armHardStop]);
 
-  return { send, open, nudge, end, abort, isEnding, isClosing, pauseClock, busy, closed, openedRef, stateRef, resumedRef };
+  return { send, open, nudge, end, abort, isEnding, isClosing, pauseClock, busy, closed, openedRef, stateRef, resumedRef, keptListeningRef };
 }

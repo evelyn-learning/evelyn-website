@@ -7,7 +7,7 @@
  * Supports position-time, velocity-time, and custom function plots.
  */
 
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import {
   Mafs,
   Coordinates,
@@ -20,6 +20,14 @@ import 'mafs/core.css';
 import type { GraphData, GraphType, GraphAnnotation, ShadedRegion } from '@core/knowledge/types';
 import { parseFunctionString, parseFunctionOfYString, normalizeShadedRegion } from '@/lib/tutor/whiteboard/math-expr';
 import { InlineMathText } from './InlineMathText';
+import { typesetMaths } from '@/lib/tutor/v2/rich-text';
+
+/** A title or axis label that names a formula ("f(x), with f'(x) = 2x") is set as one; a plain word stays a word. */
+function typeset(label: string): string { return label.includes('$') ? label : typesetMaths(label); }
+function axisLabel(label: string): ReactNode {
+  const set = typeset(label);
+  return set.includes('$') ? <InlineMathText text={set} /> : prettyMathLabel(label);
+}
 import { prettyMathLabel } from '@/lib/tutor/whiteboard/math-label';
 import { isOpenGraphPoint } from '@/lib/tutor/whiteboard/graph-features';
 import { parseAxisStep, isPiStep, labelPiTick } from '@/lib/tutor/whiteboard/graph-axis';
@@ -136,7 +144,7 @@ export function GraphRenderer({
         // "$f(x) = \frac{1}{x-2}$" shown). Render $-spans like the PDF
         // export and problem titles already do; plain titles pass through.
         <h4 className="text-center font-medium text-gray-800 mb-2">
-          <InlineMathText text={title} />
+          <InlineMathText text={typeset(title)} />
         </h4>
       )}
 
@@ -144,7 +152,7 @@ export function GraphRenderer({
         {/* Y-axis label (prettyMathLabel: calculator-notation scripts like
             ^2 / _1 become real super/subscripts — round-6f, IMG legend) */}
         <div className="absolute left-0 top-1/2 -translate-y-1/2 -rotate-90 text-sm text-gray-600 origin-center whitespace-nowrap">
-          {prettyMathLabel(yLabel ?? '')}
+          {axisLabel(yLabel ?? '')}
         </div>
 
         <div className="ml-8">
@@ -268,7 +276,7 @@ export function GraphRenderer({
 
         {/* X-axis label */}
         <div className="text-center text-sm text-gray-600 mt-1">
-          {prettyMathLabel(xLabel ?? '')}
+          {axisLabel(xLabel ?? '')}
         </div>
       </div>
 

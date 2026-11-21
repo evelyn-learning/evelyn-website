@@ -95,6 +95,7 @@ import CellDiagramRenderer from './CellDiagramRenderer';
 import DnaRenderer from './DnaRenderer';
 import FoodWebRenderer from './FoodWebRenderer';
 import { InlineMathText } from './InlineMathText';
+import { typesetMaths } from '@/lib/tutor/v2/rich-text';
 import { RichBoardText } from './RichBoardText';
 import { NoteTargetText } from './NoteTargetText';
 import { CardGloss, cardGlossOf } from './CardGloss';
@@ -1876,7 +1877,7 @@ export function WhiteboardCanvas({
         // The head of the page, as in a book: its title, and where it stands among the pages. It stays put while
         // the page scrolls under it (Praveen, biology, embed-1794520770137).
         <div className="shrink-0 flex items-baseline justify-between gap-4 px-5 sm:px-7 pt-4 pb-2.5 border-b border-slate-200" data-wb-page-title="1">
-          <h2 key={currentIndex} className="min-w-0 truncate text-base sm:text-lg font-semibold tracking-tight text-slate-800 animate-in fade-in duration-300" title={bookTitle}>{bookTitle}</h2>
+          <h2 key={currentIndex} className="min-w-0 truncate text-base sm:text-lg font-semibold tracking-tight text-slate-800 animate-in fade-in duration-300" title={bookTitle}><InlineMathText text={typesetMaths(bookTitle)} /></h2>
           <span className="shrink-0 text-xs font-medium tabular-nums text-slate-400">Page {currentIndex + 1} of {pages.length}</span>
         </div>
       )}

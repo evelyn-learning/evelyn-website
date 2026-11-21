@@ -22,7 +22,7 @@ import { TUTOR_V2_ANSWER_OVER_ASK, TUTOR_V2_LEVEL_CHECK_CHIP, TUTOR_V2_OPTIONAL_
 import { v2LevelCheckBegun } from './level-check-count';
 import { v2PartFirstStepLine } from './optional-hold';
 import { V2_LANGUAGE_PACKS, v2EndingAsk, v2IsAskLead, v2WithoutFillers } from './language-pack';
-import { V2_CUT_MARK } from './interrupted';
+import { V2_CUT_MARK, v2WithoutCutBoardNote } from './interrupted';
 
 /** `history` (Task 7g, LEVEL_CHECK_CHIP): when present, a level check under way lights its chip before any goal is marked. */
 type View = Pick<V2State, 'board' | 'goals' | 'workingLevel'> & { closed?: boolean; history?: V2State['history'] } & Partial<Pick<V2State, 'practiceSaid' | 'timeFit' | 'summaryBegunAt' | 'visitPages'>>;
@@ -300,7 +300,7 @@ export function v2NoMoreAnswer(said: string | null, languages?: readonly string[
 export function v2UnheardPartAsk(plan: LessonPlan, state: Pick<V2State, 'unheard'>, lastTutor: string, languages?: readonly string[], enabled: boolean = TUTOR_V2_ANSWER_OVER_ASK): { text: string; ask: string[]; playing: boolean } | null {
   const unheard = (state.unheard ?? []).map((x) => x.trim()).filter(Boolean);
   if (!enabled || !unheard.length) return null;
-  const heard = stripBoardBlocks(lastTutor).split(V2_CUT_MARK).join(' ').trim();
+  const heard = stripBoardBlocks(v2WithoutCutBoardNote(lastTutor)).split(V2_CUT_MARK).join(' ').trim();
   const text = `${heard} ${unheard.join(' ')}`.trim();
   const sentences = text.split(SENTENCES).map((x) => x.trim()).filter(Boolean);
   const last = sentences[sentences.length - 1] ?? '';

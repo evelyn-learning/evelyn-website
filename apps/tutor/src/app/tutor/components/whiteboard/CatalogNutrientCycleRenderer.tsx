@@ -33,8 +33,13 @@ export function CatalogNutrientCycleRenderer({ figure }: { figure: NutrientCycle
   const N = nutrientCycleFeatureNames;
   // More reservoirs → a larger ring (the figure scales to fit its frame).
   const extra = Math.max(0, reservoirs.length - 6);
-  const W = 660 + extra * 60;
-  const H = reservoirs.length === 2 ? 240 : 520 + extra * 44;
+  // With no arrows given there is no cycle to draw, only the pools: they go in a row. Set round a ring they
+  // stood far apart on a page of their own, as if arrows were missing (AP Environmental Science, portal-03406355).
+  const listed = fluxes.length === 0 && reservoirs.length > 2;
+  const perRow = listed ? (reservoirs.length <= 5 ? reservoirs.length : Math.ceil(reservoirs.length / 2)) : 0;
+  const rowCount = listed ? Math.ceil(reservoirs.length / perRow) : 0;
+  const W = listed ? Math.max(660, perRow * 172) : 660 + extra * 60;
+  const H = listed ? rowCount * 76 + 12 : reservoirs.length === 2 ? 240 : 520 + extra * 44;
   const cx = W / 2;
   const cy = H / 2;
   const ringX = W / 2 - 104;
@@ -61,8 +66,8 @@ export function CatalogNutrientCycleRenderer({ figure }: { figure: NutrientCycle
       ...r,
       lines,
       descLines,
-      x: Math.max(4 + clampW / 2, Math.min(cx + ringX * Math.cos(a), W - 4 - clampW / 2)),
-      y: Math.max(4 + h / 2, Math.min(cy + ringY * Math.sin(a), H - 4 - h / 2)),
+      x: listed ? (W / perRow) * ((i % perRow) + 0.5) : Math.max(4 + clampW / 2, Math.min(cx + ringX * Math.cos(a), W - 4 - clampW / 2)),
+      y: listed ? 44 + Math.floor(i / perRow) * 76 : Math.max(4 + h / 2, Math.min(cy + ringY * Math.sin(a), H - 4 - h / 2)),
       w,
       h,
       color: r.color || PALETTE[i % PALETTE.length],
@@ -143,7 +148,7 @@ export function CatalogNutrientCycleRenderer({ figure }: { figure: NutrientCycle
       {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        className="w-full max-w-[680px]"
+        className={listed ? 'w-full max-w-[860px]' : 'w-full max-w-[680px]'}
         data-feature={N.cycle}
         data-feature-label={title || 'nutrient cycle'}
         data-feature-cx={0.5}

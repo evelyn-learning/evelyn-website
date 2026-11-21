@@ -55,8 +55,8 @@ export function ProductionPossibilitiesRenderer({ figure }: { figure: PPCFigure 
   const plotW = W - PAD_L - PAD_R;
   const plotH = H - PAD_T - PAD_B;
 
-  const shiftX = shift ? (shift.direction === 'out' ? xAxis.max * shift.factor : xAxis.max / shift.factor) : null;
-  const shiftY = shift ? (shift.direction === 'out' ? yAxis.max * shift.factor : yAxis.max / shift.factor) : null;
+  const shiftX = shift ? shift.xMax ?? (shift.direction === 'out' ? xAxis.max * shift.factor : xAxis.max / shift.factor) : null;
+  const shiftY = shift ? shift.yMax ?? (shift.direction === 'out' ? yAxis.max * shift.factor : yAxis.max / shift.factor) : null;
 
   // The view holds both curves and every point, and ends on a round tick.
   const xAx = niceAxis(Math.max(xAxis.max, shiftX ?? 0, ...points.map((p) => p.x * 1.04)));
@@ -126,7 +126,9 @@ export function ProductionPossibilitiesRenderer({ figure }: { figure: PPCFigure 
   // The outer curve is named on its outer side, the inner curve on its inner side, so neither name sits between them.
   const mainOuter = !shift || shift.direction === 'in';
   const ppcLabel = place('PPC', 12.5, [...alongCurve(mainPts, mainOuter), ...alongCurve(mainPts, !mainOuter)]);
-  const shiftText = shift ? (shift.label ?? (shift.direction === 'out' ? 'PPC′ (growth)' : 'PPC′ (contraction)')) : '';
+  // The dashed curve is the new one, and says so: its own label alone ("Wheat side only") left it unclear which
+  // curve was the old one, and the tutor itself called the dashed curve the old one.
+  const shiftText = shift ? (shift.label && !/\b(new|after|ppc)\b/i.test(shift.label) ? `New curve: ${shift.label}` : shift.label ?? (shift.direction === 'out' ? 'PPC′ (growth)' : 'PPC′ (contraction)')) : '';
   const shiftLabel = shift && shiftPts ? place(shiftText, 12, [...alongCurve(shiftPts, !mainOuter), ...alongCurve(shiftPts, mainOuter)]) : null;
 
   const halo = { paintOrder: 'stroke' as const, stroke: '#fff', strokeWidth: 3.5, strokeLinejoin: 'round' as const };

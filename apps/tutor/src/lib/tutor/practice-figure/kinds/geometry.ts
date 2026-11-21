@@ -16,6 +16,7 @@
  *     ticks?: [a, b, c];                   // 0–3 tick marks on a side (equal sides)
  *     rightAngleMarks?: boolean (true);    // a square in every right angle
  *     altitude?: { from: 0 | 1 | 2; label?: LABEL };   // dashed, with its right-angle mark
+ *     exterior?: { at: 0 | 1 | 2; label?: LABEL };     // the exterior angle at a vertex: the side before it carried on past it
  *     drawn?: { sides: [a, b, c] } }       // with notToScale: the shape actually drawn
  * shape 'polygon' — side i runs from vertex i to vertex i + 1:
  *   { points: [[x, y] × 3–8] | regular: { n: 3–8; side: number };
@@ -73,6 +74,8 @@ export interface PolyModel {
   sides: number[];
   angles: number[];
   altitude?: { from: number; label: GeoLabel; length: number };
+  /** The exterior angle at a vertex: where the carried-on side ends (in the coordinates of the drawn points). */
+  exterior?: { at: number; label: GeoLabel; end: Pt };
 }
 export interface CirclePoint { name: string; at: number }
 export interface CircleModel {
@@ -212,6 +215,16 @@ export function geometryModel(r: Reader): GeoModel {
       const length = area2 / dist(q, s);
       if (m.angles[(from + 1) % 3] > 90 + 1e-6 || m.angles[(from + 2) % 3] > 90 + 1e-6) r.fail('altitude: it would fall outside the triangle (an obtuse angle at the base)');
       m.altitude = { from, label: one(o.label, 'altitude.label', len(length)), length };
+    }
+    // An exterior angle. A problem asked for the exterior angle at C and the figure could only put its "?" in the
+    // interior angle there (ACT Math, portal-87303e9f).
+    if (p.exterior !== undefined && p.exterior !== null) {
+      const o = r.obj(p.exterior, 'exterior');
+      const at = r.num(o.at, 'exterior.at');
+      if (![0, 1, 2].includes(at)) r.fail('exterior.at must be 0, 1 or 2 (the vertex the exterior angle is at)');
+      const D = m.drawPts; const v = D[at]; const before = D[(at + 2) % 3];
+      const reach = 0.3 * Math.max(dist(D[0], D[1]), dist(D[1], D[2]), dist(D[2], D[0])) / dist(before, v);
+      m.exterior = { at, label: one(o.label, 'exterior.label', ang(180 - m.angles[at])), end: [v[0] + (v[0] - before[0]) * reach, v[1] + (v[1] - before[1]) * reach] };
     }
     return { ...base, poly: m };
   }
@@ -413,7 +426,7 @@ function insidePoly(P: Pt[], x: number, y: number, margin: number): boolean {
   return inside;
 }
 
-function drawPoly(c: Ctx, m: PolyModel, P: Pt[]): void {
+function drawPoly(c: Ctx, m: PolyModel, P: Pt[], exteriorEnd?: Pt): void {
   const n = P.length;
   const cx = P.reduce((a, q) => a + q[0], 0) / n;
   const cy = P.reduce((a, q) => a + q[1], 0) / n;
@@ -429,6 +442,12 @@ function drawPoly(c: Ctx, m: PolyModel, P: Pt[]): void {
     c.placer.block(...segmentBoxes(v[0], v[1], f[0], f[1], 2));
     angleMark(c, f, v, t > 0.5 ? a : b, null, true);
     if (m.altitude.label !== null) put(c, (v[0] + f[0]) / 2, (v[1] + f[1]) / 2, m.altitude.label, t > 0.5 ? -1 : 1, 0, [9, 14, 20]);
+  }
+  if (m.exterior && exteriorEnd) {
+    const v = P[m.exterior.at];
+    c.parts.push(`<path d="${polyPath([v, exteriorEnd])}" ${stroke(INK, 1.3, '5 3')}/>`);
+    c.placer.block(...segmentBoxes(v[0], v[1], exteriorEnd[0], exteriorEnd[1], 2));
+    angleMark(c, v, exteriorEnd, P[(m.exterior.at + 1) % n], m.exterior.label, false, 22);
   }
   // Angle marks first (they are nearest the vertex), then side labels, then names.
   P.forEach((q, i) => {
@@ -478,9 +497,9 @@ export function renderGeometry(r: Reader, uid: string): Drawn {
   let bottom = top;
 
   if (m.poly) {
-    const f = fit(m.poly.drawPts, { x0: 50, y0: top, x1: W - 50, y1: top + 210 });
+    const f = fit(m.poly.exterior ? [...m.poly.drawPts, m.poly.exterior.end] : m.poly.drawPts, { x0: 50, y0: top, x1: W - 50, y1: top + 210 });
     if (f.k * Math.min(...m.poly.drawPts.map((q, i) => dist(q, m.poly!.drawPts[(i + 1) % m.poly!.drawPts.length]))) < 26) notes.push({ code: 'crowded', message: 'the shortest side is drawn under 26 units long — its label and marks crowd the vertices' });
-    drawPoly(c, m.poly, m.poly.drawPts.map(f.T));
+    drawPoly(c, m.poly, m.poly.drawPts.map(f.T), m.poly.exterior ? f.T(m.poly.exterior.end) : undefined);
     bottom = top + f.h;
   } else if (m.similar?.nested) {
     // One outline; the inner segment D E cuts off the small triangle at B.

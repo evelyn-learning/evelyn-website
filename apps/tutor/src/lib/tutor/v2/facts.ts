@@ -5,6 +5,7 @@
  * the model what to do.
  */
 import { renderBoard } from './board';
+import { v2WithoutCutBoardNote } from './interrupted';
 import { stripBoardBlocks } from './board-inline';
 import { TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_OPENER_FACT, TUTOR_V2_PART_ASK_EVERY, TUTOR_V2_PART_OFFER_ONCE } from '../orchestrator/flags';
 import { v2PartAskFacts, v2PartOfPage, v2PlanLabelled } from './part-flow';
@@ -12,7 +13,9 @@ import { v2FrameDue } from './part-close';
 import { v2HomeworkFacts, v2HomeworkGuardFacts, v2SheetFacts } from './homework-facts';
 import { renderGoalStatus, v2PartOfferFacts, v2PassedPartFact, v2UnreachedAtCloseFact } from './plan-map';
 import type { V2Session, V2State } from './types';
-import { discussionOf, effectiveMinutes, lastReplyNotes, renderThinking } from './discussion';
+import { roomVoicesFact } from './room-voices';
+import { leftOpen } from './part-close';
+import { discussionOf, effectiveMinutes, lastReplyNotes, reflectAsked, reflectAtMinutes, renderThinking, stagePace, untoldCases } from './discussion';
 import { v2WorkingLevelFacts } from './working-level';
 import { v2PronunciationFacts, v2TextSoundFacts } from './pronunciation';
 import { v2SentenceCardsFacts } from './sentence-cards';
@@ -40,8 +43,10 @@ import { asksAnywhere } from './board-timing';
 
 /** After the tutor chose to keep listening: how long the student stays silent before it is told so (TutorVoiceV2).
  *  At that point silence is no longer open to it: it kept listening twice and the student sat with a blank
- *  indicator for a minute (biology, embed-1794452229126). */
-export const V2_WAITED_RECHECK_S = 5;
+ *  indicator for a minute (biology, embed-1794452229126). Three seconds, not five: a student whose answer trailed
+ *  off ("1 is greater than 5, which is, which is") had in fact finished, and with the reply's own time on top the
+ *  tutor stood silent for eight seconds (Digital SAT, portal-a9b9b4d4). */
+export const V2_WAITED_RECHECK_S = 3;
 /** The early silence check after a spoken reply that asked nothing (TutorVoiceV2). Short: a tutor who has
  *  explained something and stopped leaves the student to say "got it" before the lesson moves (AP CS A,
  *  embed-1794440489707; it was 6 s, and the student spoke first). */
@@ -55,12 +60,17 @@ export interface V2TurnFacts {
   answerCheck?: string;
   /** Seconds the student was silent before this turn, when that is why the turn exists. */
   silenceSeconds?: number;
+  /** No one spoke: the turn exists because the session is nearly out of time (useV2Turns). */
+  timeCheck?: boolean;
   /** The page was reloaded and the session has just been picked up again (resume.ts). */
   resumed?: boolean;
   /** A draft of this reply was held back, and why (homework-turn.ts). */
   notSent?: string;
   /** What the person has just said, for the notes on how the last reply landed. */
   heard?: string | null;
+  /** Other voices in the room have been picked up this many times and left out; the student is to be told, once
+   *  (room-voices.ts). */
+  roomVoices?: number;
   /** Their words just now end the session (stop-signal.ts). */
   stopAsked?: boolean;
   /** Their words just now said the level remembered from an earlier lesson does not fit (working-level.ts v2ReopenLevelCheck). */
@@ -121,7 +131,7 @@ const headWords = (text: string) => text.split(/[.,:;!?。、！？\n]/)[0]!.tri
 function replyText(h: V2State['history'][number]): string {
   // A reply cut short carries "[cut off here: …]" (interrupted.ts); that marker is the system's, not the tutor's words,
   // and a reply cut before any word got out has no opener at all (final review M4: the fact quoted "[cut off here").
-  return stripBoardBlocks(typeof h.content === 'string' ? h.content : h.content.map((c) => (c.type === 'text' ? c.text : '')).join(' ')).replace(/\[cut off[^\]]*\]/gi, ' ').trim();
+  return stripBoardBlocks(v2WithoutCutBoardNote(typeof h.content === 'string' ? h.content : h.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '))).replace(/\[cut off[^\]]*\]/gi, ' ').trim();
 }
 
 /** How a reply opened: its words up to the first mark, at most four (D10). A reply that opens on a quote of the student
@@ -243,10 +253,14 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   const oneMore = !discussion && !optHold && !summaryBegun && !f.stopAsked && f.optionalOneMore ? v2OptionalOneMoreLine(f.optionalOneMore) : null;
   const timeTail = [stay, partUp, held, optHold && !summaryBegun ? v2OptionalHoldLine(optHold) : null, oneMore].filter(Boolean).map((x) => `; ${x}`).join('');
   let summaryCorrectionsShown = false;
+  const usedExact = (f.nowMs - state.startedAtMs) / 60000;
+  const reflectAt = discussion && session.plan ? reflectAtMinutes(session.plan, box) : null;
+  const reflected = discussion ? reflectAsked(state.history, discussionOf(session.plan)) : false;
+  const reflectDue = reflectAt !== null && usedExact >= reflectAt;
   const lines = [
     // A discussion runs 8–12 minutes and may close early once the person has chosen where to go next: the teaching
     // line's "time for more, not at its close" would hold it open.
-    discussion ? `time: ${usedMin} min used${box ? ` of about ${box}${box !== session.timeBoxMinutes ? ' (the time they said they have)' : ''}; ${left > box * 0.4 ? `about ${Math.round(left)} left: plenty of time, not yet time to reflect or close unless they ask` : left > 4 ? `about ${Math.round(left)} left` : left > V2_TIME_UP_MIN ? `about ${Math.round(left)} left: time to reflect and choose a direction` : 'the time is up'}` : ''}` :
+    discussion ? `time: ${usedMin} min used${box ? ` of about ${box}${box !== session.timeBoxMinutes ? ' (the time they said they have)' : ''}; ${left > V2_TIME_UP_MIN && reflectDue ? `about ${Math.round(left)} left: time to ask what they are thinking now${reflected ? ' (asked)' : ''} and then what they would like to explore next` : left > box * 0.4 ? `about ${Math.round(left)} left: plenty of time, not yet time to reflect or close unless they ask` : left > 4 ? `about ${Math.round(left)} left` : left > V2_TIME_UP_MIN ? `about ${Math.round(left)} left: time to reflect and choose a direction` : `the time is up${state.thinking?.direction ? '' : ': they have not named a direction, so the close names none'}`}` : ''}` :
     // What is left, said outright: with only "22 used of 30" the tutor said goodbye, was refused the close, and
     // took the goodbye back in the same breath (embed-1794593747478, embed-1794595194384).
     // Homework: a solved problem does not go on spending the student's minutes.
@@ -259,6 +273,11 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
       : `time: ${usedMin} min used${session.timeBoxMinutes ? ` of about ${session.timeBoxMinutes}; ${morePracticeAllowed ? `about ${Math.max(1, Math.floor(leftStop))} minutes before the session must end` : v2LessonTimeLine(session, state, f.nowMs, { summaryBegun, closeOpen, tf })}` : ''}${timeTail}`,
     `board:\n  ${renderBoard(state.board)}`,
   ];
+  // The answer to a problem of the tutor's own that is on the page in view (turn.ts, ownKeys): the latest one.
+  const keyed = [...(state.board.pages[state.board.current]?.items ?? [])].reverse().find((it) => state.ownKeys?.[it.id]);
+  if (keyed) lines.push(`the problem on the board that you set yourself ("${keyed.summary.replace(/\s+/g, ' ').slice(0, 70)}…"), worked out apart from the lesson for your checking (the student has not seen this; check each thing they say about it against this before you agree or disagree): ${state.ownKeys![keyed.id]}`);
+  // The answer to the question the tutor last asked aloud (turn.ts, askedKey).
+  if (state.askedKey?.key) lines.push(`the question you asked last ("${state.askedKey.q.replace(/\s+/g, ' ').slice(0, 120)}"), worked out apart from the lesson for your checking (the student has not seen this; check what they answer against this before you agree or disagree): ${state.askedKey.key}`);
   if ((state.repliesSinceBoard ?? 0) >= 1) lines.push(`board last written on: ${state.repliesSinceBoard} ${state.repliesSinceBoard === 1 ? 'reply' : 'replies'} ago`);
   if (state.boardProblems?.length) lines.push(`not painted in your last reply:\n${state.boardProblems.map((x) => `  - ${x}`).join('\n')}`);
   if (session.homework) lines.push(...v2HomeworkFacts(session.homework, state.homework));
@@ -374,6 +393,11 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   lines.push(`your note: ${state.note.trim() || '(empty — nothing written yet)'}`);
   const thinking = discussion ? renderThinking(state.thinking) : '';
   if (thinking) lines.push(thinking);
+  const pace = discussion && session.plan && !reflectDue ? stagePace(session.plan, state.goals, usedExact, box) : '';
+  if (pace) lines.push(pace);
+  const meta = state.history.length ? discussionOf(session.plan) : null;
+  const untold = meta ? untoldCases(meta, state.history) : [];
+  if (untold.length) lines.push(`not yet told to them: ${untold.map((c) => c.title).join('; ')}. They know nothing of ${untold.length === 1 ? 'it' : 'these'}: no name or detail from ${untold.length === 1 ? 'it' : 'them'} until the reply that tells it in full. That reply tells it at once: it does not ask whether to go on, and it does not say a case is coming`);
   const lastNotes = discussion ? lastReplyNotes(state.history, session.mode === 'voice', f.heard) : [];
   if (lastNotes.length) lines.push(`your last reply: ${lastNotes.join('; ')}`);
   // Said once in the prompt, the length and the opener drift back within a few turns (live test 2, 2026-11-15: replies of
@@ -386,22 +410,33 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // Task 7i (STAY_IN_PART): sentences of the last reply they did not hear (a barge-in cut them, interrupted.ts trimToSpoken).
   if (TUTOR_V2_STAY_IN_PART && !discussion && state.unheard?.length && !state.closed) lines.push(`not heard: they spoke over your last reply, and these sentences of it did not reach them: ${state.unheard.map((x) => `"${x}"`).join(' ')}. If it still fits after what they said, say again what they need of it (a question they did not hear is asked again)`);
   if (f.stopAsked) lines.push('the student\'s words just now asked to end the session');
+  if (f.roomVoices && session.mode === 'voice') lines.push(roomVoicesFact(f.roomVoices));
+  // The student has said yes to what the last reply named as coming next. Told nothing, the tutor named it again in
+  // the same words: "Next is parallel lines cut by a transversal, where…", "Uh, yes", "Next is parallel lines cut by a
+  // transversal, the line that…" (ACT Math, portal-87303e9f: "sounding a little robotic").
+  if (!discussion && f.heard && f.heard.trim().split(/\s+/).length <= 6) {
+    const last = [...state.history].reverse().find((m) => m.role === 'assistant');
+    const lastText = !last ? '' : typeof last.content === 'string' ? last.content : last.content.map((c) => (c.type === 'text' ? c.text : '')).join(' ');
+    const named = stripBoardBlocks(lastText).split(/(?<=[.?!])\s+/).slice(-3).find((x) => /\bnext (?:is|are|up|comes?)\b/i.test(x));
+    if (named && leftOpen(lastText, f.heard)) lines.push(`your last reply named what comes next ("${named.trim().slice(0, 160)}") and the student has answered. If they agreed, they have heard it named: start on it directly, without announcing it again`);
+  }
   if (f.answerCheck) lines.push(`answer check: ${f.answerCheck}`);
   if (f.notSent) lines.push(`your first draft of this reply was not sent (the student never saw it: do not mention it): ${f.notSent}`);
+  // A turn the tutor takes only to speak of the other voices is not a silence of the student's.
   // Task 7m (NO_FALSE_SILENCE): the early recheck after a reply that did ask (the client took it for one that asked nothing:
   // mic test 4, 9.94): not "nothing for them to do"; one short line, nothing new.
-  const askedThem = silenceTurn && Math.round(f.silenceSeconds ?? 0) === V2_NO_ASK_RECHECK_S && v2LastReplyAsked(state.history);
+  const askedThem = silenceTurn && !f.roomVoices && Math.round(f.silenceSeconds ?? 0) === V2_NO_ASK_RECHECK_S && v2LastReplyAsked(state.history);
   // Task 7r (SILENCE_AFTER_ASK): never the answer, nor the question or the part-change ask again word for word (mic test 5,
   // embed-1795050656326: the tutor answered its own summary question at 18.9 min, and re-asked its part asks).
   const notAnswer = TUTOR_V2_SILENCE_AFTER_ASK ? '. Do not give the answer yourself, and do not repeat your question or a part-change ask word for word' : '';
   // Task 7r (SILENCE_AFTER_ASK): the ordinary long wait after a reply that asked them something: the question in hand stands.
-  const longAfterAsk = TUTOR_V2_SILENCE_AFTER_ASK && !askedThem && !!f.silenceSeconds && !f.heard && ![V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S].includes(Math.round(f.silenceSeconds)) && v2LastReplyAskedGuarded(state.history);
+  const longAfterAsk = TUTOR_V2_SILENCE_AFTER_ASK && !f.roomVoices && !askedThem && !!f.silenceSeconds && !f.heard && ![V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S].includes(Math.round(f.silenceSeconds)) && v2LastReplyAskedGuarded(state.history);
   if (askedThem) lines.push(`your last reply asked them for something, and they have been silent for ${Math.round(f.silenceSeconds!)} seconds since it finished: they may be thinking. Say one short line only: that they can take their time, or an offer of a hint or the first words. No claim about what they said, no new question, no card or other board item${notAnswer}`);
   else if (longAfterAsk) lines.push(`the student has said nothing for ${Math.round(f.silenceSeconds!)} seconds since your last reply, which asked them something: they have not answered the question in hand yet. Give one short encouragement or a smaller hint towards it, and stop. Do not give the answer, do not ask a new question, and do not repeat your question or a part-change ask word for word`);
-  else if (f.silenceSeconds) lines.push(Math.round(f.silenceSeconds) === V2_NO_ASK_RECHECK_S
+  else if (f.silenceSeconds && !f.roomVoices) lines.push(Math.round(f.silenceSeconds) === V2_NO_ASK_RECHECK_S
     ? `your last reply has finished and it ended on a statement: no question, and nothing for them to do. They are waiting for you to go on`
     : Math.round(f.silenceSeconds) === V2_WAITED_RECHECK_S
-    ? `you kept listening after the student's last words, and they have said nothing more for ${V2_WAITED_RECHECK_S} seconds: they had finished. Take what they said as their answer and reply to it now`
+    ? `you kept listening after the student's last words, and they have said nothing more for ${V2_WAITED_RECHECK_S} seconds: they had finished. Take what they said as their answer and reply to it now, as you would have straight away: no remark about the wait, and no telling them you are here`
     : `the student has said nothing for ${Math.round(f.silenceSeconds)} seconds`);
   return `<facts>\n${lines.join('\n')}\n</facts>`;
 }

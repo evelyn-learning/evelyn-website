@@ -5,9 +5,14 @@ import { homedir } from "node:os";
 import path from "node:path";
 import { renderInline, renderMarkdown, sanitize } from "./render";
 import { parseItemFile } from "./item-file";
-import { parseQtiItem, readQtiZip } from "./qti";
+import JSZip from "jszip";
+import { parseQtiItem, passageHtml, readQtiZip } from "./qti";
 import { parseCsv } from "./sheet";
+import { cleanPastedHtml, splitNote } from "./note";
+import { normaliseCourse, sectionTitle, STAGES, STAGE_LABEL, STAGE_HELP, STAGE_OWNER, VERDICTS, answerSeenBy, canJudgeSolution, visibleStage } from "./config";
 import { renderForSolaro, texToLinear, toXhtml } from "./solaro";
+import { activitySeenBy, asSeenBy, stagesFor } from "./queries";
+import type { ActivityDoc } from "./db";
 
 // render: math, figures, table captions, images, sanitising
 {
@@ -85,6 +90,122 @@ Because.
   assert.ok(!q.questionHtml.includes("simpleChoice"), "options removed from stem");
   assert.ok(q.castleRockSolutionHtml.includes("cr-step-title"), "their solution kept");
   assert.deepEqual(q.imageRefs, ["resources/Image_1.png"]);
+  assert.deepEqual(q.passageRefs, []);
+
+  // Standards descriptions arrive wrapped in <p>; the list is plain text.
+  const withStd = meta.replace("</metadata>", "<SYSTEM_Standards><Standard><Code>S.1</Code><Description><p>Solve\t\tproblems.</p></Description></Standard></SYSTEM_Standards></metadata>");
+  assert.deepEqual(parseQtiItem(apip, withStd).standards, ["S.1 Solve problems."]);
+
+  // Solution-only item file (question already in the database).
+  const solOnly = parseItemFile('---\nitemId: "9"\nevelynAnswer: "A"\n---\n\n## Short answer\nA.\n', { questionOptional: true });
+  assert.deepEqual(solOnly.sections.map((s) => s.kind), ["short"]);
+  assert.throws(() => parseItemFile('---\nitemId: "9"\n---\n\n## Short answer\nA.\n'), /no Question section/);
+}
+
+// QTI reading passage: shown above the stem, kept raw for the package going back
+async function passageTests() {
+  const apip = `<assessmentItem identifier="item_7"><responseDeclaration><correctResponse><value>A</value><value>C</value></correctResponse></responseDeclaration><itemBody><rubricBlock id="passage_3" class="passage" view="candidate"><object type="text/html" data="passage_3.xml" /></rubricBlock><rubricBlock class="scoringData" view="scorer"><div><![CDATA[<Data>{A,C}=1</Data>]]></div></rubricBlock><p>Which apply?</p><choiceInteraction responseIdentifier="RESPONSE" maxChoices="0"><simpleChoice identifier="A"><p>a</p></simpleChoice><simpleChoice identifier="C"><p>c</p></simpleChoice></choiceInteraction></itemBody></assessmentItem>`;
+  const passage = `<div class="passage" id="passage_3"><div class="title">Kind</div><div class="content"><p><span class="passageRef" label="x_y">The bus came.</span></p></div></div>`;
+  assert.deepEqual(parseQtiItem(apip, "").passageRefs, ["passage_3.xml"]);
+  assert.equal(parseQtiItem(apip, "").key, "A,C");
+  assert.ok(!passageHtml(passage).includes("label="), "passage anchors dropped");
+
+  const zip = new JSZip();
+  zip.file("Item7/item_7_apip.xml", apip);
+  zip.file("Item7/passage_3.xml", passage);
+  const { items, messages } = await readQtiZip(await zip.generateAsync({ type: "uint8array" }));
+  assert.equal(items.length, 1);
+  const h = items[0].questionHtml;
+  assert.ok(h.indexOf("The bus came.") >= 0 && h.indexOf("The bus came.") < h.indexOf("Which apply?"), "passage sits above the stem");
+  assert.ok(h.includes('class="cr-passage"') && h.includes('class="cr-passage-title"'), "passage classes");
+  assert.ok(!h.includes("{A,C}=1"), "scoring data not shown");
+  assert.deepEqual(items[0].raw.passages, [{ file: "passage_3.xml", xml: passage }]);
+  assert.ok(!messages.some((m) => m.includes("passage")), "no passage warning");
+
+  const bare = new JSZip();
+  bare.file("item_7_apip.xml", apip);
+  const missing = await readQtiZip(await bare.generateAsync({ type: "uint8array" }));
+  assert.ok(missing.messages.some((m) => m.includes("passage passage_3.xml is referenced but not in the zip")), "missing passage is reported");
+}
+
+// review notes: pasted markup becomes a clean table, long notes are marked long
+{
+  const plain = splitNote("Please shorten the short answer.");
+  assert.deepEqual(plain, { text: "Please shorten the short answer.", html: null, plain: "Please shorten the short answer.", long: false });
+
+  const list = splitNote("Premises did not export.\nOocyte\n\nSperm\n\nFertilization\n\nBlastocyst");
+  assert.equal(list.text.split("\n").length, 5, "blank lines closed up");
+  assert.equal(list.long, true, "more than four lines is long");
+
+  const pasted = splitNote('The postamble: <table width="250" border="0" id="Item1_x" onclick="x()"><colgroup><col /><col /></colgroup> <tbody> <tr> <th align="center" colspan="2"><p id="Item1_y">Description</p></th> </tr> <tr> <td><p><span class="fill-in-the-blank">&nbsp;</span>A carboxylic acid</p></td> </tr> </tbody> </table><script>bad()</script><img src=x onerror=y>');
+  assert.equal(pasted.text, "The postamble:");
+  assert.ok(pasted.html!.startsWith("<table><colgroup><col /><col /></colgroup>"), "attributes dropped");
+  assert.ok(pasted.html!.includes('<th colspan="2"><p>Description</p></th>'), "colspan kept, ids dropped");
+  assert.ok(!/ id=|onclick|<script|<img|bad\(\)/.test(pasted.html!), "nothing active survives");
+  assert.equal(pasted.plain, "The postamble: Description A carboxylic acid");
+  assert.equal(pasted.long, true);
+  assert.equal(cleanPastedHtml("<a href='javascript:x'>go</a><b>b</b>").replace(/\s+/g, " ").trim(), "go <b>b</b>");
+  assert.equal(splitNote(undefined).plain, "");
+
+  // every stage has a label, a help line and an owner entry; every verdict leads to a stage
+  for (const s of STAGES) assert.ok(STAGE_LABEL[s] && STAGE_HELP[s] && s in STAGE_OWNER, `stage ${s} is described`);
+  assert.deepEqual(Object.values(VERDICTS).map((v) => v.stage), ["approved", "changes_requested", "item_data", "rejected", "drafting"]);
+  assert.equal(VERDICTS.key_right.verb, "confirmed the key of");
+  assert.equal(VERDICTS.key_right.needsSolution, false, "a key query is answered without a solution");
+  assert.equal(VERDICTS.key_right.needsNote, "Please say why the key is right.");
+  assert.equal(STAGE_OWNER.changes_requested, "evelyn");
+  assert.equal(STAGE_OWNER.item_data, "tech");
+  assert.equal(STAGE_OWNER.rejected, null);
+
+  // "ready" (passed our checks, not yet released) reads as drafting to Castle Rock
+  assert.equal(visibleStage("ready", "reviewer"), "drafting");
+  assert.equal(visibleStage("ready", "tech"), "drafting");
+  assert.equal(visibleStage("ready", "evelyn"), "ready");
+  assert.equal(visibleStage("key_query", "reviewer"), "key_query");
+  assert.equal(STAGE_OWNER.key_query, "reviewer");
+  assert.equal(STAGE_OWNER.ready, "evelyn");
+  assert.deepEqual(STAGES.slice(1, 3), ["drafting", "ready"]);
+  assert.equal(STAGES[STAGES.indexOf("item_data") + 1], "key_query");
+
+  // a solution verdict needs the latest version to be released (legacy rows count as released)
+  const held = { version: 2, releasedVersion: 1 };
+  assert.equal(canJudgeSolution(held), false, "v2 held: nothing to approve");
+  assert.equal(canJudgeSolution({ version: 2, releasedVersion: 2 }), true, "after releaseSolution");
+  assert.equal(canJudgeSolution({ version: 1, releasedVersion: 0 }), false, "nothing released");
+  assert.equal(canJudgeSolution({ version: 3 }), true, "legacy row");
+  assert.equal(canJudgeSolution({ version: 0, releasedVersion: 0 }), false);
+
+  // the answer Castle Rock sees is the one released with the solution
+  const ans = { evelynAnswer: "C", releasedAnswer: "B", releasedVersion: 1 };
+  assert.equal(answerSeenBy(ans, "reviewer"), "B");
+  assert.equal(answerSeenBy(ans, "tech"), "B");
+  assert.equal(answerSeenBy(ans, "evelyn"), "C");
+  assert.equal(answerSeenBy({ evelynAnswer: "C", releasedVersion: 0 }, "reviewer"), "", "nothing released: no answer");
+  assert.equal(answerSeenBy({ evelynAnswer: "C" }, "reviewer"), "C", "legacy row");
+
+  // list filters as Castle Rock means them
+  assert.deepEqual(stagesFor("drafting", "reviewer"), ["drafting", "ready"]);
+  assert.equal(stagesFor("ready", "reviewer"), undefined, "no Ready tab for Castle Rock");
+  assert.deepEqual(stagesFor("ready", "evelyn"), ["ready"]);
+
+  // an item as each role sees it
+  const held2 = { stage: "ready" as const, version: 2, releasedVersion: 1, evelynAnswer: "B", releasedAnswer: "A" };
+  const seen = asSeenBy(held2, "reviewer");
+  assert.deepEqual([seen.version, seen.stage, seen.evelynAnswer], [1, "drafting", "A"]);
+  assert.deepEqual(asSeenBy(held2, "evelyn"), held2);
+
+  // the history as Castle Rock sees it
+  const at = new Date();
+  const who = { username: "u", name: "U", role: "evelyn" as const, createdAt: at };
+  const rows: ActivityDoc[] = [
+    { itemId: "1", version: 2, type: "revision", body: "Revised to version 2.", ...who },
+    { itemId: "1", type: "stage", stage: "ready", body: "Status set to Ready.", ...who },
+    { itemId: "1", type: "stage", body: "Status set to Ready.", ...who },
+    { itemId: "1", version: 1, type: "verdict", verdict: "approved", ...who, role: "reviewer" },
+  ];
+  const kept = activitySeenBy(rows, () => 1, "reviewer");
+  assert.deepEqual(kept.map((a) => a.type), ["verdict"], "unreleased revision and Ready rows dropped");
+  assert.equal(activitySeenBy(rows, () => 1, "evelyn").length, 4);
 }
 
 // sheet
@@ -92,6 +213,22 @@ Because.
   const rows = parseCsv('Item ID,Subject,Course,Showcase\n"301823",Mathematics,Math 30-1,yes\n193246,Chemistry,Chemistry 30,\n');
   assert.deepEqual(rows[0], { itemId: "301823", subject: "Mathematics", course: "Math 30-1", showcase: true });
   assert.equal(rows[1].showcase, false);
+}
+
+// section title by course
+{
+  assert.equal(sectionTitle("diploma", "Math 30-1"), "Diploma-style answer");
+  assert.equal(sectionTitle("diploma", "Science, Grade 7"), "Worked answer");
+  assert.equal(sectionTitle("short", "Science, Grade 7"), "Short answer");
+  assert.equal(sectionTitle("diploma", "  mathematics 30\u20131 "), "Diploma-style answer");
+  assert.equal(normaliseCourse("Math 30\u20132"), "Math 30-2");
+  assert.equal(normaliseCourse("Mathematics 30-1"), "Math 30-1");
+  assert.equal(normaliseCourse(" biology  30 "), "Biology 30");
+  assert.equal(normaliseCourse("PHYSICS 30"), "Physics 30");
+  assert.equal(normaliseCourse("Science, Grade 7"), "Science, Grade 7");
+  assert.equal(sectionTitle("diploma", "Science 30"), "Diploma-style answer");
+  assert.equal(sectionTitle("diploma", ""), "Worked answer");
+  assert.equal(sectionTitle("diploma", undefined as unknown as string), "Worked answer");
 }
 
 /** Minimal well-formedness check: every open tag closed in order, no bare named entities. */
@@ -126,12 +263,21 @@ async function solaroTests() {
 const sample = path.join(homedir(), "Downloads", "Item234035.zip");
 (async () => {
   await solaroTests();
+  await passageTests();
   if (existsSync(sample)) {
     const { items, messages } = await readQtiZip(new Uint8Array(await readFile(sample)));
     assert.equal(items.length, 1, messages.join("; "));
     assert.equal(items[0].key, "A");
     assert.equal(items[0].resources.size, 1);
     console.log("  real QTI sample 234035 parsed");
+  }
+  // M7: a writing script needs KEYSTONE_MONGODB_URI explicitly and says which database and host
+  {
+    const { explicitTarget } = await import("./dbtarget");
+    assert.throws(() => explicitTarget({ MONGODB_URI: "mongodb://127.0.0.1:27017" }, "castle_rock_review"), /KEYSTONE_MONGODB_URI explicitly/, "M7: MONGODB_URI alone is refused");
+    assert.throws(() => explicitTarget({ KEYSTONE_MONGODB_URI: "  " }, "castle_rock_review"), /explicitly/, "M7: blank is refused");
+    const t = explicitTarget({ KEYSTONE_MONGODB_URI: "mongodb://user:secret@db.example:27017/x?authSource=admin" }, "castle_rock_review");
+    assert.equal(t.line, "Database: castle_rock_review on db.example:27017", "M7: name and host, no credentials");
   }
   console.log("keystone tests passed");
 })();

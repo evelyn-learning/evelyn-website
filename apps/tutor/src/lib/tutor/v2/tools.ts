@@ -104,7 +104,8 @@ export const V2_DISCUSSION_CONTROL_TOOLS: Anthropic.Tool[] = [
       properties: {
         position: { type: 'string', description: 'Their position now, in one sentence close to their own words. Leave out if unchanged.' },
         weighed: { type: 'array', items: { type: 'string' }, description: 'Considerations newly raised and dealt with, by them or by you, a few words each. Added to the list kept so far.' },
-        shift: { type: 'string', description: 'Only when they themselves changed or qualified their view (not when the conversation moved on): from what to what, in a few words.' },
+        shift: { type: 'string', description: 'Only when they themselves changed or qualified their view (not when the conversation moved on, and not when they granted a hypothetical you put to them): from what to what, in a few words.' },
+        shift_withdrawn: { type: 'boolean', description: 'true when they say nothing has shifted, or reject a shift you named. The recorded shifts are removed and are never mentioned again.' },
         their_example: { type: 'string', description: 'A student or experience of their own they brought in, in a few words, without names.' },
         complicated: { type: 'boolean', description: 'true when this reply brings in a consequence or another person\'s view to complicate their position.' },
         their_time_minutes: { type: 'number', description: 'How many minutes they said they have, when they say so.' },

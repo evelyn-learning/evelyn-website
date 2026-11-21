@@ -57,7 +57,9 @@ async function getSessions(filters: SessionFilterParams, page: number) {
   const [sessions, total, partners, hosts, costAgg] = await Promise.all([
     TutorSession.find(query)
       .select('-transcript -whiteboardCommands -debugEvents -tokenUsage')
-      .sort({ startedAt: -1 })
+      // By when it was last sat down to. Documents from before the field existed have none and sort after those
+      // that do, in their own order of first start, which is where they belong: they are older.
+      .sort({ lastStartedAt: -1, startedAt: -1 })
       .skip((page - 1) * PAGE_SIZE)
       .limit(PAGE_SIZE)
       .lean(),
@@ -458,8 +460,8 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
                           <div className={`text-[10px] mt-0.5 ${s.inputMode === 'text' ? 'text-indigo-600 font-medium' : 'text-gray-400'}`}>{String(s.inputMode)}</div>
                         ) : null}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-500" title={new Date(s.startedAt as string).toLocaleString('en-US')}>
-                        {formatRelativeTime(s.startedAt as string, now)}
+                      <td className="px-4 py-3 text-sm text-gray-500" title={new Date((s.lastStartedAt ?? s.startedAt) as string).toLocaleString('en-US')}>
+                        {formatRelativeTime((s.lastStartedAt ?? s.startedAt) as string, now)}
                       </td>
                       <td className="px-4 py-3 text-sm">
                         <Link
