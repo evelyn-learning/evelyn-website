@@ -124,6 +124,7 @@ const css = `
 .ai-solution button.tv-card[aria-pressed="true"] { border-color: #7a2a8e; background: #f8f1fb; }
 .tv-row2 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 10pt; color: #44506a; }
 .ai-solution button.tv-chip { min-height: 0; box-shadow: none; border: 1.5px solid #7a2a8e; color: #7a2a8e; background: #fff; border-radius: 999px; padding: 4px 12px; font: inherit; font-weight: bold; cursor: pointer; }
+.ai-solution button.tv-chip:disabled { opacity: .35; cursor: default; }
 .ai-solution button.tv-chip[aria-pressed="true"] { background: #7a2a8e; color: #fff; }
 .tv-speak { display: flex; align-items: flex-start; gap: 10px; margin: 6px 0 4px 0; }
 .tv-face { flex: none; width: 92px; text-align: center; font-family: Arial, Helvetica, sans-serif; font-size: 8.5pt; color: #44506a; }
@@ -179,8 +180,9 @@ const post = `
   pick.innerHTML = '<h3>Choose your teacher</h3><div class="tv-cards">' + T.TEACHERS.map(function (t) {
     return '<button type="button" class="tv-card" data-t="' + t.key + '" aria-pressed="' + (t.key === S.teacher.key) + '">' + T.card(t) + '<b>' + t.name + '</b></button>';
   }).join('') + '</div><div class="tv-row2"><span>Accent:</span>' + ['ca', 'gb', 'us'].map(function (a) {
-    return '<button type="button" class="tv-chip" data-a="' + a + '" aria-pressed="' + (a === S.accent) + '">' + names[a] + '</button>';
-  }).join('') + (S.teacher.kind === 'video' ? '<span>This teacher is a video made for the Canadian voice; another voice needs its own video.</span>' : '') + '<span>Voice now: ' + S.voice.name + ' (' + S.voice.accent + ', ' + S.voice.gender + ')</span></div>';
+    var off = S.teacher.voice && a !== S.accent;
+    return '<button type="button" class="tv-chip" data-a="' + a + '" aria-pressed="' + (a === S.accent) + '"' + (off ? ' disabled' : '') + '>' + names[a] + '</button>';
+  }).join('') + (S.teacher.voice ? '<span>' + S.teacher.name + ' is recorded in the ' + names[S.accent] + ' accent only.</span>' : '') + '</div>';
   var bar = root.querySelector('.es-bar'); bar.parentNode.insertBefore(pick, bar);
   // The card portraits get a resting smile.
   Array.prototype.forEach.call(pick.querySelectorAll('.tv-card'), function (c) {
@@ -215,6 +217,6 @@ for (const d of await readdir(path.join(outDir, "teachers"))) {
 html = html.slice(0, playerAt) + `<script>window.esMorph = ${JSON.stringify(morph)};</script>\n<script>${teacherJs}</script>\n<script>${pre}</script>\n` + html.slice(playerAt);
 const bootAt = html.lastIndexOf("</body>");
 html = html.slice(0, bootAt) + `<script>${post}</script>\n` + html.slice(bootAt);
-html = html.replace("</head>", `<style>${css}</style>\n</head>`);
+html = html.replace("</head>", `<meta name="robots" content="noindex, nofollow">\n<style>${css}</style>\n</head>`);
 await writeFile(path.join(outDir, "solution.html"), html);
 console.log(`Wrote ${path.join(outDir, "solution.html")} (${Object.keys(voices).length} voices)`);

@@ -16,13 +16,10 @@
   'use strict';
 
   var TEACHERS = [
-    { key: 'hayes-r', kind: 'morph', name: 'Ms. Hayes', gender: 'female', dir: 'teachers/hayes-r' },
+    { key: 'elodie', kind: 'video', name: 'Ms. Elodie', gender: 'female', dir: 'teachers/elodie', voice: 'ca-f', clips: [0, 1, 2, 3] },
     { key: 'rivera-r', kind: 'morph', name: 'Ms. Rivera', gender: 'female', dir: 'teachers/rivera-r' },
-    { key: 'elodie', kind: 'video', name: 'Ms. Elodie (HeyGen)', gender: 'female', dir: 'teachers/elodie', voice: 'ca-f', clips: [0, 1, 2, 3] },
-    { key: 'hayes-m', kind: 'morph', name: 'Ms. Hayes (previous)', gender: 'female', dir: 'teachers/hayes-m' },
-    { key: 'rivera-m', kind: 'morph', name: 'Ms. Rivera (previous)', gender: 'female', dir: 'teachers/rivera-m' },
-    { key: 'chen3d', kind: 'film', name: 'Mr. Chen', gender: 'male', dir: 'teachers/chen3d' },
-    { key: 'cole', kind: 'film', name: 'Mr. Cole', gender: 'male', dir: 'teachers/cole' },
+    { key: 'hayes-r', kind: 'morph', name: 'Ms. Hayes', gender: 'female', dir: 'teachers/hayes-r' },
+    { key: 'chen-r', kind: 'morph', name: 'Mr. Chen', gender: 'male', dir: 'teachers/chen-r' }
   ];
 
   // ---------- portrait ----------

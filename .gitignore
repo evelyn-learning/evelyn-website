@@ -117,6 +117,9 @@ docs/whitelabel/kanzoo/*.zip
 # checkout, never in git — docs/ops/WORKFLOW.md §6. deploy-marketing.sh rsyncs it
 # without --delete and never prunes it.
 apps/marketing/public/images/blog
+# Sample pages made for one client (audio, video, pictures): placed in a developer's checkout and rsynced by
+# deploy-marketing.sh; kept out of git and out of the deploy's prune list, like the blog media above.
+apps/marketing/public/client-samples
 
 # tutor v2 tester flags (local only)
 apps/tutor/.v2-flags/
