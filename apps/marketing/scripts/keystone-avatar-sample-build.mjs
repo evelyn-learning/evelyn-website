@@ -180,7 +180,7 @@ const post = `
     return '<button type="button" class="tv-card" data-t="' + t.key + '" aria-pressed="' + (t.key === S.teacher.key) + '">' + T.card(t) + '<b>' + t.name + '</b></button>';
   }).join('') + '</div><div class="tv-row2"><span>Accent:</span>' + ['ca', 'gb', 'us'].map(function (a) {
     return '<button type="button" class="tv-chip" data-a="' + a + '" aria-pressed="' + (a === S.accent) + '">' + names[a] + '</button>';
-  }).join('') + (S.teacher.kind === 'video' ? '<span>This teacher is a video made for steps 1 and 2 in the Canadian voice only.</span>' : '') + '<span>Voice now: ' + S.voice.name + ' (' + S.voice.accent + ', ' + S.voice.gender + ')</span></div>';
+  }).join('') + (S.teacher.kind === 'video' ? '<span>This teacher is a video made for the Canadian voice; another voice needs its own video.</span>' : '') + '<span>Voice now: ' + S.voice.name + ' (' + S.voice.accent + ', ' + S.voice.gender + ')</span></div>';
   var bar = root.querySelector('.es-bar'); bar.parentNode.insertBefore(pick, bar);
   // The card portraits get a resting smile.
   Array.prototype.forEach.call(pick.querySelectorAll('.tv-card'), function (c) {
