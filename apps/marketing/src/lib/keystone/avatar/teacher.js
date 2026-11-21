@@ -16,10 +16,10 @@
   'use strict';
 
   var TEACHERS = [
-    { key: 'rivera', name: 'Ms. Rivera', gender: 'female', skin: '#e9b48c', shade: '#d39a70', hair: '#3a2418', style: 'long', top: '#7a2a8e', bg: '#f1e4f6', lip: '#b8505a', brow: '#3a2418', iris: '#5b3a22' },
-    { key: 'chen', name: 'Mr. Chen', gender: 'male', skin: '#f0c9a4', shade: '#dcae86', hair: '#16161c', style: 'short', top: '#1f5fa8', bg: '#e1edf9', lip: '#b56a5e', brow: '#16161c', iris: '#2c1d14', glasses: true },
-    { key: 'okafor', name: 'Ms. Okafor', gender: 'female', skin: '#8d5a3b', shade: '#754729', hair: '#1b1210', style: 'curly', top: '#d9822b', bg: '#fbeedd', lip: '#7c2f3a', brow: '#1b1210', iris: '#24140c' },
-    { key: 'bennett', name: 'Mr. Bennett', gender: 'male', skin: '#f2cdb3', shade: '#dfb294', hair: '#a8683a', style: 'beard', top: '#2f7d5b', bg: '#e2f3ea', lip: '#b96a5c', brow: '#8b5530', iris: '#3f6f8f' }
+    { key: 'rivera3d', kind: 'film', name: 'Ms. Rivera', gender: 'female', dir: 'teachers/rivera3d' },
+    { key: 'chen3d', kind: 'film', name: 'Mr. Chen', gender: 'male', dir: 'teachers/chen3d' },
+    { key: 'okafor', name: 'Ms. Okafor (flat)', gender: 'female', skin: '#8d5a3b', shade: '#754729', hair: '#1b1210', style: 'curly', top: '#d9822b', bg: '#fbeedd', lip: '#7c2f3a', brow: '#1b1210', iris: '#24140c' },
+    { key: 'bennett', name: 'Mr. Bennett (flat)', gender: 'male', skin: '#f2cdb3', shade: '#dfb294', hair: '#a8683a', style: 'beard', top: '#2f7d5b', bg: '#e2f3ea', lip: '#b96a5c', brow: '#8b5530', iris: '#3f6f8f' }
   ];
 
   // ---------- portrait ----------
@@ -180,5 +180,68 @@
     return { stop: function () { stopped = true; } };
   }
 
-  window.esTeacher = { TEACHERS: TEACHERS, svg: svg, mount: mount, shapesFor: shapesFor, shapeAt: shapeAt };
+
+  // ---------- the illustrated ("film look") teacher: stacked picture layers ----------
+  //
+  // base.jpg is the resting face. A E O U F C M are the same picture with only
+  // the mouth area redrawn; blink has only the eye area. The step's `vis`
+  // timeline ([[ms, key], …], built from the pronunciation dictionary) says
+  // which mouth is showing. A new mouth fades in quickly over the old one, and
+  // the old one leaves a little later, so the resting smile never flashes through.
+
+  var FILM_KEYS = ['A', 'E', 'O', 'U', 'F', 'C', 'M'];
+
+  function card(t) {
+    if (t.kind !== 'film') return svg(t, t.key + '-card');
+    return '<img class="tv-svg tv-photo" src="' + t.dir + '/base.jpg" alt="' + t.name + '">';
+  }
+
+  function keyAt(vis, ms) {
+    var lo = 0, hi = vis.length - 1, at = -1, mid;
+    while (lo <= hi) { mid = (lo + hi) >> 1; if (vis[mid][0] <= ms) { at = mid; lo = mid + 1; } else hi = mid - 1; }
+    return at < 0 ? 'R' : vis[at][1];
+  }
+
+  function mountFilm(holder, t, source) {
+    var html = '<div class="tv-film"><div class="tv-film-in"><img src="' + t.dir + '/base.jpg" alt="' + t.name + '">', i;
+    for (i = 0; i < FILM_KEYS.length; i++) html += '<img data-k="' + FILM_KEYS[i] + '" src="' + t.dir + '/' + FILM_KEYS[i] + '.png" alt="" style="opacity:0">';
+    html += '<img data-k="blink" src="' + t.dir + '/blink.png" alt="" style="opacity:0"></div></div>';
+    holder.innerHTML = html;
+    var inner = holder.querySelector('.tv-film-in'), layers = {}, level = {}, blink = holder.querySelector('[data-k="blink"]');
+    FILM_KEYS.forEach(function (k) { layers[k] = holder.querySelector('[data-k="' + k + '"]'); level[k] = 0; });
+    var last = Date.now(), t0 = last, nextBlink = 1800, blinkAt = -1, stopped = false, lineAt = -1e9, lastLine = -1;
+    var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    var raf = window.requestAnimationFrame || function (f) { return setTimeout(f, 33); };
+    function frame() {
+      if (stopped) return;
+      var nowAbs = Date.now(), dt = Math.min(80, nowAbs - last), now = nowAbs - t0, st = null, key = 'R', talk = false, k, line = -1, rising = false;
+      last = nowAbs;
+      try { st = source(); } catch (e) { st = null; }
+      if (st && st.playing && st.vis) {
+        talk = true; key = keyAt(st.vis, st.ms + 30); // the mouth leads the sound a little, as real lips do
+        if (st.starts) for (k = 0; k < st.starts.length; k++) if (st.starts[k] <= st.ms) line = st.step * 100 + k;
+        if (line !== lastLine) { lastLine = line; lineAt = now; }
+      }
+      if (key !== 'R' && level[key] < 1) { level[key] = Math.min(1, level[key] + dt / 45); rising = level[key] < 1; }
+      for (k in level) if (k !== key && level[k] > 0 && !rising) level[k] = Math.max(0, level[k] - dt / (key === 'R' ? 110 : 60));
+      for (k in level) { layers[k].style.opacity = level[k].toFixed(2); layers[k].style.zIndex = k === key ? 2 : 1; }
+      if (now > nextBlink) { blinkAt = now; nextBlink = now + 2600 + Math.random() * 3400; }
+      blink.style.opacity = blinkAt >= 0 && now - blinkAt < 130 ? '1' : '0';
+      if (blinkAt >= 0 && now - blinkAt >= 130) blinkAt = -1;
+      if (!reduce) {
+        var since = now - lineAt, lift = since < 600 ? Math.sin(Math.PI * since / 600) : 0;
+        var sway = Math.sin(now / 1900) * (talk ? 1.3 : 0.6) + Math.sin(now / 730) * (talk ? 0.5 : 0);
+        var nod = (talk ? Math.sin(now / 410) * 1.1 : Math.sin(now / 2100) * 0.6) - lift * 1.6;
+        inner.style.transform = 'translate(' + (sway * 0.5).toFixed(2) + 'px,' + nod.toFixed(2) + 'px) rotate(' + sway.toFixed(2) + 'deg) scale(1.04)';
+      }
+      raf(frame);
+    }
+    raf(frame);
+    return { stop: function () { stopped = true; } };
+  }
+
+  window.esTeacher = {
+    TEACHERS: TEACHERS, svg: svg, card: card, shapesFor: shapesFor, shapeAt: shapeAt, keyAt: keyAt,
+    mount: function (holder, t, source) { return t.kind === 'film' ? mountFilm(holder, t, source) : mount(holder, t, source); }
+  };
 })();

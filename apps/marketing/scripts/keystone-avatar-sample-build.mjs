@@ -13,14 +13,94 @@
  */
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-const [src, outDir] = process.argv.slice(2);
-if (!src || !outDir) { console.error("Usage: keystone-avatar-sample-build.mjs <solution.html> <sampleDir>"); process.exit(1); }
+const [src, outDir, dictFile] = process.argv.slice(2);
+if (!src || !outDir || !dictFile) { console.error("Usage: keystone-avatar-sample-build.mjs <solution.html> <sampleDir> <cmudict.dict>"); process.exit(1); }
 const here = path.dirname(fileURLToPath(import.meta.url));
 const teacherJs = await readFile(path.join(here, "../src/lib/keystone/avatar/teacher.js"), "utf8");
 const voices = JSON.parse(await readFile(path.join(outDir, "voices.json"), "utf8"));
 let html = await readFile(src, "utf8");
+
+// ---------- mouth timeline from real pronunciation ----------
+// Each timed word is looked up in the CMU pronouncing dictionary; its sounds
+// become mouth frames spread over the word's start..end (vowels get more time,
+// and only a stressed open vowel opens the mouth wide). Quiet stretches of the
+// recording rest the mouth. Result per step: vis = [[ms, key], …], key R = rest.
+const dict = new Map();
+for (const line of (await readFile(dictFile, "utf8")).split("\n")) {
+  const m = /^([^\s(]+)(?:\(\d+\))?\s+(.+?)(?:\s+#.*)?$/.exec(line);
+  if (m && !dict.has(m[1])) dict.set(m[1], m[2].trim().split(/\s+/));
+}
+const DIGIT = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+function sounds(word) {
+  const out = [];
+  for (const part of String(word).replace(/\d/g, (d) => ` ${DIGIT[+d]} `).replace(/[^A-Za-z' ]/g, " ").split(/\s+/).filter(Boolean)) {
+    const hit = dict.get(part.toLowerCase());
+    if (hit && !(part.length > 1 && part === part.toUpperCase() && part.length <= 4 && !/[AEIOU]/.test(part))) out.push(...hit);
+    else if (hit && part !== part.toUpperCase()) out.push(...hit);
+    else if (part === part.toUpperCase() && part.length <= 8) for (const ch of part) out.push(...(dict.get(ch.toLowerCase()) ?? ["AH0"]));
+    else if (hit) out.push(...hit);
+    else for (const ch of part.toLowerCase()) out.push("aeiou".includes(ch) ? { a: "AE1", e: "EH1", i: "IH1", o: "AO1", u: "UH1" }[ch] : "mbp".includes(ch) ? "M" : "fv".includes(ch) ? "F" : "T");
+  }
+  return out;
+}
+function framesOf(ph) {
+  const stress = /\d$/.test(ph) ? +ph.slice(-1) : -1, p = ph.replace(/\d$/, "");
+  const weak = stress === 0;
+  switch (p) {
+    case "AA": case "AE": case "AH": return [[weak ? "C" : stress === 1 ? "A" : "C", 2]];
+    case "AY": return weak ? [["C", 2]] : [["A", 1.4], ["E", 1]];
+    case "AW": return weak ? [["C", 2]] : [["A", 1.4], ["U", 1]];
+    case "AO": return [["O", 2]];
+    case "OW": return [["O", 1.5], ["U", 0.8]];
+    case "OY": return [["O", 1.4], ["E", 1]];
+    case "UW": case "UH": return [["U", 2]];
+    case "W": return [["U", 1]];
+    case "IY": case "EY": return [[weak ? "C" : "E", 2]];
+    case "IH": case "EH": return [[weak ? "C" : "E", 1.7]];
+    case "ER": return [["C", 1.6]];
+    case "F": case "V": return [["F", 1]];
+    case "M": case "B": case "P": return [["M", 1]];
+    default: return [["C", 1]];
+  }
+}
+function quietSpans(file) { // [[fromMs, toMs], …] where the recording is near silent
+  const pcm = execFileSync("ffmpeg", ["-v", "error", "-i", file, "-f", "s16le", "-ac", "1", "-ar", "8000", "-"], { maxBuffer: 1 << 28 });
+  const win = 160, rms = [];
+  for (let i = 0; i + win * 2 <= pcm.length; i += win * 2) { let a = 0; for (let j = 0; j < win; j++) { const v = pcm.readInt16LE(i + j * 2); a += v * v; } rms.push(Math.sqrt(a / win)); }
+  const peak = [...rms].sort((a, b) => a - b)[Math.floor(rms.length * 0.95)] || 1, spans = [];
+  let from = -1;
+  rms.forEach((v, i) => { const q = v < peak * 0.05; if (q && from < 0) from = i; if (!q && from >= 0) { if (i - from >= 11) spans.push([from * 20, i * 20]); from = -1; } });
+  return spans;
+}
+function timeline(words, quiet) {
+  const vis = [];
+  const put = (ms, k) => { const last = vis[vis.length - 1]; if (!last || last[1] !== k) vis.push([Math.round(ms), k]); };
+  words.forEach((w, i) => {
+    const [text, a, b] = w, run = sounds(text).flatMap(framesOf), total = run.reduce((s, r) => s + r[1], 0) || 1, span = Math.max(80, b - a);
+    let at = a;
+    for (const [k, wgt] of run) { put(at, k); at += (span * wgt) / total; }
+    const next = words[i + 1];
+    if (!next || next[1] - b > 110) put(b + 40, "R");
+  });
+  // rest during quiet stretches, then pick the timeline back up
+  const out = [];
+  const keyAt = (ms) => { let k = "R"; for (const v of vis) { if (v[0] <= ms) k = v[1]; else break; } return k; };
+  let qi = 0;
+  for (const v of vis) {
+    while (qi < quiet.length && quiet[qi][1] <= v[0]) { out.push([quiet[qi][0] + 20, "R"], [quiet[qi][1], keyAt(quiet[qi][1])]); qi++; }
+    if (!quiet.some(([f, t]) => v[0] > f + 20 && v[0] < t)) out.push(v);
+  }
+  return out.sort((x, y) => x[0] - y[0]).filter((v, i, arr) => i === 0 || arr[i - 1][1] !== v[1]);
+}
+let unknown = new Set();
+for (const v of Object.values(voices)) for (const st of v.steps) {
+  for (const w of st.words) for (const part of String(w[0]).replace(/[^A-Za-z' ]/g, " ").split(/\s+/).filter(Boolean)) if (!dict.has(part.toLowerCase())) unknown.add(part);
+  st.vis = timeline(st.words, quietSpans(path.join(outDir, st.file)));
+}
+console.log(`Words not in the dictionary (spelled out or guessed): ${[...unknown].join(", ") || "none"}`);
 
 const css = `
 .tv-pick { border: 1px solid #e6ebf2; border-radius: 10px; padding: 12px 14px; margin: 0 0 14px 0; background: #fbfcfe; font-family: Arial, Helvetica, sans-serif; }
@@ -37,6 +117,11 @@ const css = `
 .tv-face { flex: none; width: 92px; text-align: center; font-family: Arial, Helvetica, sans-serif; font-size: 8.5pt; color: #44506a; }
 .tv-face .tv-svg { width: 92px; height: 92px; display: block; }
 .tv-speak .es-live { flex: 1; min-width: 0; }
+.tv-photo { border-radius: 50%; object-fit: cover; }
+.tv-face.tv-big { width: 124px; }
+.tv-film { width: 124px; height: 124px; border-radius: 50%; overflow: hidden; box-shadow: 0 2px 10px rgba(20,33,58,.18); background: #dfe6ee; }
+.tv-film-in { position: relative; width: 100%; height: 100%; transform-origin: 50% 85%; will-change: transform; }
+.tv-film-in img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
 `;
 
 const pre = `
@@ -73,13 +158,14 @@ const post = `
   var pick = document.createElement('div'); pick.className = 'tv-pick';
   var names = { ca: 'Canadian', gb: 'British', us: 'American' };
   pick.innerHTML = '<h3>Choose your teacher</h3><div class="tv-cards">' + T.TEACHERS.map(function (t) {
-    return '<button type="button" class="tv-card" data-t="' + t.key + '" aria-pressed="' + (t.key === S.teacher.key) + '">' + T.svg(t, t.key + '-card') + '<b>' + t.name + '</b></button>';
+    return '<button type="button" class="tv-card" data-t="' + t.key + '" aria-pressed="' + (t.key === S.teacher.key) + '">' + T.card(t) + '<b>' + t.name + '</b></button>';
   }).join('') + '</div><div class="tv-row2"><span>Accent:</span>' + ['ca', 'gb', 'us'].map(function (a) {
     return '<button type="button" class="tv-chip" data-a="' + a + '" aria-pressed="' + (a === S.accent) + '">' + names[a] + '</button>';
   }).join('') + '<span>Voice now: ' + S.voice.name + ' (' + S.voice.accent + ', ' + S.voice.gender + ')</span></div>';
   var bar = root.querySelector('.es-bar'); bar.parentNode.insertBefore(pick, bar);
   // The card portraits get a resting smile.
   Array.prototype.forEach.call(pick.querySelectorAll('.tv-card'), function (c) {
+    if (!c.querySelector('[data-p="mouth"]')) { c.addEventListener('click', function () { go(c.getAttribute('data-t'), S.accent); }); return; }
     var d = 'M-15 -2.6 C-7.5 1.3 7.5 1.3 15 -2.6 C7.5 1.8 -7.5 1.8 -15 -2.6 Z';
     c.querySelector('[data-p="mouth"]').setAttribute('d', d); c.querySelector('[data-p="lips"]').setAttribute('d', d);
     c.addEventListener('click', function () { go(c.getAttribute('data-t'), S.accent); });
@@ -87,14 +173,14 @@ const post = `
   Array.prototype.forEach.call(pick.querySelectorAll('.tv-chip'), function (c) { c.addEventListener('click', function () { go(S.teacher.key, c.getAttribute('data-a')); }); });
   // the teacher beside the live caption
   var live = document.getElementById('es-live'), row = document.createElement('div'), face = document.createElement('div'), holder = document.createElement('div');
-  row.className = 'tv-speak'; face.className = 'tv-face';
+  row.className = 'tv-speak'; face.className = 'tv-face' + (S.teacher.kind === 'film' ? ' tv-big' : '');
   live.parentNode.insertBefore(row, live); face.appendChild(holder);
   var label = document.createElement('div'); label.textContent = S.teacher.name; face.appendChild(label);
   row.appendChild(face); row.appendChild(live);
   T.mount(holder, S.teacher, function () {
     var a = S.audio; if (!a || a._step == null || a._step < 0) return null;
     var st = S.voice.steps[a._step]; if (!st) return null;
-    return { playing: !a.paused && !a.ended, step: a._step, ms: a.currentTime * 1000, words: st.words, starts: st.starts };
+    return { playing: !a.paused && !a.ended, step: a._step, ms: a.currentTime * 1000, words: st.words, starts: st.starts, vis: st.vis };
   });
 })();
 `;
