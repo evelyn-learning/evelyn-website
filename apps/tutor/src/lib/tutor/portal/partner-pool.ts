@@ -84,8 +84,8 @@ export function sittingEndMs(
   return typeof save.endedAtMs === 'number' && Number.isFinite(save.endedAtMs) ? save.endedAtMs : nowMs;
 }
 
-/** `overrunSec` (Task 7f F, TUTOR_V2_TIME_OVERRUN): a v2 sitting may run this far past the per-session cap, and the pool is
- *  charged wall-clock for it; the caller passes it (0: as before). */
+/** `overrunSec` (Task 7f F, TUTOR_V2_TIME_OVERRUN): a sitting that has the overrun margin may run this far past the per-session
+ *  cap, and the pool is charged wall-clock for it; the caller passes it (0: as before; partner-pool-store.ts sittingOverrunSec). */
 export function sittingCharge(input: {
   engagedAtMs: number;
   endMs: number;

@@ -127,11 +127,21 @@ async function main() {
     assert.equal(f.pools.get('gameclass')!.usedSec, 180);
   });
 
-  // Task 7f F (TUTOR_V2_TIME_OVERRUN): a v2 sitting may run the overrun margin past the cap, and is charged wall-clock for it.
-  await test(`a sitting entry is clamped: the sitting cannot exceed sessionMax + ${TUTOR_V2_TIME_OVERRUN ? `${TUTOR_V2_OVERRUN_MIN} min overrun + ` : ''}120 s`, async () => {
+  // Task 8h (ruling 3): a sitting that reports no margin (v1, homework, a discussion, any lesson but a v2 part-flow one) is clamped
+  // as on main: sessionMax + 120 s.
+  await test('a sitting entry is clamped: the sitting cannot exceed sessionMax + 120 s', async () => {
     const f = fakeDeps({ pool: POOL, createdAtMs: 0, now: 5_000_000 });
     const r = await chargeSitting({ partnerId: 'gameclass', sessionId: 's1', reportedEngagedAtMs: 30_000, save: { status: 'active' } }, f.deps);
-    assert.equal(r.deltaSec, 1020 + (TUTOR_V2_TIME_OVERRUN ? TUTOR_V2_OVERRUN_MIN * 60 : 0));
+    assert.equal(r.deltaSec, 1020);
+  });
+
+  // Task 7f F / 8h: a sitting that reports the overrun margin may run it past the cap, charged wall-clock; never more than the engine's.
+  await test(`a sitting with the margin is clamped at sessionMax + ${TUTOR_V2_TIME_OVERRUN ? `${TUTOR_V2_OVERRUN_MIN} min overrun + ` : ''}120 s, a larger report bounded`, async () => {
+    for (const overrunSec of [TUTOR_V2_OVERRUN_MIN * 60, 99_999]) {
+      const f = fakeDeps({ pool: POOL, createdAtMs: 0, now: 5_000_000 });
+      const r = await chargeSitting({ partnerId: 'gameclass', sessionId: 's1', reportedEngagedAtMs: 30_000, save: { status: 'active' }, overrunSec }, f.deps);
+      assert.equal(r.deltaSec, 1020 + (TUTOR_V2_TIME_OVERRUN ? TUTOR_V2_OVERRUN_MIN * 60 : 0));
+    }
   });
 
   await test('no pool doc → not pooled, nothing charged, no incPool', async () => {

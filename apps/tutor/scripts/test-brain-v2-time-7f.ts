@@ -318,7 +318,8 @@ async function main() {
     const turns = readFileSync(join(__dirname, '..', 'src', 'app', 'tutor', 'components', 'v2', 'useV2Turns.ts'), 'utf8');
     check('the runtime\'s hard stop is at v2HardStopMinutes (the box + the margin, under the ceiling)', /minutes \+ v2ClientMarginMin\(\{ mode: p\.current\.mode, plan: planRef\.current, boxMin: minutes, ceilingMin: p\.current\.sessionStopCeilingMinutes \}\)/.test(turns) && /stopMin \* 60000/.test(turns));
     const store = readFileSync(join(__dirname, '..', 'src', 'lib', 'tutor', 'portal', 'partner-pool-store.ts'), 'utf8');
-    check('the store charges the margin', /overrunSec: TUTOR_V2_TIME_OVERRUN \? TUTOR_V2_OVERRUN_MIN \* 60 : 0/.test(store));
+    // Task 8h (ruling 3): the margin the sitting reports, bounded by the engine's (was: the engine's margin for every sitting).
+    check('the store charges the margin', /overrunSec: sittingOverrunSec\(input\.overrunSec\)/.test(store) && /const max = TUTOR_V2_TIME_OVERRUN \? TUTOR_V2_OVERRUN_MIN \* 60 : 0;/.test(store));
     const controls = readFileSync(join(__dirname, '..', 'src', 'app', 'tutor', 'components', 'SessionControls.tsx'), 'utf8');
     check('the visible timer: past the target it counts on; the chip only in the last 2 minutes before the hard stop', /overrunSec > 0 \? remainingSeconds <= 120 : remainingSeconds <= 300/.test(controls));
   }

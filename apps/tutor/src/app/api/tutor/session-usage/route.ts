@@ -615,6 +615,8 @@ export async function POST(req: NextRequest) {
               sessionId,
               reportedEngagedAtMs: engagedMs,
               save: { status, endedAtMs: Number.isFinite(endedAtMs as number) ? endedAtMs : null },
+              // Task 8h (ruling 3): the margin this sitting's runtime has (a v2 part-flow lesson's); bounded in the store.
+              ...(typeof body.overrunSec === "number" ? { overrunSec: body.overrunSec } : {}),
             });
             if (result.snapshot.pooled) {
               pool = { remaining_sec: result.snapshot.remainingSec, exhausted: result.snapshot.exhausted };

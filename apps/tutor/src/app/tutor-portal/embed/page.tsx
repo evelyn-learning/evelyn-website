@@ -1265,6 +1265,8 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       // Partner minute pool: the moment the tutor engaged in THIS sitting
       // (start tap / evelyn:start). The server charges wall clock from here.
       attemptEngagedAt: sessionEngagedAtRef.current ? new Date(sessionEngagedAtRef.current).toISOString() : undefined,
+      // Task 8h (ruling 3): the margin this sitting has (0 for all but a v2 part-flow lesson): the pool's charge clamp follows it.
+      ...(v2StopMarginSecRef.current() > 0 ? { overrunSec: v2StopMarginSecRef.current() } : {}),
       duration,
       messageCount: transcript.length,
       whiteboardItemCount: whiteboardCommands.length,

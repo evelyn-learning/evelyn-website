@@ -21,6 +21,12 @@ import {
 } from './partner-pool';
 import { TUTOR_V2_OVERRUN_MIN, TUTOR_V2_TIME_OVERRUN } from '../orchestrator/flags';
 
+/** Task 8h (ruling 3): the overrun a sitting reports, bounded by the engine's margin (0 with TUTOR_V2_TIME_OVERRUN off). */
+export function sittingOverrunSec(reported: unknown): number {
+  const max = TUTOR_V2_TIME_OVERRUN ? TUTOR_V2_OVERRUN_MIN * 60 : 0;
+  return typeof reported === 'number' && Number.isFinite(reported) && reported > 0 ? Math.min(Math.floor(reported), max) : 0;
+}
+
 /** Two reports of the same sitting may disagree on engagedAt by this much (clock skew, ISO rounding). */
 export const SITTING_MATCH_MS = 60_000;
 
@@ -103,6 +109,11 @@ export async function chargeSitting(
     sessionId: string;
     reportedEngagedAtMs: number;
     save: { status: 'active' | 'completed' | 'abandoned'; endedAtMs?: number | null };
+    /** Task 8h (final review I3, ruling 3): the seconds this sitting may run past the per-session cap, as its own runtime
+     *  reports them: the overrun margin of a v2 part-flow lesson (v2/time-box.ts v2MarginMin; the embed page sends it with each
+     *  usage report). Absent or 0 (a v1 sitting, homework, a discussion, any other lesson): clamped as on main. Never more than
+     *  the engine's margin: a forged value only lets the forger's own sitting be charged its real wall clock that far. */
+    overrunSec?: number;
   },
   deps: PoolStoreDeps = mongoPoolStoreDeps(),
 ): Promise<ChargeResult> {
@@ -130,9 +141,10 @@ export async function chargeSitting(
     }
 
     const endMs = sittingEndMs(input.save, nowMs);
-    // Task 7f F: a v2 sitting may run the overrun margin past the per-session cap; the pool is charged wall-clock for it. The
-    // store cannot tell a v1 sitting from a v2 one, and a v1 sitting ends at the cap, so the clamp is raised for every sitting.
-    const { wallSec, deltaSec } = sittingCharge({ engagedAtMs, endMs, chargedSec: entry?.chargedSec ?? 0, sessionMaxSec: snap.sessionMaxSec, overrunSec: TUTOR_V2_TIME_OVERRUN ? TUTOR_V2_OVERRUN_MIN * 60 : 0 });
+    // Task 7f F: a sitting that has the overrun margin may run it past the per-session cap; the pool is charged wall-clock for it.
+    // Task 8h (ruling 3): only that sitting (input.overrunSec); every other one is clamped at the cap plus the slack, as on main
+    // (a v1 sitting whose save arrived late was charged up to five minutes it never ran).
+    const { wallSec, deltaSec } = sittingCharge({ engagedAtMs, endMs, chargedSec: entry?.chargedSec ?? 0, sessionMaxSec: snap.sessionMaxSec, overrunSec: sittingOverrunSec(input.overrunSec) });
     if (deltaSec <= 0) return none(snap);
 
     const won = await deps.casSittingCharge({
