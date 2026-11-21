@@ -54,6 +54,7 @@ const MAIN_TIME_FOR_MORE = (n: number) => `about ${n} left, which is time for mo
 const MAIN_CLOSE_DUE = (n: number) => `about ${n} left: tell the student so now, once and in a few words, then use what is left for the one thing that matters most (finish the step in hand, or say what to take away), and close when that is done. Do not start anything new`;
 const MAIN_TIME_UP = 'the time is up: close now, in a sentence or two';
 const MAIN_SILENT = (s: number) => `the student has said nothing for ${s} seconds`;
+const MAIN_NO_ASK = 'your last reply has finished and it ended on a statement: no question, and nothing for them to do. They are waiting for you to go on';
 const factLines = (f: string) => f.replace(/^<facts>\n|\n<\/facts>$/g, '').split('\n');
 
 async function main() {
@@ -122,22 +123,30 @@ async function main() {
     const states: Array<[string, V2State, Parameters<typeof renderFacts>[2]]> = [
       ['three replies opening alike', { ...newV2State(0), history: same('Great.') }, { nowMs: 6 * MIN, heard: 'x' }],
       ['75 s of silence after a reply that asked', { ...newV2State(0), history: same('Great.') }, { nowMs: 6 * MIN, silenceSeconds: 75 }],
+      ['the 2 s recheck after a reply that asked', { ...newV2State(0), history: same('Great.') }, { nowMs: 6 * MIN, silenceSeconds: 2 }],
       ['the last reply held a "ready to go on?" ask', { ...newV2State(0), history: [u('a'), a('Good. Ready to go on, or would you like to ask something first?')] }, { nowMs: 6 * MIN, heard: 'yes' }],
     ];
     for (const [name, s] of [['a maths lesson', maths], ['a homework session', homework], ['a discussion', discussion]] as const) {
       for (const [what, st, f] of states) {
         const lines = factLines(renderFacts(s, st, f));
-        const ok = !lines.some((x) => /a confirmation only when|replies opened with/.test(x))
+        // Task 8h follow-up: no opener line at all (6b / 6c), and the 2 s recheck is main's line (no 7m "they may be thinking").
+        const ok = !lines.some((x) => /opened with/.test(x))
+          && !lines.some((x) => /they may be thinking/.test(x))
           && !lines.some((x) => /^part changes: the ask whether to go on/.test(x))
           && !lines.some((x) => /smaller hint|Do not give the answer/.test(x))
-          && (f.silenceSeconds ? lines[lines.length - 1] === MAIN_SILENT(75) : true);
+          && (f.silenceSeconds ? lines[lines.length - 1] === (f.silenceSeconds === 2 ? MAIN_NO_ASK : MAIN_SILENT(75)) : true);
         check(`${name}, ${what}: main's lines`, ok, lines.filter((x) => /opened with|part changes|said nothing|hint/.test(x)));
       }
     }
-    check('a maths lesson keeps the one opener line it had before 6c (an all-tenant line, D10), whatever the run', v2OpenerFact(maths, { ...newV2State(0), history: same('Great.') })[0] === 'your last reply opened with "Great": open this one differently, or go straight to the content', v2OpenerFact(maths, { ...newV2State(0), history: same('Great.') }));
+    // Task 8h follow-up (controller's ruling): main has no opener fact; only the spoken language lesson gets one.
+    const one = { ...newV2State(0), history: [u('a'), a(`Great. ${asked}`)] };
+    check('no opener line for a maths lesson, a homework session, a discussion or a typed language lesson, after one reply or a run', [maths, homework, discussion, { ...lang, mode: 'text' as const }].every((s) => v2OpenerFact(s, one).length === 0 && v2OpenerFact(s, { ...newV2State(0), history: same('Great.') }).length === 0));
+    check('the spoken language lesson: the single line after one reply', v2OpenerFact(lang, one)[0] === 'your last reply opened with "Great": open this one differently, or go straight to the content', v2OpenerFact(lang, one));
     // The language lesson keeps its lines (no new behaviour there).
     const fl = factLines(renderFacts(lang, { ...newV2State(0), history: same('Great.') }, { nowMs: 6 * MIN, silenceSeconds: 75 }));
     check('the spoken language lesson keeps the run line and the silence-after-ask line', fl.some((x) => /your last 3 replies opened with "Great".*a confirmation only when/.test(x)) && fl.some((x) => /smaller hint towards it/.test(x)), fl.filter((x) => /opened with|hint/.test(x)));
+    const f2 = factLines(renderFacts(lang, { ...newV2State(0), history: same('Great.') }, { nowMs: 6 * MIN, silenceSeconds: 2 }));
+    check('…and the 7m line at the 2 s recheck after a reply that asked', f2.some((x) => /they may be thinking/.test(x)) && !f2.includes(MAIN_NO_ASK), f2.slice(-2));
   }
 
   console.log(`\n${passed} passed, ${failed} failed`);

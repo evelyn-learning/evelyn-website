@@ -164,16 +164,15 @@ export function v2LastOpener(history: V2State['history']): string {
  *  it says how many did, and that a reply reacts to what the student said (Task 6c, ruling 4). Not in a discussion,
  *  which has its own line. */
 export function v2OpenerFact(session: V2Session, state: V2State, enabled: boolean = TUTOR_V2_OPENER_FACT): string[] {
-  if (!enabled || discussionOf(session.plan)) return [];
+  // Task 8h follow-up (controller's ruling): a spoken lesson that teaches a language only (note-targets.ts v2NoteTargetsOn); every
+  // other session gets no opener line, as on main 11843955.
+  if (!enabled || discussionOf(session.plan) || !v2NoteTargetsOn(session)) return [];
   const openers = tutorReplies(state.history).map((m) => v2OpenerOf(replyText(m)));
   const opener = openers[openers.length - 1] ?? '';
   if (!opener) return [];
   let run = 1;
   for (let i = openers.length - 2; i >= 0 && openers[i] === opener; i--) run += 1;
-  // Task 8h (final review I5, ruling 5): the run line (Task 6c) is a language lesson's (note-targets.ts v2NoteTargetsOn): its
-  // "a confirmation only when they were practising the form being taught" has no meaning in homework, where the right / wrong word
-  // is the product, or a maths lesson. Every other session keeps the one line it had before 6c, whatever the run.
-  if (run < 2 || !v2NoteTargetsOn(session)) return [`your last reply opened with "${opener}": open this one differently, or go straight to the content`];
+  if (run < 2) return [`your last reply opened with "${opener}": open this one differently, or go straight to the content`];
   return [`your last ${run} replies opened with "${opener}": open this one differently. React to what they said and keep the conversation moving; a confirmation only when they were practising the form being taught, and then in other words`];
 }
 
@@ -438,7 +437,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // A turn the tutor takes only to speak of the other voices is not a silence of the student's.
   // Task 7m (NO_FALSE_SILENCE): the early recheck after a reply that did ask (the client took it for one that asked nothing:
   // mic test 4, 9.94): not "nothing for them to do"; one short line, nothing new.
-  const askedThem = silenceTurn && !f.roomVoices && Math.round(f.silenceSeconds ?? 0) === V2_NO_ASK_RECHECK_S && v2LastReplyAsked(state.history);
+  // Task 8h follow-up (controller's ruling): the 7m line in a spoken lesson that teaches a language only; elsewhere main's lines.
+  const askedThem = silenceTurn && v2NoteTargetsOn(session) && !f.roomVoices && Math.round(f.silenceSeconds ?? 0) === V2_NO_ASK_RECHECK_S && v2LastReplyAsked(state.history);
   // Task 7r (SILENCE_AFTER_ASK): never the answer, nor the question or the part-change ask again word for word (mic test 5,
   // embed-1795050656326: the tutor answered its own summary question at 18.9 min, and re-asked its part asks).
   // Task 8h (ruling 5): both 7r lines in a spoken lesson that teaches a language only (v2NoteTargetsOn); homework, a maths lesson and a
