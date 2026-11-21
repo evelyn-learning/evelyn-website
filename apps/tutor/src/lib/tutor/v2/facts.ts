@@ -16,6 +16,7 @@ import type { V2Session, V2State } from './types';
 import { roomVoicesFact } from './room-voices';
 import { leftOpen } from './part-close';
 import { discussionOf, effectiveMinutes, lastReplyNotes, reflectAsked, reflectAtMinutes, renderThinking, stagePace, untoldCases } from './discussion';
+import { v2NoteTargetsOn } from './note-targets';
 import { v2WorkingLevelFacts } from './working-level';
 import { v2PronunciationFacts, v2TextSoundFacts } from './pronunciation';
 import { v2SentenceCardsFacts } from './sentence-cards';
@@ -169,7 +170,10 @@ export function v2OpenerFact(session: V2Session, state: V2State, enabled: boolea
   if (!opener) return [];
   let run = 1;
   for (let i = openers.length - 2; i >= 0 && openers[i] === opener; i--) run += 1;
-  if (run < 2) return [`your last reply opened with "${opener}": open this one differently, or go straight to the content`];
+  // Task 8h (final review I5, ruling 5): the run line (Task 6c) is a language lesson's (note-targets.ts v2NoteTargetsOn): its
+  // "a confirmation only when they were practising the form being taught" has no meaning in homework, where the right / wrong word
+  // is the product, or a maths lesson. Every other session keeps the one line it had before 6c, whatever the run.
+  if (run < 2 || !v2NoteTargetsOn(session)) return [`your last reply opened with "${opener}": open this one differently, or go straight to the content`];
   return [`your last ${run} replies opened with "${opener}": open this one differently. React to what they said and keep the conversation moving; a confirmation only when they were practising the form being taught, and then in other words`];
 }
 
@@ -392,7 +396,9 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // all have names (Task 7a, PART_ASK_EVERY).
   // Task 7x (PART_FIRST_STEP): the part opened on their yes begins with its own first step from the plan (its opening question).
   if (session.plan && !discussion && v2AskEveryOn(session, f.partAskEvery)) lines.push(...v2PartAskFacts(session.plan, state, f.partOpened, f.partOpened ? v2OpenedFirstStep(session, f.partOpened) : null));
-  else if (session.plan && !discussion) lines.push(...v2QuestionCheckFact(state));
+  // Task 8h (ruling 5): the question check (6e) in a spoken lesson that teaches a language only; homework and maths lessons carry a
+  // plan too, and main sends them no such line.
+  else if (session.plan && !discussion && v2NoteTargetsOn(session)) lines.push(...v2QuestionCheckFact(state));
   // Task 8h (final review I4, ruling 4): a part-flow lesson's own line, out of the shared constitution: v2 reads back no lesson
   // progress (task-2 report, case 10), so a promise to pick up here would be false there, while other hosts save the session to be
   // picked up from (portal/host-end.ts, the resume card) and their students are told nothing of it.
@@ -435,9 +441,12 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   const askedThem = silenceTurn && !f.roomVoices && Math.round(f.silenceSeconds ?? 0) === V2_NO_ASK_RECHECK_S && v2LastReplyAsked(state.history);
   // Task 7r (SILENCE_AFTER_ASK): never the answer, nor the question or the part-change ask again word for word (mic test 5,
   // embed-1795050656326: the tutor answered its own summary question at 18.9 min, and re-asked its part asks).
-  const notAnswer = TUTOR_V2_SILENCE_AFTER_ASK ? '. Do not give the answer yourself, and do not repeat your question or a part-change ask word for word' : '';
+  // Task 8h (ruling 5): both 7r lines in a spoken lesson that teaches a language only (v2NoteTargetsOn); homework, a maths lesson and a
+  // discussion get main's silence lines.
+  const afterAskOn = TUTOR_V2_SILENCE_AFTER_ASK && v2NoteTargetsOn(session);
+  const notAnswer = afterAskOn ? '. Do not give the answer yourself, and do not repeat your question or a part-change ask word for word' : '';
   // Task 7r (SILENCE_AFTER_ASK): the ordinary long wait after a reply that asked them something: the question in hand stands.
-  const longAfterAsk = TUTOR_V2_SILENCE_AFTER_ASK && !f.roomVoices && !askedThem && !!f.silenceSeconds && !f.heard && ![V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S].includes(Math.round(f.silenceSeconds)) && v2LastReplyAskedGuarded(state.history);
+  const longAfterAsk = afterAskOn && !f.roomVoices && !askedThem && !!f.silenceSeconds && !f.heard && ![V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S].includes(Math.round(f.silenceSeconds)) && v2LastReplyAskedGuarded(state.history);
   if (askedThem) lines.push(`your last reply asked them for something, and they have been silent for ${Math.round(f.silenceSeconds!)} seconds since it finished: they may be thinking. Say one short line only: that they can take their time, or an offer of a hint or the first words. No claim about what they said, no new question, no card or other board item${notAnswer}`);
   else if (longAfterAsk) lines.push(`the student has said nothing for ${Math.round(f.silenceSeconds!)} seconds since your last reply, which asked them something: they have not answered the question in hand yet. Give one short encouragement or a smaller hint towards it, and stop. Do not give the answer, do not ask a new question, and do not repeat your question or a part-change ask word for word`);
   else if (f.silenceSeconds && !f.roomVoices) lines.push(Math.round(f.silenceSeconds) === V2_NO_ASK_RECHECK_S

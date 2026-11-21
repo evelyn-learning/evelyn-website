@@ -431,7 +431,9 @@ async function main() {
   check('I2 a request quoted as a phrase (「"Could you tell me…?" は「教えてもらえますか」という意味です。」) is no ask by the one test', !on.i2.quotedInvite && !on.i2.quotedAsks, on.i2);
   check('I2 the session\'s asks stay asks (どうぞ, 繰り返してください, 言ってみましょう)', on.i2.stillAsks.every(Boolean), on.i2.stillAsks);
   check('m1 "Conversation?" (asking what it is) is not a go', on.m1.conversationQ !== 'go', on.m1);
-  check('m6 a maths voice reply that asked: the long silence says the question in hand stands', /not answered the question in hand yet/.test(on.mathsSilence), on.mathsSilence.match(/the student has said nothing[^\n]*/)?.[0]);
+  // Task 8h (ruling 5): the silence-after-ask line is a spoken language lesson's only; a maths lesson gets main's line (was: the
+  // question-in-hand line here).
+  check('m6 a maths voice reply that asked: the long silence is main\'s line (Task 8h)', !/not answered the question in hand yet/.test(on.mathsSilence) && /\nthe student has said nothing for 12 seconds\n<\/facts>$/.test(on.mathsSilence), on.mathsSilence.match(/the student has said nothing[^\n]*/)?.[0]);
 
   console.log('7  fix round 2');
   for (const x of on.n1.asks) check(`N1 a か-question with a time / condition word stays an ask (one test, guarded, server): 「${x.t}」`, x.one && x.guarded && x.server, x);
