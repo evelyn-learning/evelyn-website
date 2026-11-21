@@ -138,6 +138,7 @@ const css = `
 .tv-face.tv-huge { width: 176px; }
 .tv-film.tv-film-big { width: 176px; height: 176px; }
 .tv-morph { position: absolute; background-repeat: no-repeat; -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 80%); mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 80%); }
+.tv-film-in video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; }
 .tv-film-in img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
 `;
 
@@ -147,7 +148,8 @@ const pre = `
   var q = new URLSearchParams(location.search);
   var T = window.esTeacher.TEACHERS, teacher = T.filter(function (t) { return t.key === q.get('teacher'); })[0] || T[0];
   var accent = { us: 1, ca: 1, gb: 1 }[q.get('accent')] ? q.get('accent') : 'ca';
-  var voice = VOICES[accent + (teacher.gender === 'female' ? '-f' : '-m')];
+  var voice = VOICES[teacher.voice || accent + (teacher.gender === 'female' ? '-f' : '-m')];
+  if (teacher.voice) accent = teacher.voice.slice(0, 2);
   window.esSample = { teacher: teacher, accent: accent, voice: voice, audio: null };
   // The chosen voice's line timings go into the spec the player is about to read.
   var specEl = document.getElementById('es-spec'), data = JSON.parse(specEl.textContent);
@@ -178,7 +180,7 @@ const post = `
     return '<button type="button" class="tv-card" data-t="' + t.key + '" aria-pressed="' + (t.key === S.teacher.key) + '">' + T.card(t) + '<b>' + t.name + '</b></button>';
   }).join('') + '</div><div class="tv-row2"><span>Accent:</span>' + ['ca', 'gb', 'us'].map(function (a) {
     return '<button type="button" class="tv-chip" data-a="' + a + '" aria-pressed="' + (a === S.accent) + '">' + names[a] + '</button>';
-  }).join('') + '<span>Voice now: ' + S.voice.name + ' (' + S.voice.accent + ', ' + S.voice.gender + ')</span></div>';
+  }).join('') + (S.teacher.kind === 'video' ? '<span>This teacher is a video made for step 1 in the Canadian voice only.</span>' : '') + '<span>Voice now: ' + S.voice.name + ' (' + S.voice.accent + ', ' + S.voice.gender + ')</span></div>';
   var bar = root.querySelector('.es-bar'); bar.parentNode.insertBefore(pick, bar);
   // The card portraits get a resting smile.
   Array.prototype.forEach.call(pick.querySelectorAll('.tv-card'), function (c) {
@@ -190,7 +192,7 @@ const post = `
   Array.prototype.forEach.call(pick.querySelectorAll('.tv-chip'), function (c) { c.addEventListener('click', function () { go(S.teacher.key, c.getAttribute('data-a')); }); });
   // the teacher beside the live caption
   var live = document.getElementById('es-live'), row = document.createElement('div'), face = document.createElement('div'), holder = document.createElement('div');
-  row.className = 'tv-speak' + (S.teacher.kind === 'morph' ? ' tv-stack' : ''); face.className = 'tv-face' + (S.teacher.kind === 'morph' ? ' tv-huge' : S.teacher.kind === 'film' ? ' tv-big' : '');
+  row.className = 'tv-speak' + ((S.teacher.kind === 'morph' || S.teacher.kind === 'video') ? ' tv-stack' : ''); face.className = 'tv-face' + ((S.teacher.kind === 'morph' || S.teacher.kind === 'video') ? ' tv-huge' : S.teacher.kind === 'film' ? ' tv-big' : '');
   live.parentNode.insertBefore(row, live); face.appendChild(holder);
   var label = document.createElement('div'); label.textContent = S.teacher.name; face.appendChild(label);
   row.appendChild(face); row.appendChild(live);

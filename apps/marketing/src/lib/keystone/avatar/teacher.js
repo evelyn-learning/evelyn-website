@@ -18,6 +18,7 @@
   var TEACHERS = [
     { key: 'hayes-r', kind: 'morph', name: 'Ms. Hayes', gender: 'female', dir: 'teachers/hayes-r' },
     { key: 'rivera-r', kind: 'morph', name: 'Ms. Rivera', gender: 'female', dir: 'teachers/rivera-r' },
+    { key: 'elodie', kind: 'video', name: 'Ms. Elodie (HeyGen)', gender: 'female', dir: 'teachers/elodie', voice: 'ca-f', clips: [0] },
     { key: 'hayes-m', kind: 'morph', name: 'Ms. Hayes (previous)', gender: 'female', dir: 'teachers/hayes-m' },
     { key: 'rivera-m', kind: 'morph', name: 'Ms. Rivera (previous)', gender: 'female', dir: 'teachers/rivera-m' },
     { key: 'chen3d', kind: 'film', name: 'Mr. Chen', gender: 'male', dir: 'teachers/chen3d' },
@@ -193,7 +194,7 @@
   var FILM_KEYS = ['A', 'E', 'O', 'U', 'F', 'C', 'M', 'S', 'L', 'H'];
 
   function card(t) {
-    if (t.kind !== 'film' && t.kind !== 'morph') return svg(t, t.key + '-card');
+    if (t.kind !== 'film' && t.kind !== 'morph' && t.kind !== 'video') return svg(t, t.key + '-card');
     return '<img class="tv-svg tv-photo" src="' + t.dir + '/base.jpg" alt="' + t.name + '">';
   }
 
@@ -349,8 +350,38 @@
   }
 
 
+  // ---------- the video teacher: a generated clip per step ----------
+  //
+  // A premium avatar service made a real video of a presenter speaking this
+  // step's recording (teachers/<key>/step-N.mp4, silent). It is kept in time
+  // with the player's own audio; steps without a clip show the still picture.
+
+  function mountVideo(holder, t, source) {
+    holder.innerHTML = '<div class="tv-film tv-film-big"><div class="tv-film-in"><img src="' + t.dir + '/base.jpg" alt="' + t.name + '"><video muted playsinline preload="auto" style="opacity:0"></video></div></div>';
+    var v = holder.querySelector('video'), loaded = -1, stopped = false;
+    var raf = window.requestAnimationFrame || function (f) { return setTimeout(f, 33); };
+    function frame() {
+      if (stopped) return;
+      var st = null;
+      try { st = source(); } catch (e) { st = null; }
+      var has = st && t.clips.indexOf(st.step) >= 0;
+      if (has && loaded !== st.step) { loaded = st.step; v.src = t.dir + '/step-' + (st.step + 1) + '.mp4'; }
+      if (has && st.playing) {
+        if (Math.abs(v.currentTime - st.ms / 1000) > 0.12) { try { v.currentTime = st.ms / 1000; } catch (e) { /* not ready yet */ } }
+        if (v.paused) { var p = v.play(); if (p && p['catch']) p['catch'](function () {}); }
+        v.style.opacity = '1';
+      } else {
+        if (!v.paused) v.pause();
+        if (!has) v.style.opacity = '0';
+      }
+      raf(frame);
+    }
+    raf(frame);
+    return { stop: function () { stopped = true; v.pause(); } };
+  }
+
   window.esTeacher = {
     TEACHERS: TEACHERS, svg: svg, card: card, shapesFor: shapesFor, shapeAt: shapeAt, keyAt: keyAt, mixAt: mixAt,
-    mount: function (holder, t, source) { return t.kind === 'morph' ? mountMorph(holder, t, source) : t.kind === 'film' ? mountFilm(holder, t, source) : mount(holder, t, source); }
+    mount: function (holder, t, source) { return t.kind === 'video' ? mountVideo(holder, t, source) : t.kind === 'morph' ? mountMorph(holder, t, source) : t.kind === 'film' ? mountFilm(holder, t, source) : mount(holder, t, source); }
   };
 })();
