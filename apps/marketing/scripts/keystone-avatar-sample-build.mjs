@@ -11,7 +11,7 @@
  * before it points its audio at the chosen voice and gives it that voice's
  * line timings. Choice is kept in the address (?teacher=…&accent=…).
  */
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -133,6 +133,11 @@ const css = `
 .tv-face.tv-big { width: 124px; }
 .tv-film { width: 124px; height: 124px; border-radius: 50%; overflow: hidden; box-shadow: 0 2px 10px rgba(20,33,58,.18); background: #dfe6ee; }
 .tv-film-in { position: relative; width: 100%; height: 100%; transform-origin: 50% 85%; will-change: transform; }
+.tv-speak.tv-stack { flex-direction: column; align-items: center; }
+.tv-speak.tv-stack .es-live { align-self: stretch; flex: none; }
+.tv-face.tv-huge { width: 176px; }
+.tv-film.tv-film-big { width: 176px; height: 176px; }
+.tv-morph { position: absolute; background-repeat: no-repeat; -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 80%); mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 80%); }
 .tv-film-in img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
 `;
 
@@ -185,7 +190,7 @@ const post = `
   Array.prototype.forEach.call(pick.querySelectorAll('.tv-chip'), function (c) { c.addEventListener('click', function () { go(S.teacher.key, c.getAttribute('data-a')); }); });
   // the teacher beside the live caption
   var live = document.getElementById('es-live'), row = document.createElement('div'), face = document.createElement('div'), holder = document.createElement('div');
-  row.className = 'tv-speak'; face.className = 'tv-face' + (S.teacher.kind === 'film' ? ' tv-big' : '');
+  row.className = 'tv-speak' + (S.teacher.kind === 'morph' ? ' tv-stack' : ''); face.className = 'tv-face' + (S.teacher.kind === 'morph' ? ' tv-huge' : S.teacher.kind === 'film' ? ' tv-big' : '');
   live.parentNode.insertBefore(row, live); face.appendChild(holder);
   var label = document.createElement('div'); label.textContent = S.teacher.name; face.appendChild(label);
   row.appendChild(face); row.appendChild(live);
@@ -200,7 +205,12 @@ const post = `
 const specAt = html.indexOf('<script type="application/json" id="es-spec">');
 const playerAt = html.indexOf("<script>", html.indexOf("</script>", specAt));
 if (specAt < 0 || playerAt < 0) throw new Error("this page does not look like a built animated solution");
-html = html.slice(0, playerAt) + `<script>${teacherJs}</script>\n<script>${pre}</script>\n` + html.slice(playerAt);
+// A morphing teacher's sheet layout (morph.json beside its pictures) is put in the page, since a page opened from disk cannot fetch it.
+const morph = {};
+for (const d of await readdir(path.join(outDir, "teachers"))) {
+  try { morph[d] = JSON.parse(await readFile(path.join(outDir, "teachers", d, "morph.json"), "utf8")); } catch { /* not a morphing teacher */ }
+}
+html = html.slice(0, playerAt) + `<script>window.esMorph = ${JSON.stringify(morph)};</script>\n<script>${teacherJs}</script>\n<script>${pre}</script>\n` + html.slice(playerAt);
 const bootAt = html.lastIndexOf("</body>");
 html = html.slice(0, bootAt) + `<script>${post}</script>\n` + html.slice(bootAt);
 html = html.replace("</head>", `<style>${css}</style>\n</head>`);

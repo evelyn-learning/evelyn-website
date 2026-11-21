@@ -16,9 +16,11 @@
   'use strict';
 
   var TEACHERS = [
-    { key: 'rivera3d', kind: 'film', name: 'Ms. Rivera', gender: 'female', dir: 'teachers/rivera3d' },
+    { key: 'hayes-m', kind: 'morph', name: 'Ms. Hayes', gender: 'female', dir: 'teachers/hayes-m' },
+    { key: 'rivera-m', kind: 'morph', name: 'Ms. Rivera', gender: 'female', dir: 'teachers/rivera-m' },
+    { key: 'rivera3d', kind: 'film', name: 'Ms. Rivera (before)', gender: 'female', dir: 'teachers/rivera3d' },
     { key: 'chen3d', kind: 'film', name: 'Mr. Chen', gender: 'male', dir: 'teachers/chen3d' },
-    { key: 'hayes', kind: 'film', name: 'Ms. Hayes', gender: 'female', dir: 'teachers/hayes' },
+    { key: 'hayes', kind: 'film', name: 'Ms. Hayes (before)', gender: 'female', dir: 'teachers/hayes' },
     { key: 'cole', kind: 'film', name: 'Mr. Cole', gender: 'male', dir: 'teachers/cole' },
     { key: 'okafor', name: 'Ms. Okafor (flat)', gender: 'female', skin: '#8d5a3b', shade: '#754729', hair: '#1b1210', style: 'curly', top: '#d9822b', bg: '#fbeedd', lip: '#7c2f3a', brow: '#1b1210', iris: '#24140c' },
     { key: 'bennett', name: 'Mr. Bennett (flat)', gender: 'male', skin: '#f2cdb3', shade: '#dfb294', hair: '#a8683a', style: 'beard', top: '#2f7d5b', bg: '#e2f3ea', lip: '#b96a5c', brow: '#8b5530', iris: '#3f6f8f' }
@@ -193,7 +195,7 @@
   var FILM_KEYS = ['A', 'E', 'O', 'U', 'F', 'C', 'M', 'S', 'L', 'H'];
 
   function card(t) {
-    if (t.kind !== 'film') return svg(t, t.key + '-card');
+    if (t.kind !== 'film' && t.kind !== 'morph') return svg(t, t.key + '-card');
     return '<img class="tv-svg tv-photo" src="' + t.dir + '/base.jpg" alt="' + t.name + '">';
   }
 
@@ -212,18 +214,19 @@
    * themselves last), so the lips are almost always in motion, as in speech,
    * and never snap. Returns { key: weight } with the weights adding up to 1.
    */
-  function mixAt(vis, ms) {
+  function mixAt(vis, ms, win) {
+    win = win || 110;
     var i = indexAt(vis, ms), out = {}, cur = i < 0 ? 'R' : vis[i][1];
     var start = i < 0 ? -1e9 : vis[i][0], end = i + 1 < vis.length ? vis[i + 1][0] : 1e9, len = end - start, w, half, p;
     out[cur] = 1;
     if (i + 1 < vis.length) { // leaving for the next shape
       var nextLen = i + 2 < vis.length ? vis[i + 2][0] - end : 400;
-      w = Math.min(110, len, nextLen); half = w / 2;
+      w = Math.min(win, len, nextLen); half = w / 2;
       if (ms > end - half) { p = smooth((ms - (end - half)) / w); out[cur] = 1 - p; out[vis[i + 1][1]] = (out[vis[i + 1][1]] || 0) + p; return out; }
     }
     if (i >= 0) { // still arriving from the one before
       var prev = i > 0 ? vis[i - 1][1] : 'R', prevLen = i > 0 ? start - vis[i - 1][0] : 400;
-      w = Math.min(110, len, prevLen); half = w / 2;
+      w = Math.min(win, len, prevLen); half = w / 2;
       if (ms < start + half) { p = smooth((ms - (start - half)) / w); out[cur] = p; out[prev] = (out[prev] || 0) + 1 - p; }
     }
     return out;
@@ -278,8 +281,78 @@
     return { stop: function () { stopped = true; } };
   }
 
+  // ---------- the morphing teacher: real in-between frames ----------
+  //
+  // mouth.jpg holds the eleven mouth states and, for every pair of them, three
+  // frames in between (made once, offline, by motion interpolation). Going
+  // from one mouth to another therefore plays real movement: state, three
+  // in-betweens, state, with a light blend between neighbouring frames so the
+  // motion has no steps. eyes.jpg does the same from open to closed. Layout
+  // comes from morph.json, which the page build puts in window.esMorph[key].
+
+  function mountMorph(holder, t, source) {
+    var M = (window.esMorph || {})[t.key], K = M.keys, n = K.length, steps = M.steps, index = {}, i;
+    for (i = 0; i < n; i++) index[K[i]] = i;
+    function pairStart(a, b) { return n + (a * (2 * n - a - 1) / 2 + (b - a - 1)) * steps; } // a < b
+    function cellOf(a, b, f) { return f <= 0 ? a : f >= steps + 1 ? b : pairStart(a, b) + f - 1; }
+    function box(m, cls) {
+      return '<div class="tv-morph ' + cls + '" style="left:' + (m.left * 100).toFixed(3) + '%;top:' + (m.top * 100).toFixed(3) + '%;width:' + (m.width * 100).toFixed(3) + '%;height:' + (m.height * 100).toFixed(3) +
+        '%;background-image:url(' + t.dir + '/' + (cls.indexOf('eyes') >= 0 ? 'eyes.jpg' : 'mouth.jpg') + ');background-size:' + (m.cols * 100) + '% ' + (m.rows * 100) + '%"></div>';
+    }
+    holder.innerHTML = '<div class="tv-film tv-film-big"><div class="tv-film-in"><img src="' + t.dir + '/base.jpg" alt="' + t.name + '">' +
+      box(M.mouth, 'tv-m1') + box(M.mouth, 'tv-m2') + box(M.eyes, 'tv-eyes tv-e1') + box(M.eyes, 'tv-eyes tv-e2') + '</div></div>';
+    var inner = holder.querySelector('.tv-film-in'), m1 = holder.querySelector('.tv-m1'), m2 = holder.querySelector('.tv-m2'), e1 = holder.querySelector('.tv-e1'), e2 = holder.querySelector('.tv-e2');
+    function show(el, m, cell) {
+      var col = cell % m.cols, row = (cell / m.cols) | 0;
+      el.style.backgroundPosition = (m.cols > 1 ? col / (m.cols - 1) * 100 : 0).toFixed(3) + '% ' + (m.rows > 1 ? row / (m.rows - 1) * 100 : 0).toFixed(3) + '%';
+    }
+    var t0 = Date.now(), last = t0, nextBlink = 1800, blinkAt = -1, stopped = false, lineAt = -1e9, lastLine = -1, nodAt = -1e9, lastIdx = -1, talkLevel = 0;
+    var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    var raf = window.requestAnimationFrame || function (f) { return setTimeout(f, 33); };
+    function frame() {
+      if (stopped) return;
+      var nowAbs = Date.now(), dt = Math.min(80, nowAbs - last), now = nowAbs - t0, st = null, mix = { R: 1 }, talk = false, k, line = -1, idx;
+      last = nowAbs;
+      try { st = source(); } catch (e) { st = null; }
+      if (st && st.playing && st.vis) {
+        talk = true; mix = mixAt(st.vis, st.ms + 50, 170); // the mouth leads the sound a little, as real lips do
+        idx = indexAt(st.vis, st.ms + 50);
+        if (idx !== lastIdx) { lastIdx = idx; if (idx >= 0 && (st.vis[idx][1] === 'A' || st.vis[idx][1] === 'H') && now - nodAt > 500) nodAt = now; }
+        if (st.starts) for (k = 0; k < st.starts.length; k++) if (st.starts[k] <= st.ms) line = st.step * 100 + k;
+        if (line !== lastLine) { lastLine = line; lineAt = now; }
+      }
+      // mouth: where we are between the two states in play
+      var keys = [], a, b, pos, f, frac;
+      for (k in mix) if (mix[k] > 0.0005 && index[k] != null) keys.push(k);
+      keys.sort(function (x, y) { return index[x] - index[y]; });
+      a = index[keys[0]]; b = keys.length > 1 ? index[keys[keys.length - 1]] : a;
+      pos = a === b ? 0 : mix[K[b]] / (mix[K[a]] + mix[K[b]]) * (steps + 1);
+      f = Math.floor(pos); frac = pos - f;
+      show(m1, M.mouth, cellOf(a, b, f)); show(m2, M.mouth, cellOf(a, b, Math.min(steps + 1, f + 1)));
+      m2.style.opacity = frac.toFixed(3);
+      // blink: open, five in-betweens, closed, and back; about a quarter of a second
+      if (now > nextBlink) { blinkAt = now; nextBlink = now + 2400 + Math.random() * 3600; }
+      var bl = blinkAt < 0 ? 1 : (now - blinkAt) / 260, lid = 0;
+      if (bl < 1) lid = smooth(Math.sin(Math.PI * bl)); else blinkAt = -1;
+      var ep = lid * (M.eyes.steps + 1), ef = Math.floor(ep), efr = ep - ef; // 0 = open (base shows), steps + 1 = closed
+      e1.style.opacity = ef >= 1 ? '1' : '0'; if (ef >= 1) show(e1, M.eyes, ef - 1);
+      show(e2, M.eyes, Math.min(M.eyes.steps, ef)); e2.style.opacity = (ef > M.eyes.steps ? 0 : efr).toFixed(3);
+      if (!reduce) {
+        talkLevel += ((talk ? 1 : 0) - talkLevel) * Math.min(1, dt / 400);
+        var since = now - lineAt, lift = since < 700 ? Math.sin(Math.PI * since / 700) : 0, sn = now - nodAt, nodHit = sn < 420 ? Math.sin(Math.PI * sn / 420) : 0;
+        var sway = Math.sin(now / 2300) * (0.6 + 0.9 * talkLevel) + Math.sin(now / 870 + 1) * 0.45 * talkLevel;
+        var nod = Math.sin(now / 2100) * 0.8 + nodHit * 2 * talkLevel - lift * 1.8;
+        inner.style.transform = 'translate(' + (sway * 0.8).toFixed(2) + 'px,' + nod.toFixed(2) + 'px) rotate(' + sway.toFixed(2) + 'deg) scale(' + (1.04 + nodHit * 0.006).toFixed(4) + ')';
+      }
+      raf(frame);
+    }
+    raf(frame);
+    return { stop: function () { stopped = true; } };
+  }
+
+
   window.esTeacher = {
     TEACHERS: TEACHERS, svg: svg, card: card, shapesFor: shapesFor, shapeAt: shapeAt, keyAt: keyAt, mixAt: mixAt,
-    mount: function (holder, t, source) { return t.kind === 'film' ? mountFilm(holder, t, source) : mount(holder, t, source); }
+    mount: function (holder, t, source) { return t.kind === 'morph' ? mountMorph(holder, t, source) : t.kind === 'film' ? mountFilm(holder, t, source) : mount(holder, t, source); }
   };
 })();
