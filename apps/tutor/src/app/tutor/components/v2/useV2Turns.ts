@@ -492,7 +492,10 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         const reached = p.current.heardSoFar?.() ?? text;
         // Task 7v (SELF_CORRECTION): nothing of the reply reached them: the record keeps no trace of the turn, so their words go on to
         // the next turn with the words that cut it.
-        carriedSaidRef.current = v2CutWordsCarried(brainSaid, reached, settled.length, pendingRef.current);
+        // Task 8h (final review M5): never the placeholder of a turn for words not heard (main's carry below has the same test); M4: the
+        // carry is logged under main's event name too.
+        carriedSaidRef.current = unheard ? null : v2CutWordsCarried(brainSaid, reached, settled.length, pendingRef.current);
+        if (carriedSaidRef.current) p.current.onDebugEvent?.('v2_unanswered_carried', carriedSaidRef.current.slice(0, 80));
         // Merge with main (Task 8e): main carries the same words by its own ref (211dfda8: "Oh, at most means less than or equal
         // to", then "right?" over the reply, Digital SAT, portal-b0efc3c2). One carry only: with SELF_CORRECTION on the words are in
         // carriedSaidRef (joined on a new line for the brain); with it off, main's ref holds them (joined into brainSaid in runTurn's head).
