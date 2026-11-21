@@ -18,7 +18,7 @@
   var TEACHERS = [
     { key: 'hayes-r', kind: 'morph', name: 'Ms. Hayes', gender: 'female', dir: 'teachers/hayes-r' },
     { key: 'rivera-r', kind: 'morph', name: 'Ms. Rivera', gender: 'female', dir: 'teachers/rivera-r' },
-    { key: 'elodie', kind: 'video', name: 'Ms. Elodie (HeyGen)', gender: 'female', dir: 'teachers/elodie', voice: 'ca-f', clips: [0] },
+    { key: 'elodie', kind: 'video', name: 'Ms. Elodie (HeyGen)', gender: 'female', dir: 'teachers/elodie', voice: 'ca-f', clips: [0, 1] },
     { key: 'hayes-m', kind: 'morph', name: 'Ms. Hayes (previous)', gender: 'female', dir: 'teachers/hayes-m' },
     { key: 'rivera-m', kind: 'morph', name: 'Ms. Rivera (previous)', gender: 'female', dir: 'teachers/rivera-m' },
     { key: 'chen3d', kind: 'film', name: 'Mr. Chen', gender: 'male', dir: 'teachers/chen3d' },
@@ -352,32 +352,52 @@
 
   // ---------- the video teacher: a generated clip per step ----------
   //
-  // A premium avatar service made a real video of a presenter speaking this
-  // step's recording (teachers/<key>/step-N.mp4, silent). It is kept in time
-  // with the player's own audio; steps without a clip show the still picture.
+  // A premium avatar service made a real video of a presenter speaking each
+  // step's recording (teachers/<key>/step-N.mp4, silent). Every clip is loaded
+  // up front. A clip is set to the audio's position once, when its step
+  // starts, and is then kept in time by playing a touch faster or slower,
+  // never by jumping, which would make the face judder. When a step ends the
+  // last frame stays on screen, and the next step's clip fades in over it.
 
   function mountVideo(holder, t, source) {
-    holder.innerHTML = '<div class="tv-film tv-film-big"><div class="tv-film-in"><img src="' + t.dir + '/base.jpg" alt="' + t.name + '"><video muted playsinline preload="auto" style="opacity:0"></video></div></div>';
-    var v = holder.querySelector('video'), loaded = -1, stopped = false;
+    var html = '<div class="tv-film tv-film-big"><div class="tv-film-in"><img src="' + t.dir + '/base.jpg" alt="' + t.name + '">', i;
+    for (i = 0; i < t.clips.length; i++) html += '<video muted playsinline preload="auto" data-step="' + t.clips[i] + '" src="' + t.dir + '/step-' + (t.clips[i] + 1) + '.mp4" style="opacity:0"></video>';
+    holder.innerHTML = html + '</div></div>';
+    var vids = {}, cur = -1, started = false, lastSeek = 0, stopped = false, z = 2;
+    Array.prototype.forEach.call(holder.querySelectorAll('video'), function (v) { vids[+v.getAttribute('data-step')] = v; });
     var raf = window.requestAnimationFrame || function (f) { return setTimeout(f, 33); };
     function frame() {
       if (stopped) return;
-      var st = null;
+      var st = null, now = Date.now(), v, want, drift;
       try { st = source(); } catch (e) { st = null; }
-      var has = st && t.clips.indexOf(st.step) >= 0;
-      if (has && loaded !== st.step) { loaded = st.step; v.src = t.dir + '/step-' + (st.step + 1) + '.mp4'; }
-      if (has && st.playing) {
-        if (Math.abs(v.currentTime - st.ms / 1000) > 0.12) { try { v.currentTime = st.ms / 1000; } catch (e) { /* not ready yet */ } }
-        if (v.paused) { var p = v.play(); if (p && p['catch']) p['catch'](function () {}); }
-        v.style.opacity = '1';
-      } else {
-        if (!v.paused) v.pause();
-        if (!has) v.style.opacity = '0';
+      v = st ? vids[st.step] : null;
+      if (v && st.step !== cur) { // a new step: bring its clip in over whatever is showing
+        var old = vids[cur]; cur = st.step; started = false;
+        if (old) { old.pause(); setTimeout(function () { if (vids[cur] !== old) { old.style.opacity = '0'; try { old.currentTime = 0; } catch (e) { /* stays where it is */ } } }, 450); }
+        if (v.currentTime > 0.05 && st.ms < 300) { try { v.currentTime = 0; } catch (e) { /* placed when it starts */ } }
+        v.style.zIndex = String(++z);
       }
+      if (v && st.playing) {
+        want = st.ms / 1000;
+        if (!started) {
+          // Wait until the sound is really running. From the top of a step the clip simply plays from its first frame
+          // (no jump at all); from the middle (Listen, resume) it is placed once, a little ahead to cover the time a jump takes.
+          if (v.readyState >= 2 && want > 0.02) {
+            if (want > 0.3 || v.currentTime > 0.05) { try { v.currentTime = want + (want > 0.3 ? 0.12 : 0); } catch (e) { /* placed by the drift rule below */ } lastSeek = now; }
+            v.playbackRate = 1; started = true;
+          }
+        } else if (!v.seeking) {
+          drift = v.currentTime - want;
+          if (Math.abs(drift) > 0.6 && now - lastSeek > 1500) { v.currentTime = want + 0.12; lastSeek = now; v.playbackRate = 1; }
+          else v.playbackRate = Math.max(0.92, Math.min(1.08, 1 - drift * 0.6));
+          if (v.paused && !v.ended) { var p = v.play(); if (p && p['catch']) p['catch'](function () {}); }
+          v.style.opacity = '1';
+        }
+      } else if (v && !v.paused) v.pause(); // paused, or the step's audio has ended: hold this frame
       raf(frame);
     }
     raf(frame);
-    return { stop: function () { stopped = true; v.pause(); } };
+    return { stop: function () { stopped = true; for (var k in vids) vids[k].pause(); } };
   }
 
   window.esTeacher = {

@@ -138,7 +138,7 @@ const css = `
 .tv-face.tv-huge { width: 176px; }
 .tv-film.tv-film-big { width: 176px; height: 176px; }
 .tv-morph { position: absolute; background-repeat: no-repeat; -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 80%); mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 80%); }
-.tv-film-in video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; }
+.tv-film-in video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity .4s ease; }
 .tv-film-in img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
 `;
 
@@ -180,7 +180,7 @@ const post = `
     return '<button type="button" class="tv-card" data-t="' + t.key + '" aria-pressed="' + (t.key === S.teacher.key) + '">' + T.card(t) + '<b>' + t.name + '</b></button>';
   }).join('') + '</div><div class="tv-row2"><span>Accent:</span>' + ['ca', 'gb', 'us'].map(function (a) {
     return '<button type="button" class="tv-chip" data-a="' + a + '" aria-pressed="' + (a === S.accent) + '">' + names[a] + '</button>';
-  }).join('') + (S.teacher.kind === 'video' ? '<span>This teacher is a video made for step 1 in the Canadian voice only.</span>' : '') + '<span>Voice now: ' + S.voice.name + ' (' + S.voice.accent + ', ' + S.voice.gender + ')</span></div>';
+  }).join('') + (S.teacher.kind === 'video' ? '<span>This teacher is a video made for steps 1 and 2 in the Canadian voice only.</span>' : '') + '<span>Voice now: ' + S.voice.name + ' (' + S.voice.accent + ', ' + S.voice.gender + ')</span></div>';
   var bar = root.querySelector('.es-bar'); bar.parentNode.insertBefore(pick, bar);
   // The card portraits get a resting smile.
   Array.prototype.forEach.call(pick.querySelectorAll('.tv-card'), function (c) {
