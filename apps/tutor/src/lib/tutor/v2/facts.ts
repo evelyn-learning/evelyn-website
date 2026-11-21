@@ -161,8 +161,8 @@ export function v2LastOpener(history: V2State['history']): string {
 
 /** The facts line naming the last reply's opening words (D10: "Yes, that's right." opened 50–70% of replies; told in
  *  the constitution, the model moved to "Correct." instead, review I2). When the replies before it opened the same way,
- *  it says how many did, and that a reply reacts to what the student said (Task 6c, ruling 4). Not in a discussion,
- *  which has its own line. */
+ *  it says how many did, and that a reply reacts to what the student said (Task 6c, ruling 4). Only in a spoken lesson that
+ *  teaches a language (note-targets.ts v2NoteTargetsOn; Task 8h): every other lesson has no such line, as on main. */
 export function v2OpenerFact(session: V2Session, state: V2State, enabled: boolean = TUTOR_V2_OPENER_FACT): string[] {
   // Task 8h follow-up (controller's ruling): a spoken lesson that teaches a language only (note-targets.ts v2NoteTargetsOn); every
   // other session gets no opener line, as on main 11843955.

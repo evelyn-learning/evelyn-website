@@ -1669,7 +1669,8 @@ export const TUTOR_V2_TEXT_NO_SOUND = process.env.NEXT_PUBLIC_TUTOR_V2_TEXT_NO_S
  *  (Task 6, D5: upper-int t13–t21). Default ON; NEXT_PUBLIC_TUTOR_V2_RETRY_COUNT=off ⇒ no such line. */
 export const TUTOR_V2_RETRY_COUNT = process.env.NEXT_PUBLIC_TUTOR_V2_RETRY_COUNT !== 'off';
 
-/** Tutor brain v2 (v2/facts.ts v2OpenerFact): every turn's facts name how the tutor's last reply opened ("your last reply
+/** Tutor brain v2 (v2/facts.ts v2OpenerFact): in a spoken lesson that teaches a language (v2NoteTargetsOn; Task 8h: every other lesson
+ *  has no such line, as on main), each turn's facts name how the tutor's last reply opened ("your last reply
  *  opened with 'Correct'; open this one differently, or go straight to the content"). "Yes, that's right." opened 50–70%
  *  of replies (Task 6, D10); a constitution line against it only moved the stock opener to "Correct." and raised repeated
  *  openers in demo-forces 5→13 (Task 6b review I2). Default ON; NEXT_PUBLIC_TUTOR_V2_OPENER_FACT=off ⇒ no such line. */

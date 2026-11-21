@@ -95,11 +95,14 @@ function answerBefore(transcript: V2SummaryInput['transcript'], at: number): str
 /** The sentence of theirs a card reworks by the one correction test (sentence-cards.ts v2IsCorrectionOf, stems alike only for a
  *  marked card, as the engine reads it): of those it pairs with, the one sharing the most words; or null. Fix round 1 (I2): never paired
  *  without the test. */
-function saidFor(card: Card, sentences: readonly string[]): string | null {
+/** Fix round 2 (I-1, the controller's ruling): `right`, the keys of their sentences the same reply carded unmarked exactly as said: a
+ *  card is no correction of those (a pattern-drill model card after a right sentence: "I have worked here for five years." carded as
+ *  said, then "She has worked here for three years."). */
+function saidFor(card: Card, sentences: readonly string[], right: ReadonlySet<string> = new Set()): string | null {
   const cardWords = new Set(key(card.sentence).split(' '));
   let best: string | null = null; let bestN = -1;
   for (const s of sentences) {
-    if (!v2IsCorrectionOf(card.sentence, s, undefined, card.stems)) continue;
+    if (right.has(key(s)) || !v2IsCorrectionOf(card.sentence, s, undefined, card.stems)) continue;
     const n = key(s).split(' ').filter((w) => cardWords.has(w)).length;
     if (n > bestN) { best = s; bestN = n; }
   }
@@ -112,8 +115,14 @@ function saidFor(card: Card, sentences: readonly string[]): string | null {
 export function v2CorrectionsFromRow(input: V2SummaryInput, max: number): Array<{ student: string; corrected: string }> {
   const transcript = input.transcript ?? [];
   const bySaid = new Map<string, { student: string; corrected: string }>();
-  for (const card of cardsOf(input.whiteboardCommands ?? [])) {
-    const said = saidFor(card, answerBefore(transcript, card.at));
+  const cards = cardsOf(input.whiteboardCommands ?? []);
+  // Fix round 2 (I-1): per reply, their sentences it carded unmarked exactly as said.
+  const rightIn = (at: number): Set<string> => {
+    const theirs = answerBefore(transcript, at);
+    return new Set(cards.filter((c) => c.at === at && !c.marked).flatMap((c) => theirs.filter((x) => v2CardIsAsSaid(c.sentence, x)).map(key)));
+  };
+  for (const card of cards) {
+    const said = saidFor(card, answerBefore(transcript, card.at), rightIn(card.at));
     // A second card for the same sentence of theirs (a shorter one, then the whole) replaces the first, in its place.
     if (said) bySaid.set(key(said), { student: clean(said), corrected: card.sentence });
   }

@@ -111,6 +111,10 @@ async function summary() {
     const repeat = buildSessionFacts(row([{ role: 'tutor', text: 'Ready?' }, { role: 'student', text: 'Yes.' }, { role: 'tutor', text: 'Say this after me.' }, { role: 'student', text: 'I work here six years.' }, { role: 'tutor', text: 'Good.' }],
       [['I have worked here for six years.', ['have', 'worked', 'for'], 2]]), null);
     check('I2: a marked model card followed by their imperfect repeat is no correction of that repeat', (repeat.v2?.corrections ?? []).length === 0, repeat.v2);
+    // Fix round 2 (I-1): a right sentence carded as said, unmarked, and an unmarked model card for the next practice in the same reply.
+    const drill = buildSessionFacts(row([{ role: 'tutor', text: 'How long have you worked there?' }, { role: 'student', text: 'I have worked here for five years.' }, { role: 'tutor', text: "That's right. Now about your colleague." }],
+      [['I have worked here for five years.', undefined, 2], ['She has worked here for three years.', undefined, 2]]), null);
+    check('I-1: a model card beside their right sentence carded as said is no correction of it; the sentence stays said right', (drill.v2?.corrections ?? []).length === 0 && JSON.stringify(drill.v2?.saidRight) === JSON.stringify(['I have worked here for five years.']), drill.v2);
   }
   // A v1 session (no start_v2): the same facts and prompt with the switch on and off, and its row board ignored.
   const v1: SessionFactsInput = {
