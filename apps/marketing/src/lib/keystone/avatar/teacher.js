@@ -18,6 +18,8 @@
   var TEACHERS = [
     { key: 'rivera3d', kind: 'film', name: 'Ms. Rivera', gender: 'female', dir: 'teachers/rivera3d' },
     { key: 'chen3d', kind: 'film', name: 'Mr. Chen', gender: 'male', dir: 'teachers/chen3d' },
+    { key: 'hayes', kind: 'film', name: 'Ms. Hayes', gender: 'female', dir: 'teachers/hayes' },
+    { key: 'cole', kind: 'film', name: 'Mr. Cole', gender: 'male', dir: 'teachers/cole' },
     { key: 'okafor', name: 'Ms. Okafor (flat)', gender: 'female', skin: '#8d5a3b', shade: '#754729', hair: '#1b1210', style: 'curly', top: '#d9822b', bg: '#fbeedd', lip: '#7c2f3a', brow: '#1b1210', iris: '#24140c' },
     { key: 'bennett', name: 'Mr. Bennett (flat)', gender: 'male', skin: '#f2cdb3', shade: '#dfb294', hair: '#a8683a', style: 'beard', top: '#2f7d5b', bg: '#e2f3ea', lip: '#b96a5c', brow: '#8b5530', iris: '#3f6f8f' }
   ];
