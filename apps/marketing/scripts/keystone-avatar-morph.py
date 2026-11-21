@@ -1,17 +1,19 @@
 """
 Avatar samples: real in-between frames for a teacher's mouth and blink.
 
-  python3 keystone-avatar-morph.py <portrait.png> <framesDir> <outDir> <crop x0,y0,size> <mouth cx,cy,rx,ry> <eyes cx,cy,rx,ry>
+  python3 keystone-avatar-morph.py <portrait.png> <framesDir> <outDir> <crop x0,y0,size> <mouth cx,cy,rx,ry> <eyes cx,cy,rx,ry> [rifeDir]
 
 The eleven mouth states are the resting face and the ten redrawn mouths
-(A E O U F C M S L H). For every pair of states ffmpeg's motion interpolation
-(minterpolate) makes three frames in between, so going from any mouth to any
+(A E O U F C M S L H). For every pair of states a frame-interpolation tool
+makes the frames in between (RIFE when [rifeDir], the unpacked
+rife-ncnn-vulkan folder, is given: five per pair; otherwise ffmpeg's
+minterpolate: three per pair), so going from any mouth to any
 other is real movement, not a fade. The same is done from open eyes to closed
-(five frames in between). Everything is packed into two picture sheets:
+(seven or five frames in between). Everything is packed into two picture sheets:
 
   base.jpg    the resting face, SIZE x SIZE
-  mouth.jpg   cells: 11 states, then 3 in-betweens per pair (pairs in order 0-1, 0-2 … 9-10)
-  eyes.jpg    cells: 5 in-betweens, then closed
+  mouth.jpg   cells: 11 states, then the in-betweens of each pair (pairs in order 0-1, 0-2 … 9-10)
+  eyes.jpg    cells: the in-betweens, then closed
   morph.json  where the mouth and eye boxes sit and how the sheets are laid out
 
 Coordinates are in the portrait's own pixels (1024 square). Needs ffmpeg.
@@ -22,6 +24,8 @@ from PIL import Image, ImageDraw, ImageFilter
 SIZE = 520
 KEYS = ["R", "A", "E", "O", "U", "F", "C", "M", "S", "L", "H"]
 portrait, frames, out, crop, mouth, eyes = sys.argv[1:7]
+RIFE = sys.argv[7] if len(sys.argv) > 7 else None
+STEPS, EYE_STEPS = (5, 7) if RIFE else (3, 5)
 x0, y0, cs = [int(v) for v in crop.split(",")]
 scale = SIZE / cs
 os.makedirs(out, exist_ok=True)
@@ -45,6 +49,13 @@ def state(key, spec, box):
 
 def between(a, b, n):
     """n frames evenly between pictures a and b."""
+    if RIFE:  # asked for 2(n+1) frames from two pictures, RIFE returns a, the n in-betweens, then b repeated
+        with tempfile.TemporaryDirectory() as d:
+            os.makedirs(f"{d}/in"); os.makedirs(f"{d}/out")
+            a.save(f"{d}/in/0.png"); b.save(f"{d}/in/1.png")
+            subprocess.run([os.path.join(RIFE, "rife-ncnn-vulkan"), "-m", "rife-v4.6", "-i", f"{d}/in", "-o", f"{d}/out", "-n", str(2 * (n + 1))],
+                           check=True, cwd=RIFE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            return [Image.open(f"{d}/out/{i:08d}.png").convert("RGB").copy() for i in range(2, n + 2)]
     with tempfile.TemporaryDirectory() as d:
         a.save(f"{d}/0.png"); b.save(f"{d}/1.png"); b.save(f"{d}/2.png")
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-framerate", "1", "-i", f"{d}/%d.png", "-vf",
@@ -71,12 +82,12 @@ states = [state(k, mouth, mbox) for k in KEYS]
 cells = list(states)
 for i in range(len(KEYS)):
     for j in range(i + 1, len(KEYS)):
-        cells += between(states[i], states[j], 3)
+        cells += between(states[i], states[j], STEPS)
     print("mouth pairs from", KEYS[i], flush=True)
-meta = {"keys": KEYS, "steps": 3, "mouth": {**place(mbox), **sheet(cells, 16, "mouth.jpg")}}
+meta = {"keys": KEYS, "steps": STEPS, "mouth": {**place(mbox), **sheet(cells, 18, "mouth.jpg")}}
 
 ebox = box_of(eyes, 30, 40)
 closed = state("blink", eyes, ebox)
-meta["eyes"] = {**place(ebox), **sheet(between(base.crop(ebox), closed, 5) + [closed], 6, "eyes.jpg"), "steps": 5}
+meta["eyes"] = {**place(ebox), **sheet(between(base.crop(ebox), closed, EYE_STEPS) + [closed], EYE_STEPS + 1, "eyes.jpg"), "steps": EYE_STEPS}
 json.dump(meta, open(f"{out}/morph.json", "w"), indent=1)
 print("wrote", out)
