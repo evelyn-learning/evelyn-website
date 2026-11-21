@@ -16,6 +16,8 @@
  * last fifth (D).
  */
 import type { LessonPlan } from '../lesson-plan/types';
+import { homeworkProblemOf } from '../lesson-plan/homework-problem-meta';
+import { homeworkProblemsOf } from '../lesson-plan/homework';
 import { TUTOR_V2_CLOCK_FROM_START, TUTOR_V2_CLOSE_BY_CONTENT, TUTOR_V2_FLAG_CLOCK_PAUSE, TUTOR_V2_MORE_PRACTICE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_OVERRUN_MIN, TUTOR_V2_PART_ENTERED, TUTOR_V2_PART_MIN_PRACTICE, TUTOR_V2_TIME_BOX, TUTOR_V2_TIME_NO_SQUEEZE, TUTOR_V2_TIME_OVERRUN } from '../orchestrator/flags';
 import { discussionOf } from './discussion';
 import { closeDueMinutes } from './close-heard';
@@ -62,40 +64,66 @@ export function v2HardStopDelayMs(stopMin: number, state: Pick<V2State, 'started
 /** Task 7f's switches, B to F, as one value: each its own flag (default on); tests pass some off for one turn. */
 export interface V2TimeFlags { noSqueeze: boolean; minPractice: boolean; closeByContent: boolean; morePractice: boolean; overrun: boolean }
 /** `session` (Task 8h, ruling 1): the close by content (D) is a rule of the part-flow lesson (v2PartFlowLesson); for any other
- *  session it is off whatever the flag or a test says, and the close is main's (v2CloseOpenByClock). */
-export function v2TimeFlags(o: Partial<V2TimeFlags> = {}, session?: Pick<V2Session, 'mode' | 'homework' | 'homeworkSheet' | 'plan'>): V2TimeFlags {
+ *  session it is off whatever the flag or a test says, and the close is main's (v2CloseOpenByClock). Ruling 2: the overrun (F)
+ *  is on only for a session that has a margin (v2MarginMin), so the tutor is told of one exactly where the hard stop has one. */
+export function v2TimeFlags(o: Partial<V2TimeFlags> = {}, session?: V2MarginSession): V2TimeFlags {
   const scoped = !session || v2PartFlowLesson(session);
   return {
     noSqueeze: o.noSqueeze ?? TUTOR_V2_TIME_NO_SQUEEZE, minPractice: o.minPractice ?? TUTOR_V2_PART_MIN_PRACTICE,
-    closeByContent: scoped && (o.closeByContent ?? TUTOR_V2_CLOSE_BY_CONTENT), morePractice: o.morePractice ?? TUTOR_V2_MORE_PRACTICE, overrun: o.overrun ?? TUTOR_V2_TIME_OVERRUN,
+    closeByContent: scoped && (o.closeByContent ?? TUTOR_V2_CLOSE_BY_CONTENT), morePractice: o.morePractice ?? TUTOR_V2_MORE_PRACTICE,
+    overrun: (o.overrun ?? TUTOR_V2_TIME_OVERRUN) && (!session || v2MarginMin(session, true) > 0),
   };
 }
 
 /** Task 7f F (TIME_OVERRUN): the minutes a v2 lesson may run past its box (the target). 0 with the switch off. */
 export function v2OverrunMin(on: boolean = TUTOR_V2_TIME_OVERRUN): number { return on ? TUTOR_V2_OVERRUN_MIN : 0; }
 
-/** Task 7f F: the minute of the runtime's hard stop (useV2Turns): the box plus the margin, never past `ceilingMin` (a partner
- *  pool's remaining balance) and never before the box. */
+/** Task 7f F: the minute of the hard stop of a session that has the margin (v2MarginMin decides which): the box plus the margin,
+ *  never past `ceilingMin` (the partner's own maximum, a partner pool's remaining balance) and never before the box. */
 export function v2HardStopMinutes(boxMin: number, ceilingMin?: number, on: boolean = TUTOR_V2_TIME_OVERRUN): number {
   const stop = boxMin + v2OverrunMin(on);
   return typeof ceilingMin === 'number' && Number.isFinite(ceilingMin) && ceilingMin > 0 ? Math.max(boxMin, Math.min(stop, ceilingMin)) : stop;
 }
 
-/** A taught lesson: not homework, not a discussion (they keep their own time lines; the margin reaches only their hard stop). */
+/** A taught lesson: not homework, not a discussion (they keep their own time lines, and have no margin: v2MarginMin). */
 export const v2Taught = (session: Pick<V2Session, 'homework' | 'homeworkSheet' | 'plan'>) => !session.homework && !session.homeworkSheet && !discussionOf(session.plan);
 
 /** Task 8h (final review I1, ruling 1): the part-flow lesson: a spoken taught lesson on a plan whose every part has an authored
  *  name (turn.ts `partFlow`, time-fit.ts and facts.ts v2AskEveryOn gate the same way). The lesson the close by content, the
- *  wrap minute were built and tested for. Every other session (a maths or science lesson, a
+ *  wrap minute and (ruling 2) the overrun margin were built and tested for. Every other session (a maths or science lesson, a
  *  typed lesson, a plan without part names, homework, a discussion) keeps main's close: by the clock alone, two minutes before
  *  the box (close-heard.ts closeDueMinutes), with main's time line and no wrap minute. */
 export const v2PartFlowLesson = (session: Pick<V2Session, 'mode' | 'homework' | 'homeworkSheet' | 'plan'>) => session.mode === 'voice' && v2Taught(session) && v2PlanLabelled(session.plan);
 
-/** Minutes left to the time-up reference: a taught lesson's box plus the overrun margin (Task 7f F: "the time is up" moves to
- *  target + margin), homework's and a discussion's box. Infinity with no box. */
-export function v2LeftToStopMin(session: Pick<V2Session, 'timeBoxMinutes' | 'homework' | 'homeworkSheet' | 'plan'>, state: Pick<V2State, 'startedAtMs'>, nowMs: number, overrun: boolean = TUTOR_V2_TIME_OVERRUN): number {
+/** What v2MarginMin reads of a session. */
+export type V2MarginSession = Pick<V2Session, 'mode' | 'homework' | 'homeworkSheet' | 'plan' | 'timeBoxMinutes' | 'stopCeilingMinutes'>;
+
+/** Task 8h (final review I2, ruling 2): the minutes this session may run past its box. A part-flow lesson (v2PartFlowLesson)
+ *  has the overrun margin, never past the host's own maximum (`stopCeilingMinutes`: the partner's `max_duration_minutes`, a
+ *  pool's balance): a lesson whose box is that maximum has none. Every other session (homework, a discussion, a maths lesson, a
+ *  typed lesson) has none, as on main: its tutor was told "the time is up" at the box while the stop waited five more minutes,
+ *  open and billed. The one value for what the tutor is told (v2LeftToStopMin, the time line), the client's hard stop
+ *  (useV2Turns), the header clock, the pooled sitting's end and the pool charge clamp. */
+export function v2MarginMin(session: V2MarginSession, on: boolean = TUTOR_V2_TIME_OVERRUN): number {
+  const box = session.timeBoxMinutes;
+  if (!on || !box || !v2PartFlowLesson(session)) return 0;
+  return Math.max(0, v2HardStopMinutes(box, session.stopCeilingMinutes, true) - box);
+}
+
+/** The margin as the browser reads it (useV2Turns' hard stop, the header clock, the embed page's pooled sitting): from the plan
+ *  it has loaded. Homework is the server's to resolve (v2/homework.ts), so a plan that carries a homework problem or a sheet has
+ *  none here; no plan loaded, none. */
+export function v2ClientMarginMin(c: { mode: 'text' | 'voice'; plan: LessonPlan | null | undefined; boxMin?: number | null; ceilingMin?: number | null }, on: boolean = TUTOR_V2_TIME_OVERRUN): number {
+  const plan = c.plan;
+  if (!plan || !c.boxMin || homeworkProblemOf(plan) || homeworkProblemsOf(plan)?.length) return 0;
+  return v2MarginMin({ mode: c.mode, plan, timeBoxMinutes: c.boxMin, ...(typeof c.ceilingMin === 'number' ? { stopCeilingMinutes: c.ceilingMin } : {}) }, on);
+}
+
+/** Minutes left to the time-up reference: the box plus the session's margin (Task 7f F: "the time is up" moves to target +
+ *  margin; v2MarginMin: a part-flow lesson's only). Infinity with no box. */
+export function v2LeftToStopMin(session: V2MarginSession, state: Pick<V2State, 'startedAtMs'>, nowMs: number, overrun: boolean = TUTOR_V2_TIME_OVERRUN): number {
   if (!session.timeBoxMinutes) return Infinity;
-  return session.timeBoxMinutes + (v2Taught(session) ? v2OverrunMin(overrun) : 0) - (nowMs - state.startedAtMs) / 60000;
+  return session.timeBoxMinutes + v2MarginMin(session, overrun) - (nowMs - state.startedAtMs) / 60000;
 }
 
 /** The wrap minute: the host's, else (Task 7f D, CLOSE_BY_CONTENT) two before the box, so the close by the clock still has a
@@ -238,7 +266,7 @@ export function v2LessonTimeLine(session: V2Session, state: Pick<V2State, 'start
   const box = session.timeBoxMinutes!;
   const used = (nowMs - state.startedAtMs) / 60000;
   const left = box - used;
-  const leftStop = left + (o.tf.overrun ? v2OverrunMin(true) : 0);
+  const leftStop = left + v2MarginMin(session, o.tf.overrun);
   const n = Math.round(left);
   const wrapDue = v2WrapDue(session, used, TUTOR_V2_TIME_BOX, o.tf.closeByContent);
   if (!o.tf.closeByContent && !o.tf.overrun && !wrapDue) {

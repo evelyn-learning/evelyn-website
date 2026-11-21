@@ -30,7 +30,7 @@ import { speaksMaths, unwrittenEquations } from './spoken-maths';
 import { cardQuestion, v2DropSaidLead, saidCovers, sentenceCardToSay, unsaidAsk, unsaidBoardItem, asksAnywhere, noteSentencesToSay, pointsBackAtBoard } from './board-timing';
 import { V2_CONSTITUTION, v2ModeLines } from './constitution';
 import { renderFacts, v2AskEveryOn, v2SummaryBegun, V2_NO_ASK_RECHECK_S, V2_TIME_UP_MIN, V2_WAITED_RECHECK_S, type V2TurnFacts } from './facts';
-import { v2CloseOpen, v2LeftToStopMin, v2LessonNowMs, v2OverrunMin, v2PartFlowLesson, v2PlanContentDone, v2TimeFlags, v2WrapDue, v2WrapMin, type V2TimeFlags } from './time-box';
+import { v2CloseOpen, v2LeftToStopMin, v2LessonNowMs, v2MarginMin, v2PartFlowLesson, v2PlanContentDone, v2TimeFlags, v2WrapDue, v2WrapMin, type V2TimeFlags } from './time-box';
 import { V2_MIN_PRACTICE, V2_MORE_PRACTICE_MIN_LEFT, v2LevelCheckTimeUp, v2ArrivalDrops, v2LeaveOutByChoice, v2AsksMorePractice, v2CountPractice, v2PartPracticeAsked, v2DroppedMentioned, v2TakeEnteredDropped, v2PartsToDrop, v2PracticeMoreLine, v2PracticeShort, v2TimeFitAfterReply, v2TimeFitDue, v2TimeFitUpFront, v2MarkPartStart, v2OptionalAskedAtClose, v2OptionalWrapMin } from './time-fit';
 import { planGoalIds, renderPlanMap, v2NextTimeAllLine, v2PagePartLabel, v2NextTimeLine, v2PartIsOptional, v2PartNamedIn, v2PartOf, v2PartOffers, v2UnreachedOffer } from './plan-map';
 import { stripToolTalk } from './tool-talk';
@@ -492,7 +492,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Fix round 1 (m2): not on the turn of their no to it (or to going on to the summary past it), which the 7r block below records.
   const declining = !!session.plan && TUTOR_V2_PART_GO_NAMED && input.studentSaid !== null && (v2OptionalDeclined(session.plan, state, lastTutorText, input.studentSaid, askLangs) >= 0 || v2SummaryGo(input.studentSaid, lastTutorText, session.plan, state, askLangs));
   const realSession = session;
-  const optionalHeld = !discussion && session.plan && !declining && !(TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid)) ? v2OptionalWrapMin(session, state, nowMs, v2WrapMin(session, tf.closeByContent), tf.overrun ? v2OverrunMin(true) : 0, (() => { const a = v2PendingPart(session.plan!, state, lastTutorText, null, undefined, askLangs); return a ? session.plan!.segments[a.index]!.id : null; })()) : null;
+  const optionalHeld = !discussion && session.plan && !declining && !(TUTOR_V2_STOP_SIGNAL && v2StopAsked(input.studentSaid)) ? v2OptionalWrapMin(session, state, nowMs, v2WrapMin(session, tf.closeByContent), v2MarginMin(session, tf.overrun), (() => { const a = v2PendingPart(session.plan!, state, lastTutorText, null, undefined, askLangs); return a ? session.plan!.segments[a.index]!.id : null; })()) : null;
   if (optionalHeld) session = { ...session, wrapMinutes: optionalHeld.wrap };
   // Fix round 1 (a): the once-only deferral of a tutor-chosen end_lesson while the part is next and not yet offered.
   const heldPart = optionalHeld && session.plan ? session.plan.segments.find((x) => v2PartOf(x).label === optionalHeld.label) : undefined;
@@ -581,7 +581,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Fix round 1 (I1): a part left out that their words name is only told to the model (the facts, permissive: the minutes left);
   // it is taken after all only once the lesson enters it (v2TakeEnteredDropped), never on their words.
   const arrivalOn = tf.noSqueeze && TUTOR_V2_OPTIONAL_AT_ARRIVAL && !!session.timeBoxMinutes && !discussion && !session.homework && !session.homeworkSheet && v2PlanLabelled(session.plan);
-  const marginMin = tf.overrun ? v2OverrunMin(true) : 0;
+  const marginMin = v2MarginMin(session, tf.overrun);
   let droppedAsked: { label: string; minutes: number; left: number; fits: boolean; notReached?: true } | undefined;
   // Task 7r fix round 4 (I-E, the controller's ruling: declining an optional part is state): the optional part the last reply
   // offered on arrival that their answer says no to (part-flow.ts v2OptionalDeclined); -1: none.

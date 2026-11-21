@@ -36,8 +36,8 @@ import { parseEmbedConfig } from '@/lib/tutor/portal/parse-embed-config';
 import { parseLessonContext, parseEntry, clampTitle } from '@/lib/tutor/embed/lesson-context';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
 import { unloadSaveStatus } from '@/lib/tutor/voice/lesson-close';
-import { TUTOR_CLOSED_LESSON_COMPLETES, TUTOR_BRAIN_V2_CLAIM, TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT, TUTOR_HOST_START, TUTOR_HOST_LESSON, TUTOR_HOST_QUESTION_READ, TUTOR_EXTRA_LANGUAGES, TUTOR_THINKING_CUE, TUTOR_V2_TIME_OVERRUN, TUTOR_V2_FLAG_CLOCK_PAUSE } from '@/lib/tutor/orchestrator/flags';
-import { v2OverrunMin } from '@/lib/tutor/v2/time-box';
+import { TUTOR_CLOSED_LESSON_COMPLETES, TUTOR_BRAIN_V2_CLAIM, TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT, TUTOR_HOST_START, TUTOR_HOST_LESSON, TUTOR_HOST_QUESTION_READ, TUTOR_EXTRA_LANGUAGES, TUTOR_THINKING_CUE, TUTOR_V2_FLAG_CLOCK_PAUSE } from '@/lib/tutor/orchestrator/flags';
+import { v2ClientMarginMin } from '@/lib/tutor/v2/time-box';
 import { parseTutorLanguages } from '@/lib/tutor/voice/tts-language';
 import { shouldFlushEarly } from '@/lib/tutor/orchestrator/flush-policy';
 import type { TeacherPersonaWire } from '@core/ai/teacher-persona';
@@ -1447,6 +1447,17 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // completed ids — so we hold each in a ref and rebuild from the latest of
   // both. lessonProgressRef holds the last built value for session_ended.
   const planRef = useRef<LessonPlan | null>(null);
+  // Task 8h (rulings 2 and 3): the seconds this sitting may run past its pool cap: the margin of a v2 part-flow lesson
+  // (time-box.ts v2MarginMin), never past the partner's own max_duration_minutes; 0 for every other sitting (v1, homework, a
+  // discussion, a maths lesson, no pool cap). Read by the pooled sitting's end below and sent with each usage report, where it
+  // raises the pool's charge clamp for this sitting alone (partner-pool-store.ts).
+  const v2StopMarginSec = () => {
+    const cap = poolCapSecRef.current;
+    if (brainVersionRef.current !== 'v2' || cap === null) return 0;
+    return Math.round(v2ClientMarginMin({ mode: sessionMode === 'text' ? 'text' : 'voice', plan: planRef.current, boxMin: cap / 60, ceilingMin: maxDurationExplicit ? maxDuration : undefined }) * 60);
+  };
+  const v2StopMarginSecRef = useRef(v2StopMarginSec);
+  v2StopMarginSecRef.current = v2StopMarginSec;
   const currentSegmentIdRef = useRef<string>('');
   const completedSegmentIdsRef = useRef<string[]>([]);
   const lessonProgressRef = useRef<LessonProgress | null>(null);
@@ -2132,10 +2143,11 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       const cap = poolCapSecRef.current;
       const engagedAt = sessionEngagedAtRef.current;
       if (cap === null || engagedAt === null || poolEndReasonRef.current || sessionEndedPostedRef.current) return;
-      // Task 7f F (TUTOR_V2_TIME_OVERRUN): a v2 sitting runs to the cap plus the overrun margin (its own runtime says the goodbye
-      // there), never past the pool's remaining balance; v1 sittings end at the cap, as before. No database write: the margin is
-      // the engine's constant, and the pool is charged wall-clock (partner-pool-store.ts).
-      const stopSec = poolStopSec({ capSec: cap, remainingSec: poolRemainingAtLatchSecRef.current, overrunSec: brainVersionRef.current === 'v2' && TUTOR_V2_TIME_OVERRUN ? v2OverrunMin() * 60 : 0 });
+      // Task 7f F (TUTOR_V2_TIME_OVERRUN): a v2 sitting that has the margin runs to the cap plus it (its own runtime says the
+      // goodbye there), never past the pool's remaining balance; every other sitting ends at the cap, as before. No database
+      // write: the margin is the engine's constant, and the pool is charged wall-clock (partner-pool-store.ts).
+      // Task 8h (ruling 2): the margin is a part-flow lesson's only, and never past the partner's own max_duration_minutes.
+      const stopSec = poolStopSec({ capSec: cap, remainingSec: poolRemainingAtLatchSecRef.current, overrunSec: v2StopMarginSecRef.current() });
       if (Date.now() - engagedAt < stopSec * 1000) return;
       const h = sessionHandleRef.current;
       if (h?.isEnding?.() === true) return;
@@ -2599,7 +2611,8 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         thinkingCue={thinkingCue}
         sessionMaxMinutes={poolTimeBoxState?.maxMinutes ?? maxDuration}
         sessionWrapMinutes={poolTimeBoxState?.wrapMinutes ?? wrapAtMinutes}
-        sessionStopCeilingMinutes={poolCeilingMinutes}
+        // Task 8h (ruling 2): the partner's own max_duration_minutes is a ceiling too: the margin never carries a session past it.
+        sessionStopCeilingMinutes={maxDurationExplicit ? Math.min(maxDuration, poolCeilingMinutes ?? Infinity) : poolCeilingMinutes}
         maxDurationExplicit={maxDurationExplicit || poolTimeBoxState !== null}
         socialMemory={config.social_memory}
         progressDigest={config.progress_digest}

@@ -21,7 +21,7 @@ import { stripBoardBlocks } from './board-inline';
 import { v2LearnerSentence } from './learner-card';
 import { v2AsksPartChange, v2EndingPartAsk, v2MoveAnswer, v2NextPart, v2OpenPagePart, v2PartInHand, v2PartViewed, v2PlanLabelled } from './part-flow';
 import { v2FreeConversationPart, v2IsPageOfPart, v2OfferedOut, v2PartEntered, v2PartIsOptional, v2PartNamedIn, v2PartOf } from './plan-map';
-import { v2OverrunMin, v2Taught, v2WrapMin } from './time-box';
+import { v2MarginMin, v2Taught, v2WrapMin } from './time-box';
 import { v2WithoutFillers } from './language-pack';
 import { TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_PART_ASK_LANGS, TUTOR_V2_PART_CLOCK, TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART, TUTOR_V2_TIME_NO_SQUEEZE, TUTOR_V2_OVERLONG_QUIET } from '../orchestrator/flags';
 import type { V2Session, V2State } from './types';
@@ -282,7 +282,7 @@ export function v2PartPace(session: V2Session, state: V2State, nowMs: number, on
   const late = through.every((x) => !!v2PartOf(x).minutes) && lessonUsed > planThrough + V2_BEHIND_SLACK_MIN && minMet;
   const core = c.index === v2CorePart(plan);
   if (core) {
-    const margin = v2OverrunMin();
+    const margin = v2MarginMin(session);
     let rest = 0;
     plan.segments.forEach((seg, j) => {
       if (j <= c.index || !counts(seg, state)) return;
@@ -413,7 +413,7 @@ export function v2TimeFitFacts(session: V2Session, state: V2State, on: boolean, 
     }
     if (toTell.length) {
       const t1 = toTell.length === 1;
-      const used = typeof nowMs === 'number' ? ` (about ${Math.max(0, Math.round((nowMs - state.startedAtMs) / 60000))} minutes used, and the session can run to about ${(session.timeBoxMinutes ?? 0) + v2OverrunMin()})` : '';
+      const used = typeof nowMs === 'number' ? ` (about ${Math.max(0, Math.round((nowMs - state.startedAtMs) / 60000))} minutes used, and the session can run to about ${Math.floor((session.timeBoxMinutes ?? 0) + v2MarginMin(session))})` : '';
       lines.push(`left out for time: there is no longer time for ${names(toTell)} and the summary${used}, so ${t1 ? 'it is' : 'they are'} left for the next session. Say nothing of ${t1 ? 'it' : 'them'} while the part in hand goes on; in the reply that closes the part in hand and moves on, tell them once, in one short sentence (in your own words, in the lesson's language), that there is no time left for ${t1 ? 'it' : 'them'} today and you will take ${t1 ? 'it' : 'them'} up next time, and go on to the next part; do not offer ${t1 ? 'it' : 'them'}`);
     }
     return lines;

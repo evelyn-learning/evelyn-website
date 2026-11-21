@@ -31,6 +31,10 @@ export interface V2Session {
   /** The minute the host's wrap starts, two before the box (partner-pool.ts `poolTimeBox`, the embed page's
    *  `wrap_at_minutes`): from it the facts say to finish the exchange and summarise (time-box.ts). */
   wrapMinutes?: number;
+  /** The most minutes the session may run, as the host gives it: the partner's own `max_duration_minutes` and a partner pool's
+   *  remaining balance, whichever is less. The overrun margin of a part-flow lesson never carries the session past it
+   *  (time-box.ts v2MarginMin; Task 8h, ruling 2). Absent: the host set no maximum of its own. */
+  stopCeilingMinutes?: number;
   plan?: LessonPlan;
   /** The teacher the tutor speaks as, when the session names one. `intro` and `background`: the persona's own words on
    *  who it is (TeacherPersonaWire); with a background they are the tutor's persona card (turn.ts v2PersonaCardLines). */

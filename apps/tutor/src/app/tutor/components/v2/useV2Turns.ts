@@ -29,7 +29,7 @@ import { V2_CONTROL_TOOL_NAMES } from '@/lib/tutor/v2/tool-names';
 import { mentionsTool } from '@/lib/tutor/v2/tool-talk';
 import { newV2State, type V2State, type V2ToolCall } from '@/lib/tutor/v2/types';
 import { TUTOR_LESSON_CLOSE_AUTO_END, TUTOR_V2_CHIP_ON_PAINT, TUTOR_V2_UNHEARD_ASK_OWED, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FLAG_CLOCK_PAUSE, TUTOR_V2_TIME_BOX, TUTOR_WORKING_LEVEL, TUTOR_WORKING_LEVEL_ESTIMATE } from '@/lib/tutor/orchestrator/flags';
-import { V2_CLOCK_PAUSE_HONOURED, v2HardStop, v2HardStopDelayMs, v2HardStopMinutes, v2StartClock } from '@/lib/tutor/v2/time-box';
+import { V2_CLOCK_PAUSE_HONOURED, v2ClientMarginMin, v2HardStop, v2HardStopDelayMs, v2StartClock } from '@/lib/tutor/v2/time-box';
 import { v2HardStopNextTime } from '@/lib/tutor/v2/close-invite';
 import { goodbyeLine } from '@/lib/tutor/voice/timebox-lines';
 import { parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-level';
@@ -49,7 +49,8 @@ export interface V2TurnsConfig {
    *  from it the facts tell the tutor to finish the exchange and summarise (v2/time-box.ts). */
   sessionWrapMinutes?: number;
   /** Task 7f F: the most minutes the session may run, whatever the overrun margin: a partner pool's remaining balance (the embed
-   *  page). The hard stop is at the box plus the margin (TUTOR_V2_TIME_OVERRUN), never past this. */
+   *  page), and the partner's own max_duration_minutes when it set one. A part-flow lesson's hard stop is at the box plus the
+   *  margin (TUTOR_V2_TIME_OVERRUN), never past this; every other session stops at the box (time-box.ts v2MarginMin). */
   sessionStopCeilingMinutes?: number;
   /** The partner's `lessonCloseAutoEnd` (partner-session-options.ts, on by default; TUTOR_LESSON_CLOSE_AUTO_END):
    *  off, the tutor's close leaves the session open for the student or the host to end. */
@@ -329,6 +330,8 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       ...((p.current.tutorLanguages?.length ?? 0) > 1 ? { languages: p.current.tutorLanguages } : {}),
       ...(p.current.sessionMaxMinutes ? { timeBoxMinutes: p.current.sessionMaxMinutes } : {}),
       ...(p.current.sessionMaxMinutes && p.current.sessionWrapMinutes ? { wrapMinutes: p.current.sessionWrapMinutes } : {}),
+      // Task 8h (ruling 2): the host's own maximum, so the tutor is told of a margin only where the hard stop below has one.
+      ...(p.current.sessionMaxMinutes && p.current.sessionStopCeilingMinutes ? { stopCeilingMinutes: p.current.sessionStopCeilingMinutes } : {}),
       ...(p.current.lessonPlanId ? { lessonPlanId: p.current.lessonPlanId } : {}),
       ...(p.current.topic && !p.current.lessonPlanId ? { topic: p.current.topic } : {}),
       ...(p.current.background?.length || memoryRef.current.length ? { background: [...(p.current.background ?? []), ...memoryRef.current].slice(0, V2_BACKGROUND_MAX_LINES) } : {}),
@@ -597,8 +600,13 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   const armHardStop = useCallback((afterPause?: boolean) => {
     const minutes = p.current.sessionMaxMinutes;
     if (!minutes || hardStopRef.current) return;
-    // Task 7f F (TIME_OVERRUN): the box is the target; the stop is at the box plus the margin, never past the pool's balance.
-    const stopMin = v2HardStopMinutes(minutes, p.current.sessionStopCeilingMinutes);
+    // Task 7f F (TIME_OVERRUN): the box is the target; the stop is at the box plus the margin, never past the host's maximum.
+    // Task 8h (final review I2, ruling 2): only in a session whose tutor is told of the margin (time-box.ts v2MarginMin: a
+    // part-flow lesson, never past the partner's own max_duration_minutes or the pool's balance). Every other session (homework,
+    // a discussion, a maths lesson) stops at the box, as on main. The stop is armed for the box and the margin is read there:
+    // the plan that decides it is loaded after the session mounts.
+    const stopMinNow = () => minutes + v2ClientMarginMin({ mode: p.current.mode, plan: planRef.current, boxMin: minutes, ceilingMin: p.current.sessionStopCeilingMinutes });
+    const byLessonClock = afterPause || (TUTOR_V2_FLAG_CLOCK_PAUSE && resumedRef.current);
     // Two minutes before the end the tutor says so and uses what is left well (facts.ts). A turn that happens
     // then is told by its facts; when no one is speaking, this makes the turn happen. Without it a quiet
     // student met the end of the session with no warning.
@@ -618,7 +626,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       };
       timeCheckRef.current = setTimeout(check, dueMs);
     }
-    hardStopRef.current = setTimeout(() => {
+    const stop = (stopMin: number) => {
       if (endingRef.current) return;
       // Task 7h: a close still being said when the box comes is not interruptible either: the microphone closes, and
       // (fix round 1, I1) the closing words play out, bounded, then the session ends as the close would have.
@@ -660,8 +668,14 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         ended: () => endedRef.current,
         log: (type, message) => p.current.onDebugEvent?.(type, message),
       }, farewell);
+    };
+    hardStopRef.current = setTimeout(() => {
+      if (endingRef.current) return;
+      const stopMin = stopMinNow();
+      if (!(stopMin > minutes)) { stop(minutes); return; }
+      hardStopRef.current = setTimeout(() => stop(stopMin), byLessonClock ? v2HardStopDelayMs(stopMin, stateRef.current, Date.now()) : Math.max(0, stopMin * 60000 - (Date.now() - stateRef.current.startedAtMs)));
     // A resumed session's box runs from when the lesson first began.
-    }, afterPause || (TUTOR_V2_FLAG_CLOCK_PAUSE && resumedRef.current) ? v2HardStopDelayMs(stopMin, stateRef.current, Date.now()) : Math.max(5000, stopMin * 60000 - (resumedRef.current ? Date.now() - stateRef.current.startedAtMs : 0)));
+    }, byLessonClock ? v2HardStopDelayMs(minutes, stateRef.current, Date.now()) : Math.max(5000, minutes * 60000 - (resumedRef.current ? Date.now() - stateRef.current.startedAtMs : 0)));
   }, []);
   // Unmounted: a stop under way (waiting on the last words or the goodbye) does nothing more.
   // (Set false on mount: React's development double mount runs this clean-up once before the real mount.)

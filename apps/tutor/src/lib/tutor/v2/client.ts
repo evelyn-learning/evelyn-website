@@ -15,6 +15,8 @@ export interface V2ClientSession {
   timeBoxMinutes?: number;
   /** The host's wrap minute (types.ts V2Session). */
   wrapMinutes?: number;
+  /** The most minutes the session may run (types.ts V2Session). */
+  stopCeilingMinutes?: number;
   lessonPlanId?: string;
   /** What the student asked to learn, when there is no lesson plan (a topic typed on the demo page, a partner's free practice). */
   topic?: string;

@@ -24,7 +24,7 @@ import { TUTOR_V2_CARD_GLOSS_ASK, TUTOR_V2_CARD_GLOSS_REMIND } from '../orchestr
 import { v2CardsOwedFacts, v2LearnerSentenceFacts } from './learner-card';
 import { v2PracticeAskFacts, v2RetryFacts } from './languages';
 import { v2PracticeFactLines } from './practice-facts';
-import { V2_TIME_UP_MIN, v2CloseOpen, v2PlanContentDone, v2LeftToStopMin, v2LessonTimeLine, v2OverrunMin, v2PartDueFact, v2TimeFlags, v2WrapDue, type V2TimeFlags } from './time-box';
+import { V2_TIME_UP_MIN, v2CloseOpen, v2PlanContentDone, v2LeftToStopMin, v2LessonTimeLine, v2MarginMin, v2PartDueFact, v2TimeFlags, v2WrapDue, type V2TimeFlags } from './time-box';
 import { V2_MORE_PRACTICE_MIN_LEFT, v2LevelCheckTimeUp, v2MorePracticeFacts, v2OptionalFits, v2OptionalHeldLine, v2PartClock, v2PartTimeUpLine, v2PracticeFacts, v2StayInPartLine, v2TimeFitFacts } from './time-fit';
 import { TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART, TUTOR_V2_SUPPORT_FOLLOWED } from '../orchestrator/flags';
 import { v2CloseInviteFacts, v2CloseReopened, v2MoreAskAnswered } from './close-invite';
@@ -297,7 +297,7 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     // Task 7v (OPTIONAL_FIT): an optional part that still fits by the 7i fit is never "no time for it now"; asked for at the close
     // while it fits, the droppedAsked line below says to take it up. Fix round 1 (m10): where the wrap is held for it too (spoken,
     // the fit decided on arrival); typed lessons as before.
-    const fitting = TUTOR_V2_OPTIONAL_FIT && !!session.timeBoxMinutes && session.mode === 'voice' && !!state.timeFit?.byArrival && !discussion && !f.stopAsked ? (seg: { id: string }) => { const i = session.plan!.segments.findIndex((x) => x.id === seg.id); return i >= 0 && !state.timeFit?.dropped.includes(seg.id) && v2OptionalFits(session.plan!, state, i, (f.nowMs - state.startedAtMs) / 60000, session.timeBoxMinutes!, tf.overrun ? v2OverrunMin(true) : 0); } : undefined;
+    const fitting = TUTOR_V2_OPTIONAL_FIT && !!session.timeBoxMinutes && session.mode === 'voice' && !!state.timeFit?.byArrival && !discussion && !f.stopAsked ? (seg: { id: string }) => { const i = session.plan!.segments.findIndex((x) => x.id === seg.id); return i >= 0 && !state.timeFit?.dropped.includes(seg.id) && v2OptionalFits(session.plan!, state, i, (f.nowMs - state.startedAtMs) / 60000, session.timeBoxMinutes!, v2MarginMin(session, tf.overrun)); } : undefined;
     if (!discussion && !passed.length && !(f.droppedAsked?.notReached && f.droppedAsked.fits)) lines.push(...v2UnreachedAtCloseFact(session.plan, state, closing || summaryBegun ? 'closing' : near ? 'near' : null, undefined, fitting));
     // Task 6g: an optional part offered and not taken up is offered at most once more (tester A: four offers in nine turns).
     if (!discussion) lines.push(...v2PartOfferFacts(session.plan, state));

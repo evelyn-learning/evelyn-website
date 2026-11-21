@@ -31,7 +31,7 @@ const SSE_HEADERS = { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-
 const MAX_STUDENT_CHARS = 8000;
 
 interface TurnBody {
-  session?: { studentName?: unknown; subject?: unknown; level?: unknown; mode?: unknown; languages?: unknown; timeBoxMinutes?: unknown; wrapMinutes?: unknown; lessonPlanId?: unknown; topic?: unknown; background?: unknown; teacher?: unknown; trial?: unknown; levelCheck?: unknown; pronunciation?: unknown };
+  session?: { studentName?: unknown; subject?: unknown; level?: unknown; mode?: unknown; languages?: unknown; timeBoxMinutes?: unknown; wrapMinutes?: unknown; stopCeilingMinutes?: unknown; lessonPlanId?: unknown; topic?: unknown; background?: unknown; teacher?: unknown; trial?: unknown; levelCheck?: unknown; pronunciation?: unknown };
   state?: unknown;
   studentSaid?: unknown;
   silenceSeconds?: unknown;
@@ -80,6 +80,8 @@ export async function POST(req: NextRequest) {
     ...(typeof cfg.timeBoxMinutes === 'number' && cfg.timeBoxMinutes > 0 ? { timeBoxMinutes: Math.min(180, Math.round(cfg.timeBoxMinutes)) } : {}),
     // The wrap minute counts only inside a box (time-box.ts).
     ...(typeof cfg.timeBoxMinutes === 'number' && typeof cfg.wrapMinutes === 'number' && cfg.wrapMinutes > 0 && cfg.wrapMinutes < cfg.timeBoxMinutes ? { wrapMinutes: Math.round(cfg.wrapMinutes) } : {}),
+    // The host's own maximum (the partner's max_duration_minutes, a pool's balance): the margin never passes it (time-box.ts v2MarginMin).
+    ...(typeof cfg.timeBoxMinutes === 'number' && cfg.timeBoxMinutes > 0 && typeof cfg.stopCeilingMinutes === 'number' && Number.isFinite(cfg.stopCeilingMinutes) && cfg.stopCeilingMinutes > 0 ? { stopCeilingMinutes: Math.min(180, cfg.stopCeilingMinutes) } : {}),
     ...(background.length ? { background } : {}),
     ...(teacher ? { teacher } : {}),
     ...(cfg.trial === true ? { trial: true } : {}),

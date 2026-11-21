@@ -69,7 +69,7 @@ import { isQpinStaleByTurns, shouldClearQpinOnAnswer, QPIN_MAX_TUTOR_TURNS_BEHIN
 import { latestSubstantiveTutorEntry, shouldClearQpinOnSegmentChange } from '@/lib/tutor/qpin-behavior';
 import { preStartDockCaption } from './prestart-affordances';
 import { HeaderClock } from './HeaderClock';
-import { v2OverrunMin } from '@/lib/tutor/v2/time-box';
+import { v2ClientMarginMin } from '@/lib/tutor/v2/time-box';
 import { v2OverlongQuiet } from '@/lib/tutor/v2/time-fit';
 import {
   buildStudentMediaBrainInput, buildUploadedProblemCard, classifyExtraction, studentMediaNotice,
@@ -2009,6 +2009,9 @@ export default function TutorSession(props: TutorSessionProps) {
   const agendaRailVerticalEl = railItems && railItems.length > 0
     ? <AgendaRail items={railItems} orientation="vertical" offPlan={railModel?.offPlan} /> : undefined;
 
+  // Task 8h (ruling 2): the header clock shows the margin only for a session that has one (time-box.ts v2MarginMin: a part-flow
+  // lesson, never past the host's own maximum); every other session counts down to its box, as on main.
+  const v2MarginMinutes = brainVersion === 'v2' ? v2ClientMarginMin({ mode: sessionMode === 'text' ? 'text' : 'voice', plan: lessonProgress.plan, boxMin: sessionMaxMinutes, ceilingMin: sessionStopCeilingMinutes }) : 0;
   // Demo-polish (2026-10-29): the stage's fullscreen machinery, for the header button.
   const [fullscreenApi, setFullscreenApi] = useState<FullscreenApi | null>(null);
   const controlsEl = (
@@ -2019,7 +2022,7 @@ export default function TutorSession(props: TutorSessionProps) {
       frozenAtMs={standbySinceMs}
       hideTimer={!sessionTimer}
       maxDuration={sessionMaxMinutes}
-      overrunMinutes={brainVersion === 'v2' ? v2OverrunMin() : 0}
+      overrunMinutes={v2MarginMinutes}
       onEndSession={handleEndSession}
       onUploadHomework={onUploadHomework ?? handleUploadHomeworkFallback}
       hideUpload={brainVersion === 'v2'}
@@ -2353,7 +2356,7 @@ export default function TutorSession(props: TutorSessionProps) {
             frozenAtMs={standbySinceMs}
             maxMinutes={sessionMaxMinutes}
             countDown={!!maxDurationExplicit}
-            overrunMinutes={brainVersion === 'v2' ? v2OverrunMin() : 0}
+            overrunMinutes={v2MarginMinutes}
           />
         )}
         adaptiveMenu={adaptiveMenuEl}
