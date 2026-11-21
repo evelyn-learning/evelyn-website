@@ -185,56 +185,92 @@
 
   // ---------- the illustrated ("film look") teacher: stacked picture layers ----------
   //
-  // base.jpg is the resting face. A E O U F C M are the same picture with only
-  // the mouth area redrawn; blink has only the eye area. The step's `vis`
-  // timeline ([[ms, key], …], built from the pronunciation dictionary) says
-  // which mouth is showing. A new mouth fades in quickly over the old one, and
-  // the old one leaves a little later, so the resting smile never flashes through.
+  // base.jpg is the resting face. The ten mouth layers are the same picture
+  // with only the mouth area redrawn; `half` and `blink` have only the eye
+  // area. The step's `vis` timeline ([[ms, key], …], built from the
+  // pronunciation dictionary) says which mouth belongs to each moment.
 
-  var FILM_KEYS = ['A', 'E', 'O', 'U', 'F', 'C', 'M'];
+  var FILM_KEYS = ['A', 'E', 'O', 'U', 'F', 'C', 'M', 'S', 'L', 'H'];
 
   function card(t) {
     if (t.kind !== 'film') return svg(t, t.key + '-card');
     return '<img class="tv-svg tv-photo" src="' + t.dir + '/base.jpg" alt="' + t.name + '">';
   }
 
-  function keyAt(vis, ms) {
+  function indexAt(vis, ms) {
     var lo = 0, hi = vis.length - 1, at = -1, mid;
     while (lo <= hi) { mid = (lo + hi) >> 1; if (vis[mid][0] <= ms) { at = mid; lo = mid + 1; } else hi = mid - 1; }
-    return at < 0 ? 'R' : vis[at][1];
+    return at;
+  }
+  function keyAt(vis, ms) { var i = indexAt(vis, ms); return i < 0 ? 'R' : vis[i][1]; }
+  function smooth(x) { return x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x); }
+
+  /**
+   * How much of each mouth is showing at `ms`. Between two neighbouring
+   * entries of the timeline the mouth moves from one shape to the next over a
+   * window centred on the change (up to 110 ms, never more than the shapes
+   * themselves last), so the lips are almost always in motion, as in speech,
+   * and never snap. Returns { key: weight } with the weights adding up to 1.
+   */
+  function mixAt(vis, ms) {
+    var i = indexAt(vis, ms), out = {}, cur = i < 0 ? 'R' : vis[i][1];
+    var start = i < 0 ? -1e9 : vis[i][0], end = i + 1 < vis.length ? vis[i + 1][0] : 1e9, len = end - start, w, half, p;
+    out[cur] = 1;
+    if (i + 1 < vis.length) { // leaving for the next shape
+      var nextLen = i + 2 < vis.length ? vis[i + 2][0] - end : 400;
+      w = Math.min(110, len, nextLen); half = w / 2;
+      if (ms > end - half) { p = smooth((ms - (end - half)) / w); out[cur] = 1 - p; out[vis[i + 1][1]] = (out[vis[i + 1][1]] || 0) + p; return out; }
+    }
+    if (i >= 0) { // still arriving from the one before
+      var prev = i > 0 ? vis[i - 1][1] : 'R', prevLen = i > 0 ? start - vis[i - 1][0] : 400;
+      w = Math.min(110, len, prevLen); half = w / 2;
+      if (ms < start + half) { p = smooth((ms - (start - half)) / w); out[cur] = p; out[prev] = (out[prev] || 0) + 1 - p; }
+    }
+    return out;
   }
 
   function mountFilm(holder, t, source) {
     var html = '<div class="tv-film"><div class="tv-film-in"><img src="' + t.dir + '/base.jpg" alt="' + t.name + '">', i;
     for (i = 0; i < FILM_KEYS.length; i++) html += '<img data-k="' + FILM_KEYS[i] + '" src="' + t.dir + '/' + FILM_KEYS[i] + '.png" alt="" style="opacity:0">';
-    html += '<img data-k="blink" src="' + t.dir + '/blink.png" alt="" style="opacity:0"></div></div>';
+    html += '<img data-k="half" src="' + t.dir + '/half.png" alt="" style="opacity:0"><img data-k="blink" src="' + t.dir + '/blink.png" alt="" style="opacity:0"></div></div>';
     holder.innerHTML = html;
-    var inner = holder.querySelector('.tv-film-in'), layers = {}, level = {}, blink = holder.querySelector('[data-k="blink"]');
-    FILM_KEYS.forEach(function (k) { layers[k] = holder.querySelector('[data-k="' + k + '"]'); level[k] = 0; });
-    var last = Date.now(), t0 = last, nextBlink = 1800, blinkAt = -1, stopped = false, lineAt = -1e9, lastLine = -1;
+    var inner = holder.querySelector('.tv-film-in'), layers = {}, blink = holder.querySelector('[data-k="blink"]'), halfLid = holder.querySelector('[data-k="half"]');
+    FILM_KEYS.forEach(function (k) { layers[k] = holder.querySelector('[data-k="' + k + '"]'); });
+    var t0 = Date.now(), nextBlink = 1800, blinkAt = -1, stopped = false, lineAt = -1e9, lastLine = -1, nodAt = -1e9, lastIdx = -1, talkLevel = 0, last = t0;
     var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     var raf = window.requestAnimationFrame || function (f) { return setTimeout(f, 33); };
     function frame() {
       if (stopped) return;
-      var nowAbs = Date.now(), dt = Math.min(80, nowAbs - last), now = nowAbs - t0, st = null, key = 'R', talk = false, k, line = -1, rising = false;
+      var nowAbs = Date.now(), dt = Math.min(80, nowAbs - last), now = nowAbs - t0, st = null, mix = { R: 1 }, talk = false, k, line = -1, order, shown, a, idx;
       last = nowAbs;
       try { st = source(); } catch (e) { st = null; }
       if (st && st.playing && st.vis) {
-        talk = true; key = keyAt(st.vis, st.ms + 30); // the mouth leads the sound a little, as real lips do
+        talk = true; mix = mixAt(st.vis, st.ms + 40); // the mouth leads the sound a little, as real lips do
+        idx = indexAt(st.vis, st.ms + 40);
+        if (idx !== lastIdx) { lastIdx = idx; if (idx >= 0 && (st.vis[idx][1] === 'A' || st.vis[idx][1] === 'H') && now - nodAt > 500) nodAt = now; } // a small nod on an open, stressed vowel
         if (st.starts) for (k = 0; k < st.starts.length; k++) if (st.starts[k] <= st.ms) line = st.step * 100 + k;
         if (line !== lastLine) { lastLine = line; lineAt = now; }
       }
-      if (key !== 'R' && level[key] < 1) { level[key] = Math.min(1, level[key] + dt / 45); rising = level[key] < 1; }
-      for (k in level) if (k !== key && level[k] > 0 && !rising) level[k] = Math.max(0, level[k] - dt / (key === 'R' ? 110 : 60));
-      for (k in level) { layers[k].style.opacity = level[k].toFixed(2); layers[k].style.zIndex = k === key ? 2 : 1; }
-      if (now > nextBlink) { blinkAt = now; nextBlink = now + 2600 + Math.random() * 3400; }
-      blink.style.opacity = blinkAt >= 0 && now - blinkAt < 130 ? '1' : '0';
-      if (blinkAt >= 0 && now - blinkAt >= 130) blinkAt = -1;
+      // Layers are opaque where they draw, so stacking two with weights a (below) and b (above) needs: below fully in, above at b / (a + b).
+      order = FILM_KEYS.filter(function (key) { return mix[key] > 0.001; }).sort(function (x, y) { return mix[y] - mix[x]; });
+      shown = mix.R || 0;
+      for (k = 0; k < FILM_KEYS.length; k++) if (order.indexOf(FILM_KEYS[k]) < 0) layers[FILM_KEYS[k]].style.opacity = '0';
+      for (k = order.length - 1; k >= 0; k--) { // smallest share on top
+        var key = order[order.length - 1 - k], wgt = mix[key];
+        a = shown + wgt > 0 ? wgt / (shown + wgt) : 0; shown += wgt;
+        layers[key].style.opacity = a.toFixed(3); layers[key].style.zIndex = String(2 + k);
+      }
+      // blink: half, closed, half, each eased, about a fifth of a second in all
+      if (now > nextBlink) { blinkAt = now; nextBlink = now + 2400 + Math.random() * 3600; }
+      var b = blinkAt < 0 ? 1 : (now - blinkAt) / 210, closed = 0, halfO = 0;
+      if (b < 1) { var c = Math.sin(Math.PI * b); halfO = smooth(c / 0.55); closed = smooth((c - 0.5) / 0.4); } else blinkAt = -1;
+      halfLid.style.opacity = halfO.toFixed(2); blink.style.opacity = closed.toFixed(2);
       if (!reduce) {
-        var since = now - lineAt, lift = since < 600 ? Math.sin(Math.PI * since / 600) : 0;
-        var sway = Math.sin(now / 1900) * (talk ? 1.3 : 0.6) + Math.sin(now / 730) * (talk ? 0.5 : 0);
-        var nod = (talk ? Math.sin(now / 410) * 1.1 : Math.sin(now / 2100) * 0.6) - lift * 1.6;
-        inner.style.transform = 'translate(' + (sway * 0.5).toFixed(2) + 'px,' + nod.toFixed(2) + 'px) rotate(' + sway.toFixed(2) + 'deg) scale(1.04)';
+        talkLevel += ((talk ? 1 : 0) - talkLevel) * Math.min(1, dt / 400);
+        var since = now - lineAt, lift = since < 700 ? Math.sin(Math.PI * since / 700) : 0, sn = now - nodAt, nodHit = sn < 380 ? Math.sin(Math.PI * sn / 380) : 0;
+        var sway = Math.sin(now / 2300) * (0.6 + 0.9 * talkLevel) + Math.sin(now / 870 + 1) * 0.45 * talkLevel;
+        var nod = Math.sin(now / 2100) * 0.6 + nodHit * 1.5 * talkLevel - lift * 1.4;
+        inner.style.transform = 'translate(' + (sway * 0.6).toFixed(2) + 'px,' + nod.toFixed(2) + 'px) rotate(' + sway.toFixed(2) + 'deg) scale(' + (1.04 + nodHit * 0.006).toFixed(4) + ')';
       }
       raf(frame);
     }
@@ -243,7 +279,7 @@
   }
 
   window.esTeacher = {
-    TEACHERS: TEACHERS, svg: svg, card: card, shapesFor: shapesFor, shapeAt: shapeAt, keyAt: keyAt,
+    TEACHERS: TEACHERS, svg: svg, card: card, shapesFor: shapesFor, shapeAt: shapeAt, keyAt: keyAt, mixAt: mixAt,
     mount: function (holder, t, source) { return t.kind === 'film' ? mountFilm(holder, t, source) : mount(holder, t, source); }
   };
 })();

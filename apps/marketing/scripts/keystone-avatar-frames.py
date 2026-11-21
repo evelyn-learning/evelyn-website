@@ -1,6 +1,6 @@
 """
 Avatar samples: turns one illustrated teacher portrait and its edited variants
-(mouth shapes A E O U F C M, and a blink) into the layers the browser stacks.
+(mouth shapes A E O U F C M S L H, a blink and a half-blink) into the layers the browser stacks.
 
   python3 keystone-avatar-frames.py <portrait.png> <framesDir> <outDir> <crop x0,y0,size> <mouth cx,cy,rx,ry> <eyes cx,cy,rx,ry>
 
@@ -25,7 +25,7 @@ def mask(spec):
 
 base = Image.open(portrait).convert("RGB")
 base.crop(box).resize((SIZE, SIZE), Image.LANCZOS).save(f"{out}/base.jpg", quality=90)
-for key, spec in [(k, mouth) for k in "AEOUFCM"] + [("blink", eyes)]:
+for key, spec in [(k, mouth) for k in "AEOUFCMSLH"] + [("blink", eyes), ("half", eyes)]:
     im = Image.open(f"{frames}/{key}.png").convert("RGB")
     im.putalpha(mask(spec))
     im = im.crop(box).resize((SIZE, SIZE), Image.LANCZOS)

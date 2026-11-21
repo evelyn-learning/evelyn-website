@@ -26,8 +26,8 @@ let html = await readFile(src, "utf8");
 // ---------- mouth timeline from real pronunciation ----------
 // Each timed word is looked up in the CMU pronouncing dictionary; its sounds
 // become mouth frames spread over the word's start..end (vowels get more time,
-// and only a stressed open vowel opens the mouth wide). Quiet stretches of the
-// recording rest the mouth. Result per step: vis = [[ms, key], …], key R = rest.
+// only a stressed, loud open vowel opens the mouth fully, and shapes too short
+// for real lips are dropped). Long silences rest the mouth. Result per step: vis = [[ms, key], …], key R = rest.
 const dict = new Map();
 for (const line of (await readFile(dictFile, "utf8")).split("\n")) {
   const m = /^([^\s(]+)(?:\(\d+\))?\s+(.+?)(?:\s+#.*)?$/.exec(line);
@@ -47,58 +47,70 @@ function sounds(word) {
   return out;
 }
 function framesOf(ph) {
-  const stress = /\d$/.test(ph) ? +ph.slice(-1) : -1, p = ph.replace(/\d$/, "");
-  const weak = stress === 0;
+  const stress = /\\d$/.test(ph) ? +ph.slice(-1) : -1, p = ph.replace(/\\d$/, "");
+  const weak = stress === 0, strong = stress === 1;
   switch (p) {
-    case "AA": case "AE": case "AH": return [[weak ? "C" : stress === 1 ? "A" : "C", 2]];
-    case "AY": return weak ? [["C", 2]] : [["A", 1.4], ["E", 1]];
-    case "AW": return weak ? [["C", 2]] : [["A", 1.4], ["U", 1]];
+    case "AA": return [[weak ? "C" : strong ? "A" : "H", 2]];
+    case "AE": return [[weak ? "C" : strong ? "A" : "H", 2]];
+    case "AH": return [[weak ? "C" : "H", weak ? 1.2 : 1.8]];
+    case "AY": return weak ? [["H", 2]] : [["A", 1.4], ["E", 1]];
+    case "AW": return weak ? [["H", 2]] : [["A", 1.4], ["U", 1]];
     case "AO": return [["O", 2]];
     case "OW": return [["O", 1.5], ["U", 0.8]];
     case "OY": return [["O", 1.4], ["E", 1]];
     case "UW": case "UH": return [["U", 2]];
     case "W": return [["U", 1]];
-    case "IY": case "EY": return [[weak ? "C" : "E", 2]];
-    case "IH": case "EH": return [[weak ? "C" : "E", 1.7]];
+    case "IY": case "EY": return [[weak ? "S" : "E", 2]];
+    case "EH": return [[weak ? "C" : "H", 1.7]];
+    case "IH": return [[weak ? "C" : "E", 1.5]];
     case "ER": return [["C", 1.6]];
+    case "R": return [["C", 1]];
     case "F": case "V": return [["F", 1]];
     case "M": case "B": case "P": return [["M", 1]];
-    default: return [["C", 1]];
+    case "L": case "TH": case "DH": return [["L", 1]];
+    case "S": case "Z": case "T": case "D": case "N": case "SH": case "CH": case "JH": case "ZH": return [["S", 1]];
+    default: return [["C", 1]]; // K G HH NG Y
   }
 }
-function quietSpans(file) { // [[fromMs, toMs], …] where the recording is near silent
+function loudness(file) { // 20 ms loudness of the recording, 0..1 against its own loud level
   const pcm = execFileSync("ffmpeg", ["-v", "error", "-i", file, "-f", "s16le", "-ac", "1", "-ar", "8000", "-"], { maxBuffer: 1 << 28 });
   const win = 160, rms = [];
   for (let i = 0; i + win * 2 <= pcm.length; i += win * 2) { let a = 0; for (let j = 0; j < win; j++) { const v = pcm.readInt16LE(i + j * 2); a += v * v; } rms.push(Math.sqrt(a / win)); }
-  const peak = [...rms].sort((a, b) => a - b)[Math.floor(rms.length * 0.95)] || 1, spans = [];
-  let from = -1;
-  rms.forEach((v, i) => { const q = v < peak * 0.05; if (q && from < 0) from = i; if (!q && from >= 0) { if (i - from >= 11) spans.push([from * 20, i * 20]); from = -1; } });
-  return spans;
+  const peak = [...rms].sort((a, b) => a - b)[Math.floor(rms.length * 0.95)] || 1;
+  return rms.map((v) => Math.min(1, v / peak));
 }
-function timeline(words, quiet) {
-  const vis = [];
-  const put = (ms, k) => { const last = vis[vis.length - 1]; if (!last || last[1] !== k) vis.push([Math.round(ms), k]); };
+function timeline(words, loud) {
+  const at20 = (ms) => loud[Math.max(0, Math.min(loud.length - 1, Math.round(ms / 20)))] ?? 0;
+  let vis = [];
   words.forEach((w, i) => {
     const [text, a, b] = w, run = sounds(text).flatMap(framesOf), total = run.reduce((s, r) => s + r[1], 0) || 1, span = Math.max(80, b - a);
     let at = a;
-    for (const [k, wgt] of run) { put(at, k); at += (span * wgt) / total; }
+    for (const [k, wgt] of run) { vis.push([at, k, (span * wgt) / total]); at += (span * wgt) / total; }
     const next = words[i + 1];
-    if (!next || next[1] - b > 110) put(b + 40, "R");
+    if (!next || next[1] - b > 110) vis.push([b + 40, "R", next ? next[1] - b - 40 : 400]);
   });
-  // rest during quiet stretches, then pick the timeline back up
+  // How loud the voice is decides how far the mouth opens: a quiet open vowel is half open, a quiet half-open one is small.
+  vis = vis.map(([ms, k, d]) => { const l = Math.max(at20(ms + d * 0.3), at20(ms + d * 0.6)); return [ms, k === "A" && l < 0.5 ? "H" : k === "H" && l < 0.28 ? "C" : k, d]; });
+  // A long silence inside the words rests the mouth.
+  let from = -1; const quiet = [];
+  loud.forEach((v, i) => { const q = v < 0.05; if (q && from < 0) from = i; if (!q && from >= 0) { if (i - from >= 11) quiet.push([from * 20 + 20, i * 20]); from = -1; } });
+  vis = vis.filter(([ms]) => !quiet.some(([f, t]) => ms >= f && ms < t));
+  for (const [f] of quiet) vis.push([f, "R", 220]);
+  vis.sort((x, y) => x[0] - y[0]);
+  // Lips cannot change shape faster than about every 55 ms: a shorter shape is dropped, unless it is a lip closure (M, F), which is always seen.
   const out = [];
-  const keyAt = (ms) => { let k = "R"; for (const v of vis) { if (v[0] <= ms) k = v[1]; else break; } return k; };
-  let qi = 0;
-  for (const v of vis) {
-    while (qi < quiet.length && quiet[qi][1] <= v[0]) { out.push([quiet[qi][0] + 20, "R"], [quiet[qi][1], keyAt(quiet[qi][1])]); qi++; }
-    if (!quiet.some(([f, t]) => v[0] > f + 20 && v[0] < t)) out.push(v);
+  for (let i = 0; i < vis.length; i++) {
+    const [ms, k] = vis[i], len = (vis[i + 1]?.[0] ?? ms + 300) - ms, prev = out[out.length - 1];
+    if (prev && prev[1] === k) continue;
+    if (len < 55 && k !== "M" && k !== "F" && out.length) continue;
+    out.push([Math.round(ms), k]);
   }
-  return out.sort((x, y) => x[0] - y[0]).filter((v, i, arr) => i === 0 || arr[i - 1][1] !== v[1]);
+  return out;
 }
 let unknown = new Set();
 for (const v of Object.values(voices)) for (const st of v.steps) {
   for (const w of st.words) for (const part of String(w[0]).replace(/[^A-Za-z' ]/g, " ").split(/\s+/).filter(Boolean)) if (!dict.has(part.toLowerCase())) unknown.add(part);
-  st.vis = timeline(st.words, quietSpans(path.join(outDir, st.file)));
+  st.vis = timeline(st.words, loudness(path.join(outDir, st.file)));
 }
 console.log(`Words not in the dictionary (spelled out or guessed): ${[...unknown].join(", ") || "none"}`);
 
