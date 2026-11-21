@@ -49,6 +49,7 @@ export const V2_MAX_MODEL_CALLS = 5;
 /** After a look back at an earlier page, what a later reply writes goes on the page of the work in progress. Kill switch: TUTOR_V2_LOOK_RETURNS=off. */
 const V2_LOOK_RETURNS = process.env.TUTOR_V2_LOOK_RETURNS !== 'off';
 const V2_RECAP_PAGE = process.env.TUTOR_V2_RECAP_PAGE !== 'off';
+const V2_PART_PAGE = process.env.TUTOR_V2_PART_PAGE !== 'off';
 /** The heading of a note that is a recap: its first line, when that line is a recap's title and points follow it. */
 function recapHeading(text: unknown): string | null {
   if (typeof text !== 'string') return null;
@@ -433,6 +434,19 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         }
       }
     }
+    // A point outside the window is not on the graph: (2, 6) on axes that stop at 5 showed as a label at the top
+    // edge with no dot (Digital SAT, portal-b0efc3c2). The window grows to take in every point and segment end.
+    if (block.name === 'show_function_graph') {
+      const spots = [...(Array.isArray(args.points) ? args.points as Array<{ x?: unknown; y?: unknown }> : []), ...(Array.isArray(args.segments) ? (args.segments as Array<{ from?: { x?: unknown; y?: unknown }; to?: { x?: unknown; y?: unknown } }>).flatMap((sg) => [sg.from ?? {}, sg.to ?? {}]) : [])];
+      for (const [k, axis] of [['xRange', 'x'], ['yRange', 'y']] as const) {
+        const r = args[k];
+        if (!Array.isArray(r) || r.length !== 2 || !r.every((n) => typeof n === 'number' && Number.isFinite(n))) continue;
+        const vals = spots.map((sp) => sp[axis]).filter((n): n is number => typeof n === 'number' && Number.isFinite(n));
+        if (!vals.length) continue;
+        const lo = Math.min(...vals); const hi = Math.max(...vals);
+        args[k] = [lo <= (r[0] as number) ? Math.floor(lo) - 1 : r[0], hi >= (r[1] as number) ? Math.ceil(hi) + 1 : r[1]];
+      }
+    }
     // A note that says again what a note from this same reply says is its second draft, and takes its place:
     // "Walking around the loop" went up with the answers in it and again, under it, with question marks
     // (AP Physics, embed-1794493438983).
@@ -492,6 +506,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         // (Digital SAT, portal-a9b9b4d4). The note's heading becomes the page's.
         else if (block.name === 'annotate' && !turnedNow && !markBeforeTurn && V2_RECAP_PAGE && recapHeading(args.text) && state.board.current >= 0 && state.board.pages[state.board.current].items.length > 0 && !RECAP_TITLE.test(state.board.pages[state.board.current].title)) {
           turnedNow = true;
+          // What the check adds for the sentences before this turn belongs to the page before it: the last
+          // problem's working, r = 7, went up under the recap (ACT Math, portal-3d431436).
+          if (pageTurnAt < 0) { pageTurnAt = saidChars; pageBefore = state.board.current; pagesBefore = state.board.pages.length; }
           const heading = recapHeading(args.text)!;
           settle({ type: 'tool_use', id: `recap_${nowMs.toString(36)}_${toolCalls.length}`, name: 'new_page', input: { title: heading } } as Anthropic.ToolUseBlock, boardOnly, inline);
           args.text = String(args.text).replace(/^\s*[^\n]*\n+/, '');
@@ -610,7 +627,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   let heldAt: { raw: string; offer: string } | null = null; let saidNow = '';
   const lastTutorText = (() => { const m = [...state.history].reverse().find((h) => h.role === 'assistant' && (typeof h.content === 'string' || h.content.some((c) => c.type === 'text'))); return !m ? '' : typeof m.content === 'string' ? m.content : m.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '); })();
   const boardHasPage = (title: string) => state.board.pages.some((pg) => pg.title.replace(/\s+/g, '').toLowerCase() === title.replace(/\s+/g, '').toLowerCase());
-  let owedAsked = false;
+  let owedAsked = false; let partPaged = false;
   for (; modelCalls < V2_MAX_MODEL_CALLS;) {
     const params = {
       model: '',
@@ -622,11 +639,31 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       messages,
     } as unknown as Anthropic.MessageCreateParamsNonStreaming;
     const inline = new BoardInlineStream();
-    const take = (parts: InlinePart[]) => {
-      for (const part of parts) {
+    const take = (partsIn: InlinePart[]) => {
+      const parts = [...partsIn];
+      for (let k = 0; k < parts.length; k++) {
+        const part = parts[k];
         if (heldAt) continue;
         if ('opening' in part) { input.onBoardOpen?.(); continue; }
         if ('block' in part) {
+          // A problem of another part of the plan, set on a page that already holds one part's problem, is the next
+          // part beginning: it gets its page, as if the tutor had written the page block (and so the student is
+          // asked first, and a note written just before it goes with it). The exterior-angle rule and its problem
+          // went up at the foot of the circle formulas page (ACT Math, portal-87303e9f).
+          if (part.block.kind === 'problem' && session.plan && !discussion && V2_PART_PAGE && !partPaged && pageTurnAt < 0 && !turnedNow && state.board.current >= 0) {
+            const goal = goalForProblem(session.plan, part.block.body);
+            const page = state.board.pages[state.board.current];
+            const cards = state.problemCards ?? {};
+            if (goal && !cards[goal] && Object.entries(cards).some(([g, id]) => g !== goal && page.items.some((it) => it.id === id))) {
+              const lead = page.items.filter((it) => sinceWords.includes(it.id) && it.tool === 'annotate').map((it) => it.summary.split(/[:\n]/)[0].trim()).find((h) => h && h.split(/\s+/).length <= 6);
+              const slug = goal.split(/[-_]/).slice(1).join(' ');
+              const title = lead || (slug ? slug[0].toUpperCase() + slug.slice(1) : '');
+              const synth = title ? boardBlocksIn(`<board page>${title}</board>`)[0] : undefined;
+              partPaged = true;
+              // Its place in the reply is the problem's: a held page cuts the stored reply there.
+              if (synth) { parts.splice(k, 0, { block: { ...synth, raw: part.block.raw } }); k -= 1; continue; }
+            }
+          }
           // A new part the student has not been asked about is not opened in this reply (part-close.ts): the
           // reply ends here, with the offer in place of the page and all that followed it.
           if (part.block.kind === 'page' && !discussion && !boardHasPage(part.block.body) && !state.closed && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length })) {
@@ -814,10 +851,12 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const missing = [
       confirmedNoFigure ? 'You confirmed the student\'s answer and drew nothing: if what they found can be seen in a picture (an angle, an image, a point or a crossing on a graph, a length, a position), draw that figure now with the answer marked on it, as the third step.' : '',
       promised ? 'You spoke of a picture or pointed at something as shown ("here is…"), and this reply drew no figure: draw it now, as the third step.' : '',
-      cardNoFigure ? 'This reply put up a problem and no figure with it: if the problem describes something that can be drawn (a circuit, a shape, a set-up, a graph, a plot of data it describes in words), draw it now as the third step, with what the student is to find left out.' : '',
-      confirmedBare ? 'You confirmed the student\'s answer and wrote nothing for it: in the second step, write the one line of working that gives it, with with="the opening words of the sentence that confirms it".' : '',
+      cardNoFigure ? 'This reply put up a problem and no figure with it: if the problem describes something that can be drawn (a circuit, a shape, a set-up, a graph, a plot of data it describes in words), draw it now as the third step, with what the student is to find marked by a question mark where the figure can show it, and its value left out.' : '',
+      // "Write only what you said" kept the working off the board when the tutor had only said "yes, (1, −4)": the
+      // student's own steps, given aloud a moment before, were never written (ACT Math, portal-3d431436, twice).
+      confirmedBare ? 'You confirmed the student\'s answer and wrote nothing for it. This is the one case where the second step writes more than you said: put up the working that gives the answer, as an equation block, using the steps the student gave in their last message (with anything you corrected put right), with with="the opening words of the sentence that confirms it".' : '',
     ].filter(Boolean).join(' ');
-    const check = `[board check — from the system running the session, not from the student]\nYou have just said the reply above aloud. In it you put on the board: ${listed.length ? `\n${listed.join('\n')}` : 'nothing. A reply of this length that leaves the board untouched is a tutor talking at an empty board: unless it was only small talk or a question about what is already up, the heart of what you said belongs there, in the form that fits it.'}\n\nFirst, and rarely: does a numbered item state outright the answer to the very thing this reply asks the student to work out, so that reading the board answers your question for them? Only then, withdraw it by writing "withdraw N" on a line by itself, followed by that question as you asked it, in quotation marks; and if the reply points the student at that item ("the table below"), write it again in the second step with the part they are to find left as a question mark. Everything else stays: an item that sets the question out, leaves a blank or a question mark for them to fill, lists things for them to compare, shows working the student has already given, or shows what you yourself explained. When unsure, it stays.\n\nSecond: what is only heard is lost. If something you said aloud that the student needs to hold on to is not on the board (the working behind a result, a step the student gave, a correction, a hint; a name, a date, a term, the two sides of a question), write it now as board blocks, in whichever kind fits, each with with="the opening words of the sentence in which you say it", for example <board equation with="The derivative of the top">…</board>. Write only what you said: nothing new, nothing already there, and never an answer you left for the student to find.${unwritten.length ? ` These equations were said aloud and no board item holds them: ${unwritten.map((e) => `"${e}"`).join('; ')}. Each goes up now as an equation, unless it is there in another form or is the answer the student is to find.` : ''}${askedOnCard ? '' : ' A question you set that comes with its own numbers, data or expression, none of them on the board, is written as a problem block holding the question as you asked it; a question about what is already on the board needs none.'}\n\nThird, a picture. Name to yourself the one thing in this reply a student could look at rather than read: an equation that is a curve, a function, points on axes, an arrangement of things a problem or an explanation describes (a circuit, an apparatus, a shape, a set-up), a set of data values or counts, pushes and pulls on a thing, values on a number line, events in order, the stages of a process, two things set side by side. If there is one and no figure of that very thing is on the board (a figure of something else, an earlier circuit or an earlier graph, does not count), draw it now in the figure form that fits (${catalogueSubjects(session).includes('physics') ? 'graph, chart, forces' : 'graph, chart'}, numberline, timeline, steps, cycle, ranks, web, map, compare, table)${catalogue ? ', or as an exact figure from the catalogue below when one of them shows it better' : ''}, with with="…" as above. A formula written out is not a figure of its curve. A general case told in letters (a circle of radius r about a centre) is drawn with plain numbers standing in for the letters, so there is something to see. Draw the situation as you described it, with the numbers you gave, never the answer the student is to find. What has no shape gets no figure.${missing ? `\n\nIn this reply: ${missing}` : ''}\n\nAnswer in three lines or groups, in this order. First: "withdraw N" with the question it answers in quotation marks, or "1: none". Second: the missing blocks, or "2: none". Third: the figure block itself (saying it is drawn does not draw it), or "3: none" followed by a few words on why nothing here can be drawn.${catalogue ? `\n\nThe catalogue of exact figures for this lesson. One is written <board figure kind="its kind" with="…">its parameters as one JSON object</board>. Give the values the reply gave, as they were said; leave out whatever the student is to find.\n${catalogue}` : ''}`;
+    const check = `[board check — from the system running the session, not from the student]\nYou have just said the reply above aloud. In it you put on the board: ${listed.length ? `\n${listed.join('\n')}` : 'nothing. A reply of this length that leaves the board untouched is a tutor talking at an empty board: unless it was only small talk or a question about what is already up, the heart of what you said belongs there, in the form that fits it.'}\n\nFirst, and rarely: does a numbered item state outright the answer to the very thing this reply asks the student to work out, so that reading the board answers your question for them? Only then, withdraw it by writing "withdraw N" on a line by itself, followed by that question as you asked it, in quotation marks; and if the reply points the student at that item ("the table below"), write it again in the second step with the part they are to find left as a question mark. Everything else stays: an item that sets the question out, leaves a blank or a question mark for them to fill, lists things for them to compare, shows working the student has already given, or shows what you yourself explained. When unsure, it stays.\n\nSecond: what is only heard is lost. If something you said aloud that the student needs to hold on to is not on the board (the working behind a result, a step the student gave, a correction, a hint; a name, a date, a term, the two sides of a question), write it now as board blocks, in whichever kind fits, each with with="the opening words of the sentence in which you say it", for example <board equation with="The derivative of the top">…</board>. Write only what you said: nothing new, nothing already there, and never an answer you left for the student to find.${unwritten.length ? ` These equations were said aloud and no board item holds them: ${unwritten.map((e) => `"${e}"`).join('; ')}. Each goes up now as an equation, unless it is there in another form or is the answer the student is to find.` : ''}${askedOnCard ? '' : ' A question you set that comes with its own numbers, data or expression, none of them on the board, is written as a problem block holding the question as you asked it; a question about what is already on the board needs none.'}\n\nThird, a picture. Name to yourself the one thing in this reply a student could look at rather than read: an equation that is a curve, a function, points on axes, an arrangement of things a problem or an explanation describes (a circuit, an apparatus, a shape, a set-up), a set of data values or counts, pushes and pulls on a thing, values on a number line, events in order, the stages of a process, two things set side by side. If there is one and no figure of that very thing is on the board (a figure of something else, an earlier circuit or an earlier graph, does not count), draw it now in the figure form that fits (${catalogueSubjects(session).includes('physics') ? 'graph, chart, forces' : 'graph, chart'}, numberline, timeline, steps, cycle, ranks, web, map, compare, table)${catalogue ? ', or as an exact figure from the catalogue below when one of them shows it better' : ''}, with with="…" as above. A formula written out is not a figure of its curve. A general case told in letters (a circle of radius r about a centre) is drawn with plain numbers standing in for the letters, so there is something to see. Draw the situation as you described it, with the numbers you gave, never the answer the student is to find: where the figure has a place for it, mark what they are to find with a question mark (the angle asked for, the side asked for), so the figure shows which one is meant. What has no shape gets no figure.${missing ? `\n\nIn this reply: ${missing}` : ''}\n\nAnswer in three lines or groups, in this order. First: "withdraw N" with the question it answers in quotation marks, or "1: none". Second: the missing blocks, or "2: none". Third: the figure block itself (saying it is drawn does not draw it), or "3: none" followed by a few words on why nothing here can be drawn.${catalogue ? `\n\nThe catalogue of exact figures for this lesson. One is written <board figure kind="its kind" with="…">its parameters as one JSON object</board>. Give the values the reply gave, as they were said; leave out whatever the student is to find.\n${catalogue}` : ''}`;
     try {
       const response = await callModel({
         model: '', max_tokens: 1500, thinking: { type: 'adaptive' }, output_config: { effort: 'low' }, system, tools,

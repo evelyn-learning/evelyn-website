@@ -26,6 +26,12 @@ export const ROOM_CHECK_TIMEOUT_MS = 1500;
 /** Words of a stretch still being spoken before it is judged early, so a pause on a television lasts a second
  *  or two and not the length of the advert (the first pause on embed-1795049380206 ran 14.6 s). */
 export const ROOM_PARTIAL_WORDS = 5;
+/** Five words are thin grounds for talking over someone. In a room where no other voice has yet been found, a
+ *  stretch judged another voice at five words is judged again at this many before the tutor goes on: "So the
+ *  center here would" and "But my teacher told" were the student answering, were read as background, and the
+ *  tutor went on speaking over them four times in one lesson (ACT Math, portal-3d431436). */
+export const ROOM_PARTIAL_CONFIRM_WORDS = 10;
+export function partialIsConfirmed(text: string): boolean { return wordCount(text) >= ROOM_PARTIAL_CONFIRM_WORDS; }
 /** In a room known to be noisy the tutor is not paused until the words are judged, so they are judged sooner. */
 export const ROOM_PARTIAL_WORDS_NOISY = 3;
 
@@ -63,6 +69,18 @@ export function partialIsJudged(text: string, noisy: boolean): boolean {
  *  say why, and a right verdict with a reason after it was read as the student). */
 export function repliedBackground(raw: string): boolean {
   return /^\W*background\b/i.test(raw.trim());
+}
+
+/** How the check is asked of a given model. The older small models take a temperature; the newer ones reject it
+ *  and think by default, which spends the few tokens of a one-word verdict on thinking and returns no text. */
+export function roomModelParams(model: string): Record<string, unknown> {
+  if (/(?:haiku|sonnet|opus)-4/.test(model)) return { temperature: 0 };
+  if (/sonnet-5-5/.test(model)) return { thinking: { type: 'between_tools' }, output_config: { effort: 'low' } };
+  return { thinking: { type: 'disabled' }, output_config: { effort: 'low' } };
+}
+/** The words of a reply, wherever its text block sits. */
+export function roomReplyText(msg: { content: Array<{ type: string; text?: string }> }): string {
+  return msg.content.find((b) => b.type === 'text')?.text ?? '';
 }
 
 const WHO = `STUDENT: one person speaking to the tutor, about anything at all.

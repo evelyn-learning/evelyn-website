@@ -283,7 +283,7 @@ export function cellParams(p: Record<string, unknown>): Record<string, unknown> 
 }
 
 const ENGINE: Record<string, { type: string; draw: (r: Reader, uid: string) => Drawn; prep?: (p: Record<string, unknown>) => Record<string, unknown> }> = {
-  geometry_figure: { type: 'geometric_figure', draw: (r, uid) => renderGeometry(r, uid) },
+  geometry_figure: { type: 'geometric_figure', draw: (r, uid) => renderGeometry(r, uid), prep: geometryParams },
   cladogram: { type: 'phylogenetic_tree', draw: (r) => renderPhyloTree(r) },
   energy_levels: { type: 'energy_levels', draw: (r, uid) => renderEnergyLevels(r, uid) },
   spectrum: { type: 'spectrum', draw: (r) => renderSpectrum(r) },
@@ -297,6 +297,23 @@ const ENGINE: Record<string, { type: string; draw: (r: Reader, uid: string) => D
 const FIGURES: Record<string, (p: Record<string, unknown>) => DrawnFigure> = { refraction, apparent_depth: apparentDepth, particles, buoyancy, pipe_flow: pipeFlow, moon_orbit: moonOrbit };
 export const DRAWN_FIGURE_KINDS = [...Object.keys(FIGURES), ...Object.keys(ENGINE)];
 
+/** A circle as a tutor writes it. The centre is the engine's own point: listed among the points on the circle as
+ *  "O", it was drawn on the rim beside P with a second O at the centre, and a central angle came with no radii to
+ *  bound it, an arc floating at the centre of an empty circle (ACT Math, portal-87303e9f). The centre is taken out
+ *  of the points, and an angle at the centre brings its two radii, and the sector between them when one is asked for. */
+function geometryParams(p: Record<string, unknown>): Record<string, unknown> {
+  if (p.shape !== 'circle') return p;
+  const centre = typeof p.center === 'string' && p.center.trim() ? p.center.trim() : 'O';
+  const obj = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is Record<string, unknown> => !!x && typeof x === 'object') : []);
+  const angles = obj(p.angles).map((a) => (a.vertex === centre ? { ...a, vertex: 'center' } : a));
+  const points = obj(p.points).filter((q) => q.name !== centre);
+  const radii = obj(p.radii).filter((x) => x.to !== centre);
+  for (const a of angles) if (a.vertex === 'center') for (const end of [a.from, a.to]) if (typeof end === 'string' && !radii.some((x) => x.to === end)) radii.push({ to: end });
+  return { ...p, ...(p.points !== undefined ? { points } : {}), ...(angles.length ? { angles } : {}), ...(radii.length ? { radii } : {}) };
+}
+
+/** The longest label the figure engine takes on a side or an angle (practice-figure/spec.ts). */
+const LABEL_FITS = 18;
 export function drawFigure(kind: unknown, params: unknown): DrawnFigure {
   const k = String(kind ?? ''); const p = params && typeof params === 'object' && !Array.isArray(params) ? (params as Record<string, unknown>) : {};
   if (FIGURES[k]) return FIGURES[k](p);
@@ -305,7 +322,19 @@ export function drawFigure(kind: unknown, params: unknown): DrawnFigure {
   try {
     // The title stands over the card on the board, not inside the figure as well.
     const { title: _title, ...given } = p; void _title;
-    const rest = e.prep ? e.prep(given) : given;
+    const prepped = e.prep ? e.prep(given) : given;
+    // A label too long for its place is shortened, not a reason to draw nothing: asked what a hypotenuse is, the
+    // tutor drew the triangle with one side named "distance = 5 (hypotenuse)", seven characters over, and the
+    // student got words and no figure (ACT Math, portal-3d431436). A bracketed aside goes first, then whole words.
+    const fit = (label: unknown): unknown => {
+      if (typeof label !== 'string' || label.length <= LABEL_FITS) return label;
+      const plain = label.replace(/\s*\([^)]*\)\s*/g, ' ').trim();
+      if (plain && plain.length <= LABEL_FITS) return plain;
+      const words = (plain || label).split(/\s+/); let out = '';
+      for (const w of words) { if (`${out} ${w}`.trim().length > LABEL_FITS) break; out = `${out} ${w}`.trim(); }
+      return out || (plain || label).slice(0, LABEL_FITS);
+    };
+    const rest = Object.fromEntries(Object.entries(prepped).map(([key, v]) => [key, /Labels$/.test(key) && Array.isArray(v) ? v.map(fit) : v]));
     const uid = `v2${[...JSON.stringify(rest)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7).toString(36)}`;
     const d = e.draw(new Reader(e.type, rest), uid);
     return { svg: svgDocument(d.W ?? FIGURE_WIDTH, d.H, d.body) };

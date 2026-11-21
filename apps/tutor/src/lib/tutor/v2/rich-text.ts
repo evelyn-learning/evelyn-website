@@ -175,7 +175,10 @@ export function typesetMaths(text: string): string {
     const pre = seg.replace(/∫\s*from\s+(\S+)\s+to\s+(\S+)\s+of\s+/g, '∫_{$1}^{$2} ').replace(/(?<![A-Za-z$])([xy])-(axis|axes|values?|coordinates?|intercepts?)\b/g, '$$$1$$-$2')
       // A derivative named in a sentence, "the sign of f' on each side": the mark belongs to the letter. It was set
       // as an italic f with a plain apostrophe after it (AP Calculus BC, portal-8e2d86f3).
-      .replace(/(?<![A-Za-z$'’])([f-hF-Hy])(''?|′′?)(?![A-Za-z'’′(])/g, (_m, f: string, p: string) => `$${f}${"'".repeat(p.length)}$`);
+      .replace(/(?<![A-Za-z$'’])([f-hF-Hy])(''?|′′?)(?![A-Za-z'’′(])/g, (_m, f: string, p: string) => `$${f}${"'".repeat(p.length)}$`)
+      // A pair of letters in brackets, "an ordered pair (x, y)", is one piece of mathematics. Set letter by letter
+      // it could break across lines, and its closing bracket stood alone on the next line (ACT Math, portal-3d431436).
+      .replace(/(?<![A-Za-z$\\])\(\s*([A-Za-z])\s*,\s*([A-Za-z])\s*\)/g, '$$($1,\\ $2)$$');
     const toks = pre.split(/(\s+)/);
     // Chemistry is in this stretch: an arrow of reaction, or a formula with its counts.
     const chem = toks.some((t) => formula(strippedToken(t).core)?.counted) || (/→/.test(pre) && toks.some((t) => !!formula(strippedToken(t).core)));

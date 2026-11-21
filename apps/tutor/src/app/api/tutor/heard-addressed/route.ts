@@ -11,7 +11,7 @@
  */
 import { NextRequest } from 'next/server';
 import { getModelClient } from '@/lib/tutor/ai/model-registry';
-import { ROOM_CHECK_SYSTEM, ROOM_EXTRACT_SYSTEM, repliedBackground, roomCheckMessage, studentPart, studentWordsIn } from '@/lib/tutor/v2/room-voices';
+import { ROOM_CHECK_SYSTEM, ROOM_EXTRACT_SYSTEM, repliedBackground, roomCheckMessage, roomModelParams, roomReplyText, studentPart, studentWordsIn } from '@/lib/tutor/v2/room-voices';
 
 export const runtime = 'nodejs';
 
@@ -25,23 +25,24 @@ export async function POST(req: NextRequest) {
     const tutorSaid = typeof body.tutorSaid === 'string' ? body.tutorSaid : '';
     const earlier = Array.isArray(body.earlier) ? body.earlier.filter((x): x is string => typeof x === 'string').slice(-2) : [];
     const content = roomCheckMessage({ tutorSaid, heard, earlier });
+    const extra = roomModelParams(MODEL_ID) as Record<string, never>;
     if (body.extract === true) {
       // Both readings at once (room-voices.ts, studentPart): whose the stretch is, and which words are the student's.
       const [whole, picked] = await Promise.all([
-        anthropic.messages.create({ model: MODEL_ID, max_tokens: 8, temperature: 0, system: ROOM_CHECK_SYSTEM, messages: [{ role: 'user', content }] }),
-        anthropic.messages.create({ model: MODEL_ID, max_tokens: 300, temperature: 0, system: ROOM_EXTRACT_SYSTEM, messages: [{ role: 'user', content }] }),
+        anthropic.messages.create({ model: MODEL_ID, max_tokens: 16, ...extra, system: ROOM_CHECK_SYSTEM, messages: [{ role: 'user', content }] }),
+        anthropic.messages.create({ model: MODEL_ID, max_tokens: 300, ...extra, system: ROOM_EXTRACT_SYSTEM, messages: [{ role: 'user', content }] }),
       ]);
-      const text = (m: typeof whole) => (m.content[0]?.type === 'text' ? m.content[0].text : '');
+      const text = (m: typeof whole) => roomReplyText(m as never);
       return Response.json({ student: studentPart(repliedBackground(text(whole)), studentWordsIn(text(picked), heard), heard) });
     }
     const msg = await anthropic.messages.create({
       model: MODEL_ID,
-      max_tokens: 8,
-      temperature: 0,
+      max_tokens: 16,
+      ...extra,
       system: ROOM_CHECK_SYSTEM,
       messages: [{ role: 'user', content }],
     });
-    const raw = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
+    const raw = roomReplyText(msg as never);
     return Response.json({ background: repliedBackground(raw) });
   } catch {
     return Response.json({ background: false, ok: false }, { status: 502 });

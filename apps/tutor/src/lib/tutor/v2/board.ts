@@ -210,6 +210,10 @@ export function applyToModelBoard(board: V2Board, id: string, name: string, args
     // On the page in view, writing a thing again points at it: the board scrolls back to it.
     return { painted: false, detail: `already on the board (page ${p + 1})`, ...(p === board.current ? { pointAt: items[at].id } : {}) };
   }
+  // A problem set on a page the tutor turned back to makes that page the one being worked on: the look is over.
+  // Taken back to the one-variable page for one more problem, the student worked it there and the board jumped to
+  // the last page to write their working (Digital SAT, portal-b0efc3c2).
+  if (name === 'show_problem') delete board.look;
   board.pages[board.current].items.push({ id, tool: name, summary, core, ...(name === 'show_function_graph' ? { args: { functions: args.functions, inequalities: args.inequalities, points: args.points, segments: args.segments, xRange: args.xRange, yRange: args.yRange, title: args.title } } : {}) });
   return { painted: true, detail: `painted on page ${board.current + 1}` };
 }

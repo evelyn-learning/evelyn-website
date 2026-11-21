@@ -35,7 +35,7 @@ import { TUTOR_STT_ENGINE_INK2 } from '@/lib/tutor/orchestrator/flags';
 import { inkTurnEndTimeoutMs } from '@/lib/tutor/voice/ink-turn-end';
 import type { RealtimeHandle } from '@/lib/tutor/orchestrator/types';
 import type { WhiteboardCommand } from '@core/knowledge/types';
-import { ROOM_CHECK_TIMEOUT_MS, ROOM_HAND_TURN_MS, ROOM_LOOK_EVERY_MS, ROOM_LOOK_MIN_WORDS, ROOM_NOISY_AFTER, ROOM_VOICES_ON, afterWords, partialIsJudged, plainlyTheStudent, sameWords, waitsForCheck } from '@/lib/tutor/v2/room-voices';
+import { ROOM_CHECK_TIMEOUT_MS, ROOM_HAND_TURN_MS, ROOM_LOOK_EVERY_MS, ROOM_LOOK_MIN_WORDS, ROOM_NOISY_AFTER, ROOM_VOICES_ON, afterWords, partialIsConfirmed, partialIsJudged, plainlyTheStudent, sameWords, waitsForCheck } from '@/lib/tutor/v2/room-voices';
 import { type V2ComposerStatus, V2Composer, V2_HANDLE_STUBS } from './TutorClientV2';
 import { V2FlagBar, V2_FLAGS_ON, reviewNotesClaim, type V2FlagState } from './V2FlagBar';
 import { useV2Turns, type V2TurnsConfig } from './useV2Turns';
@@ -47,7 +47,7 @@ import { summariseBoardCall } from '@/lib/tutor/v2/board';
 import { V2_NO_ASK_RECHECK_S, V2_WAITED_RECHECK_S } from '@/lib/tutor/v2/facts';
 import { asksToWait } from '@/lib/tutor/v2/close-heard';
 import { useMicReacquire } from '../../hooks/useMicReacquire';
-import { outsideMathSpans, speakBonds, speakCoefficientLetters, speakDataRuns, speakFormulas, speakLessonNotation, speakLetterUnits, speakGroups, speakNumberPlurals, speakReEndings, speakSlashes } from '@/lib/tutor/voice/tts-pronunciation';
+import { outsideMathSpans, speakBonds, speakCoefficientLetters, speakCoefficientNames, speakDataRuns, speakFormulas, speakLessonNotation, speakLetterUnits, speakGroups, speakNumberPlurals, speakReEndings, speakSlashes } from '@/lib/tutor/voice/tts-pronunciation';
 import { cueStop, cueTick, cueTurnAccepted, initialThinkingCue } from '@/lib/tutor/voice/thinking-cue';
 import { useScreenAwake } from './useScreenAwake';
 import { playThinkingPulse, playTurnChime, primeThinkingCueAudio } from '@/lib/tutor/voice/thinking-cue-audio';
@@ -104,6 +104,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const spokenRef = useRef<string[]>([]);
   /** What had been fully played of a reply still streaming when the student came in (null: no cut this turn). */
   const cutHeardRef = useRef<string | null>(null);
+  /** Board items of the reply in hand that were dropped unseen (dropBoard); told to the record of a cut turn. */
+  const lostIdsRef = useRef<Set<string>>(new Set());
   const startedRef = useRef(false);
   const [started, setStarted] = useState(false);
   const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -194,6 +196,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     const state = turnsRef.current?.stateRef.current;
     if (!state) return;
     const ids = new Set(lost.map((x) => x.id).filter(Boolean));
+    for (const id of ids) lostIdsRef.current.add(id as string);
     for (const page of state.board.pages) page.items = page.items.filter((it) => !ids.has(it.id));
     // A page that was never turned to is not a page: left in the record, the tutor believed it was on it.
     for (const x of lost) { const m = /^new_page:\s*(.*)$/.exec(x.what ?? ''); const last = state.board.pages[state.board.pages.length - 1]; if (m && last && state.board.pages.length > 1 && !last.items.length && last.title.slice(0, 80) === m[1]) { state.board.pages.pop(); state.board.current = state.board.pages.length - 1; } }
@@ -204,7 +207,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   // last of them, whether the student is still to be told, and the early judgement of the stretch now being spoken.
   const roomHitsRef = useRef(0); const roomEarlierRef = useRef<string[]>([]);
   const roomNoticeOwedRef = useRef(false); const roomNoticeSentRef = useRef(false);
-  const partialVerdictRef = useRef<'none' | 'pending' | 'background' | 'student'>('none');
+  const partialVerdictRef = useRef<'none' | 'pending' | 'doubt' | 'background' | 'student'>('none');
   // A noisy room: the stretch being spoken is looked at every few seconds for words of the student's. `taken`:
   // how many of its words have been dealt with; `last`: what the previous look found; `gen`: which stretch.
   const rollRef = useRef({ taken: 0, last: '', lookedAt: 0, pending: false, gen: 0 });
@@ -252,6 +255,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     onSentence: (sentence, startsParagraph) => { if (startsParagraph || !turnSentencesRef.current.length) paraStartRef.current = turnSentencesRef.current.length; turnSentencesRef.current.push(sentence); placeBoard(); waitingRef.current = false; cueRef.current = cueStop(); spokenRef.current = [...spokenRef.current.slice(-7), sentence]; if (openingSpeechRef.current) openingSpeechRef.current.push(sentence); else realtimeRef.current?.speakText(sentence); },
     onCut: () => { void realtimeRef.current?.clearSpeechQueue(); dropBoard(); },
     heardSoFar: () => cutHeardRef.current,
+    notShown: () => lostIdsRef.current,
     // The student is told of the other voices once: the line rides on each turn until a reply carrying it has been spoken.
     roomVoices: () => { if (!roomNoticeOwedRef.current) return undefined; roomNoticeSentRef.current = true; return roomHitsRef.current; },
     onBoardWithdraw: (id) => {
@@ -334,7 +338,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       props.onTutorBusy?.(busy);
       turnBusyRef.current = busy;
       if (!busy && roomNoticeSentRef.current) { roomNoticeSentRef.current = false; if (turnSentencesRef.current.length > 0 && cutHeardRef.current === null) { roomNoticeOwedRef.current = false; p.current.onDebugEvent?.('v2_room_voices_told', `the student was told of other voices in the room (${roomHitsRef.current} left out so far)`); } }
-      if (busy) { cutHeardRef.current = null; releaseBoard(); paintedThisTurnRef.current = []; paintFnsRef.current.clear(); turnSentencesRef.current = []; startedCountRef.current = 0; segStartRef.current = 0; paraStartRef.current = 0; pageTurnAtRef.current = 0; lastBlockAtRef.current = -1; clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); showState('thinking'); }
+      if (busy) { cutHeardRef.current = null; lostIdsRef.current = new Set(); releaseBoard(); paintedThisTurnRef.current = []; paintFnsRef.current.clear(); turnSentencesRef.current = []; startedCountRef.current = 0; segStartRef.current = 0; paraStartRef.current = 0; pageTurnAtRef.current = 0; lastBlockAtRef.current = -1; clearSilence(); waitingRef.current = true; realtimeRef.current?.signalBrainThinking(true); showState('thinking'); }
       else { waitingRef.current = false; cueRef.current = cueStop(); realtimeRef.current?.signalBrainThinking(false); placeBoard(true); if (!realtimeRef.current?.isSpeechPending()) releaseBoard(); else releaseBoard(startedCountRef.current);
         // The tutor chose to say nothing and wait (keep_listening). If the student was in fact finished, it finds out soon.
         const silentReply = turnSentencesRef.current.length === 0 && !turnsRef.current?.isEnding();
@@ -434,10 +438,13 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     });
   }, [studentWords]);
   /** The stretch being spoken is judged once, early, so a pause for a television is a short one. */
-  const judgePartial = useCallback((text: string) => {
+  const judgePartial = useCallback((text: string, second = false) => {
     partialVerdictRef.current = 'pending';
     void saidToTutor(text).then((student) => {
       if (partialVerdictRef.current !== 'pending') return; // the stretch has ended since
+      // No other voice has been found in this room yet: a first reading of "another voice" is asked about again
+      // on more words before the tutor speaks over what may be its student (room-voices.ts).
+      if (!student && !second && roomHitsRef.current < ROOM_NOISY_AFTER) { partialVerdictRef.current = 'doubt'; p.current.onDebugEvent?.('v2_room_voice_doubt', `read as another voice on its first words; the tutor stays paused until more is heard: ${text.slice(0, 80)}`); return; }
       partialVerdictRef.current = student ? 'student' : 'background';
       if (flagRef.current.active) return;
       if (!student) { p.current.onDebugEvent?.('v2_room_voice', `not the student (still being said), the tutor goes on: ${text.slice(0, 80)}`); liftPause(); return; }
@@ -454,6 +461,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       // This stretch has been judged another voice in the room: the tutor goes on through the rest of it.
       if (partialVerdictRef.current === 'background') return;
       if (partialVerdictRef.current === 'none' && partialIsJudged(text, false)) judgePartial(text);
+      else if (partialVerdictRef.current === 'doubt' && partialIsConfirmed(text)) judgePartial(text, true);
     }
     const giveUp = () => setTimeout(() => { pauseTimerRef.current = null; if (!flagRef.current.active) realtimeRef.current?.resumeSpeech(); }, PAUSE_GIVE_UP_MS);
     // Words of the student's: a pause taken on the sound alone was right.
@@ -492,6 +500,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
         if (trimmed !== st) { turnsRef.current!.stateRef.current = trimmed; p.current.onDebugEvent?.('v2_unheard_trimmed', `${turnSentencesRef.current.length - heardCount} sentence(s) not fully heard; the record keeps ${heardCount}`); }
       }
     }
+    // Nothing queued or playing, and the reply still being written: what was heard is the sentences that played.
+    else if (turnsRef.current?.busy && cutHeardRef.current === null) cutHeardRef.current = turnSentencesRef.current.slice(0, startedCountRef.current).join(' ');
     dropBoard();
     realtimeRef.current?.resumeSpeech();
     silenceStepRef.current = 0;
@@ -527,6 +537,10 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       const words = found && !(speaking && isOwnVoice(found, spokenRef.current)) ? found : null;
       if (flagRef.current.active) { flagRef.current.words.push(words ?? rest); return; }
       if (words) {
+        // A stretch that was all the student's, in a room not yet known to be noisy, clears a single earlier reading
+        // of "another voice": that reading is wrong often enough on a short answer ("That is a 100 pi") that two
+        // of them, lessons apart, must not mark the room noisy for good (ACT Math, portal-87303e9f).
+        if (sameWords(words, rest) && roomHitsRef.current > 0 && roomHitsRef.current < ROOM_NOISY_AFTER) { roomHitsRef.current = 0; roomEarlierRef.current = []; }
         if (!sameWords(words, rest)) p.current.onDebugEvent?.('v2_room_student_words', `found among other voices: "${words.slice(0, 300)}" out of: ${rest.slice(0, 600)}`);
         takeFloor(words, opts); return;
       }
@@ -566,7 +580,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const onRelayTranscript = useCallback((transcript: string, opts?: { typed?: boolean }) => heard(transcript, opts), [heard]);
   const languagesKey = (props.tutorLanguages ?? []).join(',');
   const scienceSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => speakGroups(rewrite(outsideMathSpans(sentence, (w) => speakFormulas(speakBonds(speakSlashes(speakNumberPlurals(speakDataRuns(speakLessonNotation(speakLetterUnits(speakReEndings(w))))))))))), []);
-  const mathsSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => speakGroups(rewrite(outsideMathSpans(sentence, (w) => speakCoefficientLetters(speakSlashes(speakNumberPlurals(speakDataRuns(speakLessonNotation(speakReEndings(w))))))))), []);
+  const mathsSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => speakGroups(rewrite(outsideMathSpans(sentence, (w) => speakCoefficientLetters(speakSlashes(speakNumberPlurals(speakDataRuns(speakLessonNotation(speakReEndings(speakCoefficientNames(w)))))))))), []);
   const plainSpeech = useCallback((sentence: string, rewrite: (s: string) => string) => rewrite(speakSlashes(speakNumberPlurals(speakDataRuns(speakLessonNotation(speakReEndings(sentence)))))), []);
   const relayMode = useMemo(() => ({
     instructions: TRANSPORT_ONLY,

@@ -80,6 +80,8 @@ export interface V2TurnsConfig {
   onCut?: () => void;
   /** The voice client's record of what was actually played of the reply being cut short, or null if it has none. */
   heardSoFar?: () => string | null;
+  /** Ids of board items of the reply in hand that were dropped before the student saw them (the voice client). */
+  notShown?: () => Set<string>;
   /** Voice: how many times other voices in the room were left out, while the student is still to be told of it
    *  (room-voices.ts). Asked as each turn is sent. */
   roomVoices?: () => number | undefined;
@@ -174,6 +176,8 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
   const pendingOpenRef = useRef(false);
   const openedRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
+  /** The student's words from a turn that never reached them (see the cut branch of runTurn). */
+  const unansweredRef = useRef<string | null>(null);
   const endingRef = useRef(false);
   /** The tutor has closed the lesson and its closing words are still being said (voice). */
   const closingRef = useRef(false);
@@ -209,10 +213,14 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     }
     busyRef.current = true; setBusy(true); p.current.onTutorBusy?.(true);
     keptListeningRef.current = false;
+    // What the student said just before, when no word of its reply reached them, is part of what they are saying now.
+    const saidNow = studentSaid;
+    if (studentSaid && unansweredRef.current) studentSaid = `${unansweredRef.current} ${studentSaid}`;
+    if (studentSaid) unansweredRef.current = null;
     // A turn that starts inside the last minutes is told of the time by its facts: the timer need not say it again.
     { const box = p.current.sessionMaxMinutes; if (box && openedRef.current && box - (Date.now() - stateRef.current.startedAtMs) / 60000 <= closeDueMinutes(box)) timeCheckedRef.current = true; }
     const stamp = Date.now();
-    if (studentSaid) transcriptRef.current = [...transcriptRef.current, { id: `student-${stamp}`, timestamp: new Date(), role: 'student', text: studentSaid }];
+    if (saidNow) transcriptRef.current = [...transcriptRef.current, { id: `student-${stamp}`, timestamp: new Date(), role: 'student', text: saidNow }];
     const tutorId = `tutor-${stamp}`;
     publish();
     // The tutor's entry appears with its first words: the session save refuses an entry with no text.
@@ -358,7 +366,16 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         // What reached the student is what was played, when the voice client knows it: text that had
         // arrived but not been spoken was never heard.
         const reached = p.current.heardSoFar?.() ?? text;
-        stateRef.current = foldInterruptedTurn(stateRef.current, studentSaid ?? (stateRef.current.history.length === 0 ? '[The session has just started. The student has joined and is waiting for you to begin the lesson.]' : '[The student has not replied.]'), reached, settled);
+        // No word of the reply was heard and nothing was drawn: the turn never happened, and the record drops it.
+        // The student's words must not go with it. "Oh, at most means less than or equal to", then "right?" a
+        // second later over the reply: the first half was lost, and "right?" was read as the answer to an earlier
+        // "write the inequality" ("I didn't catch the inequality you wrote", Digital SAT, portal-b0efc3c2).
+        if (studentSaid && !reached.trim() && settled.length === 0 && pendingRef.current) { unansweredRef.current = studentSaid; p.current.onDebugEvent?.('v2_unanswered_carried', studentSaid.slice(0, 80)); }
+        // An item dropped before it was shown is not on the board, and the tutor is told so: recorded as painted, a
+        // problem the student never saw was "the one on the board" in the next reply (ACT Math, portal-87303e9f).
+        const hidden = p.current.notShown?.() ?? new Set<string>();
+        const asSeen = settled.map((c) => (hidden.has(c.id) ? { ...c, outcome: 'not painted: the student spoke before you reached it, so it never went up' } : c));
+        stateRef.current = foldInterruptedTurn(stateRef.current, studentSaid ?? (stateRef.current.history.length === 0 ? '[The session has just started. The student has joined and is waiting for you to begin the lesson.]' : '[The student has not replied.]'), reached, asSeen);
         p.current.onDebugEvent?.('v2_turn_cut', `${text.trim().split(/\s+/).filter(Boolean).length} words kept, ${settled.length} tool call(s)`);
         if (text.trim()) setTutor(text.trim(), false);
       } else {
