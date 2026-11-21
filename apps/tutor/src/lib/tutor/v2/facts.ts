@@ -24,7 +24,7 @@ import { TUTOR_V2_CARD_GLOSS_ASK, TUTOR_V2_CARD_GLOSS_REMIND } from '../orchestr
 import { v2CardsOwedFacts, v2LearnerSentenceFacts } from './learner-card';
 import { v2PracticeAskFacts, v2RetryFacts } from './languages';
 import { v2PracticeFactLines } from './practice-facts';
-import { V2_TIME_UP_MIN, v2CloseOpen, v2PlanContentDone, v2LeftToStopMin, v2LessonTimeLine, v2MarginMin, v2PartDueFact, v2TimeFlags, v2WrapDue, type V2TimeFlags } from './time-box';
+import { V2_TIME_UP_MIN, v2CloseOpen, v2PlanContentDone, v2LeftToStopMin, v2LessonTimeLine, v2MarginMin, v2PartDueFact, v2PartFlowLesson, v2TimeFlags, v2WrapDue, type V2TimeFlags } from './time-box';
 import { V2_MORE_PRACTICE_MIN_LEFT, v2LevelCheckTimeUp, v2MorePracticeFacts, v2OptionalFits, v2OptionalHeldLine, v2PartClock, v2PartTimeUpLine, v2PracticeFacts, v2StayInPartLine, v2TimeFitFacts } from './time-fit';
 import { TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART, TUTOR_V2_SUPPORT_FOLLOWED } from '../orchestrator/flags';
 import { v2CloseInviteFacts, v2CloseReopened, v2MoreAskAnswered } from './close-invite';
@@ -218,6 +218,9 @@ function v2OpenedFirstStep(session: V2Session, title: string, enabled: boolean =
   return i >= 0 ? v2PartOpeningQuestion(session.plan.segments[i]) : null;
 }
 
+/** Task 8h (ruling 4): the constitution's former "pick up here next time" line, for a part-flow lesson (time-box.ts v2PartFlowLesson). */
+export const V2_NO_PICK_UP_LINE = 'if they ask to pick up here next time, don\'t promise it: the next lesson does not open where this one stopped';
+
 export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts): string {
   const usedMin = Math.max(0, Math.round((f.nowMs - state.startedAtMs) / 60000));
   const discussion = !!discussionOf(session.plan);
@@ -390,6 +393,10 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   // Task 7x (PART_FIRST_STEP): the part opened on their yes begins with its own first step from the plan (its opening question).
   if (session.plan && !discussion && v2AskEveryOn(session, f.partAskEvery)) lines.push(...v2PartAskFacts(session.plan, state, f.partOpened, f.partOpened ? v2OpenedFirstStep(session, f.partOpened) : null));
   else if (session.plan && !discussion) lines.push(...v2QuestionCheckFact(state));
+  // Task 8h (final review I4, ruling 4): a part-flow lesson's own line, out of the shared constitution: v2 reads back no lesson
+  // progress (task-2 report, case 10), so a promise to pick up here would be false there, while other hosts save the session to be
+  // picked up from (portal/host-end.ts, the resume card) and their students are told nothing of it.
+  if (v2PartFlowLesson(session) && !state.closed) lines.push(V2_NO_PICK_UP_LINE);
   lines.push(`your note: ${state.note.trim() || '(empty — nothing written yet)'}`);
   const thinking = discussion ? renderThinking(state.thinking) : '';
   if (thinking) lines.push(thinking);

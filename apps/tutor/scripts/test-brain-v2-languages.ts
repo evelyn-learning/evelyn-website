@@ -11,7 +11,7 @@ import { join } from 'node:path';
 import type Anthropic from '@anthropic-ai/sdk';
 import { V2_CONSTITUTION } from '../src/lib/tutor/v2/constitution';
 import { v2LanguagesSection, v2RetryFacts, v2SpeechParts } from '../src/lib/tutor/v2/languages';
-import { renderFacts, v2LastOpener, v2OpenerFact, v2OpenerOf } from '../src/lib/tutor/v2/facts';
+import { V2_NO_PICK_UP_LINE, renderFacts, v2LastOpener, v2OpenerFact, v2OpenerOf } from '../src/lib/tutor/v2/facts';
 import { TUTOR_V2_OPENER_FACT, TUTOR_V2_PERSONA_CARD, TUTOR_V2_PRACTICE_VERDICT, TUTOR_V2_RETRY_COUNT } from '../src/lib/tutor/orchestrator/flags';
 import { v2StopAsked } from '../src/lib/tutor/v2/stop-signal';
 import { SentenceStream } from '../src/lib/tutor/v2/sentences';
@@ -132,7 +132,8 @@ async function main() {
   const es = v2LanguagesSection(['en', 'es']) ?? '';
   check('another support language is named, without the Japanese-only lines', /Spanish/.test(es) && !/です|romaji|Japanese/.test(es));
   check('the section names no partner', !/gdi|nagoya|josh|james/i.test(ja));
-  check('the constitution stays generic and says the next lesson does not open at this point', !/gdi|japanese/i.test(V2_CONSTITUTION) && /don't promise it/.test(V2_CONSTITUTION) && !/short review/.test(V2_CONSTITUTION)); // final review I2: no review promised to a tenant without lesson memory
+  // Task 8h (ruling 4): the "pick up here" line moved from the shared constitution to a part-flow lesson's facts (was: in V2_CONSTITUTION).
+  check('the constitution stays generic and says the next lesson does not open at this point', !/gdi|japanese/i.test(V2_CONSTITUTION) && !/don't promise it|pick up here/.test(V2_CONSTITUTION) && !/short review/.test(V2_CONSTITUTION) && /don't promise it: the next lesson does not open where this one stopped/.test(V2_NO_PICK_UP_LINE) && !/short review/.test(V2_NO_PICK_UP_LINE)); // final review I2: no review promised to a tenant without lesson memory
 
   console.log('Japanese sentences for speech');
   const feed = (pieces: string[]) => { const ss = new SentenceStream(); const got: string[] = []; for (const x of pieces) got.push(...ss.push(x)); return [got, ss.flush()] as const; };
