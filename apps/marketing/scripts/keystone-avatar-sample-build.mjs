@@ -130,6 +130,13 @@ const css = `
 .tv-face { flex: none; width: 92px; text-align: center; font-family: Arial, Helvetica, sans-serif; font-size: 8.5pt; color: #44506a; }
 .tv-face .tv-svg { width: 92px; height: 92px; display: block; }
 .tv-speak .es-live { flex: 1; min-width: 0; }
+@media (max-width: 700px) {
+  .tv-pick { padding: 10px; }
+  .tv-cards { gap: 6px; flex-wrap: nowrap; }
+  .ai-solution button.tv-card { width: auto; flex: 1 1 0; min-width: 0; padding: 6px 2px 5px; }
+  .tv-card .tv-svg { width: 100%; max-width: 64px; height: auto; aspect-ratio: 1 / 1; }
+  .tv-card b { font-size: 8.5pt; }
+}
 .tv-photo { border-radius: 50%; object-fit: cover; }
 .tv-face.tv-big { width: 124px; }
 .tv-film { width: 124px; height: 124px; border-radius: 50%; overflow: hidden; box-shadow: 0 2px 10px rgba(20,33,58,.18); background: #dfe6ee; }
@@ -198,6 +205,14 @@ const post = `
   live.parentNode.insertBefore(row, live); face.appendChild(holder);
   var label = document.createElement('div'); label.textContent = S.teacher.name; face.appendChild(label);
   row.appendChild(face); row.appendChild(live);
+  // The board and the teacher sit below the picker (on a phone, a full screen below), so a tap on Play could leave the
+  // student listening to a screen where nothing moves. Bring them to the top of the screen when playback is started.
+  root.addEventListener('click', function (e) {
+    var b = e.target && e.target.closest ? e.target.closest('#es-play, .es-listen') : null;
+    if (!b) return;
+    var player = root.querySelector('.es-main') || root.querySelector('.es-player');
+    setTimeout(function () { try { player.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (err) { player.scrollIntoView(); } }, 60);
+  });
   T.mount(holder, S.teacher, function () {
     var a = S.audio; if (!a || a._step == null || a._step < 0) return null;
     var st = S.voice.steps[a._step]; if (!st) return null;

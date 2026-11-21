@@ -360,8 +360,20 @@
     var html = '<div class="tv-film tv-film-big"><div class="tv-film-in"><img src="' + t.dir + '/base.jpg" alt="' + t.name + '">', i;
     for (i = 0; i < t.clips.length; i++) html += '<video muted playsinline preload="auto" data-step="' + t.clips[i] + '" src="' + t.dir + '/step-' + (t.clips[i] + 1) + '.mp4" style="opacity:0"></video>';
     holder.innerHTML = html + '</div></div>';
-    var vids = {}, cur = -1, started = false, lastSeek = 0, stopped = false, z = 2;
+    var vids = {}, cur = -1, started = false, lastSeek = 0, stopped = false, z = 2, unlocked = false;
     Array.prototype.forEach.call(holder.querySelectorAll('video'), function (v) { vids[+v.getAttribute('data-step')] = v; });
+    // Phones do not load a video until it is played, and some (an iPhone in Low Power Mode) only let a video start
+    // from a tap. So the first tap on any button starts every clip for an instant: after that each one is loaded and
+    // free to play when its step comes.
+    function unlock(e) {
+      if (unlocked || !e.target || !e.target.closest || !e.target.closest('button')) return;
+      unlocked = true;
+      for (var k in vids) (function (v, step) {
+        var p; try { p = v.play(); } catch (err) { return; }
+        if (p && p.then) p.then(function () { setTimeout(function () { if (step !== cur) v.pause(); }, 700); })['catch'](function () {}); // by then the step in play is known
+      })(vids[k], +k);
+    }
+    document.addEventListener('click', unlock, true);
     var raf = window.requestAnimationFrame || function (f) { return setTimeout(f, 33); };
     function frame() {
       if (stopped) return;
@@ -379,6 +391,7 @@
         if (!started) {
           // Wait until the sound is really running. From the top of a step the clip simply plays from its first frame
           // (no jump at all); from the middle (Listen, resume) it is placed once, a little ahead to cover the time a jump takes.
+          if (v.readyState < 2 && v.paused) { var p0 = v.play(); if (p0 && p0['catch']) p0['catch'](function () {}); } // a phone loads it only once asked to play
           if (v.readyState >= 2 && want > 0.02) {
             if (want > 0.3 || v.currentTime > 0.05) { try { v.currentTime = want + (want > 0.3 ? 0.12 : 0); } catch (e) { /* placed by the drift rule below */ } lastSeek = now; }
             v.playbackRate = 1; started = true;
