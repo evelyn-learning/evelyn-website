@@ -18,7 +18,7 @@
  * language, and a lesson without one has nothing to gloss in. Under the TUTOR_V2_SENTENCE_CARDS kill switch. A session
  * without it gets a byte-identical session part and facts. Pure, client-safe.
  */
-import { TUTOR_V2_CORRECTION_STEMS, TUTOR_V2_NUMBER_NOT_CORRECTION, TUTOR_V2_SENTENCE_CARDS, TUTOR_V2_SUMMARY_GROUPS } from '../orchestrator/flags';
+import { TUTOR_V2_CORRECTED_CARD_WHOLE, TUTOR_V2_CORRECTION_STEMS, TUTOR_V2_NUMBER_NOT_CORRECTION, TUTOR_V2_SENTENCE_CARDS, TUTOR_V2_SUMMARY_GROUPS } from '../orchestrator/flags';
 import { v2SameWord } from './question-overlap';
 import { languageNameOf } from '../voice/language-request';
 import { discussionOf } from './discussion';
@@ -40,7 +40,8 @@ export function v2SentenceCardsOn(session: V2Session, enabled: boolean = TUTOR_V
 /** The session part's section (sentence-card sessions only). Stable for the whole session. */
 /** `grouped`: Task 7u (SUMMARY_GROUPS): the summary page is laid out in labelled groups (summary-layout.ts); its line says so in place
  *  of "up to 4 of their corrected sentences". */
-export function v2SentenceCardsSection(languages: readonly string[], grouped: boolean = false): string {
+/** Task 8l (CORRECTED_CARD_WHOLE): `corrected`: the line that a correcting card holds the whole sentence right. */
+export function v2SentenceCardsSection(languages: readonly string[], grouped: boolean = false, corrected: boolean = TUTOR_V2_CORRECTED_CARD_WHOLE): string {
   const T = languageNameOf(languages[0]!);
   const S = languageNameOf(languages[1]!.toLowerCase().split(/[-_]/)[0]!);
   return [
@@ -49,6 +50,10 @@ export function v2SentenceCardsSection(languages: readonly string[], grouped: bo
     `A ${T} sentence you model or correct goes on the board as a sentence card, written in the reply where you say it: <board sentence stress="word | word" gloss="a short note in ${S}">The whole sentence.</board>`,
     // The card's stressed words are drawn bold (v1 SentenceCard); a gloss in the target language helps nobody who needs one.
     `stress (optional): the words you changed, or the ones to stress when saying it. gloss (optional): a few words in ${S} on what it means or what changed, with no double quote inside it. One sentence per card; a card for what they should say, never for their mistake.`,
+    // Task 8l (CORRECTED_CARD_WHOLE, mic test 14, embed-1795467413823 T36): told to correct one error at a time, the model carded
+    // "…negotiate with customers and give best price." as the corrected sentence (the error it named fixed, the other left in), then
+    // rewrote it two turns later for "the". The card is what they should say: every error is fixed on it, whatever is named aloud.
+    ...(corrected ? [`A card that corrects their sentence holds the whole sentence right: even when you name only one error aloud, fix every error in it on the card, with stress on each word you changed.`] : []),
     // v1 boarded up to four of the learner's sentences in its summary (typedLearnerSentencesRef); v2 has no client summary.
     // Each listed sentence is already a card on the page it was corrected on, and the board does not write a thing twice
     // on one page (board.ts): written there, the summary's cards only scrolled back to the old ones. On a new page they are

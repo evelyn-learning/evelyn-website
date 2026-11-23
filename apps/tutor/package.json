@@ -284,6 +284,7 @@
     "test:brain-v2-mic12-8i": "npx tsx scripts/test-brain-v2-mic12-8i.ts",
     "test:brain-v2-mic13-8j": "npx tsx scripts/test-brain-v2-mic13-8j.ts",
     "test:brain-v2-mic13-8k": "npx tsx scripts/test-brain-v2-mic13-8k.ts",
+    "test:brain-v2-mic14-8l": "npx tsx scripts/test-brain-v2-mic14-8l.ts",
     "test:brain-v2-tenants-8h": "npx tsx scripts/test-brain-v2-tenants-8h.ts",
     "test:brain-v2-mic6-7v": "NEXT_PUBLIC_TUTOR_V2_RETEST_ASKED=off npx tsx scripts/test-brain-v2-mic6-7v.ts",
     "test:brain-v2-time-box": "NEXT_PUBLIC_TUTOR_V2_SUMMARY_HAND_OVER=off NEXT_PUBLIC_TUTOR_V2_TIME_NO_SQUEEZE=off NEXT_PUBLIC_TUTOR_V2_PART_MIN_PRACTICE=off NEXT_PUBLIC_TUTOR_V2_CLOSE_BY_CONTENT=off NEXT_PUBLIC_TUTOR_V2_TIME_OVERRUN=off npx tsx scripts/test-brain-v2-time-box.ts",

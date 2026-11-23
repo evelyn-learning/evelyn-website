@@ -20,7 +20,8 @@ import { v2SummaryHeadingGroup } from './summary-layout';
 import { v2ChangedWords } from './adaptive';
 import { v2NoteTargetsOn } from './note-targets';
 import { V2_CLOSING_PAGE } from './part-close';
-import { v2PlanLabelled } from './part-flow';
+import { v2PartOfPage, v2PlanLabelled } from './part-flow';
+import { v2PartOf } from './plan-map';
 import { v2CorrectionStems, v2CorrectionWords, v2IsCorrectionOf, v2SentenceCardsOn, v2SentenceTokens } from './sentence-cards';
 import type { V2Correction, V2Session, V2State, V2ToolCall } from './types';
 
@@ -151,4 +152,36 @@ export function v2ReadCorrectedOlder(raw: unknown): string[] | undefined {
   if (!Array.isArray(raw)) return undefined;
   const out = raw.filter((x): x is string => typeof x === 'string' && !!x.trim()).slice(-V2_MAX_CORRECTED_OLDER).map((x) => x.trim().slice(0, OLDER_CHARS));
   return out.length ? out : undefined;
+}
+
+/** Task 8l (WELL_WITH_CARD): the most sentences said right the summary facts list. */
+export const V2_SAID_RIGHT_LISTED = 6;
+/** Task 8l (WELL_WITH_CARD; mic test 14, embed-1795467413823 flag 3): the sentences they said right in this lesson, by state, for the
+ *  "What went well" group: a sentence card on a lesson page (not the Summary page, not a pronunciation part's page, at least three words)
+ *  that holds one of their own sentences as they said it (words compared as 7u does: numbers as words, fillers out) and is none of their
+ *  corrections (the 7w record, the older keys, the 4c list). A sentence said right only after its correction is a correction (7w / 8c:
+ *  it goes under "To improve"). Live, the only one was "I enjoyed the exhibition very, very, very much." (T53); the model put two
+ *  corrected-then-repeated sentences under "What went well" instead, which the runtime placed under "To improve". The most recent last. */
+export function v2SaidRightSentences(session: V2Session, state: V2State, heard?: string | null): string[] {
+  const own = (m: V2State['history'][number]) => m.role === 'user' ? (typeof m.content === 'string' ? m.content : m.content.map((b) => (b.type === 'text' ? b.text : '')).join(' ')) : '';
+  const said = new Set<string>();
+  for (const t of [...state.history.map(own), heard ?? '']) {
+    if (!t.trim() || t.trim().startsWith('[')) continue;
+    for (const p of [t, ...t.split(/(?<=[.!?。！？])\s+/)]) { const k = key(p); if (k) said.add(k); }
+  }
+  const corrected = new Set((state.correctedSentences ?? []).map(key));
+  const out: string[] = [];
+  state.board.pages.forEach((page) => {
+    if (V2_CLOSING_PAGE.test(page.title)) return;
+    const part = session.plan ? v2PartOfPage(session.plan, page.title) : -1;
+    if (part >= 0 && session.plan && v2PartOf(session.plan.segments[part]!).pronunciation) return;
+    for (const it of page.items) {
+      if (it.tool !== 'show_sentence') continue;
+      const k = key(it.summary);
+      if (k.split(' ').length < 3 || !said.has(k) || corrected.has(k) || v2CorrectionFor(state, it.summary) || v2OlderCorrection(state, it.summary)) continue;
+      const kept = out.filter((x) => key(x) !== k);
+      out.length = 0; out.push(...kept, clean(it.summary));
+    }
+  });
+  return out.slice(-V2_SAID_RIGHT_LISTED);
 }

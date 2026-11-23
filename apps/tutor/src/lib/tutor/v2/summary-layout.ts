@@ -34,10 +34,20 @@ const base = (code: string) => code.toLowerCase().split(/[-_]/)[0]!;
 export const V2_SUMMARY_SPOKEN_LINE = 'Say the summary aloud as you write it: for each group (the grammar points, what went well, what to improve) one or two sentences of your own, said just before its cards; never a summary page with nothing said for it';
 
 /** The facts line for the summary page (`heard`: their words this turn, for the gloss level). `spoken`: SUMMARY_SPOKEN (Task 7w). */
-export function v2SummaryLayoutLine(session: V2Session, state: V2State, heard: string | null | undefined, spoken: boolean = TUTOR_V2_SUMMARY_SPOKEN): string {
+/** Task 8l (WELL_WITH_CARD): `well`: the sentences they said right on record (summary-marks.ts v2SaidRightSentences): the went-well cards
+ *  come from them, and with none the group is left out (no heading, nothing said of it) and the summary speaks kindly of what to improve
+ *  and of their effort. Undefined: as before. */
+export const V2_SUMMARY_NO_WELL = 'nothing they said right is on record apart from their corrections, so leave this group out: no "What went well" heading and no cards for it, and do not say that something went well with no card for it; instead say kindly what to improve, and say something encouraging about their effort in this lesson';
+export function v2SummaryLayoutLine(session: V2Session, state: V2State, heard: string | null | undefined, spoken: boolean = TUTOR_V2_SUMMARY_SPOKEN, well?: readonly string[]): string {
   const T = languageNameOf(base(session.languages?.[0] ?? 'en'));
   const gloss = v2CardGlossOn(session) && v2GlossLevelOn(session, state, heard) ? ` with gloss="…" in ${languageNameOf(base(session.languages![1]!))} as your rule notes carry` : '';
-  return `summary page: lay the Summary page out in this order, and say it in the same order, each card right after the words that say it and none after your last question: (1) the rule notes, one short line per grammar point of the lesson; (2) a heading note in ${T}, <board note style="heading"${gloss ? ' gloss="…"' : ''}>What went well</board>${gloss}, then 1–2 sentences they said right in this lesson, as sentence cards; (3) a heading note <board note style="heading"${gloss ? ' gloss="…"' : ''}>To improve</board>, then 1–2 of their corrections, each as ONE sentence card of the right sentence with the changed words in stress, never a card holding their mistake (no "…, not …"). At most ${V2_SUMMARY_SENTENCE_CARDS} sentence cards on the page in all${spoken ? `. ${V2_SUMMARY_SPOKEN_LINE}` : ''}`;
+  const two = well === undefined
+    ? `a heading note in ${T}, <board note style="heading"${gloss ? ' gloss="…"' : ''}>What went well</board>${gloss}, then 1–2 sentences they said right in this lesson, as sentence cards`
+    : well.length
+    ? `a heading note in ${T}, <board note style="heading"${gloss ? ' gloss="…"' : ''}>What went well</board>${gloss}, then 1–2 of the sentences they said right in this lesson, as sentence cards, chosen from these only (none of them a correction): ${well.map((x) => JSON.stringify(x)).join('; ')}`
+    : V2_SUMMARY_NO_WELL;
+  const spokenLine = well !== undefined && !well.length ? V2_SUMMARY_SPOKEN_LINE.replace('(the grammar points, what went well, what to improve)', '(the grammar points, what to improve)') : V2_SUMMARY_SPOKEN_LINE;
+  return `summary page: lay the Summary page out in this order, and say it in the same order, each card right after the words that say it and none after your last question: (1) the rule notes, one short line per grammar point of the lesson; (2) ${two}; (3) a heading note <board note style="heading"${gloss ? ' gloss="…"' : ''}>To improve</board>, then 1–2 of their corrections, each as ONE sentence card of the right sentence with the changed words in stress, never a card holding their mistake (no "…, not …"). At most ${V2_SUMMARY_SENTENCE_CARDS} sentence cards on the page in all${spoken ? `. ${spokenLine}` : ''}`;
 }
 
 /** The runtime's cap: a sentence card on the summary page in view that already holds V2_SUMMARY_SENTENCE_CARDS of them is not painted. */

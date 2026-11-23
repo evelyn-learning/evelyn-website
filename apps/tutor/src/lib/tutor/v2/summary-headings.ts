@@ -16,7 +16,7 @@
  * Rule notes written before the cards stay above the groups (the headings go before their first card, never at the top). No model text
  * is cut; a card is placed, never dropped. Every other lesson and page: nothing. Pure, client-safe.
  */
-import { TUTOR_V2_CORRECTIONS_ALL_GUARDED, TUTOR_V2_SUMMARY_HEADINGS } from '../orchestrator/flags';
+import { TUTOR_V2_CORRECTIONS_ALL_GUARDED, TUTOR_V2_SUMMARY_HEADINGS, TUTOR_V2_WELL_WITH_CARD } from '../orchestrator/flags';
 import { V2_CLOSING_PAGE } from './part-close';
 import { v2CorrectionStems, v2IsCorrectionOf } from './sentence-cards';
 import { v2CorrectionFor, v2OlderCorrection } from './summary-marks';
@@ -84,4 +84,17 @@ export function v2SummaryHeadingRepeat(session: V2Session, state: V2State, name:
   const g = page ? groupOf(args.text) : null;
   if (!page || !g || !headingsOn(page, calls)[g]) return null;
   return `not painted: the "${g === 'well' ? V2_SUMMARY_WELL_HEADING : V2_SUMMARY_IMPROVE_HEADING}" heading is on the summary page already; its cards go under it`;
+}
+
+/** Task 8l (WELL_WITH_CARD): what a held "What went well" heading's call is told. It starts "not painted" so nothing shows it yet. */
+export const V2_SUMMARY_WELL_HELD = 'not painted yet: the "What went well" heading goes up with its first card under it; with no card under it, it is not shown';
+/** Task 8l (WELL_WITH_CARD; mic test 14, embed-1795467413823 flag 3): a "What went well" heading the model writes on the Summary page of a
+ *  grouped lesson, when the page has none, is held, not painted: the runtime writes it (the model's own words and line) right before the
+ *  first card placed in that group (v2SummaryHeadingPlan's `write`), and never when no card goes there. Live, the model wrote the heading,
+ *  then two of their corrections the runtime rightly placed under "To improve", and "What went well" stood over nothing. By state (the
+ *  card's group), never by phrase. Only where the runtime places the cards (SUMMARY_HEADINGS). */
+export function v2SummaryWellHeld(session: V2Session, state: V2State, name: string, args: Record<string, unknown>, calls: readonly V2ToolCall[], enabled: boolean = TUTOR_V2_WELL_WITH_CARD, headings: boolean = TUTOR_V2_SUMMARY_HEADINGS): boolean {
+  if (!enabled || name !== 'annotate' || typeof args.text !== 'string') return false;
+  const page = summaryPage(session, state, headings);
+  return !!page && groupOf(args.text) === 'well' && !headingsOn(page, calls).well;
 }

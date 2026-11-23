@@ -95,7 +95,7 @@ import CellDiagramRenderer from './CellDiagramRenderer';
 import DnaRenderer from './DnaRenderer';
 import FoodWebRenderer from './FoodWebRenderer';
 import { InlineMathText } from './InlineMathText';
-import { typesetMaths } from '@/lib/tutor/v2/rich-text';
+import { typesetMaths, v2NoteLinesAreItems } from '@/lib/tutor/v2/rich-text';
 import { RichBoardText } from './RichBoardText';
 import { NoteTargetText } from './NoteTargetText';
 import { CardGloss, cardGlossOf } from './CardGloss';
@@ -109,7 +109,7 @@ import { strokeOutline, tickSpine, highlightBand } from '@/lib/tutor/whiteboard/
 import { InkNotesOverlay, AMBER } from './InkNotesOverlay';
 import { inkNotesEnabled, linksEnabled } from '../../hooks/toolDefinitions';
 import { shouldFollowNewRender, trailingNavSuppressesFollow, pageTargetedCardHoldsView, isPageTargetedSentence } from '@/lib/tutor/whiteboard/view-follow';
-import { INK_NOTE_DRAG, TUTOR_V2_QUESTION_NOT_NOTE, TUTOR_V2_SUMMARY_GROUPS } from '@/lib/tutor/orchestrator/flags';
+import { INK_NOTE_DRAG, TUTOR_V2_NOTE_ITEM_LINES, TUTOR_V2_QUESTION_NOT_NOTE, TUTOR_V2_SUMMARY_GROUPS } from '@/lib/tutor/orchestrator/flags';
 import { stripLatexForTitle } from '@/lib/tutor/whiteboard/board-title';
 
 /** Actions that don't paint a teaching render — shared by the scrollTo
@@ -3136,7 +3136,9 @@ function CommandRendererInner({ command }: CommandRendererProps) {
               instead of being clipped by the pane's overflow-x-hidden. */}
           {/* One paragraph per line of the note: a list of conditions or steps written with newlines ran together as one line. */}
           {/* rich (tutor brain v2): a heading, labelled points and program code are set out as such (RichBoardText). */}
-          {(command as { rich?: boolean }).rich ? <RichBoardText text={String(command.text ?? '')} titled {...(marked ? { quoted: noteMarks.quoted, stress: noteMarks.stress } : {})} /> : String(command.text ?? '').split(/\n+/).filter((line) => line.trim()).map((line, i) => (
+          {/* Task 8l (NOTE_ITEM_LINES, mic test 14 flag 1): a language lesson's note whose lines are a list of equal items (v2NoteLinesAreItems) has no
+              heading line; every other note as before. */}
+          {(command as { rich?: boolean }).rich ? <RichBoardText text={String(command.text ?? '')} titled={!(TUTOR_V2_NOTE_ITEM_LINES && ((command as { targets?: boolean }).targets === true || !!cardGlossOf(command)) && v2NoteLinesAreItems(String(command.text ?? '')))} {...(marked ? { quoted: noteMarks.quoted, stress: noteMarks.stress } : {})} /> : String(command.text ?? '').split(/\n+/).filter((line) => line.trim()).map((line, i) => (
             <HScrollFade key={i} as="p" className={`text-lg overflow-x-auto${i ? ' mt-1.5' : ''}`}>{marked ? <NoteTargetText text={line} quoted={noteMarks.quoted} stress={noteMarks.stress} /> : <InlineMathText text={line} />}</HScrollFade>
           ))}
           {/* Task 7p: a beginner's line in their language under a rule note (CardGloss); a note without one renders as before. */}

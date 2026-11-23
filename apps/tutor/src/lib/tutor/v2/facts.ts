@@ -30,7 +30,7 @@ import { V2_MORE_PRACTICE_MIN_LEFT, v2LevelCheckTimeUp, v2MorePracticeFacts, v2O
 import { TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_PRACTICE_ON_PART_PAGE, TUTOR_V2_STAY_IN_PART, TUTOR_V2_SUPPORT_FOLLOWED } from '../orchestrator/flags';
 import { v2CloseInviteFacts, v2CloseReopened, v2MoreAskAnswered } from './close-invite';
 import { v2CloseCheckFacts, v2CloseCheckSummaryLine } from './close-check';
-import { v2SummaryCorrectionsLine } from './summary-marks';
+import { v2SaidRightSentences, v2SummaryCorrectionsLine, v2SummaryMarksOn } from './summary-marks';
 import { v2SummaryGroupsOn, v2SummaryLayoutLine } from './summary-layout';
 import { TUTOR_V2_ASK_ONE_TEST, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_SILENCE_AFTER_ASK } from '../orchestrator/flags';
 import { v2AsksTheLearner } from './one-question';
@@ -38,7 +38,7 @@ import { SentenceStream } from './sentences';
 import { v2OptionalHoldLine, v2OptionalOneMoreLine, v2PartOpeningQuestion, type V2OptionalHold } from './optional-hold';
 import { V2_STARTER_LINE } from './practice-facts';
 import { v2AdaptOn } from './adaptive';
-import { TUTOR_V2_LEVEL_CHECK_PUT, TUTOR_V2_PART_FIRST_STEP } from '../orchestrator/flags';
+import { TUTOR_V2_LEVEL_CHECK_PUT, TUTOR_V2_PART_FIRST_STEP, TUTOR_V2_WELL_WITH_CARD } from '../orchestrator/flags';
 import { V2_CORRECT_THEN_REPEAT_LINE } from './one-question';
 import { asksAnywhere } from './board-timing';
 
@@ -318,7 +318,8 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
     lines.push(...check.lines);
     // Task 7u (SUMMARY_GROUPS): near or at the close, before the summary has begun, the summary page's order (summary-layout.ts).
     if (!discussion && (closing || near) && !summaryBegun && !state.closed && v2SummaryGroupsOn(session)) {
-      lines.push(v2SummaryLayoutLine(session, state, f.heard));
+      // Task 8l (WELL_WITH_CARD): the went-well cards come from the sentences said right on record; none: the group is left out.
+      lines.push(v2SummaryLayoutLine(session, state, f.heard, undefined, TUTOR_V2_WELL_WITH_CARD && v2SummaryMarksOn(session) ? v2SaidRightSentences(session, state, f.heard) : undefined));
       // Task 7w (SUMMARY_MARKS): the corrections the "To improve" cards come from, with what they said and the words changed.
       const corrections = v2SummaryCorrectionsLine(session, state);
       if (corrections) { lines.push(corrections); summaryCorrectionsShown = (state.corrections?.length ?? 0) > 0; }

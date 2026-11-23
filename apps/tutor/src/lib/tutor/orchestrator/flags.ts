@@ -2618,3 +2618,24 @@ export const TUTOR_V2_TIME_CHECK_AFTER_SPEECH = process.env.NEXT_PUBLIC_TUTOR_V2
  *  pause after "I have worked with", scored not_attempted, and the rest of the sentence was left out as another voice while the tutor
  *  asked again) (Task 8k). Default ON; NEXT_PUBLIC_TUTOR_V2_PRON_PAUSE_HOLD=off ⇒ as before. */
 export const TUTOR_V2_PRON_PAUSE_HOLD = process.env.NEXT_PUBLIC_TUTOR_V2_PRON_PAUSE_HOLD !== 'off';
+
+/** Tutor brain v2, whiteboard (v2/rich-text.ts v2NoteLinesAreItems, WhiteboardCanvas.tsx): a note of a spoken language lesson (its targets
+ *  marker or a learner-language line) whose lines are a list of equal items (two or more short lines, none a sentence, a heading with a
+ *  colon, a labelled point, maths or code) has no heading line: every line is set alike. Mic test 14 (embed-1795467413823, 0.3 min:
+ *  "Present perfect" looked like the card's heading and "Past simple" like its content) (Task 8l). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_NOTE_ITEM_LINES=off ⇒ as before. */
+export const TUTOR_V2_NOTE_ITEM_LINES = process.env.NEXT_PUBLIC_TUTOR_V2_NOTE_ITEM_LINES !== 'off';
+
+/** Tutor brain v2 (v2/sentence-cards.ts, the sentence-card section): a card that corrects the learner's sentence holds the whole sentence
+ *  right, even when the reply names only one error aloud; the rest are fixed on the card too. Mic test 14 (embed-1795467413823, 8.2 min:
+ *  "…negotiate with customers and give best price." carded as the corrected sentence, then rewritten for "the") (Task 8l). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_CORRECTED_CARD_WHOLE=off ⇒ as before. */
+export const TUTOR_V2_CORRECTED_CARD_WHOLE = process.env.NEXT_PUBLIC_TUTOR_V2_CORRECTED_CARD_WHOLE !== 'off';
+
+/** Tutor brain v2 (v2/summary-headings.ts, v2/summary-marks.ts, v2/summary-layout.ts): on the Summary page of a grouped lesson the
+ *  "What went well" heading goes up only with its first card: a model-written one is held and painted right before the first card placed
+ *  in that group, never with no card under it; the summary facts list the sentences they said right on record (cards of their own words
+ *  that are no correction), and when there are none, say to leave the group out and speak kindly of what to improve and of their effort.
+ *  Mic test 14 (embed-1795467413823, 20.2 min: "What went well" with nothing under it, its two cards corrections placed under "To
+ *  improve") (Task 8l). Default ON; NEXT_PUBLIC_TUTOR_V2_WELL_WITH_CARD=off ⇒ as before. */
+export const TUTOR_V2_WELL_WITH_CARD = process.env.NEXT_PUBLIC_TUTOR_V2_WELL_WITH_CARD !== 'off';

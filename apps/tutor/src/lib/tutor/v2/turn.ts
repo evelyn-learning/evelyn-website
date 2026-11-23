@@ -56,7 +56,7 @@ import { TUTOR_V2_SUMMARY_HAND_OVER } from '../orchestrator/flags';
 import { V2_CHECK_INS } from './question-overlap';
 import { v2AdaptAfter, v2AdaptBefore, v2AdaptOn, v2AdaptPart, v2FreeConvAfter, v2FreeConvQuiet, v2PracticePairs, v2QuestionOfReply, v2ReplyQuestions, v2RetestPutAfter } from './adaptive';
 import { LearnerCardWatch, V2_AS_SAID_REFUSED, V2_REPLY_MISHEARD, v2CardCorrects, v2CardIsAsSaid, v2CardIsFragment, v2CardSentence, v2LearnerCardsOn, v2LearnerSentences, v2OwedCardCheckLine, v2PracticeAnswerSentences, v2SentenceOnBoard, v2SentencesNotCarded } from './learner-card';
-import { v2SummaryHeadingPlan, v2SummaryHeadingRepeat } from './summary-headings';
+import { V2_SUMMARY_WELL_HEADING, V2_SUMMARY_WELL_HELD, v2SummaryHeadingPlan, v2SummaryHeadingRepeat, v2SummaryWellHeld } from './summary-headings';
 import { v2StopAsked } from './stop-signal';
 import { V2_CLOSE_INVITE_LINE, V2_CLOSE_INVITE_REFUSAL, V2_CLOSE_INVITE_REFUSAL_GIVEN, V2_CLOSE_INVITE_WAIT, v2CloseInviteRefusal, v2InviteOfReply, v2SummaryGiven, V2_CLOSE_MORE_LINE, V2_CLOSE_REOPEN_REFUSAL, v2CloseInviteOn, v2CloseInviteOwed, v2CloseReopened, v2ReplyAsksMoreOrFinish, v2ReplyInvites } from './close-invite';
 import { TUTOR_V2_LEVEL_CHECK_PUT, TUTOR_V2_OWN_KEY_NOT_LANGUAGE, TUTOR_V2_ASK_NO_CHECKIN, TUTOR_V2_CLOSE_ONE_QUESTION, TUTOR_V2_CLOSE_OPENS_SUMMARY, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FRAME_NAMES_OPENED, TUTOR_V2_HELD_PART_RELEASE, TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE, TUTOR_V2_OPTIONAL_AT_ARRIVAL, TUTOR_V2_PAGE_NEEDS_GO, TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PART_POSITION_KEPT, TUTOR_V2_PART_PAGE_CHIP, TUTOR_V2_PASSED_PART_CLOSE, TUTOR_V2_PERSONA_CARD, TUTOR_V2_QUESTION_CARD, TUTOR_V2_SAY_NOTE_SENTENCES, TUTOR_V2_SAY_SENTENCE_CARD, TUTOR_V2_SPEAK_BOARD_ITEM, TUTOR_V2_STOP_SIGNAL, TUTOR_V2_SUMMARY_BEGUN_NEXT_TIME, TUTOR_V2_QUESTION_ONCE, TUTOR_V2_CORRECTION_CARD_NOW, TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_NOTE_TARGET_QUOTES, TUTOR_V2_NOTE_TARGET_MARK, TUTOR_V2_NOTE_STRESS_MARK, TUTOR_V2_NO_MARKDOWN_STARS, TUTOR_V2_CARD_GLOSS_SHOW, TUTOR_V2_SUPPORT_STEPS, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_PART_GO_NAMED, TUTOR_V2_PRONUNCIATION_PAGE, TUTOR_V2_FRAGMENT_CARD, TUTOR_V2_CARD_AT_SENTENCE, TUTOR_V2_OPTIONAL_FIT, TUTOR_V2_RETEST_TARGET_CHANGED, TUTOR_V2_OPENING_PAGE_TITLE, TUTOR_V2_FREE_CONVERSATION, TUTOR_V2_REPEAT_THEN_WAIT, TUTOR_V2_OPENING_PAGE_FIRST, TUTOR_V2_UNHEARD_ASK_OWED, TUTOR_V2_REPEAT_NOT_MISHEARD, TUTOR_V2_OWED_CARD_RIGHT, TUTOR_V2_SUMMARY_HEADINGS, TUTOR_V2_PRON_TARGET_SAID, TUTOR_V2_ANSWER_OVER_ASK, TUTOR_V2_PAIR_PAINTED_ONLY } from '../orchestrator/flags';
@@ -774,6 +774,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   /** Run one tool call: validate it, apply it, tell the client, and return its result for the model. */
   /** Task 7u (CARD_AT_SENTENCE): the timing mark of the inline block being settled (V2ToolCall.timed), set by `take` around it. */
   let inlineTimed: 'next' | 'text' | undefined;
+  // Task 8l (WELL_WITH_CARD): the "What went well" heading the model wrote on the Summary page, held until its first card (summary-headings.ts).
+  let heldWell: Record<string, unknown> | null = null;
   const settle = (blockIn: Anthropic.ToolUseBlock, boardOnly = false, inline = false): Anthropic.ToolResultBlockParam => {
     let block = blockIn;
     const { [SAY_WITH]: sayWithRaw, ...args } = (block.input ?? {}) as Record<string, unknown>;
@@ -931,20 +933,26 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       // it when the page has none (summary-headings.ts); the 7w guard below reads it as this reply's heading.
       const headingPlan = block.name === 'show_sentence' && !guarded && !asSaidWrong ? v2SummaryHeadingPlan(session, state, args.sentence, toolCalls, cardGloss && v2GlossLevelOn(session, state, input.studentSaid), input.studentSaid, args.emphasis) : null;
       const headingRepeat = !guarded ? v2SummaryHeadingRepeat(session, state, block.name, args, toolCalls) : null;
-      let heading: V2ToolCall | null = null;
+      // Task 8l (WELL_WITH_CARD, mic test 14 flag 3): a model-written "What went well" heading with none on the page waits for its first card.
+      const wellHeld = !guarded && !headingRepeat && v2SummaryWellHeld(session, state, block.name, args, toolCalls);
+      let heading: V2ToolCall | null = null; let headingFromHeld = false;
       // The 7w guard reads the last heading before the card; with the runtime's headings placed by group, the order on the page (not the
       // order written) says which heading a card at the foot of the page stands under.
       const byPagePosition = (calls: V2ToolCall[]) => { const items = state.board.pages[state.board.current]?.items ?? []; const at = (c: V2ToolCall) => { const i = items.findIndex((it) => it.id === c.id); return i < 0 ? Infinity : i; }; return [...calls].sort((x, y) => at(x) - at(y)); };
       if (headingPlan?.write) {
         const id = `${block.id}_h`;
-        const o = applyBoard(state.board, id, 'annotate', { ...headingPlan.write });
-        if (o.painted) heading = { id, name: 'annotate', args: { ...headingPlan.write }, outcome: o.detail, ...(sayWith ? { sayWith } : {}), ...(inline && !sayWith ? { inline: true } : {}), ...(markBeforeTurn ? { beforeTurn: true } : {}), ...(inline && inlineTimed ? { timed: inlineTimed } : {}) };
+        // Task 8l (WELL_WITH_CARD): the held heading goes up now, before its first card, in the model's own words and line.
+        headingFromHeld = !!heldWell && headingPlan.write.text === V2_SUMMARY_WELL_HEADING;
+        const write: Record<string, unknown> = headingFromHeld ? { ...heldWell, style: 'heading' } : { ...headingPlan.write };
+        const o = applyBoard(state.board, id, 'annotate', { ...write });
+        if (o.painted) heading = { id, name: 'annotate', args: { ...write }, outcome: o.detail, ...(sayWith ? { sayWith } : {}), ...(inline && !sayWith ? { inline: true } : {}), ...(markBeforeTurn ? { beforeTurn: true } : {}), ...(inline && inlineTimed ? { timed: inlineTimed } : {}) };
       }
       // Task 7w (SUMMARY_MARKS): on the Summary page, one of their corrections carries its marks, and never stands under "What went well".
       const summaryRefused = block.name === 'show_sentence' && !guarded && !asSaidWrong ? v2SummaryCardCheck(session, state, args, TUTOR_V2_SUMMARY_HEADINGS ? byPagePosition(heading ? [...toolCalls, heading] : toolCalls) : toolCalls) : null;
       if (guarded) outcome = `not painted: ${guarded}`;
       else if (asSaidWrong) outcome = V2_AS_SAID_REFUSED;
       else if (headingRepeat) outcome = headingRepeat;
+      else if (wellHeld) { outcome = V2_SUMMARY_WELL_HELD; heldWell = { ...args }; }
       else if (summaryRefused) outcome = summaryRefused;
       // Task 7u (SUMMARY_GROUPS): the summary page holds at most four sentence cards (summary-layout.ts).
       else if (block.name === 'show_sentence' && v2SummaryCardsFull(session, state)) outcome = V2_SUMMARY_CARDS_FULL;
@@ -1054,6 +1062,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           const anchor = placeAbove ?? headingPlan?.above;
           if (anchor) { const h = page.items.find((it) => it.id === heading!.id); if (h) { page.items = page.items.filter((it) => it !== h); const at = page.items.findIndex((it) => it.id === anchor); page.items.splice(at < 0 ? page.items.length : at, 0, h); heading.before = anchor; } }
           toolCalls.push(heading); input.onToolCall?.(heading);
+          if (headingFromHeld) heldWell = null;
         }
       }
       if (!placeAbove && headingPlan?.above && !/^not /.test(outcome)) {
@@ -1124,7 +1133,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       if (!/^not /.test(String(again.content))) failed = false;
     }
     if (!failed && !boardOnly) inlinePainted.push({ id: `inl_${nowMs.toString(36)}_${inlineN}`, raw: b.raw, label: `${b.kind}: ${b.body.replace(/\s+/g, ' ').slice(0, 160)}` });
-    if (failed && !boardOnly && !/scrolled back/.test(String(r.content))) boardProblems.push(`${b.kind} "${b.body.replace(/\s+/g, ' ').slice(0, 60)}": ${String(r.content).replace(/^not painted: /, '')}`);
+    if (failed && !boardOnly && !/scrolled back/.test(String(r.content)) && r.content !== V2_SUMMARY_WELL_HELD) boardProblems.push(`${b.kind} "${b.body.replace(/\s+/g, ' ').slice(0, 60)}": ${String(r.content).replace(/^not painted: /, '')}`);
     return !failed;
   };
   // How much had been said when the reply turned to a new page (-1: it did not).

@@ -269,3 +269,18 @@ export function richBlocks(text: string, opts: { titled?: boolean } = {}): RichB
   if (opts.titled && blocks.length >= 2 && heading && !END_PUNCT.test(heading) && heading.split(/\s+/).length <= 9) blocks[0] = { kind: 'title', text: heading };
   return blocks;
 }
+
+/** Task 8l (NOTE_ITEM_LINES): the most words a line of a list of items has. */
+const ITEM_WORDS = 6;
+/** Task 8l (NOTE_ITEM_LINES; mic test 14, embed-1795467413823 flag 1): the lines of a note are a list of equal items, not a heading over
+ *  its points. The opening note "Present perfect (現在完了)\nPast simple (過去形)" went up with its first line as the card's heading and the
+ *  second as its body. By shape: two or more lines, each short (at most ITEM_WORDS words), none ending a sentence or a heading (no
+ *  closing punctuation, no colon), none a labelled point, none mathematics or code. Every line then has the shape the first has, so the
+ *  first is set as one of them. A heading over points keeps its title (a closing colon, or points that are sentences, labels or maths).
+ *  The board applies it only to a note of a spoken language lesson (its `targets` marker or a learner-language line): a maths or
+ *  science note keeps the first-line heading rule as on main. Pure. */
+export function v2NoteLinesAreItems(text: string): boolean {
+  const lines = String(text ?? '').split('\n').map((l) => l.trim().replace(/^[-•–]\s+/, '')).filter(Boolean);
+  if (lines.length < 2) return false;
+  return lines.every((l) => !l.includes('$') && !looksLikeCodeLine(l) && !END_PUNCT.test(l) && !/:\s*\S/.test(l) && l.split(/\s+/).length <= ITEM_WORDS);
+}
