@@ -2609,3 +2609,12 @@ export const TUTOR_V2_SUMMARY_HAND_OVER = process.env.NEXT_PUBLIC_TUTOR_V2_SUMMA
  *  check question; the check question was asked a second time) (Task 8j fix round 1, ruling 5). Default ON;
  *  NEXT_PUBLIC_TUTOR_V2_TIME_CHECK_AFTER_SPEECH=off ⇒ as on main. */
 export const TUTOR_V2_TIME_CHECK_AFTER_SPEECH = process.env.NEXT_PUBLIC_TUTOR_V2_TIME_CHECK_AFTER_SPEECH !== 'off';
+
+/** Tutor brain v2, voice client (v2/pronunciation-recorder.ts, components/v2/TutorVoiceV2.tsx): while a pronunciation item is armed and
+ *  the learner has begun the attempt, a stop of their speech holds the clip open for V2_PRON_PAUSE_HOLD_MS: speech that starts again
+ *  within it is the same attempt (the clip runs on and its words join the attempt's, which then take the floor together); the clip is sent
+ *  when the hold runs out with no new speech. Speech that starts after a longer silence is not the attempt and goes through the
+ *  other-voices filter as before. Decided by timing only. Mic test 13 (embed-1795453600266, 17:16.7–17:25.9: the attempt was cut at a
+ *  pause after "I have worked with", scored not_attempted, and the rest of the sentence was left out as another voice while the tutor
+ *  asked again) (Task 8k). Default ON; NEXT_PUBLIC_TUTOR_V2_PRON_PAUSE_HOLD=off ⇒ as before. */
+export const TUTOR_V2_PRON_PAUSE_HOLD = process.env.NEXT_PUBLIC_TUTOR_V2_PRON_PAUSE_HOLD !== 'off';

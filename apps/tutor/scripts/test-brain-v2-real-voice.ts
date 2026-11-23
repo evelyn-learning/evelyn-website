@@ -303,7 +303,7 @@ async function main() {
     check('switch off: no watch', lost === 2 && TUTOR_V2_NO_WORDS_RECOVER === true);
     const voice = src('src/app/tutor/components/v2/TutorVoiceV2.tsx');
     check('the voice client: start, partial words and stop arm it; a transcript or a failure settles it; lost → listening + the idle nudge', /wordsWatchRef\.current\.speech\('start'\)/.test(voice) && /wordsWatchRef\.current\.speech\('partial'\)/.test(voice) && /wordsWatchRef\.current\.speech\('stop'\)/.test(voice) && /const heard = useCallback\(\(transcript: string, opts\?: \{ typed\?: boolean \}\) => \{\n\s+wordsWatchRef\.current\.settled\(\);/.test(voice) && /wordsWatchRef\.current\.settled\(\);\n\s+p\.current\.onDebugEvent\?\.\('v2_transcription_failed'/.test(voice) && /showState\('listening'\); armSilence\(\);\n\s+\}, undefined, TUTOR_V2_NO_WORDS_RECOVER\)/.test(voice));
-    check('root cause, pinned: the recogniser drops an empty final turn with no callback, and speech start clears the idle timer', /if \(!text\) return; \/\/ genuinely empty turn/.test(src('src/app/tutor/hooks/useCartesiaInkWS.ts')) && /pronRef\.current\?\.speechStart\(!!realtimeRef\.current\?\.isSpeechPending\(\)\);\n\s+clearSilence\(\);/.test(voice));
+    check('root cause, pinned: the recogniser drops an empty final turn with no callback, and speech start clears the idle timer', /if \(!text\) return; \/\/ genuinely empty turn/.test(src('src/app/tutor/hooks/useCartesiaInkWS.ts')) && /pronRef\.current\?\.speechStart\(!!realtimeRef\.current\?\.isSpeechPending\(\), !!e\?\.resume\);\n\s+clearSilence\(\);/.test(voice));
   }
 
   console.log('fix round 1 — reply gate');

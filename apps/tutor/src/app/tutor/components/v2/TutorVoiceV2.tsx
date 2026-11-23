@@ -32,7 +32,7 @@ import { useOpenAIRealtime, type OpenAIVoice } from '@/app/tutor/hooks/useOpenAI
 import { usePerceptionWS, type PerceptionTranscript } from '@/app/tutor/hooks/usePerceptionWS';
 import { useCartesiaInkWS } from '@/app/tutor/hooks/useCartesiaInkWS';
 import { useAudioRecorder } from '@/app/tutor/hooks/useAudioRecorder';
-import { BARGEIN_GATE_POLL_MS, TUTOR_MIC_REACQUIRE, TUTOR_PRONUNCIATION_ASSESS, TUTOR_STT_ENGINE_INK2, TUTOR_V2_BARGEIN_ENERGY_GATE, TUTOR_V2_HEARD_NOISE, TUTOR_V2_NO_WORDS_RECOVER, TUTOR_V2_SPOKEN_SOUNDS, TUTOR_V2_TARGET_PAUSE, TUTOR_V2_TARGET_PUNCT, TUTOR_V2_CARD_STRESS_SPOKEN, TUTOR_V2_WAVE_DASH, TUTOR_V2_FLAG_CLOCK_PAUSE, TUTOR_V2_ASK_ONE_TEST, TUTOR_V2_CARD_AT_SENTENCE, TUTOR_V2_PAUSE_NOT_ECHO, TUTOR_V2_MOSTLY_HEARD } from '@/lib/tutor/orchestrator/flags';
+import { BARGEIN_GATE_POLL_MS, TUTOR_MIC_REACQUIRE, TUTOR_PRONUNCIATION_ASSESS, TUTOR_STT_ENGINE_INK2, TUTOR_V2_BARGEIN_ENERGY_GATE, TUTOR_V2_HEARD_NOISE, TUTOR_V2_NO_WORDS_RECOVER, TUTOR_V2_SPOKEN_SOUNDS, TUTOR_V2_TARGET_PAUSE, TUTOR_V2_TARGET_PUNCT, TUTOR_V2_CARD_STRESS_SPOKEN, TUTOR_V2_WAVE_DASH, TUTOR_V2_FLAG_CLOCK_PAUSE, TUTOR_V2_ASK_ONE_TEST, TUTOR_V2_CARD_AT_SENTENCE, TUTOR_V2_PAUSE_NOT_ECHO, TUTOR_V2_MOSTLY_HEARD, TUTOR_V2_PRON_PAUSE_HOLD } from '@/lib/tutor/orchestrator/flags';
 import { v2AsksTheLearner } from '@/lib/tutor/v2/one-question';
 import type { BargeInFrame } from '@/lib/tutor/voice/bargein-gate';
 import { armV2SoundGate, stepV2SoundGate } from '@/lib/tutor/v2/sound-gate';
@@ -561,6 +561,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const lookForStudent = useCallback((text: string) => {
     const r = rollRef.current; const now = Date.now();
     if (r.pending || now - r.lookedAt < ROOM_LOOK_EVERY_MS) return;
+    // Task 8k (PRON_PAUSE_HOLD): a held pronunciation attempt is not taken in pieces while it is said; its end is decided in `heard`.
+    if (pronRef.current?.holdsAttempt()) return;
     const rest = afterWords(text, r.taken); const total = text.trim().split(/\s+/).filter(Boolean).length;
     if (total - r.taken < ROOM_LOOK_MIN_WORDS) return;
     r.pending = true; r.lookedAt = now; const gen = r.gen;
@@ -693,6 +695,39 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   }, [liftPause, dropBoard]);
   const takeFloorRef = useRef<typeof takeFloor | null>(null); takeFloorRef.current = takeFloor;
 
+  /** What is heard, once the checks in `heard` are passed: the student's turn, or another voice in the room (main's filter). Task 8k:
+   *  `then`, the rest of a held pronunciation attempt, rides with the words taken as the student's (and goes with them when they are not). */
+  const decideTurn = useCallback((rest: string, early: string, opts?: { typed?: boolean }, then = '') => {
+    const withThen = (w: string) => (then ? `${w} ${then}` : w);
+    const backToWaiting = () => { liftPause(); if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) { showState('listening'); armSilence(soonAfterSpeechRef.current); } };
+    // A reply being worked out is cut by a turn as surely as one being spoken.
+    const speaking = !!realtimeRef.current?.isSpeechPending() || !!turnsRef.current?.busy;
+    // Judged the student's while it was still being said: it is not asked about twice.
+    if (early === 'student' || !waitsForCheck({ text: rest, typed: opts?.typed, speaking, suspect: roomHitsRef.current > 0 })) { takeFloor(withThen(rest), opts); return; }
+    // Words picked up while the tutor is talking, or in a room where other voices have been heard: only the part
+    // said to the tutor takes the floor (room-voices.ts). The tutor stays paused while that is asked.
+    void studentWords(rest).then((found) => {
+      const words = found && !(speaking && isOwnVoice(found, spokenRef.current)) ? found : null;
+      if (flagRef.current.active) { flagRef.current.words.push(withThen(words ?? rest)); return; }
+      if (words) {
+        // A stretch that was all the student's, in a room not yet known to be noisy, clears a single earlier reading
+        // of "another voice": that reading is wrong often enough on a short answer ("That is a 100 pi") that two
+        // of them, lessons apart, must not mark the room noisy for good (ACT Math, portal-87303e9f).
+        if (sameWords(words, rest) && roomHitsRef.current > 0 && roomHitsRef.current < ROOM_NOISY_AFTER) { roomHitsRef.current = 0; roomEarlierRef.current = []; }
+        if (!sameWords(words, rest)) p.current.onDebugEvent?.('v2_room_student_words', `found among other voices: "${words.slice(0, 300)}" out of: ${rest.slice(0, 600)}`);
+        takeFloor(withThen(words), opts); return;
+      }
+      roomHitsRef.current += 1; roomEarlierRef.current = [...roomEarlierRef.current.slice(-1), withThen(rest)];
+      const noisy = roomHitsRef.current >= ROOM_NOISY_AFTER;
+      p.current.onDebugEvent?.('v2_room_voice', `not the student, left out (${roomHitsRef.current}${noisy ? ', the room is noisy' : ''}; the tutor was ${speaking ? 'speaking and goes on' : 'waiting and goes on waiting'}): ${withThen(rest).slice(0, 600)}`);
+      if (roomHitsRef.current === ROOM_NOISY_AFTER) roomNoticeOwedRef.current = true;
+      if (noisy) setComposerStatus((was) => (was.room ? was : { ...was, room: true }));
+      // Nothing was said to the tutor: it is still the student's move, and the wait for them runs on.
+      backToWaiting();
+      if (roomNoticeOwedRef.current) sayRoomNotice();
+    });
+  }, [liftPause, studentWords, armSilence, takeFloor, sayRoomNotice]);
+
   const heard = useCallback((transcript: string, opts?: { typed?: boolean }) => {
     wordsWatchRef.current.settled();
     const text = transcript.trim();
@@ -732,35 +767,23 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     // Noise with the floor free is not words: there is nothing in it to ask the room check about.
     if (noise) { takeFloor(text, { noise: true }); return; }
     const rest = opts?.typed ? text : afterWords(text, taken);
-    const backToWaiting = () => { liftPause(); if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) { showState('listening'); armSilence(soonAfterSpeechRef.current); } };
-    if (!rest) { backToWaiting(); return; }
-    // A reply being worked out is cut by a turn as surely as one being spoken.
-    const speaking = !!realtimeRef.current?.isSpeechPending() || !!turnsRef.current?.busy;
-    // Judged the student's while it was still being said: it is not asked about twice.
-    if (early === 'student' || !waitsForCheck({ text: rest, typed: opts?.typed, speaking, suspect: roomHitsRef.current > 0 })) { takeFloor(rest, opts); return; }
-    // Words picked up while the tutor is talking, or in a room where other voices have been heard: only the part
-    // said to the tutor takes the floor (room-voices.ts). The tutor stays paused while that is asked.
-    void studentWords(rest).then((found) => {
-      const words = found && !(speaking && isOwnVoice(found, spokenRef.current)) ? found : null;
-      if (flagRef.current.active) { flagRef.current.words.push(words ?? rest); return; }
-      if (words) {
-        // A stretch that was all the student's, in a room not yet known to be noisy, clears a single earlier reading
-        // of "another voice": that reading is wrong often enough on a short answer ("That is a 100 pi") that two
-        // of them, lessons apart, must not mark the room noisy for good (ACT Math, portal-87303e9f).
-        if (sameWords(words, rest) && roomHitsRef.current > 0 && roomHitsRef.current < ROOM_NOISY_AFTER) { roomHitsRef.current = 0; roomEarlierRef.current = []; }
-        if (!sameWords(words, rest)) p.current.onDebugEvent?.('v2_room_student_words', `found among other voices: "${words.slice(0, 300)}" out of: ${rest.slice(0, 600)}`);
-        takeFloor(words, opts); return;
-      }
-      roomHitsRef.current += 1; roomEarlierRef.current = [...roomEarlierRef.current.slice(-1), rest];
-      const noisy = roomHitsRef.current >= ROOM_NOISY_AFTER;
-      p.current.onDebugEvent?.('v2_room_voice', `not the student, left out (${roomHitsRef.current}${noisy ? ', the room is noisy' : ''}; the tutor was ${speaking ? 'speaking and goes on' : 'waiting and goes on waiting'}): ${rest.slice(0, 600)}`);
-      if (roomHitsRef.current === ROOM_NOISY_AFTER) roomNoticeOwedRef.current = true;
-      if (noisy) setComposerStatus((was) => (was.room ? was : { ...was, room: true }));
-      // Nothing was said to the tutor: it is still the student's move, and the wait for them runs on.
-      backToWaiting();
-      if (roomNoticeOwedRef.current) sayRoomNotice();
-    });
-  }, [liftPause, studentWords, armSilence, takeFloor, sayRoomNotice]);
+    if (!rest) { liftPause(); if (!realtimeRef.current?.isSpeechPending() && !turnsRef.current?.busy) { showState('listening'); armSilence(soonAfterSpeechRef.current); } return; }
+    // Task 8k (PRON_PAUSE_HOLD): words of an armed pronunciation attempt that is being held across a short pause wait for the rest of it
+    // (pronunciation-recorder.ts); the whole attempt then takes the floor through releaseAttempt. Mic test 13 (embed-1795453600266, 17:21.65).
+    if (!opts?.typed && pronRef.current?.attemptWords(rest)) { liftPause(); return; }
+    decideTurn(rest, early, opts);
+  }, [liftPause, armSilence, takeFloor, decideTurn]);
+  /** Task 8k (PRON_PAUSE_HOLD): a held pronunciation attempt has ended. Its first part is decided as any stretch is (the other-voices
+   *  filter, unchanged); the parts said after a pause shorter than the hold are the same speaker's attempt and ride with it, never judged
+   *  apart. Mic test 13 (embed-1795453600266: "international customers for several years." was left out as another voice, 17:26.43). */
+  const releaseAttempt = useCallback((parts: string[]) => {
+    if (flagRef.current.active) { flagRef.current.words.push(parts.join(' ')); return; }
+    if (turnsRef.current?.isEnding()) { p.current.onDebugEvent?.('v2_heard_while_ending', parts.join(' ').slice(0, 80)); return; }
+    if (parts.length > 1) p.current.onDebugEvent?.('v2_attempt_joined', `${parts.length} parts said with short pauses, one attempt: ${parts.join(' | ').slice(0, 300)}`);
+    decideTurn(parts[0]!, 'none', undefined, parts.slice(1).join(' '));
+  }, [decideTurn]);
+  const releaseAttemptRef = useRef<typeof releaseAttempt | null>(null); releaseAttemptRef.current = releaseAttempt;
+  pronRef.current?.holdPauses(TUTOR_V2_PRON_PAUSE_HOLD ? (parts) => releaseAttemptRef.current?.(parts) : null);
 
   // Stable identities, all of them: see the note at the top of this file.
   // A microphone that gives no sound in its first second is common and harmless (Bluetooth earphones open
@@ -841,7 +864,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     if (flagRef.current.active) return;
     wordsWatchRef.current.speech('start');
     // An armed pronunciation reply starts recording here, unless the tutor's own voice is what was heard.
-    pronRef.current?.speechStart(!!realtimeRef.current?.isSpeechPending());
+    pronRef.current?.speechStart(!!realtimeRef.current?.isSpeechPending(), !!e?.resume);
     clearSilence();
     const rt = realtimeRef.current;
     if (!rt?.isSpeechPending()) { showState('hearing'); return; }
@@ -892,7 +915,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const releaseOpeningSpeech = useCallback(() => { const held = openingSpeechRef.current; if (!held) return; openingSpeechRef.current = null; const since = (t: number) => (t && tapAtRef.current ? `${t - tapAtRef.current} ms` : 'never'); p.current.onDebugEvent?.('v2_opening_speech', `released ${since(Date.now())} after the tap; microphone live at ${since(micLiveAtRef.current)}${micLiveAtRef.current ? '' : ' (the wait ran out)'}; ${held.length} sentence(s) were waiting`); for (const s of held) realtimeRef.current?.speakText(s); }, []);
   const onMicLevel = useCallback((level: number) => { if (openingSpeechRef.current && !micLiveRef.current) { micLiveRef.current = true; micLiveAtRef.current = Date.now(); setTimeout(releaseOpeningSpeech, MIC_SETTLE_MS); } if (level > MIC_SOUND_LEVEL) lastSoundAtRef.current = Date.now(); const now = Date.now(); if (now - micUiAtRef.current > 110) { micUiAtRef.current = now; setComposerStatus((was) => (Math.abs((was.level ?? 0) - level) < 0.04 && !(was.quiet && level > MIC_SOUND_LEVEL) ? was : { ...was, level, ...(level > MIC_SOUND_LEVEL ? { quiet: false } : {}) })); } }, [releaseOpeningSpeech]);
   // Fix round 2: a turn that ended with no words is over for the echo clock (Ink gives no transcript for it).
-  const onTurnEndedEmpty = useCallback(() => { echoRef.current.settled(); ownPartialLoggedRef.current = false; partialWordsRef.current = 0; }, []);
+  // Task 8k (PRON_PAUSE_HOLD): a part of a held pronunciation attempt that ended with no words is counted, so the attempt does not wait for it.
+  const onTurnEndedEmpty = useCallback(() => { echoRef.current.settled(); ownPartialLoggedRef.current = false; partialWordsRef.current = 0; pronRef.current?.attemptPartEmpty(); }, []);
   const onInkDiagnostic = useCallback((type: string, message: string) => p.current.onDebugEvent?.(type, message), []);
   // The microphone follows the student to a new input device (AirPods taken by a phone, a headset unplugged):
   // without it the lesson went on speaking to a student it could no longer hear (portal-1f1d7348).

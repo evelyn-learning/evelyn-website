@@ -12,7 +12,7 @@ import {
   clipPeakDbfs, pcm16ToBase64, type PronunciationClip,
 } from '../pronunciation/clip-capture';
 import { v2PronunciationHeardOf, type V2PronunciationHeard } from './pronunciation';
-import { TUTOR_V2_PRON_ONSET_GRACE } from '../orchestrator/flags';
+import { TUTOR_V2_PRON_ONSET_GRACE, TUTOR_V2_PRON_PAUSE_HOLD } from '../orchestrator/flags';
 
 /** The assess route's request body for one clip (assess-request.ts parseAssessBody). */
 export function v2AssessRequestBody(sessionId: string, clip: PronunciationClip): { sessionId: string; referenceText: string; audio: string } {
@@ -27,6 +27,25 @@ export const V2_PRON_ONSET_GRACE_MS = 500;
 /** Task 8g fix round 1 (I3): a capture opened at the voice's end is kept only if their speech is still going this long after the end; a
  *  stop sooner is the tail of the tutor's own voice (an echo), and the clip is dropped unsent, the arm kept. */
 export const V2_PRON_ONSET_CONFIRM_MS = 400;
+/** Task 8k (PRON_PAUSE_HOLD; mic test 13, embed-1795453600266): a stop of their speech during an armed attempt holds the clip open this
+ *  long; speech that starts again within it is the same attempt. Counted from the recogniser's stop, which itself comes after some silence. */
+export const V2_PRON_PAUSE_HOLD_MS = 1200;
+/** Task 8k: once the hold has run out, how long the attempt's words wait for a part whose transcript has not come yet (its speech stopped,
+ *  the recogniser's final still on its way) before they take the floor without it. */
+export const V2_PRON_FINAL_WAIT_MS = 3000;
+
+/** Task 8k: the attempt being held across short pauses (PRON_PAUSE_HOLD). `parts`: the recogniser's speech starts in it (a resume of the
+ *  same recogniser turn is not a new part); `finals`: the parts whose transcript (or empty end) has come; `words`: those transcripts. */
+interface V2HeldAttempt {
+  parts: number;
+  finals: number;
+  words: string[];
+  /** When their speech last stopped (null: they are speaking). */
+  stoppedAt: number | null;
+  /** The hold ran out: the clip has been sent (or the capture's blip rule dropped it); the words wait only for missing finals. */
+  over: boolean;
+  timer: unknown;
+}
 
 export class V2PronunciationRecorder {
   private readonly capture = new ClipCapture({ maxMs: CLIP_MAX_MS, sampleRate: CLIP_SAMPLE_RATE, preRollMs: CLIP_PRE_ROLL_MS, minMs: CLIP_MIN_MS });
@@ -39,11 +58,19 @@ export class V2PronunciationRecorder {
   /** Task 8g fix round 1 (I3): a capture opened at the voice's end is provisional until this time (null: none). */
   private provisionalUntil: number | null = null;
   private reference = '';
+  /** Task 8k (PRON_PAUSE_HOLD): the attempt held across short pauses (null: none open). */
+  private attempt: V2HeldAttempt | null = null;
+  /** Task 8k: where the held attempt's words go when it ends (the voice client's turn); null: no hold (as before). */
+  private release: ((words: string[]) => void) | null = null;
+  private readonly setTimer: (fn: () => void, ms: number) => unknown;
+  private readonly clearTimer: (h: unknown) => void;
   private readonly fetchImpl: typeof fetch;
   private readonly now: () => number;
   private readonly log: (type: string, message: string) => void;
 
-  constructor(private readonly opts: { sessionId: string; fetchImpl?: typeof fetch; now?: () => number; log?: (type: string, message: string) => void; onsetGrace?: boolean }) {
+  constructor(private readonly opts: { sessionId: string; fetchImpl?: typeof fetch; now?: () => number; log?: (type: string, message: string) => void; onsetGrace?: boolean; pauseHold?: boolean; setTimer?: (fn: () => void, ms: number) => unknown; clearTimer?: (h: unknown) => void }) {
+    this.setTimer = opts.setTimer ?? ((fn, ms) => setTimeout(fn, ms));
+    this.clearTimer = opts.clearTimer ?? ((h) => clearTimeout(h as ReturnType<typeof setTimeout>));
     this.fetchImpl = opts.fetchImpl ?? ((...a) => fetch(...a));
     this.now = opts.now ?? Date.now;
     this.log = opts.log ?? (() => {});
@@ -54,13 +81,79 @@ export class V2PronunciationRecorder {
     if (seq === this.seq && this.capture.isArmed()) return;
     // A new arm starts a new clip: ClipCapture keeps buffered audio across a re-arm, which here belongs to the old item.
     this.capture.disarm();
+    this.dropAttempt(true);
     this.onsetOverVoiceAt = null; this.provisionalUntil = null; this.reference = reference;
     this.capture.arm(reference);
     this.seq = seq; this.armedAt = this.now();
     this.log('pronunciation_armed', `#${seq} "${reference.slice(0, 80)}" (v2)`);
   }
 
-  disarm(): void { if (this.capture.isArmed()) this.log('pronunciation_disarmed', `#${this.seq} (v2)`); this.capture.disarm(); }
+  disarm(): void { if (this.capture.isArmed()) this.log('pronunciation_disarmed', `#${this.seq} (v2)`); this.capture.disarm(); this.dropAttempt(true); }
+
+  /** Task 8k (PRON_PAUSE_HOLD): the voice client takes the held attempt's words with this (null: no hold, as before). The hold needs it:
+   *  a clip held open while their first words took the floor would leave the turn without its score. */
+  holdPauses(release: ((words: string[]) => void) | null): void { this.release = release; }
+
+  /** Task 8k: is an armed attempt being held (their speech began, the attempt has not ended)? */
+  holdsAttempt(): boolean { return this.attempt !== null; }
+
+  /** Task 8k: a transcript the recogniser finished. While an attempt is held and this is one of its parts, the words are kept for it (true:
+   *  the caller does nothing more with them). Anything else (no attempt, or speech that began after the hold ran out) is false. */
+  attemptWords(text: string): boolean {
+    const a = this.attempt;
+    if (!a || a.finals >= a.parts) return false;
+    a.finals += 1;
+    if (text.trim()) a.words.push(text.trim());
+    this.log('pronunciation_attempt_words', `#${this.seq} part ${a.finals} of ${a.parts}${a.over ? ', the hold over' : ''}: "${text.trim().slice(0, 80)}" (v2)`);
+    if (a.over) this.releaseIfComplete();
+    return true;
+  }
+
+  /** Task 8k: a part of the held attempt ended with no words (the recogniser's empty end or its failure). */
+  attemptPartEmpty(): void {
+    const a = this.attempt;
+    if (!a || a.finals >= a.parts) return;
+    a.finals += 1;
+    if (a.over) this.releaseIfComplete();
+  }
+
+  private holding(): boolean { return (this.opts.pauseHold ?? TUTOR_V2_PRON_PAUSE_HOLD) && this.release !== null; }
+
+  /** Task 8k: the capture has opened on their speech: the attempt begins. */
+  private beginAttempt(): void {
+    if (!this.holding()) return;
+    this.dropAttempt();
+    this.attempt = { parts: 1, finals: 0, words: [], stoppedAt: null, over: false, timer: null };
+  }
+
+  /** Task 8k: an attempt that is no longer wanted (a new arm, a disarm, an echo dropped): its timer cleared. `flush` (a new arm or a
+   *  disarm): words already kept for it are still theirs and take the floor, as they would have without the hold. */
+  private dropAttempt(flush = false): void {
+    const a = this.attempt; this.attempt = null;
+    if (a && a.timer !== null) this.clearTimer(a.timer);
+    if (flush && a && a.words.length) { this.log('pronunciation_attempt_released', `#${this.seq} ended by a new arm or a disarm before its hold ran out: "${a.words.join(' ').slice(0, 120)}" (v2)`); this.release?.(a.words); }
+  }
+
+  /** Task 8k: the hold ran out with no new speech: the clip goes (the capture's own blip rule still applies), and the words follow once
+   *  every part's transcript is in (bounded by V2_PRON_FINAL_WAIT_MS). */
+  private holdRanOut(): void {
+    const a = this.attempt;
+    if (!a) return;
+    a.timer = null; a.over = true;
+    const clip = this.capture.onSpeechStop();
+    if (clip) this.send(clip);
+    if (a.finals < a.parts) a.timer = this.setTimer(() => { const b = this.attempt; if (b === a) { b.timer = null; b.finals = b.parts; this.releaseIfComplete(); } }, V2_PRON_FINAL_WAIT_MS);
+    this.releaseIfComplete();
+  }
+
+  private releaseIfComplete(): void {
+    const a = this.attempt;
+    if (!a || !a.over || a.finals < a.parts) return;
+    if (a.timer !== null) this.clearTimer(a.timer);
+    this.attempt = null;
+    this.log('pronunciation_attempt_released', `#${this.seq} ${a.parts} part(s): "${a.words.join(' ').slice(0, 120)}" (v2)`);
+    if (a.words.length) this.release?.(a.words);
+  }
   isArmed(): boolean { return this.capture.isArmed(); }
 
   /** A microphone frame. A clip that reaches the 15 s cap is sent from here. */
@@ -69,8 +162,19 @@ export class V2PronunciationRecorder {
     if (clip) this.send(clip);
   }
 
-  /** The recogniser heard speech begin. `tutorSpeaking`: the tutor's voice is still playing. */
-  speechStart(tutorSpeaking: boolean): void {
+  /** The recogniser heard speech begin. `tutorSpeaking`: the tutor's voice is still playing. `resume` (Task 8k): the recogniser's own
+   *  resume of a turn it had called ended early (Ink's turn.resume): the same part, one transcript. */
+  speechStart(tutorSpeaking: boolean, resume = false): void {
+    // Task 8k (PRON_PAUSE_HOLD): their speech starts again within the hold: the same attempt goes on (the clip has kept running).
+    const a = this.attempt;
+    if (a && a.stoppedAt !== null && !a.over && !tutorSpeaking) {
+      if (a.timer !== null) this.clearTimer(a.timer);
+      a.timer = null;
+      this.log('pronunciation_pause_held', `#${this.seq} speech again ${Math.round(this.now() - a.stoppedAt)} ms after it stopped: the same attempt (v2)`);
+      a.stoppedAt = null;
+      if (!resume) a.parts += 1;
+      return;
+    }
     if (!this.capture.isArmed() || this.capture.isCapturing()) return;
     // v1 (PRONUNCIATION_ARM_MAX_MS): a stale arm must never score some later, unrelated reply.
     if (this.now() - this.armedAt > PRONUNCIATION_ARM_MAX_MS) { this.capture.disarm(); this.log('pronunciation_unavailable', `arm_expired #${this.seq} (v2)`); return; }
@@ -83,6 +187,7 @@ export class V2PronunciationRecorder {
     }
     this.onsetOverVoiceAt = null;
     this.capture.onSpeechStart();
+    if (this.capture.isCapturing()) this.beginAttempt();
   }
 
   /** Task 8g (PRON_ONSET_GRACE; mic test 11, embed-1795220913119 16:52.59: he began about 50 ms before the voice ended and the attempt was
@@ -99,6 +204,7 @@ export class V2PronunciationRecorder {
     const after = this.now() - at;
     if (after > V2_PRON_ONSET_GRACE_MS) return;
     this.capture.onSpeechStart();
+    if (this.capture.isCapturing()) this.beginAttempt();
     this.provisionalUntil = this.now() + V2_PRON_ONSET_CONFIRM_MS;
     this.log('pronunciation_start_at_voice_end', `#${this.seq} onset ${after} ms before the voice ended (v2)`);
   }
@@ -110,9 +216,21 @@ export class V2PronunciationRecorder {
     // Fix round 1 (I3): their speech stopped within V2_PRON_ONSET_CONFIRM_MS of the voice's end: the tail of the tutor's voice. The clip
     // is dropped unsent; the arm stays for their real attempt (a fresh capture: its pre-roll held the tutor's voice).
     if (provisional !== null && this.now() < provisional && this.capture.isCapturing()) {
-      this.capture.disarm(); this.capture.arm(this.reference);
+      this.capture.disarm(); this.capture.arm(this.reference); this.dropAttempt();
       this.log('pronunciation_voice_end_echo_dropped', `#${this.seq} speech stopped within ${V2_PRON_ONSET_CONFIRM_MS} ms of the voice end (v2)`);
       return;
+    }
+    // Task 8k (PRON_PAUSE_HOLD): an attempt under way whose speech stops is held open V2_PRON_PAUSE_HOLD_MS; the clip keeps running (the
+    // pause is in it). A stop with less than the capture's minimum of their speech is left to its blip rule, as before.
+    const a = this.attempt;
+    if (a && !a.over) {
+      if (a.stoppedAt !== null) return; // already held
+      if (!this.capture.isCapturing() || this.capture.bufferedMs() >= CLIP_MIN_MS) {
+        a.stoppedAt = this.now();
+        a.timer = this.setTimer(() => { if (this.attempt === a) this.holdRanOut(); }, V2_PRON_PAUSE_HOLD_MS);
+        return;
+      }
+      this.dropAttempt();
     }
     const clip = this.capture.onSpeechStop();
     if (clip) this.send(clip);
