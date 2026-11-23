@@ -12,7 +12,7 @@ import { callModel } from "./models";
 import type { ModelDeps, ModelImage } from "./types";
 
 export type IntakeFinding = {
-  code: "missing_image" | "missing_passage" | "no_choices" | "no_premises" | "no_key" | "empty_stem" | "model_missing" | "too_long" | "malformed_markup";
+  code: "missing_image" | "missing_passage" | "no_choices" | "no_premises" | "no_key" | "empty_stem" | "model_missing" | "too_long" | "malformed_markup" | "source_mismatch";
   detail: string;
 };
 
@@ -568,6 +568,11 @@ const BLANKS = "blanks: ";
 export function intakeCode(item: ItemDoc, assetExists: (file: string) => boolean): { findings: IntakeFinding[]; unsupported: string[] } {
   const interactions = item.interactions ?? [];
   const unsupported = interactions.flatMap((i) => (i.kind === "unsupported" ? [i.element] : []));
+  // An image the page cannot load (its link was never pointed at our copy) is our upload's fault, never the client's:
+  // held like a type we cannot read. A file check alone passes it (the file is there; the page still shows nothing).
+  const shownHtml = [item.questionHtml ?? "", ...(item.options ?? []).map((o) => o.html), JSON.stringify(interactions)].join("\n");
+  // Only for an item that came as a package (item.qti): its images must all have been pointed at our copies.
+  if (item.qti) for (const m of shownHtml.matchAll(/<img\b[^>]*?\bsrc=\\?"([^"\\]*)/g)) if (!/^(\/|https?:|data:)/i.test(m[1])) unsupported.push(`image link ${m[1]}`);
   if (unsupported.length) return { findings: [], unsupported };
 
   const findings: IntakeFinding[] = [];
@@ -618,6 +623,9 @@ export function intakeCode(item: ItemDoc, assetExists: (file: string) => boolean
     add("no_choices", `${OPTIONS}The question has no answer area: no options came through.`);
   }
 
+  // Castle Rock's own source file disagrees with the QTI export (recorded at upload).
+  for (const f of item.sourceFindings ?? []) add("source_mismatch", f);
+
   // Key
   if (hasInteractions(item)) {
     const need = interactions.filter((i) => ["choice", "textEntry", "inlineChoice", "match", "gapMatch", "order"].includes(i.kind) && "responseId" in i);
@@ -662,7 +670,7 @@ export async function intakeModel(
   return { complete, missing, ...run };
 }
 
-const SENTENCE: Record<Exclude<IntakeFinding["code"], "missing_image" | "model_missing" | "no_choices">, string> = {
+const SENTENCE: Record<Exclude<IntakeFinding["code"], "missing_image" | "model_missing" | "no_choices" | "source_mismatch">, string> = {
   missing_passage: "The reading passage did not come through.",
   no_premises: "The matching lists did not come through, so the labels cannot be matched.",
   no_key: "No answer key came with this item.",
@@ -679,6 +687,7 @@ export function intakeNote(findings: IntakeFinding[]): string {
       f.code === "missing_image" ? `The image ${f.detail} did not come through.`
       : f.code === "no_choices" ? (f.detail.startsWith(BLANKS) ? "The choices for the blanks did not come through." : "The answer options did not come through.")
       : f.code === "model_missing" ? `Missing: ${f.detail.slice(0, 200)}`
+      : f.code === "source_mismatch" ? `${f.detail.slice(0, 300)}`
       : SENTENCE[f.code];
     if (!out.includes(s)) out.push(s);
   }

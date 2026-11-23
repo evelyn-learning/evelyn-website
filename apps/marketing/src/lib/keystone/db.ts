@@ -237,6 +237,10 @@ export type ItemDoc = {
   keys?: Record<string, string[]>;
   /** Castle Rock's own worked solution from the QTI export, for reference. */
   castleRockSolutionHtml?: string;
+  /** Where the QTI export differs from Castle Rock's source file (item_<id>_original.txt); the pipeline stops at intake on any. */
+  sourceFindings?: string[];
+  /** What was taken from the source file because the QTI export lacked it (shown on the item page). */
+  sourceNotes?: string[];
   /** Original QTI XML (items that arrived as QTI); resource paths as used in the XML. */
   qti?: { apip: string; metadata: string; resources: string[]; passages?: { file: string; xml: string }[] };
   /** Animated (voiced) player attached to the item: files under assets/<itemId>/player/. */
@@ -533,6 +537,8 @@ function defineModels(conn: Connection): Models {
     interactions: { type: Schema.Types.Mixed },
     keys: { type: Schema.Types.Mixed },
     castleRockSolutionHtml: String,
+    sourceFindings: { type: [String], default: undefined },
+    sourceNotes: { type: [String], default: undefined },
     qti: {
       type: new Schema(
         {
