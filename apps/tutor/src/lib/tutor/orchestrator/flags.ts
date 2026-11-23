@@ -2595,10 +2595,17 @@ export const TUTOR_V2_PAIR_PAINTED_ONLY = process.env.NEXT_PUBLIC_TUTOR_V2_PAIR_
  *  correction no re-test) (Task 8g, item 4). Default ON; NEXT_PUBLIC_TUTOR_V2_ASK_QUESTION_CARD=off ⇒ as before. */
 export const TUTOR_V2_ASK_QUESTION_CARD = process.env.NEXT_PUBLIC_TUTOR_V2_ASK_QUESTION_CARD !== 'off';
 
-/** Tutor brain v2 (v2/summary-hand-over.ts, v2/turn.ts): in a part-flow lesson the learner is never moved from a part into the Summary
- *  without a hand-over: a Summary page written in a reply is held there and the reply ends with the hand-over ("one more, or shall we
- *  move on to the summary?"; when the time is up, "we'll move on to the summary now"), and the page opens on the next reply. Not when
- *  the last reply already handed over, their words go for the summary, they asked to stop, the summary began earlier, or the hard stop
- *  is near (V2_TIME_UP_MIN before the box plus its margin). Mic test 13 (embed-1795453600266, 17.7 min: the pronunciation score, the
- *  Summary and the check question in one reply) (Task 8j). Default ON; NEXT_PUBLIC_TUTOR_V2_SUMMARY_HAND_OVER=off ⇒ as before. */
+/** Tutor brain v2 (v2/summary-hand-over.ts, v2/turn.ts): in a part-flow lesson, a Summary page the model opens while the optional part in
+ *  hand is held by 7x (its items not done, its minutes not over), on no closing turn, is held: one bounded continuation call finishes the
+ *  reply with the hand-over ("one more, or shall we move on to the summary?"; fallback: the fixed line), and the page opens on the next
+ *  reply (state.summaryHandOver) or on their go. Closing turns (the wrap due, the time up, a stop asked, end_lesson because the student
+ *  asked, a D1 release) are as before. Mic test 13 (embed-1795453600266, 17.7 min: the pronunciation score, the Summary and the check
+ *  question in one reply) (Task 8j, fix round 1). Default ON; NEXT_PUBLIC_TUTOR_V2_SUMMARY_HAND_OVER=off ⇒ as before. */
 export const TUTOR_V2_SUMMARY_HAND_OVER = process.env.NEXT_PUBLIC_TUTOR_V2_SUMMARY_HAND_OVER !== 'off';
+
+/** Tutor brain v2, voice client (components/v2/useV2Turns.ts, the time check two minutes before the box): the check does not make its
+ *  turn while the tutor's voice still plays; after the voice ends it waits V2_TIME_CHECK_QUIET_MS of quiet, and a turn in the meantime
+ *  (which is told of the time by its facts) makes it unneeded. Mic test 13 (embed-1795453600266, 18:02: fired during the summary and the
+ *  check question; the check question was asked a second time) (Task 8j fix round 1, ruling 5). Default ON;
+ *  NEXT_PUBLIC_TUTOR_V2_TIME_CHECK_AFTER_SPEECH=off ⇒ as on main. */
+export const TUTOR_V2_TIME_CHECK_AFTER_SPEECH = process.env.NEXT_PUBLIC_TUTOR_V2_TIME_CHECK_AFTER_SPEECH !== 'off';

@@ -398,7 +398,9 @@ async function main() {
       { role: 'user', content: 'ok' }, { role: 'assistant', content: 'Good, that is right.' },
     ];
     check('(setup: budget spent)', !v2FrameDue(spent));
-    const st = pagesAt(B, { history: spent, workingLevel: { level: 'beginner', from: 'this_lesson' } } as Partial<V2State>);
+    // Task 8j fix round 1 (SEED_8J_HANDOVER, the -8j-on run): the Pronunciation page is open with no item, so 8j's hold applies to this
+    // Summary page unless the reply before carried the runtime's hand-over: seeded here, every later path is as with the switch off.
+    const st = pagesAt(B, { history: spent, workingLevel: { level: 'beginner', from: 'this_lesson' }, ...(process.env.SEED_8J_HANDOVER ? { summaryHandOver: spent.filter((h) => h.role === 'assistant').length } : {}) } as Partial<V2State>);
     check('(setup: nothing unreached)', v2UnreachedOffer(GDI, st) === null);
     const heard: string[] = [];
     const r = await runV2Turn({ session: { ...lang, plan: GDI }, state: st, studentSaid: 'I have worked here ten years.', callModel: streaming('Good. Let\'s finish with a quick summary. <board page>Summary</board> You talked about your work.').call, onText: (d) => heard.push(d), boardPass: false, mathsCheck: false, nowMs: 12 * 60000 });

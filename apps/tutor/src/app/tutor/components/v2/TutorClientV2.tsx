@@ -15,7 +15,7 @@ import { V2FlagBar, V2_FLAGS_ON, type V2FlagState } from './V2FlagBar';
 import type { RealtimeHandle } from '@/lib/tutor/orchestrator/types';
 import { useV2Turns, type V2TurnsConfig } from './useV2Turns';
 
-export interface TutorClientV2Props extends Omit<V2TurnsConfig, 'mode' | 'onSentence' | 'onCut' | 'closeDelayMs' | 'untilQuiet'> {
+export interface TutorClientV2Props extends Omit<V2TurnsConfig, 'mode' | 'onSentence' | 'onCut' | 'closeDelayMs' | 'untilQuiet' | 'speechPending'> {
   standby?: boolean;
   prewarm?: boolean;
   composerSlot?: ReactNode;

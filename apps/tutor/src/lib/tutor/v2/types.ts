@@ -228,6 +228,9 @@ export interface V2State {
   /** Task 7x fix round 1 (I2): optional parts the learner's words asked to leave (optional-hold.ts v2NoteOptionalLeave). A phrase reading:
    *  only the hold's facts line reads it, never a runtime hold (moveOnAsked feeds the 7f minimum). */
   optionalLeft?: string[];
+  /** Task 8j (SUMMARY_HAND_OVER): the count of tutor replies (part-flow.ts v2TutorReplies) when the reply carrying the runtime's
+   *  summary hand-over was stored: the next reply opens the Summary page without the hold (summary-hand-over.ts v2HandedOver). */
+  summaryHandOver?: number;
   /** Task 7v (PART_CLOCK), spoken lessons with a labelled plan: the part in hand and when (lesson clock, ms) the lesson entered it.
    *  A part's own time is measured from here (time-fit.ts). */
   partStart?: { part: string; at: number };

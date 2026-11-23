@@ -51,7 +51,7 @@ import { v2NoteCorrection, v2SummaryCardCheck } from './summary-marks';
 import { v2SummaryOpensCloseOn } from './summary-close';
 import { V2_CLOSE_CHECK_REFUSAL, V2_CLOSE_CHECK_REFUSAL_GIVEN, v2CheckCardText, v2CloseCheckRefusal, v2CloseCheckOwed, v2CloseCheckPending, v2PlanCheckQuestion, v2NoteCloseAskLast, v2UnheardCloseAsks } from './close-check';
 import { v2NoteOptionalLeave, v2OptionalHold, v2OptionalOneMore } from './optional-hold';
-import { v2HandedOverToSummary, v2SummaryHandOverLine } from './summary-hand-over';
+import { V2_HAND_OVER_CONTINUE, V2_HAND_OVER_DEFER, V2_HAND_OVER_MAX_TOKENS, V2_HAND_OVER_TIMEOUT_MS, V2_OPTIONAL_DEFER_IN_PREFIX, V2_SUMMARY_HAND_OVER_LINE, v2HandedOver, v2InPartDeferredBefore } from './summary-hand-over';
 import { TUTOR_V2_SUMMARY_HAND_OVER } from '../orchestrator/flags';
 import { V2_CHECK_INS } from './question-overlap';
 import { v2AdaptAfter, v2AdaptBefore, v2AdaptOn, v2AdaptPart, v2FreeConvAfter, v2FreeConvQuiet, v2PracticePairs, v2QuestionOfReply, v2ReplyQuestions, v2RetestPutAfter } from './adaptive';
@@ -321,7 +321,7 @@ export { V2_CLOSING_PAGE } from './part-close';
 /** Task 7v fix round 1 (a): the start of the once-only end_lesson deferral for an optional part that fits (found in the history). */
 export const V2_OPTIONAL_DEFER_PREFIX = 'not ended yet:';
 /** Fix round 3 (N3): the same, inside the optional part they took. */
-export const V2_OPTIONAL_DEFER_IN_PREFIX = 'not ended yet, in the part:';
+export { V2_OPTIONAL_DEFER_IN_PREFIX } from './summary-hand-over';
 export const V2_BARE_ASSENT = /^\s*(?:yes|yeah|yep|yup|ya|y|ok|okay|k|sure|alright|all right|mhm|uh[- ]?huh)\s*[.!]*\s*$/i;
 
 /** The own-question results a homework session keeps (note_own_answer). */
@@ -896,6 +896,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         : block.name === 'keep_listening' && mustSpeak && !spoken.length ? 'not done: the student is waiting for you to speak. Say the next thing now.'
         // The reply ended on the offer of the next part: a session that ended here would end on a question nobody
         // answers, with no summary (D1). The close comes after their answer.
+        : block.name === 'end_lesson' && handOverRaw ? V2_HAND_OVER_DEFER
         : block.name === 'end_lesson' && (heldAt as { practice?: boolean } | null)?.practice ? 'not ended: they have not yet said enough sentences of their own in this part, and this reply asks for another. Say nothing of this message. Close after their answer.'
         : block.name === 'end_lesson' && heldAt && TUTOR_V2_CLOSE_OPENS_SUMMARY ? 'not ended: this reply ends by asking the student whether to go on, and they have not answered yet. Say nothing of this message. Close after their answer.'
         // Task 7d: in the box's last fifth (earlier, applyControlTool refuses with its own question), with time left and no
@@ -1174,13 +1175,20 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const frameDue = askEvery ? true : frameDueOld;
   // Task 8j (SUMMARY_HAND_OVER): spoken part-flow lessons only (every other lesson as on main 11843955).
   const handOverOn = TUTOR_V2_SUMMARY_HAND_OVER && gated && partFlow && askEvery && !!session.plan;
+  // Fix round 1 (rulings 3, 4): the reply before carried the runtime's hand-over (state); an in-part deferral was already given.
+  const handedOverBefore = handOverOn && v2HandedOver(state);
+  const inPartDeferred = handOverOn && v2InPartDeferredBefore(state.history);
+  // The page held and what followed it while the reply is still coming (its end_lesson decides, as D1's); the held page's block; the
+  // continuation's stage; whether the hand-over was given.
+  let handOverParts: InlinePart[] | null = null; let handOverRaw: string | null = null;
+  let handOverStage: 'none' | 'continuing' | 'done' = 'none'; let handOverGiven = false;
   // …and a frame the model writes is dropped only when it repeats an earlier ask word for word (or a frame about the summary
   // when the 6e budget would have dropped it: the close keeps its rules).
   // Final review I1: never the close's invitation ("Any questions before we finish?" was dropped as a repeat of the overview's
   // "Any questions before we start?", and the runtime's check-in or a part ask took its place).
   // Task 7f C: while the practice part in hand is short of its sentences, the model's own part ask is dropped too (the runtime
   // asks for another sentence instead, below).
-  const dropFrameIf = askEvery ? (x: string) => !v2ReplyInvites(x) && (v2AskRepeats(x, state.history, session.plan) || (TUTOR_V2_PART_OFFER_ONCE && !frameDueOld && isPartFrame(x) && V2_CLOSING_PAGE.test(x)) || (!!practiceShort && !!session.plan && v2AsksPartChange(session.plan, x))) : null;
+  const dropFrameIf = askEvery ? (x: string) => !v2ReplyInvites(x) && (v2AskRepeats(x, state.history, session.plan) || (TUTOR_V2_PART_OFFER_ONCE && !frameDueOld && isPartFrame(x) && V2_CLOSING_PAGE.test(x) && handOverStage !== 'continuing') || (!!practiceShort && !!session.plan && v2AsksPartChange(session.plan, x))) : null;
   // F3, F4: a goodbye waits for the reply to be complete (reply-gate.ts).
   const holdGoodbye = gated && (TUTOR_V2_CLOSE_ONE_QUESTION || TUTOR_V2_PASSED_PART_CLOSE || v2CloseInviteOn(session));
   let framesDropped = 0;
@@ -1298,12 +1306,25 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const stars = TUTOR_V2_NO_MARKDOWN_STARS && noteTargets ? new V2StarStrip() : null;
   // Fix round 1 (minor 2): the runtime's own lines that may carry the model's words (an offer, a card's ask, a correction) too.
   const unstar = (t: string) => (stars ? v2StripStars(t) : t);
+  // Task 8j fix round 1: the fixed hand-over line, said and stored at the end of the reply (the fallback).
+  const sayHandOver = (line: string) => {
+    const t = unstar(line);
+    input.onText?.(`\n\n${t}`); saidChars += t.length + 2; saidNow += `\n\n${t}`;
+    spoken.push(t); rawSpoken.push(t);
+    const last = [...stored].reverse().find((m) => m.role === 'assistant');
+    const blocks = last && Array.isArray(last.content) ? last.content as Anthropic.ContentBlockParam[] : null;
+    const tb = blocks ? [...blocks].reverse().find((c): c is Anthropic.TextBlockParam => c.type === 'text') : undefined;
+    if (tb) tb.text = `${tb.text.trimEnd()}\n\n${t}`;
+    else if (stored[stored.length - 1]?.role === 'assistant' && blocks) blocks.unshift({ type: 'text', text: t });
+    else stored.push({ role: 'assistant', content: [{ type: 'text', text: t }] });
+  };
   for (; modelCalls < V2_MAX_MODEL_CALLS;) {
     const params = {
       model: '',
-      max_tokens: V2_MAX_TOKENS,
+      // Task 8j fix round 1 (ruling 2): the hand-over's continuation is bounded (tokens, effort, and a time limit below).
+      max_tokens: handOverStage === 'continuing' ? V2_HAND_OVER_MAX_TOKENS : V2_MAX_TOKENS,
       thinking: { type: 'adaptive' },
-      output_config: { effort: input.effort ?? V2_DEFAULT_EFFORT },
+      output_config: { effort: handOverStage === 'continuing' ? 'low' : input.effort ?? V2_DEFAULT_EFFORT },
       system,
       tools,
       messages,
@@ -1350,6 +1371,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         let part = parts[k];
         if (heldAt) continue;
         if (pendingHold) { pendingHold.push(part); continue; }
+        if (handOverParts) { handOverParts.push(part); continue; }
         if ('opening' in part) { gate.flush(); input.onBoardOpen?.(); continue; }
         if ('block' in part) {
           // A problem of another part of the plan, set on a page that already holds one part's problem, is the next
@@ -1435,18 +1457,23 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           // it opens as before, and the summary opens the close only once the required parts are done (summaryOpensNow).
           const earlySummary = opensClose && closingPage && !closingTurn && !summaryBefore && !goForPage && !requiredDone() && !!v2UnreachedOffer(session.plan, state) && !boardHasPage(part.block.body) && !state.closed && !releasing;
           const holdIt = earlySummary || !goForPage && part.block.kind === 'page' && !discussion && !summaryBegun && !(summaryBefore && closingPage) && ((closingPage ? frameDueOld : frameDue) || (closesLesson(part.block.body) && !!v2UnreachedOffer(session.plan, state))) && partChange && !boardHasPage(part.block.body) && !state.closed && !closingTurn && !releasing && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length, strict: askEvery, ...(askEvery && TUTOR_V2_PAGE_NEEDS_GO ? { go: v2MoveAnswer(input.studentSaid, lastTutorText, askLangs, undefined, session.plan) === 'go' } : {}) });
-          // Task 8j (SUMMARY_HAND_OVER): in a part-flow lesson a Summary page is never opened in the reply that leaves a part (mic test
-          // 13, embed-1795453600266: the pronunciation score, the Summary and the check question in one reply): held here, the reply ends
-          // with the hand-over, and the page opens on the next reply. Not when the last reply handed over, their words go for it, they
-          // asked to stop, the summary began earlier, or the hard stop is near (V2_TIME_UP_MIN before the box plus its margin).
-          if (!holdIt && closingPage && handOverOn && !goForPage && !summaryBefore && !stopAsked && leftMin > V2_TIME_UP_MIN && !boardHasPage(part.block.body) && !state.closed
-            && !v2HandedOverToSummary(session.plan!, lastTutorText) && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length, strict: true, go: v2MoveAnswer(input.studentSaid, lastTutorText, askLangs, undefined, session.plan) === 'go' })) {
-            gate.flush(); gate.releaseAsk(); gate.dropTrailingCheckIn();
-            const kind = closingTurn ? 'now' : optionalHold || optionalOneMore ? 'more' : 'ask';
-            const offer = kind !== 'now' && (v2ReplyHandsOver(saidNow) || endsAsking(lastSentences(stripBoardBlocks(saidNow), 1))) ? '' : v2SummaryHandOverLine(kind, state.history);
-            heldAt = { raw: part.block.raw, offer };
-            if (offer) { input.onText?.(`\n\n${unstar(offer)}`); saidChars += unstar(offer).length + 2; }
-            input.onToolCall?.({ id: `held_${nowMs.toString(36)}`, name: 'new_page', args: { title: part.block.body.trim() }, outcome: 'not opened yet: the summary opens on the next reply, after the hand-over' });
+          // Task 8j (SUMMARY_HAND_OVER), fix round 1: the Summary page the model opens while the optional part in hand is held by 7x
+          // (v2OptionalHold: its items not done and its minutes not over), on no closing turn, is held (mic test 13, embed-1795453600266:
+          // the pronunciation score, the Summary and the check question in one reply). What follows it waits for the reply's end (its
+          // end_lesson decides, below); then one continuation call finishes the reply with the hand-over. Not after the reply's own words
+          // began the summary (beganNow), nor on the reply after the runtime's hand-over, nor on their go (goForPage).
+          if (!holdIt && closingPage && handOverOn && !!optionalHold && !closingTurn && !releasing && !stopAsked && !beganNow && !summaryBefore && !goForPage && !handedOverBefore && !boardHasPage(part.block.body) && !state.closed) {
+            gate.flush();
+            if (handOverStage === 'continuing') {
+              // The continuation wrote the page again: the fallback (its words so far, then the fixed line).
+              gate.releaseAsk(); gate.dropTrailingCheckIn();
+              const offer = endsAsking(lastSentences(stripBoardBlocks(saidNow), 1)) ? '' : V2_SUMMARY_HAND_OVER_LINE;
+              heldAt = { raw: part.block.raw, offer };
+              if (offer) { input.onText?.(`\n\n${unstar(offer)}`); saidChars += unstar(offer).length + 2; }
+              handOverGiven = true;
+              continue;
+            }
+            handOverParts = [part];
             continue;
           }
           // Task 6g: the summary begins here, so a practice ask waiting before it is dropped; any other page lets it go.
@@ -1524,7 +1551,26 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // Fix round 1 (I3): when the words end, the last sentence goes out (it waited for the white space after it, or for the
     // call to return, behind any trailing tool calls), and a practice ask still waiting goes too, unless a closing page waits
     // on the end of the reply (pendingHold) or a goodbye is held: their outcome decides it.
-    const response = await callModel(params, (delta) => take(cardsIn(inline.push(delta))), input.signal, (type) => { if (type !== 'text' || pendingHold) return; gate.flush(); if (!pendingHold && !gate.holdsGoodbye) gate.releaseAsk(); });
+    // Task 8j fix round 1 (ruling 2): the continuation that fails or runs past its time limit falls back to the fixed hand-over line;
+    // nothing it streams after that is taken.
+    let callCut = false;
+    const modelCall = callModel(params, (delta) => { if (!callCut) take(cardsIn(inline.push(delta))); }, input.signal, (type) => { if (callCut || type !== 'text' || pendingHold) return; gate.flush(); if (!pendingHold && !gate.holdsGoodbye) gate.releaseAsk(); });
+    let response: Anthropic.Message;
+    if (handOverStage === 'continuing') {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const got = await Promise.race([modelCall, new Promise<null>((r) => { timer = setTimeout(() => r(null), V2_HAND_OVER_TIMEOUT_MS); })]).catch(() => null).finally(() => clearTimeout(timer));
+      if (!got) {
+        callCut = true; modelCall.catch(() => undefined);
+        gate.flush(); gate.releaseAsk();
+        handOverStage = 'done';
+        const line = endsAsking(lastSentences(stripBoardBlocks(saidNow), 1)) ? '' : V2_SUMMARY_HAND_OVER_LINE;
+        if (line) sayHandOver(line);
+        handOverGiven = true;
+        heldAt = { raw: handOverRaw!, offer: '' };
+        break;
+      }
+      response = got;
+    } else response = await modelCall;
     take(cardsIn(inline.flush()));
     if (learnerWatch) take(learnerWatch.end());
     gate.flush();
@@ -1535,6 +1581,26 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       const block = (waiting[0] as { block: InlineBlock }).block;
       if (response.content.some((b) => b.type === 'tool_use' && b.name === 'end_lesson')) { releasing = true; releaseText = response.content.map((b) => (b.type === 'text' ? b.text : '')).join(' '); try { take(waiting); gate.flush(); } finally { releasing = false; releaseText = ''; } }
       else hold(block);
+    }
+    if (handOverParts) {
+      // Task 8j fix round 1 (rulings 1, 3): the reply is complete. An end_lesson because the student asked, or one after an in-part
+      // deferral already given, is a close: the page opens with all that followed it, as at 663fe546 (a D1 release). Otherwise the page
+      // stays held: nothing from it on is said, painted or stored (its board tool calls go with it), and its end_lesson is deferred.
+      const waiting: InlinePart[] = handOverParts; handOverParts = null;
+      const end = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === 'tool_use' && b.name === 'end_lesson');
+      if (end && ((end.input as { because?: unknown } | null)?.because === 'student_asked' || inPartDeferred)) { releasing = true; releaseText = response.content.map((b) => (b.type === 'text' ? b.text : '')).join(' '); try { take(waiting); gate.flush(); } finally { releasing = false; releaseText = ''; } }
+      else {
+        handOverRaw = (waiting[0] as { block: InlineBlock }).block.raw;
+        gate.releaseAsk(); gate.dropTrailingCheckIn();
+        let cut = false;
+        for (const b of response.content) {
+          if (b.type !== 'text') continue;
+          if (cut) { b.text = ''; continue; }
+          const at = b.text.indexOf(handOverRaw);
+          if (at >= 0) { b.text = b.text.slice(0, at).trimEnd(); cut = true; }
+        }
+        response.content = response.content.filter((b) => (b.type === 'text' ? !!b.text.trim() : b.type !== 'tool_use' || V2_CONTROL_TOOL_NAMES.has(b.name)));
+      }
     }
     // Task 6g: the reply is complete; a practice ask still waiting goes out (one before a held goodbye waits for the close).
     if (!gate.holdsGoodbye) gate.releaseAsk();
@@ -1662,11 +1728,36 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       }
     }
     questionSaid.clear();
-    if (keep.length) stored.push({ role: 'assistant', content: keep });
+    // Task 8j fix round 1: the continuation is the same reply: stored with the words before the page when nothing came between.
+    const prevStored = stored[stored.length - 1];
+    if (keep.length && handOverStage === 'continuing' && prevStored?.role === 'assistant' && Array.isArray(prevStored.content)) prevStored.content = [...prevStored.content, ...keep];
+    else if (keep.length) stored.push({ role: 'assistant', content: keep });
     // Every stored tool call is followed by its result, whatever the stop reason was
     // (a reply cut at the token limit can carry finished tool calls): the API refuses
     // a history in which one is missing.
     if (results.length) stored.push({ role: 'user', content: results });
+    // Task 8j fix round 1 (ruling 2): the continuation is done: the reply ends on the hand-over (the fixed line when its last
+    // sentence asks nothing); a held Summary page in it already had the fallback.
+    if (handOverStage === 'continuing') {
+      handOverStage = 'done';
+      if (!heldAt) {
+        if (!endsAsking(lastSentences(stripBoardBlocks(saidNow), 1))) sayHandOver(V2_SUMMARY_HAND_OVER_LINE);
+        handOverGiven = true;
+        heldAt = { raw: handOverRaw!, offer: '' };
+      }
+      break;
+    }
+    // …the first call held the Summary page: one continuation call finishes the reply from where the student stopped hearing it.
+    if (handOverRaw && handOverStage === 'none' && !input.signal?.aborted) {
+      handOverStage = 'continuing';
+      const nudge: Anthropic.TextBlockParam = { type: 'text', text: V2_HAND_OVER_CONTINUE };
+      const said = response.content.filter((b) => b.type !== 'text' || !!b.text.trim());
+      messages = said.some((b) => b.type === 'text' || b.type === 'tool_use')
+        ? [...messages, { role: 'assistant', content: said as unknown as Anthropic.ContentBlockParam[] }, { role: 'user', content: [...results, nudge] }]
+        : [...messages.slice(0, -1), { role: 'user', content: [...(messages[messages.length - 1].content as Anthropic.ContentBlockParam[]), nudge] }];
+      continue;
+    }
+    if (handOverRaw && handOverStage === 'none') { handOverStage = 'done'; sayHandOver(V2_SUMMARY_HAND_OVER_LINE); handOverGiven = true; heldAt = { raw: handOverRaw, offer: '' }; }
     if (heldAt) break;
     // Task 7d fix round 1 (I2): a second end_lesson after the invitation's refusal: the reply stands as said, ending on the
     // invitation, and the turn ends with the lesson open (no further model call, nothing said again).
@@ -2349,6 +2440,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Task 8d: the invitation's own sentence, when it was the step recorded (a statement after it is not the ask).
   if (!input.signal?.aborted) v2NoteCloseAskLast(state, nowMs, inviteSaid && state.closeInvitedAt === nowMs && !asksMore ? inviteSaid : lastSaid);
   state.history = [...state.history, ...stored];
+  // Task 8j fix round 1 (ruling 4): the reply that carried the runtime's hand-over, by state: the next reply opens the Summary page.
+  if (handOverGiven && !state.closed && !input.signal?.aborted) state.summaryHandOver = v2TutorReplies(state.history); else delete state.summaryHandOver;
   // Task 7f B: the parts left out for time are told once (a reply names them, or the facts have asked twice).
   if (tf.noSqueeze && state.timeFit && !input.signal?.aborted) v2TimeFitAfterReply(session.plan, state, spoken.join(' '));
   // Task 7i fix round 1 (I1): a part left out that this reply entered (its page holds something) was taken after all.

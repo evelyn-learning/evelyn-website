@@ -28,7 +28,7 @@ import { V2_UNHEARD_SAID } from '@/lib/tutor/v2/heard';
 import { V2_CONTROL_TOOL_NAMES } from '@/lib/tutor/v2/tool-names';
 import { mentionsTool } from '@/lib/tutor/v2/tool-talk';
 import { newV2State, type V2State, type V2ToolCall } from '@/lib/tutor/v2/types';
-import { TUTOR_LESSON_CLOSE_AUTO_END, TUTOR_V2_CHIP_ON_PAINT, TUTOR_V2_UNHEARD_ASK_OWED, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FLAG_CLOCK_PAUSE, TUTOR_V2_TIME_BOX, TUTOR_WORKING_LEVEL, TUTOR_WORKING_LEVEL_ESTIMATE } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_V2_TIME_CHECK_AFTER_SPEECH, TUTOR_LESSON_CLOSE_AUTO_END, TUTOR_V2_CHIP_ON_PAINT, TUTOR_V2_UNHEARD_ASK_OWED, TUTOR_V2_CLOSE_REOPENED, TUTOR_V2_FLAG_CLOCK_PAUSE, TUTOR_V2_TIME_BOX, TUTOR_WORKING_LEVEL, TUTOR_WORKING_LEVEL_ESTIMATE } from '@/lib/tutor/orchestrator/flags';
 import { V2_CLOCK_PAUSE_HONOURED, v2ClientMarginMin, v2HardStop, v2HardStopDelayMs, v2StartClock } from '@/lib/tutor/v2/time-box';
 import { v2HardStopNextTime } from '@/lib/tutor/v2/close-invite';
 import { goodbyeLine } from '@/lib/tutor/voice/timebox-lines';
@@ -123,9 +123,14 @@ export interface V2TurnsConfig {
   /** Voice, at the box: resolves once the tutor's speech under way has finished (true), or at `maxMs` with it still
    *  going (false). Absent (text): nothing is playing. */
   untilQuiet?: (maxMs: number) => Promise<boolean>;
+  /** Voice: the tutor's speech is still playing (Task 8j fix round 1: the time check waits for it to end). Absent (text): never. */
+  speechPending?: () => boolean;
 }
 
 const CLOSE_READ_MS = 4000;
+/** Task 8j fix round 1: the quiet after the tutor's voice before the time check makes a turn, and how many 1 s checks it waits at most. */
+export const V2_TIME_CHECK_QUIET_MS = 15000;
+export const V2_TIME_CHECK_WAIT_TRIES = 120;
 /** How long a finished sentence waits to learn what follows it; and how long it waits for a board block that has begun. */
 const KEEP_BRIEF_MS = 250;
 const KEEP_FOR_BLOCK_MS = 2500;
@@ -620,9 +625,21 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     const dueMs = afterPause || (TUTOR_V2_FLAG_CLOCK_PAUSE && resumedRef.current) ? v2HardStopDelayMs(checkMin, stateRef.current, Date.now()) : checkMin * 60000 - (resumedRef.current ? Date.now() - stateRef.current.startedAtMs : 0);
     if (dueMs > 5000) {
       let tries = 0;
+      // Task 8j fix round 1 (TIME_CHECK_AFTER_SPEECH): not while the tutor's voice still plays, and then only after
+      // V2_TIME_CHECK_QUIET_MS of quiet with no turn (a turn inside the last minutes sets timeCheckedRef, and the check is not needed).
+      // Mic test 13 (embed-1795453600266, 18:02): it fired while the summary and the check question were still being spoken, and the
+      // tutor asked the check question a second time. Checked every second, for at most V2_TIME_CHECK_WAIT_TRIES seconds.
+      let waits = 0; let quietSince = 0; let heardSpeech = false;
       const check = () => {
         if (endingRef.current || closingRef.current.active || stateRef.current.closed || timeCheckedRef.current) return;
         if (busyRef.current) { if (++tries <= 8) timeCheckRef.current = setTimeout(check, 4000); return; }
+        if (TUTOR_V2_TIME_CHECK_AFTER_SPEECH && p.current.speechPending && waits < V2_TIME_CHECK_WAIT_TRIES) {
+          if (p.current.speechPending()) { heardSpeech = true; quietSince = 0; waits += 1; timeCheckRef.current = setTimeout(check, 1000); return; }
+          if (heardSpeech) {
+            if (!quietSince) quietSince = Date.now();
+            if (Date.now() - quietSince < V2_TIME_CHECK_QUIET_MS) { waits += 1; timeCheckRef.current = setTimeout(check, 1000); return; }
+          }
+        }
         timeCheckedRef.current = true;
         p.current.onDebugEvent?.('v2_time_check', `${closeDueMinutes(minutes)} min left of ${minutes}`);
         void runTurnRef.current?.(null, undefined, false, true);

@@ -190,7 +190,9 @@ async function main() {
       a('<board page>Your job</board> What do you do?'), u('I make cars.'), a('Good. Next is present perfect. Shall we go on?'), u('Yes.'),
       a('<board page>Present perfect</board> We use have worked.'), u('ok'), a('<board page>Pronunciation</board> Next word: international. Please say it after me.')];
     const goals = { ...goalsB, 'topic-intro': { status: 'shown' as const, at: 0 }, pronunciation: { status: 'shown' as const, at: 0 } };
-    const st = pagesAt([...B, 'Pronunciation'], { goals, ...level, history: spent });
+    // Task 8j fix round 1 (SEED_8J_HANDOVER, the -8j-on run): the Pronunciation page is open with no item, so 8j's hold applies to this
+    // Summary page unless the reply before carried the runtime's hand-over: seeded here, every later path is as with the switch off.
+    const st = pagesAt([...B, 'Pronunciation'], { goals, ...level, history: spent, ...(process.env.SEED_8J_HANDOVER ? { summaryHandOver: spent.filter((h) => h.role === 'assistant').length } : {}) });
     const r = await runV2Turn({ session: { ...lang, plan: GDI }, state: st, studentSaid: 'Uh, yes.', callModel: streaming('Here is the word once more: international. Now let\'s finish with a short review. <board page>まとめ (Summary)</board> Well done. You used the right tense for each one.').call, boardPass: false, mathsCheck: false, nowMs: 11 * 60000 });
     check('T50: the summary page opens and the summary is recorded as begun', r.state.board.pages.some((p) => /Summary/.test(p.title)) && typeof r.state.summaryBegunAt === 'number' && v2SummaryBegun(r.state));
     const facts = renderFacts({ ...lang, plan: GDI }, r.state, { nowMs: 12 * 60000 });

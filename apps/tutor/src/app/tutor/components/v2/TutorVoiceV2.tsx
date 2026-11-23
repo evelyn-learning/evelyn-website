@@ -71,7 +71,7 @@ import { cueStop, cueTick, cueTurnAccepted, initialThinkingCue, micChangedLabel,
 import { useScreenAwake } from './useScreenAwake';
 import { playThinkingPulse, playTurnChime, primeThinkingCueAudio } from '@/lib/tutor/voice/thinking-cue-audio';
 
-export interface TutorVoiceV2Props extends Omit<V2TurnsConfig, 'mode' | 'onSentence' | 'onCut' | 'closeDelayMs' | 'untilQuiet'> {
+export interface TutorVoiceV2Props extends Omit<V2TurnsConfig, 'mode' | 'onSentence' | 'onCut' | 'closeDelayMs' | 'untilQuiet' | 'speechPending'> {
   voice?: OpenAIVoice;
   ttsProvider?: 'realtime' | 'openai-mini' | 'cartesia' | 'silent';
   cartesiaVoiceId?: string;
@@ -477,6 +477,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
         soonAfterSpeechRef.current = recheck ? WAITED_RECHECK_S : noAsk ? NO_ASK_RECHECK_S : undefined;
         armSilence(soonAfterSpeechRef.current); }
     },
+    // Task 8j fix round 1 (ruling 5): whether the tutor's voice is still playing (the time check waits for it to end).
+    speechPending: () => !!realtimeRef.current?.isSpeechPending(),
     // The session ends once the closing words have been spoken.
     closeDelayMs: async () => {
       const end = Date.now() + 60000;

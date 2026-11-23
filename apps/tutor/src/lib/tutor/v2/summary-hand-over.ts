@@ -1,45 +1,47 @@
 /**
- * Tutor brain v2 — Task 8j (SUMMARY_HAND_OVER): the learner is never moved from a part into the Summary without a hand-over.
- * Mic test 13 (embed-1795453600266, 17.7 min): the reply to the pronunciation score gave the result and the stress tip, then opened
- * the Summary page, gave the summary and ended on the check question, all in one reply, with the optional part held (1 of 2 items) and
- * no "one more, or move on?" asked. The hold of 7x is facts only, and the reply's own `<board page>Summary</board>` opened the close.
+ * Tutor brain v2 — Task 8j (SUMMARY_HAND_OVER): the learner is not moved from a held optional part into the Summary without a
+ * hand-over. Mic test 13 (embed-1795453600266, 17.7 min): the reply to the pronunciation score (the part held by 7x: 1 of 2 items, its
+ * minutes not over) gave the result and the stress tip, then opened the Summary page, gave the summary and ended on the check question,
+ * all in one reply: the 7x hold is facts only, and the reply's own `<board page>Summary</board>` opened the close.
  *
- * By position (turn.ts): in a part-flow lesson the Summary page written in a reply is held, and that reply ends with the hand-over,
- * unless the hand-over was already given (the last reply's last two sentences name the summary: an ask, or "we are moving to the
- * summary now"), their words just now go for the summary (the part ask's go), they asked to stop, the summary began earlier, or the
- * hard stop is near (within V2_TIME_UP_MIN of the box plus its margin: the existing "the time is up" of time-box.ts). The page opens on
- * the next reply. Nothing is refused; no lesson state moves on the phrase reading (it only decides whether a page turns now).
+ * Fix round 1 (controller's rulings), turn.ts:
+ *  - Held only there: a Summary page the model opens while the optional part in hand is held by 7x (v2OptionalHold), on a turn that is
+ *    no closing turn (the wrap due, the time up, a stop asked, `end_lesson` because the student asked, a D1 release), and not after the
+ *    reply's own words announced the summary (`beganNow`: the summary has begun). Every closing turn is as at 663fe546.
+ *  - The held reply is not cut mid-promise: one bounded continuation call finishes the reply from the page on (the part's feedback,
+ *    anything it announced, then the hand-over ask). Fallback (the call fails, times out, or writes the page again): the words before the
+ *    page and the fixed hand-over line; the line is also added when the continuation does not end asking.
+ *  - `end_lesson` on a held reply: deferred with the optional part's in-part prefix, so the deferral counts with 7v's (once in the part);
+ *    when one was already given in the part, or the student asked, the page is not held.
+ *  - The next reply: the Summary opens without the hold when the reply before carried the runtime's hand-over (state.summaryHandOver,
+ *    the count of tutor replies when it was given; round-trips), or the part-release logic opens it on their go.
  * Pure, client-safe.
  */
-import type { LessonPlan } from '../lesson-plan/types';
-import { stripBoardBlocks } from './board-inline';
-import { V2_CLOSING_PAGE } from './part-close';
-import { v2PartNamedIn } from './plan-map';
 import type { V2State } from './types';
+import { v2TutorReplies } from './part-flow';
 
-const SENTENCES = /(?<=[.!?]["'”’)]*)\s+|(?<=[。！？][」』)）"”]*)\s*/;
+/** Task 7v's in-part deferral prefix (re-exported by turn.ts, where it was defined). */
+export const V2_OPTIONAL_DEFER_IN_PREFIX = 'not ended yet, in the part:';
 
-/** The last reply handed over to the summary: its last two sentences name it (the plan's closing part by its name or a localized
- *  name, or a summary word). */
-export function v2HandedOverToSummary(plan: LessonPlan, lastTutor: string): boolean {
-  const last = plan.segments[plan.segments.length - 1];
-  const tail = stripBoardBlocks(lastTutor).split(SENTENCES).map((x) => x.trim()).filter(Boolean).slice(-2).join(' ');
-  if (!tail) return false;
-  return V2_CLOSING_PAGE.test(tail) || (!!last && v2PartNamedIn(last, tail));
+/** The fixed hand-over line (the fallback, or after a continuation that did not ask). */
+export const V2_SUMMARY_HAND_OVER_LINE = 'Would you like one more, or shall we move on to the summary?';
+
+/** The continuation call's instruction, sent after the reply as heard (cut just before the page). */
+export const V2_HAND_OVER_CONTINUE = '[from the system running the session, not from the student] The Summary page was not opened, and nothing you wrote from it on was said: the student heard your reply only up to just before it. Continue the same reply from there, in at most two short sentences: finish what you were saying about this part (if you said you would show or say something, do it now), then ask whether they would like one more or to move on to the summary, and stop there. No summary, no Summary page, no check question, no goodbye, and no end_lesson.';
+
+/** The outcome of `end_lesson` in a held reply: the optional part's in-part deferral (its prefix: counted with 7v's, once in the part). */
+export const V2_HAND_OVER_DEFER = `${V2_OPTIONAL_DEFER_IN_PREFIX} the Summary page was not opened in this reply, which ends by asking whether they want one more or the summary. Say nothing of this message. Close after their answer.`;
+
+/** Bounds of the continuation call. */
+export const V2_HAND_OVER_MAX_TOKENS = 600;
+export const V2_HAND_OVER_TIMEOUT_MS = 10000;
+
+/** The reply before this turn carried the runtime's hand-over (state, not wording). */
+export function v2HandedOver(state: Pick<V2State, 'summaryHandOver' | 'history'>): boolean {
+  return typeof state.summaryHandOver === 'number' && state.summaryHandOver === v2TutorReplies(state.history);
 }
 
-/** Which hand-over: `more` (an optional part in hand that still has time: one more item, or the summary), `ask` (go on to the
- *  summary?), `now` (the time is up: we move to the summary now; it opens on the next reply). */
-export type V2SummaryHandOver = 'more' | 'ask' | 'now';
-
-const LINES: Record<V2SummaryHandOver, string[]> = {
-  more: ['Would you like one more, or shall we move on to the summary?', 'One more, or shall we go to the summary now?'],
-  ask: ['Shall we move on to the summary?', 'Shall we go to the summary now?'],
-  now: ["We're almost out of time, so we'll move on to the summary now.", "Time is nearly up, so let's go to the summary now."],
-};
-
-/** The runtime's hand-over line: never an earlier reply's words when another is left. */
-export function v2SummaryHandOverLine(kind: V2SummaryHandOver, history: V2State['history']): string {
-  const said = history.filter((h) => h.role === 'assistant').map((h) => (typeof h.content === 'string' ? h.content : h.content.map((c) => (c.type === 'text' ? c.text : '')).join(' '))).join(' ');
-  return LINES[kind].find((x) => !said.includes(x)) ?? LINES[kind][0]!;
+/** An in-part deferral was already given in this lesson (7v's or this one's): the page is not held again for an `end_lesson`. */
+export function v2InPartDeferredBefore(history: V2State['history']): boolean {
+  return history.some((h) => Array.isArray(h.content) && h.content.some((c) => c.type === 'tool_result' && typeof c.content === 'string' && c.content.startsWith(V2_OPTIONAL_DEFER_IN_PREFIX)));
 }
