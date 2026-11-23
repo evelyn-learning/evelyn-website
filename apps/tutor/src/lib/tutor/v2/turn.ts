@@ -51,6 +51,8 @@ import { v2NoteCorrection, v2SummaryCardCheck } from './summary-marks';
 import { v2SummaryOpensCloseOn } from './summary-close';
 import { V2_CLOSE_CHECK_REFUSAL, V2_CLOSE_CHECK_REFUSAL_GIVEN, v2CheckCardText, v2CloseCheckRefusal, v2CloseCheckOwed, v2CloseCheckPending, v2PlanCheckQuestion, v2NoteCloseAskLast, v2UnheardCloseAsks } from './close-check';
 import { v2NoteOptionalLeave, v2OptionalHold, v2OptionalOneMore } from './optional-hold';
+import { v2HandedOverToSummary, v2SummaryHandOverLine } from './summary-hand-over';
+import { TUTOR_V2_SUMMARY_HAND_OVER } from '../orchestrator/flags';
 import { V2_CHECK_INS } from './question-overlap';
 import { v2AdaptAfter, v2AdaptBefore, v2AdaptOn, v2AdaptPart, v2FreeConvAfter, v2FreeConvQuiet, v2PracticePairs, v2QuestionOfReply, v2ReplyQuestions, v2RetestPutAfter } from './adaptive';
 import { LearnerCardWatch, V2_AS_SAID_REFUSED, V2_REPLY_MISHEARD, v2CardCorrects, v2CardIsAsSaid, v2CardIsFragment, v2CardSentence, v2LearnerCardsOn, v2LearnerSentences, v2OwedCardCheckLine, v2PracticeAnswerSentences, v2SentenceOnBoard, v2SentencesNotCarded } from './learner-card';
@@ -1170,6 +1172,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const frameDueOld = !TUTOR_V2_PART_OFFER_ONCE || !gated || v2FrameDue(state.history);
   // Task 7a (PART_ASK_EVERY): every part change is asked, so the 6e budget does not apply; the summary page keeps it.
   const frameDue = askEvery ? true : frameDueOld;
+  // Task 8j (SUMMARY_HAND_OVER): spoken part-flow lessons only (every other lesson as on main 11843955).
+  const handOverOn = TUTOR_V2_SUMMARY_HAND_OVER && gated && partFlow && askEvery && !!session.plan;
   // …and a frame the model writes is dropped only when it repeats an earlier ask word for word (or a frame about the summary
   // when the 6e budget would have dropped it: the close keeps its rules).
   // Final review I1: never the close's invitation ("Any questions before we finish?" was dropped as a repeat of the overview's
@@ -1431,6 +1435,20 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           // it opens as before, and the summary opens the close only once the required parts are done (summaryOpensNow).
           const earlySummary = opensClose && closingPage && !closingTurn && !summaryBefore && !goForPage && !requiredDone() && !!v2UnreachedOffer(session.plan, state) && !boardHasPage(part.block.body) && !state.closed && !releasing;
           const holdIt = earlySummary || !goForPage && part.block.kind === 'page' && !discussion && !summaryBegun && !(summaryBefore && closingPage) && ((closingPage ? frameDueOld : frameDue) || (closesLesson(part.block.body) && !!v2UnreachedOffer(session.plan, state))) && partChange && !boardHasPage(part.block.body) && !state.closed && !closingTurn && !releasing && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length, strict: askEvery, ...(askEvery && TUTOR_V2_PAGE_NEEDS_GO ? { go: v2MoveAnswer(input.studentSaid, lastTutorText, askLangs, undefined, session.plan) === 'go' } : {}) });
+          // Task 8j (SUMMARY_HAND_OVER): in a part-flow lesson a Summary page is never opened in the reply that leaves a part (mic test
+          // 13, embed-1795453600266: the pronunciation score, the Summary and the check question in one reply): held here, the reply ends
+          // with the hand-over, and the page opens on the next reply. Not when the last reply handed over, their words go for it, they
+          // asked to stop, the summary began earlier, or the hard stop is near (V2_TIME_UP_MIN before the box plus its margin).
+          if (!holdIt && closingPage && handOverOn && !goForPage && !summaryBefore && !stopAsked && leftMin > V2_TIME_UP_MIN && !boardHasPage(part.block.body) && !state.closed
+            && !v2HandedOverToSummary(session.plan!, lastTutorText) && !mayOpenPart({ title: part.block.body, studentSaid: input.studentSaid, lastTutor: lastTutorText, pagesOpen: state.board.pages.length, strict: true, go: v2MoveAnswer(input.studentSaid, lastTutorText, askLangs, undefined, session.plan) === 'go' })) {
+            gate.flush(); gate.releaseAsk(); gate.dropTrailingCheckIn();
+            const kind = closingTurn ? 'now' : optionalHold || optionalOneMore ? 'more' : 'ask';
+            const offer = kind !== 'now' && (v2ReplyHandsOver(saidNow) || endsAsking(lastSentences(stripBoardBlocks(saidNow), 1))) ? '' : v2SummaryHandOverLine(kind, state.history);
+            heldAt = { raw: part.block.raw, offer };
+            if (offer) { input.onText?.(`\n\n${unstar(offer)}`); saidChars += unstar(offer).length + 2; }
+            input.onToolCall?.({ id: `held_${nowMs.toString(36)}`, name: 'new_page', args: { title: part.block.body.trim() }, outcome: 'not opened yet: the summary opens on the next reply, after the hand-over' });
+            continue;
+          }
           // Task 6g: the summary begins here, so a practice ask waiting before it is dropped; any other page lets it go.
           if (part.block.kind === 'page' && !holdIt) { if (closingPage) { gate.summaryBegins(); closingOpened = true; summaryOpensNow(); } else gate.releaseAsk(); }
           // Task 7d: not said while their questions are still to be invited (the page still opens): the line goes on the reply

@@ -206,7 +206,7 @@ async function main() {
   check('fix round 1 (minor 3): a lone trailing star and ***…*** leave neither the stream nor the final text (the two the same)', !on.loneHeard.includes('*') && !on.loneSpoken.includes('*') && on.loneSpoken.startsWith('Say it once more. Ready?'), [on.loneHeard, on.loneSpoken]);
   {
     const turn = readFileSync(join(__dirname, '..', 'src', 'lib', 'tutor', 'v2', 'turn.ts'), 'utf8');
-    check('fix round 1 (minor 2): the runtime\'s lines that may carry the model\'s words go through the stripper too (two offers, the card ask, the correction)', (turn.match(/input\.onText\?\.\(`\\n\\n\$\{unstar\(/g) ?? []).length === 4);
+    check('fix round 1 (minor 2): the runtime\'s lines that may carry the model\'s words go through the stripper too (two offers, the card ask, the correction)', (turn.match(/input\.onText\?\.\(`\\n\\n\$\{unstar\(/g) ?? []).length === 5); // Task 8j: + the summary hand-over line
   }
   check('a maths voice lesson streams as before (stars untouched)', on.mathsStarsHeard === 'We write it **twice**.', on.mathsStarsHeard);
 

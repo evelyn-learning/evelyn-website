@@ -2594,3 +2594,11 @@ export const TUTOR_V2_PAIR_PAINTED_ONLY = process.env.NEXT_PUBLIC_TUTOR_V2_PAIR_
  *  Mic test 11 (embed-1795220913119, T28: a Japanese instruction and a question card only; T29 "…for 6 year." got no practice signal, its
  *  correction no re-test) (Task 8g, item 4). Default ON; NEXT_PUBLIC_TUTOR_V2_ASK_QUESTION_CARD=off ⇒ as before. */
 export const TUTOR_V2_ASK_QUESTION_CARD = process.env.NEXT_PUBLIC_TUTOR_V2_ASK_QUESTION_CARD !== 'off';
+
+/** Tutor brain v2 (v2/summary-hand-over.ts, v2/turn.ts): in a part-flow lesson the learner is never moved from a part into the Summary
+ *  without a hand-over: a Summary page written in a reply is held there and the reply ends with the hand-over ("one more, or shall we
+ *  move on to the summary?"; when the time is up, "we'll move on to the summary now"), and the page opens on the next reply. Not when
+ *  the last reply already handed over, their words go for the summary, they asked to stop, the summary began earlier, or the hard stop
+ *  is near (V2_TIME_UP_MIN before the box plus its margin). Mic test 13 (embed-1795453600266, 17.7 min: the pronunciation score, the
+ *  Summary and the check question in one reply) (Task 8j). Default ON; NEXT_PUBLIC_TUTOR_V2_SUMMARY_HAND_OVER=off ⇒ as before. */
+export const TUTOR_V2_SUMMARY_HAND_OVER = process.env.NEXT_PUBLIC_TUTOR_V2_SUMMARY_HAND_OVER !== 'off';
