@@ -342,12 +342,15 @@ function literalIs(lit: string, value: string): boolean {
 const stemText = (item: ItemDoc) => htmlToPlainText(item.questionHtml ?? "").replace(/<[^<>]*>/g, " ").replace(/&[a-z#0-9]+;/gi, " ");
 
 /** A problem with how a last sentence states the agreed number, or null. A tainted literal (after ±, inside a
- * function, raised to a power) never states the value and always counts as another value. */
+ * function, raised to a power) never states the value, and counts as another value unless the question writes it
+ * exactly so (a restatement of the question). */
 function numberSentenceProblem(sentence: string, value: string, stemNumbers: string[], where: "Short" | "Diploma"): string | null {
   const lits = scanLiterals(sentence);
   const states = (l: Lit) => !l.taint && literalIs(l.lit, value);
   if (!lits.some(states)) return `the ${where} answer's last sentence does not state the agreed value`;
-  const fromStem = (l: Lit) => !l.taint && stemNumbers.some((g) => g === l.lit || (!l.lit.includes("/") && !g.includes("/") && literalIs(l.lit, g)));
+  // A number written exactly as the question writes it is a restatement of the question, even inside a function
+  // ("sin^-1(\u221a3/2) = 60" restating "sin^-1(\u221a3/2)"); only an equal value written differently needs no taint.
+  const fromStem = (l: Lit) => stemNumbers.some((g) => g === l.lit || (!l.taint && !l.lit.includes("/") && !g.includes("/") && literalIs(l.lit, g)));
   const other = lits.find((l) => !states(l) && !fromStem(l));
   if (other === undefined) return null;
   return `the last sentence of the ${where} answer gives another value: ${other.lit}${other.taint ? ` (${other.taint})` : ""}`;
@@ -399,7 +402,7 @@ function proseLike(inner: string): boolean {
  * equal to another label names it. Exempt, and only these: the article "a"/"A" followed by a lower-case word and not
  * after a lead word (option, choice, answer, pick, select, letter); the pronoun "I" before a common verb or adverb.
  * A label with other characters is matched as a whole, delimited by non-word characters. */
-function otherLabelsNamed(prose: string, agreed: string[], labels: string[], eq: LabelEq): string[] {
+function otherLabelsNamed(prose: string, agreed: string[], labels: string[], eq: LabelEq, stemTokens: Set<string> = new Set()): string[] {
   const others = labels.filter((l) => !agreed.some((a) => a.toUpperCase() === l.toUpperCase()));
   const named = new Set<string>();
   const wordOthers = others.filter((l) => WORD_ONLY.test(l));
@@ -412,6 +415,9 @@ function otherLabelsNamed(prose: string, agreed: string[], labels: string[], eq:
       const after = prose.slice(at + tok.length, at + tok.length + 24);
       if ((tok === "a" || tok === "A") && /^\s+[a-z]/.test(after) && !LEAD_BEFORE.test(tailOf(prose, at))) continue;
       if (tok === "I" && PRONOUN_I_NEXT.test(after)) continue;
+      // The question itself uses this token as a name (a vertex "D" in "triangle DEF", a variable "a" in
+      // "y = a(x - h)^2 + k"): it names an option only after a lead word ("option D", "choice A").
+      if (stemTokens.has(tok) && !LEAD_BEFORE.test(tailOf(prose, at))) continue;
       named.add(hit);
     }
   }
@@ -496,7 +502,9 @@ function draftProblem(d: Reply, answer: Answer, item: ItemDoc): string | null {
     const eq: LabelEq = own.length ? (x, y) => x.toUpperCase() === y.toUpperCase() : (x, y) => x === y;
     const prose = proseOnly(shortBody, labels, eq);
     if (prose === null) return "unbalanced math delimiters in the Short answer";
-    const other = otherLabelsNamed(prose, agreed, labels, eq);
+    // Tokens the question itself uses as names, exactly as written (case kept); the options are not part of it.
+    const stemTokens = new Set([...nfkc(stemText(item)).matchAll(TOKEN)].map((m) => m[0]));
+    const other = otherLabelsNamed(prose, agreed, labels, eq, stemTokens);
     if (other.length) return `the Short answer names option ${other.join(", ")} besides the agreed ${agreed.join(", ")}`;
     return null;
   }
