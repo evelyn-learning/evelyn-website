@@ -13,6 +13,9 @@
  *    page 3 (no turn back to page 2), and the question is said
  *  2 the learner's answer (T15 → T16) and its corrected card on page 3; the next question (T17 → T18) on page 3
  *  3 a lesson without part flow (the same pages in a typed lesson): main's turn back to the problem's page, as on main 11843955
+ *  4 fix round 1: the card painted on page 3 is not recorded as the level check's (problemCards unchanged); a later card there whose
+ *    words are another part's plan problem is painted on page 3, no page made or held, its question said (main's V2_PART_PAGE does
+ *    not run in a part-flow lesson); in the typed lesson main's V2_PART_PAGE still cuts the reply and offers the part
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -89,7 +92,7 @@ const wire = (st: V2State, s: V2Session) => v2ScopeCarried(v2ReadClientState(JSO
 const run = async (session: V2Session, st: V2State, said: string, reply: string, atMin: number) => {
   const heard: string[] = [];
   const r = await runV2Turn({ session, state: st, studentSaid: said, callModel: scripted(reply), onText: (d) => heard.push(d), boardPass: false, mathsCheck: false, nowMs: atMin * MIN });
-  return { r, heard: heard.join('') };
+  return { r, heard: heard.join(''), spoken: r.spoken };
 };
 const titleOfCard = (st: V2State, re: RegExp) => st.board.pages.find((p) => p.items.some((it) => re.test(it.summary)))?.title;
 
@@ -123,6 +126,24 @@ async function main() {
   const tx = await run(typed, opened(), T11, R12, 2.42);
   const txCard = tx.r.toolCalls.find((c) => c.name === 'show_problem');
   check('the card is not painted again; the board turns back to page 2 and points at the problem (main 593ac2959)', /^not painted again: already on page 2 "Level check"; the board has turned back/.test(txCard?.outcome ?? '') && (txCard as { turnsTo?: number } | undefined)?.turnsTo === 1 && tx.r.state.board.current === 1, tx.r.toolCalls.map((c) => `${c.name}: ${c.outcome}`));
+
+  console.log('4. fix round 1: a later card on "Your job" whose words are another part\'s plan problem (main\'s V2_PART_PAGE)');
+  check('the level check keeps its own card in problemCards after T12 (the card painted on page 3 is not recorded as its)', t12.r.state.problemCards?.['level-check'] === 'inl_mwtgcncc_1', t12.r.state.problemCards);
+  check('…and after T16 and T18', t18.r.state.problemCards?.['level-check'] === 'inl_mwtgcncc_1', t18.r.state.problemCards);
+  const PS_Q = 'Did you attend any business events or exhibitions last year?';
+  check('the past simple part\'s own question is read as its plan problem', goalForProblem(GDI, PS_Q) === 'past-simple');
+  const R_PS = `Good. One more question about your work.\n\n<board problem gloss="去年、展示会に行きましたか。">${PS_Q}</board>`;
+  const ps = await run(voice, wire(t12.r.state, voice), T15, R_PS, 3.37);
+  const psCalls = ps.r.toolCalls.map((c) => `${c.name}: ${c.outcome}`);
+  check('painted on page 3 "Your job"; the board stays there', titleOfCard(ps.r.state, /business events/) === 'Your job' && ps.r.state.board.current === 2, psCalls);
+  check('no page created or held', !ps.r.toolCalls.some((c) => c.name === 'new_page' || c.name === 'go_to_page') && !ps.r.state.heldPage && ps.r.state.board.pages.length === 3, [psCalls, ps.r.state.heldPage]);
+  check('its question is said', ps.heard.includes(PS_Q), ps.heard);
+  check('problemCards: the level check\'s card unchanged', ps.r.state.problemCards?.['level-check'] === 'inl_mwtgcncc_1', ps.r.state.problemCards);
+  // A typed lesson (no part flow): main's rule. T12 turned the board back to page 2, which holds the level check's card; the past
+  // simple's question there is the next part beginning: main synthesizes its page block, and the part not yet agreed, the reply is
+  // cut at it and the part is offered ("Next is simple. Shall we go on…", the goal's slug as the title).
+  const typedPs = await run(typed, wire(tx.r.state, typed), T15, R_PS, 3.37);
+  check('typed lesson: main\'s V2_PART_PAGE: the card is not painted, the reply is cut at it and the part offered', !typedPs.r.state.board.pages.some((p) => p.items.some((it) => /business events/.test(it.summary))) && /Next is simple\. Shall we go on/.test(typedPs.spoken), [typedPs.r.toolCalls.map((c) => `${c.name}: ${c.outcome}`), typedPs.spoken]);
 
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);

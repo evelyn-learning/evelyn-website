@@ -123,8 +123,8 @@ export function v2PartInHand(plan: LessonPlan, state: View, kept: boolean = TUTO
 
 /** Task 8i (merge with main): pages `a` and `b` are pages of the same part of the plan (both named for it, or the opening page as
  *  the first part's). Main's "a plan problem asked again turns the board back to its page" (turn.ts, 593ac2959) keeps to these in a
- *  part-flow lesson: mic test 12 (embed-1795449526586) read the "Your job" part's first question as the level check's plan problem
- *  and turned the board back to "Level check" from the page just opened; the card was not painted, its question not said, and
+ *  part-flow lesson: mic test 12 (embed-1795449526586) read a part's first question as the level check's plan problem and turned
+ *  the board back to the level check's page from the part's page just opened; the card was not painted, its question not said, and
  *  what followed was written on the earlier part's page. */
 export function v2SamePartPages(plan: LessonPlan, board: V2Board, a: number, b: number): boolean {
   if (a < 0 || b < 0 || a >= board.pages.length || b >= board.pages.length) return false;

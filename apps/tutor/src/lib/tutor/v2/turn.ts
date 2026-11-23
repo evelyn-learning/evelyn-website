@@ -1011,7 +1011,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         // A problem of the tutor's own making has no answer in the plan: it is worked out apart, after this reply.
         if (put && !planGoal && o.painted && !noOwnKey) state.ownKeys = { ...(state.ownKeys ?? {}), [block.id]: '' };
         if (planGoal) {
-          if (o.painted && !partAlone) state.problemCards = { ...(state.problemCards ?? {}), [planGoal]: block.id };
+          // Task 8i fix round 1: not a card painted on the page in view because the turn back to another part's page was skipped
+          // (crossPart): it is not that part's card, and the part's own card stays its record.
+          if (o.painted && !partAlone && !crossPart) state.problemCards = { ...(state.problemCards ?? {}), [planGoal]: block.id };
           // A problem of the plan on the board is that part of the plan begun, whether or not the tutor records
           // it: a whole lesson ran with the phases showing Hook, because no progress was recorded until the
           // close (Algebra 1, portal-50a1e584). Gone back to while still open, it is the part in hand again.
@@ -1350,7 +1352,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           // part beginning: it gets its page, as if the tutor had written the page block (and so the student is
           // asked first, and a note written just before it goes with it). The exterior-angle rule and its problem
           // went up at the foot of the circle formulas page (ACT Math, portal-87303e9f).
-          if (part.block.kind === 'problem' && session.plan && !discussion && V2_PART_PAGE && !partPaged && pageTurnAt < 0 && !turnedNow && state.board.current >= 0) {
+          // Task 8i fix round 1: not in a part-flow lesson, where the part flow opens the parts' pages (7e position, 7i entry, 7k).
+          if (part.block.kind === 'problem' && session.plan && !discussion && V2_PART_PAGE && !partFlow && !partPaged && pageTurnAt < 0 && !turnedNow && state.board.current >= 0) {
             const goal = goalForProblem(session.plan, part.block.body);
             const page = state.board.pages[state.board.current];
             const cards = state.problemCards ?? {};
