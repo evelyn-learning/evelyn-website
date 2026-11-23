@@ -24,7 +24,7 @@
  */
 import type { LessonPlan } from '../lesson-plan/types';
 import { v2WithoutCutBoardNote } from './interrupted';
-import { TUTOR_V2_CORRECTION_KEPT, TUTOR_V2_FREE_CONV_NO_STARTER, TUTOR_V2_FREE_CONV_PARTNER, TUTOR_V2_FREE_CONVERSATION, TUTOR_V2_RETEST_ASK_ONCE, TUTOR_V2_PART_CLOCK, TUTOR_V2_PERSONA_CARD, TUTOR_V2_RETEST_QUESTION, TUTOR_V2_RETEST_ASKED, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_RETEST_SPREAD, TUTOR_V2_RETEST_TARGET_CHANGED, TUTOR_V2_STARTER_IS_ANSWER, TUTOR_V2_SUPPORT_FOLLOWED, TUTOR_V2_SUPPORT_STEPS } from '../orchestrator/flags';
+import { TUTOR_V2_CORRECTION_KEPT, TUTOR_V2_FREE_CONV_NO_STARTER, TUTOR_V2_FREE_CONV_PARTNER, TUTOR_V2_FREE_CONVERSATION, TUTOR_V2_RETEST_ASK_ONCE, TUTOR_V2_RETEST_SEVERAL_FIXES, TUTOR_V2_PART_CLOCK, TUTOR_V2_PERSONA_CARD, TUTOR_V2_RETEST_QUESTION, TUTOR_V2_RETEST_ASKED, TUTOR_V2_RETEST_MISTAKE, TUTOR_V2_RETEST_SPREAD, TUTOR_V2_RETEST_TARGET_CHANGED, TUTOR_V2_STARTER_IS_ANSWER, TUTOR_V2_SUPPORT_FOLLOWED, TUTOR_V2_SUPPORT_STEPS } from '../orchestrator/flags';
 import { v2AskedForQuestion, v2CardIsOf, v2CardSentence, v2SentenceWords } from './learner-card';
 import { v2AsksRepeat } from './one-question';
 import { v2NoteTargetsOn } from './note-targets';
@@ -40,7 +40,7 @@ import type { V2Retest, V2Session, V2State, V2Support, V2SupportStep, V2TurnEven
 /** Task 7x: `free` (FREE_CONVERSATION), `asked` (RETEST_ASKED); absent = its flag. */
 /** Task 7z: `noStarter` (FREE_CONV_NO_STARTER), `question` (RETEST_QUESTION); absent = its flag. */
 /** Task 8a: `partner` (FREE_CONV_PARTNER), `once` (RETEST_ASK_ONCE); absent = its flag. */
-export interface V2AdaptFlags { support: boolean; retest: boolean; changed?: boolean; spread?: boolean; followed?: boolean; free?: boolean; asked?: boolean; noStarter?: boolean; question?: boolean; partner?: boolean; once?: boolean }
+export interface V2AdaptFlags { support: boolean; retest: boolean; changed?: boolean; spread?: boolean; followed?: boolean; free?: boolean; asked?: boolean; noStarter?: boolean; question?: boolean; partner?: boolean; once?: boolean; several?: boolean }
 const FLAGS = (): V2AdaptFlags => ({ support: TUTOR_V2_SUPPORT_STEPS, retest: TUTOR_V2_RETEST_MISTAKE });
 const changedOn = (f: V2AdaptFlags) => f.changed ?? TUTOR_V2_RETEST_TARGET_CHANGED;
 const spreadOn = (f: V2AdaptFlags) => f.spread ?? TUTOR_V2_RETEST_SPREAD;
@@ -51,6 +51,8 @@ const noStarterOn = (f: V2AdaptFlags) => freeOn(f) && (f.noStarter ?? TUTOR_V2_F
 const questionOn = (f: V2AdaptFlags) => askedOn(f) && (f.question ?? TUTOR_V2_RETEST_QUESTION);
 const partnerOn = (f: V2AdaptFlags) => noStarterOn(f) && (f.partner ?? TUTOR_V2_FREE_CONV_PARTNER);
 const onceOn = (f: V2AdaptFlags) => askedOn(f) && (f.once ?? TUTOR_V2_RETEST_ASK_ONCE);
+/** Task 8l fix round 1 (RETEST_SEVERAL_FIXES): `several`; absent = its flag. */
+const severalOn = (f: V2AdaptFlags) => askedOn(f) && (f.several ?? TUTOR_V2_RETEST_SEVERAL_FIXES);
 
 export const V2_SUPPORT_STEPS: readonly V2SupportStep[] = ['stretch', 'normal', 'starter', 'gap', 'repeat'];
 /** Answers in a row that move the step. */
@@ -134,6 +136,9 @@ const sameTarget = (a: readonly string[], b: readonly string[]) => { const x = n
 // Fix round 2 (N2, ruling): every target phrase whole (each a changed run with its neighbour under RETEST_TARGET_CHANGED): a bare changed
 // word ("in" of "at Tokyo → in Tokyo") passed "I was in a meeting all day."
 function passesRetest(sentence: string, r: Pick<V2Retest, 'said' | 'right' | 'target'>, f: V2AdaptFlags): boolean {
+  // Task 8l fix round 1 (RETEST_SEVERAL_FIXES, the controller's ruling): a card that fixed several errors passes on any one of its changed
+  // phrases used right, with none of its original wrong forms back.
+  if (severalOn(f) && v2RetestWrongForms(r.said, r.right).length >= 2) return usesTarget(sentence, r.target) && !wrongFormBack(sentence, r);
   return askedOn(f) && r.target.length ? r.target.every((x) => usesTarget(sentence, [x])) : usesTarget(sentence, r.target);
 }
 const quoteTarget = (t: readonly string[]) => t.map((x) => `"${x}"`).join(', ');
@@ -167,6 +172,31 @@ function changedRuns(said: string, card: string): { cardWords: string[]; runs: n
   b.forEach((_, k) => { if (kept.has(k)) return; const last = runs[runs.length - 1]; if (last && last[last.length - 1] === k - 1) last.push(k); else runs.push([k]); });
   return { cardWords: b, runs };
 }
+/** Task 8l fix round 1 (RETEST_SEVERAL_FIXES): the learner's original wrong forms a correction card fixed, one per changed run of the card:
+ *  the words of theirs the run replaced with a neighbour of theirs ("attend" → "i attend"), or for a word the card added, their words on
+ *  both sides of the gap (T35 "…negotiate customers and give best price." → "negotiate customers", "give best"). Words as 7u compares them. */
+export function v2RetestWrongForms(said: string, card: string): string[] {
+  const a = v2CorrectionWords(said); const b = v2CorrectionWords(card);
+  const dp: number[][] = Array.from({ length: a.length + 1 }, () => new Array<number>(b.length + 1).fill(0));
+  for (let i = a.length - 1; i >= 0; i--) for (let j = b.length - 1; j >= 0; j--) dp[i]![j] = a[i] === b[j] ? dp[i + 1]![j + 1]! + 1 : Math.max(dp[i + 1]![j]!, dp[i]![j + 1]!);
+  const pairs: Array<[number, number]> = []; let i = 0; let j = 0;
+  while (i < a.length && j < b.length) { if (a[i] === b[j]) { pairs.push([i, j]); i += 1; j += 1; } else if (dp[i + 1]![j]! >= dp[i]![j + 1]!) i += 1; else j += 1; }
+  const keptJ = new Set(pairs.map(([, y]) => y));
+  const out: string[] = [];
+  for (let k = 0; k < b.length; k++) {
+    if (keptJ.has(k) || (k > 0 && !keptJ.has(k - 1))) continue;
+    let end = k; while (end + 1 < b.length && !keptJ.has(end + 1)) end += 1;
+    const prev = [...pairs].reverse().find(([, y]) => y < k); const next = pairs.find(([, y]) => y > end);
+    const from = prev ? prev[0] + 1 : 0; const to = next ? next[0] : a.length;
+    const seg = a.slice(from, to);
+    const form = seg.length ? (prev ? [a[prev[0]]!, ...seg] : next ? [...seg, a[next[0]]!] : seg) : [...(prev ? [a[prev[0]]!] : []), ...(next ? [a[next[0]]!] : [])];
+    if (form.length >= (seg.length ? 1 : 2)) out.push(form.join(' '));
+  }
+  return [...new Set(out)];
+}
+/** One of the retest card's original wrong forms is in their sentence (whole words). */
+const wrongFormBack = (sentence: string, r: Pick<V2Retest, 'said' | 'right'>) => { const have = ` ${v2CorrectionWords(sentence).join(' ')} `; return v2RetestWrongForms(r.said, r.right).some((x) => have.includes(` ${x} `)); };
+
 /** At most this many changed words make a target of them; more, and the card's stress words are the target. */
 export const V2_TARGET_CHANGED_MAX = 3;
 /** Task 7v (RETEST_TARGET_CHANGED): the words the correction changed, as phrases (no neighbour): for the praise line. Empty when
@@ -402,7 +432,10 @@ export function v2AdaptAfter(session: V2Session, state: V2State, part: { index: 
   // (the turn after it) has been read with neither outcome.
   const open = list.find((r) => r.offered && !r.outcome && r.in === part.id && typeof r.askedAt === 'number' && turn > r.askedAt);
   if (open) {
-    const missed = pairs.some((p) => p.corrected && ((changedOn(flags) ? samePhrase(p.stress, open.target) : touches(p.stress, open.target)) || (!usesTarget(p.said, open.target) && usesTarget(p.card, open.target))));
+    // Task 8l fix round 1 (RETEST_SEVERAL_FIXES, ruling): a card that fixed several errors is missed only when one of its original wrong forms
+    // comes back; a later correction of another slip does not score it.
+    const several = severalOn(flags) && v2RetestWrongForms(open.said, open.right).length >= 2;
+    const missed = several ? pairs.some((p) => wrongFormBack(p.said, open)) : pairs.some((p) => p.corrected && ((changedOn(flags) ? samePhrase(p.stress, open.target) : touches(p.stress, open.target)) || (!usesTarget(p.said, open.target) && usesTarget(p.card, open.target))));
     // Fix round 1 (ruling): a pass needs every word the correction changed (7v's record), not one word of the target phrase.
     const passedNow = !missed && pairs.some((p) => passesRetest(p.said, open, flags));
     // Task 7x (RETEST_ASKED): no "not asked" by turns: the outcome stays open until the part ends (v2AdaptBefore).

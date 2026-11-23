@@ -2639,3 +2639,10 @@ export const TUTOR_V2_CORRECTED_CARD_WHOLE = process.env.NEXT_PUBLIC_TUTOR_V2_CO
  *  Mic test 14 (embed-1795467413823, 20.2 min: "What went well" with nothing under it, its two cards corrections placed under "To
  *  improve") (Task 8l). Default ON; NEXT_PUBLIC_TUTOR_V2_WELL_WITH_CARD=off ⇒ as before. */
 export const TUTOR_V2_WELL_WITH_CARD = process.env.NEXT_PUBLIC_TUTOR_V2_WELL_WITH_CARD !== 'off';
+
+/** Tutor brain v2 (v2/adaptive.ts, the 7q re-test of a correction): a correction card that fixed several errors (CORRECTED_CARD_WHOLE asks
+ *  for whole right cards) PASSES its re-test when the learner uses at least one of its changed phrases right and none of its original wrong
+ *  forms comes back; it is MISSED only when one of those wrong forms comes back; a later correction of another slip does not score it. A
+ *  card with one fix: as before (every target phrase; missed on a correction of the same phrase). Task 8l fix round 1 (review I1, the
+ *  controller's ruling; mic test 14, embed-1795467413823 T36). Default ON; NEXT_PUBLIC_TUTOR_V2_RETEST_SEVERAL_FIXES=off ⇒ as before. */
+export const TUTOR_V2_RETEST_SEVERAL_FIXES = process.env.NEXT_PUBLIC_TUTOR_V2_RETEST_SEVERAL_FIXES !== 'off';

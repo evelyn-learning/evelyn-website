@@ -36,6 +36,7 @@ import { v2NoteCorrection } from '../src/lib/tutor/v2/summary-marks';
 import { V2_AS_SAID_REFUSED, v2CardCorrects, v2CardIsOf, v2CardSentence, v2LastQuestionOf, v2OwedCardCheckLine } from '../src/lib/tutor/v2/learner-card';
 import { v2PracticePairs } from '../src/lib/tutor/v2/adaptive';
 import { V2_SUMMARY_IMPROVE_HEADING, V2_SUMMARY_WELL_HEADING } from '../src/lib/tutor/v2/summary-headings';
+import { TUTOR_V2_RETEST_SEVERAL_FIXES } from '../src/lib/tutor/orchestrator/flags';
 
 let passed = 0; let failed = 0;
 const CHILD = process.env.MIC10_8C_CHILD;
@@ -242,7 +243,12 @@ async function main() {
 
   console.log('4  ASK_LAST_QUESTION: the ask read from the last question');
   check('v2LastQuestionOf: a question then one short non-question sentence gives the question; a long tail or no question before it gives the last', v2LastQuestionOf(['Now, have you been with your current company for a long time?', 'Please answer in English.']) === 'Now, have you been with your current company for a long time?' && v2LastQuestionOf(['Good.', 'Please answer in English.']) === 'Please answer in English.' && v2LastQuestionOf(['How long have you worked there?', 'I will tell you about my own job first and then we can compare them.']) === 'I will tell you about my own job first and then we can compare them.');
-  check('T44 → T45: a practice answer: T45 owed a card (the board check gets the line), counted (signal wrong) with the corrected card, and the re-test put at T44 scored missed', HAS_OWED.test(on.t46.check) && on.t46.events.some((e) => /^v2_practice_signal wrong part=past-simple/.test(e)) && on.t46.events.some((e) => /^v2_retest_outcome target="i have", "corporation for five" outcome=missed/.test(e)), [on.t46.events, on.t46.check.slice(-600)]);
+  // Task 8l fix round 1 (RETEST_SEVERAL_FIXES, the controller's ruling): the re-test put at T44 is of a card that fixed several errors ("i
+  // worked" → "i have worked", "nagoya five" → "nagoya corporation for five"); T45 ("I am with … for a long time") brings back neither
+  // original wrong form and uses no target phrase, so it is no longer scored (it was missed, by T46's correction touching "i have").
+  // With the switch off it is missed as before.
+  check('T44 → T45: a practice answer: T45 owed a card (the board check gets the line), counted (signal wrong) with the corrected card; the re-test put at T44: 8l fix round 1, not scored (switch off: missed)', HAS_OWED.test(on.t46.check) && on.t46.events.some((e) => /^v2_practice_signal wrong part=past-simple/.test(e))
+    && (TUTOR_V2_RETEST_SEVERAL_FIXES ? !on.t46.events.some((e) => /^v2_retest_outcome target="i have", "corporation for five"/.test(e)) : on.t46.events.some((e) => /^v2_retest_outcome target="i have", "corporation for five" outcome=missed/.test(e))), [on.t46.events, on.t46.check.slice(-600)]);
 
   console.log('3  SUMMARY_HEADINGS: the Summary page\'s headings by the runtime');
   const headings = (t: Probe['sumA']) => t.calls.filter((c) => c.name === 'annotate' && c.style === 'heading' && !/^not /.test(c.outcome));

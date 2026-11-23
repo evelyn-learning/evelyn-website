@@ -16,7 +16,11 @@
  *                          "To improve", as 7w / 8c intend): the went-well heading is held and never painted; with a card said right
  *                          (T53's) under it, the heading goes up right before that card in the model's words, above "To improve"; the
  *                          facts list T53's sentence as said right; with none on record, the facts say to leave the group out
- *  each switch off alone (a child process per switch): as at ade52609 for that item.
+ *  4 RETEST_SEVERAL_FIXES  (fix round 1, review I1, the controller's ruling) T35 with the whole card "…negotiate with customers and give
+ *                          the best price." (two fixes): its re-test passes on one changed phrase used right with no original wrong form
+ *                          back; missed only when "negotiate customers" / "give best" comes back; a later correction of another slip
+ *                          does not score it
+ *  each switch off alone (a child process per switch): as at ade52609 for that item (4: as at ac244651).
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -32,7 +36,8 @@ import { richBlocks, v2NoteLinesAreItems } from '../src/lib/tutor/v2/rich-text';
 import { V2_SUMMARY_IMPROVE_HEADING, V2_SUMMARY_WELL_HEADING, V2_SUMMARY_WELL_HELD } from '../src/lib/tutor/v2/summary-headings';
 import { V2_SUMMARY_NO_WELL } from '../src/lib/tutor/v2/summary-layout';
 import { V2_AS_SAID_REFUSED } from '../src/lib/tutor/v2/learner-card';
-import { TUTOR_V2_CORRECTED_CARD_WHOLE, TUTOR_V2_NOTE_ITEM_LINES, TUTOR_V2_WELL_WITH_CARD } from '../src/lib/tutor/orchestrator/flags';
+import { TUTOR_V2_CORRECTED_CARD_WHOLE, TUTOR_V2_NOTE_ITEM_LINES, TUTOR_V2_RETEST_SEVERAL_FIXES, TUTOR_V2_WELL_WITH_CARD } from '../src/lib/tutor/orchestrator/flags';
+import { v2AdaptAfter, v2PracticePairs, v2RetestWrongForms } from '../src/lib/tutor/v2/adaptive';
 
 let passed = 0; let failed = 0;
 const CHILD = process.env.MIC14_8L_CHILD;
@@ -219,6 +224,18 @@ async function turn(state: V2State, said: string, replies: string[], atMin: numb
 // ── Flag 1: the opening note ──
 const NOTE1 = 'Present perfect (現在完了)\nPast simple (過去形)';
 
+// ── Fix round 1: the re-test of a card that fixed several errors (T35 → the whole card) ──
+const T35 = 'I have learned to negotiate customers and give best price.';
+const WHOLE35 = 'I have learned to negotiate with customers and give the best price.';
+const PP = { index: 3, id: 'present-perfect' };
+/** The re-test of T35's whole card, open (asked at reply 1) in Present perfect; `said`: their later answer, `card`/`stress`: its card. */
+function retestAfter(said: string, card: string, stress: string[]) {
+  const s: V2State = { ...newV2State(0), history: [{ role: 'user', content: START }, { role: 'assistant', content: 'a' }, { role: 'user', content: 'b' }, { role: 'assistant', content: 'c' }, { role: 'user', content: 'd' }, { role: 'assistant', content: 'e' }],
+    retests: [{ part: PP.id, said: T35, right: WHOLE35, target: ['with customers', 'the best'], turn: 0, offered: 1, in: PP.id, askedAt: 1, lastAt: 1 }] };
+  const events = v2AdaptAfter(lang, s, PP, [said], v2PracticePairs([said], [{ sentence: card, stress }]), { support: false, retest: true });
+  return { outcome: s.retests![0]!.outcome ?? null, events: events.map((e) => `${e.type} ${e.message}`) };
+}
+
 async function probe() {
   // 2: T35 → T36 (the reply as said, with the card WB21 the row holds).
   const atT35 = (() => { const s = atT89(); s.history = history(35); s.board.pages = s.board.pages.slice(0, 4); s.board.pages[3]!.items = s.board.pages[3]!.items.slice(0, 6); s.board.current = 3; s.corrections = []; s.correctedSentences = []; s.correctedOlder = []; s.partStart = { part: 'present-perfect', at: 6 * MIN }; s.goals = goalsThrough(4); return s; })();
@@ -228,8 +245,18 @@ async function probe() {
   const sum = await turn(atT89(), T(89), [T90(), NONE], 19.75);
   const sumRight = await turn(atT89(), T(89), [T90_WITH_RIGHT, NONE], 19.75);
   const noRight = await turn(atT89([WB32, WB35]), T(89), [T90(), NONE], 19.75);
-  return { t36, sum, sumRight, noRight, saidRight: v2SaidRightSentences(lang, atT89()), saidRightNone: v2SaidRightSentences(lang, atT89([WB32, WB35])),
-    flags: { items: TUTOR_V2_NOTE_ITEM_LINES, whole: TUTOR_V2_CORRECTED_CARD_WHOLE, well: TUTOR_V2_WELL_WITH_CARD } };
+  const rt = {
+    // the session's shape: "…give the best price" with "with" right
+    wholeRight: retestAfter(WHOLE35, WHOLE35, []),
+    // one changed phrase used right in a new sentence, the other not used, no wrong form
+    oneRight: retestAfter('I have talked with customers about prices.', 'I have talked with customers about prices.', []),
+    // "give best price" again: an original wrong form back
+    again: retestAfter('I have learned to negotiate with customers and give best price.', WHOLE35, ['the']),
+    // a later correction of another slip (an article elsewhere): not scored
+    other: retestAfter('I have gave best service to customer.', 'I have given the best service to the customer.', ['given', 'the', 'the']),
+  };
+  return { rt, t36, sum, sumRight, noRight, saidRight: v2SaidRightSentences(lang, atT89()), saidRightNone: v2SaidRightSentences(lang, atT89([WB32, WB35])),
+    flags: { several: TUTOR_V2_RETEST_SEVERAL_FIXES, items: TUTOR_V2_NOTE_ITEM_LINES, whole: TUTOR_V2_CORRECTED_CARD_WHOLE, well: TUTOR_V2_WELL_WITH_CARD } };
 }
 type Probe = Awaited<ReturnType<typeof probe>>;
 const WHOLE = /A card that corrects their sentence holds the whole sentence right/;
@@ -269,6 +296,14 @@ async function main() {
   check('with no sentence said right on record (WB32 and WB35 left off the board): the facts leave the group out and ask for kind words on what to improve and on their effort; the spoken line names no went-well group', on.saidRightNone.length === 0 && on.noRight.facts.includes(V2_SUMMARY_NO_WELL) && /for each group \(the grammar points, what to improve\)/.test(on.noRight.facts) && !/What went well<\/board>/.test(on.noRight.facts), on.noRight.facts.slice(0, 3000));
   check('the switch is default ON', on.flags.well === true);
 
+  console.log('4  RETEST_SEVERAL_FIXES: the re-test of a card that fixed several errors (fix round 1, ruling)');
+  check('T35 → the whole card: its original wrong forms are "negotiate customers" and "give best"', JSON.stringify(v2RetestWrongForms(T35, WHOLE35)) === JSON.stringify(['negotiate customers', 'give best']));
+  check('"…negotiate with customers and give the best price." later (with right, the best right): passed', on.rt.wholeRight.outcome === 'passed', on.rt.wholeRight);
+  check('one changed phrase used right ("talked with customers"), the other not used, no wrong form: passed', on.rt.oneRight.outcome === 'passed', on.rt.oneRight);
+  check('"…and give best price." again: missed (an original wrong form back)', on.rt.again.outcome === 'missed', on.rt.again);
+  check('a later correction of another slip ("gave best service" → "given the best service"): not scored', on.rt.other.outcome === null, on.rt.other);
+  check('the switch is default ON', on.flags.several === true);
+
   console.log('each switch off alone (a child process per switch): as at ade52609 for that item');
   const child = (flag: string) => {
     const res = spawnSync(process.execPath, [...process.execArgv, __filename], { env: { ...process.env, [`NEXT_PUBLIC_TUTOR_V2_${flag}`]: 'off', MIC14_8L_CHILD: '1' }, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
@@ -288,6 +323,11 @@ async function main() {
   {
     const off = child('WELL_WITH_CARD');
     check('WELL_WITH_CARD off: "What went well" painted at once with nothing under it, as live; the facts as before (no list, no leave-out line)', off.sum.page[1] === `annotate: ${V2_SUMMARY_WELL_HEADING}` && off.sum.page[2] === `annotate: ${V2_SUMMARY_IMPROVE_HEADING}` && !off.sum.facts.includes('chosen from these only') && !off.noRight.facts.includes(V2_SUMMARY_NO_WELL) && WHOLE.test(off.t36.system), off.sum.page);
+  }
+
+  {
+    const off = child('RETEST_SEVERAL_FIXES');
+    check('RETEST_SEVERAL_FIXES off: as at ac244651 (every target phrase to pass; a correction of the same phrase misses): one phrase used, not scored; the other slip\'s correction of "the best": missed; the whole sentence: passed', off.rt.oneRight.outcome === null && off.rt.other.outcome === 'missed' && off.rt.wholeRight.outcome === 'passed' && off.flags.items && wellOn(off), off.rt);
   }
 
   console.log(`\n${passed} passed, ${failed} failed`);
