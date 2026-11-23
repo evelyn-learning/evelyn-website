@@ -29,8 +29,11 @@ export const V2_SUMMARY_HAND_OVER_LINE = 'Would you like one more, or shall we m
 /** The continuation call's instruction, sent after the reply as heard (cut just before the page). */
 export const V2_HAND_OVER_CONTINUE = '[from the system running the session, not from the student] The Summary page was not opened, and nothing you wrote from it on was said: the student heard your reply only up to just before it. Continue the same reply from there, in at most two short sentences: finish what you were saying about this part (if you said you would show or say something, do it now), then ask whether they would like one more or to move on to the summary, and stop there. No summary, no Summary page, no check question, no goodbye, and no end_lesson.';
 
+/** Fix round 2 (I1): the same, when the words before the page had begun to announce the summary. */
+export const V2_HAND_OVER_CONTINUE_BEGAN = '[from the system running the session, not from the student] The Summary page was not opened, and nothing you wrote from it on was said: the student heard your reply only up to just before it, where you had begun to announce the summary. Continue the same reply from there, in at most two short sentences: say that first we finish this part, then ask whether they would like one more or to move on to the summary, and stop there. No summary, no Summary page, no check question, no goodbye, and no end_lesson.';
+
 /** The outcome of `end_lesson` in a held reply: the optional part's in-part deferral (its prefix: counted with 7v's, once in the part). */
-export const V2_HAND_OVER_DEFER = `${V2_OPTIONAL_DEFER_IN_PREFIX} the Summary page was not opened in this reply, which ends by asking whether they want one more or the summary. Say nothing of this message. Close after their answer.`;
+export const V2_HAND_OVER_DEFER = `${V2_OPTIONAL_DEFER_IN_PREFIX} the Summary page was not opened in this reply, which ends by asking them something. Say nothing of this message. Close after their answer.`;
 
 /** Bounds of the continuation call. */
 export const V2_HAND_OVER_MAX_TOKENS = 600;

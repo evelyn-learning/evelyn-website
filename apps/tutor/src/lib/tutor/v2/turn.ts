@@ -51,7 +51,7 @@ import { v2NoteCorrection, v2SummaryCardCheck } from './summary-marks';
 import { v2SummaryOpensCloseOn } from './summary-close';
 import { V2_CLOSE_CHECK_REFUSAL, V2_CLOSE_CHECK_REFUSAL_GIVEN, v2CheckCardText, v2CloseCheckRefusal, v2CloseCheckOwed, v2CloseCheckPending, v2PlanCheckQuestion, v2NoteCloseAskLast, v2UnheardCloseAsks } from './close-check';
 import { v2NoteOptionalLeave, v2OptionalHold, v2OptionalOneMore } from './optional-hold';
-import { V2_HAND_OVER_CONTINUE, V2_HAND_OVER_DEFER, V2_HAND_OVER_MAX_TOKENS, V2_HAND_OVER_TIMEOUT_MS, V2_OPTIONAL_DEFER_IN_PREFIX, V2_SUMMARY_HAND_OVER_LINE, v2HandedOver, v2InPartDeferredBefore } from './summary-hand-over';
+import { V2_HAND_OVER_CONTINUE, V2_HAND_OVER_CONTINUE_BEGAN, V2_HAND_OVER_DEFER, V2_HAND_OVER_MAX_TOKENS, V2_HAND_OVER_TIMEOUT_MS, V2_OPTIONAL_DEFER_IN_PREFIX, V2_SUMMARY_HAND_OVER_LINE, v2HandedOver, v2InPartDeferredBefore } from './summary-hand-over';
 import { TUTOR_V2_SUMMARY_HAND_OVER } from '../orchestrator/flags';
 import { V2_CHECK_INS } from './question-overlap';
 import { v2AdaptAfter, v2AdaptBefore, v2AdaptOn, v2AdaptPart, v2FreeConvAfter, v2FreeConvQuiet, v2PracticePairs, v2QuestionOfReply, v2ReplyQuestions, v2RetestPutAfter } from './adaptive';
@@ -1182,6 +1182,13 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // continuation's stage; whether the hand-over was given.
   let handOverParts: InlinePart[] | null = null; let handOverRaw: string | null = null;
   let handOverStage: 'none' | 'continuing' | 'done' = 'none'; let handOverGiven = false;
+  // Fix round 2: the words before the held page announced the summary (I1: the continuation says the part is finished first); where the
+  // continuation's words begin in what was said (M1); the continuation's own abort (M1).
+  let handOverBegan = false; let contFrom = -1; let contAbort: AbortController | null = null;
+  // Fix round 2 (M2): the conditions of the hold that do not depend on how the page was written (inline block or new_page call).
+  const handOverMay = (title: string) => handOverOn && !!optionalHold && !closingTurn && !stopAsked && !summaryBefore && !handedOverBefore && !state.closed && handOverStage === 'none'
+    && !state.board.pages.some((pg) => pg.title.replace(/\s+/g, '').toLowerCase() === title.replace(/\s+/g, '').toLowerCase())
+    && !(TUTOR_V2_PART_GO_NAMED && !!session.plan && (v2GoForPart(input.studentSaid, lastTutorText, session.plan, state, session.plan.segments.length - 1, askLangs) || (declinedNow >= 0 && v2NextPart(session.plan, state, v2PartInHand(session.plan, state)) === session.plan.segments.length - 1)));
   // …and a frame the model writes is dropped only when it repeats an earlier ask word for word (or a frame about the summary
   // when the 6e budget would have dropped it: the close keeps its rules).
   // Final review I1: never the close's invitation ("Any questions before we finish?" was dropped as a repeat of the overview's
@@ -1307,9 +1314,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Fix round 1 (minor 2): the runtime's own lines that may carry the model's words (an offer, a card's ask, a correction) too.
   const unstar = (t: string) => (stars ? v2StripStars(t) : t);
   // Task 8j fix round 1: the fixed hand-over line, said and stored at the end of the reply (the fallback).
-  const sayHandOver = (line: string) => {
-    const t = unstar(line);
-    input.onText?.(`\n\n${t}`); saidChars += t.length + 2; saidNow += `\n\n${t}`;
+  const storeSaid = (t: string) => {
     spoken.push(t); rawSpoken.push(t);
     const last = [...stored].reverse().find((m) => m.role === 'assistant');
     const blocks = last && Array.isArray(last.content) ? last.content as Anthropic.ContentBlockParam[] : null;
@@ -1317,6 +1322,11 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     if (tb) tb.text = `${tb.text.trimEnd()}\n\n${t}`;
     else if (stored[stored.length - 1]?.role === 'assistant' && blocks) blocks.unshift({ type: 'text', text: t });
     else stored.push({ role: 'assistant', content: [{ type: 'text', text: t }] });
+  };
+  const sayHandOver = (line: string) => {
+    const t = unstar(line);
+    input.onText?.(`\n\n${t}`); saidChars += t.length + 2; saidNow += `\n\n${t}`;
+    storeSaid(t);
   };
   for (; modelCalls < V2_MAX_MODEL_CALLS;) {
     const params = {
@@ -1327,6 +1337,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       output_config: { effort: handOverStage === 'continuing' ? 'low' : input.effort ?? V2_DEFAULT_EFFORT },
       system,
       tools,
+      // Task 8j fix round 2 (M2): the continuation writes words only: no tool (state, pages, pronunciation) is called in it.
+      ...(handOverStage === 'continuing' ? { tool_choice: { type: 'none' } } : {}),
       messages,
     } as unknown as Anthropic.MessageCreateParamsNonStreaming;
     const inline = new BoardInlineStream();
@@ -1460,9 +1472,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
           // Task 8j (SUMMARY_HAND_OVER), fix round 1: the Summary page the model opens while the optional part in hand is held by 7x
           // (v2OptionalHold: its items not done and its minutes not over), on no closing turn, is held (mic test 13, embed-1795453600266:
           // the pronunciation score, the Summary and the check question in one reply). What follows it waits for the reply's end (its
-          // end_lesson decides, below); then one continuation call finishes the reply with the hand-over. Not after the reply's own words
-          // began the summary (beganNow), nor on the reply after the runtime's hand-over, nor on their go (goForPage).
-          if (!holdIt && closingPage && handOverOn && !!optionalHold && !closingTurn && !releasing && !stopAsked && !beganNow && !summaryBefore && !goForPage && !handedOverBefore && !boardHasPage(part.block.body) && !state.closed) {
+          // end_lesson decides, below); then one continuation call finishes the reply with the hand-over. Not on the reply after the
+          // runtime's hand-over, nor on their go (goForPage). Fix round 2 (I1): words before it that began the summary do not exempt it.
+          if (!holdIt && closingPage && handOverOn && !!optionalHold && !closingTurn && !releasing && !stopAsked && !summaryBefore && !goForPage && !handedOverBefore && !boardHasPage(part.block.body) && !state.closed) {
             gate.flush();
             if (handOverStage === 'continuing') {
               // The continuation wrote the page again: the fallback (its words so far, then the fixed line).
@@ -1473,6 +1485,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
               handOverGiven = true;
               continue;
             }
+            // Fix round 2 (I1): not exempt when the words before it announced the summary: the continuation says this part ends first.
+            handOverBegan = beganNow;
             handOverParts = [part];
             continue;
           }
@@ -1554,15 +1568,19 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // Task 8j fix round 1 (ruling 2): the continuation that fails or runs past its time limit falls back to the fixed hand-over line;
     // nothing it streams after that is taken.
     let callCut = false;
-    const modelCall = callModel(params, (delta) => { if (!callCut) take(cardsIn(inline.push(delta))); }, input.signal, (type) => { if (callCut || type !== 'text' || pendingHold) return; gate.flush(); if (!pendingHold && !gate.holdsGoodbye) gate.releaseAsk(); });
+    if (handOverStage === 'continuing') { contAbort = new AbortController(); const ac = contAbort; if (input.signal?.aborted) ac.abort(); else input.signal?.addEventListener('abort', () => ac.abort(), { once: true }); contFrom = saidNow.length; }
+    const modelCall = callModel(params, (delta) => { if (!callCut) take(cardsIn(inline.push(delta))); }, handOverStage === 'continuing' ? contAbort!.signal : input.signal, (type) => { if (callCut || type !== 'text' || pendingHold) return; gate.flush(); if (!pendingHold && !gate.holdsGoodbye) gate.releaseAsk(); });
     let response: Anthropic.Message;
     if (handOverStage === 'continuing') {
       let timer: ReturnType<typeof setTimeout> | undefined;
       const got = await Promise.race([modelCall, new Promise<null>((r) => { timer = setTimeout(() => r(null), V2_HAND_OVER_TIMEOUT_MS); })]).catch(() => null).finally(() => clearTimeout(timer));
       if (!got) {
-        callCut = true; modelCall.catch(() => undefined);
-        gate.flush(); gate.releaseAsk();
+        // Fix round 2 (M1): the unfinished sentence is dropped (never said); the complete sentences said are kept in the stored reply.
+        callCut = true; modelCall.catch(() => undefined); contAbort?.abort();
+        gate.dropTail(); gate.flush(); gate.releaseAsk();
         handOverStage = 'done';
+        const contSaid = contFrom >= 0 ? stripBoardBlocks(saidNow.slice(contFrom)).trim() : '';
+        if (contSaid) storeSaid(contSaid);
         const line = endsAsking(lastSentences(stripBoardBlocks(saidNow), 1)) ? '' : V2_SUMMARY_HAND_OVER_LINE;
         if (line) sayHandOver(line);
         handOverGiven = true;
@@ -1602,6 +1620,27 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         response.content = response.content.filter((b) => (b.type === 'text' ? !!b.text.trim() : b.type !== 'tool_use' || V2_CONTROL_TOOL_NAMES.has(b.name)));
       }
     }
+    // Task 8j fix round 2 (M2): a new_page call titled as the closing page is held as the inline page is (its words were all said: the
+    // call has no place in them). It and every board call after it are dropped; an end_lesson decides as above.
+    if (!handOverRaw && handOverStage === 'none') {
+      const at = response.content.findIndex((b) => b.type === 'tool_use' && b.name === 'new_page' && closesLesson(String((b.input as { title?: unknown } | null)?.title ?? '')));
+      const np = at >= 0 ? response.content[at] as Anthropic.ToolUseBlock : null;
+      const end = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === 'tool_use' && b.name === 'end_lesson');
+      if (np && handOverMay(String((np.input as { title?: unknown }).title)) && !(end && ((end.input as { because?: unknown } | null)?.because === 'student_asked' || inPartDeferred))) {
+        handOverRaw = `\u0000new_page:${np.id}`;
+        handOverBegan = V2_SUMMARY_BEGUN.test(lastSentences(stripBoardBlocks(saidNow), 2));
+        gate.releaseAsk(); gate.dropTrailingCheckIn();
+        response.content = response.content.filter((b, k) => b.type !== 'tool_use' || k < at || V2_CONTROL_TOOL_NAMES.has(b.name));
+      }
+    }
+    // Task 8j fix round 2 (I2): words before the held page that already end on a question: no continuation, no line, no hand-over state.
+    // The reply ends at that question; the next reply that writes the page is held again and gets the hand-over then.
+    if (handOverRaw && handOverStage === 'none' && (v2ReplyHandsOver(saidNow) || endsAsking(lastSentences(stripBoardBlocks(saidNow), 1)))) {
+      handOverStage = 'done';
+      heldAt = { raw: handOverRaw, offer: '' };
+    }
+    // Task 8j fix round 2 (M2): the continuation calls no tool (tool_choice none; any that comes is dropped, unrun).
+    if (handOverStage === 'continuing') response.content = response.content.filter((b) => b.type !== 'tool_use');
     // Task 6g: the reply is complete; a practice ask still waiting goes out (one before a held goodbye waits for the close).
     if (!gate.holdsGoodbye) gate.releaseAsk();
     // Task 7c fix round 1: this call's words are complete; a check-in straight after a hand-over ended them, and is dropped.
@@ -1750,7 +1789,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // …the first call held the Summary page: one continuation call finishes the reply from where the student stopped hearing it.
     if (handOverRaw && handOverStage === 'none' && !input.signal?.aborted) {
       handOverStage = 'continuing';
-      const nudge: Anthropic.TextBlockParam = { type: 'text', text: V2_HAND_OVER_CONTINUE };
+      const nudge: Anthropic.TextBlockParam = { type: 'text', text: handOverBegan ? V2_HAND_OVER_CONTINUE_BEGAN : V2_HAND_OVER_CONTINUE };
       const said = response.content.filter((b) => b.type !== 'text' || !!b.text.trim());
       messages = said.some((b) => b.type === 'text' || b.type === 'tool_use')
         ? [...messages, { role: 'assistant', content: said as unknown as Anthropic.ContentBlockParam[] }, { role: 'user', content: [...results, nudge] }]

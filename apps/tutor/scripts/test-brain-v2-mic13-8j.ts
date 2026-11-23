@@ -15,7 +15,10 @@
  *  2 fallbacks: the continuation fails / writes the Summary page again / asks nothing → the fixed hand-over line, once
  *  3 the next reply: "The summary, please." and a bare "Yes." open the page (state, not wording); "One more, please." keeps the hold
  *  4 never held: a closing turn (23.7: the time up; a stop asked; end_lesson because the student asked; the wrap due), a reply whose own
- *    words began the summary (no duplicate announcement), a required part's reply with no 7x hold, an in-part deferral already given
+ *    a required part's reply with no 7x hold, an in-part deferral already given
+ *  fix round 2: words that began the summary are held too (the continuation finishes the part first); words before the page that end on a
+ *    question: no continuation, no line, no state; the time-out keeps whole sentences only; a new_page call titled Summary is held; the
+ *    continuation calls no tool
  *  5 the whole close after a hand-over (8d): summary once with its headings and marks, check question once, invitation, short goodbye
  *  6 a lesson without part flow (typed): identical on and off
  *  7 NEXT_PUBLIC_TUTOR_V2_SUMMARY_HAND_OVER=off (child process): as at 663fe546
@@ -29,7 +32,7 @@ import { parseLessonPlan } from '../src/lib/tutor/lesson-plan/parser';
 import { runV2Turn, type V2ModelCall } from '../src/lib/tutor/v2/turn';
 import { v2ReadClientState } from '../src/lib/tutor/v2/client-state';
 import { v2ScopeCarried } from '../src/lib/tutor/v2/state-carry';
-import { V2_HAND_OVER_CONTINUE } from '../src/lib/tutor/v2/summary-hand-over';
+import { V2_HAND_OVER_CONTINUE, V2_HAND_OVER_CONTINUE_BEGAN } from '../src/lib/tutor/v2/summary-hand-over';
 import { newV2State, type V2BoardPage, type V2Session, type V2State } from '../src/lib/tutor/v2/types';
 
 let passed = 0; let failed = 0;
@@ -41,18 +44,19 @@ const usage = { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, 
 const msg = (content: unknown[], stop: string): Anthropic.Message => ({ id: 'm', type: 'message', role: 'assistant', model: 'x', content, stop_reason: stop, stop_sequence: null, usage } as unknown as Anthropic.Message);
 type Reply = { text: string; tools?: Array<{ name: string; input: Record<string, unknown> }>; fail?: boolean; hang?: boolean };
 function scripted(replies: Reply[]) {
-  const facts: string[] = []; let i = 0; let cont = false;
+  const facts: string[] = []; let i = 0; let cont = false; const choices: unknown[] = []; const nudges: string[] = [];
   const call: V2ModelCall = async (params, onText) => {
     const last = params.messages[params.messages.length - 1];
-    if (Array.isArray(last?.content)) for (const b of last.content as Array<{ type: string; text?: string }>) { if (b.type === 'text' && b.text?.startsWith('<facts>')) facts.push(b.text); if (b.type === 'text' && b.text === V2_HAND_OVER_CONTINUE) cont = true; }
+    choices.push((params as unknown as { tool_choice?: unknown }).tool_choice);
+    if (Array.isArray(last?.content)) for (const b of last.content as Array<{ type: string; text?: string }>) { if (b.type === 'text' && b.text?.startsWith('<facts>')) facts.push(b.text); if (b.type === 'text' && (b.text === V2_HAND_OVER_CONTINUE || b.text === V2_HAND_OVER_CONTINUE_BEGAN)) { cont = true; nudges.push(b.text); } }
     const r = replies[Math.min(i, replies.length - 1)]!; i += 1;
     if (r.fail) throw new Error('the model call failed');
-    if (r.hang) { onText?.('Listen once more: '); return new Promise<Anthropic.Message>(() => undefined); }
+    if (r.hang) { onText?.(`${SENT} Listen once mo`); return new Promise<Anthropic.Message>(() => undefined); }
     for (const piece of r.text.match(/[\s\S]{1,17}/g) ?? []) onText?.(piece);
     const tools = (r.tools ?? []).map((t, k) => ({ type: 'tool_use', id: `tu_${i}_${k}`, name: t.name, input: t.input }));
     return msg([{ type: 'text', text: r.text }, ...tools], tools.length ? 'tool_use' : 'end_turn');
   };
-  return { call, facts, calls: () => i, cont: () => cont };
+  return { call, facts, calls: () => i, cont: () => cont, choices, nudges };
 }
 
 const repoRoot = join(__dirname, '..', '..', '..');
@@ -107,7 +111,7 @@ async function run(session: V2Session, st: V2State, said: string | null, replies
   const r = await runV2Turn({ session, state: st, studentSaid: said, callModel: m.call, onText: (d) => heard.push(d), boardPass: false, mathsCheck: false, nowMs: atMin * MIN });
   const stored = r.state.history.slice(before).filter((h) => h.role === 'assistant').map(textOf).join(' ');
   return { r, heard: heard.join(''), facts: m.facts.join('\n'), stored, summaryOpen: r.state.board.pages.some((p) => p.title === 'Summary'), begun: typeof r.state.summaryBegunAt === 'number',
-    ended: r.toolCalls.find((c) => c.name === 'end_lesson')?.outcome ?? '', calls: m.calls(), cont: m.cont(), painted: r.toolCalls.filter((c) => !/^not /.test(c.outcome)).map((c) => c.name), handOver: r.state.summaryHandOver };
+    ended: r.toolCalls.find((c) => c.name === 'end_lesson')?.outcome ?? '', calls: m.calls(), cont: m.cont(), choices: m.choices, nudges: m.nudges, painted: r.toolCalls.filter((c) => !/^not /.test(c.outcome)).map((c) => c.name), handOver: r.state.summaryHandOver };
 }
 const count = (t: string, x: string) => t.split(x).length - 1;
 
@@ -139,7 +143,7 @@ async function probe() {
   const stop = await run(voice, atT90(), 'I have to finish now.', [T91, { text: '' }], 17.69);
   const studentAsked = await run(voice, atT90(), 'Sorry, my next meeting is starting.', [{ ...T91, tools: [{ name: 'end_lesson', input: { because: 'student_asked' } }] }, { text: '' }], 17.69);
   const wrap = await run(voice, { ...atT90(), timeFit: { dropped: [], byArrival: true }, partStart: { part: 'pronunciation', at: 16.876 * MIN } }, SENT, [T91, { text: '' }], 21.0);
-  const began = await run(voice, atT90(), SENT, [{ text: `${FEEDBACK.replace(' Here is the whole sentence again, for you to hear.', '')} Great work today! Here is a quick summary.\n\n<board page>Summary</board>\n${SUMMARY_WORDS}` }, { text: '' }], 17.69);
+  const began = await run(voice, atT90(), SENT, [{ text: `${FEEDBACK.replace(' Here is the whole sentence again, for you to hear.', '')} Great work today! Here is a quick summary.\n\n<board page>Summary</board>\n${SUMMARY_WORDS}` }, { text: 'Before that, let\'s finish this part. Would you like one more, or shall we move on to the summary?' }], 17.69);
   const conv = (): V2State => ({ ...atT90(), goals: Object.fromEntries(ids.slice(0, 5).map((id) => [id, { status: 'shown' as const, at: 0 }])), partStart: { part: 'open-conversation', at: 11 * MIN },
     board: { pages: structuredClone(PAGES.slice(0, 6)), current: 5 }, pronunciation: undefined, history: [...atT90().history.slice(0, 8)] });
   const convReply: Reply = { text: `Candy and emails sound like a friendly way to follow up.\n\n<board sentence>We gave them candy and wrote emails.</board>\n\n<board page>Summary</board>\n\n${SUMMARY_WORDS}` };
@@ -152,7 +156,10 @@ async function probe() {
   const c3 = await run(voice, wire(c2.r.state, voice), 'Uh no.', [GOODBYE], 19.1);
   // 6
   const typedLive = await run(typed, atT90(), SENT, [T91, { text: '' }], 17.69);
-  return { live, failed, timedOut, pageAgain, noAsk, next, bareYes, oneMore, nearStop, stop, studentAsked, wrap, began, required, deferredBefore, c1, c2, c3, typedLive };
+  const asksFirst = await run(voice, atT90(), SENT, [{ text: `${FEEDBACK.replace(' Here is the whole sentence again, for you to hear.', '')} Can you say the whole sentence once more?\n\n<board page>Summary</board>\n${SUMMARY_WORDS}` }, CONT], 17.69);
+  const toolPage = await run(voice, atT90(), SENT, [{ text: FEEDBACK, tools: [{ name: 'new_page', input: { title: 'Summary' } }, { name: 'show_sentence', input: { sentence: SENT } }] }, CONT], 17.69);
+  const contTools = await run(voice, atT90(), SENT, [T91, { ...CONT, tools: [{ name: 'practise_pronunciation', input: { items: [SENT] } }, { name: 'new_page', input: { title: 'Summary' } }] }], 17.69);
+  return { asksFirst, toolPage, contTools, live, failed, timedOut, pageAgain, noAsk, next, bareYes, oneMore, nearStop, stop, studentAsked, wrap, began, required, deferredBefore, c1, c2, c3, typedLive };
 }
 type P = Awaited<ReturnType<typeof probe>>;
 const slim = (p: P) => Object.fromEntries(Object.entries(p).map(([k, v]) => [k, { heard: v.heard, facts: v.facts, stored: v.stored, summaryOpen: v.summaryOpen, begun: v.begun, ended: v.ended, calls: v.calls, cont: v.cont }]));
@@ -175,7 +182,8 @@ async function main() {
 
   console.log('2. fallbacks');
   check('the continuation fails: the words before the page, then the fixed line', /for you to hear\.\s*Would you like one more, or shall we move on to the summary\?$/.test(p.failed.heard.trim()) && !p.failed.summaryOpen && typeof p.failed.r.state.summaryHandOver === 'number', p.failed.heard);
-  check('the continuation runs past its time limit (10 s): what it streamed stays, then the fixed line, once; the turn ends', count(p.timedOut.heard, HAND) === 1 && p.timedOut.heard.trim().endsWith(HAND) && !p.timedOut.summaryOpen, p.timedOut.heard);
+  check('the continuation runs past its time limit (10 s): its whole sentence is said, the fragment is not, then the fixed line once', count(p.timedOut.heard, HAND) === 1 && p.timedOut.heard.trim().endsWith(HAND) && !p.timedOut.heard.includes('Listen once mo') && p.timedOut.heard.includes(`for you to hear.`) && count(p.timedOut.heard, SENT) >= 1 && !p.timedOut.summaryOpen, p.timedOut.heard);
+  check('…the stored reply keeps the whole sentence said and not the fragment', p.timedOut.stored.includes(`${SENT}`) && !p.timedOut.stored.includes('Listen once mo') && p.timedOut.stored.trim().endsWith(HAND), p.timedOut.stored);
   check('the continuation writes the Summary page again: held, its words not said, the fixed line once', !p.pageAgain.summaryOpen && !p.pageAgain.heard.includes('donation') && count(p.pageAgain.heard, HAND) === 1, p.pageAgain.heard);
   check('the continuation asks nothing: the fixed line added, once', count(p.noAsk.heard, HAND) === 1 && p.noAsk.heard.trim().endsWith(HAND), p.noAsk.heard);
 
@@ -190,7 +198,11 @@ async function main() {
     const x = p[k];
     check(`${label}: no hold: ${k === 'required' ? 'as off (below)' : 'the Summary page opens in the same reply'}, no continuation, no hand-over line`, (k === 'required' || x.summaryOpen) && !x.cont && !x.heard.includes(HAND) && x.r.state.summaryHandOver === undefined, [x.heard.slice(-200), x.r.toolCalls.map((c) => `${c.name}: ${c.outcome}`)]);
   }
-  check('the reply\'s own words began the summary: the page opens, no second announcement', p.began.summaryOpen && !p.began.heard.includes(HAND) && count(p.began.heard, 'summary') === 1, p.began.heard);
+  console.log('fix round 2');
+  check('I1: words that began the summary ("Here is a quick summary.") on no closing turn: the page is held; the continuation is told the part ends first; one hand-over ask', !p.began.summaryOpen && !p.began.begun && p.began.nudges[0] === V2_HAND_OVER_CONTINUE_BEGAN && count(p.began.heard, HAND) === 1 && !p.began.heard.includes('donation') && typeof p.began.r.state.summaryHandOver === 'number', p.began.heard);
+  check('I2: words before the page end on a question: no continuation, no line, no hand-over state; the reply ends at that question', !p.asksFirst.summaryOpen && !p.asksFirst.cont && p.asksFirst.calls === 1 && !p.asksFirst.heard.includes(HAND) && p.asksFirst.heard.trim().endsWith('once more?') && p.asksFirst.r.state.summaryHandOver === undefined, p.asksFirst.heard);
+  check('M2: a new_page call titled Summary is held like the page block: no page, its later board call not run, the continuation and the ask', !p.toolPage.summaryOpen && !p.toolPage.painted.includes('show_sentence') && p.toolPage.cont && count(p.toolPage.heard, HAND) === 1, [p.toolPage.r.toolCalls.map((c) => `${c.name}: ${c.outcome}`), p.toolPage.heard]);
+  check('M2: the continuation is called with tool_choice none, and a tool it calls anyway is not run (no arm, no page)', JSON.stringify(p.contTools.choices[1]) === '{"type":"none"}' && !p.contTools.r.toolCalls.some((c) => c.name === 'practise_pronunciation' || c.name === 'new_page') && !p.contTools.summaryOpen && count(p.contTools.heard, HAND) === 1, [p.contTools.choices, p.contTools.r.toolCalls.map((c) => c.name)]);
 
   console.log('5. the whole close after the hand-over (8d)');
   const summaryPages = (st: V2State) => st.board.pages.filter((pg) => pg.title === 'Summary');
@@ -209,7 +221,7 @@ async function main() {
   const off = JSON.parse(line.slice('OFF_JSON '.length)) as ReturnType<typeof slim>;
   check('typed: the words, the board and the stored reply are the same on and off', p.typedLive.heard === off.typedLive!.heard && p.typedLive.summaryOpen === off.typedLive!.summaryOpen && p.typedLive.stored === off.typedLive!.stored, [p.typedLive.heard.slice(-200), off.typedLive!.heard.slice(-200)]);
   check('off: T91 opens the Summary page in the same reply and the summary begins, no continuation, as at 663fe546', off.live!.summaryOpen && off.live!.begun && off.live!.heard.includes('donation drive') && !off.live!.cont, off.live);
-  check('off: the closing turns are the same as on (never held either way)', (['nearStop', 'stop', 'studentAsked', 'wrap', 'required', 'deferredBefore', 'began'] as const).every((k) => off[k]!.heard === p[k].heard && off[k]!.summaryOpen === p[k].summaryOpen), (['nearStop', 'stop', 'studentAsked', 'wrap', 'required', 'deferredBefore', 'began'] as const).filter((k) => off[k]!.heard !== p[k].heard));
+  check('off: the closing turns are the same as on (never held either way)', (['nearStop', 'stop', 'studentAsked', 'wrap', 'required', 'deferredBefore'] as const).every((k) => off[k]!.heard === p[k].heard && off[k]!.summaryOpen === p[k].summaryOpen), (['nearStop', 'stop', 'studentAsked', 'wrap', 'required', 'deferredBefore'] as const).filter((k) => off[k]!.heard !== p[k].heard));
 
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed) process.exit(1);

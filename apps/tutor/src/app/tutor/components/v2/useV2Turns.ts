@@ -130,7 +130,7 @@ export interface V2TurnsConfig {
 const CLOSE_READ_MS = 4000;
 /** Task 8j fix round 1: the quiet after the tutor's voice before the time check makes a turn, and how many 1 s checks it waits at most. */
 export const V2_TIME_CHECK_QUIET_MS = 15000;
-export const V2_TIME_CHECK_WAIT_TRIES = 120;
+export const V2_TIME_CHECK_WAIT_TRIES = 60;
 /** How long a finished sentence waits to learn what follows it; and how long it waits for a board block that has begun. */
 const KEEP_BRIEF_MS = 250;
 const KEEP_FOR_BLOCK_MS = 2500;
@@ -626,13 +626,15 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     if (dueMs > 5000) {
       let tries = 0;
       // Task 8j fix round 1 (TIME_CHECK_AFTER_SPEECH): not while the tutor's voice still plays, and then only after
-      // V2_TIME_CHECK_QUIET_MS of quiet with no turn (a turn inside the last minutes sets timeCheckedRef, and the check is not needed).
+      // V2_TIME_CHECK_QUIET_MS of quiet with no turn; none once the summary has begun (fix round 2, M7) (a turn inside the last minutes sets timeCheckedRef, and the check is not needed).
       // Mic test 13 (embed-1795453600266, 18:02): it fired while the summary and the check question were still being spoken, and the
       // tutor asked the check question a second time. Checked every second, for at most V2_TIME_CHECK_WAIT_TRIES seconds.
       let waits = 0; let quietSince = 0; let heardSpeech = false;
       const check = () => {
         if (endingRef.current || closingRef.current.active || stateRef.current.closed || timeCheckedRef.current) return;
         if (busyRef.current) { if (++tries <= 8) timeCheckRef.current = setTimeout(check, 4000); return; }
+        // Fix round 2 (M7): once the summary has begun the close's own turns carry the time: no check.
+        if (TUTOR_V2_TIME_CHECK_AFTER_SPEECH && typeof stateRef.current.summaryBegunAt === 'number') return;
         if (TUTOR_V2_TIME_CHECK_AFTER_SPEECH && p.current.speechPending && waits < V2_TIME_CHECK_WAIT_TRIES) {
           if (p.current.speechPending()) { heardSpeech = true; quietSince = 0; waits += 1; timeCheckRef.current = setTimeout(check, 1000); return; }
           if (heardSpeech) {

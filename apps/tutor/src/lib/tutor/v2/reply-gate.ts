@@ -204,6 +204,8 @@ export class ReplyGate {
   releaseAsk(): void { const a = this.ask; this.ask = null; if (a) this.out(a); }
   /** Task 7c fix round 1: the reply has ended (this model call's words are complete, or it stops at a held page): a check-in
    *  waiting after a hand-over is the trailing second question, and is dropped. */
+  /** Task 8j fix round 2 (M1): drop the unfinished sentence still waiting (a cut model call): it is never said. */
+  dropTail(): void { this.buf = ''; }
   dropTrailingCheckIn(): void { const c = this.checkIn; this.checkIn = null; if (c?.trim()) this.removed.push(c.trim()); }
   /** Drop a waiting practice ask: what follows it closes the lesson. Final review M2: a check-in waiting after it goes too: it
    *  was released mid-reply before the summary ("Does that make sense so far?"), and with the close's invitation after the
