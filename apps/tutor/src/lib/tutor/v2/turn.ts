@@ -38,7 +38,7 @@ import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
 import { V2_CLOSING_PAGE, endsAsking, leftOpen, mayOpenPart, namesPart, partOffer, v2FrameDue } from './part-close';
 import { ReplyGate, isGoodbye, isPartFrame } from './reply-gate';
-import { V2_JA_SCRIPT, v2AnswerAsksOrDeclines, v2GoForPart, v2AskedParts, v2OptionalAhead, v2OptionalDeclined, v2SummaryAsked, v2SummaryGo, v2AskRepeats, v2AsksPartChange, v2EndingPartAsk, v2HeldPageOwed, v2HeldPartWaiting, v2IsPartAsk, v2MoveAnswer, v2NextPart, v2PageForPart, v2PartAskLine, v2PartChangeAsked, v2PartInHand, v2PartNamedLate, v2PartOfPage, v2PartViewed, v2PageTurnNote, v2PositionPage, v2PendingPart, v2PlanLabelled, v2TutorReplies, v2UnheardPartAsk } from './part-flow';
+import { V2_JA_SCRIPT, v2AnswerAsksOrDeclines, v2GoForPart, v2AskedParts, v2OptionalAhead, v2OptionalDeclined, v2SummaryAsked, v2SummaryGo, v2AskRepeats, v2AsksPartChange, v2EndingPartAsk, v2HeldPageOwed, v2HeldPartWaiting, v2IsPartAsk, v2MoveAnswer, v2NextPart, v2PageForPart, v2PartAskLine, v2PartChangeAsked, v2PartInHand, v2PartNamedLate, v2PartOfPage, v2PartViewed, v2PageTurnNote, v2PositionPage, v2PendingPart, v2PlanLabelled, v2SamePartPages, v2TutorReplies, v2UnheardPartAsk } from './part-flow';
 import { heardAsWords } from './heard';
 import { v2IsPracticeAsk, v2LanguagesSection } from './languages';
 import { v2ReadsByClauses } from './language-pack';
@@ -986,7 +986,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         const cardPage = cardId ? state.board.pages.findIndex((pg) => pg.items.some((it) => it.id === cardId)) : -1;
         let o: V2BoardOutcome & { turnTo?: number };
         let partAlone = false;
-        if (cardId && cardPage >= 0 && (whole || cardPage !== state.board.current)) {
+        // Task 8i (merge with main): in a part-flow lesson the board never turns from the page in view to another part's page for
+        // it (v2SamePartPages): the card goes up on the page in view. Turns between parts are the part flow's and the learner's (7k).
+        const crossPart = partFlow && !!session.plan && cardPage >= 0 && cardPage !== state.board.current && !v2SamePartPages(session.plan, state.board, cardPage, state.board.current);
+        if (cardId && cardPage >= 0 && !crossPart && (whole || cardPage !== state.board.current)) {
           // Asked for again, or its next part asked: the problem is one card, and the board goes to it. From
           // another page the board turns back to its page, so the parts and the working done on it are in
           // view together and what is written next goes there ("show me that question again" put part (c)
