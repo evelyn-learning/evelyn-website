@@ -229,12 +229,15 @@ const T35 = 'I have learned to negotiate customers and give best price.';
 const WHOLE35 = 'I have learned to negotiate with customers and give the best price.';
 const PP = { index: 3, id: 'present-perfect' };
 /** The re-test of T35's whole card, open (asked at reply 1) in Present perfect; `said`: their later answer, `card`/`stress`: its card. */
-function retestAfter(said: string, card: string, stress: string[]) {
+function retestAfter(said: string, card: string, stress: string[], of: { said: string; right: string; target: string[] } = { said: T35, right: WHOLE35, target: ['with customers', 'the best'] }) {
   const s: V2State = { ...newV2State(0), history: [{ role: 'user', content: START }, { role: 'assistant', content: 'a' }, { role: 'user', content: 'b' }, { role: 'assistant', content: 'c' }, { role: 'user', content: 'd' }, { role: 'assistant', content: 'e' }],
-    retests: [{ part: PP.id, said: T35, right: WHOLE35, target: ['with customers', 'the best'], turn: 0, offered: 1, in: PP.id, askedAt: 1, lastAt: 1 }] };
+    retests: [{ part: PP.id, ...of, turn: 0, offered: 1, in: PP.id, askedAt: 1, lastAt: 1 }] };
   const events = v2AdaptAfter(lang, s, PP, [said], v2PracticePairs([said], [{ sentence: card, stress }]), { support: false, retest: true });
   return { outcome: s.retests![0]!.outcome ?? null, events: events.map((e) => `${e.type} ${e.message}`) };
 }
+
+const NAGOYA = { said: 'Yes, I worked at Nagoya uh 5 years ago.', right: 'I have worked at Nagoya Corporation for five years.', target: ['i have', 'corporation for five'] };
+const TOKYO = { said: 'I work Tokyo 3 year.', right: 'I have worked in Tokyo for three years.', target: [] as string[] };
 
 async function probe() {
   // 2: T35 → T36 (the reply as said, with the card WB21 the row holds).
@@ -254,6 +257,14 @@ async function probe() {
     again: retestAfter('I have learned to negotiate with customers and give best price.', WHOLE35, ['the']),
     // a later correction of another slip (an article elsewhere): not scored
     other: retestAfter('I have gave best service to customer.', 'I have given the best service to the customer.', ['given', 'the', 'the']),
+    // fix round 2 (re-review I1, ruling): mic test 10's T44 card ("i worked", "nagoya five" its wrong forms). A RIGHT later sentence that
+    // holds "i worked" (carded as said, not corrected): not missed. The same form in a sentence that was corrected: missed.
+    bankRight: retestAfter('I worked at a bank before that.', 'I worked at a bank before that.', [], NAGOYA),
+    nagoyaAgain: retestAfter('I worked at Nagoya for five years.', 'I have worked at Nagoya for five years.', ['have'], NAGOYA),
+    // fix round 2 (re-review M1, ruling): more than three words changed, the target fell back to the stress words "in", "for" (function
+    // words only): a sentence with "in" and "for" passes nothing; with a content word in the stress, it passes on it.
+    stressFn: retestAfter('I live in Osaka for work.', 'I live in Osaka for work.', [], { ...TOKYO, target: ['in', 'for'] }),
+    stressContent: retestAfter('I have worked in Osaka since May.', 'I have worked in Osaka since May.', [], { ...TOKYO, target: ['have worked', 'in', 'for'] }),
   };
   return { rt, t36, sum, sumRight, noRight, saidRight: v2SaidRightSentences(lang, atT89()), saidRightNone: v2SaidRightSentences(lang, atT89([WB32, WB35])),
     flags: { several: TUTOR_V2_RETEST_SEVERAL_FIXES, items: TUTOR_V2_NOTE_ITEM_LINES, whole: TUTOR_V2_CORRECTED_CARD_WHOLE, well: TUTOR_V2_WELL_WITH_CARD } };
@@ -302,6 +313,10 @@ async function main() {
   check('one changed phrase used right ("talked with customers"), the other not used, no wrong form: passed', on.rt.oneRight.outcome === 'passed', on.rt.oneRight);
   check('"…and give best price." again: missed (an original wrong form back)', on.rt.again.outcome === 'missed', on.rt.again);
   check('a later correction of another slip ("gave best service" → "given the best service"): not scored', on.rt.other.outcome === null, on.rt.other);
+  check('fix round 2 (I1): a right later sentence holding "i worked" ("I worked at a bank before that.", carded as said): not missed (not scored)', on.rt.bankRight.outcome === null, on.rt.bankRight);
+  check('fix round 2 (I1): "i worked" back in a sentence that was corrected ("I worked at Nagoya for five years." → "I have worked…"): missed', on.rt.nagoyaAgain.outcome === 'missed', on.rt.nagoyaAgain);
+  check('fix round 2 (M1): the target fell back to stress words (more than three changed); only function words ("in", "for"): a sentence holding them passes nothing', on.rt.stressFn.outcome === null, on.rt.stressFn);
+  check('fix round 2 (M1): …with a content word among them ("have worked"): passes on it', on.rt.stressContent.outcome === 'passed', on.rt.stressContent);
   check('the switch is default ON', on.flags.several === true);
 
   console.log('each switch off alone (a child process per switch): as at ade52609 for that item');

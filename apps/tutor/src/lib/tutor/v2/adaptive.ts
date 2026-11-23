@@ -138,7 +138,9 @@ const sameTarget = (a: readonly string[], b: readonly string[]) => { const x = n
 function passesRetest(sentence: string, r: Pick<V2Retest, 'said' | 'right' | 'target'>, f: V2AdaptFlags): boolean {
   // Task 8l fix round 1 (RETEST_SEVERAL_FIXES, the controller's ruling): a card that fixed several errors passes on any one of its changed
   // phrases used right, with none of its original wrong forms back.
-  if (severalOn(f) && v2RetestWrongForms(r.said, r.right).length >= 2) return usesTarget(sentence, r.target) && !wrongFormBack(sentence, r);
+  // Fix round 2 (re-review M1, ruling): when the target fell back to the card's stress words (more than three words changed), a pass needs a
+  // target holding a content word: a lone "the" or "for" passes nothing.
+  if (severalOn(f) && v2RetestWrongForms(r.said, r.right).length >= 2) return usesTarget(sentence, v2ChangedWords(r.said, r.right).length ? r.target : r.target.filter((x) => words(x).some((w) => !FUNCTION_WORDS.has(w)))) && !wrongFormBack(sentence, r);
   return askedOn(f) && r.target.length ? r.target.every((x) => usesTarget(sentence, [x])) : usesTarget(sentence, r.target);
 }
 const quoteTarget = (t: readonly string[]) => t.map((x) => `"${x}"`).join(', ');
@@ -194,7 +196,8 @@ export function v2RetestWrongForms(said: string, card: string): string[] {
   }
   return [...new Set(out)];
 }
-/** One of the retest card's original wrong forms is in their sentence (whole words). */
+/** One of the retest card's original wrong forms is in their sentence (whole words). Compared as v2RetestWrongForms builds the forms
+ *  (v2CorrectionWords: numbers as words, fillers out); the target side (usesTarget) reads v2SentenceWords, as before (re-review M2). */
 const wrongFormBack = (sentence: string, r: Pick<V2Retest, 'said' | 'right'>) => { const have = ` ${v2CorrectionWords(sentence).join(' ')} `; return v2RetestWrongForms(r.said, r.right).some((x) => have.includes(` ${x} `)); };
 
 /** At most this many changed words make a target of them; more, and the card's stress words are the target. */
@@ -435,7 +438,9 @@ export function v2AdaptAfter(session: V2Session, state: V2State, part: { index: 
     // Task 8l fix round 1 (RETEST_SEVERAL_FIXES, ruling): a card that fixed several errors is missed only when one of its original wrong forms
     // comes back; a later correction of another slip does not score it.
     const several = severalOn(flags) && v2RetestWrongForms(open.said, open.right).length >= 2;
-    const missed = several ? pairs.some((p) => wrongFormBack(p.said, open)) : pairs.some((p) => p.corrected && ((changedOn(flags) ? samePhrase(p.stress, open.target) : touches(p.stress, open.target)) || (!usesTarget(p.said, open.target) && usesTarget(p.card, open.target))));
+    // Fix round 2 (re-review I1, ruling): only in a sentence of theirs that was itself corrected: a right "I worked at a bank before that."
+    // holds "i worked" and misses nothing.
+    const missed = several ? pairs.some((p) => p.corrected && wrongFormBack(p.said, open)) : pairs.some((p) => p.corrected && ((changedOn(flags) ? samePhrase(p.stress, open.target) : touches(p.stress, open.target)) || (!usesTarget(p.said, open.target) && usesTarget(p.card, open.target))));
     // Fix round 1 (ruling): a pass needs every word the correction changed (7v's record), not one word of the target phrase.
     const passedNow = !missed && pairs.some((p) => passesRetest(p.said, open, flags));
     // Task 7x (RETEST_ASKED): no "not asked" by turns: the outcome stays open until the part ends (v2AdaptBefore).
