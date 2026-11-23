@@ -250,6 +250,19 @@ export default async function ItemPage({
         <div className="ks-split">
           <section className="ks-card ks-question">
             <h3>Question</h3>
+            {(item.sourceNotes ?? []).map((n) => (
+              <div key={n} className="ks-note info">{n}</div>
+            ))}
+            {(item.sourceFindings ?? []).length > 0 && (
+              <div className="ks-note">
+                <b>The QTI export differs from Castle Rock&apos;s source file for this item:</b>
+                <ul style={{ margin: "4px 0 0 18px" }}>
+                  {item.sourceFindings!.map((f) => (
+                    <li key={f}>{f}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <div className="ks-prose" dangerouslySetInnerHTML={{ __html: item.questionHtml }} />
             {isChoice && (
               <ol className="ks-opts">
