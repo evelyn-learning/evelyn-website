@@ -901,6 +901,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     echoRef.current.settled(); ownPartialLoggedRef.current = false; partialWordsRef.current = 0;
     wordsWatchRef.current.settled();
     p.current.onDebugEvent?.('v2_transcription_failed', String(kind ?? 'unknown'));
+    // Task 8k fix round 1 (I1): a held pronunciation attempt does not wait for a transcript the recogniser has given up on.
+    pronRef.current?.attemptPartEmpty();
     lastPartialRef.current = ''; partialVerdictRef.current = 'none'; rollRef.current = { taken: 0, last: '', lookedAt: 0, pending: false, gen: rollRef.current.gen + 1 };
     if (flagRef.current.active) return;
     liftPause();
@@ -1007,7 +1009,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     turnsRef.current?.open();
   }, []);
 
-  useEffect(() => () => { wordsWatchRef.current.settled(); echoRef.current.settled(); stopSoundGate(); pronRef.current?.disarm(); releaseBoard(); clearSilence(); if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current); turnsRef.current?.abort(); realtimeRef.current?.disconnect(); }, []);
+  useEffect(() => () => { wordsWatchRef.current.settled(); echoRef.current.settled(); stopSoundGate(); pronRef.current?.dispose(); releaseBoard(); clearSilence(); if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current); turnsRef.current?.abort(); realtimeRef.current?.disconnect(); }, []);
 
   // A resumed session waits for a tap, as any session does (audio needs one): the page shows "Continue lesson".
   useEffect(() => { if (turns.resumedRef.current && !startedRef.current) p.current.onResumeAwaitingTapChange?.(true); // eslint-disable-next-line react-hooks/exhaustive-deps

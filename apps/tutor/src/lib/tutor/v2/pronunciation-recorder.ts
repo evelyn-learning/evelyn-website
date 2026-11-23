@@ -33,6 +33,10 @@ export const V2_PRON_PAUSE_HOLD_MS = 1200;
 /** Task 8k: once the hold has run out, how long the attempt's words wait for a part whose transcript has not come yet (its speech stopped,
  *  the recogniser's final still on its way) before they take the floor without it. */
 export const V2_PRON_FINAL_WAIT_MS = 3000;
+/** Task 8k fix round 1 (I1): the backstop. No held attempt lives longer than this from its start: the clip's cap (CLIP_MAX_MS, the longest
+ *  an attempt can be recorded) plus the hold plus the wait for a missing transcript. Past it the clip (if still open) is sent and the words
+ *  take the floor, whatever the recogniser has or has not sent (a reconnect mid-attempt sends neither a stop nor a final). */
+export const V2_PRON_ATTEMPT_MAX_MS = CLIP_MAX_MS + V2_PRON_PAUSE_HOLD_MS + V2_PRON_FINAL_WAIT_MS;
 
 /** Task 8k: the attempt being held across short pauses (PRON_PAUSE_HOLD). `parts`: the recogniser's speech starts in it (a resume of the
  *  same recogniser turn is not a new part); `finals`: the parts whose transcript (or empty end) has come; `words`: those transcripts. */
@@ -45,6 +49,8 @@ interface V2HeldAttempt {
   /** The hold ran out: the clip has been sent (or the capture's blip rule dropped it); the words wait only for missing finals. */
   over: boolean;
   timer: unknown;
+  /** Fix round 1 (I1): the backstop timer (V2_PRON_ATTEMPT_MAX_MS from the start). */
+  bound: unknown;
 }
 
 export class V2PronunciationRecorder {
@@ -105,8 +111,17 @@ export class V2PronunciationRecorder {
     a.finals += 1;
     if (text.trim()) a.words.push(text.trim());
     this.log('pronunciation_attempt_words', `#${this.seq} part ${a.finals} of ${a.parts}${a.over ? ', the hold over' : ''}: "${text.trim().slice(0, 80)}" (v2)`);
-    if (a.over) this.releaseIfComplete();
+    if (a.over) this.releaseIfComplete(); else this.finalWithoutStop(a);
     return true;
+  }
+
+  /** Fix round 1 (I1): every part's transcript is in while the recorder still counts them as speaking (no stop came: the recogniser's
+   *  eager end, its resume, then its end with no second eager end): the transcript is the stop, and the hold starts from now. */
+  private finalWithoutStop(a: V2HeldAttempt): void {
+    if (a.over || a.stoppedAt !== null || a.finals < a.parts) return;
+    a.stoppedAt = this.now();
+    if (a.timer !== null) this.clearTimer(a.timer);
+    a.timer = this.setTimer(() => { if (this.attempt === a) this.holdRanOut(); }, V2_PRON_PAUSE_HOLD_MS);
   }
 
   /** Task 8k: a part of the held attempt ended with no words (the recogniser's empty end or its failure). */
@@ -114,7 +129,14 @@ export class V2PronunciationRecorder {
     const a = this.attempt;
     if (!a || a.finals >= a.parts) return;
     a.finals += 1;
-    if (a.over) this.releaseIfComplete();
+    if (a.over) this.releaseIfComplete(); else this.finalWithoutStop(a);
+  }
+
+  /** Fix round 1 (I2): the voice client is going away: the attempt is dropped without its words taking the floor (no turn is sent for a
+   *  lesson that has been left), its timers cleared, the capture disarmed. */
+  dispose(): void {
+    this.release = null;
+    this.disarm();
   }
 
   private holding(): boolean { return (this.opts.pauseHold ?? TUTOR_V2_PRON_PAUSE_HOLD) && this.release !== null; }
@@ -123,7 +145,15 @@ export class V2PronunciationRecorder {
   private beginAttempt(): void {
     if (!this.holding()) return;
     this.dropAttempt();
-    this.attempt = { parts: 1, finals: 0, words: [], stoppedAt: null, over: false, timer: null };
+    const a: V2HeldAttempt = { parts: 1, finals: 0, words: [], stoppedAt: null, over: false, timer: null, bound: null };
+    a.bound = this.setTimer(() => {
+      if (this.attempt !== a) return;
+      a.bound = null;
+      this.log('pronunciation_attempt_bound', `#${this.seq} held ${V2_PRON_ATTEMPT_MAX_MS} ms: the attempt ends now (v2)`);
+      if (!a.over) { if (a.timer !== null) this.clearTimer(a.timer); this.holdRanOut(); }
+      if (this.attempt === a) { a.finals = a.parts; this.releaseIfComplete(); }
+    }, V2_PRON_ATTEMPT_MAX_MS);
+    this.attempt = a;
   }
 
   /** Task 8k: an attempt that is no longer wanted (a new arm, a disarm, an echo dropped): its timer cleared. `flush` (a new arm or a
@@ -131,6 +161,7 @@ export class V2PronunciationRecorder {
   private dropAttempt(flush = false): void {
     const a = this.attempt; this.attempt = null;
     if (a && a.timer !== null) this.clearTimer(a.timer);
+    if (a && a.bound !== null) this.clearTimer(a.bound);
     if (flush && a && a.words.length) { this.log('pronunciation_attempt_released', `#${this.seq} ended by a new arm or a disarm before its hold ran out: "${a.words.join(' ').slice(0, 120)}" (v2)`); this.release?.(a.words); }
   }
 
@@ -150,6 +181,7 @@ export class V2PronunciationRecorder {
     const a = this.attempt;
     if (!a || !a.over || a.finals < a.parts) return;
     if (a.timer !== null) this.clearTimer(a.timer);
+    if (a.bound !== null) this.clearTimer(a.bound);
     this.attempt = null;
     this.log('pronunciation_attempt_released', `#${this.seq} ${a.parts} part(s): "${a.words.join(' ').slice(0, 120)}" (v2)`);
     if (a.words.length) this.release?.(a.words);

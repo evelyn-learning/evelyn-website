@@ -25,7 +25,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { V2PronunciationRecorder, V2_PRON_FINAL_WAIT_MS, V2_PRON_PAUSE_HOLD_MS } from '../src/lib/tutor/v2/pronunciation-recorder';
+import { V2PronunciationRecorder, V2_PRON_ATTEMPT_MAX_MS, V2_PRON_FINAL_WAIT_MS, V2_PRON_PAUSE_HOLD_MS } from '../src/lib/tutor/v2/pronunciation-recorder';
 import { TUTOR_V2_PRON_PAUSE_HOLD } from '../src/lib/tutor/orchestrator/flags';
 
 let passed = 0; let failed = 0;
@@ -201,6 +201,49 @@ async function sections() {
     check('  no timer fires later (no clip, no second release)', r.sent().length === 0 && r.released.length === 1, r.log);
   }
 
+  console.log('fix round 1 (I1): a final with no stop before it; the backstop');
+  {
+    // Ink: eager end (the hold starts), resume within 1.2 s (the hold cleared), then the end with no second eager end.
+    const r = rig(); r.rec.arm(1, REF);
+    r.until(at(17, 16.66)); r.rec.speechStart(false);
+    r.until(at(17, 19)); r.rec.speechStop();
+    r.until(at(17, 19.4)); r.rec.speechStart(false, true);
+    r.until(at(17, 25.82)); const kept = r.rec.attemptWords(REF);
+    check('the final is kept and starts the hold (it is the stop)', kept && r.released.length === 0 && r.rec.holdsAttempt(), r.log);
+    r.until(at(17, 25.82) + V2_PRON_PAUSE_HOLD_MS);
+    check('  released when the hold runs out: one clip, one turn of the whole sentence', r.sent().length === 1 && r.released.length === 1 && r.released[0]!.join(' ') === REF && !r.rec.holdsAttempt(), { log: r.log, released: r.released });
+    // The recogniser gives up on a part (its failure): counted, so the attempt does not wait for it.
+    const f = rig(); f.rec.arm(1, REF);
+    f.until(at(17, 16.66)); f.rec.speechStart(false); f.until(at(17, 21.61)); f.rec.speechStop(); f.rec.attemptWords(PART1);
+    f.until(at(17, 21.77)); f.rec.speechStart(false); f.until(at(17, 23)); f.rec.attemptPartEmpty();
+    f.until(at(17, 23) + V2_PRON_PAUSE_HOLD_MS);
+    check('a part the recogniser gave up on (no stop, no final): the hold starts at its failure, the words go', f.released.length === 1 && f.released[0]!.join(' ') === PART1, { log: f.log, released: f.released });
+    // A reconnect mid-attempt: speech again within the hold, then neither a stop nor a final ever comes.
+    const b = rig(); b.rec.arm(1, REF);
+    const start = at(17, 16.66);
+    b.until(start); b.rec.speechStart(false); b.until(at(17, 21.61)); b.rec.speechStop(); b.rec.attemptWords(PART1);
+    b.until(at(17, 21.77)); b.rec.speechStart(false);
+    b.until(start + V2_PRON_ATTEMPT_MAX_MS - 40);
+    check(`the backstop: still held just before ${V2_PRON_ATTEMPT_MAX_MS} ms (the clip went at its 15 s cap)`, b.released.length === 0 && b.rec.holdsAttempt() && b.sent().length === 1, b.log);
+    b.until(start + V2_PRON_ATTEMPT_MAX_MS + 20);
+    check('  at the bound the attempt ends: its words take the floor, nothing held', b.released.length === 1 && b.released[0]!.join(' ') === PART1 && !b.rec.holdsAttempt() && b.log.some((x) => x.startsWith('pronunciation_attempt_bound #1')), { log: b.log, released: b.released });
+    check(`  the bound is the clip cap + the hold + the transcript wait (${V2_PRON_ATTEMPT_MAX_MS} ms)`, V2_PRON_ATTEMPT_MAX_MS === 15000 + V2_PRON_PAUSE_HOLD_MS + V2_PRON_FINAL_WAIT_MS);
+    // A released attempt leaves no backstop behind.
+    const n = rig(); n.rec.arm(1, REF);
+    n.until(at(17, 16.66)); n.rec.speechStart(false); n.until(at(17, 21.61)); n.rec.speechStop(); n.rec.attemptWords(PART1);
+    n.until(at(17, 16.66) + V2_PRON_ATTEMPT_MAX_MS + 1000);
+    check('  a released attempt: no second release from the backstop', n.released.length === 1 && !n.log.some((x) => x.startsWith('pronunciation_attempt_bound')), n.log);
+  }
+
+  console.log('fix round 1 (I2): the voice client goes away during a hold');
+  {
+    const r = rig(); r.rec.arm(1, REF);
+    r.until(at(17, 16.66)); r.rec.speechStart(false); r.until(at(17, 21.61)); r.rec.speechStop(); r.rec.attemptWords(PART1);
+    r.rec.dispose();
+    r.until(at(17, 21.61) + V2_PRON_ATTEMPT_MAX_MS + 1000);
+    check('dispose: nothing released (no turn), no clip sent, nothing held, disarmed; no timer fires later', r.released.length === 0 && r.sent().length === 0 && !r.rec.holdsAttempt() && !r.rec.isArmed(), r.log);
+  }
+
   console.log('7 outside an armed attempt: nothing held');
   {
     const r = rig();
@@ -232,6 +275,8 @@ async function wiring() {
     check('the hold is handed its release only with the switch on', v.includes('pronRef.current?.holdPauses(TUTOR_V2_PRON_PAUSE_HOLD ? (parts) => releaseAttemptRef.current?.(parts) : null);'));
     check('the recogniser\'s resume reaches the recorder; an empty end counts a part', v.includes('pronRef.current?.speechStart(!!realtimeRef.current?.isSpeechPending(), !!e?.resume);') && v.includes('pronRef.current?.attemptPartEmpty();'));
     check('the noisy room\'s early look does not take a held attempt in pieces', /if \(pronRef\.current\?\.holdsAttempt\(\)\) return;/.test(v.slice(v.indexOf('const lookForStudent'), v.indexOf('const judgePartial'))));
+    check('fix round 1 (I2): the unmount disposes the recorder (no release), never a flushing disarm', /stopSoundGate\(\); pronRef\.current\?\.dispose\(\); releaseBoard\(\);/.test(v) && !/pronRef\.current\?\.disarm\(\); releaseBoard/.test(v));
+    check('fix round 1 (I1): a transcription failure counts the held part', /'v2_transcription_failed'[^\n]*\n[^\n]*\n\s+pronRef\.current\?\.attemptPartEmpty\(\);/.test(v));
     check('the switch is default ON', CHILD ? TUTOR_V2_PRON_PAUSE_HOLD === false : TUTOR_V2_PRON_PAUSE_HOLD === true);
   }
 
