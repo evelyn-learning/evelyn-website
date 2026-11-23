@@ -509,7 +509,9 @@ export function xmlProblem(xml: string): string | null {
     TAG_OPEN.lastIndex = lt;
     const open = TAG_OPEN.exec(xml);
     if (!open) return `"<" that does not start a well-formed tag near ${JSON.stringify(rest.slice(0, 60))}`;
-    const names = [...open[2].matchAll(new RegExp(`(${NAME})\\s*=`, "g"))].map((m) => m[1]);
+    // Names only from name="value" pairs taken in order: text inside a quoted value (an alt text such as
+    // "x=-7 x=-20") is never read as an attribute name.
+    const names = [...open[2].matchAll(new RegExp(`(${NAME})\\s*=\\s*(?:"[^"]*"|'[^']*'|[^\\s"'=<>\`]+)`, "g"))].map((m) => m[1]);
     if (new Set(names).size !== names.length) return `<${open[1]}> repeats an attribute`;
     if (badAmp(open[2])) return `bare "&" in an attribute of <${open[1]}>`;
     if (!open[3]) stack.push(open[1]);
