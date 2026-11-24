@@ -220,7 +220,7 @@ export default async function ItemPage({
               ))}
             </ul>
             {pipe?.seenAt && <div className="ks-q-seen">Seen {pacificTime(new Date(pipe.seenAt))}</div>}
-            <HeldControls itemId={itemId} back="item" ids />
+            <HeldControls itemId={itemId} back="item" ctx={q} ids />
             <OwnerKeys />
           </div>
         )}
@@ -228,7 +228,7 @@ export default async function ItemPage({
           <div className="ks-note info ks-owner">
             <b>Passed our checks.</b>{" "}
             {pipe?.releaseAt ? `Goes to Castle Rock's review by itself ${pacificTime(new Date(pipe.releaseAt))}.` : "No release time yet."}
-            <HoldControl itemId={itemId} back="item" />
+            <HoldControl itemId={itemId} back="item" ctx={q} />
           </div>
         )}
         {item.reviewNote && (

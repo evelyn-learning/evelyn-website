@@ -6,10 +6,12 @@ import { OwnerForm as ActionForm } from "./OwnerForm";
 
 type Where = "queue" | "item";
 
-const Hidden = ({ itemId, back }: { itemId: string; back: Where }) => (
+// `ctx` is the list the item page was opened from ("?stage=ready"): kept on the way back so prev/next stay in that list.
+const Hidden = ({ itemId, back, ctx }: { itemId: string; back: Where; ctx?: string }) => (
   <>
     <input type="hidden" name="itemId" value={itemId} />
     <input type="hidden" name="back" value={back} />
+    {ctx && <input type="hidden" name="ctx" value={ctx} />}
   </>
 );
 
@@ -19,8 +21,8 @@ const Hidden = ({ itemId, back }: { itemId: string; back: Where }) => (
  * (queries.ts ownerQueue); the item page shows a held ready version (send and send back).
  */
 export function HeldControls({
-  itemId, back, openHref, ids = false, canSend = true, canSendBack = true, canClear = false,
-}: { itemId: string; back: Where; openHref?: string; ids?: boolean; canSend?: boolean; canSendBack?: boolean; canClear?: boolean }) {
+  itemId, back, ctx, openHref, ids = false, canSend = true, canSendBack = true, canClear = false,
+}: { itemId: string; back: Where; ctx?: string; openHref?: string; ids?: boolean; canSend?: boolean; canSendBack?: boolean; canClear?: boolean }) {
   return (
     <div className="ks-q-ctl">
       {openHref && (
@@ -30,26 +32,26 @@ export function HeldControls({
       )}
       {canSend && (
         <ActionForm action={sendToReviewAction} className="ks-q-form">
-          <Hidden itemId={itemId} back={back} />
+          <Hidden itemId={itemId} back={back} ctx={ctx} />
           <button className="ks-btn ok" id={ids ? "ks-owner-send" : undefined}>
             Send to review{ids && <kbd>S</kbd>}
           </button>
         </ActionForm>
       )}
       <ActionForm action={keepHoldingAction} className="ks-q-form">
-        <Hidden itemId={itemId} back={back} />
+        <Hidden itemId={itemId} back={back} ctx={ctx} />
         <button className="ks-btn">Keep holding</button>
       </ActionForm>
       {canClear && (
         <ActionForm action={clearHoldAction} className="ks-q-form">
-          <Hidden itemId={itemId} back={back} />
+          <Hidden itemId={itemId} back={back} ctx={ctx} />
           <button className="ks-btn">Seen: clear the hold</button>
         </ActionForm>
       )}
       {canSendBack && <details className="ks-q-back" id={ids ? "ks-owner-back" : undefined}>
         <summary className="ks-btn warn">Send back{ids && <kbd>B</kbd>}</summary>
         <ActionForm action={sendBackAction} className="ks-q-backform">
-          <Hidden itemId={itemId} back={back} />
+          <Hidden itemId={itemId} back={back} ctx={ctx} />
           <textarea
             name="note"
             id={ids ? "ks-owner-note" : undefined}
@@ -65,7 +67,7 @@ export function HeldControls({
   );
 }
 
-export function HoldControl({ itemId, back, openHref }: { itemId: string; back: Where; openHref?: string }) {
+export function HoldControl({ itemId, back, ctx, openHref }: { itemId: string; back: Where; ctx?: string; openHref?: string }) {
   return (
     <div className="ks-q-ctl">
       {openHref && (
@@ -74,7 +76,7 @@ export function HoldControl({ itemId, back, openHref }: { itemId: string; back: 
         </Link>
       )}
       <ActionForm action={holdAction} className="ks-q-form">
-        <Hidden itemId={itemId} back={back} />
+        <Hidden itemId={itemId} back={back} ctx={ctx} />
         <button className="ks-btn warn">Hold this one</button>
       </ActionForm>
     </div>
