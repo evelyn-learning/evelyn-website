@@ -33,7 +33,7 @@ import { renderFacts, v2AskEveryOn, v2SummaryBegun, V2_NO_ASK_RECHECK_S, V2_TIME
 import { v2CloseOpen, v2LeftToStopMin, v2LessonNowMs, v2MarginMin, v2PartFlowLesson, v2PlanContentDone, v2TimeFlags, v2WrapDue, v2WrapMin, type V2TimeFlags } from './time-box';
 import { V2_MIN_PRACTICE, V2_MORE_PRACTICE_MIN_LEFT, v2LevelCheckTimeUp, v2ArrivalDrops, v2LeaveOutByChoice, v2AsksMorePractice, v2CountPractice, v2PartPracticeAsked, v2DroppedMentioned, v2TakeEnteredDropped, v2PartsToDrop, v2PracticeMoreLine, v2PracticeShort, v2TimeFitAfterReply, v2TimeFitDue, v2TimeFitUpFront, v2MarkPartStart, v2OptionalAskedAtClose, v2OptionalWrapMin } from './time-fit';
 import { planGoalIds, renderPlanMap, v2NextTimeAllLine, v2PagePartLabel, v2NextTimeLine, v2PartIsOptional, v2PartNamedIn, v2PartOf, v2PartOffers, v2UnreachedOffer } from './plan-map';
-import { stripToolTalk } from './tool-talk';
+import { ControlTagStream, stripControlTags, stripToolTalk } from './tool-talk';
 import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
 import { V2_CLOSING_PAGE, endsAsking, leftOpen, mayOpenPart, namesPart, partOffer, v2FrameDue } from './part-close';
@@ -1355,6 +1355,13 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       messages,
     } as unknown as Anthropic.MessageCreateParamsNonStreaming;
     const inline = new BoardInlineStream();
+    // A control tool written as markup is taken out of the words; in a discussion, what a record_thinking tag asked for is recorded.
+    const controlTags = new ControlTagStream((tagName, attrs) => {
+      if (!discussion || tagName !== 'record_thinking') return;
+      const args: Record<string, unknown> = Object.fromEntries(Object.entries(attrs).map(([k, v]) => [k, v === 'true' ? true : v === 'false' ? false : /^\d+$/.test(v) ? Number(v) : v]));
+      delete args.weighed;
+      applyControlTool(state, session, 'record_thinking', args, nowMs, input.studentSaid, { tf });
+    });
     const gate = new ReplyGate((piece) => {
       // Task 7o (NO_MARKDOWN_STARS): no markdown bold in the words heard, captioned or written in the transcript.
       const t = stars ? stars.push(piece) : piece;
@@ -1582,7 +1589,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // nothing it streams after that is taken.
     let callCut = false;
     if (handOverStage === 'continuing') { contAbort = new AbortController(); const ac = contAbort; if (input.signal?.aborted) ac.abort(); else input.signal?.addEventListener('abort', () => ac.abort(), { once: true }); contFrom = saidNow.length; }
-    const modelCall = callModel(params, (delta) => { if (!callCut) take(cardsIn(inline.push(delta))); }, handOverStage === 'continuing' ? contAbort!.signal : input.signal, (type) => { if (callCut || type !== 'text' || pendingHold) return; gate.flush(); if (!pendingHold && !gate.holdsGoodbye) gate.releaseAsk(); });
+    const modelCall = callModel(params, (delta) => { if (!callCut) take(cardsIn(inline.push(controlTags.push(delta)))); }, handOverStage === 'continuing' ? contAbort!.signal : input.signal, (type) => { if (callCut || type !== 'text' || pendingHold) return; gate.flush(); if (!pendingHold && !gate.holdsGoodbye) gate.releaseAsk(); });
     let response: Anthropic.Message;
     if (handOverStage === 'continuing') {
       let timer: ReturnType<typeof setTimeout> | undefined;
@@ -1602,6 +1609,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       }
       response = got;
     } else response = await modelCall;
+    { const rest = controlTags.flush(); if (rest) take(cardsIn(inline.push(rest))); }
+    // The stored copy of the reply is cleaned as the stream was.
+    for (const b of response.content) if (b.type === 'text') b.text = stripControlTags(b.text);
     take(cardsIn(inline.flush()));
     if (learnerWatch) take(learnerWatch.end());
     gate.flush();

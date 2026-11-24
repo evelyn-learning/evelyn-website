@@ -30,3 +30,46 @@ export function stripToolTalk(text: string): string {
     .filter(Boolean)
     .join('\n\n');
 }
+
+/** The tools that never draw: a reply that writes one of them as markup has slipped. */
+const CONTROL_NAMES = ['record_thinking', 'set_goal_status', 'update_session_note', 'end_lesson', 'keep_listening', 'track_gap'];
+
+/**
+ * Takes control tools written as markup out of a reply as it streams. Board blocks are written inline, and now
+ * and then the model writes a control tool the same way (`<record_thinking address_declined="true"
+ * stance="against">`); the sentence net above then left its tail in the words (`stance="against">` opened two
+ * replies of a replay, 2026-11-24). The tag never reaches the student, and `onTag` gets what it asked for.
+ */
+export class ControlTagStream {
+  private buf = '';
+  constructor(private onTag?: (name: string, attrs: Record<string, string>) => void) {}
+  push(delta: string): string { this.buf += delta; return this.drain(false); }
+  flush(): string { return this.drain(true); }
+  private drain(final: boolean): string {
+    let out = '';
+    for (;;) {
+      const lt = this.buf.indexOf('<');
+      if (lt < 0) { out += this.buf; this.buf = ''; return out; }
+      out += this.buf.slice(0, lt); this.buf = this.buf.slice(lt);
+      const head = this.buf.slice(1).replace(/^\//, '');
+      const name = CONTROL_NAMES.find((n) => head.startsWith(n) && !/^[a-z_]/i.test(head.slice(n.length, n.length + 1)));
+      if (name) {
+        const end = this.buf.indexOf('>');
+        if (end < 0) { if (final) this.buf = ''; return out; }
+        const tag = this.buf.slice(0, end + 1); this.buf = this.buf.slice(end + 1).replace(/^[ \t]*\n?/, '');
+        if (!tag.startsWith('</')) this.onTag?.(name, Object.fromEntries([...tag.matchAll(/([a-z_]+)\s*=\s*"([^"]*)"/gi)].map((m) => [m[1], m[2]])));
+        continue;
+      }
+      // Not yet enough to tell: "<rec" may still become a control tag.
+      if (!final && CONTROL_NAMES.some((n) => n.startsWith(head) || (head.length <= n.length && n.startsWith(head.slice(0, n.length))))) return out;
+      out += '<'; this.buf = this.buf.slice(1);
+    }
+  }
+}
+
+/** The same, for a whole text (the stored copy of a reply). */
+export function stripControlTags(text: string): string {
+  if (!text.includes('<')) return text;
+  const st = new ControlTagStream();
+  return st.push(text) + st.flush();
+}
