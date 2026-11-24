@@ -119,6 +119,8 @@ export interface V2TurnsConfig {
   /** Voice: how many times other voices in the room were left out, while the student is still to be told of it
    *  (room-voices.ts). Asked as each turn is sent. */
   roomVoices?: () => number | undefined;
+  /** A reviewer's note was closed just before this turn (asked once per note). */
+  afterNote?: () => boolean;
   /** How long after the closing words the session ends. Voice passes a function that waits for the speech to finish. */
   closeDelayMs?: number | (() => Promise<void>);
   /** Voice, at the box: resolves once the tutor's speech under way has finished (true), or at `maxMs` with it still
@@ -369,12 +371,14 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     const turnNo = pagesHeldRef.current.begin(stateRef.current.board);
     const pageShown = () => { if (pagesHeldRef.current.painted(turnNo)) reportProgress(); };
     const roomVoices = p.current.roomVoices?.();
+    const afterNote = studentSaid !== null && !!p.current.afterNote?.();
     try {
       const done = await streamV2Turn({
         session, state: stateRef.current, studentSaid: brainSaid, embedToken: p.current.embedToken, signal: abort.signal,
         ...(silenceSeconds ? { silenceSeconds } : {}),
         ...(timeCheck ? { timeCheck: true } : {}),
         ...(roomVoices ? { roomVoices } : {}),
+        ...(afterNote ? { afterNote: true } : {}),
         ...(resumeTurnRef.current ? { resumed: true } : {}),
         onText: (delta) => {
           // Typed sessions: once the reply is appearing, the shell's "Thinking…" state is over.

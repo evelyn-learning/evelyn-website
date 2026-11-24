@@ -29,6 +29,9 @@ export function v2ReadClientState(raw: unknown, carry: boolean = TUTOR_V2_STATE_
     ...(typeof t.direction === 'string' ? { direction: t.direction.slice(0, 240) } : {}),
     ...(t.justComplicated === true ? { justComplicated: true } : {}),
     ...(t.steered === true ? { steered: true } : {}),
+    ...(typeof t.addressAs === 'string' && t.addressAs.trim() ? { addressAs: t.addressAs.trim().slice(0, 40) } : {}),
+    ...(t.addressDeclined === true ? { addressDeclined: true } : {}),
+    ...(t.stance === 'for' || t.stance === 'against' || t.stance === 'mixed' ? { stance: t.stance } : {}),
     ...(typeof t.theirMinutes === 'number' && Number.isFinite(t.theirMinutes) ? { theirMinutes: Math.min(60, Math.max(2, Math.round(t.theirMinutes))) } : {}),
     ...(typeof t.complications === 'number' && Number.isFinite(t.complications) ? { complications: Math.min(20, Math.max(0, Math.round(t.complications))) } : {}),
   } : undefined;

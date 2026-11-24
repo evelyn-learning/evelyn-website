@@ -146,6 +146,12 @@ export interface V2State {
     theirMinutes?: number;
     /** The tutor's last reply brought in a complication (cleared each turn): never two in a row. */
     justComplicated?: boolean;
+    /** How they asked to be addressed, in their words (plans that ask; discussion.ts addressQuestion). */
+    addressAs?: string;
+    /** Asked how to be addressed, they gave no name or none could be made out: no name is used, and none is asked for again. */
+    addressDeclined?: boolean;
+    /** Where they stand on the thing under discussion, when it is plain. */
+    stance?: 'for' | 'against' | 'mixed';
     /** The direction they named, once they have. */
     direction?: string;
     /** They said they felt led to an answer: no more cases or consequences that point away from their view. */

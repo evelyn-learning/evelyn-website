@@ -33,7 +33,7 @@ import { renderFacts, v2AskEveryOn, v2SummaryBegun, V2_NO_ASK_RECHECK_S, V2_TIME
 import { v2CloseOpen, v2LeftToStopMin, v2LessonNowMs, v2MarginMin, v2PartFlowLesson, v2PlanContentDone, v2TimeFlags, v2WrapDue, v2WrapMin, type V2TimeFlags } from './time-box';
 import { V2_MIN_PRACTICE, V2_MORE_PRACTICE_MIN_LEFT, v2LevelCheckTimeUp, v2ArrivalDrops, v2LeaveOutByChoice, v2AsksMorePractice, v2CountPractice, v2PartPracticeAsked, v2DroppedMentioned, v2TakeEnteredDropped, v2PartsToDrop, v2PracticeMoreLine, v2PracticeShort, v2TimeFitAfterReply, v2TimeFitDue, v2TimeFitUpFront, v2MarkPartStart, v2OptionalAskedAtClose, v2OptionalWrapMin } from './time-fit';
 import { planGoalIds, renderPlanMap, v2NextTimeAllLine, v2PagePartLabel, v2NextTimeLine, v2PartIsOptional, v2PartNamedIn, v2PartOf, v2PartOffers, v2UnreachedOffer } from './plan-map';
-import { stripToolTalk } from './tool-talk';
+import { ControlTagStream, stripControlTags, stripToolTalk } from './tool-talk';
 import { gradeOfLevel } from './session-kind';
 import { v2HomeworkOpener, v2HomeworkPart, v2SheetOpener, v2SheetPart } from './homework';
 import { V2_CLOSING_PAGE, endsAsking, leftOpen, mayOpenPart, namesPart, partOffer, v2FrameDue } from './part-close';
@@ -66,7 +66,7 @@ import { TUTOR_V2_LEVEL_CHECK_PUT, TUTOR_V2_OWN_KEY_NOT_LANGUAGE, TUTOR_V2_ASK_N
 import { v2CardGlossOn, v2CleanGloss, v2GlossLevelOn } from './card-gloss';
 import { v2NoteTargetsOn, v2NoteTargetsSection, v2NoteHasTarget, v2NoteStressWords } from './note-targets';
 import { V2StarStrip, v2StripStars } from './markdown-stars';
-import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, DISCUSSION_STEERED, V2_DISCUSSION_CONSTITUTION, caseToldIn, directionAnswered, directionAsked, discussionOf, reflectAsked, syncDiscussionStages, untoldCases, effectiveMinutes, recordThinking, renderDiscussionMap, scriptedWelcome } from './discussion';
+import { DISCUSSION_CHECK_INS, DISCUSSION_OPENING, DISCUSSION_STEERED, V2_DISCUSSION_CONSTITUTION, caseToldIn, directionAnswered, directionAsked, discussionOf, reflectAsked, syncDiscussionStages, untoldCases, effectiveMinutes, recordThinking, renderDiscussionMap, scriptedWelcome, heldViewCloseWords } from './discussion';
 import { SAY_WITH, V2_CONTROL_TOOL_NAMES, V2_NOTE_OWN_ANSWER_TOOL, V2_SET_CURRENT_PROBLEM_TOOL, v2Tools } from './tools';
 import type { GapStatus, GoalStatus, V2Board, V2BoardOutcome, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
 
@@ -231,7 +231,7 @@ export function v2SessionPart(session: V2Session): string {
   if (discussion && session.plan) {
     return [
       'THIS SESSION',
-      `Person: ${session.studentName?.trim() || 'name not given'}.`,
+      discussion.addressQuestion ? 'Person: they are asked how they would like to be addressed; the facts say what they answered. No other name is known to you.' : `Person: ${session.studentName?.trim() || 'name not given'}.`,
       session.teacher?.name ? `You are ${session.teacher.name}${session.teacher.nameIsRole ? ' (a role, not a person\'s name)' : ''}: say so when you greet them.${session.teacher.style ? ` How you talk: ${session.teacher.style}` : ''}` : '',
       ...v2PersonaCardLines(session.teacher),
       // The teaching mode lines speak of mathematics and answers; a discussion has neither.
@@ -1119,6 +1119,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       && v2PartOfPage(session.plan, String(args.title ?? '')) === 0) return true;
     // A note whose first line is the title of the page it stands on says the title twice (flagged in a local
     // test, embed-1795030468491: "page 2's title is The Revision Assistant, and the title on the card is too").
+    // The board of a discussion never carries the tutor's own point: "Consideration: for a student who finds writing
+    // hard, AI feedback may be what keeps them going" stood on the screen of a teacher who had said AI has no place
+    // in his room (embed-1795280313652).
+    if (discussion && name === 'annotate' && typeof args.text === 'string' && /^\s*(?:a |one )?consideration\b/i.test(args.text)) return false;
     if (name === 'annotate' && typeof args.text === 'string') {
       const lines = args.text.split('\n'); const plain = (x: string) => x.replace(/[^a-z0-9]+/gi, '').toLowerCase();
       const title = state.board.pages[state.board.current]?.title ?? '';
@@ -1358,6 +1362,13 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       messages,
     } as unknown as Anthropic.MessageCreateParamsNonStreaming;
     const inline = new BoardInlineStream();
+    // A control tool written as markup is taken out of the words; in a discussion, what a record_thinking tag asked for is recorded.
+    const controlTags = new ControlTagStream((tagName, attrs) => {
+      if (!discussion || tagName !== 'record_thinking') return;
+      const args: Record<string, unknown> = Object.fromEntries(Object.entries(attrs).map(([k, v]) => [k, v === 'true' ? true : v === 'false' ? false : /^\d+$/.test(v) ? Number(v) : v]));
+      delete args.weighed;
+      applyControlTool(state, session, 'record_thinking', args, nowMs, input.studentSaid, { tf });
+    });
     const gate = new ReplyGate((piece) => {
       // Task 7o (NO_MARKDOWN_STARS): no markdown bold in the words heard, captioned or written in the transcript.
       const t = stars ? stars.push(piece) : piece;
@@ -1585,7 +1596,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // nothing it streams after that is taken.
     let callCut = false;
     if (handOverStage === 'continuing') { contAbort = new AbortController(); const ac = contAbort; if (input.signal?.aborted) ac.abort(); else input.signal?.addEventListener('abort', () => ac.abort(), { once: true }); contFrom = saidNow.length; }
-    const modelCall = callModel(params, (delta) => { if (!callCut) take(cardsIn(inline.push(delta))); }, handOverStage === 'continuing' ? contAbort!.signal : input.signal, (type) => { if (callCut || type !== 'text' || pendingHold) return; gate.flush(); if (!pendingHold && !gate.holdsGoodbye) gate.releaseAsk(); });
+    const modelCall = callModel(params, (delta) => { if (!callCut) take(cardsIn(inline.push(controlTags.push(delta)))); }, handOverStage === 'continuing' ? contAbort!.signal : input.signal, (type) => { if (callCut || type !== 'text' || pendingHold) return; gate.flush(); if (!pendingHold && !gate.holdsGoodbye) gate.releaseAsk(); });
     let response: Anthropic.Message;
     if (handOverStage === 'continuing') {
       let timer: ReturnType<typeof setTimeout> | undefined;
@@ -1605,6 +1616,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       }
       response = got;
     } else response = await modelCall;
+    { const rest = controlTags.flush(); if (rest) take(cardsIn(inline.push(rest))); }
+    // The stored copy of the reply is cleaned as the stream was.
+    for (const b of response.content) if (b.type === 'text') b.text = stripControlTags(b.text);
     take(cardsIn(inline.flush()));
     if (learnerWatch) take(learnerWatch.end());
     gate.flush();
@@ -2558,7 +2572,13 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   }
   // The plan's own last words: that the session is over and what comes next. One session closed on a summary
   // and stopped, and the person did not know it had finished (partner review, 2026-11-17).
-  const closing = discussion && state.closed && !input.signal?.aborted ? discussionOf(session.plan)?.closing?.trim() : '';
+  // Asked once: an answer that gave no name the tutor recorded is taken as none, and the question never comes back.
+  const askMeta = discussion ? discussionOf(session.plan) : null;
+  if (askMeta?.addressQuestion && input.studentSaid !== null && !state.thinking?.addressAs && !state.thinking?.addressDeclined && state.history.filter((m) => m.role === 'assistant').length >= 2) state.thinking = { ...(state.thinking ?? { position: '', weighed: [], shifts: [] }), addressDeclined: true };
+  const closeMeta = discussion && state.closed && !input.signal?.aborted ? discussionOf(session.plan) : null;
+  // A person whose view held leaves with one thought from the plan, in the partner's words; the tutor adds none.
+  const held = closeMeta ? heldViewCloseWords(closeMeta, state) : '';
+  const closing = [held && !finalWords.includes(held) ? held : '', closeMeta?.closing?.trim() ?? ''].filter(Boolean).join('\n\n');
   if (closing && !finalWords.includes(closing)) {
     input.onText?.(`\n\n${closing}`);
     finalWords = `${finalWords}\n\n${closing}`;

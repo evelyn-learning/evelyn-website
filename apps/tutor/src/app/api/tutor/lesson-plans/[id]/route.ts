@@ -12,7 +12,13 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
   if (!plan) return NextResponse.json({ error: 'not found' }, { status: 404 });
   // Licensed source text (a partner's private plan) is read by the turn route on the server only. The browser
   // needs the stages, for the progress report; it gets the plan without its material.
-  if (isPrivatePlan(id)) return NextResponse.json({ plan: { ...plan, source: undefined, metadata: { kind: (plan.metadata as { kind?: string } | undefined)?.kind } } });
+  // The start card is the partner's own introduction, shown before the session starts; it is not source material.
+  if (isPrivatePlan(id)) {
+    const meta = plan.metadata as { kind?: string; startCard?: { title?: unknown; lines?: unknown } } | undefined;
+    const lines = Array.isArray(meta?.startCard?.lines) ? meta.startCard.lines.filter((x): x is string => typeof x === 'string' && !!x.trim()).slice(0, 8).map((x) => x.slice(0, 400)) : [];
+    const startCard = lines.length ? { ...(typeof meta?.startCard?.title === 'string' ? { title: meta.startCard.title.slice(0, 120) } : {}), lines } : undefined;
+    return NextResponse.json({ plan: { ...plan, source: undefined, metadata: { kind: meta?.kind, ...(startCard ? { startCard } : {}) } } });
+  }
   return NextResponse.json({ plan });
 }
 

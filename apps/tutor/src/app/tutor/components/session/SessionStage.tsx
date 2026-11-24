@@ -72,6 +72,9 @@ export interface SessionStageProps {
   hasPlan: boolean;
   isFreePractice: boolean;
   objective?: string;            // current LO / goal chip text
+  /** A plan's own introduction, shown before a spoken session starts in place of the generic lines (a partner's
+   *  standard welcome and practical points; plan metadata `startCard`). */
+  startCard?: { title?: string; lines: string[] };
   beats?: ReactNode;             // practice meter; legacy plan strip (<LessonPlanProgress/>) only when the agenda rail is off
   /** Agenda rail (2026-08-10): persistent content-labeled progress rail,
    *  horizontal orientation, rendered above the board when not fullscreen.
@@ -275,7 +278,7 @@ const TITLE_REVEAL_MS = 4000;
 export default function SessionStage(props: SessionStageProps) {
   const {
     sessionMode = 'voice',
-    lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, agendaRail, agendaRailVertical, controls, adaptiveMenu, headerClock, toolsLow = false, toolCluster = false, onFullscreenApi, endControl, questionPin, questionPinKey, hiccupPin, actionPin,
+    lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, startCard, beats, agendaRail, agendaRailVertical, controls, adaptiveMenu, headerClock, toolsLow = false, toolCluster = false, onFullscreenApi, endControl, questionPin, questionPinKey, hiccupPin, actionPin,
     voiceState, thinkingCueText = null, warmupOverlay = false, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, hideQuickStarts, voiceInput, transcript, transcriptCount = 0,
     quickActions, onStudentInput, onControlMessage,
     mockAgenda, mockAgendaRemaining, mockDrawer, mockCorrectDrawer, onPickAgendaItem, agendaEngaged = false,
@@ -1466,6 +1469,13 @@ export default function SessionStage(props: SessionStageProps) {
                   isFreePractice && !liveCaption ? (
                     <p className="max-w-xl text-center text-xl font-semibold text-slate-700">{S.whatToWorkOn}</p>
                   ) : null
+                ) : startCard?.lines.length ? (
+                  <div data-testid="tutor-start-card" className="mt-1 max-w-xl rounded-2xl border border-slate-200 bg-white/90 px-5 py-4 text-left shadow-sm">
+                    {startCard.title && <p className="mb-2 text-base font-semibold text-slate-800">{startCard.title}</p>}
+                    {startCard.lines.map((line, i) => (
+                      <p key={i} className="mt-1.5 text-sm leading-relaxed text-slate-600">{line}</p>
+                    ))}
+                  </div>
                 ) : (
                   <>
                     {/* What are we learning today — the top-bar title is small, so
