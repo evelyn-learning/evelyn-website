@@ -108,6 +108,10 @@ open) and each one looks right.
   "vee"), "the mass" (not "em"). This overrides the playbook's "dee why over dee ex" respellings. "ex" and
   "why" for the math variables x and y are fine (heard and accepted). Only when a variable has no name at all
   (a bare parameter called d in the question) list its spelling in `allowLetters` and use it.
+- **Read a coordinate pair as one point.** "negative 9, 6 moves to negative 3, 6" is heard as loose numbers
+  that attach to the words around them (Praveen's flag on 302347, 2026-11-24). Write `speak` as "the point with
+  ex equal to negative 9 and why equal to 6"; when only one coordinate changes, say so ("moves to ex equal to
+  negative 3, with why still 6"). `say` keeps the usual (−9, 6).
 - `cues` are what the board does when the line starts. A line with no cue is a pause.
 - The first line of step 1 is "The answer is … Here's why." The last line of the last step states the answer
   and carries `{ "do": "answer" }`.
