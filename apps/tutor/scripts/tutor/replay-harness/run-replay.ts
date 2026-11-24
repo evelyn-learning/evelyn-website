@@ -56,7 +56,9 @@ const sayVoice = arg('--say-student', '');
 const fakeMic = !!audioDir || !!sayVoice;
 function sayClip(text: string, n: number): { b64: string; sec: number } {
   const base = path.join(outDir, `say-${runId}-${String(n).padStart(2, '0')}`);
-  execFileSync('say', ['-v', sayVoice, '-o', `${base}.aiff`, text]);
+  // `say` has hung for good on a line (2026-11-24, two hours): ten seconds, then one more try.
+  try { execFileSync('say', ['-v', sayVoice, '-o', `${base}.aiff`, text], { timeout: 10_000 }); }
+  catch { execFileSync('say', ['-v', sayVoice, '-o', `${base}.aiff`, text], { timeout: 20_000 }); }
   execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-i', `${base}.aiff`, '-ac', '1', '-ar', '24000', '-c:a', 'pcm_s16le', '-map_metadata', '-1', '-fflags', '+bitexact', `${base}.wav`]);
   fs.rmSync(`${base}.aiff`, { force: true });
   const buf = fs.readFileSync(`${base}.wav`); const at = buf.indexOf(Buffer.from('data')); const pcm = buf.subarray(at + 8);

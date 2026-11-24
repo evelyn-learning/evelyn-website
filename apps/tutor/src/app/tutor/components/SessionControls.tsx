@@ -10,7 +10,7 @@
  * - Export PDF
  */
 
-import { useSessionStrings } from '@/lib/tutor/i18n/SessionStringsContext';
+import { useSessionLanguages, useSessionStrings } from '@/lib/tutor/i18n/SessionStringsContext';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Clock, LogOut, Camera, Upload, X, Download, GripVertical } from 'lucide-react';
@@ -177,6 +177,7 @@ export function SessionControls({
   level,
 }: SessionControlsProps) {
   const S = useSessionStrings();
+  const sessionLanguages = useSessionLanguages();
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   // Task 7s (HEADER_CLOCK_PAUSE): the tester's flag time left out (development only; zero otherwise).
   const flagPause = useFlagClockPause(startedAtMs);
@@ -298,14 +299,14 @@ export function SessionControls({
         topicName,
         sessionGoal,
         studentName,
-        { subject, level }
+        { subject, level, ...(sessionLanguages ? { languages: [...sessionLanguages] } : {}) }
       );
     } catch (err) {
       console.error('PDF export error:', err);
     } finally {
       setIsExporting(false);
     }
-  }, [transcript, whiteboardCommands, topicName, sessionGoal, studentName, subject, level]);
+  }, [transcript, whiteboardCommands, topicName, sessionGoal, studentName, subject, level, sessionLanguages]);
 
   return (
     <>
