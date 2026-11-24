@@ -15,7 +15,7 @@ import { renderGoalStatus, v2PartOfferFacts, v2PassedPartFact, v2UnreachedAtClos
 import type { V2Session, V2State } from './types';
 import { roomVoicesFact } from './room-voices';
 import { leftOpen } from './part-close';
-import { discussionOf, effectiveMinutes, lastReplyNotes, reflectAsked, reflectAtMinutes, renderThinking, stagePace, untoldCases } from './discussion';
+import { addressFact, discussionOf, effectiveMinutes, lastReplyNotes, offSubject, reflectAsked, reflectAtMinutes, renderThinking, stagePace, untoldCases } from './discussion';
 import { v2NoteTargetsOn } from './note-targets';
 import { v2WorkingLevelFacts } from './working-level';
 import { v2PronunciationFacts, v2TextSoundFacts } from './pronunciation';
@@ -72,6 +72,9 @@ export interface V2TurnFacts {
   /** Other voices in the room have been picked up this many times and left out; the student is to be told, once
    *  (room-voices.ts). */
   roomVoices?: number;
+  /** They have just come back from a pause they made to leave a reviewer's note (V2FlagBar): words about carrying
+   *  on are not an answer. */
+  afterNote?: boolean;
   /** Their words just now end the session (stop-signal.ts). */
   stopAsked?: boolean;
   /** Their words just now said the level remembered from an earlier lesson does not fit (working-level.ts v2ReopenLevelCheck). */
@@ -411,6 +414,12 @@ export function renderFacts(session: V2Session, state: V2State, f: V2TurnFacts):
   const meta = state.history.length ? discussionOf(session.plan) : null;
   const untold = meta ? untoldCases(meta, state.history) : [];
   if (untold.length) lines.push(`not yet told to them: ${untold.map((c) => c.title).join('; ')}. They know nothing of ${untold.length === 1 ? 'it' : 'these'}: no name or detail from ${untold.length === 1 ? 'it' : 'them'} until the reply that tells it in full. That reply tells it at once: it does not ask whether to go on, and it does not say a case is coming`);
+  const addressLine = meta ? addressFact(meta, state.thinking, state.history) : '';
+  if (addressLine) lines.push(addressLine);
+  if (meta && offSubject(meta, state.history, f.heard)) lines.push(`the last two exchanges have not touched ${meta.subject!.name}: tie your next question back to it, through what they have just been saying`);
+  // "All right, carry on", said to end a pause, was taken as the answer to the opening question, and the session
+  // went on past it ("I never gave you any feedback… can you start over?", embed-1795280313652).
+  if (discussion && f.afterNote && f.heard) lines.push('they paused the session to leave a note for its makers and have just come back: words about carrying on or being ready are about the pause, not an answer. If that is all they said, put your last question to them again in a few words');
   const lastNotes = discussion ? lastReplyNotes(state.history, session.mode === 'voice', f.heard) : [];
   if (lastNotes.length) lines.push(`your last reply: ${lastNotes.join('; ')}`);
   // Said once in the prompt, the length and the opener drift back within a few turns (live test 2, 2026-11-15: replies of

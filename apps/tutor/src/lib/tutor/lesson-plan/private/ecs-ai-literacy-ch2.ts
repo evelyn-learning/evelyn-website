@@ -64,17 +64,17 @@ const discussion: DiscussionMeta = {
   ],
   considerations: [
     'A school or district rule against AI revision tools gives some families and teachers clarity and reassurance, while others feel students are being denied the chance to learn to use AI well.',
-    'A student who leans on AI at every step can hand in polished work they cannot reproduce on their own, in an in-class essay or a timed exam.',
+    '[against] A student who leans on AI at every step can hand in polished work they cannot reproduce on their own, in an in-class essay or a timed exam.',
     'Heavy AI help may need to be disclosed in some settings, such as a college application essay, and students may not know where that line is.',
     'A teacher who raises a suspicion of AI use with a student who genuinely improved can damage trust; the student may stop sharing drafts or struggles.',
     'Students whose writing is flagged as "not sounding like them" may simply be growing, or getting help at home that other students do not have.',
     'Colleagues on the same team may set different expectations for AI use, so students meet different rules from one class to the next.',
-    'For a student who finds writing hard, AI feedback can be the support that lets them keep going; taking it away may hit those students hardest.',
-    'If AI suggestions are accepted without being weighed, the student skips the decisions about their own writing that build the skill.',
-    'A teacher who cannot see how a piece was produced cannot tell what the student can do alone, and so cannot grade it fairly or plan the next step from it.',
+    '[for] For a student who finds writing hard, AI feedback can be the support that lets them keep going; taking it away may hit those students hardest.',
+    '[against] If AI suggestions are accepted without being weighed, the student skips the decisions about their own writing that build the skill.',
+    '[against] A teacher who cannot see how a piece was produced cannot tell what the student can do alone, and so cannot grade it fairly or plan the next step from it.',
     'Teachers are often left to decide about AI on their own, without guidance, training or time from the school, and each new expectation lands as more work.',
-    'Writing done by hand in class shows a teacher where the ideas came from in a way a typed final draft cannot.',
-    'Students may already be using AI at home whether or not their teacher allows it in class, so a teacher may be dealing with it either way.',
+    '[against] Writing done by hand in class shows a teacher where the ideas came from in a way a typed final draft cannot.',
+    '[for] Students may already be using AI at home whether or not their teacher allows it in class, so a teacher may be dealing with it either way.',
   ],
   commonReactions: [
     'A quick split: Kelly is fine, Diego is cheating, and the matter is settled.',
@@ -95,8 +95,32 @@ const discussion: DiscussionMeta = {
   ],
   reflectionQuestions: ['Does this still sound like me?', 'Am I growing as a writer here?', 'Am I being honest about how I got to this final draft?'],
   reflectionQuestionsFrom: 'from the chapter introduction: the questions the author wants students to learn to ask themselves',
-  welcome: 'Welcome to the ECS Voice Tutors, powered by Evelyn Learning. I\'m {tutor}. EdConsult Solutions builds professional learning for educators, and this is a short demo of one conversation from it. For about ten minutes we\'ll talk through two short classroom cases about students writing with AI. Nothing here is graded and there are no right answers: I\'m interested in your own thinking. Talk to me as you would to a colleague, and stop me or ask me to repeat anything at any time. To begin, {name}: when you hear about students writing with AI, what\'s your first reaction?',
-  welcomeBoard: ['ECS Voice Tutors, powered by Evelyn Learning', 'Demo: AI as a Helper – But You\'re Still the Author', 'About 10 minutes · two short cases · no right answers', 'Stop me or say "say that again" at any time'],
+  // The opening follows the partner's standard introduction (Ed_Consult_Solutions_Voice_Tutor_Introduction.pdf,
+  // 2026-11-21, still a draft on his side): its device advice and "tap the button" are on the start card, which is
+  // read before the tap; the rest is spoken. "Graded" is gone (it read as written for students), the session is
+  // framed as a rehearsal, and the person is asked how they would like to be addressed (his review notes on
+  // embed-1795280313652).
+  // ⚠ "Nothing … is recorded or kept" is said at Praveen's direction for the test phase (2026-11-24). It is NOT
+  // true of the engine yet: sessions are stored. The no-retention mode must ship before this plan goes to anyone
+  // outside the review group.
+  welcome: 'Hello, and thank you for choosing an Ed Consult Solutions voice tutor, powered by Evelyn Learning. I\'m {tutor}. This conversation is for trying ideas out loud, finding your voice, and rehearsing your thinking, not about landing on the right answer. It is strictly a rehearsal: nothing from this conversation is recorded or kept. Over about ten minutes we\'ll talk through two short classroom cases about students writing with AI, and you can stop me or ask me to repeat anything at any time.',
+  addressQuestion: 'Before we begin, how would you like to be addressed during this conversation?',
+  firstQuestion: 'When you hear about students writing with AI, what\'s your first reaction?',
+  subject: { name: 'where AI fits in students\' writing and in their own classroom', words: ['AI', 'artificial intelligence', 'chatbot', 'chatbots', 'ChatGPT', 'tool', 'tools'] },
+  reflectQuestion: 'Thinking about where AI fits in your own classroom, what do you think now, and has anything shifted?',
+  // Ours, drafted from his note 3; his to reword.
+  heldViewClose: 'Wherever AI ends up fitting in your classroom, your students will meet it once they leave you, in their next grade or on a college campus. That makes this a conversation worth coming back to from time to time, with what is best for your students in mind.',
+  startCard: {
+    title: 'Ed Consult Solutions Voice Tutor',
+    lines: [
+      'Thank you for choosing an Ed Consult Solutions voice tutor, powered by Evelyn Learning.',
+      'This conversation is for trying ideas out loud, finding your voice, and rehearsing your thinking, not about landing on the right answer.',
+      'For the best experience, use a desktop or laptop so you can follow the visuals on your screen. A phone works too, though some content is easier to see on a larger screen.',
+      'Headphones or a quiet room help. You can interrupt at any time, or say "say that again".',
+      'When you\'re ready, tap the button to get started.',
+    ],
+  },
+  welcomeBoard: ['Ed Consult Solutions Voice Tutor, powered by Evelyn Learning', 'AI as a Helper – But You\'re Still the Author', 'About 10 minutes · two short cases · a rehearsal, not a test', 'Stop me or say "say that again" at any time'],
   casesLeadIn: 'I\'m going to tell you about two students who each used AI on a piece of writing, in two different ways. After each one I\'ll ask what you make of it.',
   stageStarts: { explore: 'case_told', complicate: 'cases_told', reflect: 'reflect_asked', 'next-direction': 'direction_asked' },
   closing: 'That\'s the end of this demo conversation. You can close this window now, or start again from the same link whenever you like.',

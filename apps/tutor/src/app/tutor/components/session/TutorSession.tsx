@@ -480,6 +480,20 @@ export default function TutorSession(props: TutorSessionProps) {
   const [error, setError] = useState<string | null>(null);
   const [pacingMenuOpen, setPacingMenuOpen] = useState(false);
   const [selectedLessonPlanId, setSelectedLessonPlanId] = useState<string | undefined>(lessonPlanId);
+  // A plan may carry its own introduction for the start screen (plan metadata `startCard`).
+  const [startCard, setStartCard] = useState<{ title?: string; lines: string[] } | undefined>(undefined);
+  useEffect(() => {
+    if (!selectedLessonPlanId) { setStartCard(undefined); return; }
+    let gone = false;
+    fetch(`/api/tutor/lesson-plans/${encodeURIComponent(selectedLessonPlanId)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { plan?: { metadata?: { startCard?: { title?: string; lines?: string[] } } } } | null) => {
+        const card = data?.plan?.metadata?.startCard;
+        if (!gone) setStartCard(card && Array.isArray(card.lines) && card.lines.length ? { ...(card.title ? { title: card.title } : {}), lines: card.lines } : undefined);
+      })
+      .catch(() => { /* the generic start lines stand */ });
+    return () => { gone = true; };
+  }, [selectedLessonPlanId]);
   const [nudgeDismissed, setNudgeDismissed] = useState(false);
   // Phase 2: pen mode + ink-fade epoch. The epoch bumps when a tutor turn
   // completes (isProcessing falling edge, tracked via the existing
@@ -2344,6 +2358,7 @@ export default function TutorSession(props: TutorSessionProps) {
         hasPlan={!!lessonProgress.plan}
         isFreePractice={!lessonProgress.plan}
         objective={objective}
+        startCard={startCard}
         beats={beatsEl}
         agendaRail={agendaRailEl}
         agendaRailVertical={agendaRailVerticalEl}

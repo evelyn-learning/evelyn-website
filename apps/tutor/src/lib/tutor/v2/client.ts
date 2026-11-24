@@ -53,6 +53,8 @@ export interface V2TurnRequest {
   timeCheck?: boolean;
   /** Other voices in the room, left out this many times: the tutor tells the student once (room-voices.ts). */
   roomVoices?: number;
+  /** The person has just closed a reviewer's note (V2FlagBar). */
+  afterNote?: boolean;
   embedToken?: string;
   signal?: AbortSignal;
   onText?: (delta: string) => void;
@@ -70,7 +72,7 @@ export async function streamV2Turn(req: V2TurnRequest): Promise<V2TurnDone> {
   const res = await doFetch('/api/tutor/brain-v2/turn', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...(req.embedToken ? { 'x-embed-token': req.embedToken } : {}) },
-    body: JSON.stringify({ session: req.session, state: req.state, studentSaid: req.studentSaid, ...(req.silenceSeconds ? { silenceSeconds: req.silenceSeconds } : {}), ...(req.resumed ? { resumed: true } : {}), ...(req.timeCheck ? { timeCheck: true } : {}), ...(req.roomVoices ? { roomVoices: req.roomVoices } : {}) }),
+    body: JSON.stringify({ session: req.session, state: req.state, studentSaid: req.studentSaid, ...(req.silenceSeconds ? { silenceSeconds: req.silenceSeconds } : {}), ...(req.resumed ? { resumed: true } : {}), ...(req.timeCheck ? { timeCheck: true } : {}), ...(req.roomVoices ? { roomVoices: req.roomVoices } : {}), ...(req.afterNote ? { afterNote: true } : {}) }),
     signal: req.signal,
   });
   if (!res.ok || !res.body) {

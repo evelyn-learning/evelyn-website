@@ -121,6 +121,9 @@ const MIC_SOUND_LEVEL = 0.12;
 /** A held board item is painted after this long whatever the voice is doing. */
 const BOARD_HOLD_MAX_MS = 45000;
 
+/** How long after a note closes the next words are told to the tutor as coming after a pause. */
+const AFTER_NOTE_MS = 45_000;
+
 export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const p = useRef(props); p.current = props;
   const spokenRef = useRef<string[]>([]);
@@ -139,6 +142,8 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // A tester's flag is open (V2FlagBar, local development only): the tutor is paused and what is heard is a note.
   const flagRef = useRef<V2FlagState>({ active: false, words: [] });
+  /** When the last note was closed: the first words after it may be about the pause and not an answer (facts afterNote). */
+  const noteClosedAtRef = useRef(0);
   // Board timing (board-timing.ts): the sentences of the running reply as sent to the voice, how many have
   // started playing, and the board items waiting for theirs.
   const lastSoundAtRef = useRef(0);
@@ -353,6 +358,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     notShown: () => lostIdsRef.current,
     // The student is told of the other voices once: the line rides on each turn until a reply carrying it has been spoken.
     roomVoices: () => { if (!roomNoticeOwedRef.current) return undefined; roomNoticeSentRef.current = true; return roomHitsRef.current; },
+    afterNote: () => { const at = noteClosedAtRef.current; noteClosedAtRef.current = 0; return !!at && Date.now() - at < AFTER_NOTE_MS; },
     onBoardWithdraw: (id) => {
       const held = heldBoardRef.current.find((h) => h.id === id);
       if (held) { cancelHold(held); heldBoardRef.current = heldBoardRef.current.filter((h) => h !== held); }
@@ -1065,6 +1071,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   };
   const flagStart = useCallback(() => { clearSilence(); stopSoundGate(); if (pauseTimerRef.current) { clearTimeout(pauseTimerRef.current); pauseTimerRef.current = null; } soundPauseRef.current = false; realtimeRef.current?.pauseSpeech(); voicePaused(); p.current.onDebugEvent?.('v2_flag', 'opened'); holdClock(true); }, []);
   const flagStop = useCallback(() => {
+    noteClosedAtRef.current = Date.now();
     p.current.onDebugEvent?.('v2_flag', 'closed');
     holdClock(false);
     resumeVoice();
