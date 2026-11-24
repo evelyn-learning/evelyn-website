@@ -136,8 +136,11 @@ const OWNER_ONLY = "Only Evelyn can do that.";
 
 /** Where an owner action returns to: the queue (default) or the item it was made on. */
 async function ownerBack(form: FormData, itemId: string, note?: string): Promise<string> {
-  const q = note ? `?done=${note}` : "";
-  return ksHref(String(form.get("back")) === "item" ? `/item/${encodeURIComponent(itemId)}${q}` : `/queue${q}`);
+  if (String(form.get("back")) === "item") {
+    // Back to the item inside the list it was opened from, so prev/next stay in that list (e.g. Ready).
+    return ksHref(`/item/${encodeURIComponent(itemId)}${ctxQuery(parseCtx(new URLSearchParams(String(form.get("ctx") || ""))), note ? { done: note } : undefined)}`);
+  }
+  return ksHref(`/queue${note ? `?done=${note}` : ""}`);
 }
 
 async function ownerAction(form: FormData, run: (itemId: string, user: Awaited<ReturnType<typeof requireUser>>) => Promise<OwnerOutcome>, done: string): Promise<ReviewResult> {

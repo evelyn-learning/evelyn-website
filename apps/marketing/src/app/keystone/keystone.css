@@ -103,7 +103,9 @@
 .ks-err { color: var(--bad); font-size: 14px; margin: 8px 0; }
 
 /* Item review page */
-.ks-item-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-start; margin-bottom: 14px; }
+/* Title and level on one line, the controls (level, version, prev/next) always on the line below: a long topic
+   must not move them between items while paging with next. */
+.ks-item-head { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; margin-bottom: 14px; }
 .ks-meta { color: var(--muted); font-size: 14px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .ks-split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 16px; align-items: start; }
 @media (max-width: 960px) { .ks-split { grid-template-columns: 1fr; } }
