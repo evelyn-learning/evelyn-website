@@ -21,7 +21,8 @@ import { join } from 'node:path';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { resolveEmbedUiOptions } from '../src/lib/tutor/portal/embed-ui-options';
-import { EndControl } from '../src/app/tutor/components/session/EndControl';
+import { EndControl, EndControlView } from '../src/app/tutor/components/session/EndControl';
+import { EN as SESSION_EN } from '../src/lib/tutor/i18n/session-strings';
 
 let passed = 0;
 let failed = 0;
@@ -174,7 +175,7 @@ function main() {
 
   test('EndControl reports which control was pressed (finish intent only from the Finish button)', () => {
     const calls: Array<string | undefined> = [];
-    const el = EndControl({ armed: false, mobileFinish: true, onPress: (intent) => calls.push(intent) }) as React.ReactElement<{ children: React.ReactElement<{ onClick: () => void }>[] }>;
+    const el = EndControlView({ armed: false, mobileFinish: true, onPress: (intent) => calls.push(intent), S: SESSION_EN }) as React.ReactElement<{ children: React.ReactElement<{ onClick: () => void }>[] }>;
     const [finishBtn, endBtn] = React.Children.toArray(el.props.children) as React.ReactElement<{ onClick: () => void }>[];
     finishBtn.props.onClick();
     endBtn.props.onClick();
@@ -195,7 +196,7 @@ function main() {
   test('TutorSession: the Humor section is rendered only when humorControl is on (default on)', () => {
     const ts = src('src/app/tutor/components/session/TutorSession.tsx');
     assert.match(ts, /humorControl = true,/);
-    assert.match(ts, /\{humorControl && \(\s*<>\s*<div className="my-1 border-t border-slate-100" \/>\s*<p [^>]*>Humor<\/p>/);
+    assert.match(ts, /\{humorControl && \(\s*<>\s*<div className="my-1 border-t border-slate-100" \/>\s*<p [^>]*>\{S\.humor\}<\/p>/);
   });
 
   test('embed page resolves the options from the token and passes both; /tutor passes neither', () => {

@@ -42,7 +42,7 @@ Your server signs a token (JWT, `alg: HS256`, signed with the partner secret) an
   "target_kind": "freestyle",
   "tutor_languages": ["zh-TW"],
   "input_mode": "voice",
-  "max_duration_minutes": 20,
+  "max_duration_minutes": 15,
   "iat": 1795550000,
   "exp": 1795557200
 }
@@ -55,7 +55,7 @@ Your server signs a token (JWT, `alg: HS256`, signed with the partner secret) an
 | `level` | The grade, e.g. `"Grade 8"` (國二). |
 | `input_mode` | `voice` (default) or `text`. In a voice session the student can also type. |
 | `student_id` | Your own stable id. All data for the student is keyed on it, scoped to your partner. |
-| `max_duration_minutes` | 1 to 120, default 30. |
+| `max_duration_minutes` | 1 to 120, default 30. In the sandbox a session ends at 15 minutes whatever this says. |
 | `exp` | Unix seconds. Two hours is a good value. |
 
 Token signing in Node, with no dependencies:

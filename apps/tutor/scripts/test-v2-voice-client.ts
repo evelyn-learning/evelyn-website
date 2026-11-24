@@ -168,7 +168,7 @@ function wiring() {
 function admission() {
   console.log('a second teaching language');
   check('a lesson in English with a second language for help runs on v2', v2CanRunSession({ tutorLanguages: ['en', 'ja'] }) && v2CanRunSession({ tutorLanguages: ['en'] }) && v2CanRunSession({}));
-  check('a lesson taught in another language still goes to v1', !v2CanRunSession({ tutorLanguages: ['ja'] }) && !v2CanRunSession({ tutorLanguages: ['ja', 'en'] }));
+  check('a lesson taught in another language runs on v2 too (2026-11-24: voice/lesson-language.ts)', v2CanRunSession({ tutorLanguages: ['ja'] }) && v2CanRunSession({ tutorLanguages: ['zh-TW'] }));
   check('the other kinds v2 has not taken over still go to v1, languages or not', !v2CanRunSession({ tutorLanguages: ['en', 'ja'], standby: true }) && !v2CanRunSession({ tutorLanguages: ['en', 'ja'], targetKind: 'diagnostic' }) && !v2CanRunSession({ tutorLanguages: ['en', 'ja'], sessionGoal: 'mock-review' }));
 }
 

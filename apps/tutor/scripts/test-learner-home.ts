@@ -47,7 +47,7 @@ const panelSrc = rd('../src/app/tutor-portal/embed/LessonSummaryPanel.tsx');
 const bodySrc = rd('../src/app/tutor-portal/home/SummaryBody.tsx');
 const endBranch = embedSrc.slice(embedSrc.indexOf('  if (sessionEnded) {\n    return ('), embedSrc.indexOf('  if (sessionEnded) {\n    return (') + 1600);
 check('embed end branch renders LessonSummaryPanel for partners', /config\.partner_id[\s\S]{0,200}<LessonSummaryPanel/.test(endBranch));
-check('embed end branch keeps Session Complete fallback', /Session Complete/.test(endBranch));
+check('embed end branch keeps Session Complete fallback', /S\.sessionComplete/.test(endBranch));
 // C1: the end panel's PDF gets the STORED shape {action, data, timestamp}, same mapping as the save.
 check('embed end panel passes the stored whiteboard shape', /whiteboardCommands=\{toStoredWhiteboardCommands\(whiteboardCommands\)\}/.test(endBranch));
 check('embed save uses the same mapping', /whiteboardCommands: toStoredWhiteboardCommands\(whiteboardCommands\)/.test(embedSrc));

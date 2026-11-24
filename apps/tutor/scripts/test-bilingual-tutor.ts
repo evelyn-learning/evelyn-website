@@ -111,12 +111,14 @@ test('absent / English-only / unsupported ⇒ null (default session)', () => {
   for (const v of [undefined, null, '', 'en', ['en'], ['xx'], 42, {}]) assert.equal(parseTutorLanguages(v), null, JSON.stringify(v));
 });
 test('array or comma string, any case, region tags ⇒ ["en","ja"]', () => {
-  for (const v of [['en', 'ja'], ['ja'], 'en,ja', 'JA', ['ja-JP', 'en-US'], 'ja en']) {
+  for (const v of [['en', 'ja'], 'en,ja', ['ja-JP', 'en-US'], 'ja en']) {
     assert.deepEqual(parseTutorLanguages(v), ['en', 'ja'], JSON.stringify(v));
   }
+  // 2026-11-24: a list without English is a lesson taught in that language (voice/lesson-language.ts taughtIn).
+  for (const v of [['ja'], 'JA']) assert.deepEqual(parseTutorLanguages(v), ['ja'], JSON.stringify(v));
 });
 test('same set ⇒ the same array instance (stable React prop)', () => {
-  assert.equal(parseTutorLanguages(['ja']), parseTutorLanguages('en,ja'));
+  assert.equal(parseTutorLanguages(['ja', 'en']), parseTutorLanguages('en,ja'));
 });
 
 console.log('ttsLanguageFor');

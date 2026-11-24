@@ -1,5 +1,6 @@
 import { LogOut } from 'lucide-react';
 import { useSessionStrings } from '@/lib/tutor/i18n/SessionStringsContext';
+import type { SessionStrings } from '@/lib/tutor/i18n/session-strings';
 
 /**
  * The header's end control. Presentational: the two-tap arm state and the
@@ -24,8 +25,12 @@ export interface EndControlProps {
   onPress: (intent?: 'finish') => void;
 }
 
-export function EndControl({ armed, mobileFinish, onPress }: EndControlProps) {
-  const S = useSessionStrings();
+export function EndControl(props: EndControlProps) {
+  return <EndControlView {...props} S={useSessionStrings()} />;
+}
+
+/** The control with its wording handed in (the session's language): no hook, so a test can call it. */
+export function EndControlView({ armed, mobileFinish, onPress, S }: EndControlProps & { S: SessionStrings }) {
   const endButton = (
     <button
       onClick={() => onPress()}
