@@ -26,7 +26,7 @@ function priorMarks(raw: unknown[]): string[] {
   const out: string[] = [];
   for (const m of raw) {
     if (typeof m !== 'string' || m.length > 120 || out.includes(m)) continue;
-    if (/^part:[a-z0-9]*$/.test(m) || /^value:[a-z0-9]*=.+$/.test(m)) out.push(m);
+    if (/^part:[\p{L}\p{N}]*$/u.test(m) || /^value:[\p{L}\p{N}]*=.+$/u.test(m)) out.push(m);
     if (out.length >= 40) break;
   }
   return out;

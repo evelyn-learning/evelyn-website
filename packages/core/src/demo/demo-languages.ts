@@ -13,13 +13,15 @@ export interface DemoLanguage {
   label: string;
   /** Its name in English, for the picker's title text and for analytics. */
   english: string;
+  /** A first topic every school system teaches, named in the language (a demo with no ready lesson opens on it). */
+  firstTopic: string;
 }
 
 export const DEMO_LANGUAGES: readonly DemoLanguage[] = [
-  { code: 'en', label: 'English', english: 'English' },
-  { code: 'zh-TW', label: '繁體中文', english: 'Chinese (Traditional)' },
-  { code: 'zh-CN', label: '简体中文', english: 'Chinese (Simplified)' },
-  { code: 'ja', label: '日本語', english: 'Japanese' },
+  { code: 'en', label: 'English', english: 'English', firstTopic: 'Solving linear equations' },
+  { code: 'zh-TW', label: '繁體中文', english: 'Chinese (Traditional)', firstTopic: '一元一次方程式' },
+  { code: 'zh-CN', label: '简体中文', english: 'Chinese (Simplified)', firstTopic: '一元一次方程' },
+  { code: 'ja', label: '日本語', english: 'Japanese', firstTopic: '一次方程式' },
 ];
 
 /** What a demo's session config adds for a picked language: nothing for English (the session every demo was

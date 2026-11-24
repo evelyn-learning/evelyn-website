@@ -553,7 +553,8 @@
     "live:gameclass-replay": "node scripts/gameclass-replay.mjs",
     "test:no-raw-solver-errors": "npx tsx scripts/test-no-raw-solver-errors.ts",
     "test:trial-checks-typed": "node scripts/test-trial-checks-typed.mjs",
-    "test:session-strings": "npx tsx scripts/test-session-strings.ts"
+    "test:session-strings": "npx tsx scripts/test-session-strings.ts",
+    "test:homework-lesson-language": "npx tsx scripts/test-homework-lesson-language.ts"
   },
   "dependencies": {
     "opencc-js": "^1.4.2"

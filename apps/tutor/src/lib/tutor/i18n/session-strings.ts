@@ -102,6 +102,8 @@ export interface SessionStrings {
 
   // ── board ──
   problem: string; given: string; gridIn: string;
+  /** The homework problem beside the board (ProblemPanel): its heading, and the note under a problem with no checked answer. */
+  problemN: (n: number) => string; noAnswerCheck: string;
   /** English keeps the lower-case word (the chip's CSS upper-cases it). */
   difficulty: Record<'easy' | 'medium' | 'hard', string>;
   pageOf: (i: number, n: number) => string;
@@ -203,6 +205,7 @@ export const EN: SessionStrings = {
   exportPdfTitle: 'Export session as PDF', exportPdf: 'Export PDF', exporting: 'Exporting...',
 
   problem: 'Problem', given: 'Given:', gridIn: 'Grid-in — enter a numeric answer.',
+  problemN: (n) => `Problem ${n}`, noAnswerCheck: 'No answer check for this one yet — your tutor will work it through with you.',
   difficulty: { easy: 'easy', medium: 'medium', hard: 'hard' },
   pageOf: (i, n) => `Page ${i} of ${n}`,
   pageN: (n) => `Page ${n}`,
@@ -303,6 +306,7 @@ export const ZH_TW: SessionStrings = {
   exportPdfTitle: '將課程匯出為 PDF', exportPdf: '匯出 PDF', exporting: '匯出中...',
 
   problem: '題目', given: '已知：', gridIn: '填充題 — 請輸入數字答案。',
+  problemN: (n) => `第 ${n} 題`, noAnswerCheck: '這一題還沒有核對過的答案，老師會陪你一步一步做。',
   difficulty: { easy: '簡單', medium: '中等', hard: '困難' },
   pageOf: (i, n) => `第 ${i} 頁，共 ${n} 頁`,
   pageN: (n) => `第 ${n} 頁`,
@@ -403,6 +407,7 @@ export const ZH_CN: SessionStrings = {
   exportPdfTitle: '将课程导出为 PDF', exportPdf: '导出 PDF', exporting: '导出中...',
 
   problem: '题目', given: '已知：', gridIn: '填空题 — 请输入数字答案。',
+  problemN: (n) => `第 ${n} 题`, noAnswerCheck: '这道题还没有核对过的答案，老师会陪你一步一步做。',
   difficulty: { easy: '简单', medium: '中等', hard: '困难' },
   pageOf: (i, n) => `第 ${i} 页，共 ${n} 页`,
   pageN: (n) => `第 ${n} 页`,
@@ -503,6 +508,7 @@ export const JA: SessionStrings = {
   exportPdfTitle: 'セッションをPDFで書き出す', exportPdf: 'PDF出力', exporting: '書き出し中...',
 
   problem: '問題', given: '条件：', gridIn: '数値で答えを入力してください。',
+  problemN: (n) => `問題 ${n}`, noAnswerCheck: 'この問題はまだ答えの確認ができていません。先生と一緒に解いていきましょう。',
   difficulty: { easy: 'やさしい', medium: 'ふつう', hard: 'むずかしい' },
   pageOf: (i, n) => `${i} / ${n} ページ`,
   pageN: (n) => `${n} ページ`,

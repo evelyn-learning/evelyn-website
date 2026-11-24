@@ -21,6 +21,8 @@ import {
   HOMEWORK_PROBLEM_CONDUCT_RULES, HOMEWORK_PROBLEM_FIGURE_SHOWN, HOMEWORK_PROBLEM_NO_FIGURE, HOMEWORK_PROBLEM_UNVERIFIED,
 } from '../voice/homework-problem-block';
 import { marksInWords, oneLine, partLabel } from './homework-facts';
+import { answerText, fullWidthToAscii } from '../voice/answer-text';
+import { numeralValue } from '../voice/heard-numerals';
 import type { V2HomeworkProblem, V2HomeworkSheet, V2HomeworkState, V2Session, V2State } from './types';
 
 export { marksInWords, partLabel, v2HomeworkFacts } from './homework-facts';
@@ -140,7 +142,8 @@ export function studentMessagesOf(history: V2State['history']): Array<{ role: 'u
 }
 
 /** Where a worked message breaks into the steps it states, last first ("…, so x = 30", "…, which gives 4/11"). */
-const STEP_BREAK = /(?<=[.!?;])\s+|,\s*|\s+(?=\b(?:so|which|that|therefore|then|giving|gives|hence)\b)/i;
+// 2026-11-24: and before the words that open a result in Chinese or Japanese (所以 x = 11, だから x = 11).
+const STEP_BREAK = /(?<=[.!?;])\s+|,\s*|\s+(?=\b(?:so|which|that|therefore|then|giving|gives|hence)\b)|\s*(?=所以|因此|於是|于是|だから|なので|よって)/i;
 const exprKey = (s: string) => s.toLowerCase().replace(/[−–]/g, '-').replace(/\s+/g, '').replace(/\.$/, '');
 /**
  * A key part stated as "name = expression" (`g^-1(x) = 3x + 1`) and an answer that offers the expression alone
@@ -177,6 +180,8 @@ const STEP_VALUE = /\b(?:to|is|are|equals?|be|get|got|gives|makes|comes to)\s+(\
 export function workedAnswerCredit(studentSaid: string, key: AnswerKey): KeyedVerdict[] {
   // A hedged answer ("maybe 3x + 1?", "is it x = 8", "I think 4") counts as the answer it offers, as in v1
   // (Praveen 2026-11-14). Any other step that ends in a question is a question, not an answer.
+  // The message as the checks read it (voice/answer-text.ts): full-width marks, 等於, 答案是, 可能是 … 嗎？
+  studentSaid = answerText(studentSaid);
   const steps = studentSaid.split(STEP_BREAK).map((x) => x.trim()).filter(Boolean)
     .map((x) => (/\?\s*$/.test(x) ? (HEDGE.test(x) ? x.replace(HEDGE, '').replace(/\?+\s*$/, '').trim() : '') : x.replace(HEDGE, '').trim() || x))
     .filter(Boolean).reverse();
@@ -289,10 +294,28 @@ export function v2SheetOpener(sheet: V2HomeworkSheet): string {
   return `[The session has just started. The student has brought a homework sheet of ${sheet.problems.length} problem${sheet.problems.length === 1 ? '' : 's'}, which they can see. Greet them in a few words and ask which problem they want to start with, or start with problem ${sheet.problems[0]?.n ?? 1} if they have no preference. Keep it short.]`;
 }
 
+/** How a problem is named by its number, per language: the English words, then 第 2 題 / 第三題 / 問2 / 2番. */
+const PROBLEM_NAMED: ReadonlyArray<RegExp> = [
+  /\b(?:problem|question|number|no\.|#)\s*(\d{1,2})\b/gi,
+  /第\s*(\d{1,2}|[一二兩两三四五六七八九十]{1,3})\s*(?:大題|大题|題|题|問|番)/gu,
+  /(?:問題?|问题)\s*(\d{1,2})/gu,
+  /(\d{1,2})\s*番/gu,
+];
+
+/** Every problem number a text names, in the order named (2026-11-24: 第2題 and 第三題 were not read). */
+export function problemNumbersNamed(text: string | null | undefined): number[] {
+  const t = fullWidthToAscii(text ?? '');
+  const found: Array<{ at: number; n: number }> = [];
+  for (const re of PROBLEM_NAMED) for (const m of t.matchAll(re)) {
+    const n = Number(/^\d/.test(m[1]) ? m[1] : numeralValue(m[1]) ?? NaN);
+    if (Number.isInteger(n)) found.push({ at: m.index ?? 0, n });
+  }
+  return found.sort((a, b) => a.at - b.at).map((f) => f.n);
+}
+
 /** A problem of the sheet the student's message names ("problem 2", "question 3", "number 4", "#5"). */
 export function sheetProblemNamed(studentSaid: string | null, sheet: V2HomeworkSheet): number | null {
-  const m = /\b(?:problem|question|number|no\.|#)\s*(\d{1,2})\b/i.exec(studentSaid ?? '');
-  const n = m ? Number(m[1]) : NaN;
+  const n = problemNumbersNamed(studentSaid)[0] ?? NaN;
   return sheet.problems.some((p) => p.n === n) ? n : null;
 }
 

@@ -79,6 +79,7 @@ import {
 import { enumerateProblems, defaultEnumerateDeps, getEnumerateClient } from '@/lib/tutor/lesson-plan/enumerate-problems';
 import { buildHomeworkPlanFields, shouldClassifyMaterial, homeworkPlanDecision, typedHomeworkIsOwnMaterial, typedHomeworkPlanDecision, capObjectivesForHomework, typedEnumerationText, groundTypedProblems } from '@/lib/tutor/lesson-plan/homework';
 import { TUTOR_HOMEWORK_OWN_MATERIAL } from '@/lib/tutor/orchestrator/turn-round-flags';
+import { homeworkWording } from '@/lib/tutor/lesson-plan/homework-wording';
 import type { HomeworkProblem } from '@/lib/tutor/lesson-plan/enumerate-problems';
 import { getLearnerHints } from '@/lib/tutor/learner-model/hints';
 import { resolveProfileIdOrRaw } from '@/lib/tutor/student-profile/store';
@@ -334,6 +335,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
       homeworkProblems,
       classification?.topicSummary || requestTopic || requestText.slice(0, 80),
       durablePlanId,
+      locale,
     );
     const homeworkSegment: Segment = {
       id: 'homework',
@@ -343,7 +345,8 @@ export const POST = withPortalAuth(async (_req, auth) => {
     };
     plan = parseLessonPlan({
       id: durablePlanId,
-      title: 'Homework help',
+      // 2026-11-24: in the request's locale (homework-wording.ts); 'Homework help' for English and for none.
+      title: homeworkWording(locale).sheetTitle,
       curriculum: 'freestyle',
       grade,
       subject,

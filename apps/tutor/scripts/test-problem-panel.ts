@@ -38,10 +38,12 @@ async function main() {
   await section('layout: desktop column width, select-text, phone header', () => {
     has(panel, /w-\[min\(38vw,440px\)\]/);
     has(panel, /select-text/);
-    has(panel, /Problem \{n\} \{collapsed \? '▾' : '▴'\}/);
+    has(panel, /\{str\.problemN\(n\)\} \{collapsed \? '▾' : '▴'\}/);
   });
   await section('unverified line is the ruled sentence, and there is no checking state', () => {
-    has(panel, /No answer check for this one yet — your tutor will work it through with you\./);
+    // 2026-11-24: the sentence lives in the session strings (the panel shows it in the session's language).
+    has(panel, /\{str\.noAnswerCheck\}/);
+    has(readSrc('lib/tutor/i18n/session-strings.ts'), /No answer check for this one yet — your tutor will work it through with you\./);
     hasNot(panel, /Checking the answer key/);
   });
 

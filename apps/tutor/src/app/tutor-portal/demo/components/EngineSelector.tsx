@@ -36,7 +36,7 @@ function buildDemoConfig(studentName: string, mode: 'voice' | 'text' = 'voice', 
     return {
       subject: 'math',
       level: 'Middle school',
-      topic: 'Solving linear equations',
+      topic: DEMO_LANGUAGES.find((l) => l.code === language)?.firstTopic ?? 'Solving linear equations',
       target_kind: 'freestyle',
       student_name: studentName,
       input_mode: mode,

@@ -1210,9 +1210,9 @@ async function main() {
       }
       assert.deepEqual((await solveKey({ n: 1, text: 'q' }, mk(...args()))).key!.unkeyed, ['a']);
     });
-    await section('BUILD_LOGIC_VERSION is 3: problems built before prose keys are rebuilt', async () => {
+    await section('BUILD_LOGIC_VERSION is 4: problems built before finals in the problem\'s language are rebuilt', async () => {
       const { BUILD_LOGIC_VERSION, problemHash } = await import('../src/lib/tutor/homework-build/types');
-      assert.equal(BUILD_LOGIC_VERSION, 3);
+      assert.equal(BUILD_LOGIC_VERSION, 4);
       assert.notEqual(problemHash('x'), (await import('node:crypto')).createHash('sha256').update('v2|x').digest('hex').slice(0, 16));
     });
     await section('decisiveToken: prose differs, decisive content agrees; any doubt disagrees', async () => {

@@ -18,6 +18,7 @@ import type { HomeworkProblem, EnumerateResult } from './enumerate-problems';
 import type { LearningObjective } from './types';
 import { ungroundedRelations, verbatimText } from './problem-text';
 import { TUTOR_HOMEWORK_VERBATIM } from '../orchestrator/turn-round-flags';
+import { homeworkWording } from './homework-wording';
 
 /** `metadata.kind` marking a plan as homework-help, read by consumers
  *  that need to branch on it (the brain block, the client). */
@@ -86,6 +87,8 @@ export function buildHomeworkPlanFields(
   problems: HomeworkProblem[],
   topicSummary: string,
   planId: string,
+  /** The plan's locale: the objective's wording follows it (homework-wording.ts). */
+  locale?: string,
 ): HomeworkPlanFields {
   const lo: LessonPlanLo = {
     // Namespaced under the plan id (like generated LOs, `${planId}.lo-N`):
@@ -94,7 +97,7 @@ export function buildHomeworkPlanFields(
     // mastery — so a fixed literal would pool every homework plan's
     // evidence and bank items under one key.
     id: homeworkLoIdFor(planId),
-    description: 'Work the uploaded problems in order.',
+    description: homeworkWording(locale).sheetObjective,
     shortTitle: topicSummary,
     estimatedMinutes: HOMEWORK_LO_ESTIMATED_MINUTES,
   };

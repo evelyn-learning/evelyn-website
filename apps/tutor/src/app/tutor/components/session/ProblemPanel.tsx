@@ -27,6 +27,7 @@ import { useState } from 'react';
 import type { FigureCommand } from '@/lib/tutor/homework-build/types';
 import { InlineMathText } from '../whiteboard/InlineMathText';
 import { problemTextForDisplay } from '@/lib/tutor/lesson-plan/homework-problem-meta';
+import { useSessionStrings } from '@/lib/tutor/i18n/SessionStringsContext';
 
 export interface ProblemPanelProps {
   n: number;
@@ -39,6 +40,8 @@ export interface ProblemPanelProps {
 
 export function ProblemPanel(props: ProblemPanelProps): JSX.Element {
   const { n, text, figure, verified } = props;
+  // 2026-11-24: the panel's own words in the session's language (第 4 題 in a lesson taught in Chinese); English outside a session.
+  const str = useSessionStrings();
   // Phone sheet: controlled when the parent passes `collapsed`, else its own
   // state, collapsed by default.
   const [collapsedOwn, setCollapsedOwn] = useState(true);
@@ -51,7 +54,7 @@ export function ProblemPanel(props: ProblemPanelProps): JSX.Element {
   return (
     <aside
       data-testid="problem-panel"
-      aria-label={`Problem ${n}`}
+      aria-label={str.problemN(n)}
       className="fixed inset-x-0 top-0 z-[60] flex flex-col bg-white border-b border-slate-200 shadow-sm select-text xl:inset-x-auto xl:left-0 xl:bottom-0 xl:z-20 xl:w-[min(38vw,440px)] xl:border-b-0 xl:border-r xl:shadow-none"
     >
       {/* Phone header: the sheet's toggle. Hidden on desktop. */}
@@ -61,15 +64,15 @@ export function ProblemPanel(props: ProblemPanelProps): JSX.Element {
         aria-expanded={!collapsed}
         className="xl:hidden flex items-center justify-between w-full h-10 px-4 text-sm font-semibold text-slate-800"
       >
-        <span>Problem {n} {collapsed ? '▾' : '▴'}</span>
+        <span>{str.problemN(n)} {collapsed ? '▾' : '▴'}</span>
       </button>
       <div className={`${collapsed ? 'hidden' : 'block'} xl:block max-h-[45vh] xl:max-h-none xl:flex-1 overflow-y-auto px-4 pb-4 xl:pt-4`}>
-        <div className="hidden xl:block mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Problem {n}</div>
+        <div className="hidden xl:block mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{str.problemN(n)}</div>
         <div className="text-[15px] leading-relaxed text-slate-900">
           <InlineMathText text={problemTextForDisplay(text)} wrap />
         </div>
         {!verified && (
-          <p className="mt-3 text-xs text-slate-500">No answer check for this one yet — your tutor will work it through with you.</p>
+          <p className="mt-3 text-xs text-slate-500">{str.noAnswerCheck}</p>
         )}
       </div>
     </aside>

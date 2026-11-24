@@ -99,6 +99,9 @@ export const PARTNER_SESSION_DEFAULTS: Readonly<Record<string, Partial<PartnerSe
   // EdConsult Solutions (James Salvo), 2026-11-14: the AI-literacy discussion demo for educators is a v2 discussion
   // plan (v2/discussion.ts); v1 has no discussion mode.
   edconsult: { openerPrefetch: false, brainVersion: 'v2' },
+  // Lumiq (Taipei), 2026-11-24: a pilot of maths lessons taught in Traditional Chinese, a photographed worksheet
+  // among them. Lessons taught in another language exist on v2 only (voice/lesson-language.ts).
+  lumiq: { openerPrefetch: false, brainVersion: 'v2', homeworkOnV2: true },
 };
 
 /** Which turn engine each partner runs, set per deploy: NEXT_PUBLIC_TUTOR_BRAIN_VERSIONS="evelyn-marketing=v2,crimsora=v1".

@@ -32,6 +32,7 @@
 import type { AnswerKey, AnswerPart } from '../homework-build/types';
 import { numbersAgree } from '../portal/key-compare';
 import type { VerdictPrecheckResult } from './verdict-precheck-shared';
+import { answerText } from './answer-text';
 
 export type KeyedVerdict = {
   verdict: 'correct' | 'incorrect' | 'undecided';
@@ -68,8 +69,10 @@ const OPERATOR_WORD_RE = /^\s+(?:times|plus|minus|over|divided|multiplied|square
 /** An exact radical: "4 root 3", "4√3", "4 sqrt 3", "4\\sqrt{3}", "√3". Groups: coefficient?, radicand. */
 const RADICAL_RE = /(-?\d+(?:\.\d+)?)?\s*(?:√|\\?sqrt|root)\s*(?:of\s+)?[{(]?\s*(\d+(?:\.\d+)?)\s*[)}]?/gi;
 
+// 2026-11-24: full-width marks and Chinese / Japanese wording around a value are read as their plain forms
+// first (answer-text.ts): "x=2，y=3" had its second value read without its name, and "x 等於 3" was never read.
 function normalize(s: string): string {
-  return String(s ?? '')
+  return answerText(String(s ?? ''))
     .replace(/[−–—]/g, '-')
     .replace(/~=|≃|≅|~/g, '≈')
     .replace(/[’‘]/g, "'");
@@ -309,13 +312,17 @@ function bareNumber(text: string): Candidate | null {
   // 2026-10-26: a reason after the value ("4 kcal/m^2/yr, because it's 10% twice") is not part of it.
   const lead = text.replace(/\s*(?:[,;]|\bbecause\b|\bsince\b)\s[\s\S]*$/i, '');
   const m = /^\s*(-?\d+(?:\.\d+)?)\s*([A-Za-z°º%][A-Za-z°º%²³^0-9/·*]*)?\s*[.!]?\s*$/.exec(lead);
+  // 2026-11-24: a number with a measure word or unit in Chinese or Japanese ("5 公里", "23隻") is one value too.
+  const han = m ? null : /^\s*(-?\d+(?:\.\d+)?)\s*([\p{Script=Han}\p{Script=Katakana}]{1,4})\s*[.!]?\s*$/u.exec(lead);
+  if (han) return { value: Number(han[1]), text: `${han[1]} ${han[2]}`, at: 0, explicit: false };
   if (!m) return null;
   // A compound unit ("m/s", "kcal/m^2/yr") counts when every piece is a unit.
   if (m[2] && !(/[/·*]/.test(m[2]) ? isUnitText(m[2]) : UNIT_RE.test(m[2]))) return null;
   return { value: Number(m[1]), text: (m[1] + (m[2] ? ` ${m[2]}` : '')).trim(), at: 0, explicit: false };
 }
 
-const normLabel = (s: string) => String(s ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+// 2026-11-24: letters and digits of any script. Parts labelled 甲 / 乙 or ① / ② all became '' and shared one record.
+const normLabel = (s: string) => String(s ?? '').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -333,6 +340,8 @@ function labelMarks(text: string, key: AnswerKey): Array<{ label: string; at: nu
       new RegExp(`(?:^|(?<=[\\s,;]))${L}\\)\\s*[:=]?`, 'gi'),
       new RegExp(`(?:^|(?<=[\\s,;]))${L}\\s*:`, 'gi'),
       ...(partCount > 1 && /^[a-z]$/.test(label) ? [new RegExp(`(?:^|(?<=[\\s,;]))${L}\\s*=`, 'gi')] : []),
+      // A label that is not a Latin letter or digit (甲, ①) names its part standing alone before the value.
+      ...(/[^a-z0-9]/.test(label) ? [new RegExp(`(?:^|(?<=[\\s,;]))${L}[.\\s]+(?=[-\\d(√∠A-Za-z])`, 'gi')] : []),
     ];
     for (const re of res) {
       for (const m of text.matchAll(re)) {
@@ -434,6 +443,94 @@ function judgeNamedValues(part: AnswerPart, cands: Candidate[]): KeyedVerdict[] 
   return [...byName.values()];
 }
 
+const HAN_RE = /\p{Script=Han}/u;
+/** A value named in Chinese or Japanese (雞, 兔子, 大人): its reader is judgeHanNamedValues. */
+export const isHanValueName = (name: string) => HAN_RE.test(name);
+const hasHanNames = (part: AnswerPart) => !!part.values?.some((v) => isHanValueName(v.name));
+/** What may stand between a name and its number without making it another quantity (雞有 23, 兔子是 12, 雞 = 23). */
+const HAN_FILL_RE = /應該|应该|的(?:數量|数量|隻數|只数|個數|个数|人數|人数|值)|[有是為为就也還还=:\s]|は|が/gu;
+/** Words that open a clause without being part of a name. */
+const HAN_OPENER_RE = /^(?:所以|因此|那麼|那么|於是|于是|而且|其中|然後|然后|那|則|则|而|故|即|だから|なので|よって)+/u;
+/** A value supposed for the sake of the working is not offered as the answer (假設雞有 35 隻). */
+const HAN_SUPPOSED_RE = /假設|假设|假如|如果|要是|若是|若|設|设|もし|仮に|とすると|としたら/u;
+const hanCount = (s: string) => (s.match(/\p{Script=Han}/gu) ?? []).length;
+/** Words that close a clause after the value and its measure word (雞有 23 隻喔). */
+const HAN_CLOSER_RE = /[了喔哦吧啊呀的呢]|才對|才对|です|だ/gu;
+/**
+ * What follows the number is its own measure word and nothing more: the key's (隻 of "雞23隻"), or any one
+ * character. More than that names another quantity: 雞有 2 隻腳 counts feet, not 雞.
+ */
+function hanCountsTheValue(after: string, unit: string): boolean {
+  let a = after.replace(/\s/g, '');
+  a = unit && a.startsWith(unit) ? a.slice(unit.length) : a.replace(/^\p{Script=Han}/u, '');
+  return hanCount(a.replace(HAN_CLOSER_RE, '')) === 0 && !/[A-Za-z0-9]/.test(a);
+}
+
+/**
+ * 2026-11-24 (a Taiwan worksheet, 雞兔同籠): a part whose values carry Chinese names ("雞23隻，兔12隻") was one
+ * opaque text, matched only when typed character for character; "雞有 23 隻，兔子有 12 隻" was never decided and a
+ * swapped answer never denied. Each number in the message is given to the value whose name stands by it: the name
+ * before the number with only a linking word between (雞有 23), a longer or shorter form of it (兔子 for 兔), or
+ * the name right after the number and its measure word (23 隻雞). A number that equals its value confirms it. It
+ * is denied only when the name stands exactly, directly before the number; anything looser is left undecided, as
+ * is a supposed value and a number with no name by it (working: "就有 70 隻腳").
+ */
+function judgeHanNamedValues(part: AnswerPart, text: string): KeyedVerdict[] {
+  const values = (part.values ?? []).filter((v) => isHanValueName(v.name));
+  if (!values.length) return [];
+  const label = normLabel(part.label);
+  const byName = new Map<string, KeyedVerdict>();
+  const longestFirst = [...values].sort((a, b) => b.name.length - a.name.length);
+  const final = normalize(part.final);
+  const unitOf = (v: { name: string; value: number }) => new RegExp(`${escapeRe(v.name)}[^\\d,;]*?${escapeRe(String(v.value))}\\s*([\\p{Script=Han}]{0,3})`, 'u').exec(final)?.[1] ?? '';
+  for (const clause of text.split(/[,;!?\n]|\.(?!\d)|和|及|與|与|跟|還有|还有/u)) {
+    if (!clause.trim() || HAN_SUPPOSED_RE.test(clause)) continue;
+    const nums = [...clause.matchAll(NUM_RE)].filter((m) => !/[\w.]/.test(clause[(m.index ?? 0) - 1] ?? '') && !continuesExpression(clause, (m.index ?? 0) + m[0].length));
+    nums.forEach((m, i) => {
+      const at = m.index ?? 0;
+      const prevEnd = i > 0 ? (nums[i - 1].index ?? 0) + nums[i - 1][0].length : 0;
+      const before = clause.slice(prevEnd, at);
+      const after = clause.slice(at + m[0].length, i + 1 < nums.length ? (nums[i + 1].index ?? clause.length) : clause.length);
+      // What follows the number as far as the next value's name: "雞 23 隻 兔 12 隻" has no mark between its two.
+      const nextName = Math.min(after.length, ...values.map((v) => after.indexOf(v.name)).filter((k) => k >= 0));
+      const own = after.slice(0, nextName);
+      let hit: { name: string; value: number } | undefined;
+      let exact = false;
+      // The name before the number, with only a linking word between.
+      for (const v of longestFirst) {
+        const idx = before.lastIndexOf(v.name);
+        if (idx < 0) continue;
+        const gap = before.slice(idx + v.name.length).replace(HAN_FILL_RE, '');
+        if (/[A-Za-z0-9]/.test(gap) || hanCount(gap) > 1 || !hanCountsTheValue(own, unitOf(v))) continue;
+        hit = v;
+        exact = gap === '' && hanCount(before.slice(0, idx).trim().replace(HAN_OPENER_RE, '')) === 0;
+        break;
+      }
+      // A shorter form of a name (兔 for a key's 兔子), when it can be only one of them.
+      if (!hit) {
+        const said = /([\p{Script=Han}]{1,6})$/u.exec(before.replace(HAN_FILL_RE, '').replace(HAN_OPENER_RE, ''))?.[1];
+        const hits = said ? values.filter((v) => v.name.includes(said)) : [];
+        if (hits.length === 1 && hanCountsTheValue(own, unitOf(hits[0]))) hit = hits[0];
+      }
+      // The name after the number and its measure word (23 隻雞), when no other number follows it first.
+      if (!hit) {
+        for (const v of longestFirst) {
+          const idx = after.indexOf(v.name);
+          if (idx < 0 || hanCount(after.slice(0, idx).replace(/的/g, '')) > 2 || /[A-Za-z0-9]/.test(after.slice(0, idx))) continue;
+          if (hanCount(after.slice(idx + v.name.length).replace(HAN_CLOSER_RE, '')) > 1) continue;
+          hit = v;
+          break;
+        }
+      }
+      if (!hit) return;
+      const matched = `${hit.name} ${m[0]}`;
+      if (numbersAgree(Number(m[0]), hit.value)) byName.set(hit.name, { verdict: 'correct', part: label, value: hit.name, matched });
+      else if (exact) byName.set(hit.name, { verdict: 'incorrect', part: label, value: hit.name, matched });
+    });
+  }
+  return [...byName.values()];
+}
+
 /** One verdict per part the message offers a value for (or the single part). */
 export function keyedVerdicts(studentMessage: string, key: AnswerKey): KeyedVerdict[] {
   // A runtime note in front of the student's words is dropped (R19b); a
@@ -474,14 +571,15 @@ export function keyedVerdicts(studentMessage: string, key: AnswerKey): KeyedVerd
     // A hedge's value comes first ("maybe 4 kcal/m^2/yr, because it's 10% twice"): the reason after it is not the offer.
     const bare = !marks.length && (!cands.length || hedged !== null) ? bareNumber(text) : null;
     const whole = marks.length ? (segText.get(normLabel(part.label)) || undefined) : text;
-    const named = part.values?.length ? judgeNamedValues(part, bare ? [bare] : cands) : [];
+    // Values named in Chinese or Japanese are read by their names; a number alone is then never given to one of them.
+    const named = hasHanNames(part) ? judgeHanNamedValues(part, text) : part.values?.length ? judgeNamedValues(part, bare ? [bare] : cands) : [];
     if (named.length) out.push(...named);
     else out.push(judgePart(part, bare ? [bare] : cands, whole, { yesNo: marks.length ? 'judge' : hedged !== null ? 'confirm' : 'off' }));
   } else {
     for (const part of key.parts) {
       const cands = byLabel.get(normLabel(part.label));
       const seg = segText.get(normLabel(part.label)) || undefined;
-      const named = part.values?.length && cands?.length ? judgeNamedValues(part, cands) : [];
+      const named = hasHanNames(part) ? (seg ? judgeHanNamedValues(part, seg) : []) : part.values?.length && cands?.length ? judgeNamedValues(part, cands) : [];
       if (named.length) out.push(...named);
       else if (cands?.length) out.push(judgePart(part, cands, seg, { yesNo: 'judge' }));
       else if (seg !== undefined) {
@@ -514,6 +612,11 @@ export function keyedVerdicts(studentMessage: string, key: AnswerKey): KeyedVerd
       if (!out.length) {
         const textHits = key.parts.filter((p) => textMatchesPart(p, text));
         if (textHits.length === 1) out.push({ verdict: 'correct', part: normLabel(textHits[0].label), matched: text.replace(/[.!]+$/, '') });
+      }
+      // Unlabelled values named in Chinese or Japanese: the one part that carries those names.
+      if (!out.length) {
+        const hanHits = key.parts.map((p) => (hasHanNames(p) ? judgeHanNamedValues(p, text) : [])).filter((vs) => vs.length);
+        if (hanHits.length === 1) out.push(...hanHits[0]);
       }
       // A hedged yes / no ("maybe no, because …") confirms the one yes/no part it equals.
       if (!out.length && hedged !== null && yesNoOf(text)) {
@@ -610,7 +713,7 @@ export function sanitizeConfirmedMarks(raw: unknown): string[] {
   const out: string[] = [];
   for (const m of raw) {
     if (typeof m !== 'string' || m.length > PRIOR_CONFIRMED_MARK_MAX) continue;
-    if (!/^part:[a-z0-9]*$/.test(m) && !/^value:[a-z0-9]*=.+$/.test(m)) continue;
+    if (!/^part:[\p{L}\p{N}]*$/u.test(m) && !/^value:[\p{L}\p{N}]*=.+$/u.test(m)) continue;
     if (!out.includes(m)) out.push(m);
     if (out.length >= PRIOR_CONFIRMED_MAX) break;
   }
@@ -885,6 +988,6 @@ export function formatKeyedVerdictDebug(part: string, verdict: 'correct' | 'inco
 }
 
 export function parseKeyedVerdictDebug(message: unknown): { part: string; verdict: 'correct' | 'incorrect'; value?: string } | null {
-  const m = /^keyed part=([a-z0-9]*) verdict=(correct|incorrect)\b(?: value=(\S+))?/.exec(String(message ?? ''));
+  const m = /^keyed part=([\p{L}\p{N}]*) verdict=(correct|incorrect)\b(?: value=(\S+))?/u.exec(String(message ?? ''));
   return m ? { part: m[1], verdict: m[2] as 'correct' | 'incorrect', ...(m[3] ? { value: m[3] } : {}) } : null;
 }

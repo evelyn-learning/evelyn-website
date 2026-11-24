@@ -15,7 +15,8 @@
 import type { ProseAnswerMatchFn } from '../voice/prose-answer-match';
 import { boardRevealsHomeworkKey, homeworkKeyWithheld, HOMEWORK_BOARD_KEY_WITHHELD_REASON, HOMEWORK_OPENER_BOARD_WITHHELD_REASON } from '../voice/homework-problem-block';
 import { boardStrings, revealsWithheldAnswer, type WithheldAnswer } from '../voice/whole-answer-reveal';
-import { newSheetRecord, partLabel, sheetProblemNamed, studentMessagesOf, v2HomeworkCheck, type V2HomeworkResolved, type V2SheetResolved } from './homework';
+import { newSheetRecord, partLabel, problemNumbersNamed, sheetProblemNamed, studentMessagesOf, v2HomeworkCheck, type V2HomeworkResolved, type V2SheetResolved } from './homework';
+import { answerText } from '../voice/answer-text';
 import { castsDoubt, creditsNonAnswer, givesCredit, isBareNumber, statesExpression, statesOwnResult, isGuess, nonAnswer, sentencesOf, unearnedCredit, verdictMissing, V2_HOMEWORK_GUARD_REASONS, V2_VERDICT_OPENERS, V2_VERDICT_OPENERS_BY_LANGUAGE, type GuessedPart, type NonAnswer } from './homework-guards';
 import { V2_CONTROL_TOOL_NAMES } from './tool-names';
 import { v2LessonLines } from './lesson-lines';
@@ -48,6 +49,9 @@ function lastTutorText(history: V2State['history']): string {
 // A key value written as an expression ("y = 3x + 1") is read by its written form too: the number reader passes
 // it by (precalculus, 2026-11-15: "adding 1 to both sides gives y=3x+1" in a correction, before (b) was tried).
 const revealing = (sentence: string, withheld: ReadonlyArray<WithheldAnswer>) => withheld.some((a) => revealsWithheldAnswer(sentence, a).hit || (statesExpression(sentence, a.value, a.givenText ?? '') && !statesExpression(a.studentText ?? '', a.value, a.givenText ?? '')));
+
+/** A board note written about the student and not to them, in a lesson taught in Chinese or Japanese (學生的答案…, 生徒の答え…). */
+const ABOUT_THE_STUDENT_CJK = /(?:這位|这位|該|该)?(?:學生|学生)(?:的|給|给|說|说|寫|写|回答)|生徒(?:の|は|が)/u;
 
 /** What the homework-guards checks read for one turn. */
 interface TurnChecks {
@@ -82,14 +86,15 @@ function ownAnswerCheck(state: V2State, studentSaid: string | null): string | nu
 /** A bare number sent to the tutor's question that neither the key nor an own result checked (check 2b). */
 function uncheckedNumber(studentSaid: string | null, na: NonAnswer | null, verdicts: number, state: V2State): string | null {
   if (!studentSaid || na || verdicts || !isBareNumber(studentSaid) || ownAnswerCheck(state, studentSaid)) return null;
-  return /\?/.test(lastTutorText(state.history)) ? studentSaid.trim() : null;
+  return /[?？]/.test(lastTutorText(state.history)) ? studentSaid.trim() : null;
 }
 
 /** Parts newly confirmed by this message, when it offered them as a bare guess (check 4). */
 function newlyGuessed(prior: ReadonlyArray<string>, confirmed: ReadonlyArray<string>, studentSaid: string | null, verdicts: ReadonlyArray<{ part: string; verdict: string; value?: string }>, prefix = ''): GuessedPart[] {
   if (!studentSaid || !isGuess(studentSaid)) return [];
   const fresh = confirmed.filter((m) => m.startsWith('part:') && !prior.includes(m)).map((m) => m.slice(5));
-  const value = studentSaid.replace(/^.*?(?:maybe|perhaps|probably|i (?:think|guess)|is it|could it be)\s+/i, '').replace(/[?!.\s]+$/, '').trim();
+  // The hedge as the checks read it (voice/answer-text.ts): 可能是 11？ is "maybe 11?".
+  const value = answerText(studentSaid).replace(/^.*?(?:maybe|perhaps|probably|i (?:think|guess)|is it|could it be)\s+/i, '').replace(/[?!.\s]+$/, '').trim();
   return fresh.map((label) => ({ label: `${prefix}${label}`, value: verdicts.find((v) => v.part === label)?.value ?? value }));
 }
 
@@ -141,7 +146,7 @@ async function guardedTurn(given: V2TurnInput, withheld: WithheldAnswer[], opts:
     if (opening && opts.figureOnScreen) return HOMEWORK_OPENER_BOARD_WITHHELD_REASON.replace(/^not shown — /, '');
     // A note about "the student" is written to the tutor, not to them ("The student's answer, 17, arrived with no
     // working. Before it is checked, ask…", GAC validation round 2): the board is the student's page.
-    if (boardStrings(args).some((t) => /\bthe student(?:'s|s')?\b/i.test(t))) return 'the board is the student\'s page: write to them as "you", or not at all';
+    if (boardStrings(args).some((t) => /\bthe student(?:'s|s')?\b/i.test(t) || ABOUT_THE_STUDENT_CJK.test(t))) return 'the board is the student\'s page: write to them as "you", or not at all';
     if (checks.own.length && boardStrings(args).some((t) => statesOwn(t, checks.own))) return 'it states the result of the student\'s own question, which they must reach themselves';
     return withheld.length && boardRevealsHomeworkKey(args, withheld) ? HOMEWORK_BOARD_KEY_WITHHELD_REASON.replace(/^not shown — /, '') : null;
   };
@@ -248,7 +253,7 @@ export async function runV2SheetTurn(input: V2TurnInput & { resolvedSheet: V2She
   else if (named === null && rec.solved.includes(rec.current)) {
     const open = sheet.problems.map((p) => p.n).filter((n) => !rec.solved.includes(n));
     const said = lastTutorText(turn.state.history);
-    const mentioned = [...said.matchAll(/\b(?:problem|question|number)\s*(\d{1,2})\b/gi)].map((m) => Number(m[1])).filter((n) => open.includes(n));
+    const mentioned = problemNumbersNamed(said).filter((n) => open.includes(n));
     const next = mentioned.at(-1) ?? open[0];
     if (next !== undefined) rec = { ...rec, current: next, since: turn.state.history.length };
   }

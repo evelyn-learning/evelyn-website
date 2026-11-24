@@ -12,6 +12,7 @@ import { parseLessonPlan } from './parser';
 import { LESSON_PLAN_SCHEMA_VERSION } from './types';
 import type { LessonPlan } from './types';
 import { HOMEWORK_PROBLEM_KIND, type HomeworkProblemMeta } from './homework-problem-meta';
+import { homeworkWording } from './homework-wording';
 
 export { HOMEWORK_PROBLEM_KIND, homeworkProblemOf, problemTextForDisplay, type HomeworkProblemMeta } from './homework-problem-meta';
 
@@ -20,23 +21,28 @@ export function buildHomeworkProblemPlan(
   parent: LessonPlan,
   meta: Omit<HomeworkProblemMeta, 'kind'>,
   planId: string,
+  /** The language the problem's session is taught in, when the caller knows it and the sheet's plan carries none. */
+  opts: { locale?: string } = {},
 ): LessonPlan {
+  // 2026-11-24: the title and the objective in the plan's language (homework-wording.ts); English as before otherwise.
+  const locale = opts.locale || parent.locale || 'en';
+  const words = homeworkWording(locale);
   const los = [{
     id: `${planId}.lo-1`,
-    description: `Work problem ${meta.n}.`,
-    shortTitle: `Work problem ${meta.n}`,
+    description: words.problemObjectiveSentence(meta.n),
+    shortTitle: words.problemObjective(meta.n),
   }];
   // Parent metadata minus the whole-sheet problem list and its cache key.
   const { problems: _problems, cacheKey: _cacheKey, ...parentMeta } = (parent.metadata ?? {}) as Record<string, unknown>;
   void _problems; void _cacheKey;
   return parseLessonPlan({
     id: planId,
-    title: `Problem ${meta.n}`,
+    title: words.problemTitle(meta.n),
     curriculum: parent.curriculum,
     grade: parent.grade,
     subject: parent.subject,
     topic: meta.text.slice(0, 80),
-    locale: parent.locale ?? 'en',
+    locale,
     los,
     estimatedMinutes: parent.estimatedMinutes,
     segments: [

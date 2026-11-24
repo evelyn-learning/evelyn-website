@@ -103,8 +103,9 @@ export interface HomeworkBuildDoc {
 
 /** Bump when a change to the build (figure, answer key) must not reuse problems built before it: the
  *  cache matches on this hash, so an older build's figure or key is never served after the bump.
- *  2 = 2026-10-27 per-part answer keys. 3 = 2026-10-29 prose parts keyed by a verify call. */
-export const BUILD_LOGIC_VERSION = 3;
+ *  2 = 2026-10-27 per-part answer keys. 3 = 2026-10-29 prose parts keyed by a verify call.
+ *  4 = 2026-11-24 finals and steps in the problem's language, values named in Chinese or Japanese. */
+export const BUILD_LOGIC_VERSION = 4;
 
 /** sha256 of the build version and the text with whitespace collapsed and trimmed, first 16 hex chars. */
 export function problemHash(text: string): string {

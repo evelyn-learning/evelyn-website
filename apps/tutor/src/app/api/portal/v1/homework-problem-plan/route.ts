@@ -1,5 +1,5 @@
 /**
- * POST /api/portal/v1/homework-problem-plan  { planId, n, priorNote?, priorConfirmed?, waitMs? }
+ * POST /api/portal/v1/homework-problem-plan  { planId, n, priorNote?, priorConfirmed?, waitMs?, locale? }
  *   -> 201 { planId, verified, hasFigure, buildStatus }
  *
  * Mints the one-problem plan a student's session runs on. Waits (up to
@@ -27,7 +27,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export const POST = withPortalAuth(async (_req, auth) => {
   // withPortalAuth consumed the request stream for the HMAC check; the parsed
   // body is auth.body (reading _req.json() here finds an empty stream → 400).
-  const body = (auth.body && typeof auth.body === 'object' ? auth.body : {}) as { planId?: unknown; n?: unknown; priorNote?: unknown; priorConfirmed?: unknown; waitMs?: unknown };
+  const body = (auth.body && typeof auth.body === 'object' ? auth.body : {}) as { planId?: unknown; n?: unknown; priorNote?: unknown; priorConfirmed?: unknown; waitMs?: unknown; locale?: unknown };
   if (typeof body.planId !== 'string' || !body.planId || typeof body.n !== 'number') {
     return NextResponse.json({ error: 'bad_request', reason: 'planId and n required' }, { status: 400 });
   }
@@ -63,7 +63,11 @@ export const POST = withPortalAuth(async (_req, auth) => {
     parentPlanId: parentId, n, text: problem.text, figure, verified,
     ...(priorNote ? { priorNote } : {}),
     ...(priorConfirmed.length ? { priorConfirmed } : {}),
-  }, planId);
+  }, planId, {
+    // 2026-11-24: the language this problem's session is taught in (the code the session's `tutor_languages`
+    // leads with), for a sheet whose plan was generated without a locale. Optional; the sheet's locale otherwise.
+    ...(typeof body.locale === 'string' && body.locale.trim() ? { locale: body.locale.trim().slice(0, 20) } : {}),
+  });
   await upsertLessonPlan(plan);
   return NextResponse.json({ planId, verified, hasFigure: figure != null, buildStatus }, { status: 201 });
 });

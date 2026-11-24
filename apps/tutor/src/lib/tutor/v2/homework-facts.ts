@@ -5,7 +5,8 @@
 import type { V2HomeworkProblem, V2HomeworkState } from './types';
 
 /** A part's label as the record keeps it (keyed-verdict.ts normLabel). */
-export const partLabel = (l: unknown) => String(l ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+// 2026-11-24: letters and digits of any script (甲 / 乙, ① / ② all became '').
+export const partLabel = (l: unknown) => String(l ?? '').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 
 export const oneLine = (s: string, max: number) => String(s ?? '').replace(/[<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
 

@@ -15,6 +15,7 @@ import type Anthropic from '@anthropic-ai/sdk';
 import { getModelClient, prepareParams } from '../ai/model-registry';
 import { compareDeterministic, numbersAgree, parseSimpleNumber } from '../portal/key-compare';
 import type { AnswerKey, AnswerPart, KeyStep } from './types';
+import { answerText } from '../voice/answer-text';
 
 export interface SolveOutcome { parts: AnswerPart[] | null; steps?: KeyStep[]; usage?: { in: number; out: number } }
 export type SolveFn = (text: string) => Promise<SolveOutcome>;
@@ -34,7 +35,8 @@ Rules:
 3. "canonical" is the same answer in machine form. When the answer is a single number, kind is "number", number holds its value, and units holds the unit with the number stripped out ("" when none). Otherwise kind is "text" and text holds the answer as written. Unused canonical fields are 0 or "".
 4. Round numeric answers to 4 significant figures unless the problem asks for a different precision or the answer is exact.
 5. If the problem cannot be solved from the text and the figure description (missing data, contradictory data, or a figure that is needed but not described), set ill_posed to a short reason and return an empty parts array. Never guess.
-6. steps: the solution path a tutor would walk the student along — one entry per step, in order. relation is the fact, theorem or equation the step uses (one sentence, at most 25 words); value is that step's intermediate result exactly as a student would write it ("AE = 4", "(5x + 5) = 40 + ∠B"), or "" when the step yields none. At most 8 steps. Every number in the finals must be reachable from these steps.`;
+6. steps: the solution path a tutor would walk the student along — one entry per step, in order. relation is the fact, theorem or equation the step uses (one sentence, at most 25 words); value is that step's intermediate result exactly as a student would write it ("AE = 4", "(5x + 5) = 40 + ∠B"), or "" when the step yields none. At most 8 steps. Every number in the finals must be reachable from these steps.
+7. Write every "final", every unit and every step's relation in the language and script the problem itself is written in, with units in the form the problem uses; numbers, variable letters and symbols stay as they are. When a part asks for several named quantities, "final" names each quantity with its value, in the order the problem asks for them.`;
 
 export const KEY_SOLVE_SCHEMA = {
   type: 'object',
@@ -101,6 +103,25 @@ export function namedValues(final: string): Array<{ name: string; value: number 
     if (!Number.isFinite(value) || out.some((v) => v.name === name)) continue;
     out.push({ name, value });
   }
+  return out.length >= 2 ? out : hanNamedValues(final);
+}
+
+/**
+ * 2026-11-24 (a Taiwan worksheet): a final that names its quantities in Chinese or Japanese ("雞23隻，兔12隻",
+ * "雞 = 23 隻、兔 = 12 隻", "大人有 3 人，小孩有 5 人") had no named values, so it was matched only when typed
+ * character for character. One name and one number per clause, every clause read, two or more names; any other
+ * shape yields none and the final stays a plain text answer.
+ */
+function hanNamedValues(final: string): Array<{ name: string; value: number }> {
+  const text = answerText(final).replace(/^the answer is\s*/i, '');
+  if (!/\p{Script=Han}/u.test(text)) return [];
+  const out: Array<{ name: string; value: number }> = [];
+  for (const clause of text.split(/[,;]|\.(?!\d)|和|及|與|与/u).map((c) => c.trim()).filter(Boolean)) {
+    const m = /^([\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]{1,8}?)(?:的(?:數量|数量|隻數|只数|個數|个数|人數|人数))?\s*(?:有|是|為|为|は|が|[=:])?\s*(-?\d+(?:\.\d+)?)(?![\d.]*\s*[+\-*/×÷^])/u.exec(clause);
+    const value = m ? Number(m[2]) : NaN;
+    if (!m || !/\p{Script=Han}/u.test(m[1]) || !Number.isFinite(value) || out.some((v) => v.name === m[1])) return [];
+    out.push({ name: m[1], value });
+  }
   return out.length >= 2 ? out : [];
 }
 
@@ -165,7 +186,7 @@ async function callSolve(role: 'plangen-vision' | 'content-verify', effort: 'med
   }
 }
 
-export const SAME_STATEMENT_SYSTEM = 'You check an answer key for one part of a homework problem. Several independent solvers answered the part in their own words. Decide whether every answer states the same thing: the same claim, mechanism or conclusion, with no answer adding or contradicting a point another one makes as the answer. Wording, detail and order may differ. If they state the same thing, write that shared answer as one short plain sentence a teacher would accept (at most 30 words); otherwise leave statement empty.';
+export const SAME_STATEMENT_SYSTEM = 'You check an answer key for one part of a homework problem. Several independent solvers answered the part in their own words. Decide whether every answer states the same thing: the same claim, mechanism or conclusion, with no answer adding or contradicting a point another one makes as the answer. Wording, detail and order may differ. If they state the same thing, write that shared answer as one short plain sentence a teacher would accept (at most 30 words); otherwise leave statement empty. Write the statement in the language the problem is written in.';
 
 export const SAME_STATEMENT_SCHEMA = {
   type: 'object',
@@ -207,7 +228,8 @@ export function defaultKeySolveDeps(): KeySolveDeps {
 
 const normUnit = (u: string): string => {
   const x = (u ?? '').toLowerCase().replace(/[\s.·*⋅]/g, '').replace(/\^2/g, '²').replace(/\^3/g, '³');
-  return x === '°' || x === 'deg' || x === 'degree' || x === 'degrees' ? 'deg' : x;
+  // 2026-11-24: 度 is the degree sign as Chinese and Japanese write it.
+  return x === '°' || x === 'deg' || x === 'degree' || x === 'degrees' || x === '度' ? 'deg' : x;
 };
 const normText = (s: string): string => (s ?? '').toLowerCase().replace(/\s+/g, ' ').trim().replace(/\.+$/, '').trim();
 
@@ -250,11 +272,20 @@ export function decisiveToken(text: string): string {
   return kept.some((x) => /\d/.test(x)) ? kept.join(' ') : '';
 }
 
+const hanValuesOf = (p: AnswerPart) => (p.values ?? namedValues(p.final)).filter((v) => /\p{Script=Han}/u.test(v.name));
+
 function partAgree(a: AnswerPart, b: AnswerPart): boolean {
   if (a.canonical.kind !== b.canonical.kind) return false;
   if (a.canonical.kind === 'text' && b.canonical.kind === 'text') {
     const x = normText(a.canonical.value), y = normText(b.canonical.value);
     if (!!x && x === y) return true;
+    // 2026-11-24: quantities named in Chinese or Japanese agree by name and number, however each solver worded
+    // them, and disagree when the same names carry other numbers. The numbers-only reading below drops the
+    // names, so "雞23隻，兔12隻" and "兔23隻，雞12隻" read alike.
+    const hanA = hanValuesOf(a), hanB = hanValuesOf(b);
+    if (hanA.length || hanB.length) {
+      return hanA.length >= 2 && hanA.length === hanB.length && hanA.every((v) => hanB.some((w) => w.name === v.name && numbersAgree(v.value, w.value)));
+    }
     const dx = decisiveToken(a.canonical.value);
     return !!dx && dx === decisiveToken(b.canonical.value);
   }
