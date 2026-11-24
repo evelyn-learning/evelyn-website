@@ -1028,6 +1028,24 @@ export function realSteps(modelDeps: ModelDeps = {}): Steps {
   };
 }
 
+/**
+ * A PNG or WEBP with a see-through background, flattened onto white as the page shows it. Sent as it is, one solver
+ * (GPT) saw Castle Rock's graphs as black rectangles (139736, 140811: black lines on a transparent background) and
+ * could not read them. Other images are sent unchanged.
+ */
+export async function onWhite(data: Uint8Array, mime: string): Promise<Uint8Array> {
+  if (mime !== "image/png" && mime !== "image/webp") return data;
+  const { default: sharp } = await import("sharp");
+  try {
+    const img = sharp(data);
+    if (!(await img.metadata()).hasAlpha) return data;
+    const out = await img.flatten({ background: "#ffffff" }).toFormat(mime === "image/png" ? "png" : "webp").toBuffer();
+    return new Uint8Array(out);
+  } catch {
+    return data; // not decodable here: sent as it is, and the format check before sending decides
+  }
+}
+
 const IMAGE_MIME: Record<string, string> = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp" };
 const safeName = (s: string) => s.replace(/[^A-Za-z0-9._-]/g, "_");
 
@@ -1039,16 +1057,20 @@ export function folderAssets(dir: string): Pick<Deps, "assetExists" | "images"> 
       try { return statSync(file(itemId, f)).isFile(); } catch { return false; }
     },
     images: async (item, files) =>
-      [...new Set(files)].map((f) => {
-        const mime = IMAGE_MIME[path.extname(f).slice(1).toLowerCase()];
-        // The run only asks for raster files; anything else, or a file that cannot be read, is an error, never dropped.
-        if (!mime) throw new Error(`image ${f} of item ${item.itemId} is not a type the solvers can take`);
-        try {
-          return { mime, data: new Uint8Array(readFileSync(file(item.itemId, f))) };
-        } catch {
-          throw new Error(`image ${f} of item ${item.itemId} could not be read from the asset folder; not solved without it`);
-        }
-      }),
+      Promise.all(
+        [...new Set(files)].map(async (f) => {
+          const mime = IMAGE_MIME[path.extname(f).slice(1).toLowerCase()];
+          // The run only asks for raster files; anything else, or a file that cannot be read, is an error, never dropped.
+          if (!mime) throw new Error(`image ${f} of item ${item.itemId} is not a type the solvers can take`);
+          let data: Uint8Array;
+          try {
+            data = new Uint8Array(readFileSync(file(item.itemId, f)));
+          } catch {
+            throw new Error(`image ${f} of item ${item.itemId} could not be read from the asset folder; not solved without it`);
+          }
+          return { mime, data: await onWhite(data, mime) };
+        }),
+      ),
   };
 }
 
