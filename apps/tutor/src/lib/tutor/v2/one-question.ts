@@ -58,7 +58,20 @@ export function v2ReplyAsks(text: string): boolean {
   const plain = stripBoardBlocks(text);
   const old = plain.split(/(?<=[.?!])\s+/).filter((x) => x.trim());
   const now = v2ReplySentences(plain);
-  return asksAnywhere(old) || endsHandingOver(now) || now.some(v2AsksInJapanese);
+  return asksAnywhere(old) || endsHandingOver(now) || now.some(v2AsksInJapanese) || now.slice(-2).some(v2HandsOverInItsLanguage);
+}
+
+/** A lesson taught in Chinese or Japanese hands the turn over with an instruction and no question mark as often as an
+ *  English one does (「請你把 x 等於 3 代入第一式，算出 y。」, 「求下面聯立方程式的 x 和 y。」, 「y を求めてください。」): taken for a
+ *  statement, each got the runtime's check-in after it (first zh-TW run, 2026-11-24: a problem read out, then "Are you with
+ *  me so far?"). Read in the reply's last two sentences only, as an English instruction is (board-timing.ts asksAloud).
+ *  Not advice for later or under a condition (下次…, 如果有問題…, 次回…, …があれば). */
+const ZH_HAND_OVER = /(?:請|请)(?:你|妳|您)?(?:先|再|也|試著|试着|自己)?\s*(?:算|說|说|寫|写|試|试|想|告訴|告诉|回答|做|解|求|找|比|完成|選|选|看|判斷|判断|列|代入|計算|计算|解釋|解释|描述|讀|读|畫|画|用|把|舉|举)|(?:試|试)(?:試|试)看|算算看|想想看|做做看|(?:說說|说说)看|你來(?:試|算|做|說|寫|解)|你来(?:试|算|做|说|写|解)|(?:換|换|輪到|轮到)你|(?:告訴|告诉)我|^(?:(?:現在|现在|接下來|接下来|那麼|那么|好|來|来)[，,、]?\s*)*(?:求|算出|計算|计算|解出|寫出|写出|找出|比較|比较|化簡|化简)(?!出來了|出来了)/u;
+const JA_HAND_OVER_TASK = /(?:求め|解い|計算し|答え|考え|やっ|書い|選ん|比べ|説明し|代入し|試し|確かめ)て(?:みて)?(?:ください|みましょう|ごらん)|やってみましょう|(?:求め|解き|計算し|答え)なさい/u;
+const NOT_NOW_CJK = /下次|下一次|以後|以后|如果有|有問題的話|有问题的话|隨時|随时|次回|あとで|後で|があれば|あったら|いつでも/u;
+export function v2HandsOverInItsLanguage(sentence: string): boolean {
+  const s = sentence.trim();
+  return !!s && !NOT_NOW_CJK.test(s) && (ZH_HAND_OVER.test(s) || JA_HAND_OVER_TASK.test(s));
 }
 
 /** Task 7e: a Japanese question with no question mark, ending か (「…次に進みますか。」, 「もう一度言ってもらえますか。」,

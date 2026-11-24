@@ -13,6 +13,7 @@
  * neither applies.
  */
 import { Maximize2, Minimize2 } from 'lucide-react';
+import { useSessionStrings } from '@/lib/tutor/i18n/SessionStringsContext';
 
 export interface FullscreenApi {
   /** Native fullscreen or the iframe expand path is possible here. */
@@ -22,12 +23,10 @@ export interface FullscreenApi {
   toggle: () => void;
 }
 
-export const FULLSCREEN_LABEL = 'Full screen';
-export const EXIT_FULLSCREEN_LABEL = 'Exit full screen';
-
 export function HeaderFullscreenButton({ api, compact = false }: { api: FullscreenApi | null | undefined; compact?: boolean }) {
+  const S = useSessionStrings();
   if (!api || !api.available) return null;
-  const label = api.active ? EXIT_FULLSCREEN_LABEL : FULLSCREEN_LABEL;
+  const label = api.active ? S.exitFullScreen : S.fullScreen;
   const Icon = api.active ? Minimize2 : Maximize2;
   return (
     <button

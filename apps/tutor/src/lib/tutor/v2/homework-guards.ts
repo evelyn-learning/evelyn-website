@@ -51,8 +51,9 @@ export function nonAnswer(studentSaid: string | null, lastTutor: string): NonAns
   return null;
 }
 
-const firstSentences = (text: string, n: number) => String(text ?? '').split(/(?<=[.!?])\s+|\n+/).map((s) => s.trim()).filter(Boolean).slice(0, n);
-export const sentencesOf = (text: string) => String(text ?? '').split(/(?<=[.!?])\s+|\n+/).map((x) => x.trim()).filter(Boolean);
+// Cut after 。！？ too: a reply in Chinese or Japanese was one "sentence", so its whole length counted as its start.
+const firstSentences = (text: string, n: number) => String(text ?? '').split(/(?<=[.!?])\s+|(?<=[。！？])\s*|\n+/).map((s) => s.trim()).filter(Boolean).slice(0, n);
+export const sentencesOf = (text: string) => String(text ?? '').split(/(?<=[.!?])\s+|(?<=[。！？])\s*|\n+/).map((x) => x.trim()).filter(Boolean);
 
 const OPENS_WITH_CREDIT = /^\W*(?:yes|yep|yeah|right|correct|exactly|spot on|perfect|well done|that's (?:right|correct|it)|that is (?:right|correct))\b/i;
 const CREDITS = /\b(?:is|was|'s) (?:right|correct)\b|\bmatches\b|\byou got it\b/i;
@@ -69,6 +70,8 @@ export function creditsNonAnswer(spoken: string): boolean {
 }
 
 const POSITIVE = /\b(?:yes|yep|yeah|right|correct|exactly|spot on|that's it|well done|matches|you got it|perfect|nice work|good work|great work)\b/i;
+const POSITIVE_CJK = /(?<![不没沒])(?:對|对)(?![不嗎吗])|正確|正确|沒錯|没错|答對|答对|算對|算对|很好|太好了|完全正確|正解|その通り|そのとおり|合って(?:い)?ます|よくでき|すばらしい|いいですね/u;
+const NEGATIVE_CJK = /不對|不对|不太對|不太对|不正確|不正确|不是|錯了|错了|有(?:一點|一点|個|个)?(?:錯|错|問題|问题)|還差|还差|差一點|差一点|再(?:看|想|算|檢查|检查)|違います|ちがいます|間違|惜しい|もう一度(?:考え|確認|計算)|正しくありません/u;
 const NEGATIVE = /\b(?:not quite|not right|not correct|incorrect|isn'?t (?:right|correct|quite)|wrong|doesn'?t (?:match|work|give|hold)|does not|close|almost|look again|check (?:that|this|your|the)|slip|mistake|error|not the)\b|^\W*no\b/i;
 
 /**
@@ -81,9 +84,13 @@ export function verdictMissing(spoken: string, verdicts: ReadonlyArray<'correct'
   const head = firstSentences(spoken, 2).join(' ');
   const right = verdicts.every((v) => v === 'correct');
   const wrong = verdicts.every((v) => v === 'incorrect');
-  if (right) return POSITIVE.test(head) && !/^\W*(?:not quite|no\b)/i.test(head) ? null : 'correct';
-  if (wrong) return NEGATIVE.test(head) ? null : 'incorrect';
-  return POSITIVE.test(head) || NEGATIVE.test(head) ? null : 'mixed';
+  // The verdict in a lesson taught in Chinese or Japanese (對，… / 不太對 / 正解です / 違います): without these every such reply was
+  // taken to lack its verdict, redrafted, and given an English one in front.
+  const negative = NEGATIVE.test(head) || NEGATIVE_CJK.test(head);
+  const positive = POSITIVE.test(head) || (POSITIVE_CJK.test(head) && !NEGATIVE_CJK.test(head.split(/[，,。、]/)[0] ?? ''));
+  if (right) return positive && !/^\W*(?:not quite|no\b)/i.test(head) ? null : 'correct';
+  if (wrong) return negative ? null : 'incorrect';
+  return positive || negative ? null : 'mixed';
 }
 
 /** The words that offer a value tentatively, and "I don't know" before them. */
@@ -153,6 +160,12 @@ export function castsDoubt(spoken: string): string[] {
 
 /** The verdict said in front of a second draft that still lacks it. */
 export const V2_VERDICT_OPENERS = { correct: 'That\'s right.', incorrect: 'Not quite.', mixed: '' } as const;
+/** The same in a lesson taught in another language, by its code (voice/lesson-language.ts). */
+export const V2_VERDICT_OPENERS_BY_LANGUAGE: Readonly<Record<string, { correct: string; incorrect: string; mixed: string }>> = {
+  'zh-TW': { correct: '對，沒錯。', incorrect: '不太對。', mixed: '' },
+  'zh-CN': { correct: '对，没错。', incorrect: '不太对。', mixed: '' },
+  ja: { correct: 'その通りです。', incorrect: '少し違います。', mixed: '' },
+};
 
 /**
  * Check 3: the text states the result the tutor worked out for the student's own question. A number is read

@@ -22,6 +22,7 @@ import { SketchFallbackCard } from './SketchFallbackCard';
 import { RenderFallbackCard } from './RenderFallbackCard';
 import { BoardItemErrorBoundary } from './BoardItemErrorBoundary';
 import { BoardLeadPinContext } from './board-lead-pin-context';
+import { useSessionStrings } from '@/lib/tutor/i18n/SessionStringsContext';
 import type { SketchPrimitive } from '@/lib/tutor/whiteboard/sketch-schema';
 import { TryYourselfRenderer } from './TryYourselfRenderer';
 import { gradeTryYourself, type TryYourselfRelationDetail } from './tryYourselfAnswer';
@@ -475,6 +476,7 @@ export function WhiteboardCanvas({
   onInkNoteMoved,
   leadItem,
 }: WhiteboardCanvasProps) {
+  const S = useSessionStrings();
   const [currentIndex, setCurrentIndex] = useState(0);
   // Track which direction the page-change happened in so the entrance
   // animation slides correctly (forward = next page, backward = prev).
@@ -1811,7 +1813,7 @@ export function WhiteboardCanvas({
             <button
               onClick={handleClear}
               className="p-1 rounded hover:bg-gray-200 text-gray-500"
-              title="Clear whiteboard"
+              title={S.clearWhiteboard}
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -1825,7 +1827,7 @@ export function WhiteboardCanvas({
             onClick={goPrev}
             disabled={currentIndex === 0}
             className="p-1 rounded-md bg-white border border-gray-200 shadow-sm hover:bg-gray-50 disabled:opacity-30 disabled:shadow-none"
-            title="Previous page"
+            title={S.prevPage}
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -1841,7 +1843,7 @@ export function WhiteboardCanvas({
                     ? 'bg-blue-600 text-white scale-110 shadow-sm'
                     : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
                 }`}
-                title={pages[i].title || `Page ${i + 1}`}
+                title={pages[i].title || S.pageN(i + 1)}
               >
                 {i + 1}
               </button>
@@ -1854,7 +1856,7 @@ export function WhiteboardCanvas({
             onClick={goNext}
             disabled={currentIndex === pages.length - 1}
             className="p-1 rounded-md bg-white border border-gray-200 shadow-sm hover:bg-gray-50 disabled:opacity-30 disabled:shadow-none"
-            title="Next page"
+            title={S.nextPage}
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -1870,7 +1872,7 @@ export function WhiteboardCanvas({
 
   const headerTitle = chrome === 'minimal' && pageTitleHeader ? stripLatexForTitle(currentPage.title).trim() : '';
   const ownTitle = stripLatexForTitle(currentPage.title).trim();
-  const bookTitle = bookHeader === undefined || headerTitle ? '' : (ownTitle && !/^(?:page|board)\s*\d+$/i.test(ownTitle) ? ownTitle : bookHeader.trim() || `Page ${currentIndex + 1}`);
+  const bookTitle = bookHeader === undefined || headerTitle ? '' : (ownTitle && !/^(?:page|board)\s*\d+$/i.test(ownTitle) ? ownTitle : bookHeader.trim() || S.pageN(currentIndex + 1));
   const bodyContent = (
     <>
       {bookTitle && (
@@ -1878,7 +1880,7 @@ export function WhiteboardCanvas({
         // the page scrolls under it (Praveen, biology, embed-1794520770137).
         <div className="shrink-0 flex items-baseline justify-between gap-4 px-5 sm:px-7 pt-4 pb-2.5 border-b border-slate-200" data-wb-page-title="1">
           <h2 key={currentIndex} className="min-w-0 truncate text-base sm:text-lg font-semibold tracking-tight text-slate-800 animate-in fade-in duration-300" title={bookTitle}><InlineMathText text={typesetMaths(bookTitle)} /></h2>
-          <span className="shrink-0 text-xs font-medium tabular-nums text-slate-400">Page {currentIndex + 1} of {pages.length}</span>
+          <span className="shrink-0 text-xs font-medium tabular-nums text-slate-400">{S.pageOf(currentIndex + 1, pages.length)}</span>
         </div>
       )}
       {headerTitle && (
@@ -3006,6 +3008,7 @@ function SentenceCard({ sentence, emphasis, emphasisAt, label, gloss }: { senten
 }
 
 function CommandRendererInner({ command }: CommandRendererProps) {
+  const S = useSessionStrings();
   switch (command.action) {
     case 'showEquation':
       // Round 28 design pass: was min-h-[200px] — the only forced min-
@@ -3202,13 +3205,13 @@ function CommandRendererInner({ command }: CommandRendererProps) {
                   className={`text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded ${difficultyStyle}`}
                   data-feature="difficulty"
                 >
-                  {problem.difficultyLabel}
+                  {S.difficulty[problem.difficultyLabel] ?? problem.difficultyLabel}
                 </span>
               )}
             </div>
           )}
           <h4 className="font-semibold text-blue-900 mb-2" data-feature="title">
-            <InlineMathText text={problem.title || 'Problem'} />
+            <InlineMathText text={problem.title || S.problem} />
           </h4>
           {(problem as { rich?: boolean }).rich ? (
             <div className="text-gray-800" data-feature="statement"><RichBoardText text={stripEmbeddedChoiceBlock(problem.statement || '', answerChoices)} size="text-base" /></div>
@@ -3223,7 +3226,7 @@ function CommandRendererInner({ command }: CommandRendererProps) {
           <CardGloss of={command} />
           {validGivenValues.length > 0 && (
             <div className="mt-3" data-feature="given">
-              <p className="text-sm font-medium text-gray-600">Given:</p>
+              <p className="text-sm font-medium text-gray-600">{S.given}</p>
               <ul className="text-sm text-gray-700 ml-4 list-disc">
                 {validGivenValues.map((gv, i) => (
                   <li key={i} data-feature={`given-${i + 1}`}>
@@ -3255,7 +3258,7 @@ function CommandRendererInner({ command }: CommandRendererProps) {
           )}
           {problem.format === 'grid-in' && answerChoices.length === 0 && (
             <p className="mt-3 text-xs text-gray-500 italic">
-              Grid-in — enter a numeric answer.
+              {S.gridIn}
             </p>
           )}
         </div>

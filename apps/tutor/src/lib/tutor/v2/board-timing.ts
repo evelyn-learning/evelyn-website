@@ -165,7 +165,7 @@ export function v2DropSaidLead(question: string, said: string): string {
   const rest = m[2]!;
   return rest.charAt(0).toUpperCase() + rest.slice(1);
 }
-export function unsaidAsk(statement: string, sentences: string[], opts: { questionOnce?: boolean } = {}): string | null {
+export function unsaidAsk(statement: string, sentences: string[], opts: { questionOnce?: boolean; lookAtBoard?: string } = {}): string | null {
   const card = statement.replace(/\s+/g, ' ').trim();
   if (!card || !sentences.length) return null;
   // Task 7m (QUESTION_ONCE, mic test 4 flag 5a): the card's question already heard (said where the card stands, or by the
@@ -208,7 +208,7 @@ export function unsaidAsk(statement: string, sentences: string[], opts: { questi
   const cardWords = [...about(card)];
   const told = sentences.some((x) => shared(x, cardWords) >= 2);
   if (!told && norm(card).length <= SAY_WHOLE_CARD_WORDS && (card.match(/\d+(?:\.\d+)?/g) ?? []).length <= 5) return card;
-  return short(ask) ? ask : 'Have a look at it on the board, and tell me what you think.';
+  return short(ask) ? ask : opts.lookAtBoard ?? 'Have a look at it on the board, and tell me what you think.';
 }
 
 /** Whether a spoken reply already set the question a card states: most of what the card is about (its words

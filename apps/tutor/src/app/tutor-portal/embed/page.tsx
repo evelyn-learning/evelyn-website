@@ -549,6 +549,8 @@ import { EMBED_DOCUMENT_TITLE, partnerFrameTitle } from '@/lib/tutor/portal/part
 import { resolveEmbedUiOptions } from '@/lib/tutor/portal/embed-ui-options';
 import { v2CanRunSession, resolvePartnerSessionOptions } from '@/lib/tutor/portal/partner-session-options';
 import type { MockReviewContext } from '@/lib/tutor/mock-exam/review-focus';
+import { sessionStrings } from '@/lib/tutor/i18n/session-strings';
+import { SessionStringsProvider } from '@/lib/tutor/i18n/SessionStringsContext';
 import type { WhiteboardCommand } from '@core/knowledge/types';
 import type { OpenAIVoice } from '@/app/tutor/hooks/useOpenAIRealtime';
 
@@ -842,6 +844,8 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // instead of the OpenAI Realtime fallback. An explicit openai persona voice
   // is still honored. Flag TUTOR_EMBED_CARTESIA_DEFAULT ('off' = old behavior).
   const tutorLanguages = TUTOR_EXTRA_LANGUAGES ? parseTutorLanguages(config.tutor_languages) ?? undefined : undefined;
+  // The wording of this page's own screens (start fallback, expired link, session complete) in the lesson's language.
+  const S = sessionStrings(tutorLanguages);
   const useCartesiaDefault = TUTOR_EMBED_CARTESIA_DEFAULT && !teacherVoice && !voiceOverrideId;
   if (useCartesiaDefault && typeof window !== 'undefined') {
     // Served-artifact marker for this behavior (Rule 4) + a breadcrumb when a
@@ -2528,13 +2532,13 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
             showHomeLink={searchParams.get('return') === 'home'}
           />
         ) : (
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" aria-label="Saving your lesson" />
+          <Loader2 className="h-8 w-8 animate-spin text-gray-400" aria-label={S.savingLesson} />
         )) : (
         <div className="max-w-md text-center p-8">
           <div className="mb-4 text-4xl">&#10003;</div>
-          <h1 className="mb-2 text-xl font-bold text-gray-900">Session Complete</h1>
+          <h1 className="mb-2 text-xl font-bold text-gray-900">{S.sessionComplete}</h1>
           <p className="text-sm text-gray-600">
-            {transcript.length} messages exchanged, {whiteboardCommands.length} visuals generated.
+            {S.sessionStats(transcript.length, whiteboardCommands.length)}
           </p>
         </div>
         )}
@@ -2569,6 +2573,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
 
 
   return (
+    <SessionStringsProvider languages={tutorLanguages}>
     <div style={brandStyle}>
       <TutorSession
         subject={subject}
@@ -2715,12 +2720,12 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
           onClick={() => { setStartBlocked(null); runHostStart(); }}
           className="fixed inset-0 z-[80] flex items-center justify-center bg-white/90 text-lg font-semibold text-slate-800"
         >
-          <span className="rounded-full bg-[var(--brand-color,#2563eb)] px-6 py-3 text-white shadow-lg">Tap to hear your tutor</span>
+          <span className="rounded-full bg-[var(--brand-color,#2563eb)] px-6 py-3 text-white shadow-lg">{S.tapToHearTutor}</span>
         </button>
       )}
       {startBlocked === 'token_expired' && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-white/95 p-8 text-center text-sm text-slate-700">
-          This session link has expired. Please reload the page to start the tutor.
+          {S.linkExpired}
         </div>
       )}
       {/* Partner minute pool (spec 2026-10-21): the partner's shared minutes are gone. */}
@@ -2738,6 +2743,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         </div>
       )}
     </div>
+    </SessionStringsProvider>
   );
 }
 

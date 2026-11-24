@@ -56,6 +56,7 @@ import { v2NoteOptionalLeave, v2OptionalHold, v2OptionalOneMore } from './option
 import { V2_HAND_OVER_CONTINUE, V2_HAND_OVER_CONTINUE_BEGAN, V2_HAND_OVER_DEFER, V2_HAND_OVER_MAX_TOKENS, V2_HAND_OVER_TIMEOUT_MS, V2_OPTIONAL_DEFER_IN_PREFIX, V2_SUMMARY_HAND_OVER_LINE, v2HandedOver, v2InPartDeferredBefore } from './summary-hand-over';
 import { TUTOR_V2_SUMMARY_HAND_OVER } from '../orchestrator/flags';
 import { V2_CHECK_INS } from './question-overlap';
+import { V2_LESSON_CHECK_INS, v2LessonLines } from './lesson-lines';
 import { v2AdaptAfter, v2AdaptBefore, v2AdaptOn, v2AdaptPart, v2FreeConvAfter, v2FreeConvQuiet, v2PracticePairs, v2QuestionOfReply, v2ReplyQuestions, v2RetestPutAfter } from './adaptive';
 import { LearnerCardWatch, V2_AS_SAID_REFUSED, V2_REPLY_MISHEARD, v2CardCorrects, v2CardIsAsSaid, v2CardIsFragment, v2CardSentence, v2LearnerCardsOn, v2LearnerSentences, v2OwedCardCheckLine, v2PracticeAnswerSentences, v2SentenceOnBoard, v2SentencesNotCarded } from './learner-card';
 import { V2_SUMMARY_WELL_HEADING, V2_SUMMARY_WELL_HELD, v2SummaryHeadingPlan, v2SummaryHeadingRepeat, v2SummaryWellHeld } from './summary-headings';
@@ -1387,7 +1388,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       // of a part not reached; the 7a part ask after the model's own question): the page stays held, unasked, and the ask
       // comes on a later reply.
       const unasked = (oneQuestion && (!!missed || !askedNow) && v2ReplyHandsOver(saidNow)) || (!askedNow && endsOnRepeat(saidNow));
-      const offer = unasked ? '' : missed ?? (askedNow ? '' : nextPart && plan ? v2PartAskLine({ next: nextPart.title, done: doneLabel, named: v2PartNamedLate(plan.segments[nextPart.index]!, saidNow), history: state.history }) : partOffer(named, namesPart(block.body, saidNow) || namesPart(named, saidNow)));
+      const offer = unasked ? '' : missed ?? (askedNow ? '' : nextPart && plan ? v2PartAskLine({ next: nextPart.title, done: doneLabel, named: v2PartNamedLate(plan.segments[nextPart.index]!, saidNow), history: state.history }) : partOffer(named, namesPart(block.body, saidNow) || namesPart(named, saidNow), true, session.languages));
       heldAt = { raw: block.raw, offer, ...(plan && part && partFlow ? { part: { id: plan.segments[part.index]!.id, title: partLabel } } : {}), ...(unasked ? { unasked } : {}) };
       if (offer) { input.onText?.(`\n\n${unstar(offer)}`); saidChars += unstar(offer).length + 2; }
       input.onToolCall?.({ id: `held_${nowMs.toString(36)}`, name: 'new_page', args: { title: block.body.trim() }, outcome: unasked ? 'not opened yet: held until they are asked whether to go on' : 'not opened yet: the student is asked first' });
@@ -1869,7 +1870,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // Task 7m (QUESTION_ONCE): the sentences cut at 。 too (sentencesSaid): a Japanese reply was one "sentence" here.
     // Fix round 1 (I1): spoken language lessons only (questionCards); any other voice lesson keeps the base split and ask.
     const questionOnce = TUTOR_V2_QUESTION_ONCE && questionCards;
-    const more = card ? unsaidAsk(String(card.args.statement ?? ''), questionOnce ? sentencesSaid : spoken.join(' ').split(/(?<=[.!?？])\s+/).filter(Boolean), { questionOnce })
+    const more = card ? unsaidAsk(String(card.args.statement ?? ''), questionOnce ? sentencesSaid : spoken.join(' ').split(/(?<=[.!?？])\s+/).filter(Boolean), { questionOnce, ...(v2LessonLines(session.languages) ? { lookAtBoard: v2LessonLines(session.languages)!.lookAtBoard } : {}) })
       : TUTOR_V2_SPEAK_BOARD_ITEM ? unsaidBoardItem(toolCalls, sentencesSaid, { sentences: !TUTOR_V2_SAY_SENTENCE_CARD }) : null;
     if (more) {
       input.onText?.(`\n\n${unstar(more)}`);
@@ -2187,7 +2188,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
 
   const fix = await mathsCheck;
   if (fix && !state.closed && !input.signal?.aborted) {
-    const words = `One correction: ${fix}`;
+    const words = v2LessonLines(session.languages)?.correction(fix) ?? `One correction: ${fix}`;
     input.onText?.(`\n\n${unstar(words)}`);
     spoken.push(words);
     const holder = [...stored].reverse().find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));
@@ -2303,7 +2304,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const hasRecapPage = state.board.pages.some((pg) => goalForTitle(session.plan!, pg.title) === recapPart?.id);
     // A reply that wrote its own summary has put the recap up: the plan's would be a second one.
     const wroteSummary = toolCalls.some((c) => c.name === 'annotate' && !/^not /.test(c.outcome) && String(c.args.text ?? '').split('\n').filter((l) => l.trim()).length >= 3);
-    if (recapPart && points.length && taught && !reached(recapPart.id) && !hasRecapPage && !wroteSummary && state.board.pages.length) {
+    // Not in a lesson taught in another language: the plan's points are stored in English.
+    if (recapPart && points.length && taught && !reached(recapPart.id) && !hasRecapPage && !wroteSummary && state.board.pages.length && !taughtIn(session.languages)) {
       const stamp = nowMs.toString(36);
       settle({ type: 'tool_use', id: `recap_page_${stamp}`, name: 'new_page', input: { title: 'Recap' } } as Anthropic.ToolUseBlock, true);
       settle({ type: 'tool_use', id: `recap_note_${stamp}`, name: 'annotate', input: { text: points.slice(0, 6).map((x) => `- ${x.trim()}`).join('\n') } } as Anthropic.ToolUseBlock, true);
@@ -2330,7 +2332,8 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && spoken.length && !framesDropped && !toolCalls.some((c) => c.name === 'keep_listening' || c.name === 'end_lesson') && !replyAsks && !pronAsks && !saysGoodbye && !endsOnRepeat(spoken.join(' '))
     // With the close due the tutor is saying goodbye: "Good work today." was followed by "Are you with me so far?" (portal-84f8660d).
     && !(session.timeBoxMinutes && session.timeBoxMinutes - (nowMs - state.startedAtMs) / 60000 <= closeDueMinutes(session.timeBoxMinutes))) {
-    const ins = discussion ? DISCUSSION_CHECK_INS : V2_CHECK_INS;
+    // A lesson taught in another language checks in in that language (lesson-lines.ts).
+    const ins = v2LessonLines(session.languages)?.checkIns ?? (discussion ? DISCUSSION_CHECK_INS : V2_CHECK_INS);
     const words = ins[state.history.length % ins.length];
     input.onText?.(`\n\n${words}`);
     spoken.push(words);
@@ -2385,7 +2388,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     const textBlock = (holder?.content as Anthropic.ContentBlockParam[] | undefined)?.find((c): c is Anthropic.TextBlockParam => c.type === 'text');
     if (textBlock) textBlock.text = `${openingFirst.join('\n')}\n${textBlock.text}`;
   }
-  if (opening && !openingFirst.length && !session.homework && !session.homeworkSheet && !state.closed && spoken.length && !paintedSoFar()) {
+  // A lesson taught in another language gets no board text from the plan as stored (its title and objectives are English): the
+  // tutor is told to open the board itself in the lesson's language (lesson-language-section.ts).
+  if (opening && !openingFirst.length && !session.homework && !session.homeworkSheet && !state.closed && spoken.length && !paintedSoFar() && !taughtIn(session.languages)) {
     // Standards codes are for the plan's author, not the student: "(CCSS 8.G.B.6, 8.G.B.7)" was printed on the first card (demo check, 2026-11-13).
     const noCodes = (x: string) => x.replace(/\s*\((?:[^()]*\b(?:CCSS|NGSS|TEKS|HS-|MS-|[0-9]\.[A-Z]{1,3}\.[A-Z]?\.?\d)[^()]*)\)/g, '').trim();
     // A discussion's objectives are written about the participant, for the tutor ("greater clarity about their own
@@ -2480,7 +2485,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // question that is not the invitation) records it asked; the turn of their next words records it answered (close-check.ts).
   // Task 7w (SUMMARY_OPENS_CLOSE): the runtime's own check-in ("Is that clear, or shall I go over it again?") is no check question.
   if (checkOwed && !state.closed && typeof state.closeInvitedAt !== 'number' && summaryGiven && !heldAt && !input.signal?.aborted
-    && (toolCalls.some((c) => c.name === 'show_problem' && !/^not /.test(c.outcome)) || (endsAsking(lastSaid, true) && !inviteSaid && !(opensClose && V2_CHECK_INS.includes(lastSaid.trim()))))) state.closeCheck = { askedAt: nowMs };
+    && (toolCalls.some((c) => c.name === 'show_problem' && !/^not /.test(c.outcome)) || (endsAsking(lastSaid, true) && !inviteSaid && !(opensClose && (V2_CHECK_INS.includes(lastSaid.trim()) || V2_LESSON_CHECK_INS.includes(lastSaid.trim())))))) state.closeCheck = { askedAt: nowMs };
   else if (checkPending && state.closeCheck && !!input.studentSaid?.trim() && !input.signal?.aborted) state.closeCheck = { ...state.closeCheck, answeredAt: nowMs };
   // Task 7w (SUMMARY_OPENS_CLOSE): a summary reply that did not end on the check (nor on the invitation) owes it on the next reply, once;
   // that reply uses it up, asked or not.

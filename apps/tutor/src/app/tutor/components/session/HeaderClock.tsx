@@ -26,6 +26,7 @@
 import { Clock } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { flagFreeElapsedSec, useFlagClockPause } from './useFlagClockPause';
+import { useSessionStrings } from '@/lib/tutor/i18n/SessionStringsContext';
 
 export function HeaderClock({
   startedAtMs,
@@ -52,6 +53,7 @@ export function HeaderClock({
   overrunMinutes?: number;
   className?: string;
 }) {
+  const S = useSessionStrings();
   const [elapsedSec, setElapsedSec] = useState(0);
   // Task 7s (HEADER_CLOCK_PAUSE): the tester's flag time left out (development only; zero otherwise).
   const flagPause = useFlagClockPause(startedAtMs);
@@ -97,8 +99,8 @@ export function HeaderClock({
   return (
     <span
       className={`inline-flex items-center gap-1 font-mono text-xs tabular-nums ${tone} ${className}`}
-      title={countDown && !pastTarget ? 'Time left in this lesson' : 'Time in this session'}
-      aria-label={countDown && !pastTarget ? `${shown} left` : `${shown} elapsed`}
+      title={countDown && !pastTarget ? S.timeLeftTitle : S.timeInSessionTitle}
+      aria-label={countDown && !pastTarget ? S.timeLeftAria(shown) : S.timeElapsedAria(shown)}
     >
       <Clock className="w-4 h-4 shrink-0" />
       {shown}

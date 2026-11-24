@@ -28,6 +28,7 @@ import { stripBoardBlocks } from './board-inline';
 import { v2PartOf } from './plan-map';
 import { TUTOR_V2_LEVEL_CHECK_PUT } from '../orchestrator/flags';
 import { V2_CHECK_INS, v2ContentWords, v2LatinOnly, v2SameQuestion, v2SameWord } from './question-overlap';
+import { V2_LESSON_CHECK_INS } from './lesson-lines';
 
 /** Task 8a fix round 1 (M3): the level set when the check's time is up with no answer (the plan gives no starting level; the facts' "over"
  *  line pitches at intermediate too, working-level.ts). */
@@ -191,7 +192,7 @@ export function v2LevelQuestionOf(reply: string): string | null {
   const heard = stripBoardBlocks(v2WithoutCutBoardNote(reply)).replace(/\[cut off[^\]]*\]/gi, ' ').replace(/\s+/g, ' ').trim();
   const sentences = heard.split(/(?<=[.!?。！？]["'”’」)]*)\s*/).map((x) => x.trim()).filter(Boolean);
   // M1: the runtime's check-in, word for word (fix round 2: wherever it stands, as replies of one turn are joined).
-  for (let i = sentences.length - 1; i >= 0; i--) if (V2_CHECK_INS.includes(sentences[i]!)) sentences.splice(i, 1);
+  for (let i = sentences.length - 1; i >= 0; i--) if (V2_CHECK_INS.includes(sentences[i]!) || V2_LESSON_CHECK_INS.includes(sentences[i]!)) sentences.splice(i, 1);
   const latinFirst = (xs: string[]) => { const l = xs.filter(v2LatinOnly); return (l.length ? l : xs).pop() ?? null; };
   const asks = sentences.filter((x) => /[?？]["'”’」)]*$/.test(x) && !NOT_LEVEL.test(x));
   if (asks.length) return latinFirst(asks);

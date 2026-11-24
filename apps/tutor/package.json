@@ -64,6 +64,7 @@
     "test:learner-summary-store": "npx tsx scripts/test-learner-summary-store.ts",
     "test:learner-summary-route": "npx tsx scripts/test-learner-summary-route.ts",
     "test:pdf-tutor-session": "npx tsx scripts/test-pdf-tutor-session.ts",
+    "test:pdf-cjk-font": "npx tsx scripts/test-pdf-cjk-font.ts",
     "test:partner-token-secrets": "npx tsx scripts/test-partner-token-secrets.ts",
     "test:material-classify": "npx tsx scripts/test-material-classify.ts",
     "test:enumerate-problems": "npx tsx scripts/test-enumerate-problems.ts",
@@ -551,7 +552,8 @@
     "practice-figure-gallery": "npx tsx scripts/practice-figure-gallery.ts",
     "live:gameclass-replay": "node scripts/gameclass-replay.mjs",
     "test:no-raw-solver-errors": "npx tsx scripts/test-no-raw-solver-errors.ts",
-    "test:trial-checks-typed": "node scripts/test-trial-checks-typed.mjs"
+    "test:trial-checks-typed": "node scripts/test-trial-checks-typed.mjs",
+    "test:session-strings": "npx tsx scripts/test-session-strings.ts"
   },
   "dependencies": {
     "opencc-js": "^1.4.2"

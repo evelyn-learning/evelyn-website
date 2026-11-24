@@ -10,7 +10,7 @@ import { inkNotesEnabled, linksEnabled } from '@/app/tutor/hooks/toolDefinitions
 import { latexToReadable, mathifyDollarSpans } from './latex-readable';
 import { normalizeLiteralLineBreaks } from '@/lib/tutor/whiteboard/inline-math';
 import {
-  getPdfTextContext, hasCjk, inferSessionLanguages, installCjkFontRouter, loadCjkFontBase64,
+  getPdfTextContext, inferSessionLanguages, installCjkFontRouter, loadCjkFontBase64, pickCjkFont, CJK_FONTS,
   mapNonLatin1Runs, registerCjkFont, resetPdfTextContext, setPdfTextContext, type PdfTextContext,
 } from './pdf-cjk-font';
 import {
@@ -1797,18 +1797,22 @@ async function exportTutorSessionPDFInner(
   const { default: jsPDF } = await import('jspdf');
   const pdf = new jsPDF('p', 'mm', 'a4');
 
-  // Task 32 §A: embed Noto Sans JP only when the session carries CJK text
-  // (a Latin-only session never fetches the font), then route every CJK
+  // Task 32 §A: embed a CJK font only when the session carries CJK text
+  // (a Latin-only session never fetches one), then route every CJK
   // string through it. A failed fetch keeps the bracket-label fallback.
+  // ONE file per document, by the session's language when the caller gave
+  // it and by the text otherwise: Noto Sans JP, TC (Traditional Chinese) or
+  // SC (Simplified) — see pickCjkFont.
   {
     const allText = pdfSessionText(topicName, transcript, whiteboardCommands);
     let cjkFont = false;
-    if (hasCjk(allText)) {
-      const b64 = await loadCjkFontBase64();
+    const fontKey = pickCjkFont(allText, options?.languages);
+    if (fontKey) {
+      const b64 = await loadCjkFontBase64(CJK_FONTS[fontKey].url);
       if (b64) {
         try {
-          registerCjkFont(pdf, b64);
-          installCjkFontRouter(pdf);
+          registerCjkFont(pdf, b64, fontKey);
+          installCjkFontRouter(pdf, fontKey);
           cjkFont = true;
         } catch (err) {
           console.warn('[pdf-tutor-session] CJK font registration failed, using bracket labels:', err);

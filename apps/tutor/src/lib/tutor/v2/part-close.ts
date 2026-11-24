@@ -1,3 +1,4 @@
+import { v2LessonLines } from './lesson-lines';
 import { stripBoardBlocks } from './board-inline';
 import { TUTOR_V2_PART_OFFER_ONCE } from '../orchestrator/flags';
 import type { V2State } from './types';
@@ -93,7 +94,10 @@ export function v2QuestionCheckRecent(history: V2State['history']): boolean {
 
 /** What the tutor says in place of the held page. `named`: the reply had already said what the next part is.
  *  `askQuestion` false: the last part change asked whether they had a question, so this one only asks to go on. */
-export function partOffer(title: string, named: boolean, askQuestion: boolean = true): string {
+export function partOffer(title: string, named: boolean, askQuestion: boolean = true, languages?: readonly string[]): string {
+  // A lesson taught in another language asks in it, and without the part's name: plan names are stored in English.
+  const own = v2LessonLines(languages);
+  if (own) return askQuestion ? own.goOnOrQuestion : own.goOn;
   const ask = askQuestion ? 'Shall we go on, or do you have a question first?' : 'Shall we go on?';
   if (named) return ask;
   const t = title.trim().replace(/[.:;,]+$/, '');

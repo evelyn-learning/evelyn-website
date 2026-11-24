@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useSessionStrings } from '@/lib/tutor/i18n/SessionStringsContext';
 import { compressedChipLabel, type RailItem } from '@/lib/tutor/lesson-plan/rail-labels';
 
 interface AgendaRailProps {
@@ -15,6 +16,7 @@ interface AgendaRailProps {
 
 /** Persistent agenda rail. Display-only v1 (no jump navigation — grill-me 2026-08-10). */
 export function AgendaRail({ items, orientation, offPlan = false }: AgendaRailProps) {
+  const S = useSessionStrings();
   const scrollerRef = useRef<HTMLDivElement>(null);
   const currentRef = useRef<HTMLDivElement>(null);
   const [overlayOpen, setOverlayOpen] = useState(false);
@@ -90,7 +92,7 @@ export function AgendaRail({ items, orientation, offPlan = false }: AgendaRailPr
   // without claiming any item is current. Non-interactive, display-only v1.
   const offPlanChip = offPlan ? (
     <div
-      title="Off plan"
+      title={S.offPlan}
       data-testid="agenda-rail-off-plan"
       className={[
         orientation === 'vertical'
@@ -99,7 +101,7 @@ export function AgendaRail({ items, orientation, offPlan = false }: AgendaRailPr
         'bg-slate-400 text-white font-medium',
       ].join(' ')}
     >
-      Off plan
+      {S.offPlan}
     </div>
   ) : null;
 
@@ -108,7 +110,7 @@ export function AgendaRail({ items, orientation, offPlan = false }: AgendaRailPr
       onClick={() => setOverlayOpen(false)} data-testid="agenda-rail-overlay">
       <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full max-h-[70vh] overflow-y-auto p-4"
         onClick={(e) => e.stopPropagation()}>
-        <div className="text-sm font-semibold text-slate-800 mb-2">Today&rsquo;s agenda</div>
+        <div className="text-sm font-semibold text-slate-800 mb-2">{S.todaysAgenda}</div>
         {items.map((it) => (
           <div key={it.key} className={['flex items-center gap-2 py-1.5 text-sm',
             it.current ? 'font-semibold text-slate-900' : it.done ? 'text-emerald-700' : 'text-slate-500'].join(' ')}>
@@ -139,7 +141,7 @@ export function AgendaRail({ items, orientation, offPlan = false }: AgendaRailPr
       </div>
       <button type="button" onClick={() => setOverlayOpen(true)}
         className="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600 tabular-nums"
-        aria-label="Show full agenda" data-testid="agenda-rail-counter">
+        aria-label={S.showFullAgenda} data-testid="agenda-rail-counter">
         {doneCount}/{items.length}
       </button>
       {overlay}

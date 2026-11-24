@@ -30,6 +30,7 @@ const SYSTEM = `You extract the question a tutor just asked a student, for a sma
 Reply with ONLY the question, rephrased as ONE complete, self-contained, natural-sounding question of at most 14 words, ending with "?". Never cut a question off — rephrase it shorter instead. Keep the student-facing essence: exactly what they must answer or decide. Drop preamble, context recaps, and scaffolding.
 Your reply is displayed to the student VERBATIM. Output nothing except the question itself (or NONE): no explanations, no parenthetical annotations, no reasoning about your verdict, and never a narrated self-correction ("Wait — let me rephrase…") — if you reconsider, output only your final version.
 Preserve any inline $...$ LaTeX EXACTLY as written — do not convert or drop it.
+Write the question in the language and script of the tutor's own words: a turn in Chinese gets its question in Chinese in the same characters (Traditional stays Traditional), a turn in Japanese gets it in Japanese, and so on. Never translate it. In those languages it ends with "？".
 
 Reply with exactly NONE only in these narrow cases: the turn asks the student to repeat or rephrase themselves ("could you say that again?"), reacts to a mishear, or poses a purely rhetorical aside the student isn't meant to answer. NONE is rare — when in doubt, pin the question.
 These are NOT plumbing — always pin them (input → your reply):

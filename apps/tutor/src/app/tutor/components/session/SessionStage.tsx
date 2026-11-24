@@ -28,6 +28,7 @@ import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
 import type { MockReviewAgendaItem, MockReviewDrawerRow } from '@/lib/tutor/mock-exam/review-focus';
 import { stripLatexForTitle } from '@/lib/tutor/whiteboard/board-title';
 import { InlineMathText } from '../whiteboard/InlineMathText';
+import { useSessionStrings } from '@/lib/tutor/i18n/SessionStringsContext';
 import { BoardLeadPinContext } from '../whiteboard/board-lead-pin-context';
 import {
   captionMeasureProxy,
@@ -265,12 +266,7 @@ const ORB_STYLE: Record<VoiceState, string> = {
   idle: 'from-slate-300 to-slate-500',
   error: 'from-rose-300 to-rose-600',
 };
-const STATE_LABEL: Record<VoiceState, string> = {
-  speaking: 'Tutor is speaking', listening: 'Listening…', hearing: 'Hearing you…',
-  processing: 'Got that — one sec…', thinking: 'Thinking…',
-  muted: 'Muted — tap the mic to talk', 'manual-held': 'Held — tap ✓ to send',
-  idle: 'Ready', error: 'Connection issue',
-};
+// The state's label is S.voiceState (session-strings.ts): it follows the lesson's language.
 
 /** How long the tapped full-title banner stays up. Long enough to read a
  *  two-line lesson name without becoming something you have to dismiss. */
@@ -288,6 +284,7 @@ export default function SessionStage(props: SessionStageProps) {
     boardPenActive, onToggleBoardPen, onOrbStart, onDebugEvent,
     sessionGoal, homeworkProgress, homeworkPlanPending, problemPanel,
   } = props;
+  const S = useSessionStrings();
 
   // Homework mode (GreenApple round 2): a single "Problem n of N · <text>"
   // chip replaces the agenda rail. `railEl` is what every rail-dependent
@@ -1091,17 +1088,17 @@ export default function SessionStage(props: SessionStageProps) {
               onClick={() => { setSwitcherOpen(false); boardPages.goTo(boardPages.index - 1); }}
               disabled={boardPages.index === 0}
               className={`shrink-0 grid place-items-center ${inline ? 'w-6 h-[22px]' : 'w-7 h-7'} rounded-full hover:bg-slate-100 text-slate-600 disabled:opacity-30`}
-              title="Previous board"
+              title={S.prevBoard}
             >
               <ChevronLeft className={inline ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
             </button>
             <button
               onClick={() => setSwitcherOpen((o) => !o)}
               className={`flex-1 min-w-0 flex items-center justify-center gap-1.5 px-1 ${inline ? 'h-[22px]' : 'h-7'} rounded-full hover:bg-slate-50`}
-              title="Jump to a board"
+              title={S.jumpToBoard}
             >
               <span className={`truncate ${inline ? 'text-[11px]' : 'text-xs'} font-medium text-slate-700`}>
-                {formatBoardTitle(boardPages.titles[boardPages.index]) || `Board ${boardPages.index + 1}`}
+                {formatBoardTitle(boardPages.titles[boardPages.index]) || S.boardN(boardPages.index + 1)}
               </span>
               <span className={`shrink-0 ${inline ? 'text-[10px]' : 'text-[11px]'} font-semibold tabular-nums text-slate-400`}>
                 {boardPages.index + 1}/{boardPages.count}
@@ -1112,7 +1109,7 @@ export default function SessionStage(props: SessionStageProps) {
               onClick={() => { setSwitcherOpen(false); boardPages.goTo(boardPages.index + 1); }}
               disabled={boardPages.index >= boardPages.count - 1}
               className={`relative shrink-0 grid place-items-center ${inline ? 'w-6 h-[22px]' : 'w-7 h-7'} rounded-full hover:bg-slate-100 text-slate-600 disabled:opacity-30`}
-              title="Next board"
+              title={S.nextBoard}
             >
               <ChevronRight className={inline ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
               {/* Task X5: a subtle unseen-content dot — new tutor render landed
@@ -1136,9 +1133,9 @@ export default function SessionStage(props: SessionStageProps) {
                     }`}
                   >
                     <span className="shrink-0 inline-grid place-items-center w-5 h-5 rounded-full bg-slate-100 text-[10px] font-semibold tabular-nums text-slate-500">{i + 1}</span>
-                    <span className="truncate">{formatBoardTitle(t) || `Board ${i + 1}`}</span>
+                    <span className="truncate">{formatBoardTitle(t) || S.boardN(i + 1)}</span>
                     {boardPages.pendingIndex === i && (
-                      <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-blue-500" aria-hidden="true" title="New content" />
+                      <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-blue-500" aria-hidden="true" title={S.newContent} />
                     )}
                   </button>
                 ))}
@@ -1163,8 +1160,8 @@ export default function SessionStage(props: SessionStageProps) {
   const renderQBtn = (className: string) => (
             <button
               type="button"
-              aria-label="Show the tutor's question"
-              title="Show the tutor's question"
+              aria-label={S.showTutorQuestion}
+              title={S.showTutorQuestion}
               onClick={() => {
                 setQpinShownAt(Date.now());
                 setQpinSpeechEndedAt(voiceState !== 'speaking' ? Date.now() : null);
@@ -1295,19 +1292,19 @@ export default function SessionStage(props: SessionStageProps) {
                   onClick={() => boardPages.goTo(boardPages.index - 1)}
                   disabled={boardPages.index === 0}
                   className="shrink-0 grid place-items-center w-6 h-6 rounded-full hover:bg-slate-100 text-slate-600 disabled:opacity-30"
-                  title="Previous board"
+                  title={S.prevBoard}
                 >
                   <ChevronLeft className="w-3.5 h-3.5" />
                 </button>
                 <span className="flex-1 min-w-0 flex items-center justify-center gap-1 truncate text-center text-xs font-medium text-slate-700">
-                  <span className="truncate">{formatBoardTitle(boardPages.titles[boardPages.index]) || `Board ${boardPages.index + 1}`}</span>
+                  <span className="truncate">{formatBoardTitle(boardPages.titles[boardPages.index]) || S.boardN(boardPages.index + 1)}</span>
                   <span className="shrink-0 text-[10px] font-semibold tabular-nums text-slate-400">{boardPages.index + 1}/{boardPages.count}</span>
                 </span>
                 <button
                   onClick={() => boardPages.goTo(boardPages.index + 1)}
                   disabled={boardPages.index >= boardPages.count - 1}
                   className="relative shrink-0 grid place-items-center w-6 h-6 rounded-full hover:bg-slate-100 text-slate-600 disabled:opacity-30"
-                  title="Next board"
+                  title={S.nextBoard}
                 >
                   <ChevronRight className="w-3.5 h-3.5" />
                   {boardPages.pendingIndex != null && boardPages.pendingIndex !== boardPages.index && (
@@ -1385,18 +1382,18 @@ export default function SessionStage(props: SessionStageProps) {
             {sessionMode === 'text' ? (
               agendaEngaged ? (
                 <p className="ss-cap max-w-xl text-center text-base text-slate-400">
-                  Starting… — the tutor is pulling up your question.
+                  {S.startingLine}
                 </p>
               ) : started ? (
                 isFreePractice && !liveCaption ? (
-                  <p className="max-w-xl text-center text-xl font-semibold text-slate-700">What would you like to work on?</p>
+                  <p className="max-w-xl text-center text-xl font-semibold text-slate-700">{S.whatToWorkOn}</p>
                 ) : null
               ) : sessionGoal === 'homework-help' && (homeworkProgress || homeworkPlanPending) ? (
-                <p className="text-lg font-semibold text-slate-800">Getting your first problem ready…</p>
+                <p className="text-lg font-semibold text-slate-800">{S.firstProblemReady}</p>
               ) : (
                 <>
-                  <p className="text-lg font-semibold text-slate-800">Type your question below to start</p>
-                  <p className="mt-2 text-sm text-slate-500">I&apos;ll teach on the board as we go</p>
+                  <p className="text-lg font-semibold text-slate-800">{S.typeQuestionToStart}</p>
+                  <p className="mt-2 text-sm text-slate-500">{S.teachAsWeGo}</p>
                 </>
               )
             ) : (
@@ -1407,7 +1404,7 @@ export default function SessionStage(props: SessionStageProps) {
                       type="button"
                       onClick={onOrbStart}
                       data-testid="tutor-orb-start"
-                      aria-label="Start the lesson"
+                      aria-label={S.startLesson}
                       className="relative mb-3 grid place-items-center pointer-events-auto rounded-full transition-transform hover:scale-105 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-500"
                     >
                       {/* Ring pulse invites the tap. */}
@@ -1429,7 +1426,7 @@ export default function SessionStage(props: SessionStageProps) {
                       aria-hidden
                       className="mb-5 pointer-events-auto rounded-full bg-blue-600 px-5 py-1.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 hover:bg-blue-700"
                     >
-                      Tap to start
+                      {S.tapToStart}
                     </button>
                   </>
                 ) : (
@@ -1450,10 +1447,10 @@ export default function SessionStage(props: SessionStageProps) {
                     control. */}
                 {!orbStarts && <div className="mb-6"><MicMeter level={micLevel} speaking={voiceState === 'speaking'} large /></div>}
                 {listeningHint === 'didnt-catch' ? (
-                  <p className="ss-cap text-sm font-medium text-amber-600 mb-2">Didn’t catch that — mind repeating?</p>
+                  <p className="ss-cap text-sm font-medium text-amber-600 mb-2">{S.didntCatch}</p>
                 ) : (
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">
-                    {started ? STATE_LABEL[voiceState] : 'Voice tutor'}
+                    {started ? S.voiceState[voiceState] : S.voiceTutor}
                   </p>
                 )}
                 {/* Once started, the tutor's WORDS live in the small Caption Strip
@@ -1463,11 +1460,11 @@ export default function SessionStage(props: SessionStageProps) {
                   // Agenda round 4: a pick has fired; hold a calm placeholder until
                   // the board content arrives (which hides this whole overlay).
                   <p className="ss-cap max-w-xl text-center text-base text-slate-400">
-                    Starting… — the tutor is pulling up your question.
+                    {S.startingLine}
                   </p>
                 ) : started ? (
                   isFreePractice && !liveCaption ? (
-                    <p className="max-w-xl text-center text-xl font-semibold text-slate-700">What would you like to work on?</p>
+                    <p className="max-w-xl text-center text-xl font-semibold text-slate-700">{S.whatToWorkOn}</p>
                   ) : null
                 ) : (
                   <>
@@ -1475,7 +1472,7 @@ export default function SessionStage(props: SessionStageProps) {
                         surface the lesson here at the start as the focal context. */}
                     {hasPlan && (
                       <p className="mb-2 text-sm sm:text-base text-slate-500">
-                        Today’s lesson: <span className="font-semibold text-slate-700">{lessonTitle}</span>
+                        {S.todaysLesson} <span className="font-semibold text-slate-700">{lessonTitle}</span>
                       </p>
                     )}
                     {/* The old "Tap the mic below to start" heading and its ↓
@@ -1485,11 +1482,11 @@ export default function SessionStage(props: SessionStageProps) {
                         is wired the heading still has a job, so it stays. */}
                     {!orbStarts && (
                       <p className="max-w-xl text-center text-2xl sm:text-3xl font-semibold leading-snug text-slate-800">
-                        Tap the mic below to start
+                        {S.tapMicToStart}
                       </p>
                     )}
                     <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-400">
-                      Just talk — I&apos;ll listen and teach on the board {!orbStarts && <ArrowDown className="w-4 h-4" />}
+                      {S.justTalk} {!orbStarts && <ArrowDown className="w-4 h-4" />}
                     </p>
                   </>
                 )}
@@ -1560,7 +1557,7 @@ export default function SessionStage(props: SessionStageProps) {
                   ? 'bg-transparent border-slate-200 text-slate-400 px-3.5 py-1.5 text-xs hover:bg-slate-50 hover:text-slate-600'
                   : 'bg-white border-slate-300 text-slate-700 px-4 py-2 text-sm font-medium shadow-sm hover:bg-slate-50'
               }`}>
-                <Upload className={orbStarts ? 'w-3.5 h-3.5 text-slate-400' : 'w-4 h-4 text-slate-500'} /> Upload a problem
+                <Upload className={orbStarts ? 'w-3.5 h-3.5 text-slate-400' : 'w-4 h-4 text-slate-500'} /> {S.uploadProblem}
                 <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImage(e, onStudentInput)} />
               </label>
               {/* Task Y1: the canned text still fires every click (it cues
@@ -1649,7 +1646,7 @@ export default function SessionStage(props: SessionStageProps) {
               onClick={revealTitle}
               className="min-w-0 text-left cursor-pointer"
               title={titleTooltip}
-              aria-label={titleTooltip ? `Lesson: ${titleTooltip}. Tap to show the full name.` : 'Show the full lesson name'}
+              aria-label={titleTooltip ? S.lessonNameAria(titleTooltip) : S.showFullLessonName}
             >
               <h1 className="text-sm font-semibold text-slate-900 truncate leading-tight">{lessonTitle}</h1>
               {subtitle && <p className="text-[11px] text-slate-500 truncate leading-tight">{subtitle}</p>}
@@ -1689,7 +1686,7 @@ export default function SessionStage(props: SessionStageProps) {
                   fireTranscriptDrawerEvent(next ? 'open' : 'close', 'icon');
                   return next;
                 })}
-                title="Transcript"
+                title={S.transcript}
                 className="relative grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100 text-slate-600"
               >
                 <MessageSquareText className="w-5 h-5" />
@@ -1710,7 +1707,7 @@ export default function SessionStage(props: SessionStageProps) {
                   icon, clock, pace pill/⋯, and End control — this chip is
                   purely informational and was pushing End off-screen. */}
               {sessionMode === 'text' && (
-                <span className="hidden md:inline-flex mr-2 items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">Text session</span>
+                <span className="hidden md:inline-flex mr-2 items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">{S.textSession}</span>
               )}
               {endControl}
             </div>
@@ -1776,14 +1773,14 @@ export default function SessionStage(props: SessionStageProps) {
         >
           {toolsOpen && (
             <>
-              <ToolBtn sizeClass={toolBtnSize} active={tool === 'draw'} title="Draw" onClick={() => { setTool(tool === 'draw' ? null : 'draw'); collapseToolsAfterUse(); }}><Pencil className="w-4 h-4" /></ToolBtn>
+              <ToolBtn sizeClass={toolBtnSize} active={tool === 'draw'} title={S.draw} onClick={() => { setTool(tool === 'draw' ? null : 'draw'); collapseToolsAfterUse(); }}><Pencil className="w-4 h-4" /></ToolBtn>
               {onToggleBoardPen && (
-                <ToolBtn sizeClass={toolBtnSize} active={!!boardPenActive} title="Draw on the board" onClick={() => { onToggleBoardPen(); collapseToolsAfterUse(); }}>
+                <ToolBtn sizeClass={toolBtnSize} active={!!boardPenActive} title={S.drawOnBoard} onClick={() => { onToggleBoardPen(); collapseToolsAfterUse(); }}>
                   <PenLine className="w-4 h-4" />
                 </ToolBtn>
               )}
-              <ToolBtn sizeClass={toolBtnSize} active={tool === 'text'} title="Text note" onClick={() => { setTool(tool === 'text' ? null : 'text'); collapseToolsAfterUse(); }}><span className="font-bold text-sm">Aa</span></ToolBtn>
-              <label title="Upload a problem" className={`grid place-items-center ${toolBtnSize} rounded-xl hover:bg-slate-100 text-slate-600 cursor-pointer`} onClick={collapseToolsAfterUse}><Camera className="w-4 h-4" /><input type="file" accept="image/*" className="hidden" onChange={(e) => handleImage(e, onStudentInput)} /></label>
+              <ToolBtn sizeClass={toolBtnSize} active={tool === 'text'} title={S.textNote} onClick={() => { setTool(tool === 'text' ? null : 'text'); collapseToolsAfterUse(); }}><span className="font-bold text-sm">Aa</span></ToolBtn>
+              <label title={S.uploadProblem} className={`grid place-items-center ${toolBtnSize} rounded-xl hover:bg-slate-100 text-slate-600 cursor-pointer`} onClick={collapseToolsAfterUse}><Camera className="w-4 h-4" /><input type="file" accept="image/*" className="hidden" onChange={(e) => handleImage(e, onStudentInput)} /></label>
               {/* Fullscreen — gate by CAPABILITY, not viewport width: the old
                   `hidden md:` gate also hid it inside the portal's <768px embed
                   iframe (the iframe's own viewport is what md: measures), which
@@ -1795,7 +1792,7 @@ export default function SessionStage(props: SessionStageProps) {
               {canFullscreen && (
                 <>
                   <div className={toolSepClass} />
-                  <ToolBtn sizeClass={toolBtnSize} title="Full screen" onClick={() => { toggleFullscreen(); collapseToolsAfterUse(); }}><Maximize2 className="w-4 h-4" /></ToolBtn>
+                  <ToolBtn sizeClass={toolBtnSize} title={S.fullScreen} onClick={() => { toggleFullscreen(); collapseToolsAfterUse(); }}><Maximize2 className="w-4 h-4" /></ToolBtn>
                 </>
               )}
               {/* Mobile expand (Task E8) — shown only where the native Fullscreen
@@ -1806,7 +1803,7 @@ export default function SessionStage(props: SessionStageProps) {
               {canExpand && (
                 <>
                   <div className={toolSepClass} />
-                  <ToolBtn sizeClass={toolBtnSize} active={expanded} title={expanded ? 'Exit expanded view' : 'Expand'} onClick={() => { (expanded ? requestCollapse : requestExpand)(); collapseToolsAfterUse(); }}>
+                  <ToolBtn sizeClass={toolBtnSize} active={expanded} title={expanded ? S.exitExpanded : S.expand} onClick={() => { (expanded ? requestCollapse : requestExpand)(); collapseToolsAfterUse(); }}>
                     {expanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
                   </ToolBtn>
                 </>
@@ -1826,7 +1823,7 @@ export default function SessionStage(props: SessionStageProps) {
               tools open/close to its left). Text-mode rail, md+: lifted to
               the top of the vertical strip by `md:order-first`. */}
           <div className={textToolRail ? 'relative md:order-first' : 'relative'}>
-            <ToolBtn sizeClass={toolBtnSize} active={toolsOpen} title={toolsOpen ? 'Close tools' : boardPenActive && !toolsOpen ? 'Tools — pen active' : 'Tools'} onClick={() => { toolsUserToggledRef.current = true; setToolsOpen((o) => !o); }}>
+            <ToolBtn sizeClass={toolBtnSize} active={toolsOpen} title={toolsOpen ? S.closeTools : boardPenActive && !toolsOpen ? S.toolsPenActive : S.tools} onClick={() => { toolsUserToggledRef.current = true; setToolsOpen((o) => !o); }}>
               <Wrench className={textToolRail ? 'w-4 h-4 md:w-3.5 md:h-3.5' : 'w-4 h-4'} />
             </ToolBtn>
             {boardPenActive && !toolsOpen && (
@@ -2004,8 +2001,8 @@ export default function SessionStage(props: SessionStageProps) {
       {warmupOverlay && (
         <div className={`absolute inset-x-0 top-14 bottom-0 z-[35] flex flex-col items-center justify-center gap-3 bg-white/60 backdrop-blur-[2px] ${sessionMode === 'text' ? 'md:pl-4 md:pr-[388px]' : ''}`}>
           <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-          <p className="text-base font-semibold text-slate-700">Your tutor is joining…</p>
-          <p className="text-sm text-slate-500">hang tight — this takes a few seconds</p>
+          <p className="text-base font-semibold text-slate-700">{S.tutorJoining}</p>
+          <p className="text-sm text-slate-500">{S.hangTight}</p>
         </div>
       )}
 
@@ -2128,7 +2125,7 @@ export default function SessionStage(props: SessionStageProps) {
           <div className="md:hidden flex justify-center pt-2.5 shrink-0"><span className="w-10 h-1.5 rounded-full bg-slate-300" /></div>
         )}
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 shrink-0">
-          <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2"><MessageSquareText className="w-4 h-4 text-slate-400" /> Transcript</h2>
+          <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2"><MessageSquareText className="w-4 h-4 text-slate-400" /> {S.transcript}</h2>
           {/* Text mode: the panel is pinned open beside the board (Option C) —
               there is no "close" state to return to, so the X is dropped.
               Voice keeps the original close control byte-identical. */}
@@ -2372,6 +2369,7 @@ function handleImage(e: React.ChangeEvent<HTMLInputElement>, onStudentInput: (t:
 
 /** Overlay drawing pad — student draws, submitted to the tutor as an image. */
 function DrawPad({ onClose, onSubmit }: { onClose: () => void; onSubmit: (dataUrl: string) => void }) {
+  const S = useSessionStrings();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
   const [pen, setPen] = useState<'pen' | 'eraser'>('pen');
@@ -2397,15 +2395,15 @@ function DrawPad({ onClose, onSubmit }: { onClose: () => void; onSubmit: (dataUr
     <div className="absolute inset-0 z-[45] grid place-items-center bg-slate-900/20 backdrop-blur-[2px] p-4" onClick={onClose}>
       <div className="w-[min(92vw,640px)] rounded-2xl bg-white border border-slate-200 shadow-2xl p-3" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-2 px-1">
-          <span className="text-sm font-semibold text-slate-700">Draw your work</span>
+          <span className="text-sm font-semibold text-slate-700">{S.drawYourWork}</span>
           <button onClick={onClose} className="grid place-items-center w-7 h-7 rounded-full hover:bg-slate-100 text-slate-500"><X className="w-4 h-4" /></button>
         </div>
         <canvas ref={canvasRef} width={1024} height={420} className="w-full h-[260px] rounded-xl border border-slate-200 bg-white touch-none cursor-crosshair" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} />
         <div className="flex items-center gap-2 mt-2">
-          <button onClick={() => setPen('pen')} className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-sm ${pen === 'pen' ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-100'}`}><Pencil className="w-4 h-4" /> Pen</button>
-          <button onClick={() => setPen('eraser')} className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-sm ${pen === 'eraser' ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-100'}`}><Eraser className="w-4 h-4" /> Eraser</button>
-          <button onClick={clear} className="ml-auto px-2.5 py-1.5 rounded-lg text-sm text-slate-500 hover:bg-slate-100">Clear</button>
-          <button onClick={() => onSubmit(canvasRef.current!.toDataURL('image/png'))} className="px-3.5 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">Send to tutor</button>
+          <button onClick={() => setPen('pen')} className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-sm ${pen === 'pen' ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-100'}`}><Pencil className="w-4 h-4" /> {S.pen}</button>
+          <button onClick={() => setPen('eraser')} className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-sm ${pen === 'eraser' ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-100'}`}><Eraser className="w-4 h-4" /> {S.eraser}</button>
+          <button onClick={clear} className="ml-auto px-2.5 py-1.5 rounded-lg text-sm text-slate-500 hover:bg-slate-100">{S.clear}</button>
+          <button onClick={() => onSubmit(canvasRef.current!.toDataURL('image/png'))} className="px-3.5 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">{S.sendToTutor}</button>
         </div>
       </div>
     </div>
@@ -2414,13 +2412,14 @@ function DrawPad({ onClose, onSubmit }: { onClose: () => void; onSubmit: (dataUr
 
 /** Quick text note overlay. */
 function TextNote({ onClose, onSubmit }: { onClose: () => void; onSubmit: (text: string) => void }) {
+  const S = useSessionStrings();
   const [text, setText] = useState('');
   return (
     <div className="absolute inset-0 z-[45] grid place-items-center bg-slate-900/20 backdrop-blur-[2px] p-4" onClick={onClose}>
       <form className="w-[min(92vw,520px)] rounded-2xl bg-white border border-slate-200 shadow-2xl p-3" onClick={(e) => e.stopPropagation()} onSubmit={(e) => { e.preventDefault(); if (text.trim()) onSubmit(text.trim()); }}>
-        <div className="flex items-center justify-between mb-2 px-1"><span className="text-sm font-semibold text-slate-700">Write a note</span><button type="button" onClick={onClose} className="grid place-items-center w-7 h-7 rounded-full hover:bg-slate-100 text-slate-500"><X className="w-4 h-4" /></button></div>
-        <textarea autoFocus value={text} onChange={(e) => setText(e.target.value)} placeholder="Type your answer or notes…" className="w-full h-28 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/40 resize-none" />
-        <div className="flex justify-end mt-2"><button type="submit" disabled={!text.trim()} className="px-3.5 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:bg-slate-300">Send to tutor</button></div>
+        <div className="flex items-center justify-between mb-2 px-1"><span className="text-sm font-semibold text-slate-700">{S.writeNote}</span><button type="button" onClick={onClose} className="grid place-items-center w-7 h-7 rounded-full hover:bg-slate-100 text-slate-500"><X className="w-4 h-4" /></button></div>
+        <textarea autoFocus value={text} onChange={(e) => setText(e.target.value)} placeholder={S.notePlaceholder} className="w-full h-28 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/40 resize-none" />
+        <div className="flex justify-end mt-2"><button type="submit" disabled={!text.trim()} className="px-3.5 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:bg-slate-300">{S.sendToTutor}</button></div>
       </form>
     </div>
   );

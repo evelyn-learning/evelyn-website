@@ -12,6 +12,7 @@
  * in view.
  */
 import { useEffect, useRef, useState } from 'react';
+import { useSessionStrings } from '@/lib/tutor/i18n/SessionStringsContext';
 
 export interface BoardPlannerTabsProps {
   index: number;
@@ -26,6 +27,7 @@ const TAB_MAX_PX = 36;
 const FRESH_MS = 6000;
 
 export default function BoardPlannerTabs({ index, count, titles, goTo, pendingIndex }: BoardPlannerTabsProps) {
+  const S = useSessionStrings();
   const [fresh, setFresh] = useState<number | null>(null);
   const lastCount = useRef(count);
   const currentRef = useRef<HTMLButtonElement | null>(null);
@@ -43,11 +45,11 @@ export default function BoardPlannerTabs({ index, count, titles, goTo, pendingIn
   useEffect(() => { currentRef.current?.scrollIntoView({ block: 'nearest' }); }, [index, count]);
   if (count < 1) return null;
   return (
-    <nav aria-label="Board pages" className="absolute left-0 top-3 bottom-36 z-20 w-9 flex flex-col gap-1 overflow-y-auto overflow-x-visible pr-0 [scrollbar-width:none]">
+    <nav aria-label={S.boardPages} className="absolute left-0 top-3 bottom-36 z-20 w-9 flex flex-col gap-1 overflow-y-auto overflow-x-visible pr-0 [scrollbar-width:none]">
       {Array.from({ length: count }, (_, i) => {
         const on = i === index;
         const isNew = !on && (i === fresh || i === pendingIndex);
-        const title = (titles[i] || `Page ${i + 1}`).trim();
+        const title = (titles[i] || S.pageN(i + 1)).trim();
         return (
           <button
             key={i}
@@ -55,7 +57,7 @@ export default function BoardPlannerTabs({ index, count, titles, goTo, pendingIn
             type="button"
             onClick={() => goTo(i)}
             title={`${i + 1}. ${title}`}
-            aria-label={`Page ${i + 1}: ${title}`}
+            aria-label={S.pageTitled(i + 1, title)}
             aria-current={on ? 'page' : undefined}
             style={{ flex: `1 1 ${TAB_MAX_PX}px`, minHeight: on ? TAB_MAX_PX : TAB_MIN_PX, maxHeight: on ? TAB_MAX_PX + 8 : TAB_MAX_PX }}
             className={`group relative shrink grid place-items-center rounded-r-lg border border-l-0 text-xs font-semibold tabular-nums transition-all ${

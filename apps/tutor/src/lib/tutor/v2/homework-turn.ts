@@ -16,8 +16,10 @@ import type { ProseAnswerMatchFn } from '../voice/prose-answer-match';
 import { boardRevealsHomeworkKey, homeworkKeyWithheld, HOMEWORK_BOARD_KEY_WITHHELD_REASON, HOMEWORK_OPENER_BOARD_WITHHELD_REASON } from '../voice/homework-problem-block';
 import { boardStrings, revealsWithheldAnswer, type WithheldAnswer } from '../voice/whole-answer-reveal';
 import { newSheetRecord, partLabel, sheetProblemNamed, studentMessagesOf, v2HomeworkCheck, type V2HomeworkResolved, type V2SheetResolved } from './homework';
-import { castsDoubt, creditsNonAnswer, givesCredit, isBareNumber, statesExpression, statesOwnResult, isGuess, nonAnswer, sentencesOf, unearnedCredit, verdictMissing, V2_HOMEWORK_GUARD_REASONS, V2_VERDICT_OPENERS, type GuessedPart, type NonAnswer } from './homework-guards';
+import { castsDoubt, creditsNonAnswer, givesCredit, isBareNumber, statesExpression, statesOwnResult, isGuess, nonAnswer, sentencesOf, unearnedCredit, verdictMissing, V2_HOMEWORK_GUARD_REASONS, V2_VERDICT_OPENERS, V2_VERDICT_OPENERS_BY_LANGUAGE, type GuessedPart, type NonAnswer } from './homework-guards';
 import { V2_CONTROL_TOOL_NAMES } from './tool-names';
+import { v2LessonLines } from './lesson-lines';
+import { taughtIn } from '../voice/lesson-language';
 import { runV2Turn, type V2TurnInput } from './turn';
 import type { V2HomeworkProblem, V2Session, V2State, V2ToolCall, V2TurnResult } from './types';
 
@@ -195,11 +197,13 @@ async function guardedTurn(given: V2TurnInput, withheld: WithheldAnswer[], opts:
     }).join(' ');
   };
   const missing = verdictMissing(second.r.spoken, checks.verdicts);
-  const opener = missing ? V2_VERDICT_OPENERS[missing] : '';
+  const lessonCode = taughtIn(turn.session.languages)?.code ?? '';
+  const opener = missing ? (V2_VERDICT_OPENERS_BY_LANGUAGE[lessonCode] ?? V2_VERDICT_OPENERS)[missing] : '';
+  const fallbackQuestion = v2LessonLines(turn.session.languages)?.nextStep ?? V2_HOMEWORK_FALLBACK_QUESTION;
   // A draft that handed the turn over with a question still does, whatever was cut.
-  if (/\?\s*$/.test(second.r.spoken)) handOver = true;
+  if (/[?？]\s*$/.test(second.r.spoken)) handOver = true;
   let spoken = [opener, cut(second.r.spoken, true)].filter(Boolean).join(' ');
-  if (handOver && !/\?\s*$/.test(spoken)) spoken = `${spoken} ${V2_HOMEWORK_FALLBACK_QUESTION}`.trim();
+  if (handOver && !/[?？]\s*$/.test(spoken)) spoken = `${spoken} ${fallbackQuestion}`.trim();
   const before = turn.state.history.length;
   let firstText = true;
   const history = second.r.state.history.map((m, i) => {
@@ -211,12 +215,12 @@ async function guardedTurn(given: V2TurnInput, withheld: WithheldAnswer[], opts:
       firstText = false;
       return { ...b, text };
     }).filter((b) => b.type !== 'text' || b.text.trim());
-    return { ...m, content: content.length ? content : [{ type: 'text' as const, text: V2_HOMEWORK_FALLBACK_QUESTION }] };
+    return { ...m, content: content.length ? content : [{ type: 'text' as const, text: fallbackQuestion }] };
   });
   // What is stored hands the turn over as what is said does.
   const lastText = [...history].reverse().find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((b) => b.type === 'text'));
   const tail = lastText && Array.isArray(lastText.content) ? ([...lastText.content].reverse().find((b) => b.type === 'text') as { text: string } | undefined) : undefined;
-  if (handOver && tail && !/\?\s*$/.test(tail.text)) tail.text = `${tail.text} ${V2_HOMEWORK_FALLBACK_QUESTION}`.trim();
+  if (handOver && tail && !/[?？]\s*$/.test(tail.text)) tail.text = `${tail.text} ${fallbackQuestion}`.trim();
   turn.onText?.(spoken);
   for (const c of second.r.toolCalls) turn.onToolCall?.(c);
   return { ...second.r, spoken, state: { ...second.r.state, history } };

@@ -14,6 +14,8 @@ import { useCallback, useEffect, useMemo, useRef, type MutableRefObject, type Re
 import { V2FlagBar, V2_FLAGS_ON, type V2FlagState } from './V2FlagBar';
 import type { RealtimeHandle } from '@/lib/tutor/orchestrator/types';
 import { useV2Turns, type V2TurnsConfig } from './useV2Turns';
+import { useSessionStrings } from '@/lib/tutor/i18n/SessionStringsContext';
+import type { SessionStrings } from '@/lib/tutor/i18n/session-strings';
 
 export interface TutorClientV2Props extends Omit<V2TurnsConfig, 'mode' | 'onSentence' | 'onCut' | 'closeDelayMs' | 'untilQuiet' | 'speechPending'> {
   standby?: boolean;
@@ -33,6 +35,7 @@ export const V2_HANDLE_STUBS = {
 
 export default function TutorClientV2(props: TutorClientV2Props) {
   const turns = useV2Turns({ ...props, mode: 'text' });
+  const S = useSessionStrings();
   const { open, send, end, abort, isEnding, openedRef } = turns;
 
   // The tutor opens the session, unless the page is only standing by.
@@ -65,23 +68,24 @@ export default function TutorClientV2(props: TutorClientV2Props) {
 
   return (<>
     {V2_FLAGS_ON && <V2FlagBar session={flagSession} flagRef={flagRef} snapshot={flagSnapshot} onStart={() => props.onDebugEvent?.('v2_flag', 'opened')} onStop={() => props.onDebugEvent?.('v2_flag', 'closed')} />}
-    <V2Composer composerSlot={props.composerSlot} closed={turns.closed} busy={turns.busy} onSend={send} placeholder="Type your answer… Enter to send" autoFocus status={turns.closed ? undefined : turns.busy ? { state: 'thinking' } : undefined} />
+    <V2Composer composerSlot={props.composerSlot} closed={turns.closed} busy={turns.busy} onSend={send} placeholder={S.typeAnswerPlaceholder} autoFocus status={turns.closed ? undefined : turns.busy ? { state: 'thinking' } : undefined} />
   </>);
 }
 
 /** What the tutor is doing right now, for the composer's status chip. `heard`: the student's words so far. */
 export interface V2ComposerStatus { state: 'listening' | 'hearing' | 'processing' | 'thinking' | 'speaking' | 'error' | 'idle'; heard?: string; level?: number; /** No sound has come from the microphone yet. */ quiet?: boolean; /** The input device changed and the new one is being opened. */ micChanged?: boolean; /** Other voices have been heard in the room (room-voices.ts). */ room?: boolean; /** The student has switched their microphone off. */ muted?: boolean }
-const STATUS_LOOK: Record<V2ComposerStatus['state'], { label: string; hint: string; dot: string; chip: string }> = {
-  listening: { label: 'Listening', hint: 'Speak, or type here', dot: 'bg-emerald-500', chip: 'border-emerald-200 bg-emerald-50 text-emerald-800' },
-  hearing: { label: 'Hearing you', hint: 'Keep going…', dot: 'bg-emerald-500', chip: 'border-emerald-300 bg-emerald-100 text-emerald-900' },
-  processing: { label: 'Got it', hint: 'One moment…', dot: 'bg-amber-500', chip: 'border-amber-200 bg-amber-50 text-amber-800' },
-  thinking: { label: 'Thinking', hint: 'Working on a reply…', dot: 'bg-amber-500', chip: 'border-amber-200 bg-amber-50 text-amber-800' },
-  speaking: { label: 'Speaking', hint: 'Talk or type to interrupt', dot: 'bg-blue-500', chip: 'border-blue-200 bg-blue-50 text-blue-800' },
-  error: { label: 'Connection problem', hint: 'Type here while it reconnects', dot: 'bg-rose-500', chip: 'border-rose-200 bg-rose-50 text-rose-800' },
-  idle: { label: 'Ready', hint: 'Type here', dot: 'bg-slate-400', chip: 'border-slate-200 bg-slate-50 text-slate-600' },
-};
+/** The chip of each state, worded for the session's language (session-strings.ts). */
+const statusLook = (S: SessionStrings): Record<V2ComposerStatus['state'], { label: string; hint: string; dot: string; chip: string }> => ({
+  listening: { label: S.chipListening, hint: S.hintListening, dot: 'bg-emerald-500', chip: 'border-emerald-200 bg-emerald-50 text-emerald-800' },
+  hearing: { label: S.chipHearing, hint: S.hintHearing, dot: 'bg-emerald-500', chip: 'border-emerald-300 bg-emerald-100 text-emerald-900' },
+  processing: { label: S.chipProcessing, hint: S.hintProcessing, dot: 'bg-amber-500', chip: 'border-amber-200 bg-amber-50 text-amber-800' },
+  thinking: { label: S.chipThinking, hint: S.hintThinking, dot: 'bg-amber-500', chip: 'border-amber-200 bg-amber-50 text-amber-800' },
+  speaking: { label: S.chipSpeaking, hint: S.hintSpeaking, dot: 'bg-blue-500', chip: 'border-blue-200 bg-blue-50 text-blue-800' },
+  error: { label: S.chipError, hint: S.hintError, dot: 'bg-rose-500', chip: 'border-rose-200 bg-rose-50 text-rose-800' },
+  idle: { label: S.chipIdle, hint: S.hintIdle, dot: 'bg-slate-400', chip: 'border-slate-200 bg-slate-50 text-slate-600' },
+});
 
-const MUTED_LOOK = { label: 'Mic off', hint: 'Your microphone is off. Tap the mic to talk, or type here', dot: 'bg-rose-500', chip: 'border-rose-200 bg-rose-50 text-rose-800' };
+const mutedLook = (S: SessionStrings) => ({ label: S.chipMicOff, hint: S.hintMicOff, dot: 'bg-rose-500', chip: 'border-rose-200 bg-rose-50 text-rose-800' });
 
 /** The line the student types on, with what the tutor is doing beside it. v1's composer showed "Listening",
  *  "Hearing…" and the rest next to the box and the first v2 one showed nothing: a student could not tell
@@ -90,7 +94,9 @@ const MUTED_LOOK = { label: 'Mic off', hint: 'Your microphone is off. Tap the mi
 export function V2Composer({ composerSlot, closed, busy, onSend, placeholder, autoFocus, status, mic }: { composerSlot?: ReactNode; closed: boolean; busy: boolean; onSend: (text: string) => void; placeholder: string; autoFocus?: boolean; status?: V2ComposerStatus; /** Voice: the student's switch for their microphone. */ mic?: { muted: boolean; onToggle: () => void } }) {
   // Switched off, the microphone is neither listening nor hearing, whatever the tutor is doing.
   const micOff = !!status?.muted && (status.state === 'listening' || status.state === 'hearing' || status.state === 'processing');
-  const look = status && !closed ? (micOff ? MUTED_LOOK : STATUS_LOOK[status.state]) : null;
+  const S = useSessionStrings();
+  const MUTED_LOOK = mutedLook(S);
+  const look = status && !closed ? (micOff ? MUTED_LOOK : statusLook(S)[status.state]) : null;
   const heard = status?.state === 'hearing' || status?.state === 'processing' ? (status.heard ?? '').trim() : '';
   const bars = [0.45, 0.8, 1, 0.7, 0.4];
   const level = Math.max(0, Math.min(1, status?.level ?? 0));
@@ -107,7 +113,7 @@ export function V2Composer({ composerSlot, closed, busy, onSend, placeholder, au
     >
       {composerSlot}
       {mic && !closed && (
-        <button type="button" onClick={mic.onToggle} aria-pressed={mic.muted} data-v2-mic={mic.muted ? 'off' : 'on'} title={mic.muted ? 'Turn your microphone on' : 'Turn your microphone off'} aria-label={mic.muted ? 'Turn your microphone on' : 'Turn your microphone off'}
+        <button type="button" onClick={mic.onToggle} aria-pressed={mic.muted} data-v2-mic={mic.muted ? 'off' : 'on'} title={mic.muted ? S.micTurnOn : S.micTurnOff} aria-label={mic.muted ? S.micTurnOn : S.micTurnOff}
           className={`shrink-0 rounded-lg p-2 ${mic.muted ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
           {mic.muted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
         </button>
@@ -135,11 +141,11 @@ export function V2Composer({ composerSlot, closed, busy, onSend, placeholder, au
         data-lpignore="true"
         autoFocus={autoFocus}
         disabled={closed}
-        placeholder={closed ? 'This session has ended' : micOff ? MUTED_LOOK.hint : status?.muted && status.state === 'speaking' ? 'Your microphone is off. Tap the mic or type to interrupt' : heard ? `“${heard.slice(-90)}”` : look ? (status?.micChanged ? 'Your microphone changed. Switching to the new one… you can also type here' : status?.quiet && status.state === 'listening' ? 'No sound from your microphone yet. Speak, or type here' : status?.room && status.state === 'speaking' ? 'Other voices nearby: say "stop" or type to interrupt' : status?.room && status.state === 'listening' ? 'Other voices nearby: speak up, or type here' : look.hint) : placeholder}
+        placeholder={closed ? S.sessionEnded : micOff ? MUTED_LOOK.hint : status?.muted && status.state === 'speaking' ? S.micOffWhileSpeaking : heard ? `“${heard.slice(-90)}”` : look ? (status?.micChanged ? S.micChanged : status?.quiet && status.state === 'listening' ? S.micNoSound : status?.room && status.state === 'speaking' ? S.roomVoicesSpeaking : status?.room && status.state === 'listening' ? S.roomVoicesListening : look.hint) : placeholder}
         className="flex-1 min-w-0 text-base sm:text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
       />
       <button type="submit" disabled={closed} className="shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50">
-        Send
+        {S.send}
       </button>
     </form>
   );

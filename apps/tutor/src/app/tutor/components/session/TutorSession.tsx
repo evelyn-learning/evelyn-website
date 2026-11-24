@@ -25,6 +25,8 @@ import Script from 'next/script';
 import { Pause, Play, Volume2, VolumeX } from 'lucide-react';
 import { STANDBY_LINE, shiftAnchor, type VideoState } from '@/lib/tutor/portal/host-lesson';
 import { EndControl } from './EndControl';
+import { sessionStrings } from '@/lib/tutor/i18n/session-strings';
+import { SessionStringsProvider } from '@/lib/tutor/i18n/SessionStringsContext';
 import { ProblemFigure } from './ProblemFigure';
 import { InlineMathText } from '../whiteboard/InlineMathText';
 import { TranscriptView } from '../TranscriptView';
@@ -338,6 +340,8 @@ export default function TutorSession(props: TutorSessionProps) {
     standby = false, videoHost, getLessonNow, onStudentWake, onResumeLesson, getOpeningNote, videoControl,
     sessionTimer = true, endControlVisible = true, toolsLow = false, toolCluster = false,
   } = props;
+  // The chrome wording of this session's language. TutorSession renders the provider, so it asks the table itself.
+  const S = sessionStrings(tutorLanguages);
   // Embed-only (see the prop docs): the retail page can never get it.
   const mobileFinishOn = !!embedded && mobileFinish === true;
 
@@ -978,9 +982,9 @@ export default function TutorSession(props: TutorSessionProps) {
             className="flex items-center gap-2 px-7 py-3.5 rounded-full bg-blue-600 text-white text-base font-semibold shadow-lg hover:bg-blue-700 hover:scale-[1.03] active:scale-95 transition-all"
           >
             <Play className="w-5 h-5" />
-            Continue lesson
+            {S.continueLesson}
           </button>
-          <p className="text-sm text-slate-600">Pick up where you left off</p>
+          <p className="text-sm text-slate-600">{S.pickUpWhereLeftOff}</p>
         </div>
       )}
     </div>
@@ -995,7 +999,7 @@ export default function TutorSession(props: TutorSessionProps) {
       // Persona label only for homework-help sessions (GreenApple pilot);
       // wider rollout to other persona brands is a parked follow-up.
       tutorLabel={sessionGoal === 'homework-help' ? teacherPersona?.name : undefined}
-      emptyHint={sessionMode === 'text' ? 'Type below to begin!' : undefined}
+      emptyHint={sessionMode === 'text' ? S.typeToBegin : undefined}
       stickToBottom={sessionMode === 'text'}
       onQuickAnswer={(text) => {
         realtimeHandleRef.current?.stopSpeaking();
@@ -1127,8 +1131,8 @@ export default function TutorSession(props: TutorSessionProps) {
         realtimeHandleRef.current?.setTutorVoiceMuted?.(next);
       }}
       aria-pressed={tutorVoiceMuted}
-      aria-label={tutorVoiceMuted ? 'Turn the tutor voice on' : 'Mute the tutor voice'}
-      title={tutorVoiceMuted ? 'Tutor voice is off — tap to turn it on' : 'Mute the tutor voice'}
+      aria-label={tutorVoiceMuted ? S.tutorVoiceOn : S.muteTutorVoice}
+      title={tutorVoiceMuted ? S.tutorVoiceOffTitle : S.muteTutorVoice}
       className={`grid h-8 w-8 shrink-0 place-items-center rounded-full transition-colors ${
         tutorVoiceMuted ? 'bg-red-50 text-red-500 hover:bg-red-100' : 'text-slate-500 hover:bg-slate-100'
       }`}
@@ -1608,14 +1612,14 @@ export default function TutorSession(props: TutorSessionProps) {
         // order, a scanner, etc.) opened the transcript with no visible
         // action to explain why. Click stays the only way in.
         onClick={() => window.dispatchEvent(new CustomEvent('evelyn:open-transcript', { detail: { entryId: questionPin.turnId, source: 'qpin' } }))}
-        title="The tutor's question — tap for the full transcript"
+        title={S.questionPinTitle}
         className="ss-cap w-full flex items-center gap-2 rounded-xl bg-amber-50/95 border border-amber-200 shadow-md px-3 py-1.5 text-left cursor-pointer"
       >
         <span className="shrink-0 grid place-items-center w-5 h-5 rounded-md bg-amber-400 text-white text-[10px] font-bold">Q</span>
         <span className="min-w-0 text-sm font-medium leading-snug text-amber-900"><InlineMathText text={questionPin.gist} forceMath /></span>
         <button
           type="button"
-          aria-label="Dismiss question pin"
+          aria-label={S.dismissQuestionPin}
           onClick={(e) => {
             e.stopPropagation();
             setQuestionPin(null);
@@ -1975,15 +1979,15 @@ export default function TutorSession(props: TutorSessionProps) {
     && (practiceStats.active || !lessonProgress.plan)
     && practiceStats.presented > 0;
   const practiceMeterEl = showPracticeMeter && practiceStats ? (
-    <div className="flex items-center gap-2 text-xs whitespace-nowrap" aria-label="Practice progress">
+    <div className="flex items-center gap-2 text-xs whitespace-nowrap" aria-label={S.practiceProgress}>
       <span className="rounded-full bg-blue-50 border border-blue-200 text-blue-700 px-2 py-0.5 font-medium">
-        {practiceStats.active ? 'Practice' : 'Problems'}
+        {practiceStats.active ? S.practice : S.problems}
       </span>
-      <span className="font-semibold text-slate-700">✓ {practiceStats.solved} solved</span>
+      <span className="font-semibold text-slate-700">{S.solvedN(practiceStats.solved)}</span>
       {practiceStats.streak >= 2 && (
         <span className="font-semibold text-amber-600">🔥 ×{practiceStats.streak}</span>
       )}
-      <span className="text-slate-400">{practiceStats.presented} shown</span>
+      <span className="text-slate-400">{S.shownN(practiceStats.presented)}</span>
     </div>
   ) : null;
   // Agenda rail (2026-08-10) replaces the old LessonPlanProgress strip as the
@@ -2039,11 +2043,11 @@ export default function TutorSession(props: TutorSessionProps) {
   // ⋯ pacing + humor menu
   const humorBand = gradeBandFor(level || '');
   const HUMOR_CHOICES: Array<{ value: StudentPreferences['humorCeiling'] | null; label: string; minBand: 'K-2' | '3-5' | '6-8' | '9-12' }> = [
-    { value: null, label: 'Default', minBand: 'K-2' },
-    { value: 'off', label: 'Serious', minBand: 'K-2' },
-    { value: 'light', label: 'A little funny', minBand: 'K-2' },
-    { value: 'medium', label: 'Pretty funny', minBand: '3-5' },
-    { value: 'heavy', label: 'Very funny', minBand: '6-8' },
+    { value: null, label: S.humorDefault, minBand: 'K-2' },
+    { value: 'off', label: S.humorSerious, minBand: 'K-2' },
+    { value: 'light', label: S.humorLight, minBand: 'K-2' },
+    { value: 'medium', label: S.humorMedium, minBand: '3-5' },
+    { value: 'heavy', label: S.humorHeavy, minBand: '6-8' },
   ];
   const BAND_RANK: Record<'K-2' | '3-5' | '6-8' | '9-12', number> = { 'K-2': 0, '3-5': 1, '6-8': 2, '9-12': 3 };
   const currentHumor = studentPreferencesForChip.humorCeiling ?? null;
@@ -2058,7 +2062,7 @@ export default function TutorSession(props: TutorSessionProps) {
       {paceChip && <button
         type="button"
         onClick={() => setPacingMenuOpen((o) => !o)}
-        aria-label={paceBias < 0 ? 'Pace: slow — tap to adjust' : paceBias > 0 ? 'Pace: fast — tap to adjust' : 'Pace: normal — tap to adjust'}
+        aria-label={S.tapToAdjust(paceBias < 0 ? S.paceSlow : paceBias > 0 ? S.paceFast : S.paceNormal)}
         className={`text-[11px] px-2 py-0.5 rounded-full border transition-all duration-200 ${
           paceBiasFlash ? 'bg-blue-100 border-blue-400 text-blue-800'
           : paceBias < 0 ? 'bg-amber-50 border-amber-300 text-amber-800'
@@ -2066,9 +2070,9 @@ export default function TutorSession(props: TutorSessionProps) {
           : 'bg-slate-50 border-slate-200 text-slate-500'
         }`}
       >
-        {paceBias < 0 ? `Pace: slow${Math.abs(paceBias) > 1 ? ` ×${Math.abs(paceBias)}` : ''}`
-          : paceBias > 0 ? `Pace: fast${paceBias > 1 ? ` ×${paceBias}` : ''}`
-          : 'Pace: normal'}
+        {paceBias < 0 ? `${S.paceSlow}${Math.abs(paceBias) > 1 ? ` ×${Math.abs(paceBias)}` : ''}`
+          : paceBias > 0 ? `${S.paceFast}${paceBias > 1 ? ` ×${paceBias}` : ''}`
+          : S.paceNormal}
       </button>}
       <button ref={pacingMenuTriggerRef} onClick={() => setPacingMenuOpen((o) => !o)} className="grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100 text-slate-600 text-lg leading-none">⋯</button>
       {pacingMenuOpen && pacingMenuPos && typeof document !== 'undefined' && createPortal(
@@ -2088,7 +2092,7 @@ export default function TutorSession(props: TutorSessionProps) {
           style={{ position: 'fixed', top: pacingMenuPos.top, right: pacingMenuPos.right }}
           className="z-[60] w-52 max-h-[70dvh] overflow-y-auto rounded-2xl bg-white border border-slate-200 shadow-xl p-1.5 text-sm"
         >
-          <p className="px-3 pt-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Adjust the lesson</p>
+          <p className="px-3 pt-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{S.adjustLesson}</p>
           {/* #7 hybrid (2026-07-17): Harder/Easier are now a STANDING
               preference, not a one-shot "give me a harder one" utterance.
               Each click steps the durable difficultyBias (sticky ✓×N, menu
@@ -2101,10 +2105,10 @@ export default function TutorSession(props: TutorSessionProps) {
               generate_problem's 'same' difficulty at the stream route, so
               the student never has to re-ask. */}
           <button onClick={() => { const next = Math.min(2, difficultyBias + 1); if (next !== difficultyBias) { realtimeHandleRef.current?.setDifficultyBias(next); realtimeHandleRef.current?.sendTextMessage(difficultyChangeDirective(next)); } }} className={`w-full text-left px-3 py-2 rounded-xl ${difficultyBias > 0 ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-slate-50 text-slate-700'}`}>
-            <span className="inline-block w-3">{difficultyBias > 0 ? '✓' : ''}</span> Harder{difficultyBias > 0 ? ` ×${difficultyBias}` : ''}
+            <span className="inline-block w-3">{difficultyBias > 0 ? '✓' : ''}</span> {S.harder}{difficultyBias > 0 ? ` ×${difficultyBias}` : ''}
           </button>
           <button onClick={() => { const next = Math.max(-1, difficultyBias - 1); if (next !== difficultyBias) { realtimeHandleRef.current?.setDifficultyBias(next); realtimeHandleRef.current?.sendTextMessage(difficultyChangeDirective(next)); } }} className={`w-full text-left px-3 py-2 rounded-xl ${difficultyBias < 0 ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-slate-50 text-slate-700'}`}>
-            <span className="inline-block w-3">{difficultyBias < 0 ? '✓' : ''}</span> Easier
+            <span className="inline-block w-3">{difficultyBias < 0 ? '✓' : ''}</span> {S.easier}
           </button>
           <div className="my-1 border-t border-slate-100" />
           {/* Task W3: pace items keep the menu OPEN on click (delta is
@@ -2114,10 +2118,10 @@ export default function TutorSession(props: TutorSessionProps) {
               is visible on the menu item itself, not just the transient
               pill beside the ⋯ button. */}
           <button onClick={() => { realtimeHandleRef.current?.stepPaceBias(-1); }} className={`w-full text-left px-3 py-2 rounded-xl ${paceBias < 0 ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-slate-50 text-slate-700'}`}>
-            <span className="inline-block w-3">{paceBias < 0 ? '✓' : ''}</span> Slow down{paceBias < 0 ? ` ×${Math.abs(paceBias)}` : ''}
+            <span className="inline-block w-3">{paceBias < 0 ? '✓' : ''}</span> {S.slowDown}{paceBias < 0 ? ` ×${Math.abs(paceBias)}` : ''}
           </button>
           <button onClick={() => { realtimeHandleRef.current?.stepPaceBias(1); }} className={`w-full text-left px-3 py-2 rounded-xl ${paceBias > 0 ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-slate-50 text-slate-700'}`}>
-            <span className="inline-block w-3">{paceBias > 0 ? '✓' : ''}</span> Speed up{paceBias > 0 ? ` ×${paceBias}` : ''}
+            <span className="inline-block w-3">{paceBias > 0 ? '✓' : ''}</span> {S.speedUp}{paceBias > 0 ? ` ×${paceBias}` : ''}
           </button>
           {/* GAC acceptance 2026-10-22 (hw-13): a one-problem homework session
               ends through the host's own "I've finished" / "Back to list" —
@@ -2125,7 +2129,7 @@ export default function TutorSession(props: TutorSessionProps) {
           {!homeworkProblem && (
             <>
               <div className="my-1 border-t border-slate-100" />
-              <button onClick={() => { realtimeHandleRef.current?.stopSpeaking(); realtimeHandleRef.current?.sendTextMessage("I'm done — let's wrap up."); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Wrap up</button>
+              <button onClick={() => { realtimeHandleRef.current?.stopSpeaking(); realtimeHandleRef.current?.sendTextMessage("I'm done — let's wrap up."); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">{S.wrapUp}</button>
             </>
           )}
           {/* Round-4 item 5 (embed-only): the portal's bottom-strip
@@ -2147,7 +2151,7 @@ export default function TutorSession(props: TutorSessionProps) {
                 }}
                 className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700"
               >
-                Finish lesson
+                {S.finishLesson}
               </button>
               <button
                 onClick={() => {
@@ -2159,7 +2163,7 @@ export default function TutorSession(props: TutorSessionProps) {
                 }}
                 className="w-full text-left px-3 py-2 rounded-xl hover:bg-red-50 text-red-600"
               >
-                Discard session
+                {S.discardSession}
               </button>
             </>
           )}
@@ -2182,7 +2186,7 @@ export default function TutorSession(props: TutorSessionProps) {
                 }}
                 className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700"
               >
-                {sessionGoal === 'homework-help' ? <>I&rsquo;ve finished this problem</> : <>I&rsquo;ve finished this concept</>}
+                {sessionGoal === 'homework-help' ? S.finishedProblem : S.finishedConcept}
               </button>
             </>
           )}
@@ -2202,7 +2206,7 @@ export default function TutorSession(props: TutorSessionProps) {
             <>
               <div className="my-1 border-t border-slate-100" />
               <div className="px-3 pt-1 pb-1.5 flex items-center justify-between">
-                <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Mic</span>
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{S.mic}</span>
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
@@ -2211,7 +2215,7 @@ export default function TutorSession(props: TutorSessionProps) {
                       !manualMic ? 'bg-blue-50 border-blue-300 text-blue-800 font-medium' : 'bg-slate-50 border-slate-200 text-slate-500'
                     }`}
                   >
-                    Auto
+                    {S.micAuto}
                   </button>
                   <button
                     type="button"
@@ -2220,7 +2224,7 @@ export default function TutorSession(props: TutorSessionProps) {
                       manualMic ? 'bg-blue-50 border-blue-300 text-blue-800 font-medium' : 'bg-slate-50 border-slate-200 text-slate-500'
                     }`}
                   >
-                    Manual
+                    {S.micManual}
                   </button>
                 </div>
               </div>
@@ -2230,7 +2234,7 @@ export default function TutorSession(props: TutorSessionProps) {
           {humorControl && (
             <>
             <div className="my-1 border-t border-slate-100" />
-            <p className="px-3 pt-1 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Humor</p>
+            <p className="px-3 pt-1 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{S.humor}</p>
             {HUMOR_CHOICES.filter((c) => BAND_RANK[humorBand] >= BAND_RANK[c.minBand]).map((c) => {
               const isSel = currentHumor === c.value;
               return (
@@ -2262,7 +2266,7 @@ export default function TutorSession(props: TutorSessionProps) {
           {ttsProvider === 'openai-mini' && (
             <>
               <div className="my-1 border-t border-slate-100" />
-              <p className="px-3 pt-1 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Voice</p>
+              <p className="px-3 pt-1 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{S.voice}</p>
               {/* Task W4: "Speak slower" TTS toggle — a SEPARATE knob from
                   "Slow down" above (that one asks for more explanation depth;
                   this one only slows the synthesized audio). Sticky ✓ state
@@ -2274,7 +2278,7 @@ export default function TutorSession(props: TutorSessionProps) {
                 }}
                 className={`w-full text-left px-3 py-2 rounded-xl ${speakingRate === 'slow' ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-slate-50 text-slate-700'}`}
               >
-                <span className="inline-block w-3">{speakingRate === 'slow' ? '✓' : ''}</span> Speak slower
+                <span className="inline-block w-3">{speakingRate === 'slow' ? '✓' : ''}</span> {S.speakSlower}
               </button>
             </>
           )}
@@ -2320,7 +2324,7 @@ export default function TutorSession(props: TutorSessionProps) {
   ) : null;
 
   return (
-    <>
+    <SessionStringsProvider languages={tutorLanguages}>
       {loadDesmos && (
         <Script src="https://www.desmos.com/api/v1.11/calculator.js?apiKey=47658ec5a4894397ae1e1a46a6174a9a" strategy="lazyOnload" />
       )}
@@ -2335,10 +2339,10 @@ export default function TutorSession(props: TutorSessionProps) {
         lessonTitle={lessonContext?.title ?? (lessonProgress.plan ? lessonProgress.plan.title : topicLabel)}
         subtitle={
           lessonProgress.plan
-            ? `${topicDisplayName} · grade ${lessonProgress.plan.grade}`
+            ? `${topicDisplayName} · ${S.gradeN(lessonProgress.plan.grade)}`
             : (mockReview || sessionGoal === 'mock-review')
               ? `${topicDisplayName || 'Mock exam'} · Mock exam review`
-              : `${topicDisplayName || 'Open practice'} · Free practice`
+              : `${topicDisplayName || S.openPractice} · ${S.freePractice}`
         }
         headerBrand={headerBrand}
         hasPlan={!!lessonProgress.plan}
@@ -2410,6 +2414,6 @@ export default function TutorSession(props: TutorSessionProps) {
       {error && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm">{error}</div>
       )}
-    </>
+    </SessionStringsProvider>
   );
 }

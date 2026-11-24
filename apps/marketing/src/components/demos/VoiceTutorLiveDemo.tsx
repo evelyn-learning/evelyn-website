@@ -25,6 +25,7 @@ import {
 } from '@core/ai/teacher-persona';
 import { accentFromTimezone } from '@core/voice/geo-accent';
 import { teachersForAccent } from '@core/voice/cartesia-voice-registry';
+import { DEMO_LANGUAGES, demoLanguageClaims } from '@core/demo/demo-languages';
 import { trackEvent } from '@/lib/analytics/events';
 
 // Same key as /tutor so a choice made here carries into the full app.
@@ -169,6 +170,7 @@ async function startGatedDemo(
   source: string,
   studentName: string,
   studentEmail: string,
+  language: string,
 ): Promise<DemoStartResult> {
   // A ready lesson names its plan; a topic the visitor typed has none, and the tutor teaches it from the topic.
   const cfg = {
@@ -184,6 +186,9 @@ async function startGatedDemo(
     // subjects and drops the Rule 7(b) "this session is scoped to…" reply).
     open_scope: true,
     teacher,
+    // The language the visitor picked for the lesson: speech, board and questions are in it (the engine's
+    // lesson-language table). English adds nothing, so an English demo is the session it always was.
+    ...demoLanguageClaims(language),
     features: { voice_mode: true, text_mode: true, homework_upload: false },
     metadata: { source },
   };
@@ -232,6 +237,7 @@ export default function VoiceTutorLiveDemo({
   const [picked, setPicked] = useState<DemoLessonOption | null>(null);
   const [typedTopic, setTypedTopic] = useState('');
   const [typedLevel, setTypedLevel] = useState('High school');
+  const [language, setLanguage] = useState('en');
   const typed = typedTopic.trim().replace(/\s+/g, ' ');
   const lesson: DemoLessonOption = useMemo(
     () => (typed.length >= 3
@@ -377,11 +383,11 @@ export default function VoiceTutorLiveDemo({
 
   const start = async () => {
     if (starting || !identityOk || !hasTopic) return;
-    trackEvent('demo_start_click', { plan_id: lesson.planId || 'typed_topic', teacher_id: teacher.id });
+    trackEvent('demo_start_click', { plan_id: lesson.planId || 'typed_topic', teacher_id: teacher.id, lesson_language: language });
     setStarting(true);
     setStartError(false);
     try {
-      const result = await startGatedDemo(lesson, teacher, source, name, email);
+      const result = await startGatedDemo(lesson, teacher, source, name, email, language);
       if (!result.ok) {
         if (result.kind === 'limited') {
           setLimited(result.reason);
@@ -501,6 +507,26 @@ export default function VoiceTutorLiveDemo({
           autoComplete="off"
           className="mt-4 w-full px-5 py-4 text-base md:text-lg border-2 border-slate-300 rounded-2xl bg-white placeholder:text-slate-400 focus:ring-4 focus:ring-blue-100 focus:border-blue-600 outline-none"
         />
+        {/* The language of the whole lesson: what the tutor speaks, hears and writes on the board. */}
+        <div className="mt-3 flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Lesson language">
+          <span className="text-sm text-slate-600 mr-1">Lesson language</span>
+          {DEMO_LANGUAGES.map((l) => (
+            <button
+              key={l.code}
+              type="button"
+              role="radio"
+              aria-checked={language === l.code}
+              title={l.english}
+              lang={l.code}
+              onClick={() => setLanguage(l.code)}
+              className={`rounded-full border px-3.5 py-1.5 text-sm transition-colors ${
+                language === l.code ? 'border-blue-600 bg-blue-600 text-white font-semibold' : 'border-slate-300 bg-white text-slate-700 hover:border-blue-400'
+              }`}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
         {typed.length >= 3 ? (
           <div className="mt-3 flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Your level">
             <span className="text-sm text-slate-600 mr-1">Your level</span>

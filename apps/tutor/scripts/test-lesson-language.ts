@@ -5,6 +5,10 @@ import { parseTutorLanguages, ttsLanguageFor, splitSentenceForTts } from '../src
 import { speakNotation, lessonSpeech } from '../src/lib/tutor/voice/lesson-speech';
 import { sessionAllowsNonLatin } from '../src/lib/tutor/voice/transcript-filters';
 import { v2CanRunSession } from '../src/lib/tutor/portal/partner-session-options';
+import { heardNumerals, numeralValue } from '../src/lib/tutor/voice/heard-numerals';
+import { v2LessonLines } from '../src/lib/tutor/v2/lesson-lines';
+import { partOffer } from '../src/lib/tutor/v2/part-close';
+import { v2HandsOverInItsLanguage, v2ReplyAsks } from '../src/lib/tutor/v2/one-question';
 
 let n = 0; const t = (name: string, f: () => void) => { f(); n++; console.log('PASS', name); };
 
@@ -71,5 +75,33 @@ t('only a lesson taught in another language', () => {
   assert.equal(lessonSpeech('x = 4', ['en', 'ja']), null); assert.equal(lessonSpeech('x = 4', undefined), null);
   assert.equal(lessonSpeech('所以 x = 4。', ['zh-TW']), '所以 x 等於 4。');
   assert.equal(lessonSpeech('x = 4', ['ja']), 'x イコール 4');
+});
+t('the lines the engine says itself', () => {
+  assert.equal(v2LessonLines(['en', 'ja']), null); assert.equal(v2LessonLines(undefined), null);
+  const tw = v2LessonLines(['zh-TW'])!; const ja = v2LessonLines(['ja'])!; const cn = v2LessonLines(['zh-CN'])!;
+  assert.equal(tw.checkIns.length, 4); assert.ok(tw.timeUp('小安').startsWith('小安，')); assert.ok(!/[A-Za-z]/.test(tw.timeUp('')));
+  for (const l of [tw, ja, cn]) for (const c of [...l.checkIns, l.goOn, l.goOnOrQuestion]) assert.ok(/[?？]$/.test(c), c);
+  assert.ok(!/[这们说请讲发]/.test(JSON.stringify([tw.checkIns, tw.goOn, tw.goOnOrQuestion, tw.lookAtBoard, tw.unreachable, tw.nextStep, tw.timeUp('x'), tw.correction('x')])), 'no Simplified in zh-TW');
+  assert.equal(partOffer('Worked example', false, true, ['zh-TW']), tw.goOnOrQuestion); assert.equal(partOffer('Worked example', false, false, ['ja']), ja.goOn);
+  assert.equal(partOffer('Worked example', false), 'Next is worked example. Shall we go on, or do you have a question first?');
+});
+t('an instruction in the lesson language hands the turn over', () => {
+  for (const s of ['請你把 x 等於 3 代入第一式，算出 y 等於多少。', '求下面聯立方程式的 x 和 y：x + y = 8，x - y = 2', '你來試試看。', '接下來換你。', '现在请你自己做一题。', 'y を求めてください。', 'では、やってみましょう。'])
+    assert.equal(v2HandsOverInItsLanguage(s), true, s);
+  for (const s of ['兩式相加，y 就會互相抵消。', '所以 x 等於 4。', '如果有問題，隨時告訴我。', '下次請你多練習相減的題目。', 'わからないことがあれば、いつでも教えてください。', 'y が消えます。', '我算出來了。'])
+    assert.equal(v2HandsOverInItsLanguage(s), false, s);
+  assert.equal(v2ReplyAsks('對，y 等於 2。接下來請你自己做一題。求下面聯立方程式的 x 和 y：x + y = 8，x - y = 2'), true);
+  assert.equal(v2ReplyAsks('對，y 等於 2，你算對了。所以這一題的解是 x 等於 3，y 等於 2。'), false);
+  assert.equal(v2ReplyAsks('Good. So x is 4.'), false);
+});
+t('numbers said in Chinese or Japanese become digits, words stay', () => {
+  const same = (x: string) => assert.equal(heardNumerals(x), x, x);
+  assert.equal(numeralValue('十四'), '14'); assert.equal(numeralValue('二十'), '20'); assert.equal(numeralValue('一百零五'), '105'); assert.equal(numeralValue('三點五'), '3.5'); assert.equal(numeralValue('兩'), '2'); assert.equal(numeralValue('三千二百'), '3200');
+  assert.equal(heardNumerals('哦，所以x等於三。'), '哦，所以x等於3。');
+  assert.equal(heardNumerals('x加x加y減y等於七加一，二x等於八，x等於四，然後四加y等於七。y等於三。'), 'x加x加y減y等於7加1，2x等於8，x等於4，然後4加y等於7。y等於3。');
+  assert.equal(heardNumerals('我看到黑板上寫的是x加y等於十，x加二y等於十四'), '我看到黑板上寫的是x加y等於10，x加2y等於14');
+  assert.equal(heardNumerals('四。'), '4。'); assert.equal(heardNumerals('答案是十二'), '答案是12'); assert.equal(heardNumerals('四分之三'), '4分之3');
+  assert.equal(heardNumerals('エックスは四で、ワイは三だと思います。'), 'エックスは4で、ワイは3だと思います。');
+  for (const x of ['等一下，我想一想。', '我們一起算。', '用第一式減第二式。', '把兩式相加。', '這是二元一次方程式。', '是一樣的嗎？', '老師好，我準備好了。', '一緒にやりましょう。', 'もう一度お願いします。', 'I have 3 apples.']) same(x);
 });
 console.log(`\n${n} passed`);

@@ -7,6 +7,7 @@
  * calls to the whiteboard; the next state kept for the following turn. It
  * holds no audio and no lesson policy.
  */
+import { v2LessonLines } from '@/lib/tutor/v2/lesson-lines';
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import { homeworkProblemOf, type HomeworkProblemMeta } from '@/lib/tutor/lesson-plan/homework-problem-meta';
 import { homeworkProblemsOf } from '@/lib/tutor/lesson-plan/homework';
@@ -514,7 +515,8 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         if (text.trim()) setTutor(text.trim(), false);
       } else {
         // The state is unchanged, so the same message can simply be sent again.
-        setTutor(text.trim() ? `${text.trim()}\n\n${UNREACHABLE}` : UNREACHABLE, false);
+        const unreachable = v2LessonLines(p.current.tutorLanguages)?.unreachable ?? UNREACHABLE;
+        setTutor(text.trim() ? `${text.trim()}\n\n${unreachable}` : unreachable, false);
         p.current.onDebugEvent?.('brain_v2_error', String((err as Error)?.message ?? err).slice(0, 200));
         p.current.onError?.(err instanceof Error ? err : new Error(String(err)));
       }
@@ -669,7 +671,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         return;
       }
       // A lesson that has already said its goodbye (kept open by its partner) is not said goodbye to twice.
-      const bye = TUTOR_V2_TIME_BOX && !stateRef.current.closed ? goodbyeLine(p.current.studentName) : null;
+      const bye = TUTOR_V2_TIME_BOX && !stateRef.current.closed ? v2LessonLines(p.current.tutorLanguages)?.timeUp((p.current.studentName ?? '').trim().split(/\s+/)[0] ?? '') ?? goodbyeLine(p.current.studentName) : null;
       // Task 7d fix round 1 (M10): the next-time line waits for the reply that closes; when the box comes first, its goodbye says it.
       const nextTime = bye ? v2HardStopNextTime({ mode: p.current.mode, plan: planRef.current ?? undefined, languages: p.current.tutorLanguages, pronunciation: p.current.pronunciation }, planRef.current, stateRef.current) : null;
       const farewell = bye && nextTime ? `${nextTime} ${bye}` : bye;

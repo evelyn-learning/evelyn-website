@@ -12,6 +12,7 @@
  * through as heard.
  */
 import { taughtIn, sessionLanguageRows } from './lesson-language';
+import { heardNumerals } from './heard-numerals';
 
 export type HeardConverter = (text: string) => string;
 const same: HeardConverter = (t) => t;
@@ -22,9 +23,13 @@ export function heardNeedsConversion(languages: readonly string[] | null | undef
   return (taughtIn(languages)?.heardAs ?? sessionLanguageRows(languages).find((r) => r.heardAs)?.heardAs) === 'traditional';
 }
 
+/** Whether numbers they say are written as digits (voice/heard-numerals.ts): a lesson taught in Chinese or Japanese. */
+const numeralsAsDigits = (languages: readonly string[] | null | undefined) => { const b = taughtIn(languages)?.base; return b === 'zh' || b === 'ja'; };
+
 /** The converter for a session's heard text: the identity for every session that needs none. Never rejects. */
 export function loadHeardConverter(languages: readonly string[] | null | undefined): Promise<HeardConverter> {
-  if (!heardNeedsConversion(languages)) return Promise.resolve(same);
+  const digits: HeardConverter = numeralsAsDigits(languages) ? heardNumerals : same;
+  if (!heardNeedsConversion(languages)) return Promise.resolve(digits);
   traditional ??= import('opencc-js/cn2t')
     .then((m) => {
       const make = (m as unknown as { Converter: (o: { from: string; to: string }) => HeardConverter }).Converter;
@@ -32,5 +37,5 @@ export function loadHeardConverter(languages: readonly string[] | null | undefin
       return ((text: string) => { try { return convert(text); } catch { return text; } }) as HeardConverter;
     })
     .catch(() => same);
-  return traditional;
+  return traditional.then((toTraditional) => (text: string) => digits(toTraditional(text)));
 }

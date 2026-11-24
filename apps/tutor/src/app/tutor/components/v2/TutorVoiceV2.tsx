@@ -48,6 +48,7 @@ import type { WhiteboardCommand } from '@core/knowledge/types';
 import { ROOM_CHECK_TIMEOUT_MS, ROOM_HAND_TURN_MS, ROOM_LOOK_EVERY_MS, ROOM_LOOK_MIN_WORDS, ROOM_NOISY_AFTER, ROOM_VOICES_ON, afterWords, partialIsConfirmed, partialIsJudged, plainlyTheStudent, sameWords, waitsForCheck } from '@/lib/tutor/v2/room-voices';
 import { type V2ComposerStatus, V2Composer, V2_HANDLE_STUBS } from './TutorClientV2';
 import { V2FlagBar, V2_FLAGS_ON, reviewNotesClaim, type V2FlagState } from './V2FlagBar';
+import { useSessionStrings } from '@/lib/tutor/i18n/SessionStringsContext';
 import { useV2Turns, type V2TurnsConfig } from './useV2Turns';
 import { isOwnVoice, ownVoiceWords } from '@/lib/tutor/v2/own-voice';
 import { V2EchoClock, v2HeardCount, v2IsEcho, v2PartialVerdict } from '@/lib/tutor/v2/echo-window';
@@ -124,6 +125,7 @@ const MIC_SOUND_LEVEL = 0.12;
 const BOARD_HOLD_MAX_MS = 45000;
 
 export default function TutorVoiceV2(props: TutorVoiceV2Props) {
+  const S = useSessionStrings();
   const p = useRef(props); p.current = props;
   const spokenRef = useRef<string[]>([]);
   // Task 7h (ECHO_BY_PLAYBACK): what the voice has actually played, and when (v2/echo-window.ts).
@@ -1088,7 +1090,7 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
       closed={turns.closed}
       busy={turns.busy}
       onSend={(text) => { if (!startedRef.current) start(); heard(text, { typed: true }); }}
-      placeholder="Type here if you can't speak…"
+      placeholder={S.typeIfCantSpeak}
       status={started ? composerStatus : undefined}
       mic={started && !turns.closed ? { muted: !!composerStatus.muted, onToggle: toggleMic } : undefined}
     />

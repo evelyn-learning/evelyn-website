@@ -20,6 +20,8 @@ export function closeDueMinutes(timeBoxMinutes: number): number {
  *  and then heard two seconds of silence was told the student was waiting for it, and went on with the lesson
  *  (Algebra 1, portal-50a1e584). A question is not a request to wait ("wait, why is it negative?"). */
 export function asksToWait(said: string): boolean {
+  // The same asked in Chinese or Japanese (等一下, 給我一點時間, ちょっと待ってください); a question about the lesson is not (等一下，為什麼是負的？).
+  if (/等一下|等等|稍等|暫停|暂停|(?:給|给)我一(?:點|点|些)?(?:時間|时间)|ちょっと待って|少し待って|待ってください|少々お待ち/u.test(said)) return !/[?？]/.test(said) || !/為什麼|为什么|怎麼|怎么|什麼|什么|なぜ|どうして|何/u.test(said);
   const s = said.toLowerCase().replace(/[’]/g, "'");
   const WAIT = /\b(?:pause|hold on|hang on|bear with me|be right back|brb|(?:give me|wait|just|one)\s+(?:(?:a|one)\s+)?(?:sec(?:ond)?|min(?:ute)?|moment)s?)\b/;
   // "Can you give me a second, please?" is the request itself, written down with a question mark; the tutor

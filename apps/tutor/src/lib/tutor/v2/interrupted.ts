@@ -84,8 +84,12 @@ export function trimToSpoken(state: V2State, sentences: string[], started: numbe
  *  ended was struck from the record, and the tutor asked it again (AP Macroeconomics, portal-a4f66d55, twice).
  *  Anything longer, or said over an earlier sentence, is still a cut: the question may not have got through. */
 const BRIEF_ANSWER = /^\s*(?:(?:oh|um|uh|well|so)[, ]+)*(?:yes|yeah|yep|yup|ya|ok|okay|sure|alright|all right|mhm|uh[- ]?huh|no|nope|nah|not yet|go on|go ahead|let'?s (?:go|go on|move on|do it|continue)|i do|i don'?t|got it|makes sense)\b/i;
+/** The same in a lesson taught in Chinese or Japanese: a short answer over the end of a question (？ as well as ?). The
+ *  recogniser writes these with no spaces, so the length is counted in characters. */
+const BRIEF_ANSWER_CJK = /^\s*(?:(?:嗯|喔|哦|啊|えっと|あの)[，,、\s]*)*(?:好的?|好啊|對|对|是的?|嗯|可以|不是|不對|不对|沒有|没有|還沒|还没|懂了?|知道了?|明白了?|繼續|继续|有|不用|はい|ええ|うん|いいえ|いえ|大丈夫(?:です)?|わかりました|お願いします|まだです)/u;
 export function answeredAsItEnded(studentSaid: string, sentences: string[], started: number): boolean {
   if (!sentences.length || started !== sentences.length) return false;
+  if (/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(studentSaid)) return /[?？]["')\]」』）]*$/.test(sentences[sentences.length - 1].trim()) && studentSaid.replace(/[^\p{L}\p{N}]/gu, '').length <= 8 && BRIEF_ANSWER_CJK.test(studentSaid);
   const words = studentSaid.trim().split(/\s+/).filter(Boolean);
   return /\?["')\]]*$/.test(sentences[sentences.length - 1].trim()) && words.length > 0 && words.length <= 6 && BRIEF_ANSWER.test(studentSaid);
 }

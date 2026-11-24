@@ -35,7 +35,13 @@ export function partialIsConfirmed(text: string): boolean { return wordCount(tex
 /** In a room known to be noisy the tutor is not paused until the words are judged, so they are judged sooner. */
 export const ROOM_PARTIAL_WORDS_NOISY = 3;
 
-const wordCount = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
+/** Words in a stretch of speech. Chinese and Japanese are written with no spaces: a whole sentence was one "word", so the
+ *  thresholds above never came, and a long answer counted as a brief one. Two characters of those scripts count as a word. */
+const CJK_CHARS = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/gu;
+const wordCount = (s: string) => { const cjk = (s.match(CJK_CHARS) ?? []).length; return s.replace(CJK_CHARS, ' ').trim().split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length + Math.ceil(cjk / 2); };
+/** A call to stop, wait or say it again, or a brief answer, in Chinese or Japanese: said to the tutor beyond doubt. */
+const COMMAND_CJK = /^\s*(?:(?:老師|老师|先生|嗯|喔|哦|啊|那個|那个|すみません|あの|えっと)[，,、\s]*)*(?:等一下|等等|稍等|停|暫停|暂停|慢一點|慢一点|再說一(?:次|遍)|再说一(?:次|遍)|再講一(?:次|遍)|再讲一(?:次|遍)|什麼|什么|我(?:聽|听)不懂|不好意思|對不起|对不起|ちょっと待って|待って|止めて|ストップ|もう一度|もう一回|ゆっくり|何ですか|すみません)/u;
+const BRIEF_CJK = /^\s*(?:(?:嗯|喔|哦|啊|えっと|あの)[，,、\s]*)*(?:好的?|好啊|對|对|是的?|嗯|可以|不是|不對|不对|沒有|没有|還沒|还没|懂了?|知道了?|明白了?|謝謝|谢谢|はい|ええ|うん|いいえ|いえ|大丈夫(?:です)?|わかりました|ありがとう(?:ございます)?)[\s\p{P}]*$/u;
 
 /** Said to the tutor beyond doubt: a call to stop, wait or say it again, or a brief answer. These are never
  *  held for the check, in a quiet room or a noisy one: "stop" must stop the tutor at once. */
@@ -45,8 +51,8 @@ const BRIEF = /^\s*(?:(?:oh|um|uh|well|so)[, ]+)*(?:yes|yeah|yep|yup|ya|ok|okay|
 export function plainlyTheStudent(text: string): boolean {
   const n = wordCount(text);
   if (!n) return false;
-  if (n <= 12 && COMMAND.test(text)) return true;
-  return n <= 4 && BRIEF.test(text);
+  if (n <= 12 && (COMMAND.test(text) || COMMAND_CJK.test(text))) return true;
+  return n <= 4 && (BRIEF.test(text) || BRIEF_CJK.test(text));
 }
 
 /** Does this recognised speech wait for the check before it takes the floor?

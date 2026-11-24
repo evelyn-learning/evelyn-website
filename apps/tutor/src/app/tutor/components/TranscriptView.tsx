@@ -6,6 +6,7 @@
  * Displays the conversation history between student and tutor.
  */
 
+import { useSessionStrings } from '@/lib/tutor/i18n/SessionStringsContext';
 import { THINKING_HINT_EVENT } from '@/lib/tutor/voice/cover-layer';
 import React, { useEffect, useRef, useState } from 'react';
 // KaTeX styles for the InlineMathText bubbles (InlineMathText itself carries
@@ -228,7 +229,8 @@ export function classifyQuestionForQuickAnswer(question: string): QuickAnswerKin
   return 'open';
 }
 
-export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorIndex, onQuickAnswer, enablePacingChips, emptyHint = 'Start speaking to begin!', stickToBottom = false, tutorLabel, onDebugEvent }: TranscriptViewProps) {
+export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorIndex, onQuickAnswer, enablePacingChips, emptyHint, stickToBottom = false, tutorLabel, onDebugEvent }: TranscriptViewProps) {
+  const S = useSessionStrings();
   const containerRef = useRef<HTMLDivElement>(null);
   // GreenApple round 6, task 4: wraps just the message bubbles (not the
   // portalled zoom overlay) so a ResizeObserver can watch CONTENT growth —
@@ -547,10 +549,10 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
       return;
     }
     setThinkingHint(null);
-    const t1 = setTimeout(() => setThinkingHint('Still thinking…'), 4000);
-    const t2 = setTimeout(() => setThinkingHint('Hmm, that\'s taking a moment — feel free to type below if I missed you.'), 8000);
+    const t1 = setTimeout(() => setThinkingHint(S.stillThinking), 4000);
+    const t2 = setTimeout(() => setThinkingHint(S.takingAMoment), 8000);
     return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [isProcessing]);
+  }, [isProcessing, S]);
   // 2026-10-06b: a TEXT session's slow-turn cover line ("Still working on
   // it…") arrives as a window event from the runtime — the spoken cover lines
   // are neither heard nor shown there. Shown under the dots while they are up.
@@ -567,9 +569,9 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
     return (
       <div className="h-full flex items-center justify-center text-gray-400">
         <p className="text-center">
-          Your conversation will appear here.
+          {S.conversationHere}
           <br />
-          {emptyHint}
+          {emptyHint ?? S.startSpeaking}
         </p>
       </div>
     );
@@ -797,18 +799,12 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
             because that turn becomes the new "latest". */}
         {onQuickAnswer && entry.id === latestTutorEntryId && !studentRespondedAfterLatest && (quickKind !== 'open' || (enablePacingChips && pacingChipsAllowed)) && (
           <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {/* A chip sends its text to the tutor as the student's answer, so label and text are both in
+                the lesson's language (session-strings.ts). */}
             {(quickKind === 'yes-no'
-              ? [
-                  { label: 'Yes', text: 'Yes' },
-                  { label: 'No', text: 'No' },
-                  { label: 'Not sure', text: 'I\'m not sure' },
-                ]
+              ? [S.quickYes, S.quickNo, S.quickNotSure]
               : quickKind === 'true-false'
-                ? [
-                    { label: 'True', text: 'True' },
-                    { label: 'False', text: 'False' },
-                    { label: 'Not sure', text: 'I\'m not sure' },
-                  ]
+                ? [S.quickTrue, S.quickFalse, S.quickNotSure]
                 : []
             ).map((opt) => (
               <button

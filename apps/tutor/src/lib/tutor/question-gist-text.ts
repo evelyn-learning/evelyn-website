@@ -319,8 +319,15 @@ export function hasInterrogative(s: string | null | undefined): boolean {
   const t = s ?? '';
   return WH_RE.test(t) || LEAD_AUX_RE.test(t) || ASK_PHRASE_RE.test(t);
 }
-const gistWords = (s: string): string[] => (s.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [])
-  .filter((w) => !GIST_STOP.has(w)).map((w) => (w.length > 3 ? w.replace(/(?<!s)s$/, '') : w));
+// Chinese and Japanese are written with no spaces: a whole question was one "word", found nowhere in the turn, so every gist in
+// those languages was dropped as ungrounded (zh-TW run 2026-11-24: 「把兩式相加，左邊和右邊分別加起來，你會得到什麼？」). A run of
+// those scripts is read character by character (a rephrased question keeps its characters, not its neighbouring pairs).
+const GIST_CJK_RUN = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]+/gu;
+const gistPairs = (run: string): string[] => [...new Set(Array.from(run))];
+const gistWords = (s: string): string[] => [
+  ...(s.toLowerCase().replace(GIST_CJK_RUN, ' ').match(/[\p{L}\p{N}]+/gu) ?? []).filter((w) => !GIST_STOP.has(w)).map((w) => (w.length > 3 ? w.replace(/(?<!s)s$/, '') : w)),
+  ...(s.match(GIST_CJK_RUN) ?? []).flatMap(gistPairs),
+];
 export function gistGrounded(gist: string | null | undefined, turnText: string | null | undefined): boolean {
   const g = gistWords(gist ?? '');
   if (g.length === 0) return true;

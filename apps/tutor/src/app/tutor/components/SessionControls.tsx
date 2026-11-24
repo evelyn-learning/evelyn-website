@@ -10,6 +10,7 @@
  * - Export PDF
  */
 
+import { useSessionStrings } from '@/lib/tutor/i18n/SessionStringsContext';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Clock, LogOut, Camera, Upload, X, Download, GripVertical } from 'lucide-react';
@@ -175,6 +176,7 @@ export function SessionControls({
   subject,
   level,
 }: SessionControlsProps) {
+  const S = useSessionStrings();
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   // Task 7s (HEADER_CLOCK_PAUSE): the tester's flag time left out (development only; zero otherwise).
   const flagPause = useFlagClockPause(startedAtMs);
@@ -337,12 +339,12 @@ export function SessionControls({
           </span>
           {isLowTime && !isOvertime && (
             <span className="text-xs text-yellow-600 bg-yellow-100 px-2 py-0.5 rounded">
-              {Math.ceil(remainingSeconds / 60)} min left
+              {S.minLeft(Math.ceil(remainingSeconds / 60))}
             </span>
           )}
           {isOvertime && (
             <span className="text-xs text-red-600 bg-red-100 px-2 py-0.5 rounded">
-              Overtime
+              {S.overtime}
             </span>
           )}
         </div>
@@ -357,13 +359,13 @@ export function SessionControls({
               onClick={handleExportPDF}
               disabled={isExporting}
               className="flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-              title="Export session as PDF"
+              title={S.exportPdfTitle}
             >
               <Download className="w-4 h-4" />
               {/* Icon-only below xl (2026-07-15): the labels crowded the header
                   and truncated the lesson title to "U1.6 S..." on laptops —
                   the title is what the student needs; tooltips carry these. */}
-              <span className="hidden xl:inline">{isExporting ? 'Exporting...' : 'Export PDF'}</span>
+              <span className="hidden xl:inline">{isExporting ? S.exporting : S.exportPdf}</span>
             </button>
           )}
 

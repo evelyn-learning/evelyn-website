@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { voiceEngines } from '../../data/engines';
 import { pricing } from '../../data/pricing';
+import { DEMO_LANGUAGES, demoLanguageClaims } from '@core/demo/demo-languages';
 
 /**
  * Portal live demo (tutor.evelynlearning.com/demo).
@@ -27,7 +28,26 @@ const DEMO_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const NAME_KEY = 'evelyn:demo:studentName';
 const EMAIL_KEY = 'evelyn:demo:studentEmail';
 
-function buildDemoConfig(studentName: string, mode: 'voice' | 'text' = 'voice') {
+function buildDemoConfig(studentName: string, mode: 'voice' | 'text' = 'voice', language: string = 'en') {
+  // A lesson in another language: the AP course below is an American one, so the demo opens on a topic every
+  // school system teaches instead (the visitor can ask for any other; open_scope). The whole lesson (speech,
+  // board, questions) is then in the picked language: the engine's lesson-language table.
+  if (language !== 'en' && demoLanguageClaims(language).tutor_languages) {
+    return {
+      subject: 'math',
+      level: 'Middle school',
+      topic: 'Solving linear equations',
+      target_kind: 'freestyle',
+      student_name: studentName,
+      input_mode: mode,
+      max_duration_minutes: 30,
+      wrap_at_minutes: 28,
+      open_scope: true,
+      ...demoLanguageClaims(language),
+      features: { voice_mode: true, text_mode: true, homework_upload: false },
+      metadata: { source: mode === 'text' ? 'tutor-portal-demo-text' : 'tutor-portal-demo', lesson_language: language },
+    };
+  }
   return {
     subject: 'cs',
     level: 'ap',
@@ -53,12 +73,12 @@ type StartResult =
   | { ok: false; kind: 'limited'; reason: string }
   | { ok: false; kind: 'error' };
 
-async function startGatedDemo(name: string, email: string, mode: 'voice' | 'text'): Promise<StartResult> {
+async function startGatedDemo(name: string, email: string, mode: 'voice' | 'text', language: string): Promise<StartResult> {
   try {
     const res = await fetch('/api/tutor/demo-start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, config: buildDemoConfig(name, mode) }),
+      body: JSON.stringify({ name, email, config: buildDemoConfig(name, mode, language) }),
     });
     if (res.status === 429) {
       const d = (await res.json().catch(() => ({}))) as { reason?: string };
@@ -94,6 +114,7 @@ export function EngineSelector({ mode = 'voice' }: { mode?: 'voice' | 'text' }) 
   const [startError, setStartError] = useState(false);
   const [limited, setLimited] = useState<string | null>(null);
   const [embedSrc, setEmbedSrc] = useState<string | null>(null);
+  const [language, setLanguage] = useState('en');
 
   useEffect(() => {
     try {
@@ -117,7 +138,7 @@ export function EngineSelector({ mode = 'voice' }: { mode?: 'voice' | 'text' }) 
     setStarting(true);
     setStartError(false);
     try {
-      const result = await startGatedDemo(name, email, mode);
+      const result = await startGatedDemo(name, email, mode, language);
       if (!result.ok) {
         if (result.kind === 'limited') setLimited(result.reason);
         else setStartError(true);
@@ -205,12 +226,39 @@ export function EngineSelector({ mode = 'voice' }: { mode?: 'voice' | 'text' }) 
               {isText ? (
                 'Type to the tutor and it writes on the board as it explains. No microphone needed.'
               ) : (
-                <>
-                  AP Computer Science Principles · Algorithms &amp; abstraction · 30-minute demo.
-                  Ask the tutor to switch topics any time.
-                </>
+                language === 'en' ? (
+                  <>
+                    AP Computer Science Principles · Algorithms &amp; abstraction · 30-minute demo.
+                    Ask the tutor to switch topics any time.
+                  </>
+                ) : (
+                  <>
+                    Mathematics · Solving linear equations · 30-minute demo, taught in{' '}
+                    {DEMO_LANGUAGES.find((l) => l.code === language)?.english}. Ask the tutor to switch topics any time.
+                  </>
+                )
               )}
             </p>
+            {/* The language of the whole lesson: what the tutor speaks, hears and writes on the board. */}
+            <div className="flex flex-wrap items-center justify-center gap-2" role="radiogroup" aria-label="Lesson language">
+              <span className="text-xs text-slate-500">Lesson language</span>
+              {DEMO_LANGUAGES.map((l) => (
+                <button
+                  key={l.code}
+                  type="button"
+                  role="radio"
+                  aria-checked={language === l.code}
+                  title={l.english}
+                  lang={l.code}
+                  onClick={() => setLanguage(l.code)}
+                  className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                    language === l.code ? 'border-blue-600 bg-blue-600 font-semibold text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-blue-400'
+                  }`}
+                >
+                  {l.label}
+                </button>
+              ))}
+            </div>
             <input
               type="text"
               value={studentName}

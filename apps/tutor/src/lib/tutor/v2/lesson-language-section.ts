@@ -26,6 +26,8 @@ export function v2LessonLanguageSection(session: Pick<V2Session, 'languages' | '
     // The plan, the topic and the catalogue's lessons are written in English; read aloud as written they put English in a Chinese lesson.
     `The plan, the topic and everything else in these instructions may be written in English: that is only how they are stored. Teach their content in ${L}, in your own words as a teacher of that language would put it; never read their English wording aloud or copy it to the board. The names of the lesson's parts are said and written in ${L} too.`,
     ...lang.writing,
+    // The engine's fallback first card (the plan's title and objectives, in English) is not written in such a lesson.
+    `Your first reply opens the board yourself: a page with a title in ${L} and a short note of what today's lesson covers.`,
     'Mathematical and scientific notation is the same in every language: numbers, variable letters, equations and units in symbols stay as they are on the board.',
     // The voice reads "x = 4" symbol by symbol, or not at all.
     session.mode === 'voice' ? `In speech, say notation in ${L} words, the way a teacher there says it aloud; the symbols go on the board.` : '',

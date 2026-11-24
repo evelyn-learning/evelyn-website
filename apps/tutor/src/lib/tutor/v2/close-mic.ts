@@ -16,13 +16,17 @@ const CJK = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u;
 /** Japanese thanks and goodbyes (and a bare yes): the learner closing too. */
 const JA_PARTING = /(?:どうも)?ありがとう(?:ございます|ございました)?|さようなら|さよなら|またね|また(?:来週|今度|次回|明日)?|お疲れ様(?:でした|です)?|おつかれさま(?:でした|です)?|失礼します|じゃあね|バイバイ|よろしくお願いします|はい|ええ|うん|先生/g;
 
+/** Chinese thanks and goodbyes (Traditional and Simplified), a bare yes, and "I have to go": a learner in a lesson taught in
+ *  Chinese closing too. Read as Japanese, 「謝謝老師，再見」 was two characters that are no Japanese goodbye, and reopened the close. */
+const ZH_PARTING = /(?:非常|太|很)?(?:謝謝|谢谢|感謝|感谢)(?:老師|老师|你|您)?|謝了|谢了|多謝|多谢|再見|再见|下次見|下次见|明天見|明天见|拜拜|掰掰|辛苦了|我(?:先)?走了|我要(?:去|走)了|好的|好啊|好|嗯|對|对|知道了|了解|明白了|懂了|沒問題|没问题|老師|老师|今天|學到很多|学到很多|我/gu;
+
 /** Whether words heard over the closing words call the close off. reopensClose (English: anything but thanks and a
  *  goodbye, any question); and Japanese, which reopensClose reads as one word: anything left once the thanks and
  *  goodbyes are taken out, or a full-width question mark. */
 export function v2CloseCalledOff(said: string): boolean {
   if (/？/.test(said)) return true;
   if (!CJK.test(said)) return reopensClose(said);
-  const rest = said.replace(JA_PARTING, ' ').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  const rest = said.replace(JA_PARTING, ' ').replace(ZH_PARTING, ' ').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
   if (!rest) return false;
   // Latin words left among the Japanese are read as English.
   const latin = rest.replace(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}ー]+/gu, ' ').trim();

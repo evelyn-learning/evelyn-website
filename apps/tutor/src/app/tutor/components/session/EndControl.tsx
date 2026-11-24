@@ -1,4 +1,5 @@
 import { LogOut } from 'lucide-react';
+import { useSessionStrings } from '@/lib/tutor/i18n/SessionStringsContext';
 
 /**
  * The header's end control. Presentational: the two-tap arm state and the
@@ -24,11 +25,12 @@ export interface EndControlProps {
 }
 
 export function EndControl({ armed, mobileFinish, onPress }: EndControlProps) {
+  const S = useSessionStrings();
   const endButton = (
     <button
       onClick={() => onPress()}
-      title={armed ? 'Tap again to end the session' : 'End or pause — your progress is saved, resume anytime'}
-      aria-label={armed ? 'Tap again to end the session' : 'End or pause session'}
+      title={armed ? S.endTapAgain : S.endOrPauseTitle}
+      aria-label={armed ? S.endTapAgain : S.endOrPauseAria}
       className={`${mobileFinish ? 'hidden sm:flex' : 'flex'} shrink-0 items-center gap-1.5 px-3 h-9 rounded-full text-xs font-semibold border transition-colors ${
         armed
           ? 'bg-red-600 text-white border-red-600 hover:bg-red-700'
@@ -40,16 +42,16 @@ export function EndControl({ armed, mobileFinish, onPress }: EndControlProps) {
           read as a broken button) while the pill geometry never changes —
           the second tap lands on the same hit target (R34 rule). */}
       <span className="inline-flex min-w-[2.25rem] justify-center sm:hidden">
-        {armed ? 'End?' : <LogOut className="w-3.5 h-3.5" />}
+        {armed ? S.endShort : <LogOut className="w-3.5 h-3.5" />}
       </span>
       <LogOut className="hidden sm:inline-block w-3.5 h-3.5" />
       {/* inline-block + min-w so the longer "End session?" label reserves
           the same slot as "End / Pause" — armed/unarmed never resize the
           pill, so the second tap always lands on the same hit target. */}
-      <span className="hidden sm:inline-block sm:min-w-[6.5rem]">{armed ? 'End session?' : 'End / Pause'}</span>
+      <span className="hidden sm:inline-block sm:min-w-[6.5rem]">{armed ? S.endSession : S.endPause}</span>
       {/* Screen readers hear the arm regardless of viewport. */}
       <span aria-live="polite" className="sr-only">
-        {armed ? 'Tap again to end the session' : ''}
+        {armed ? S.endTapAgain : ''}
       </span>
     </button>
   );
@@ -60,8 +62,8 @@ export function EndControl({ armed, mobileFinish, onPress }: EndControlProps) {
         type="button"
         data-testid="mobile-finish"
         onClick={() => onPress('finish')}
-        title={armed ? 'Tap again to finish the lesson' : 'Finish lesson'}
-        aria-label={armed ? 'Tap again to finish the lesson' : 'Finish lesson'}
+        title={armed ? S.finishTapAgain : S.finishLesson}
+        aria-label={armed ? S.finishTapAgain : S.finishLesson}
         className={`flex sm:hidden shrink-0 items-center px-2.5 h-9 rounded-full text-xs font-semibold border transition-colors ${
           armed
             ? 'bg-slate-900 text-white border-slate-900'
@@ -70,7 +72,7 @@ export function EndControl({ armed, mobileFinish, onPress }: EndControlProps) {
       >
         {/* Fixed-width slot: "Finish" ↔ "Finish?" never resizes the pill. Kept
             within ~4px of the icon pill it replaces — the phone header is full. */}
-        <span className="inline-flex min-w-[2.75rem] justify-center">{armed ? 'Finish?' : 'Finish'}</span>
+        <span className="inline-flex min-w-[2.75rem] justify-center">{armed ? S.finishShort : S.finish}</span>
       </button>
       {endButton}
     </>
