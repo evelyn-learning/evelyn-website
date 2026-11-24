@@ -25,7 +25,7 @@ function Hero() {
               href="/sandbox"
               className="rounded-xl bg-blue-600 px-8 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-blue-500"
             >
-              Request Sandbox Access
+              Get API keys
             </Link>
             <Link
               href="/docs"
@@ -340,7 +340,7 @@ function CTASection() {
             href="/sandbox"
             className="rounded-xl bg-white px-8 py-3.5 text-sm font-semibold text-blue-600 transition-colors hover:bg-slate-100"
           >
-            Request Sandbox Access
+            Get API keys
           </Link>
           <Link
             href="/docs/quickstart"

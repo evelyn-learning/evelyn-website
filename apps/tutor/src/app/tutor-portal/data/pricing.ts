@@ -45,7 +45,8 @@ export const pricing = {
 /** What a free sandbox comes with. Same engine as production. */
 export const sandboxLimits = {
   freeMinutes: 300,
-  maxSessionDurationMinutes: 30,
+  // 2026-11-24: 30 → 15, the partner minute pool's default session cap (what a sandbox session really ends at).
+  maxSessionDurationMinutes: 15,
   maxConcurrentSessions: 5,
 };
 

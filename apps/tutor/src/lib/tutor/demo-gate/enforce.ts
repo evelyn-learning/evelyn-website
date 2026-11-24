@@ -27,6 +27,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { verifyEmbedTokenAsync } from '@/lib/tutor/portal/embed-token';
 import { demoGateMode, demoGateSecret, gateClientIp, isAllowlistedIp } from './gate';
 import { DEMO_GRANT_COOKIE, verifyDemoGrant, type DemoGrantPayload } from './grant';
+import { poolServerGuard } from '@/lib/tutor/portal/pool-server-guard';
 
 export interface DemoAccessDecision {
   allow: boolean;
@@ -62,6 +63,10 @@ export async function checkDemoAccess(
     if (verdict.ok) {
       const p = verdict.payload;
       if (p.partner_id !== 'evelyn-marketing' || p.demo_gate === 1 || p.demo_gate === true) {
+        // A partner's own token: its minute pool is held here too, not only by the session page
+        // (portal/pool-server-guard.ts; 2026-11-24, anyone can now sign a token for their own sandbox).
+        const pool = typeof p.partner_id === 'string' ? await poolServerGuard(p.partner_id) : 'ok';
+        if (pool !== 'ok') return { allow: false, reason: pool };
         return { allow: true };
       }
     }
@@ -85,6 +90,12 @@ export async function denyIfNoDemoAccess(
 ): Promise<NextResponse | null> {
   const decision = await checkDemoAccess(req, route, bodyToken);
   if (decision.allow) return null;
+  if (decision.reason === 'pool_exhausted' || decision.reason === 'pool_call_limit') {
+    return NextResponse.json(
+      { error: decision.reason, message: 'This account has used its tutoring minutes.' },
+      { status: 402 },
+    );
+  }
   return NextResponse.json(
     { error: 'demo_gate_required', message: 'Start a session from the demo page to continue.' },
     { status: 401 },

@@ -208,13 +208,13 @@ export function EngineSelector({ mode = 'voice' }: { mode?: 'voice' | 'text' }) 
             <p className="text-lg font-semibold text-slate-900">Free demo limit reached</p>
             <p className="max-w-md text-sm text-slate-600">
               {LIMIT_COPY[limited] || 'The free demo limit has been reached.'} To keep evaluating,
-              request a sandbox — it comes with its own free minutes and your own signed keys.
+              get a sandbox (keys arrive as soon as you confirm your email) — it comes with its own free minutes and your own signed keys.
             </p>
             <a
               href="/sandbox"
               className="mt-2 inline-block rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-500"
             >
-              Request Sandbox Access
+              Get API keys
             </a>
           </div>
         ) : (

@@ -18,6 +18,8 @@ export interface IPartnerPool {
   sessionMaxSec?: number;
   idleEndSec?: number;
   alerts?: { pct80At?: string; pct100At?: string };
+  /** Paid engine calls made with this partner's tokens, counted on the server (portal/pool-server-guard.ts). */
+  serverCalls?: number;
   updatedAt: string;
 }
 
@@ -27,6 +29,7 @@ const PartnerPoolSchema = new Schema<IPartnerPool>({
   usedSec: { type: Number, required: true, default: 0 },
   sessionMaxSec: { type: Number },
   idleEndSec: { type: Number },
+  serverCalls: { type: Number },
   alerts: {
     pct80At: { type: String },
     pct100At: { type: String },

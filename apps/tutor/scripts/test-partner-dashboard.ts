@@ -1,0 +1,306 @@
+/**
+ * Partner dashboard and self-serve sandbox (lib/tutor/partner-dashboard): the whole flow against an in-memory
+ * store. No database, no mail.
+ */
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import {
+  SANDBOX_FREE_MINUTES, cleanEmail, envPartnerIds, hashToken, loginLinkUrl, maskSecret, partnerIdFromCompany, pickPartnerId,
+  signupLimits, testLessonClaims, usageByDay,
+} from '../src/lib/tutor/partner-dashboard/core';
+import {
+  accountForSession, addMember, noteFirstSession, removeMember, requestLink, rotateSecret, signOut, useLink,
+  type AccountRow, type DashStore, type LinkRow, type Mail, type ServiceEnv,
+} from '../src/lib/tutor/partner-dashboard/service';
+
+import { POOL_CALLS_FLOOR, POOL_CALLS_PER_CAP_MINUTE, poolCallCeiling, poolGuardVerdict, poolServerGuardOn } from '../src/lib/tutor/portal/pool-server-guard';
+
+let passed = 0; let failed = 0;
+const pending: Promise<void>[] = [];
+function test(name: string, fn: () => void | Promise<void>) {
+  pending.push((async () => {
+    try { await fn(); passed++; console.log(`  ✓ ${name}`); } catch (err) { failed++; console.log(`  ✗ ${name}\n      ${(err as Error).message}`); }
+  })());
+}
+
+function memory() {
+  const s = {
+    t: Date.parse('2026-11-24T12:00:00Z'),
+    counters: new Map<string, number>(), accounts: new Map<string, AccountRow>(), links: new Map<string, LinkRow & { used?: boolean }>(),
+    sessions: new Map<string, { email: string; expiresAt: Date }>(),
+    partners: new Map<string, { name: string; secrets: Array<{ secret: string; expiresAt?: Date }>; poolMinutes: number }>(),
+    mail: [] as Mail[], failCreatePartner: false,
+  };
+  const store: DashStore & { stampFirstSession(partnerId: string, at: Date): Promise<AccountRow | null> } = {
+    now: () => s.t,
+    async reserve(key, cap) { const n = s.counters.get(key) ?? 0; if (cap > 0 && n >= cap) return false; s.counters.set(key, n + 1); return true; },
+    async release(key) { s.counters.set(key, Math.max(0, (s.counters.get(key) ?? 0) - 1)); },
+    async findAccount(email) { return s.accounts.get(email) ?? null; },
+    async listAccounts(partnerId) { return [...s.accounts.values()].filter((a) => a.partnerId === partnerId); },
+    async createAccount(row) { if (s.accounts.has(row.email)) return false; s.accounts.set(row.email, { ...row }); return true; },
+    async updateAccount(email, set) { const a = s.accounts.get(email); if (a) Object.assign(a, set); },
+    async removeAccount(email) { s.accounts.delete(email); },
+    async saveLink(row) { s.links.set(row.tokenHash, { ...row }); },
+    async takeLink(h) { const l = s.links.get(h); if (!l || l.used || l.expiresAt.getTime() <= s.t) return null; l.used = true; return l; },
+    async saveSession(h, email, expiresAt) { s.sessions.set(h, { email, expiresAt }); },
+    async sessionEmail(h) { const x = s.sessions.get(h); return x && x.expiresAt.getTime() > s.t ? x.email : null; },
+    async dropSession(h) { s.sessions.delete(h); },
+    async dropSessionsOf(email) { for (const [h, x] of s.sessions) if (x.email === email) s.sessions.delete(h); },
+    async partnerIdTaken(id) { return s.partners.has(id) || id === 'crimsora'; },
+    async createPartner({ partnerId, name, secret, poolMinutes }) {
+      if (s.failCreatePartner) throw new Error('db down');
+      if (s.partners.has(partnerId)) throw new Error('taken');
+      s.partners.set(partnerId, { name, secrets: [{ secret }], poolMinutes });
+    },
+    async partnerSecrets(partnerId) { return (s.partners.get(partnerId)?.secrets ?? []).filter((x) => !x.expiresAt || x.expiresAt.getTime() > s.t).map((x) => ({ secret: x.secret, label: 'x', createdAt: '', expiresAt: x.expiresAt?.toISOString() })); },
+    async rotateSecret(partnerId, secret, until) { const p = s.partners.get(partnerId)!; p.secrets = [{ secret }, ...p.secrets.map((x) => ({ ...x, expiresAt: x.expiresAt && x.expiresAt < until ? x.expiresAt : until }))]; },
+    async sendMail(m) { s.mail.push(m); return true; },
+    async stampFirstSession(partnerId, at) { const o = [...s.accounts.values()].find((a) => a.partnerId === partnerId && a.role === 'owner' && !a.firstSessionAt); if (!o) return null; const before = { ...o }; o.firstSessionAt = at; return before; },
+  };
+  return { s, store };
+}
+
+const env: ServiceEnv = { origin: 'https://tutor.example', limits: signupLimits({} as NodeJS.ProcessEnv), ownerEmail: 'owner@example.com', signupOn: true };
+const tokenIn = (m: Mail) => decodeURIComponent(/verify\?token=([^\s"<]+)/.exec(m.text)![1]);
+const signup = { email: 'Dev@Acme.io', name: 'Dana Dev', company: 'Acme Learning', useCase: 'maths app', acceptTerms: true, ip: '9.9.9.9' };
+
+console.log('core');
+test('a company name becomes a partner id; reserved and unusable names do not', () => {
+  assert.equal(partnerIdFromCompany('Acme Learning, Inc.'), 'acme-learning-inc');
+  assert.equal(partnerIdFromCompany('Évelyn & Co'), null, 'ours');
+  assert.equal(partnerIdFromCompany('Lumiq'), 'lumiq');
+  for (const bad of ['', 'ab', '学習', 'Evelyn', 'evelyn-marketing', 'admin', 'Test', 'lmtest', '123 Go', 'sandbox']) assert.equal(partnerIdFromCompany(bad), null, bad);
+  assert.ok(partnerIdFromCompany('x'.repeat(80))!.length <= 28);
+});
+test('a taken id gets a random tail; a name that gives none gets a random id', async () => {
+  let n = 0; const rand = () => `r${n++}`;
+  assert.equal(await pickPartnerId('Crimsora', async (id) => id === 'crimsora', rand), 'crimsora-r0');
+  assert.match(await pickPartnerId('学習', async () => false, rand), /^sb-r\d+r\d+$/);
+  await assert.rejects(pickPartnerId('Acme', async () => true, rand));
+});
+test('names in the env secrets map count as taken', () => {
+  const ids = envPartnerIds({ PORTAL_PARTNER_SECRETS: '{"academy":"a","crimsora":"b"}', PORTAL_PARTNER_ID: 'solo' } as unknown as NodeJS.ProcessEnv);
+  assert.deepEqual([...ids].sort(), ['academy', 'crimsora', 'solo']);
+  assert.equal(envPartnerIds({ PORTAL_PARTNER_SECRETS: 'not json' } as unknown as NodeJS.ProcessEnv).size, 0);
+});
+test('emails are lower-cased and checked; the link opens a page, never an API route', () => {
+  assert.equal(cleanEmail('  Dev@Acme.IO '), 'dev@acme.io');
+  for (const bad of ['', 'a@b', 'a b@c.d', 5, null]) assert.equal(cleanEmail(bad), null);
+  assert.equal(loginLinkUrl('a+b', 'https://x.y'), 'https://x.y/dashboard/verify?token=a%2Bb');
+});
+test('a test lesson is an ordinary session of the partner, on the dashboard-test student', () => {
+  const now = Date.parse('2026-11-24T00:00:00Z');
+  const c = testLessonClaims('acme', { language: 'zh-TW', subject: 'math', topic: '聯立方程式', mode: 'text', minutes: 500, partner_id: 'crimsora' } as never, now, ['en', 'ja', 'zh-TW']);
+  assert.equal(c.partner_id, 'acme'); assert.equal(c.student_id, 'dashboard-test'); assert.deepEqual(c.tutor_languages, ['zh-TW']);
+  assert.equal(c.input_mode, 'text'); assert.equal(c.max_duration_minutes, 30); assert.equal(c.exp, now / 1000 + 7200);
+  const en = testLessonClaims('acme', { language: 'xx' }, now, ['en', 'ja']);
+  assert.equal('tutor_languages' in en, false); assert.equal(en.input_mode, 'voice'); assert.equal(en.max_duration_minutes, 10);
+});
+test('usage by day: thirty days, oldest first, empty days kept, older sessions left out', () => {
+  const now = Date.parse('2026-11-24T12:00:00Z');
+  const d = usageByDay([{ startedAt: '2026-11-24T01:00:00Z', seconds: 90 }, { startedAt: '2026-11-24T02:00:00Z', seconds: 30 }, { startedAt: '2026-11-20T00:00:00Z', seconds: 600 }, { startedAt: '2026-09-01T00:00:00Z', seconds: 999 }], now);
+  assert.equal(d.length, 30); assert.equal(d[0].day, '2026-10-26'); assert.deepEqual(d[29], { day: '2026-11-24', minutes: 2, sessions: 2 });
+  assert.deepEqual(d[25], { day: '2026-11-20', minutes: 10, sessions: 1 }); assert.equal(d.reduce((n, x) => n + x.sessions, 0), 3);
+});
+test('a masked secret shows its last four characters only', () => {
+  assert.equal(maskSecret('abcdef0123456789'), '••••••••••••6789'); assert.equal(maskSecret('abc'), '••••');
+});
+
+console.log('sign-up');
+test('a new email: nothing exists until the link is used; then partner, pool, owner account, session and a note to us', async () => {
+  const { s, store } = memory();
+  assert.deepEqual(await requestLink(store, env, signup), { ok: true });
+  assert.equal(s.partners.size, 0); assert.equal(s.accounts.size, 0);
+  assert.equal(s.mail.length, 1); assert.equal(s.mail[0].to, 'dev@acme.io');
+  const token = tokenIn(s.mail[0]);
+  assert.ok(!s.links.has(token) && s.links.has(hashToken(token)), 'only the hash is stored');
+  const r = await useLink(store, env, token);
+  assert.ok(r.ok && r.created && r.partnerId === 'acme-learning');
+  const p = s.partners.get('acme-learning')!;
+  assert.equal(p.poolMinutes, SANDBOX_FREE_MINUTES); assert.match(p.secrets[0].secret, /^[0-9a-f]{64}$/);
+  const a = s.accounts.get('dev@acme.io')!;
+  assert.equal(a.role, 'owner'); assert.ok(a.termsAcceptedAt && a.termsVersion);
+  assert.equal(s.mail[1].to, 'owner@example.com'); assert.match(s.mail[1].subject, /New sandbox: Acme Learning/); assert.match(s.mail[1].text, /maths app/);
+  assert.equal((await accountForSession(store, r.ok ? r.sessionToken : ''))?.email, 'dev@acme.io');
+  assert.ok(!s.mail.some((m) => m.text.includes(p.secrets[0].secret)), 'the secret is never emailed');
+});
+test('a link works once, and not after 30 minutes', async () => {
+  const { s, store } = memory();
+  await requestLink(store, env, signup);
+  const token = tokenIn(s.mail[0]);
+  assert.ok((await useLink(store, env, token)).ok);
+  assert.deepEqual(await useLink(store, env, token), { ok: false, error: 'invalid_link' });
+  await requestLink(store, env, { email: signup.email });
+  s.t += 31 * 60_000;
+  assert.deepEqual(await useLink(store, env, tokenIn(s.mail.at(-1)!)), { ok: false, error: 'invalid_link' });
+  for (const bad of ['', 'short', 5, 'x'.repeat(300)]) assert.deepEqual(await useLink(store, env, bad), { ok: false, error: 'invalid_link' });
+});
+test('one sandbox per email: a second sign-up for the same email signs in to the first', async () => {
+  const { s, store } = memory();
+  await requestLink(store, env, signup); await requestLink(store, env, signup);
+  const [t1, t2] = [tokenIn(s.mail[0]), tokenIn(s.mail[1])];
+  const a = await useLink(store, env, t1); const b = await useLink(store, env, t2);
+  assert.ok(a.ok && a.created); assert.ok(b.ok && !b.created && b.partnerId === 'acme-learning');
+  assert.equal(s.partners.size, 1);
+  // after the account exists the same form sends a sign-in link, and says the same thing
+  assert.deepEqual(await requestLink(store, env, { ...signup, company: 'Other Co' }), { ok: true });
+  assert.equal(s.links.get(hashToken(tokenIn(s.mail.at(-1)!)))!.purpose, 'login');
+});
+test('a sign-in request for an unknown email answers ok and sends nothing', async () => {
+  const { s, store } = memory();
+  assert.deepEqual(await requestLink(store, env, { email: 'nobody@x.io' }), { ok: true });
+  assert.equal(s.mail.length, 0); assert.equal(s.links.size, 0);
+});
+test('sign-up needs a name, a company and the terms', async () => {
+  const { store } = memory();
+  assert.deepEqual(await requestLink(store, env, { ...signup, company: '' }), { ok: false, error: 'missing_fields' });
+  assert.deepEqual(await requestLink(store, env, { ...signup, acceptTerms: 'yes' }), { ok: false, error: 'terms_required' });
+  assert.deepEqual(await requestLink(store, env, { ...signup, email: 'nope' }), { ok: false, error: 'invalid_email' });
+});
+test('limits: links per email per day, sandboxes per IP per day, sandboxes per day for everyone', async () => {
+  const { s, store } = memory();
+  const tight: ServiceEnv = { ...env, limits: { linksPerEmailPerDay: 2, linksPerIpPerDay: 50, sandboxesPerIpPerDay: 1, sandboxesPerDay: 2 } };
+  await requestLink(store, tight, signup); await requestLink(store, tight, signup);
+  assert.deepEqual(await requestLink(store, tight, signup), { ok: false, error: 'rate_limited' });
+  assert.ok((await useLink(store, tight, tokenIn(s.mail[0]))).ok);
+  await requestLink(store, tight, { ...signup, email: 'b@b.io', company: 'Beta Co' });
+  assert.deepEqual(await useLink(store, tight, tokenIn(s.mail.at(-1)!)), { ok: false, error: 'rate_limited' }, 'second sandbox from one IP');
+  assert.equal(s.counters.get('dash:signup:global:2026-11-24'), 1, 'the refused one gave its place back');
+  await requestLink(store, tight, { ...signup, email: 'c@c.io', company: 'Gamma Co', ip: '1.1.1.1' });
+  assert.ok((await useLink(store, tight, tokenIn(s.mail.at(-1)!))).ok);
+  await requestLink(store, tight, { ...signup, email: 'd@d.io', company: 'Delta Co', ip: '2.2.2.2' });
+  assert.deepEqual(await useLink(store, tight, tokenIn(s.mail.at(-1)!)), { ok: false, error: 'rate_limited' }, 'the day is full');
+  assert.equal(s.partners.size, 2);
+});
+test('sign-ups switched off: no new sandbox, sign-in still works', async () => {
+  const { s, store } = memory();
+  await requestLink(store, env, signup); await useLink(store, env, tokenIn(s.mail[0]));
+  const closed = { ...env, signupOn: false };
+  assert.deepEqual(await requestLink(store, closed, { ...signup, email: 'new@x.io' }), { ok: false, error: 'signup_closed' });
+  assert.deepEqual(await requestLink(store, closed, { email: signup.email }), { ok: true });
+  assert.ok((await useLink(store, closed, tokenIn(s.mail.at(-1)!))).ok);
+});
+test('keys could not be made: no account is left behind, and the email can sign up again', async () => {
+  const { s, store } = memory();
+  await requestLink(store, env, signup);
+  s.failCreatePartner = true;
+  await assert.rejects(useLink(store, env, tokenIn(s.mail[0])));
+  assert.equal(s.accounts.size, 0); assert.equal(s.counters.get('dash:signup:global:2026-11-24'), 0);
+  s.failCreatePartner = false;
+  await requestLink(store, env, signup);
+  assert.ok((await useLink(store, env, tokenIn(s.mail.at(-1)!))).ok);
+});
+test('a taken company id gets a tail', async () => {
+  const { s, store } = memory();
+  await requestLink(store, env, { ...signup, company: 'Crimsora' });
+  const r = await useLink(store, env, tokenIn(s.mail[0]));
+  assert.ok(r.ok && /^crimsora-[0-9a-f]{6}$/.test(r.partnerId));
+});
+
+console.log('signed in');
+async function signedIn() {
+  const m = memory();
+  await requestLink(m.store, env, signup);
+  const r = await useLink(m.store, env, tokenIn(m.s.mail[0]));
+  assert.ok(r.ok);
+  return { ...m, token: r.ok ? r.sessionToken : '', owner: m.s.accounts.get('dev@acme.io')! };
+}
+test('sign-out ends the session on the server; a session ends after thirty days', async () => {
+  const { s, store, token } = await signedIn();
+  s.t += 29 * 86_400_000; assert.ok(await accountForSession(store, token));
+  s.t += 2 * 86_400_000; assert.equal(await accountForSession(store, token), null);
+  const again = await signedIn();
+  await signOut(again.store, again.token);
+  assert.equal(await accountForSession(again.store, again.token), null);
+  assert.equal(await accountForSession(again.store, undefined), null);
+});
+test('rotating the secret: the new one is first, the old one works for a day, then is gone', async () => {
+  const { s, store, owner } = await signedIn();
+  const old = (await store.partnerSecrets('acme-learning'))[0].secret;
+  const r = await rotateSecret(store, owner);
+  assert.ok(r.ok && r.secret !== old);
+  let live = await store.partnerSecrets('acme-learning');
+  assert.deepEqual(live.map((x) => x.secret), [r.ok ? r.secret : '', old]);
+  s.t += 25 * 3_600_000;
+  live = await store.partnerSecrets('acme-learning');
+  assert.deepEqual(live.map((x) => x.secret), [r.ok ? r.secret : '']);
+});
+test('members: an owner adds and removes them; a member cannot rotate, add or remove; the owner cannot be removed', async () => {
+  const { s, store, owner } = await signedIn();
+  assert.deepEqual(await addMember(store, env, owner, 'Pat@Acme.io'), { ok: true });
+  const member = s.accounts.get('pat@acme.io')!;
+  assert.equal(member.partnerId, 'acme-learning'); assert.equal(member.role, 'member');
+  assert.deepEqual(await addMember(store, env, owner, 'pat@acme.io'), { ok: false, error: 'email_in_use' });
+  assert.deepEqual(await rotateSecret(store, member), { ok: false, error: 'owner_only' });
+  assert.deepEqual(await addMember(store, env, member, 'x@y.io'), { ok: false, error: 'owner_only' });
+  assert.deepEqual(await removeMember(store, member, owner.email), { ok: false, error: 'owner_only' });
+  assert.deepEqual(await removeMember(store, owner, owner.email), { ok: false, error: 'not_found' });
+  // a member signs in with their own link, and their session ends when they are removed
+  await requestLink(store, env, { email: 'pat@acme.io' });
+  const r = await useLink(store, env, tokenIn(s.mail.at(-1)!));
+  assert.ok(r.ok && !r.created && r.partnerId === 'acme-learning');
+  assert.deepEqual(await removeMember(store, owner, 'pat@acme.io'), { ok: true });
+  assert.equal(await accountForSession(store, r.ok ? r.sessionToken : ''), null);
+});
+test('an owner cannot remove a person of another partner', async () => {
+  const { s, store, owner } = await signedIn();
+  await requestLink(store, env, { ...signup, email: 'o@other.io', company: 'Other Co', ip: '3.3.3.3' });
+  await useLink(store, env, tokenIn(s.mail.at(-1)!));
+  await addMember(store, env, s.accounts.get('o@other.io')!, 'm@other.io');
+  assert.deepEqual(await removeMember(store, owner, 'm@other.io'), { ok: false, error: 'not_found' });
+  assert.ok(s.accounts.has('m@other.io'));
+});
+test('the first session is told to us once', async () => {
+  const { s, store } = await signedIn();
+  const before = s.mail.length;
+  assert.equal(await noteFirstSession(store, env, { partnerId: 'acme-learning', sessionId: 'embed-1', minutes: 6.4, languages: ['zh-TW'], topic: '聯立方程式', inputMode: 'voice' }), true);
+  assert.equal(await noteFirstSession(store, env, { partnerId: 'acme-learning', sessionId: 'embed-2', minutes: 2 }), false);
+  assert.equal(await noteFirstSession(store, env, { partnerId: 'greenapple', sessionId: 'embed-3', minutes: 2 }), false, 'a partner with no dashboard account');
+  assert.equal(s.mail.length, before + 1);
+  assert.match(s.mail.at(-1)!.subject, /First session: Acme Learning/); assert.match(s.mail.at(-1)!.text, /zh-TW[\s\S]*聯立方程式/);
+});
+
+console.log('wiring (source)');
+const src = (rel: string) => readFileSync(join(__dirname, '..', 'src', rel), 'utf8');
+test('the replay page checks the partner as well as the student', () => {
+  assert.match(src('app/tutor-portal/replay/page.tsx'), /session\.sourcePartnerId !== payload\.partner_id/);
+});
+test('every dashboard route that changes something asks for a same-origin request; reads are scoped by the account', () => {
+  for (const r of ['keys/reveal', 'keys/rotate', 'test-link', 'sessions/replay', 'account', 'members']) {
+    assert.match(src(`app/api/tutor-portal/dashboard/${r}/route.ts`), /requireAccount\(req, \{ write: true \}\)/, r);
+  }
+  for (const r of ['start', 'verify', 'logout']) assert.match(src(`app/api/tutor-portal/dashboard/${r}/route.ts`), /sameOrigin\(req\)/, r);
+  const data = src('lib/tutor/partner-dashboard/data.ts');
+  assert.equal((data.match(/TutorSession\.(?:find|findOne|countDocuments)\(/g) ?? []).length, (data.match(/sourcePartnerId: partnerId/g) ?? []).length + 1, 'each query names the partner (one shares a filter object)');
+});
+test('a new partner gets its pool before its row, and the pool is never skipped', () => {
+  const st = src('lib/tutor/partner-dashboard/mongo-store.ts');
+  assert.ok(st.indexOf('PartnerPoolModel.create') > 0 && st.indexOf('PartnerPoolModel.create') < st.indexOf('PartnerModel.create'));
+  assert.match(st, /allowedEndpoints: ENV_FALLBACK_ALLOWED_ENDPOINTS/); assert.match(st, /invalidatePartner\(partnerId\)/);
+});
+
+console.log('pool held on the server');
+test('an empty pool refuses a paid call; a pool with minutes left allows it; no pool row is not pooled', () => {
+  assert.equal(poolGuardVerdict(null), 'ok');
+  assert.equal(poolGuardVerdict({ capSec: 18000, usedSec: 100, serverCalls: 5 }), 'ok');
+  assert.equal(poolGuardVerdict({ capSec: 18000, usedSec: 18000, serverCalls: 5 }), 'pool_exhausted');
+  assert.equal(poolGuardVerdict({ capSec: 0, usedSec: 0 }), 'pool_exhausted');
+});
+test('paid calls are counted, with a ceiling that follows the cap: a caller that reports no minutes is still stopped', () => {
+  assert.equal(poolCallCeiling(18000), 300 * POOL_CALLS_PER_CAP_MINUTE);
+  assert.equal(poolCallCeiling(600), POOL_CALLS_FLOOR);
+  assert.equal(poolGuardVerdict({ capSec: 18000, usedSec: 0, serverCalls: 9000 }), 'ok');
+  assert.equal(poolGuardVerdict({ capSec: 18000, usedSec: 0, serverCalls: 9001 }), 'pool_call_limit');
+  assert.equal(poolGuardVerdict({ capSec: 36000, usedSec: 0, serverCalls: 9001 }), 'ok', 'a top-up raises it');
+});
+test('the gate asks the guard for a partner token and answers 402; the switch defaults on', () => {
+  const g = src('lib/tutor/demo-gate/enforce.ts');
+  assert.match(g, /await poolServerGuard\(p\.partner_id\)/); assert.match(g, /status: 402/);
+  assert.equal(poolServerGuardOn({} as NodeJS.ProcessEnv), true); assert.equal(poolServerGuardOn({ TUTOR_POOL_SERVER_GUARD: 'off' } as unknown as NodeJS.ProcessEnv), false);
+});
+
+void Promise.all(pending).then(() => {
+  console.log(`\n${passed} passed, ${failed} failed`);
+  process.exit(failed ? 1 : 0);
+});

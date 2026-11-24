@@ -18,6 +18,8 @@ import { chargePartnerFor, poolFlagOn } from "@/lib/tutor/portal/partner-pool";
 import { chargeSitting } from "@/lib/tutor/portal/partner-pool-store";
 import { sendPoolAlert } from "@/lib/tutor/portal/partner-pool-alerts";
 import { PartnerModel } from "@/models/Partner";
+import { mongoDashStore, serviceEnv } from "@/lib/tutor/partner-dashboard/mongo-store";
+import { noteFirstSession } from "@/lib/tutor/partner-dashboard/service";
 import { buildAttemptSpanWrite, durationBehindSpans, planAttemptSave, sessionActiveSeconds, type AttemptSavePlan } from "@/lib/tutor/recordings/active-seconds";
 import { clientTotalsMax, usageTotalsBehind } from "@/lib/tutor/ai/usage-totals";import { homeworkSolvedFromDebugEvents } from '@/lib/tutor/lesson-plan/homework-ledger';
 import { runSummaryForSession } from '@/lib/tutor/portal/learner-summary-store';
@@ -618,6 +620,15 @@ export async function POST(req: NextRequest) {
               // Task 8h (ruling 3): the margin this sitting's runtime has (a v2 part-flow lesson's); bounded in the store.
               ...(typeof body.overrunSec === "number" ? { overrunSec: body.overrunSec } : {}),
             });
+            // A self-serve partner's first charged session is told to us, once (partner-dashboard/service.ts
+            // noteFirstSession; Praveen 2026-11-24). Never awaited: it must not slow or sink the save.
+            if (result.charged && status !== "active") {
+              void noteFirstSession(mongoDashStore(), serviceEnv(), {
+                partnerId: who.partnerId, sessionId, minutes: (typeof body.duration === "number" ? body.duration : 0) / 60,
+                languages: Array.isArray(body.tutorLanguages) ? body.tutorLanguages.filter((x: unknown): x is string => typeof x === "string") : null,
+                topic: typeof body.topic === "string" ? body.topic : null, inputMode: typeof body.inputMode === "string" ? body.inputMode : null,
+              }).catch(() => false);
+            }
             if (result.snapshot.pooled) {
               pool = { remaining_sec: result.snapshot.remainingSec, exhausted: result.snapshot.exhausted };
               if (result.crossed.length) {

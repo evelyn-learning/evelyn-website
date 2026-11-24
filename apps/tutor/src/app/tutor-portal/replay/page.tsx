@@ -80,9 +80,15 @@ export default async function StudentReplayPage({ searchParams }: ReplayPageProp
 
   await connectDB();
   const session = await TutorSession.findOne({ sessionId: payload.session_id }).lean<
-    Record<string, unknown> & { studentId?: string } | null
+    Record<string, unknown> & { studentId?: string; sourcePartnerId?: string } | null
   >();
   if (!session) return <Refusal message="This session recording could not be found." />;
+  // The partner too (2026-11-24, self-serve sandboxes): a student id is the partner's own and is not unique
+  // across partners ("1", "test"), so a token signed by one partner must never open another partner's session
+  // that happens to carry the same student id. Every stored session with a student id has its partner.
+  if (!session.sourcePartnerId || session.sourcePartnerId !== payload.partner_id) {
+    return <Refusal message="This session does not belong to this account." />;
+  }
   if (!session.studentId || session.studentId !== payload.student_id) {
     // Ownership is load-bearing here: a replay token only unlocks the
     // student's OWN recording, never a sibling's.

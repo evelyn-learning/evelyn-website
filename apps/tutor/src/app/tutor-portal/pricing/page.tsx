@@ -84,7 +84,7 @@ export default function PricingPage() {
           href="/sandbox"
           className="inline-block rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-500"
         >
-          Request Sandbox Access
+          Get API keys
         </Link>
       </div>
     </div>

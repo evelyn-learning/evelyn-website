@@ -12,7 +12,7 @@ export default function QuickstartPage() {
       {/* Step 1 */}
       <h2 className="mb-3 mt-8 text-xl font-semibold text-slate-900">1. Your credentials</h2>
       <p className="mb-4 text-sm text-slate-600">
-        When your sandbox is provisioned you receive two values:
+        Your sandbox has two values, both on the API keys page of your <a href="/dashboard" className="font-medium text-blue-600 underline">dashboard</a> (<a href="/sandbox" className="font-medium text-blue-600 underline">get a sandbox</a> if you have none yet):
       </p>
       <ul className="mb-4 space-y-2 text-sm text-slate-600">
         <li><strong>Partner id</strong> — a short slug such as <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">acme</code></li>
