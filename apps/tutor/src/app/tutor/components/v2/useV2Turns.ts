@@ -332,7 +332,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     if (p.current.pronunciation && p.current.pronunciationHeard) { const heard = await p.current.pronunciationHeard(); stateRef.current = v2WithPronunciationHeard(stateRef.current, heard); }
     const session: V2ClientSession = {
       studentName: p.current.studentName, subject: p.current.subject, level: p.current.level, mode: p.current.mode,
-      ...((p.current.tutorLanguages?.length ?? 0) > 1 ? { languages: p.current.tutorLanguages } : {}),
+      ...((p.current.tutorLanguages?.length ?? 0) > 0 ? { languages: p.current.tutorLanguages } : {}),
       ...(p.current.sessionMaxMinutes ? { timeBoxMinutes: p.current.sessionMaxMinutes } : {}),
       ...(p.current.sessionMaxMinutes && p.current.sessionWrapMinutes ? { wrapMinutes: p.current.sessionWrapMinutes } : {}),
       // Task 8h (ruling 2): the host's own maximum, so the tutor is told of a margin only where the hard stop below has one.

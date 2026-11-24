@@ -116,8 +116,7 @@ export function brainVersionOverrides(raw: string | undefined): Readonly<Record<
 const BRAIN_VERSION_BY_PARTNER = brainVersionOverrides(process.env.NEXT_PUBLIC_TUTOR_BRAIN_VERSIONS);
 
 /** Whether tutor v2 can run this session. A partner on v2 still gets v1 for the kinds of session v2 has not
- *  taken over: homework help and mock review (their own flows, uploads and ledgers), a diagnostic, a lesson
- *  taught in another language (one in English with a second language for help runs on v2), and a session that stands by for a host's video. Those fall back
+ *  taken over: homework help and mock review (their own flows, uploads and ledgers), a diagnostic, and a session that stands by for a host's video. Those fall back
  *  instead of being taught as an ordinary lesson. */
 export function v2CanRunSession(s: { sessionGoal?: string | null; targetKind?: string | null; tutorLanguages?: string[]; standby?: boolean; homeworkOnV2?: boolean }): boolean {
   // Homework: v2's homework mode is switched on by the plan on the server (v2/homework.ts), so a homework plan
@@ -125,12 +124,9 @@ export function v2CanRunSession(s: { sessionGoal?: string | null; targetKind?: s
   if (s.sessionGoal === 'homework-help' && !s.homeworkOnV2) return false;
   if (s.sessionGoal === 'mock-review') return false;
   if (s.targetKind === 'diagnostic') return false;
-  // A lesson in English with a second language for help runs on v2 (v2/languages.ts: the bilingual section, Japanese
-  // sentence cuts, CJK echo, language-part speech, the stop signal, the level check, measured pronunciation, sentence
-  // cards, the time box and the voice client's barge-in gate, mic re-acquire and captions are in). A lesson taught in
-  // another language (English not first) is not something v2 teaches yet.
-  const languages = s.tutorLanguages ?? [];
-  if (languages.length && !/^en\b/i.test(languages[0]!)) return false;
+  // A lesson in English with a second language for help runs on v2 (v2/languages.ts), and so does a lesson taught in
+  // another language (voice/lesson-language.ts taughtIn; v2/lesson-language-section.ts): v1 has no such lesson, so
+  // these never fall back to it.
   if (s.standby) return false;
   return true;
 }

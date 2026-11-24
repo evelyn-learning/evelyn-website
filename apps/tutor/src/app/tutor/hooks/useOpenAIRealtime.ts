@@ -37,6 +37,7 @@ import { TUTOR_TTS_STREAM_HEAD, TTS_STREAM_HEAD_SAMPLES, TTS_STREAM_FOLLOW_SAMPL
 import { wordIndexAt } from '@/lib/tutor/voice/sonic-ws';
 import { preciseSentenceFraction } from '@/lib/tutor/voice/resume-from-cut';
 import { ttsLanguageFor } from '@/lib/tutor/voice/tts-language';
+import { lessonSpeech } from '@/lib/tutor/voice/lesson-speech';
 import { partitionQueueAtSentenceBoundary, SENTENCE_BOUNDARY_CAP_MS, createBoundaryDrain, finishesWithinCap, type BoundaryOutcome } from '@/lib/tutor/voice/speech-queue-boundary';
 import { useCartesiaSonicWS } from './useCartesiaSonicWS';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
@@ -1226,6 +1227,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
    *  display sentence, or null when no transform is set (then the route /
    *  WS path rewrites the display text as before). */
   const cartesiaText = (trimmed: string): string | null => {
+    // A sentence of a lesson taught in another language is never given to the English rewrites (voice/lesson-speech.ts).
+    const own = lessonSpeech(trimmed, tutorLanguagesRef.current);
+    if (own !== null) return own;
     const f = ttsTextTransformRef.current;
     if (!f) return null;
     try { return f(trimmed, (s) => rewriteForTTS(s, { studentName: studentNameRef.current })) || null; } catch { return null; }

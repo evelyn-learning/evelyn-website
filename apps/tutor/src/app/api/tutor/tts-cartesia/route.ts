@@ -28,7 +28,7 @@
 import { parseSpeechRate } from '@/lib/tutor/voice/speech-rate';
 import { NextRequest } from 'next/server';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
-import { SUPPORTED_TUTOR_LANGUAGES } from '@/lib/tutor/voice/tts-language';
+import { SUPPORTED_TTS_LANGUAGES } from '@/lib/tutor/voice/tts-language';
 import { CARTESIA_TTS_MODEL } from '@/lib/tutor/orchestrator/flags';
 import { CARTESIA_DEFAULT_VOICE_ID, substituteCartesiaVoiceId } from '@core/voice/cartesia-voice-registry';
 
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     };
     // Bilingual sessions name the sentence's language; only a supported tutor
     // language passes, anything else (or nothing) stays 'en' as before.
-    const ttsLanguage = typeof language === 'string' && (SUPPORTED_TUTOR_LANGUAGES as readonly string[]).includes(language)
+    const ttsLanguage = typeof language === 'string' && SUPPORTED_TTS_LANGUAGES.includes(language)
       ? language
       : 'en';
 

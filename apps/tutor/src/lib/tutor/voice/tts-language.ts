@@ -12,38 +12,59 @@
  * omit the field, so every existing request is byte-identical.
  */
 
-/** Tutor languages a tenant may switch on. Each needs STT (ink-2) and TTS
- *  (sonic-3.6) support and a script test below before it joins this list. */
-export const SUPPORTED_TUTOR_LANGUAGES = ['en', 'ja'] as const;
-export type TutorLanguage = (typeof SUPPORTED_TUTOR_LANGUAGES)[number];
+import { LESSON_LANGUAGES, lessonLanguageOf, sessionLanguageRows, taughtIn } from './lesson-language';
 
+/** Tutor languages a tenant may switch on: the rows of lesson-language.ts (each has a recogniser, a voice and a
+ *  script test). */
+export const SUPPORTED_TUTOR_LANGUAGES: readonly string[] = LESSON_LANGUAGES.map((l) => l.code);
+export type TutorLanguage = string;
+/** The voice `language` values a session may send (the rows' Sonic codes). */
+export const SUPPORTED_TTS_LANGUAGES: readonly string[] = [...new Set(LESSON_LANGUAGES.map((l) => l.tts))];
+
+const KANA_SCRIPT = /[\p{Script=Hiragana}\p{Script=Katakana}]/u;
+const HAN_SCRIPT = /\p{Script=Han}/u;
 const JAPANESE_SCRIPT = /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u;
 
-/** Normalise a claim/flag value to the supported list, English always first.
- *  Anything unusable ⇒ null (= the default English-only session). */
+/** Normalise a claim/flag value to the supported rows. English comes first whenever it is listed (an English
+ *  lesson with a second language for help); a list without English keeps its order, and its first language is
+ *  the one the lesson is taught in (lesson-language.ts taughtIn). Anything unusable, or English alone ⇒ null
+ *  (= the default English-only session). */
 export function parseTutorLanguages(raw: unknown): TutorLanguage[] | null {
   const list = typeof raw === 'string' ? raw.split(/[,\s]+/) : Array.isArray(raw) ? raw : null;
   if (!list) return null;
-  const picked = new Set<TutorLanguage>();
+  const picked: string[] = [];
   for (const v of list) {
-    const code = typeof v === 'string' ? v.trim().toLowerCase().slice(0, 2) : '';
-    if ((SUPPORTED_TUTOR_LANGUAGES as readonly string[]).includes(code)) picked.add(code as TutorLanguage);
+    const row = lessonLanguageOf(v);
+    // One row per language: a second region of a language already listed adds nothing the voice could speak.
+    if (row && !picked.some((c) => lessonLanguageOf(c)!.base === row.base)) picked.push(row.code);
   }
-  picked.delete('en');
-  if (picked.size === 0) return null;
+  const others = picked.filter((c) => c !== 'en');
+  if (others.length === 0) return null;
+  const ordered = picked.includes('en') ? ['en', ...others] : others;
   // One shared array per language set: callers pass this down as a React
   // prop/effect dependency, and a fresh array each render would re-fire them.
-  const key = ['en', ...picked].join(',');
+  const key = ordered.join(',');
   let cached = PARSED.get(key);
-  if (!cached) { cached = ['en', ...picked]; PARSED.set(key, cached); }
+  if (!cached) { cached = ordered; PARSED.set(key, cached); }
   return cached;
 }
 const PARSED = new Map<string, TutorLanguage[]>();
 
+/** The voice language of one sentence, from the script it is written in and the session's languages. A sentence
+ *  with kana is Japanese; one with Han characters and no kana is Chinese in a session that has Chinese, else
+ *  Japanese; a sentence with neither is English in a session that has English, and in a lesson taught in
+ *  another language it is that language ("x = 4" in a Chinese lesson is said by the Chinese voice). */
 export function ttsLanguageFor(text: string, languages: readonly string[] | null | undefined): string | undefined {
-  if (!languages || languages.length < 2) return undefined;
-  if (languages.includes('ja') && JAPANESE_SCRIPT.test(text)) return 'ja';
-  return 'en';
+  if (!languages || languages.length === 0) return undefined;
+  const rows = sessionLanguageRows(languages);
+  const lesson = taughtIn(languages);
+  if (!lesson && rows.length < 2) return undefined;
+  const has = (base: string) => rows.find((r) => r.base === base);
+  if (KANA_SCRIPT.test(text) && has('ja')) return 'ja';
+  if (HAN_SCRIPT.test(text)) { const r = has('zh') ?? has('ja'); if (r) return r.tts; }
+  for (const r of rows) if (r.script && r.base !== 'ja' && r.base !== 'zh' && r.script.test(text)) return r.tts;
+  if (has('en')) return 'en';
+  return lesson ? lesson.tts : 'en';
 }
 
 // ─────────────────────────────────────────────────────────────────────────

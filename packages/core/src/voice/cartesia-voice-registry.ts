@@ -369,3 +369,18 @@ export function cartesiaSpeedForVoiceId(voiceId: string | undefined): number | u
   }
   return undefined;
 }
+
+/** The gender of one of this registry's own English voices (teacher bases, accent pools, voice codes are all
+ *  English), or null for a voice id it does not know: a partner's own voice. A lesson taught in another language
+ *  swaps a registry voice for one native to that language, and leaves a partner's own voice alone. */
+export function cartesiaRegistryVoiceGender(voiceId: string | undefined): Gender | null {
+  if (!voiceId) return null;
+  voiceId = upgradeRetiredCartesiaVoice(voiceId);
+  for (const teacher of Object.values(TEACHER_VOICES)) if (teacher.voiceId === voiceId) return teacher.gender;
+  for (const pool of Object.values(ACCENT_POOLS)) {
+    if (pool.female?.voiceId === voiceId) return 'female';
+    if (pool.male?.voiceId === voiceId) return 'male';
+    if (pool.default?.voiceId === voiceId) return 'female';
+  }
+  return null;
+}

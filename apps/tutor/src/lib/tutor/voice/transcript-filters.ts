@@ -356,7 +356,7 @@ export interface NoiseFilterOpts {
 
 /** True when the session's languages include a non-Latin-script one. */
 export function sessionAllowsNonLatin(languages: string[] | undefined): boolean {
-  return (languages ?? []).some((l) => ['ja', 'zh', 'ko', 'ar', 'hi', 'ru', 'el', 'he', 'th'].includes(l));
+  return (languages ?? []).some((l) => ['ja', 'zh', 'ko', 'ar', 'hi', 'ru', 'el', 'he', 'th'].includes(l.toLowerCase().split(/[-_]/)[0]!));
 }
 
 /**

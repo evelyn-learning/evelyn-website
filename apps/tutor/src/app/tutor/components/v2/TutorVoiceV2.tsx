@@ -58,6 +58,8 @@ import { v2HeardIsNoise } from '@/lib/tutor/v2/heard';
 import { WordsWatch } from '@/lib/tutor/v2/words-watch';
 import { V2_CLOCK_PAUSE_HONOURED, v2LessonNowMs } from '@/lib/tutor/v2/time-box';
 import { v2SpeechParts } from '@/lib/tutor/v2/languages';
+import { sessionRecogniser } from '@/lib/tutor/voice/lesson-language';
+import { loadHeardConverter, type HeardConverter } from '@/lib/tutor/voice/heard-script';
 import { v2SpeakSounds, v2SpeakWaveDash } from '@/lib/tutor/v2/spoken-sounds';
 import { answeredAsItEnded, trimToSpoken } from '@/lib/tutor/v2/interrupted';
 import { isMathsSubject, isScienceSubject } from '@/lib/tutor/v2/session-kind';
@@ -855,8 +857,12 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
   const listening = started && realtime.isConnected && !props.standby && !turns.closed;
   // The screen stays on while the conversation runs (useScreenAwake.ts).
   useScreenAwake(started && !turns.closed, props.onDebugEvent);
-  const onTranscript = useCallback((t: PerceptionTranscript) => heard(t.text), [heard]);
-  const onPartial = useCallback((x: { text: string }) => { if (micMutedRef.current) return; wordsWatchRef.current.speech('partial'); lastPartialRef.current = x.text; setComposerStatus((was) => ({ ...was, heard: x.text })); hearingPartial(x.text); }, [hearingPartial]);
+  // A lesson language whose heard text is shown in another script (voice/heard-script.ts: Mandarin heard in Simplified,
+  // read in Traditional in Taiwan) has it converted before anything reads it: the caption, the echo test, the brain.
+  const heardScriptRef = useRef<HeardConverter>((t) => t);
+  useEffect(() => { let on = true; void loadHeardConverter(props.tutorLanguages).then((f) => { if (on) heardScriptRef.current = f; }); return () => { on = false; }; }, [props.tutorLanguages]);
+  const onTranscript = useCallback((t: PerceptionTranscript) => heard(heardScriptRef.current(t.text)), [heard]);
+  const onPartial = useCallback((x: { text: string }) => { if (micMutedRef.current) return; x = { ...x, text: heardScriptRef.current(x.text) }; wordsWatchRef.current.speech('partial'); lastPartialRef.current = x.text; setComposerStatus((was) => ({ ...was, heard: x.text })); hearingPartial(x.text); }, [hearingPartial]);
   const onSpeechStart = useCallback((e?: { resume?: boolean }) => {
     // Fix round 2: only the recogniser's own resume (Ink's turn.resume) is the same utterance; every other start is new.
     echoRef.current.speechStart(Date.now(), playProgress(), !!e?.resume);
@@ -936,10 +942,12 @@ export default function TutorVoiceV2(props: TutorVoiceV2Props) {
     ...(pronunciationOn ? { onStudentAudioFrame: onPronunciationFrame } : {}),
     onTranscript, onSpeechStart, onSpeechStop, onMicLevel, onTranscriptionFailed: onNoTranscript, onError: onRecogniserError,
   });
+  const recogniser = useMemo(() => sessionRecogniser(props.tutorLanguages), [props.tutorLanguages]);
   const ink = useCartesiaInkWS({
     enabled: listening && TUTOR_STT_ENGINE_INK2,
     onStudentAudioFrame: pronunciationOn ? onStudentFrame : recorder.pushStudentChunk,
     turnEndTimeoutMs: inkTurnEndTimeoutMs(props.tutorLanguages),
+    model: recogniser.model, languageHints: recogniser.hints,
     onTranscript, onPartialTranscript: onPartial, onSpeechStart, onSpeechStop, onMicLevel, onTranscriptionFailed: onNoTranscript, onError: onRecogniserError,
     onDiagnostic: onInkDiagnostic,
     onTurnEndedEmpty: onTurnEndedEmpty,

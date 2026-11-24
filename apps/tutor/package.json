@@ -552,5 +552,8 @@
     "live:gameclass-replay": "node scripts/gameclass-replay.mjs",
     "test:no-raw-solver-errors": "npx tsx scripts/test-no-raw-solver-errors.ts",
     "test:trial-checks-typed": "node scripts/test-trial-checks-typed.mjs"
+  },
+  "dependencies": {
+    "opencc-js": "^1.4.2"
   }
 }

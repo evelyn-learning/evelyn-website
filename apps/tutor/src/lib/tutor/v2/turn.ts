@@ -41,6 +41,8 @@ import { ReplyGate, isGoodbye, isPartFrame } from './reply-gate';
 import { V2_JA_SCRIPT, v2AnswerAsksOrDeclines, v2GoForPart, v2AskedParts, v2OptionalAhead, v2OptionalDeclined, v2SummaryAsked, v2SummaryGo, v2AskRepeats, v2AsksPartChange, v2EndingPartAsk, v2HeldPageOwed, v2HeldPartWaiting, v2IsPartAsk, v2MoveAnswer, v2NextPart, v2PageForPart, v2PartAskLine, v2PartChangeAsked, v2PartInHand, v2PartNamedLate, v2PartOfPage, v2PartViewed, v2PageTurnNote, v2PositionPage, v2PendingPart, v2PlanLabelled, v2SamePartPages, v2TutorReplies, v2UnheardPartAsk } from './part-flow';
 import { heardAsWords } from './heard';
 import { v2IsPracticeAsk, v2LanguagesSection } from './languages';
+import { v2LessonLanguageSection } from './lesson-language-section';
+import { taughtIn } from '../voice/lesson-language';
 import { v2ReadsByClauses } from './language-pack';
 import { v2AsksRepeat, v2AsksTheLearner, v2HandsOver, v2ReplyAsks, v2ReplyHandsOver, v2ReplySentences } from './one-question';
 import { V2_LEVEL_WAIT, V2_LEVEL_WAIT_OVER, V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2MarkLevelKnownParts, v2ReopenLevelCheck, v2WorkingLevelSection } from './working-level';
@@ -217,6 +219,7 @@ export function v2OpeningOverview(session: V2Session, enabled: boolean = TUTOR_V
  *  wrote "centred" and "colour" in an AP lesson would be noticed sooner or later (Praveen, AP Psychology,
  *  portal-e8640e11). A course named the British way keeps its own spelling. */
 export function v2EnglishLine(session: V2Session): string {
+  if (taughtIn(session.languages)) return '';
   const where = `${session.subject} ${session.topic ?? ''} ${session.level}`;
   if (/\b(?:i?gcse|a[- ]levels?|as[- ]levels?|key stage|ks[1-5]|year\s*\d{1,2}|cbse|icse)\b/i.test(where)) return '';
   return 'When you write or speak English, use American spelling and usage throughout, on the board as well: center, color, organize, math.';
@@ -234,6 +237,7 @@ export function v2SessionPart(session: V2Session): string {
       session.mode === 'voice'
         ? 'This is a spoken conversation. Your words are read aloud, so write them the way you would say them: no symbols, no lists, no headings. Speech is slow to listen to: a reply of more than about fifty words is a long one. Their words reach you through a speech recogniser, which now and then mishears a word: when what you heard makes no sense where it stands, ask what they meant.'
         : 'This is a typed conversation. They read your replies beside the board. Keep each reply short.',
+      v2LessonLanguageSection(session) ?? '',
       session.timeBoxMinutes ? `The conversation is meant to last about ${session.timeBoxMinutes} minutes.` : '',
       session.background?.length ? `What is known about this person:\n${session.background.map((l) => `  - ${l}`).join('\n')}` : '',
       `\n${renderDiscussionMap(session.plan, discussion)}`,
@@ -249,6 +253,8 @@ export function v2SessionPart(session: V2Session): string {
     v2EnglishLine(session),
     v2ModeLines(session.mode),
     v2LanguagesSection(session.languages, session.mode, { pronunciationMeasured: v2PronunciationOn(session) }) ?? '',
+    // Only for a lesson taught in another language (lesson-language-section.ts): every other session part is unchanged.
+    v2LessonLanguageSection(session) ?? '',
     // Only for a partner that checks the level: every other session part is unchanged.
     v2LevelCheckOn(session) ? v2WorkingLevelSection() : '',
     // Only for a partner that measures pronunciation, in a spoken lesson: every other session part is unchanged.

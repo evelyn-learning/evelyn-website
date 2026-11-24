@@ -39,11 +39,12 @@ import { unloadSaveStatus } from '@/lib/tutor/voice/lesson-close';
 import { TUTOR_CLOSED_LESSON_COMPLETES, TUTOR_BRAIN_V2_CLAIM, TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT, TUTOR_HOST_START, TUTOR_HOST_LESSON, TUTOR_HOST_QUESTION_READ, TUTOR_EXTRA_LANGUAGES, TUTOR_THINKING_CUE, TUTOR_V2_FLAG_CLOCK_PAUSE } from '@/lib/tutor/orchestrator/flags';
 import { v2ClientMarginMin } from '@/lib/tutor/v2/time-box';
 import { parseTutorLanguages } from '@/lib/tutor/voice/tts-language';
+import { lessonVoiceId } from '@/lib/tutor/voice/lesson-language';
 import { shouldFlushEarly } from '@/lib/tutor/orchestrator/flush-policy';
 import type { TeacherPersonaWire } from '@core/ai/teacher-persona';
 import { isVoiceCode } from '@core/voice/voice-codes';
 import { resolveEmbedPersona } from '@/lib/tutor/portal/embed-persona';
-import { cartesiaSpeedForVoiceId, CARTESIA_DEFAULT_VOICE_ID } from '@core/voice/cartesia-voice-registry';
+import { cartesiaSpeedForVoiceId, cartesiaRegistryVoiceGender, CARTESIA_DEFAULT_VOICE_ID } from '@core/voice/cartesia-voice-registry';
 import { parseSpeechRate } from '@/lib/tutor/voice/speech-rate';
 import { resolveThinkingCueClaim } from '@/lib/tutor/voice/thinking-cue';
 import { resolveSessionMode } from '@/lib/tutor/voice/resolve-session-mode';
@@ -840,6 +841,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // omits `teacher` hears the same natural voice as every first-party surface
   // instead of the OpenAI Realtime fallback. An explicit openai persona voice
   // is still honored. Flag TUTOR_EMBED_CARTESIA_DEFAULT ('off' = old behavior).
+  const tutorLanguages = TUTOR_EXTRA_LANGUAGES ? parseTutorLanguages(config.tutor_languages) ?? undefined : undefined;
   const useCartesiaDefault = TUTOR_EMBED_CARTESIA_DEFAULT && !teacherVoice && !voiceOverrideId;
   if (useCartesiaDefault && typeof window !== 'undefined') {
     // Served-artifact marker for this behavior (Rule 4) + a breadcrumb when a
@@ -847,11 +849,14 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     console.info('[embed] tts-default-cartesia: no teacher persona in token');
   }
   const ttsProvider = resolveTtsProvider(null, useCartesiaVoice || useCartesiaDefault ? 'cartesia' : undefined, sessionMode);
-  const cartesiaVoiceId = useCartesiaVoice
+  const sessionVoiceId = useCartesiaVoice
     ? (voiceOverrideId ?? teacherVoice?.voiceId)
     : useCartesiaDefault
       ? CARTESIA_DEFAULT_VOICE_ID
       : undefined;
+  // A lesson taught in another language speaks with a voice native to it (voice/lesson-language.ts): the session's
+  // own when it is one of that language's, else the language's voice of the same gender. English lessons: unchanged.
+  const cartesiaVoiceId = ttsProvider === 'cartesia' ? lessonVoiceId(tutorLanguages, sessionVoiceId, !sessionVoiceId ? null : cartesiaRegistryVoiceGender(sessionVoiceId) ?? 'partner') : sessionVoiceId;
   // R38 Task 6 fix round: the embed supplies a raw voiceId (not a
   // teacherId), so resolveCartesiaVoice()'s teacher-keyed lookup never runs
   // here — cartesiaSpeedForVoiceId scans by id instead. Elena/Katie is the
@@ -859,7 +864,6 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // is most visible; unknown/marketplace voice ids resolve undefined (no
   // speed sent — unchanged behavior for every other partner voice).
   const cartesiaVoiceSpeed = cartesiaSpeedForVoiceId(cartesiaVoiceId);
-  const tutorLanguages = TUTOR_EXTRA_LANGUAGES ? parseTutorLanguages(config.tutor_languages) ?? undefined : undefined;
   // Per-partner behaviour (2026-10-27 merge decisions): opener prefetch on
   // for bilingual sessions only, post-close auto-end on unless a partner row
   // says otherwise. See lib/tutor/portal/partner-session-options.ts.

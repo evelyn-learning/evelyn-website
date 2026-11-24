@@ -137,6 +137,11 @@ export interface UseCartesiaInkWSOptions {
   turnEagerEndThreshold?: number;
   turnEndThreshold?: number;
   turnEndTimeoutMs?: number;
+  /** The Ink model that listens (voice/lesson-language.ts sessionRecogniser): ink-2 unless the session has a
+   *  language only ink-preview hears (Mandarin). Absent ⇒ ink-2, the request every session made before. */
+  model?: 'ink-2' | 'ink-preview';
+  /** ink-preview only: the languages it is told to expect (base codes, at most 6). ink-2 refuses hints. */
+  languageHints?: readonly string[];
   onSpeechStart?: (e: PerceptionSpeechEvent) => void;
   onSpeechStop?: (e: PerceptionSpeechEvent) => void;
   /** The cumulative partial transcript on every `turn.update` (pause-first
@@ -229,6 +234,8 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
     turnEagerEndThreshold = ENV_TURN_EAGER_END_THRESHOLD,
     turnEndThreshold = ENV_TURN_END_THRESHOLD,
     turnEndTimeoutMs = ENV_TURN_END_TIMEOUT_MS,
+    model = 'ink-2',
+    languageHints,
     onSpeechStart,
     onSpeechStop,
     onPartialTranscript,
@@ -294,6 +301,8 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
 
   const thresholdsRef = useRef({ turnStartThreshold, turnEagerEndThreshold, turnEndThreshold, turnEndTimeoutMs });
   thresholdsRef.current = { turnStartThreshold, turnEagerEndThreshold, turnEndThreshold, turnEndTimeoutMs };
+  const recogniserRef = useRef({ model, hints: languageHints });
+  recogniserRef.current = { model, hints: languageHints };
 
   const setState = useCallback((next: PerceptionState) => {
     setStateInternal((prev) => {
@@ -679,7 +688,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
 
     const { turnStartThreshold: ts, turnEagerEndThreshold: te, turnEndThreshold: tn, turnEndTimeoutMs: tt } = thresholdsRef.current;
     const params = new URLSearchParams({
-      model: 'ink-2',
+      model: recogniserRef.current.model,
       encoding: 'pcm_f32le',
       sample_rate: String(INK_SAMPLE_RATE),
       cartesia_version: CARTESIA_VERSION,
@@ -689,6 +698,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
       turn_end_threshold: String(tn),
       turn_end_timeout_ms: String(tt),
     });
+    if (recogniserRef.current.model === 'ink-preview') for (const h of (recogniserRef.current.hints ?? []).slice(0, 6)) params.append('language_hint', h);
     const ws = new WebSocket(`wss://api.cartesia.ai/stt/turns/websocket?${params}`);
 
     ws.onopen = () => {
