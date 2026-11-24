@@ -150,6 +150,8 @@ export const V2_DISCUSSION_CONSTITUTION = `You are a thinking partner in a live,
 
 You have no position to bring them to. You are not for or against the thing under discussion, and a conversation in which they end exactly where they began, having been heard and understood, is a good one. A firm view, for or against, may stand: explore what is behind it — what they have seen, what it costs them, what they would need — and never try to move it. Meeting a reservation with an exception ("what about a student who only…", "but if it were just…") is arguing, however gently it is put: a string of them leaves a person feeling that only one answer will be accepted. When they resist a second time, bring no more cases, exceptions or consequences that point the other way: stay with their concern and ask about it. If they tell you they feel steered, say plainly that they are right to say so, drop the line you were on, and go back to what they actually think.
 
+Never defend a case, or the person in it. A case is something to think with, not a side you are on. When they judge it harshly, that judgement is their view: ask what is behind it. Don't answer it with what the person in the case did right, don't weigh the alternative they offer against the thing under discussion and find it wanting, and don't hold something they valued a moment ago up against what they are saying now. A reply to a view you might be tempted to answer has no "but" in it.
+
 Meet them where they are. They may be sceptical, tired, frustrated, new to all this, or sure they have better things to do: say so when you hear it, without trying to fix it. Match their depth: with someone already thinking about policy and guardrails, talk at that level; with someone new or resistant, start small and plain.
 
 # How you talk with them
@@ -272,7 +274,7 @@ export function renderThinking(t: V2State['thinking']): string {
   const n = t.complications ?? 0;
   const lines = [
     t.addressAs ? `  they asked to be addressed as: ${t.addressAs} (use it sparingly)` : t.addressDeclined ? '  they gave no name: address them without one; never ask again, never invent one' : '',
-    t.stance ? `  their stance on the subject: ${t.stance}${t.stance === 'mixed' ? '' : ' — considerations marked as leaning the other way are not yours to raise'}` : '',
+    t.stance ? `  their stance on the subject: ${t.stance}${t.stance === 'mixed' ? '' : ': understand it, don\'t test it — no counter-example, no defence of a case or the person in it; considerations marked as leaning the other way are not yours to raise'}` : '',
     t.position ? `  position now: ${t.position}` : '',
     t.example ? `  their own student or experience: ${t.example}` : '',
     t.weighed.length ? `  already raised or weighed (don't bring these back): ${t.weighed.join('; ')}` : '',
@@ -289,7 +291,7 @@ export function renderThinking(t: V2State['thinking']): string {
 export function addressFact(d: DiscussionMeta, t: V2State['thinking'], history: V2State['history']): string {
   if (!d.addressQuestion || t?.addressAs || t?.addressDeclined) return '';
   if (history.filter((m) => m.role === 'assistant').length !== 1) return '';
-  return `you have just asked how they would like to be addressed. If their answer plainly gives a name or a form of address, record it (record_thinking address_as) and use it once in this reply. If they gave none, would rather not say, or it cannot be made out, record address_declined and go on without any name: never ask again, never guess one, never a stand-in for one. If they went straight to the subject, take that up and treat the name as not given.${d.firstQuestion ? ` Otherwise, in this same reply, ask: "${d.firstQuestion}"` : ''}`;
+  return `you have just asked how they would like to be addressed. If their answer plainly gives a name or a form of address, record it (record_thinking address_as) and use it once in this reply. If they gave none, would rather not say, or it cannot be made out, record address_declined and go on without any name: never ask again, never guess one, never a stand-in for one. If they went straight to the subject, take that up and treat the name as not given.${d.firstQuestion ? ` Otherwise, in this same reply, ask: "${d.firstQuestion}" Nothing else goes in this reply: the welcome has already said what the conversation is, and the lead-in to the cases comes when you tell the first one.` : ''}`;
 }
 
 /** Whether the last two exchanges have left the plan's subject: none of its words in the tutor's last two
@@ -333,6 +335,8 @@ export function lastReplyNotes(history: V2State['history'], voice = false, heard
   if (/\b(?:about|only|just) (?:a|one|two|three|four|five|\d+) minutes? (?:left|remaining|to go)\b/i.test(text)) out.push('it read the clock out');
   // A run of "think of a student who only…" met every objection of a sceptical teacher, who then said the only
   // answer on offer was the tutor's (embed-1794951911157).
+  const argued = text.match(DISCUSSION_ARGUED);
+  if (argued) out.push(`it argued the other side of what they said ("${argued[0].trim().slice(0, 70)}"): take no side in this reply — no defence of a case or its person, no "but" — ask what is behind their view and let it stand`);
   if (DISCUSSION_HYPOTHETICAL.test(text)) out.push('it put a hypothetical student to them: the next one comes from what they have seen themselves, not from an exception you supply');
   const question = text.split(/(?<=[.!?])\s+/).filter((x) => x.trim().endsWith('?')).pop() ?? '';
   const qWords = question.split(/\s+/).filter(Boolean).length;
@@ -359,6 +363,11 @@ export const DISCUSSION_NOT_FOLLOWED = /\b(?:say (?:that|it) again|(?:don'?t|did
 
 /** Asking leave to go on to the next case ("Shall we go on to Diego?" drew "Who's Diego?", local test embed-1795030468491). */
 export const DISCUSSION_PERMISSION = /\b(?:shall we (?:go on|move on|look at|turn to|take)|ready (?:to|for) (?:move on|go on|the (?:next|second))|(?:want|like) to (?:go on|move on) to|next is\b|the (?:first|next) part is done)\b/i;
+
+/** The tutor answering a view instead of exploring it: a "but it can't…" set against the alternative they offered, the case's
+ *  person defended ("Kelly still made every choice"), or their own words turned on them ("the part you valued in…"). All
+ *  three met "Kelly shouldn't have used AI" in a test of the partner's third round (embed-1795552377824). */
+export const DISCUSSION_ARGUED = /\bbut (?:it|that|they|he|she|a|an|the)\b[^.?!]{0,70}\b(?:can'?t|cannot|won'?t|doesn'?t|does not|isn'?t|is not)\b|\b[A-Z][a-z]+ still (?:made|had to|has to|chose|chooses|decides?|decided|did|wrote|kept|judged?)\b|\b(?:the (?:part|thing|very thing|same thing)|what) you (?:valued|liked|praised|wanted)\b/;
 
 /** A hypothetical student supplied by the tutor to test an objection. */
 export const DISCUSSION_HYPOTHETICAL = /\b(?:picture|imagine|think of|suppose|consider|what about|take) (?:a|one|another) (?:student|child|pupil|kid|learner) (?:who|that|whose)\b/i;
