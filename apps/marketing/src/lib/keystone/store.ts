@@ -649,13 +649,20 @@ export async function ingestQtiItems(items: QtiItem[], actor: Actor, uploadId: s
   for (const q of items) {
     let questionHtml = q.questionHtml;
     let castleRockSolutionHtml = q.castleRockSolutionHtml;
+    let options = q.options.map((o) => ({ label: o.label, html: o.html }));
+    // Interactions carry HTML too (choices, gaps, premises): rewritten in their JSON form, where a quote is \".
+    let interactionsJson = JSON.stringify(q.interactions ?? []);
     const newBytes = new Map<string, Uint8Array>();
     for (const [ref, data] of q.resources) {
       const file = ref.split("/").pop()!;
       const url = assetUrl(q.itemId, file);
       newBytes.set(file, data);
-      questionHtml = questionHtml.split(`src="${ref}"`).join(`src="${url}"`);
-      castleRockSolutionHtml = castleRockSolutionHtml.split(`src="${ref}"`).join(`src="${url}"`);
+      // Every place a student or reviewer sees the image: the question, every choice, every interaction, their solution.
+      const swap = (h: string) => h.split(`src="${ref}"`).join(`src="${url}"`);
+      questionHtml = swap(questionHtml);
+      castleRockSolutionHtml = swap(castleRockSolutionHtml);
+      options = options.map((o) => ({ ...o, html: swap(o.html) }));
+      interactionsJson = interactionsJson.split(`src=\\"${ref}\\"`).join(`src=\\"${url}\\"`);
     }
     const fields = {
       subject: q.subject,
@@ -666,11 +673,13 @@ export async function ingestQtiItems(items: QtiItem[], actor: Actor, uploadId: s
       standards: q.standards,
       key: q.key,
       questionHtml,
-      options: q.options.map((o) => ({ label: o.label, html: o.html })),
-      interactions: q.interactions,
+      options,
+      interactions: JSON.parse(interactionsJson) as typeof q.interactions,
       keys: q.keys,
       castleRockSolutionHtml,
       qti: { apip: q.raw.apip, metadata: q.raw.metadata, resources: [...q.resources.keys()], passages: q.raw.passages },
+      sourceFindings: q.sourceFindings ?? [],
+      sourceNotes: q.sourceNotes ?? [],
       uploadId,
       updatedAt: new Date(),
     };

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3D teacher test</title>
+<style>
+  body { margin: 0; font: 16px/1.5 -apple-system, "Segoe UI", Arial, sans-serif; background: #f6f7fa; color: #14213a; }
+  main { max-width: 760px; margin: 0 auto; padding: 20px 16px 40px; }
+  h1 { font-size: 22px; margin: 0 0 6px; } p { color: #586580; margin: 0 0 12px; }
+  #avatar { width: 100%; max-width: 420px; aspect-ratio: 1 / 1; margin: 0 auto 12px; border-radius: 50%; overflow: hidden; background: #dfe9f5; box-shadow: 0 4px 18px rgba(20,33,58,.18); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 10px; }
+  button, select { font: inherit; font-weight: 600; padding: 7px 14px; border-radius: 8px; border: 1.5px solid #7a2a8e; background: #fff; color: #7a2a8e; cursor: pointer; }
+  button.go { background: #7a2a8e; color: #fff; }
+  #cap { min-height: 3em; font-size: 17px; } #status { font-size: 14px; color: #586580; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.186/build/three.module.js/+esm",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186/examples/jsm/",
+  "talkinghead": "https://cdn.jsdelivr.net/gh/met4citizen/TalkingHead@1.8/modules/talkinghead.mjs"
+} }
+</script>
+</head><body><main>
+<h1>3D teacher test</h1>
+<p>A true 3D head drawn live in the browser, speaking the recorded explanation. These three characters are the library's own samples, used only to judge the look.</p>
+<div id="avatar"></div>
+<div class="row"><label>Character <select id="who"><option value="avaturn">Realistic woman (Avaturn sample)</option><option value="avatarsdk">Realistic (Avatar SDK sample)</option><option value="mpfb">Open-source character (MPFB)</option></select></label>
+<label>Voice <select id="voice"></select></label></div>
+<div class="row"><button class="go" data-step="0">▶ Step 1</button><button data-step="1">▶ Step 2</button><button data-step="2">▶ Step 3</button><button data-step="3">▶ Step 4</button><button id="stop">Stop</button></div>
+<p id="cap"></p><p id="status">Loading…</p>
+</main>
+<script type="module">
+import { TalkingHead } from "talkinghead";
+const $ = (id) => document.getElementById(id), status = (t) => { $("status").textContent = t; };
+const voices = await (await fetch("voices.json")).json();
+for (const v of Object.values(voices)) $("voice").add(new Option(`${v.name} (${v.accent}, ${v.gender})`, v.key));
+$("voice").value = "ca-f";
+const head = new TalkingHead($("avatar"), { ttsEndpoint: "/none/", lipsyncModules: ["en"], cameraView: "head", cameraRotateEnable: true, modelFPS: 30 });
+const BODY = { avaturn: "F", avatarsdk: "M", mpfb: "F" };
+async function load() {
+  const who = $("who").value; status("Loading the character…");
+  try {
+    await head.showAvatar({ url: `../3d/avatars/${who}.glb`, body: BODY[who], avatarMood: "happy", lipsyncLang: "en",
+      baseline: who === "avaturn" ? { headRotateX: -0.05, eyeBlinkLeft: 0.15, eyeBlinkRight: 0.15 } : {} });
+    head.setView("head"); status("Ready."); window.thReady = true;
+  } catch (e) { status("Could not load: " + e.message); window.thError = String(e); }
+}
+$("who").onchange = () => { window.thReady = false; load(); };
+async function play(k) {
+  const v = voices[$("voice").value], st = v.steps[k];
+  const buf = await head.audioCtx.decodeAudioData(await (await fetch(st.file)).arrayBuffer());
+  head.stopSpeaking(); $("cap").textContent = "";
+  head.speakAudio({ audio: buf, words: st.words.map((w) => w[0]), wtimes: st.words.map((w) => w[1]), wdurations: st.words.map((w) => Math.max(40, w[2] - w[1])) },
+    { lipsyncLang: "en" }, (w) => { $("cap").textContent += w; });
+  status(`Speaking step ${k + 1} in ${v.name}'s voice.`);
+}
+document.querySelectorAll("[data-step]").forEach((b) => b.onclick = () => play(+b.dataset.step));
+$("stop").onclick = () => head.stopSpeaking();
+await load();
+</script>
+</body></html>

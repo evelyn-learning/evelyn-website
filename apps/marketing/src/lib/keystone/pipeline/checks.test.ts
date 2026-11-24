@@ -528,3 +528,13 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
+
+// 2026-11-23: an alt text holding "x=… x=…" is not a repeated attribute (138606 and 8 more were flagged by it).
+{
+  const xp = xmlProblem;
+  const ok = xp('<root><img class="mathml" src="resources/a.png" width="159" height="13" style="vertical-align: -1.3px;" alt="x=-7 x=-20" /></root>');
+  if (ok !== null) throw new Error(`alt text read as attributes: ${ok}`);
+  const bad = xp('<root><img src="a.png" src="b.png" /></root>');
+  if (bad !== "<img> repeats an attribute") throw new Error(`a real repeated attribute must still be caught: ${bad}`);
+  console.log("xmlProblem alt text: ok");
+}

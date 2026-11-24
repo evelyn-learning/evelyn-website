@@ -498,7 +498,9 @@ log_message "STEP" "Generating public/ manifest..."
 # media; it lives on the server and in each developer's checkout). It is
 # excluded from the manifest so a checkout without it can never prune the
 # server's copy, and the server-side prune refuses that path too.
-find "$APP_DIR/public" -type f -not -path "$APP_DIR/public/images/blog/*" | LC_ALL=C sort > .deploy-public-manifest
+# public/client-samples (2026-11-21) is the same kind of thing: media-heavy sample pages for one client, present
+# only in the checkout that made them. Left out of the manifest so a deploy from another checkout never prunes them.
+find "$APP_DIR/public" -type f -not -path "$APP_DIR/public/images/blog/*" -not -path "$APP_DIR/public/client-samples/*" | LC_ALL=C sort > .deploy-public-manifest
 log_message "INFO" "Manifest contains $(wc -l < .deploy-public-manifest) entries"
 
 # Step 1.6: Generate a .next/static/ manifest for orphan-chunk pruning.
@@ -725,7 +727,7 @@ run_remote_command "cd $REMOTE_DIR && \
   unzip -qo $ZIP_FILE && \
   rm -f $ZIP_FILE && \
   if [ ! -s $APP_DIR/.env.local ]; then echo \"FATAL: $REMOTE_DIR/$APP_DIR/.env.local is missing or empty. Refusing to restart $PM2_NAME — it would start with none of its secrets.\"; exit 1; fi && \
-  STALE_FILES=\$(comm -23 /tmp/.deploy-public-manifest.$TMP_TAG.prev .deploy-public-manifest | grep -v '^$APP_DIR/public/images/blog/' || true) && \
+  STALE_FILES=\$(comm -23 /tmp/.deploy-public-manifest.$TMP_TAG.prev .deploy-public-manifest | grep -v -e '^$APP_DIR/public/images/blog/' -e '^$APP_DIR/public/client-samples/' || true) && \
   if [ -n \"\$STALE_FILES\" ]; then echo \"Pruning stale public/ files:\"; echo \"\$STALE_FILES\"; echo \"\$STALE_FILES\" | xargs -r rm -f; else echo \"No stale public/ files to prune.\"; fi && \
   rm -f /tmp/.deploy-public-manifest.$TMP_TAG.prev && \
   if [ -s .deploy-static-manifest ]; then find $APP_DIR/.next/static -type f | LC_ALL=C sort > /tmp/.static-have.$TMP_TAG && LC_ALL=C sort .deploy-static-manifest > /tmp/.static-keep.$TMP_TAG && comm -23 /tmp/.static-have.$TMP_TAG /tmp/.static-keep.$TMP_TAG > /tmp/.static-orphans.$TMP_TAG && if [ -s /tmp/.static-orphans.$TMP_TAG ]; then echo \"Pruning \$(wc -l < /tmp/.static-orphans.$TMP_TAG) orphaned .next/static file(s) from prior builds\"; xargs -r rm -f < /tmp/.static-orphans.$TMP_TAG; else echo \"No orphaned .next/static files to prune.\"; fi && rm -f /tmp/.static-have.$TMP_TAG /tmp/.static-keep.$TMP_TAG /tmp/.static-orphans.$TMP_TAG; else echo \"WARN: .deploy-static-manifest missing/empty — skipping static prune (safety)\"; fi && \

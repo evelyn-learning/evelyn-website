@@ -348,6 +348,20 @@ async function main() {
     ok(!stated.ok && /stated answer/.test(stated.detail));
     const other = await run(withShort("Option B is wrong. So the answer is A."));
     ok(!other.ok && other.detail === "the Short answer names option B besides the agreed A", !other.ok ? other.detail : "");
+    // 2026-11-23 (228956, 141278): a letter the question itself uses as a name is not an option unless called one
+    {
+      const tri = item({ questionHtml: "<p>In triangle DEF, \u2220D = 30\u00b0 and e = 38 units. A possible value for d is</p>" });
+      const C = { kind: "choice" as const, letters: ["C"] };
+      const wC = (short: string) => withShort(short, "Here d = 31 units. So the answer is C.", choice("C"));
+      ok((await run(wC("With \u2220D = 30\u00b0 and e = 38, d can be 31 units. So the answer is C."), C, tri)).ok, "vertex D of triangle DEF is not option D");
+      const named = await run(wC("Option D is too long. So the answer is C."), C, tri);
+      ok(!named.ok && named.detail === "the Short answer names option D besides the agreed C", "D after a lead word is still option D");
+      const par = item({ questionHtml: "<p>If the equation is y = a(x \u2212 h)<sup>2</sup> + k, then the values of a, h and k are</p>" });
+      const D = { kind: "choice" as const, letters: ["D"] };
+      const wD = (short: string) => withShort(short, "So $a=-4$, $h=-7$, $k=6$. So the answer is D.", choice("D"));
+      ok((await run(wD("The stretch and reflection give a = \u22124, with h = \u22127 and k = 6. So the answer is D."), D, par)).ok, "variable a is not option A");
+      ok(!(await run(wD("Not A: it misses the reflection. So the answer is D."), D, item())).ok, "without a variable a in the question, A still counts");
+    }
     const noClose = await run(withShort("Sixty arrangements begin with R."));
     ok(!noClose.ok && noClose.detail === 'the Short answer does not end with "So the answer is A." or ", so the answer is A."', !noClose.ok ? noClose.detail : "passed");
   }
@@ -726,6 +740,10 @@ async function main() {
     for (const s of ["It is sqrt(0.5).", "It is $\\sqrt{0.5}$.", "It is \u221a0.5.", "It is $\\log 0.5$.", "It is log(0.5).", "It is $\\ln(0.5)$.", "It is $\\sin\\left(0.5\\right)$."]) {
       ok(!(await nd("0.5", s, nItem)).ok, `function argument fails: "${s}"`);
     }
+    // 2026-11-23 (239823): restating the question's own expression is not another value, even inside a function
+    const root3 = "<p>Find the value of \u221a3 + 57.</p>";
+    ok((await nd("58.73", "So \u221a3 + 57 is 58.73.", root3)).ok, "\u221a3 written exactly as the question writes it passes");
+    ok(!(await nd("58.73", "So \u221a5 + 57 is 58.73.", root3)).ok, "\u221a5 is not in the question: still another value");
     const phases = "<p>Match the phases lag, log, stationary and death to the numbers 1, 2, 3 and 4.</p>";
     const code = await nd("4132", "The phases are lag (4), log (1), stationary (3) and death (2), so the code is 4132.", phases);
     ok(code.ok, `the English word "log (1)" is not a function call: ${JSON.stringify(code)}`);

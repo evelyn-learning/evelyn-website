@@ -3,7 +3,8 @@ import { MetadataRoute } from 'next';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.evelynlearning.com';
 
 // Disallow list shared by all user agents
-const DISALLOW = ['/admin/', '/api/', '/_next/'];
+// /client-samples/ holds unlisted sample pages made for one client; they are shared by link only.
+const DISALLOW = ['/admin/', '/api/', '/_next/', '/client-samples/'];
 
 export default function robots(): MetadataRoute.Robots {
   return {
