@@ -137,7 +137,18 @@ export default async function ItemPage({
               )}
             </div>
           </div>
-          <div className="ks-meta">
+          <div className="ks-meta ks-head-tools">
+            {/* Walk links first and at fixed widths, so they stay under the pointer from one item to the next. */}
+            <span className="ks-walk">
+              {nb.prev ? <Link className="ks-step" href={`${base}/item/${nb.prev}${q}`}>‹ Prev</Link> : <span className="ks-step off" aria-disabled="true">‹ Prev</span>}
+              {nb.next ? <Link className="ks-step" href={`${base}/item/${nb.next}${q}`}>Next ›</Link> : <span className="ks-step off" aria-disabled="true">Next ›</span>}
+              <span className="ks-walk-at">{nb.inList ? `${nb.index} of ${nb.total}${isFiltered(ctx) ? ` · ${listName}` : ""}` : `no longer in ${listName}`}</span>
+            </span>
+            {can.edit(user.role) && (
+              <Link className="ks-btn" href={`${base}/item/${itemId}/edit${q}`}>
+                {item.version ? "Revise solution" : "Write solution"}
+              </Link>
+            )}
             {can.review(user.role) && LEVEL_OPEN_STAGES.includes(item.stage) && (
               <details className="ks-level">
                 <summary>Change level</summary>
@@ -173,22 +184,12 @@ export default async function ItemPage({
                     <Link
                       key={v}
                       href={`${base}/item/${itemId}${v === item.version ? q : ctxQuery(ctx, { v: String(v) })}`}
-                      style={{ fontWeight: solution?.version === v ? 700 : 400, marginLeft: 4 }}
+                      className={`ks-ver${solution?.version === v ? " on" : ""}`}
                     >
                       v{v}
                     </Link>
                   ))}
               </span>
-            )}
-            <span>
-              {nb.prev && <Link href={`${base}/item/${nb.prev}${q}`}>‹ prev</Link>}{" "}
-              {nb.inList ? `${nb.index} of ${nb.total}${isFiltered(ctx) ? ` · ${listName}` : ""}` : `no longer in ${listName}`}{" "}
-              {nb.next && <Link href={`${base}/item/${nb.next}${q}`}>next ›</Link>}
-            </span>
-            {can.edit(user.role) && (
-              <Link className="ks-btn" href={`${base}/item/${itemId}/edit${q}`}>
-                {item.version ? "Revise solution" : "Write solution"}
-              </Link>
             )}
           </div>
         </div>
