@@ -6,7 +6,6 @@ export interface VoiceEngine {
   description: string;
   latency: string;
   costPerMinute: number; // Partner price USD
-  ourCostPerMinute: number; // Internal cost USD
   features: string[];
   limitations: string[];
   bestFor: string;
@@ -28,7 +27,6 @@ export const voiceEngines: VoiceEngine[] = [
     // (a hardcoded 0.10 outlived the 2026-09-18 price change on the landing card).
     costPerMinute: pricing.perMinuteUsd,
     // Measured 2026-09-17: brain ≈ $0.10–0.12/active-min (LLM only) + ≈ $0.025 voice.
-    ourCostPerMinute: 0.125,
     features: [
       'Sub-400ms response latency with natural interruptions',
       'Structured pedagogy engine (Socratic-first, adaptive pacing)',
