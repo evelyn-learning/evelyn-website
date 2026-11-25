@@ -6,6 +6,7 @@
  * AP Physics 1 rotation, 2026-11-11). This reads the lines for what they are: a heading, a labelled point
  * ("Base case: …"), a run of program code, or a sentence. Pure, so it is tested without a browser.
  */
+import { taughtIn } from '../voice/lesson-language';
 export type RichBlock = { kind: 'title'; text: string } | { kind: 'line'; text: string; label?: string } | { kind: 'code'; text: string };
 
 /** A line of program code: it ends a statement or opens or closes a block, perhaps with a comment after it. */
@@ -128,7 +129,7 @@ function mathsToken(core: string, chem = false): boolean {
   // Words: two or more letters in a row that are not a function name ("pKa", "radius", "HA").
   const words = core.match(/[A-Za-z]{2,}/g) ?? [];
   // Two small letters can be a product of variables ("kx", "mx"); a two-letter word is not.
-  if (words.some((w) => !FUNCTION_NAMES.test(w) && !(/^[a-z]{2}$/.test(w) && !SHORT_WORDS.has(w)))) return false;
+  if (words.some((w) => !FUNCTION_NAMES.test(w) && !(/^[a-z]{2}$/.test(w) && !SHORT_WORDS.has(w) && !proseNow.has(w)))) return false;
   return /^[A-Za-z0-9()[\]{}.,+\-−×·/^_=<>≤≥≈²³¹⁰⁴-⁹⁻⁺₀-₉√∫∑πθωαβγδλμσφτΔ∞|'′\u0302\u0304]+$/.test(core);
 }
 const SUPERS: Record<string, string> = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', '⁻': '-', '⁺': '+' };
@@ -167,7 +168,34 @@ function plainMarks(text: string): string {
   return inWords(text, (seg) => seg
     .replace(/[ˣʸⁿᵃᵇᶜᵈᵉᵏᵐᵗᵘᵛʳˢᶻⁱʲ⁰¹²³⁴-⁹⁻⁺]*[ˣʸⁿᵃᵇᶜᵈᵉᵏᵐᵗᵘᵛʳˢᶻⁱʲ][ˣʸⁿᵃᵇᶜᵈᵉᵏᵐᵗᵘᵛʳˢᶻⁱʲ⁰¹²³⁴-⁹⁻⁺]*/g, (m) => `^{${[...m].map((c) => RAISED[c] ?? SUPERS[c] ?? c).join('')}}`));
 }
-export function typesetMaths(text: string): string {
+/** The one- and two-letter words of the lesson's language, as one string of words separated by spaces. In English
+ *  a lone small letter in a sentence is a variable (never "a" or "i") and two small letters side by side can be a
+ *  product ("kx"). In Spanish "y", "o" and "si" are words, in French "y" and "et", in typed Hinglish "ki" and "ka"
+ *  (2026-11-24: "y luego" went up with an italic y, and "Halla y si x + y = 5" as one formula). A lone one of these
+ *  is left as a word. English lessons: none, so nothing changes for them. */
+export function proseLettersOf(languages: readonly string[] | null | undefined): string {
+  const row = taughtIn(languages);
+  if (!row) return '';
+  if (row.base === 'es') return 'y o e u a si de la el en es un lo se su al ya no ni mi tu te me le da';
+  if (row.base === 'fr') return 'y a et de la le un en on il ce se si du au ou ne je tu sa me te va';
+  if (row.code === 'hi-Latn') return 'ki ka ko ke se me ye jo to ya na ho tu ab hi';
+  return '';
+}
+
+/** The page's lesson (one session to a page): set by the session's provider, read by every typesetting call that
+ *  is not handed its own. The server never sets it: a turn passes its session's words. */
+let pageProseLetters = '';
+export function setPageProseLetters(languages: readonly string[] | null | undefined): void { pageProseLetters = proseLettersOf(languages); }
+
+/** The lesson's short words for the call in progress (typesetMaths is synchronous: set on entry, cleared on exit). */
+let proseNow: ReadonlySet<string> = new Set();
+
+export function typesetMaths(text: string, proseLetters: string = pageProseLetters): string {
+  if (!proseLetters) return typesetMathsIn(text);
+  proseNow = new Set(proseLetters.split(' '));
+  try { return typesetMathsIn(text); } finally { proseNow = new Set(); }
+}
+function typesetMathsIn(text: string): string {
   const line = typesetBrackets(plainMarks(text).replace(/ŷ/g, 'y\u0302').replace(/ȳ/g, 'y\u0304'));
   return inWords(line, (seg) => {
     // "∫ from a to b of" is the integral's limits, said in words.
@@ -214,7 +242,7 @@ export function typesetMaths(text: string): string {
       // A lone small letter is a variable ("the constant k", "dogs walked (x)"): set like the x in an equation.
       // Not "a" or "i", not a unit after a number ("5 m", "2 s"), and not the marker of a list ("b. …").
       const before = out.slice().reverse().find((t) => t.trim()) ?? '';
-      const loneVariable = run.length === 1 && /^\(?[b-hj-z]\)?$/.test(joined) && !/\d\)?$/.test(before) && !(out.every((t) => !t.trim()) && /^[.)]/.test(trail));
+      const loneVariable = run.length === 1 && /^\(?[b-hj-z]\)?$/.test(joined) && !proseNow.has(joined.replace(/[()]/g, '')) && !/\d\)?$/.test(before) && !(out.every((t) => !t.trim()) && /^[.)]/.test(trail));
       const hasFormula = run.some((c) => chemToken(c, chem));
       const single = loneVariable || (run.length === 1 && (hasFormula || DIFFERENTIAL.test(joined) || MATHS_CHARS.test(joined.replace(/[⁺⁻]/g, '')) || /^[A-Za-z](?:''?|′′?)?\([-−]?[A-Za-z0-9.]+(?:, ?[-−]?[A-Za-z0-9.]+)*\)$/.test(joined)
         // "2x is negative": a number on x or y, said by itself. Not "2x faster".

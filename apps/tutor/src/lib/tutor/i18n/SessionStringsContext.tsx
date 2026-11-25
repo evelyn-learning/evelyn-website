@@ -5,12 +5,15 @@
  */
 import { createContext, useContext, type ReactNode } from 'react';
 import { EN, sessionStrings, type SessionStrings } from './session-strings';
+import { setPageProseLetters } from '../v2/rich-text';
 
 const SessionStringsContext = createContext<SessionStrings>(EN);
 const SessionLanguagesContext = createContext<readonly string[] | null>(null);
 
 /** `languages`: the session's list, lesson language first (`tutorLanguages`). */
 export function SessionStringsProvider({ languages, children }: { languages: readonly string[] | null | undefined; children: ReactNode }) {
+  // The lesson's one-letter words, for everything on this page that typesets maths in a sentence (v2/rich-text.ts).
+  setPageProseLetters(languages);
   // sessionStrings returns one shared object per language: a stable context value without a memo.
   return <SessionLanguagesContext.Provider value={languages ?? null}><SessionStringsContext.Provider value={sessionStrings(languages)}>{children}</SessionStringsContext.Provider></SessionLanguagesContext.Provider>;
 }

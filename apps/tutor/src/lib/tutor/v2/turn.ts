@@ -16,7 +16,7 @@
  * a network and the offline harness runs without a browser.
  */
 import { drawFigure } from './drawn-figures';
-import { typesetMaths } from './rich-text';
+import { proseLettersOf, typesetMaths } from './rich-text';
 import { closeDueMinutes } from './close-heard';
 import { v2WithoutCutBoardNote } from './interrupted';
 import { RECAP_TITLE, goalForProblem, goalForTalk, goalForTitle, laterPartAlone, wholeProblem } from './progress';
@@ -817,7 +817,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     }
     if (block.name === 'show_equation' && typeof args.latex === 'string') args.latex = stackedRow(spacedRoman(wordsAsText(args.latex)));
     // The label over an equation is typeset as a note is: "at x = -2" stood in plain letters above its working (embed-1794595194384).
-    if (block.name === 'show_equation' && typeof args.label === 'string' && !args.label.includes('$')) args.label = typesetMaths(args.label);
+    if (block.name === 'show_equation' && typeof args.label === 'string' && !args.label.includes('$')) args.label = typesetMaths(args.label, proseLettersOf(session.languages));
     // A graph drawn on a page that already has one is the same picture with more on it: a circle went up, and
     // then the point on it as a second, empty-looking graph (conic sections, 2026-11-11). A graph of points
     // alone, or one that repeats a curve already drawn, is drawn together with the earlier one and takes its place.
