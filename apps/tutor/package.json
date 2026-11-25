@@ -556,7 +556,8 @@
     "test:partner-dashboard": "npx tsx scripts/test-partner-dashboard.ts",
     "test:lesson-language": "npx tsx scripts/test-lesson-language.ts",
     "test:session-strings": "npx tsx scripts/test-session-strings.ts",
-    "test:homework-lesson-language": "npx tsx scripts/test-homework-lesson-language.ts"
+    "test:homework-lesson-language": "npx tsx scripts/test-homework-lesson-language.ts",
+    "test:lesson-words": "npx tsx scripts/test-lesson-words.ts"
   },
   "dependencies": {
     "opencc-js": "^1.4.2"

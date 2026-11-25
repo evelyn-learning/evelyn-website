@@ -63,14 +63,90 @@ const LINES: Readonly<Record<string, V2LessonLines>> = {
     unreachable: '先生につながりませんでした。もう一度送ってください。',
     nextStep: '次は何をすればいいと思いますか？',
   },
+  // 2026-11-24: Hindi, Hinglish, French, Spanish. Spoken lines: no digits and no symbols in them.
+  // Hindi: everyday words and तुम, as a teacher talks to a student; nothing literary.
+  hi: {
+    checkIns: ['यहाँ तक समझ आया?', 'अब तक सब ठीक है?', 'यह साफ़ है, या मैं एक बार फिर समझाऊँ?', 'समझ में आ रहा है?'],
+    goOn: 'तो अब आगे बढ़ें?',
+    goOnOrQuestion: 'आगे बढ़ें, या पहले तुम्हें कुछ पूछना है?',
+    timeUp: (first) => (first ? `${first}, आज का समय पूरा हो गया। तुमने बहुत अच्छा किया। अगली बार मिलते हैं।` : 'आज का समय पूरा हो गया। तुमने बहुत अच्छा किया। अगली बार मिलते हैं।'),
+    lookAtBoard: 'बोर्ड पर लिखा सवाल देखो, और बताओ कि तुम्हें क्या लगता है।',
+    correction: (fix) => `एक सुधार: ${fix}`,
+    unreachable: 'अभी टीचर से संपर्क नहीं हो पाया। इसे एक बार फिर भेजो।',
+    nextStep: 'तुम्हें क्या लगता है, अगला कदम क्या होना चाहिए?',
+  },
+  // Hinglish, as its row has the tutor write it: Hindi words in Devanagari, English words in English spelling.
+  'hi-Latn': {
+    checkIns: ['यहाँ तक clear है?', 'अब तक सब ठीक है?', 'समझ आया, या मैं एक बार फिर explain करूँ?', 'यह point clear है?'],
+    goOn: 'तो next part पर चलें?',
+    goOnOrQuestion: 'Next part पर चलें, या पहले तुम्हारा कोई doubt है?',
+    timeUp: (first) => (first ? `${first}, आज का time पूरा हो गया। तुमने बहुत अच्छा किया। अगली class में मिलते हैं।` : 'आज का time पूरा हो गया। तुमने बहुत अच्छा किया। अगली class में मिलते हैं।'),
+    lookAtBoard: 'Board पर question देखो, और बताओ कि तुम्हें क्या लगता है।',
+    correction: (fix) => `एक correction: ${fix}`,
+    unreachable: 'अभी teacher से connect नहीं हो पाया। इसे एक बार फिर भेजो।',
+    nextStep: 'तुम्हें क्या लगता है, next step क्या होगा?',
+  },
+  // French: tu. The space before ? ! : is French typography; a sentence still ends on its mark.
+  fr: {
+    checkIns: ['Tu me suis jusque-là ?', "Ça va pour l'instant ?", "C'est clair, ou tu veux que je réexplique ?", 'Tu as compris ?'],
+    goOn: 'On passe à la suite ?',
+    goOnOrQuestion: "On passe à la suite, ou tu as d'abord une question ?",
+    timeUp: (first) => (first ? `${first}, c'est tout pour aujourd'hui. Tu as bien travaillé. À la prochaine !` : "C'est tout pour aujourd'hui. Tu as bien travaillé. À la prochaine !"),
+    lookAtBoard: 'Regarde la question au tableau, et dis-moi ce que tu en penses.',
+    correction: (fix) => `Une petite correction : ${fix}`,
+    unreachable: "Je n'ai pas pu joindre le tuteur à l'instant. Envoie ton message encore une fois, s'il te plaît.",
+    nextStep: 'À ton avis, quelle est la prochaine étape ?',
+  },
+  // Spanish: tú, Latin American (never vosotros). A question opens with ¿.
+  es: {
+    checkIns: ['¿Vas bien hasta aquí?', '¿Me sigues hasta ahora?', '¿Quedó claro, o te lo explico otra vez?', '¿Se entiende?'],
+    goOn: '¿Pasamos a la siguiente parte?',
+    goOnOrQuestion: '¿Pasamos a la siguiente parte, o tienes alguna pregunta antes?',
+    timeUp: (first) => (first ? `${first}, se nos acabó el tiempo por hoy. Hiciste un muy buen trabajo. ¡Hasta la próxima!` : 'Se nos acabó el tiempo por hoy. Hiciste un muy buen trabajo. ¡Hasta la próxima!'),
+    lookAtBoard: 'Mira la pregunta en la pizarra y dime qué piensas.',
+    correction: (fix) => `Una corrección: ${fix}`,
+    unreachable: 'No pude comunicarme con el tutor en este momento. Envía tu mensaje otra vez, por favor.',
+    nextStep: '¿Cuál crees que es el siguiente paso?',
+  },
 };
 
 /** The engine's lines for a lesson taught in another language; null for an English lesson (the caller's own
  *  English wording stands) and for a language with no lines yet (English, as before, rather than nothing). */
-export function v2LessonLines(languages: readonly string[] | null | undefined): V2LessonLines | null {
+export function v2LessonLines(languages: readonly string[] | null | undefined, mode?: 'voice' | 'text'): V2LessonLines | null {
   const lang = taughtIn(languages);
-  return lang ? LINES[lang.code] ?? null : null;
+  return lang ? (mode === 'text' ? TYPED[lang.code] : undefined) ?? LINES[lang.code] ?? null : null;
 }
 
+/**
+ * 2026-11-24 (a typed Hinglish test): the lines of a TYPED session, for a language that is typed in another script
+ * than it is spoken from. Hinglish is typed in Latin letters, by the tutor and by students ("Bilkul sahi, x = 4 hai.");
+ * the speech form above (Hindi words in Devanagari, for the voice) put Hindi script into such a chat, and the
+ * student objected. A spoken session keeps the speech form; a language with no row here types as it speaks.
+ */
+const TYPED: Readonly<Record<string, V2LessonLines>> = {
+  'hi-Latn': {
+    checkIns: ['Yahan tak clear hai?', 'Ab tak sab theek hai?', 'Samajh aaya, ya main ek baar phir explain karun?', 'Yeh point clear hai?'],
+    goOn: 'To next part par chalein?',
+    goOnOrQuestion: 'Next part par chalein, ya pehle koi doubt hai?',
+    timeUp: (first) => (first ? `${first}, aaj ka time poora ho gaya. Tumne bahut achha kiya. Agli class mein milte hain.` : 'Aaj ka time poora ho gaya. Tumne bahut achha kiya. Agli class mein milte hain.'),
+    lookAtBoard: 'Board par question dekho, aur batao tumhe kya lagta hai.',
+    correction: (fix) => `Ek correction: ${fix}`,
+    unreachable: 'Abhi teacher se connect nahi ho paya. Ise ek baar phir bhejo.',
+    nextStep: 'Tumhe kya lagta hai, next step kya hoga?',
+  },
+};
+const ALL_LINES: readonly V2LessonLines[] = [...Object.values(LINES), ...Object.values(TYPED)];
+
 /** Every check-in the engine may have appended, in any language: what tells one from a question the tutor put. */
-export const V2_LESSON_CHECK_INS: readonly string[] = Object.values(LINES).flatMap((l) => l.checkIns);
+export const V2_LESSON_CHECK_INS: readonly string[] = ALL_LINES.flatMap((l) => l.checkIns);
+
+/** 2026-11-24: the engine's own asks before a held page, in any language, and those of them that offer a question
+ *  first. The part-change readers know an ask by English and Japanese wording (part-close.ts, reply-gate.ts,
+ *  part-flow.ts): these they know word for word, so the page held behind 「我們繼續下一個部分，好嗎？」 or "On passe à la
+ *  suite ?" opens on the learner's yes as it does in English. */
+const PART_ASKS: readonly string[] = ALL_LINES.flatMap((l) => [l.goOn, l.goOnOrQuestion]);
+const QUESTION_FIRST_ASKS: readonly string[] = ALL_LINES.map((l) => l.goOnOrQuestion);
+/** Whether `text` holds one of the engine's own part asks. */
+export const v2HoldsLessonPartAsk = (text: string): boolean => PART_ASKS.some((l) => text.includes(l));
+/** Whether a reply ends on the engine's own part ask that offers a question first: there a no is "no questions". */
+export const v2EndsOnLessonQuestionFirst = (reply: string): boolean => { const t = reply.trim(); return QUESTION_FIRST_ASKS.some((l) => t.endsWith(l)); };

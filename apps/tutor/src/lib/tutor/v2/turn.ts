@@ -85,7 +85,7 @@ export function indexOutsideBlocks(text: string, needle: string): number {
 }
 
 /** The last `n` sentences of `text`. */
-export const lastSentences = (text: string, n: number) => text.trim().split(/(?<=[.!?]["'”’)]*)\s+|(?<=[。！？][」』)）"”]*)\s*/).filter(Boolean).slice(-n).join(' ');
+export const lastSentences = (text: string, n: number) => text.trim().split(/(?<=[.!?।]["'”’)]*)\s+|(?<=[。！？][」』)）"”]*)\s*/).filter(Boolean).slice(-n).join(' ');
 
 /** A spoken reply of at least this many words that wrote nothing is put to the board check. */
 export const V2_UNWRITTEN_WORDS = 30;
@@ -1315,7 +1315,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // Fix round 2 (N1): the next-time line is said once a lesson. What earlier replies said about next time (the runtime's own
   // line among them) counts as naming a part for it, so no later close names it again.
   const nextTimeBefore = gated && session.plan && TUTOR_V2_PASSED_PART_CLOSE ? state.history.filter((h) => h.role === 'assistant').map((h) => stripBoardBlocks(typeof h.content === 'string' ? h.content : h.content.map((c) => (c.type === 'text' ? c.text : '')).join(' ')))
-    .flatMap((t) => t.split(/(?<=[.!?]["'”’)]*)\s+|(?<=[。！？][」』)）"”]*)\s*/)).filter((x) => /\bnext time\b|次回|次の機会/i.test(x)).join(' ') : '';
+    .flatMap((t) => t.split(/(?<=[.!?।]["'”’)]*)\s+|(?<=[。！？][」』)）"”]*)\s*/)).filter((x) => /\bnext time\b|次回|次の機会/i.test(x)).join(' ') : '';
   // F5: cards said one after another under one lead-in ("Here are two sentences…" and two cards).
   let cardRun = false;
   // Task 6f: notes and tables of example sentences are spoken in a spoken language lesson only (maths and science notes
@@ -1409,7 +1409,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       // of a part not reached; the 7a part ask after the model's own question): the page stays held, unasked, and the ask
       // comes on a later reply.
       const unasked = (oneQuestion && (!!missed || !askedNow) && v2ReplyHandsOver(saidNow)) || (!askedNow && endsOnRepeat(saidNow));
-      const offer = unasked ? '' : missed ?? (askedNow ? '' : nextPart && plan ? v2PartAskLine({ next: nextPart.title, done: doneLabel, named: v2PartNamedLate(plan.segments[nextPart.index]!, saidNow), history: state.history }) : partOffer(named, namesPart(block.body, saidNow) || namesPart(named, saidNow), true, session.languages));
+      const offer = unasked ? '' : missed ?? (askedNow ? '' : nextPart && plan ? v2PartAskLine({ languages: session.languages, mode: session.mode, next: nextPart.title, done: doneLabel, named: v2PartNamedLate(plan.segments[nextPart.index]!, saidNow), history: state.history }) : partOffer(named, namesPart(block.body, saidNow) || namesPart(named, saidNow), true, session.languages, session.mode));
       heldAt = { raw: block.raw, offer, ...(plan && part && partFlow ? { part: { id: plan.segments[part.index]!.id, title: partLabel } } : {}), ...(unasked ? { unasked } : {}) };
       if (offer) { input.onText?.(`\n\n${unstar(offer)}`); saidChars += unstar(offer).length + 2; }
       input.onToolCall?.({ id: `held_${nowMs.toString(36)}`, name: 'new_page', args: { title: block.body.trim() }, outcome: unasked ? 'not opened yet: held until they are asked whether to go on' : 'not opened yet: the student is asked first' });
@@ -1746,7 +1746,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
         // Fix round 2 (N1): only a goodbye that closes the lesson (a close accepted now, or a closing turn) gets the line.
         const closing = closingTurn || (!!ended && !/^not /.test(ended.outcome));
         const line = TUTOR_V2_PASSED_PART_CLOSE && closing ? v2NextTimeLine(session.plan, state, `${saidNow} ${gate.held} ${nextTimeBefore}`) : null;
-        const firstHeld = gate.held.split(/(?<=[.!?。！？])\s+/)[0] ?? '';
+        const firstHeld = gate.held.split(/(?<=[.!?।。！？])\s+/)[0] ?? '';
         if (line && firstHeld) for (const b of response.content) if (b.type === 'text' && b.text.includes(firstHeld)) { b.text = b.text.replace(firstHeld, `${line} ${firstHeld}`); break; }
         if (line) nextTimeSaid = true;
         gate.releaseHeld(line ?? undefined);
@@ -1894,7 +1894,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // Task 7m (QUESTION_ONCE): the sentences cut at 。 too (sentencesSaid): a Japanese reply was one "sentence" here.
     // Fix round 1 (I1): spoken language lessons only (questionCards); any other voice lesson keeps the base split and ask.
     const questionOnce = TUTOR_V2_QUESTION_ONCE && questionCards;
-    const more = card ? unsaidAsk(String(card.args.statement ?? ''), questionOnce ? sentencesSaid : spoken.join(' ').split(/(?<=[.!?？])\s+/).filter(Boolean), { questionOnce, ...(v2LessonLines(session.languages) ? { lookAtBoard: v2LessonLines(session.languages)!.lookAtBoard } : {}) })
+    const more = card ? unsaidAsk(String(card.args.statement ?? ''), questionOnce ? sentencesSaid : spoken.join(' ').split(/(?<=[.!?？])\s+/).filter(Boolean), { questionOnce, ...(v2LessonLines(session.languages, session.mode) ? { lookAtBoard: v2LessonLines(session.languages, session.mode)!.lookAtBoard } : {}) })
       : TUTOR_V2_SPEAK_BOARD_ITEM ? unsaidBoardItem(toolCalls, sentencesSaid, { sentences: !TUTOR_V2_SAY_SENTENCE_CARD }) : null;
     if (more) {
       input.onText?.(`\n\n${unstar(more)}`);
@@ -2212,7 +2212,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
 
   const fix = await mathsCheck;
   if (fix && !state.closed && !input.signal?.aborted) {
-    const words = v2LessonLines(session.languages)?.correction(fix) ?? `One correction: ${fix}`;
+    const words = v2LessonLines(session.languages, session.mode)?.correction(fix) ?? `One correction: ${fix}`;
     input.onText?.(`\n\n${unstar(words)}`);
     spoken.push(words);
     const holder = [...stored].reverse().find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));
@@ -2241,7 +2241,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // Task 7r (PART_GO_NAMED): never an ask about the part they just said go to (mic test 5, 11.9 min).
     if (nx >= 0 && nx < plan.segments.length - 1 && !(TUTOR_V2_PART_GO_NAMED && v2GoForPart(input.studentSaid, lastTutorText, plan, state, nx, askLangs))) {
       const next = v2PartOf(plan.segments[nx]!).label!;
-      const words = v2PartAskLine({ next, named: v2PartNamedLate(plan.segments[nx]!, spoken.join(' ')), history: [...state.history, ...stored], done: undefined });
+      const words = v2PartAskLine({ languages: session.languages, mode: session.mode, next, named: v2PartNamedLate(plan.segments[nx]!, spoken.join(' ')), history: [...state.history, ...stored], done: undefined });
       // Task 7a re-review: the part asked about waits as a held page, as at a page held for the ask.
       askedPart = { id: plan.segments[nx]!.id, title: next };
       input.onText?.(`\n\n${words}`);
@@ -2275,7 +2275,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
       const plan = session.plan; const inHand = v2PartInHand(plan, state);
       const done = inHand >= 0 && plan.segments[inHand]!.kind !== 'hook' && !v2PartOf(plan.segments[inHand]!).skipWhenLevelKnown ? v2PartOf(plan.segments[inHand]!).label : undefined;
       const owedSeg = plan.segments.find((seg) => seg.id === owed.part);
-      const words = v2PartAskLine({ next: owed.title, done, named: owedSeg ? v2PartNamedLate(owedSeg, said) : false, history: [...state.history, ...stored] });
+      const words = v2PartAskLine({ languages: session.languages, mode: session.mode, next: owed.title, done, named: owedSeg ? v2PartNamedLate(owedSeg, said) : false, history: [...state.history, ...stored] });
       input.onText?.(`\n\n${words}`);
       spoken.push(words);
       const holder = [...stored].reverse().find((m) => m.role === 'assistant' && Array.isArray(m.content) && m.content.some((c) => c.type === 'text'));
@@ -2341,7 +2341,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // 2026-11-11: "give the student the chance to say yes, I get this"). The reply ends by handing over instead.
   // A reply whose part-change frame was dropped (F1) goes on into the next part by design: no check-in is added to it.
   // Task 7c (ASK_NO_CHECKIN): an ask that hands the turn over, anywhere, or after a quoted sentence, is an ask (one-question.ts).
-  const replyAsks = TUTOR_V2_ASK_NO_CHECKIN ? v2ReplyAsks(spoken.join(' ')) : asksAnywhere(spoken.join(' ').split(/(?<=[.?!])\s+/));
+  const replyAsks = TUTOR_V2_ASK_NO_CHECKIN ? v2ReplyAsks(spoken.join(' '), session.languages) : asksAnywhere(spoken.join(' ').split(/(?<=[.?!])\s+/));
   // Task 7i (NO_CHECKIN_AFTER_GOODBYE): never after a goodbye in the reply's last two sentences ("…Goodbye! Does that make sense
   // so far?", mic test 3, embed-1794967959470 at 14.99).
   const saysGoodbye = TUTOR_V2_NO_CHECKIN_AFTER_GOODBYE && v2ReplySentences(stripBoardBlocks(spoken.join(' '))).slice(-2).some((x) => isGoodbye(x));
@@ -2357,7 +2357,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // With the close due the tutor is saying goodbye: "Good work today." was followed by "Are you with me so far?" (portal-84f8660d).
     && !(session.timeBoxMinutes && session.timeBoxMinutes - (nowMs - state.startedAtMs) / 60000 <= closeDueMinutes(session.timeBoxMinutes))) {
     // A lesson taught in another language checks in in that language (lesson-lines.ts).
-    const ins = v2LessonLines(session.languages)?.checkIns ?? (discussion ? DISCUSSION_CHECK_INS : V2_CHECK_INS);
+    const ins = v2LessonLines(session.languages, session.mode)?.checkIns ?? (discussion ? DISCUSSION_CHECK_INS : V2_CHECK_INS);
     const words = ins[state.history.length % ins.length];
     input.onText?.(`\n\n${words}`);
     spoken.push(words);

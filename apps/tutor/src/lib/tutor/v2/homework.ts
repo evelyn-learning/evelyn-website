@@ -23,6 +23,7 @@ import {
 import { marksInWords, oneLine, partLabel } from './homework-facts';
 import { answerText, fullWidthToAscii } from '../voice/answer-text';
 import { numeralValue } from '../voice/heard-numerals';
+import { taughtIn } from '../voice/lesson-language';
 import type { V2HomeworkProblem, V2HomeworkSheet, V2HomeworkState, V2Session, V2State } from './types';
 
 export { marksInWords, partLabel, v2HomeworkFacts } from './homework-facts';
@@ -143,7 +144,8 @@ export function studentMessagesOf(history: V2State['history']): Array<{ role: 'u
 
 /** Where a worked message breaks into the steps it states, last first ("…, so x = 30", "…, which gives 4/11"). */
 // 2026-11-24: and before the words that open a result in Chinese or Japanese (所以 x = 11, だから x = 11).
-const STEP_BREAK = /(?<=[.!?;])\s+|,\s*|\s+(?=\b(?:so|which|that|therefore|then|giving|gives|hence)\b)|\s*(?=所以|因此|於是|于是|だから|なので|よって)/i;
+// 2026-11-24: and in Hindi (इसलिए x = 11); French and Spanish have theirs once the message is read as the checks read it.
+const STEP_BREAK = /(?<=[.!?;])\s+|,\s*|\s+(?=\b(?:so|which|that|therefore|then|giving|gives|hence)\b)|\s*(?=所以|因此|於是|于是|だから|なので|よって|इसलिए|इसीलिए)/i;
 const exprKey = (s: string) => s.toLowerCase().replace(/[−–]/g, '-').replace(/\s+/g, '').replace(/\.$/, '');
 /**
  * A key part stated as "name = expression" (`g^-1(x) = 3x + 1`) and an answer that offers the expression alone
@@ -205,16 +207,21 @@ export function workedAnswerCredit(studentSaid: string, key: AnswerKey): KeyedVe
  * which nothing deterministic can match, is put to the prose match (one small model call) as v1 does. The
  * result is what the facts say; the key's values are never in it.
  */
+/** `languages` (2026-11-24): the session's, lesson language first. An answer worded in French or Spanish is written in
+ *  English's script, so only the session can say how to read it (voice/answer-text.ts); the student's messages are
+ *  put in the checks' form here, once, and every check below reads that. */
 export async function v2HomeworkCheck(input: {
   key: AnswerKey | undefined; problem: V2HomeworkProblem; state: V2State; studentSaid: string | null;
-  proseMatch?: ProseAnswerMatchFn;
+  proseMatch?: ProseAnswerMatchFn; languages?: readonly string[] | null;
 }): Promise<V2HomeworkCheckResult> {
   const prior = input.state.homework?.confirmed ?? input.problem.priorConfirmed ?? [];
   const wasDone = input.state.homework?.done === true;
   const key = input.problem.verified ? input.key : undefined;
   if (!key?.parts.length || input.studentSaid === null || wasDone) return { verdicts: [], confirmed: [...prior], done: wasDone, justDone: false };
-  const history = studentMessagesOf(input.state.history);
-  const said = input.studentSaid;
+  const base = taughtIn(input.languages)?.base;
+  const worded = base === 'hi' || base === 'fr' || base === 'es';
+  const history = worded ? studentMessagesOf(input.state.history).map((m) => ({ ...m, content: answerText(m.content, input.languages) })) : studentMessagesOf(input.state.history);
+  const said = worded ? answerText(input.studentSaid, input.languages) : input.studentSaid;
   const decided = scopedKeyedVerdicts(history, said, key, prior).filter((v): v is KeyedVerdict & { verdict: 'correct' | 'incorrect' } => v.verdict !== 'undecided');
   const verdicts: V2HomeworkVerdict[] = decided.map((v) => ({ part: partLabel(v.part ?? ''), verdict: v.verdict, ...(v.value ? { value: v.value } : {}) }));
   const credit: string[] = [];
@@ -228,7 +235,7 @@ export async function v2HomeworkCheck(input: {
     const candidates = proseMatchCandidates(msgs, key, confirmedKeyMarks(history, said, key, prior)).filter((p) => proseCreditForPart(msgs, key, prior, p).length);
     if (candidates.length) {
       const match = input.proseMatch ?? (await import('../voice/prose-answer-match')).proseAnswerMatches;
-      const found = await Promise.all(candidates.map((p) => match({ problem: input.problem.text, label: p.label, keyStatement: p.final, studentMessage: said }).catch(() => null)));
+      const found = await Promise.all(candidates.map((p) => match({ problem: input.problem.text, label: p.label, keyStatement: p.final, studentMessage: input.studentSaid ?? said }).catch(() => null)));
       const hits = candidates.filter((_, i) => found[i] === true);
       if (hits.length === 1) for (const v of proseCreditForPart(msgs, key, prior, hits[0])) { credit.push(`part:${v.part ?? ''}`); verdicts.push({ part: partLabel(v.part ?? ''), verdict: 'correct' }); }
     }
@@ -294,12 +301,16 @@ export function v2SheetOpener(sheet: V2HomeworkSheet): string {
   return `[The session has just started. The student has brought a homework sheet of ${sheet.problems.length} problem${sheet.problems.length === 1 ? '' : 's'}, which they can see. Greet them in a few words and ask which problem they want to start with, or start with problem ${sheet.problems[0]?.n ?? 1} if they have no preference. Keep it short.]`;
 }
 
-/** How a problem is named by its number, per language: the English words, then 第 2 題 / 第三題 / 問2 / 2番. */
+/** How a problem is named by its number, per language: the English words, then 第 2 題 / 第三題 / 問2 / 2番, then French, Spanish and Hindi. */
 const PROBLEM_NAMED: ReadonlyArray<RegExp> = [
   /\b(?:problem|question|number|no\.|#)\s*(\d{1,2})\b/gi,
   /第\s*(\d{1,2}|[一二兩两三四五六七八九十]{1,3})\s*(?:大題|大题|題|题|問|番)/gu,
   /(?:問題?|问题)\s*(\d{1,2})/gu,
   /(\d{1,2})\s*番/gu,
+  // 2026-11-24: "exercice 3", "numéro 3", "problema 3", "pregunta 3"; सवाल 3, प्रश्न नंबर 3, 3 नंबर का सवाल.
+  /\b(?:problème|exercice|numéro|problema|ejercicio|pregunta|número)\s*(\d{1,2})\b/gi,
+  /(?:सवाल|प्रश्न|क्वेश्चन|प्रॉब्लम)\s*(?:नंबर|संख्या|number)?\s*(\d{1,2})/gu,
+  /(\d{1,2})\s*(?:नंबर|number)\s*(?:का|वाला|वाले)?\s*(?:सवाल|प्रश्न|question|problem)/giu,
 ];
 
 /** Every problem number a text names, in the order named (2026-11-24: 第2題 and 第三題 were not read). */

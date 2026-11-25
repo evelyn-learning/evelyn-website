@@ -1,4 +1,4 @@
-import { v2LessonLines } from './lesson-lines';
+import { v2HoldsLessonPartAsk, v2LessonLines } from './lesson-lines';
 import { stripBoardBlocks } from './board-inline';
 import { TUTOR_V2_PART_OFFER_ONCE } from '../orchestrator/flags';
 import type { V2State } from './types';
@@ -37,7 +37,8 @@ const OFFERS = /\b(?:next is|next up|ready|shall we|any questions?|a question fi
 // Fix round 2: 次/先 starting a word (not 取引先, 出張先, 目次).
 // Fix round 3: 行き and 移り as in isPartFrame (「じゃ次に行きましょうか？」).
 const OFFERS_JA = new RegExp(`${JA_WORD_START}(?:次|先)(?:に|へ)(?:進|行き|移り)|${JA_WORD_START}次の(?:パート|部分|ところ|項目|テーマ|トピック|セクション|ステップ|練習|課題|内容)(?:に|へ)|(?:進む|移る)前に|質問(?:が|は)(?:あります|ありません)か`, 'u');
-const offers = (text: string, ja: boolean = TUTOR_V2_PART_OFFER_ONCE, strict = false) => (strict ? PART_OFFERS : OFFERS).test(text) || (ja && (strict ? PART_OFFERS_JA : OFFERS_JA).test(text));
+// 2026-11-24: or the engine's own ask in the lesson's language, word for word (lesson-lines.ts): an ask about moving on, so strict too.
+const offers = (text: string, ja: boolean = TUTOR_V2_PART_OFFER_ONCE, strict = false) => (strict ? PART_OFFERS : OFFERS).test(text) || (ja && (strict ? PART_OFFERS_JA : OFFERS_JA).test(text)) || v2HoldsLessonPartAsk(text);
 /** Task 7a (PART_ASK_EVERY): an ask about moving on to the next part, not a check-in. "Does that make sense so far?" left the
  *  way open, and a "Past simple" page opened in the reply that was still praising a present perfect sentence (mic test 1,
  *  embed-1794882458629 t≈9.17). */
@@ -94,9 +95,10 @@ export function v2QuestionCheckRecent(history: V2State['history']): boolean {
 
 /** What the tutor says in place of the held page. `named`: the reply had already said what the next part is.
  *  `askQuestion` false: the last part change asked whether they had a question, so this one only asks to go on. */
-export function partOffer(title: string, named: boolean, askQuestion: boolean = true, languages?: readonly string[]): string {
+export function partOffer(title: string, named: boolean, askQuestion: boolean = true, languages?: readonly string[], mode?: 'voice' | 'text'): string {
   // A lesson taught in another language asks in it, and without the part's name: plan names are stored in English.
-  const own = v2LessonLines(languages);
+  // `mode`: a typed session's wording (lesson-lines.ts: typed Hinglish is in Latin letters).
+  const own = v2LessonLines(languages, mode);
   if (own) return askQuestion ? own.goOnOrQuestion : own.goOn;
   const ask = askQuestion ? 'Shall we go on, or do you have a question first?' : 'Shall we go on?';
   if (named) return ask;
@@ -113,7 +115,7 @@ export const V2_MAX_PART_FRAMES = 2;
 /** Task 6g (PART_OFFER_ONCE): a Japanese frame counts as one, and Japanese sentences are cut after 。！？ with no space
  *  after them ("…ここまでです。次に進みますか、それとも先に質問がありますか？" was one piece, and tester A heard a frame at
  *  two part changes running, v2audio-6f). */
-const SENTENCE_CUT = /(?<=[.!?]["'”’)]*)\s+|(?<=[。！？][」』)）"”]*)\s*/;
+const SENTENCE_CUT = /(?<=[.!?]["'”’)]*)\s+|(?<=[。！？।][」』)）"”]*)\s*/;
 const hasFrame = (text: string, ja: boolean = TUTOR_V2_PART_OFFER_ONCE) => stripBoardBlocks(text).split(ja ? SENTENCE_CUT : /(?<=[.!?。！？])\s+/).some((x) => isPartFrame(x.trim(), ja));
 const PAGE_BLOCK = /<board\s+page\b/;
 /** Whether this lesson may ask at a part change whether to go on (and whether they have a question first): fewer than

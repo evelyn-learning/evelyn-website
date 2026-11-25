@@ -17,6 +17,8 @@
  *
  * Kill switch: NEXT_PUBLIC_TUTOR_ROOM_VOICES=off.
  */
+import { lessonBrief, lessonCommand } from './lesson-words';
+
 export const ROOM_VOICES_ON = process.env.NEXT_PUBLIC_TUTOR_ROOM_VOICES !== 'off';
 
 /** Stretches of other people's speech before the room counts as noisy. */
@@ -51,8 +53,9 @@ const BRIEF = /^\s*(?:(?:oh|um|uh|well|so)[, ]+)*(?:yes|yeah|yep|yup|ya|ok|okay|
 export function plainlyTheStudent(text: string): boolean {
   const n = wordCount(text);
   if (!n) return false;
-  if (n <= 12 && (COMMAND.test(text) || COMMAND_CJK.test(text))) return true;
-  return n <= 4 && (BRIEF.test(text) || BRIEF_CJK.test(text));
+  // 2026-11-24: and in Hindi, French and Spanish (lesson-words.ts: रुको, फिर से बताओ, attends, répète, espera, otra vez).
+  if (n <= 12 && (COMMAND.test(text) || COMMAND_CJK.test(text) || lessonCommand(text))) return true;
+  return n <= 4 && (BRIEF.test(text) || BRIEF_CJK.test(text) || lessonBrief(text));
 }
 
 /** Does this recognised speech wait for the check before it takes the floor?
@@ -133,7 +136,8 @@ export function roomCheckMessage(i: { tutorSaid: string; heard: string; earlier?
   ].join('\n\n');
 }
 
-const norm = (x: string) => x.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean);
+// \p{M}: a Devanagari word keeps its vowel signs (without them समीकरण was cut into four "words").
+const norm = (x: string) => x.toLowerCase().replace(/[^\p{L}\p{M}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean);
 
 /** The run with its first `n` words gone: what has not been looked at yet. */
 export function afterWords(text: string, n: number): string {

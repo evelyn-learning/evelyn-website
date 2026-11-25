@@ -25,7 +25,8 @@ import {
 } from '@core/ai/teacher-persona';
 import { accentFromTimezone } from '@core/voice/geo-accent';
 import { teachersForAccent } from '@core/voice/cartesia-voice-registry';
-import { DEMO_LANGUAGES, demoLanguageClaims } from '@core/demo/demo-languages';
+import { languageClaims, type DemoLanguage } from '@core/demo/demo-languages';
+import { useDemoLanguages } from '@core/demo/use-demo-languages';
 import { trackEvent } from '@/lib/analytics/events';
 
 // Same key as /tutor so a choice made here carries into the full app.
@@ -171,6 +172,7 @@ async function startGatedDemo(
   studentName: string,
   studentEmail: string,
   language: string,
+  offered: readonly DemoLanguage[],
 ): Promise<DemoStartResult> {
   // A ready lesson names its plan; a topic the visitor typed has none, and the tutor teaches it from the topic.
   const cfg = {
@@ -188,7 +190,7 @@ async function startGatedDemo(
     teacher,
     // The language the visitor picked for the lesson: speech, board and questions are in it (the engine's
     // lesson-language table). English adds nothing, so an English demo is the session it always was.
-    ...demoLanguageClaims(language),
+    ...languageClaims(language, offered),
     features: { voice_mode: true, text_mode: true, homework_upload: false },
     metadata: { source },
   };
@@ -238,6 +240,8 @@ export default function VoiceTutorLiveDemo({
   const [typedTopic, setTypedTopic] = useState('');
   const [typedLevel, setTypedLevel] = useState('High school');
   const [language, setLanguage] = useState('en');
+  // The engine's own list of ready languages (a new one appears here with no change to this site).
+  const offered = useDemoLanguages();
   const typed = typedTopic.trim().replace(/\s+/g, ' ');
   const lesson: DemoLessonOption = useMemo(
     () => (typed.length >= 3
@@ -387,7 +391,7 @@ export default function VoiceTutorLiveDemo({
     setStarting(true);
     setStartError(false);
     try {
-      const result = await startGatedDemo(lesson, teacher, source, name, email, language);
+      const result = await startGatedDemo(lesson, teacher, source, name, email, language, offered);
       if (!result.ok) {
         if (result.kind === 'limited') {
           setLimited(result.reason);
@@ -510,7 +514,7 @@ export default function VoiceTutorLiveDemo({
         {/* The language of the whole lesson: what the tutor speaks, hears and writes on the board. */}
         <div className="mt-3 flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Lesson language">
           <span className="text-sm text-slate-600 mr-1">Lesson language</span>
-          {DEMO_LANGUAGES.map((l) => (
+          {offered.map((l) => (
             <button
               key={l.code}
               type="button"

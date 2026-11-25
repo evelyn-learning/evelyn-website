@@ -115,6 +115,7 @@ export const LESSON_LANGUAGES: readonly LessonLanguage[] = [
       'Use the terms Hindi-medium schools use (समीकरण, भिन्न, प्रतिशत, वर्ग, वर्गमूल).',
       'Speak the way a kind teacher speaks to a student: simple everyday Hindi, तुम for the student, never stiff or literary.',
     ],
+    ready: true,
   },
   {
     // Hinglish: Hindi mixed with English, the way most Indian students speak and are taught (Praveen 2026-11-24:
@@ -125,10 +126,11 @@ export const LESSON_LANGUAGES: readonly LessonLanguage[] = [
     script: DEVANAGARI, boardIn: 'en', numbersInEnglish: true,
     writing: [
       'Speak Hinglish: Hindi sentence structure and connecting words, with English for every school and subject term (equation, value, add, cancel, slope, answer, formula), as a friendly teacher in India talks to a student. Never pure formal Hindi.',
-      'In what you say, write the Hindi words in Devanagari and the English words in English spelling: "देखो, पहले हम दोनों equations को add करेंगे।" The voice reads that naturally; Hindi in Latin letters it may misread.',
+      // (How the mix is written, in speech and in a typed lesson, is the session part's: v2/lesson-language-section.ts.)
       'Everything on the board is in English: titles, steps, problems, labels. No Hindi on the board.',
       'The student\'s words reach you with the Hindi in Devanagari and the English in Latin letters. A number may arrive as चार, four or 4: all the same answer.',
     ],
+    ready: true,
   },
   {
     code: 'fr', base: 'fr', name: 'French', ownName: 'Français', label: 'French', firstTopic: 'Les équations du premier degré', tts: 'fr', sttModel: 'ink-preview', sttHints: ['fr', 'en'],
@@ -139,6 +141,7 @@ export const LESSON_LANGUAGES: readonly LessonLanguage[] = [
       'Write standard French as used in France, in speech and on the board, tu for the student, the way a kind teacher speaks.',
       'Use the terms French schools use (équation, fraction, numérateur, dénominateur, pourcentage, racine carrée).',
     ],
+    ready: true,
   },
   {
     code: 'es', base: 'es', name: 'Spanish as used in Latin America', ownName: 'Español', label: 'Spanish', firstTopic: 'Ecuaciones de primer grado', tts: 'es', sttModel: 'ink-preview', sttHints: ['es', 'en'],
@@ -149,6 +152,7 @@ export const LESSON_LANGUAGES: readonly LessonLanguage[] = [
       'Write neutral Latin American Spanish, in speech and on the board, tú for the student (never vosotros), the way a kind teacher speaks.',
       'Use the terms Latin American schools use (ecuación, fracción, porcentaje, raíz cuadrada).',
     ],
+    ready: true,
   },
 ];
 

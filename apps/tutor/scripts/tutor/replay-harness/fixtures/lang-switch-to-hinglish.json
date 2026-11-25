@@ -1,0 +1,82 @@
+{
+  "name": "lang-switch-to-hinglish",
+  "sourceSessions": [
+    "synthetic: mid-lesson language change 2026-11-24 (embed-1795484691909: \"Hindi me samjhao\")"
+  ],
+  "partner": "evelyn-marketing",
+  "claims": {
+    "student_name": "Sourav",
+    "subject": "math",
+    "level": "Grade 8",
+    "topic": "Solving linear equations",
+    "target_kind": "freestyle",
+    "max_duration_minutes": 14,
+    "wrap_at_minutes": 12,
+    "input_mode": "text",
+    "open_scope": true,
+    "features": {
+      "voice_mode": true,
+      "text_mode": true,
+      "homework_upload": false
+    },
+    "metadata": {
+      "source": "lesson-language-check"
+    }
+  },
+  "maxMinutes": 14,
+  "maxStudentTurns": 14,
+  "student": {
+    "who": "A 15-year-old in class 10 in Patna, India, typing. Your English is weak. You START by typing in English, and after the tutor's first explanation you ask to be taught in Hindi. When the tutor offers Hindi or Hinglish, choose Hinglish. After the lesson changes you type Hinglish in Latin letters, as Indian students type (\"haan samajh gaya\", \"x ki value 4 hogi\").",
+    "voice": "Short typed lines. Before the change: simple English with mistakes. After: romanised Hinglish.",
+    "manner": "You answer what was asked. You make one mistake and get it right after a clear explanation.",
+    "beats": [
+      {
+        "id": "start",
+        "when": "The tutor greets you.",
+        "do": "Type: yes ready",
+        "once": true
+      },
+      {
+        "id": "ask",
+        "when": "The tutor has given its first explanation or question about the topic.",
+        "do": "Type exactly: Hindi me samjhao",
+        "once": true
+      },
+      {
+        "id": "choose",
+        "when": "The tutor asks which you want, Hindi or Hinglish.",
+        "do": "Type: Hinglish",
+        "once": true
+      },
+      {
+        "id": "learn",
+        "when": "The tutor asks a question after the change.",
+        "do": "Answer briefly in romanised Hinglish with the number."
+      },
+      {
+        "id": "french",
+        "when": "About four turns after the change.",
+        "do": "Type: can you teach in German?",
+        "once": true
+      }
+    ],
+    "reactions": [
+      {
+        "tag": "complaint_lost",
+        "when": "After you chose Hinglish, the tutor still replies only in English, or writes Hindi in Latin letters, or the board changes to Hindi script.",
+        "do": "Type that you asked for Hinglish."
+      },
+      {
+        "tag": "end_request",
+        "when": "About 12 or more of the tutor's turns have passed.",
+        "do": "Type: thank you sir, bye",
+        "once": true
+      }
+    ],
+    "sampleLines": [
+      "yes ready",
+      "Hindi me samjhao",
+      "x ki value 4 hogi"
+    ]
+  }
+}

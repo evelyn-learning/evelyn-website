@@ -7,7 +7,8 @@
  */
 import { TUTOR_V2_NO_FALSE_SILENCE, TUTOR_V2_PRACTICE_ASK_CAP, TUTOR_V2_QUESTION_ONCE } from '../orchestrator/flags';
 
-const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean);
+// 2026-11-24, \p{M}: a Devanagari word keeps its vowel signs (cut at them, a ten-word Hindi ask counted as thirty words).
+const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{M}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean);
 
 /** Index of the sentence the anchor points at, or -1 when there is no anchor or nothing matches.
  *  The anchor may run across a sentence break ("Good. Now a trap."): the item goes with the sentence

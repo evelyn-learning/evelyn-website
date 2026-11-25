@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ExternalLink } from 'lucide-react';
-import { DEMO_LANGUAGES } from '@core/demo/demo-languages';
+import { useDemoLanguages } from '@core/demo/use-demo-languages';
 import { CodeBlock } from '../../../docs/components/CodeBlock';
 import { dashFetch, errorText } from '../../dash-api';
 import { CopyButton, Notice, focusRing, inputClass, labelClass, linkClass, primaryButton } from '../../ui';
@@ -24,6 +24,8 @@ export default function DashboardTryPage() {
   const cap = me.pool.pooled && me.pool.sessionMaxMinutes > 0 ? me.pool.sessionMaxMinutes : null;
 
   const [language, setLanguage] = useState('en');
+
+  const offeredLanguages = useDemoLanguages();
   const [subject, setSubject] = useState('math');
   const [level, setLevel] = useState('Grade 8');
   const [topic, setTopic] = useState('');
@@ -34,7 +36,7 @@ export default function DashboardTryPage() {
   const [result, setResult] = useState<TestLink | null>(null);
 
   // A first topic in the picked language, so a lesson can be made without typing one.
-  const topicHint = DEMO_LANGUAGES.find((l) => l.code === language)?.firstTopic ?? 'Solving linear equations';
+  const topicHint = offeredLanguages.find((l) => l.code === language)?.firstTopic ?? 'Solving linear equations';
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -70,7 +72,7 @@ export default function DashboardTryPage() {
               <div>
                 <label htmlFor="language" className={labelClass}>Language</label>
                 <select id="language" value={language} onChange={(e) => setLanguage(e.target.value)} disabled={pending} className={inputClass}>
-                  {DEMO_LANGUAGES.map((l) => (
+                  {offeredLanguages.map((l) => (
                     <option key={l.code} value={l.code}>{l.code === 'en' ? l.label : `${l.label} (${l.code})`}</option>
                   ))}
                 </select>

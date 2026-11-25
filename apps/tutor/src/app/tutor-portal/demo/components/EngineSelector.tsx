@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { voiceEngines } from '../../data/engines';
 import { pricing } from '../../data/pricing';
-import { DEMO_LANGUAGES, demoLanguageClaims } from '@core/demo/demo-languages';
+import { DEMO_LANGUAGES, languageClaims, type DemoLanguage } from '@core/demo/demo-languages';
+import { useDemoLanguages } from '@core/demo/use-demo-languages';
 
 /**
  * Portal live demo (tutor.evelynlearning.com/demo).
@@ -28,22 +29,22 @@ const DEMO_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const NAME_KEY = 'evelyn:demo:studentName';
 const EMAIL_KEY = 'evelyn:demo:studentEmail';
 
-function buildDemoConfig(studentName: string, mode: 'voice' | 'text' = 'voice', language: string = 'en') {
+function buildDemoConfig(studentName: string, mode: 'voice' | 'text' = 'voice', language: string = 'en', offered: readonly DemoLanguage[] = DEMO_LANGUAGES) {
   // A lesson in another language: the AP course below is an American one, so the demo opens on a topic every
   // school system teaches instead (the visitor can ask for any other; open_scope). The whole lesson (speech,
   // board, questions) is then in the picked language: the engine's lesson-language table.
-  if (language !== 'en' && demoLanguageClaims(language).tutor_languages) {
+  if (language !== 'en' && languageClaims(language, offered).tutor_languages) {
     return {
       subject: 'math',
       level: 'Middle school',
-      topic: DEMO_LANGUAGES.find((l) => l.code === language)?.firstTopic ?? 'Solving linear equations',
+      topic: offered.find((l) => l.code === language)?.firstTopic ?? 'Solving linear equations',
       target_kind: 'freestyle',
       student_name: studentName,
       input_mode: mode,
       max_duration_minutes: 30,
       wrap_at_minutes: 28,
       open_scope: true,
-      ...demoLanguageClaims(language),
+      ...languageClaims(language, offered),
       features: { voice_mode: true, text_mode: true, homework_upload: false },
       metadata: { source: mode === 'text' ? 'tutor-portal-demo-text' : 'tutor-portal-demo', lesson_language: language },
     };
@@ -73,12 +74,12 @@ type StartResult =
   | { ok: false; kind: 'limited'; reason: string }
   | { ok: false; kind: 'error' };
 
-async function startGatedDemo(name: string, email: string, mode: 'voice' | 'text', language: string): Promise<StartResult> {
+async function startGatedDemo(name: string, email: string, mode: 'voice' | 'text', language: string, offered: readonly DemoLanguage[]): Promise<StartResult> {
   try {
     const res = await fetch('/api/tutor/demo-start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, config: buildDemoConfig(name, mode, language) }),
+      body: JSON.stringify({ name, email, config: buildDemoConfig(name, mode, language, offered) }),
     });
     if (res.status === 429) {
       const d = (await res.json().catch(() => ({}))) as { reason?: string };
@@ -115,6 +116,8 @@ export function EngineSelector({ mode = 'voice' }: { mode?: 'voice' | 'text' }) 
   const [limited, setLimited] = useState<string | null>(null);
   const [embedSrc, setEmbedSrc] = useState<string | null>(null);
   const [language, setLanguage] = useState('en');
+  // The engine's own list of ready languages (a new one appears here with no change to this page).
+  const offered = useDemoLanguages();
 
   useEffect(() => {
     try {
@@ -138,7 +141,7 @@ export function EngineSelector({ mode = 'voice' }: { mode?: 'voice' | 'text' }) 
     setStarting(true);
     setStartError(false);
     try {
-      const result = await startGatedDemo(name, email, mode, language);
+      const result = await startGatedDemo(name, email, mode, language, offered);
       if (!result.ok) {
         if (result.kind === 'limited') setLimited(result.reason);
         else setStartError(true);
@@ -233,8 +236,8 @@ export function EngineSelector({ mode = 'voice' }: { mode?: 'voice' | 'text' }) 
                   </>
                 ) : (
                   <>
-                    Mathematics · Solving linear equations · 30-minute demo, taught in{' '}
-                    {DEMO_LANGUAGES.find((l) => l.code === language)?.english}. Ask the tutor to switch topics any time.
+                    Mathematics · {offered.find((l) => l.code === language)?.firstTopic ?? 'Solving linear equations'} · 30-minute demo, taught in{' '}
+                    {offered.find((l) => l.code === language)?.english}. Ask the tutor to switch topics any time.
                   </>
                 )
               )}
@@ -242,7 +245,7 @@ export function EngineSelector({ mode = 'voice' }: { mode?: 'voice' | 'text' }) 
             {/* The language of the whole lesson: what the tutor speaks, hears and writes on the board. */}
             <div className="flex flex-wrap items-center justify-center gap-2" role="radiogroup" aria-label="Lesson language">
               <span className="text-xs text-slate-500">Lesson language</span>
-              {DEMO_LANGUAGES.map((l) => (
+              {offered.map((l) => (
                 <button
                   key={l.code}
                   type="button"

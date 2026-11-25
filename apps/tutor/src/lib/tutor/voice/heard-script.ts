@@ -13,6 +13,7 @@
  */
 import { taughtIn, sessionLanguageRows } from './lesson-language';
 import { heardNumerals } from './heard-numerals';
+import { heardNumberWords, numberWordLanguages } from './heard-number-words';
 
 export type HeardConverter = (text: string) => string;
 const same: HeardConverter = (t) => t;
@@ -23,12 +24,19 @@ export function heardNeedsConversion(languages: readonly string[] | null | undef
   return (taughtIn(languages)?.heardAs ?? sessionLanguageRows(languages).find((r) => r.heardAs)?.heardAs) === 'traditional';
 }
 
-/** Whether numbers they say are written as digits (voice/heard-numerals.ts): a lesson taught in Chinese or Japanese. */
-const numeralsAsDigits = (languages: readonly string[] | null | undefined) => { const b = taughtIn(languages)?.base; return b === 'zh' || b === 'ja'; };
+/** How the numbers they say are written as digits, by the lesson's language: Chinese and Japanese numerals
+ *  (voice/heard-numerals.ts); 2026-11-24: Hindi, French and Spanish number words, and English ones said in those
+ *  lessons (voice/heard-number-words.ts). None for an English lesson. */
+export function heardDigits(languages: readonly string[] | null | undefined): HeardConverter {
+  const b = taughtIn(languages)?.base;
+  if (b === 'zh' || b === 'ja') return heardNumerals;
+  const words = numberWordLanguages(b);
+  return words.length ? (text) => heardNumberWords(text, words) : same;
+}
 
 /** The converter for a session's heard text: the identity for every session that needs none. Never rejects. */
 export function loadHeardConverter(languages: readonly string[] | null | undefined): Promise<HeardConverter> {
-  const digits: HeardConverter = numeralsAsDigits(languages) ? heardNumerals : same;
+  const digits = heardDigits(languages);
   if (!heardNeedsConversion(languages)) return Promise.resolve(digits);
   traditional ??= import('opencc-js/cn2t')
     .then((m) => {

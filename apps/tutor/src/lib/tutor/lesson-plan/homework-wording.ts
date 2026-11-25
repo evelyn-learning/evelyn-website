@@ -34,6 +34,19 @@ const WORDING: Readonly<Record<string, HomeworkWording>> = {
     sheetTitle: '宿題サポート', sheetObjective: 'アップロードした問題を順番に解きます。',
     problemTitle: (n) => `問題 ${n}`, problemObjective: (n) => `問題 ${n} を解く`, problemObjectiveSentence: (n) => `問題 ${n} を解きます。`,
   },
+  // 2026-11-24. Hinglish has no row: its board and labels are English (lesson-language.ts boardIn), so it keeps EN.
+  hi: {
+    sheetTitle: 'होमवर्क में मदद', sheetObjective: 'अपलोड किए गए सवाल क्रम से हल करें।',
+    problemTitle: (n) => `सवाल ${n}`, problemObjective: (n) => `सवाल ${n} हल करें`, problemObjectiveSentence: (n) => `सवाल ${n} हल करें।`,
+  },
+  fr: {
+    sheetTitle: 'Aide aux devoirs', sheetObjective: "Résoudre dans l'ordre les exercices envoyés.",
+    problemTitle: (n) => `Exercice ${n}`, problemObjective: (n) => `Résoudre l'exercice ${n}`, problemObjectiveSentence: (n) => `Résoudre l'exercice ${n}.`,
+  },
+  es: {
+    sheetTitle: 'Ayuda con la tarea', sheetObjective: 'Resolver en orden los problemas subidos.',
+    problemTitle: (n) => `Problema ${n}`, problemObjective: (n) => `Resolver el problema ${n}`, problemObjectiveSentence: (n) => `Resolver el problema ${n}.`,
+  },
 };
 
 /** The wording for a plan's locale (`zh-TW`, `zh_tw`, `ja-JP`); English for none, for English and for a language with no row. */

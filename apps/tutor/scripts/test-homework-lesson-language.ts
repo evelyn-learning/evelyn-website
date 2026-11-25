@@ -10,7 +10,7 @@ import { BUILD_LOGIC_VERSION } from '../src/lib/tutor/homework-build/types';
 import type { AnswerKey, AnswerPart } from '../src/lib/tutor/homework-build/types';
 import { v2HomeworkCheck, sheetProblemNamed, problemNumbersNamed, partLabel, workedAnswerCredit } from '../src/lib/tutor/v2/homework';
 import { v2HomeworkFacts } from '../src/lib/tutor/v2/homework-facts';
-import { verdictMissing, lastQuestionOf, nonAnswer, isGuess, isBareNumber, givesCredit, unearnedCredit, castsDoubt } from '../src/lib/tutor/v2/homework-guards';
+import { verdictMissing, lastQuestionOf, nonAnswer, isGuess, isBareNumber, givesCredit, unearnedCredit, castsDoubt, V2_VERDICT_OPENERS, V2_VERDICT_OPENERS_BY_LANGUAGE, v2VerdictOpeners } from '../src/lib/tutor/v2/homework-guards';
 import { homeworkWording } from '../src/lib/tutor/lesson-plan/homework-wording';
 import { buildHomeworkProblemPlan } from '../src/lib/tutor/lesson-plan/homework-problem';
 import { buildHomeworkPlanFields } from '../src/lib/tutor/lesson-plan/homework';
@@ -243,6 +243,243 @@ t('the build\'s prompts ask for the problem\'s own language', () => {
   assert.match(TRANSCRIBE_MATERIAL_PROMPT_SINGLE, /never translate it\. The bracketed descriptions are written in English/);
   assert.match(buildBatchTranscribePrompt(2), /never translate it/);
   assert.equal(BUILD_LOGIC_VERSION, 4);
+});
+
+// ── 2026-11-24: Hindi, Hinglish, French, Spanish ──────────────────────────────────────────────────────────────
+const K6 = key([num('', '3/4', 0.75)]);
+const K7 = key([num('', '20%', 20, '%')]);
+const KP = key([num('a', '5/4', 1.25), num('b', '1', 1)]);
+/** The answer check in a session taught in `languages`. */
+async function checkIn(languages: string[] | undefined, k: AnswerKey, said: string, history: string[] = []): Promise<string> {
+  const problem: V2HomeworkProblem = { text: 'p', verified: true, hasFigure: false, parts: k.parts.map((p) => partLabel(p.label)) };
+  const state = { history: history.map((h) => ({ role: 'user' as const, content: h })) } as unknown as V2State;
+  const r = await v2HomeworkCheck({ key: k, problem, state, studentSaid: said, languages, proseMatch: async () => null });
+  return `${r.verdicts.map((v) => `${v.part || '·'}:${v.verdict}${v.value ? `(${v.value})` : ''}`).join(' ') || 'UNDECIDED'}${r.done ? ' DONE' : ''}`;
+}
+
+t('answerText: English comes back byte for byte in every session, and whatever else is typed in an English one', () => {
+  const EN_TEXT = ['x = 3, y = 2', "I think it's 12 cm?", "maybe 4 kcal/m^2/yr, because it's 10% twice", '(a) 8 (b) 24', 'The area is 52 cm².', '  45 degrees ', 'x ≤ −2 or x > 5', 'y = 2x + 3\n\nso m = 2', 'No, 42 < 45.5', 'café: 3 – 4 × 5',
+    'the answer is three quarters', 'one half', 'x is one', '3 by 4', 'da 12', 'x es 3', '3,5', '(2,3)', 'a comment on part b', 'It gives 5 over 2', 'three', 'minus 3', 'I got 7 percent', ''];
+  for (const langs of [undefined, null, [], ['en'], ['en', 'ja'], ['en', 'hi'], ['en', 'fr'], ['en', 'es'], ['zh-TW'], ['ja']] as const) for (const s of EN_TEXT) assert.equal(answerText(s, langs as string[] | null | undefined), s, `${JSON.stringify(langs)}: ${s}`);
+  // English typed in a Hinglish, French or Spanish lesson is read as English: the forms the checks already read stay.
+  for (const langs of [['hi'], ['hi-Latn'], ['fr'], ['es']]) for (const s of ['x = 3, y = 2', 'the answer is 11', 'maybe 11?', "I don't know, maybe y = -2?", '(a) 8 (b) 24', 'x = 11', '5/4', '110°', 'is it 11?']) assert.equal(answerText(s, langs), s, `${langs}: ${s}`);
+});
+t('answerText: Hindi wording around a value', () => {
+  const eq = (a: string, b: string) => { assert.equal(answerText(a), b, a); assert.equal(answerText(a, ['hi']), b, `hi: ${a}`); assert.equal(answerText(a, ['hi-Latn']), b, `hi-Latn: ${a}`); };
+  eq('उत्तर 11 है', 'the answer is 11'); eq('उत्तर है ग्यारह', 'the answer is 11'); eq('जवाब 11 होगा', 'the answer is 11'); eq('x बराबर तीन', 'x = 3'); eq('x = 3 है', 'x = 3'); eq('x 3 है', 'x = 3'); eq('x की value 3 है', 'x = 3');
+  eq('x = 2 और y = 3', 'x = 2, y = 3'); eq('x बराबर माइनस 3', 'x = -3');
+  eq('शायद 11', 'maybe 11'); eq('मुझे लगता है 11 होगा', 'maybe 11'); eq('11 शायद', 'maybe 11'); eq('पता नहीं, शायद 11?', "I don't know, maybe 11?");
+  // क्या … है? and a tag at the end are a hedge, as 嗎 is.
+  eq('क्या यह 11 है?', 'is it 11?'); eq('क्या यह 11 है', 'is it 11?'); eq('क्या answer 11 है?', 'is it 11?'); eq('11 है क्या?', '11?'); eq('11 है ना?', '11?');
+  eq('तीन बटा चार', '3/4'); eq('दो सही एक बटा तीन', '2 1/3'); eq('आधा', '1/2'); eq('110 डिग्री', '110°'); eq('एक सौ दस डिग्री', '110°'); eq('२५ प्रतिशत', '25%'); eq('बीस परसेंट', '20%');
+  eq('भाग (a) का उत्तर 5/4 है', '(a) 5/4'); eq('(b) का answer 3 है', '(b) 3');
+  // Words that only look like numbers or leads stay.
+  for (const s of ['मुझे hint दो', 'जवाब दो', 'एक मिनट रुको', 'बता दो ना']) eq(s, s);
+  eq('रुको, मैं सोच रहा हूँ।', 'रुको, मैं सोच रहा हूँ.');
+});
+t('answerText: Hinglish, with its English words and typed in Latin letters', () => {
+  const eq = (a: string, b: string) => assert.equal(answerText(a, ['hi-Latn']), b, a);
+  eq('answer 5 है', 'the answer is 5'); eq('answer है five', 'the answer is 5'); eq('answer four है', 'the answer is 4'); eq('x equals twenty one', 'x = 21'); eq('three by four', '3/4'); eq('3 by 4', '3/4');
+  // Typed the way students type it; read so only in a Hindi or Hinglish session.
+  eq('answer 5 hai', 'the answer is 5'); eq('shayad 11', 'maybe 11'); eq('3 bata 4', '3/4'); eq('5 hai kya?', '5?'); eq('kya 11 hai?', 'is it 11?'); eq('x barabar 3 hai', 'x = 3'); eq('pata nahi, shayad 11', "I don't know, maybe 11");
+  for (const s of ['answer 5 hai', 'shayad 11', '3 bata 4', '3 by 4']) { assert.equal(answerText(s), s, s); assert.equal(answerText(s, ['fr']), s, s); }
+});
+t('answerText: French wording around a value', () => {
+  const eq = (a: string, b: string) => assert.equal(answerText(a, ['fr']), b, a);
+  eq('la réponse est 11', 'the answer is 11'); eq('La réponse est onze.', 'the answer is 11.'); eq('ça fait douze', '12'); eq("j'ai trouvé 7", 'the answer is 7'); eq("c'est 12", '12');
+  eq('x égale 3', 'x = 3'); eq('x est égal à 3', 'x = 3'); eq('x est 5', 'x = 5'); eq('x vaut trois', 'x = 3'); eq('x = 2 et y = 3', 'x = 2, y = 3'); eq('x égale moins 3', 'x = -3'); eq('5 moins 3', '5 moins 3');
+  eq("je pense que c'est 11", 'maybe 11'); eq('peut-être 11', 'maybe 11'); eq('11, je pense', 'maybe 11'); eq('je ne sais pas, peut-être 11 ?', "I don't know, maybe 11?");
+  // "c'est … ?" and a tag at the end are a hedge, as 嗎 is.
+  eq("c'est 11 ?", 'is it 11?'); eq("est-ce que c'est 11 ?", 'is it 11?'); eq('11, non ?', '11?');
+  eq('trois quarts', '3/4'); eq('un demi', '1/2'); eq('la moitié', '1/2'); eq('deux et trois quarts', '2 3/4'); eq('3 sur 4', '3/4'); eq('deux tiers', '2/3'); eq('110 degrés', '110°'); eq('cent dix degrés', '110°'); eq('20 pour cent', '20%'); eq('vingt pour cent', '20%');
+  eq("l'angle ABC fait 110 degrés", '∠ABC = 110°'); eq("(a) c'est 5/4", '(a) 5/4'); eq('partie b : 7', '(b) 7');
+  // A decimal comma, as France writes it; never a pair in brackets or a named list.
+  eq('3,5', '3.5'); eq('x = 2,5', 'x = 2.5'); eq('(2,3)', '(2,3)'); eq('x=2,y=3', 'x=2,y=3');
+  for (const s of ['attends, je réfléchis', "c'est un problème difficile", "je n'ai pas compris"]) eq(s, s);
+  // French wording is read with no session to say so; a bare French number needs one.
+  assert.equal(answerText('la réponse est 11'), 'the answer is 11'); assert.equal(answerText("c'est 11 ?"), 'is it 11?'); assert.equal(answerText('trois quarts'), 'trois quarts'); assert.equal(answerText('3,5'), '3,5');
+});
+t('answerText: Spanish wording around a value', () => {
+  const eq = (a: string, b: string) => assert.equal(answerText(a, ['es']), b, a);
+  eq('la respuesta es 11', 'the answer is 11'); eq('La respuesta es treinta y dos.', 'the answer is 32.'); eq('me da 12', 'the answer is 12'); eq('da 12', '12'); eq('es 12', '12');
+  eq('x es igual a 3', 'x = 3'); eq('x es 3', 'x = 3'); eq('x vale tres', 'x = 3'); eq('x = 2 y y = 3', 'x = 2, y = 3'); eq('menos 3', '-3');
+  eq('creo que es 11', 'maybe 11'); eq('tal vez 11', 'maybe 11'); eq('11, creo', 'maybe 11'); eq('no sé, tal vez 11', "I don't know, maybe 11");
+  // "¿es … ?" and a tag at the end are a hedge, as 嗎 is.
+  eq('¿es 11?', 'is it 11?'); eq('¿Será 11?', 'is it 11?'); eq('11, ¿no?', '11?'); eq('11, ¿verdad?', '11?');
+  eq('tres cuartos', '3/4'); eq('un medio', '1/2'); eq('la mitad', '1/2'); eq('dos y tres cuartos', '2 3/4'); eq('3 sobre 4', '3/4'); eq('dos tercios', '2/3'); eq('110 grados', '110°'); eq('ciento diez grados', '110°'); eq('20 por ciento', '20%'); eq('veinte por ciento', '20%');
+  eq('el ángulo ABC es 110 grados', '∠ABC = 110°'); eq('(a) es 5/4', '(a) 5/4'); eq('parte b: 7', '(b) 7'); eq('3.5', '3.5');
+  for (const s of ['espera, estoy pensando', 'es una ecuación difícil', 'no entendí']) eq(s, s);
+  assert.equal(answerText('la respuesta es 11'), 'the answer is 11'); assert.equal(answerText('¿es 11?'), 'is it 11?'); assert.equal(answerText('tres cuartos'), 'tres cuartos');
+});
+t('answerText is idempotent in the new languages, with the session and without it', () => {
+  const CASES: Array<[string[], string[]]> = [
+    [['hi'], ['उत्तर 11 है', 'x बराबर तीन', 'क्या यह 11 है?', '11 है ना?', 'पता नहीं, शायद 11?', 'भाग (a) का उत्तर 5/4 है', 'तीन बटा चार', '110 डिग्री', 'x = 2 और y = 3', 'जवाब दो']],
+    [['hi-Latn'], ['answer 5 है', 'answer 5 hai', 'shayad 11', '3 bata 4', 'kya 11 hai?', 'The answer is 11', 'x equals 4']],
+    [['fr'], ['la réponse est 11', "c'est 11 ?", "je pense que c'est 11", 'trois quarts', '3,5', "(a) c'est 5/4", 'x = 2 et y = 3', '110 degrés', 'ça fait douze']],
+    [['es'], ['la respuesta es 11', '¿es 11?', 'creo que es 11', 'tres cuartos', '(a) es 5/4', 'x = 2 y y = 3', '110 grados', 'me da 12']],
+  ];
+  for (const [langs, xs] of CASES) for (const s of xs) { const once = answerText(s, langs); assert.equal(answerText(once, langs), once, `${langs}: ${s}`); assert.equal(answerText(once), once, `${langs}, then no session: ${s}`); }
+});
+
+t('the answer check: one value, worded in Hindi and Hinglish', async () => {
+  for (const s of ['11', 'ग्यारह', 'x बराबर 11', 'x बराबर ग्यारह', 'उत्तर 11 है', 'उत्तर ग्यारह है', 'x 11 है', 'शायद 11', 'क्या यह 11 है?', '11 है ना?', 'इसलिए x = 11', 'x की value 11 है']) assert.equal(await checkIn(['hi'], K2, s), '·:correct DONE', s);
+  for (const s of ['x बराबर 10', 'उत्तर 10 है']) assert.equal(await checkIn(['hi'], K2, s), '·:incorrect', s);
+  // A bare or hedged wrong value is never denied, and a request is no answer.
+  for (const s of ['शायद 10', '10 है क्या?', 'मुझे hint दो', 'जवाब दो', 'रुको']) assert.equal(await checkIn(['hi'], K2, s), 'UNDECIDED', s);
+  for (const s of ['answer 11 है', 'answer eleven है', 'x equals eleven', 'answer 11 hai', 'shayad 11', 'x = 11 hai', 'the answer is 11', 'I think 11']) assert.equal(await checkIn(['hi-Latn'], K2, s), '·:correct DONE', s);
+  for (const s of ['answer 10 है', 'x barabar 10']) assert.equal(await checkIn(['hi-Latn'], K2, s), '·:incorrect', s);
+  assert.equal(await checkIn(['hi-Latn'], K2, 'shayad 10'), 'UNDECIDED');
+  for (const s of ['x बराबर 3 और y बराबर 2', 'x = 3 और y = 2', 'x तीन है, y दो है']) assert.equal(await checkIn(['hi'], K1, s), RIGHT1, s);
+  assert.equal(await checkIn(['hi'], K1, 'x बराबर 2 और y बराबर 3'), WRONG1);
+  assert.equal(await checkIn(['hi'], K1, 'y दो है', ['x तीन है']), '·:correct(y) DONE');
+});
+t('the answer check: one value, worded in French', async () => {
+  for (const s of ['11', 'onze', 'x égale 11', 'x est égal à onze', 'la réponse est 11', 'ça fait onze', "c'est 11", 'x est 11', "je pense que c'est 11", "c'est 11 ?", 'donc x = 11', 'x vaut 11']) assert.equal(await checkIn(['fr'], K2, s), '·:correct DONE', s);
+  for (const s of ['x égale 10', 'la réponse est 10']) assert.equal(await checkIn(['fr'], K2, s), '·:incorrect', s);
+  for (const s of ['peut-être 10', "c'est 10 ?", 'attends']) assert.equal(await checkIn(['fr'], K2, s), 'UNDECIDED', s);
+  for (const s of ['x égale 3 et y égale 2', 'x = 3 et y = 2', 'x vaut trois, y vaut deux']) assert.equal(await checkIn(['fr'], K1, s), RIGHT1, s);
+  assert.equal(await checkIn(['fr'], K1, 'x égale 2 et y égale 3'), WRONG1);
+  assert.equal(await checkIn(['fr'], K1, 'y vaut deux', ['x vaut trois']), '·:correct(y) DONE');
+});
+t('the answer check: one value, worded in Spanish', async () => {
+  for (const s of ['11', 'once', 'x es igual a 11', 'x es igual a once', 'la respuesta es 11', 'me da once', 'es 11', 'x es 11', 'creo que es 11', '¿es 11?', 'entonces x = 11', 'x vale 11']) assert.equal(await checkIn(['es'], K2, s), '·:correct DONE', s);
+  for (const s of ['x es igual a 10', 'la respuesta es 10']) assert.equal(await checkIn(['es'], K2, s), '·:incorrect', s);
+  for (const s of ['tal vez 10', '¿es 10?', 'espera']) assert.equal(await checkIn(['es'], K2, s), 'UNDECIDED', s);
+  for (const s of ['x es igual a 3 y y es igual a 2', 'x = 3 y y = 2', 'x es tres, y es dos']) assert.equal(await checkIn(['es'], K1, s), RIGHT1, s);
+  assert.equal(await checkIn(['es'], K1, 'x es igual a 2 y y es igual a 3'), WRONG1);
+});
+t('the answer check: parts, fractions, degrees and percentages in the new languages', async () => {
+  for (const [langs, s] of [[['fr'], "(a) c'est 5/4"], [['fr'], 'partie a : cinq quarts'], [['es'], '(a) es 5/4'], [['es'], 'parte a: cinco cuartos'], [['hi'], '(a) का उत्तर 5/4 है'], [['hi'], 'भाग a का उत्तर पाँच बटा चार है']] as const) assert.equal(await checkIn([...langs], KP, s), 'a:correct', s);
+  for (const [langs, s] of [[['fr'], "la (b) c'est 1"], [['es'], 'la (b) es 1'], [['hi'], '(b) 1 है']] as const) assert.equal(await checkIn([...langs], KP, s), 'b:correct', s);
+  for (const [langs, s] of [[['fr'], 'trois quarts'], [['fr'], '3 sur 4'], [['fr'], 'la réponse est trois quarts'], [['fr'], 'zéro virgule soixante-quinze'], [['fr'], '0,75'], [['es'], 'tres cuartos'], [['es'], '3 sobre 4'], [['es'], 'cero punto setenta y cinco'],
+    [['hi'], 'तीन बटा चार'], [['hi'], 'उत्तर तीन बटा चार है'], [['hi-Latn'], 'three by four'], [['hi-Latn'], '3 by 4']] as const) assert.equal(await checkIn([...langs], K6, s), '·:correct DONE', s);
+  for (const [langs, s] of [[['fr'], '110 degrés'], [['fr'], "l'angle ABC fait 110 degrés"], [['fr'], 'cent dix degrés'], [['es'], '110 grados'], [['es'], 'ciento diez grados'], [['hi'], '110 डिग्री'], [['hi'], 'एक सौ दस डिग्री']] as const) assert.equal(await checkIn([...langs], K5, s), '·:correct DONE', s);
+  for (const [langs, s] of [[['fr'], 'la réponse est 70 degrés'], [['es'], 'la respuesta es 70 grados'], [['hi'], 'उत्तर 70 डिग्री है']] as const) assert.equal(await checkIn([...langs], K5, s), '·:incorrect', s);
+  assert.equal(await checkIn(['fr'], K5, '70 degrés'), 'UNDECIDED');
+  for (const [langs, s] of [[['fr'], '20 pour cent'], [['fr'], 'vingt pour cent'], [['es'], '20 por ciento'], [['es'], 'veinte por ciento'], [['hi'], '20 प्रतिशत'], [['hi'], 'बीस परसेंट'], [['hi-Latn'], 'twenty percent']] as const) assert.equal(await checkIn([...langs], K7, s), '·:correct DONE', s);
+});
+t('the answer check: an English session reads as before', async () => {
+  for (const langs of [undefined, ['en'], ['en', 'ja']]) {
+    for (const s of ['11', 'x = 11', 'the answer is 11', 'I think 11', 'maybe 11?']) assert.equal(await checkIn(langs, K2, s), '·:correct DONE', s);
+    assert.equal(await checkIn(langs, K2, 'x = 10'), '·:incorrect'); assert.equal(await checkIn(langs, K2, 'maybe 10?'), 'UNDECIDED');
+    // Number words and the weak wording of another language are not read in an English lesson.
+    for (const s of ['onze', 'once', 'x es 11', 'eleven']) assert.equal(await checkIn(langs, K2, s), 'UNDECIDED', `${langs}: ${s}`);
+    // A script of its own is read whatever the session, as 十一 is.
+    assert.equal(await checkIn(langs, K2, 'ग्यारह'), '·:correct DONE'); assert.equal(await checkIn(langs, K2, '十一'), '·:correct DONE');
+    assert.equal(await checkIn(langs, K1, 'x = 3, y = 2'), RIGHT1); assert.equal(await checkIn(langs, K1, 'x = 2, y = 3'), WRONG1);
+  }
+  assert.equal(await check(K2, 'x = 11'), await checkIn(undefined, K2, 'x = 11'));
+});
+
+t('the reply checks in Hindi and Hinglish', () => {
+  for (const langs of [['hi'], ['hi-Latn'], undefined]) {
+    for (const s of ['बिल्कुल सही। अब आगे चलते हैं।', 'हाँ, x चार है।', 'शाबाश!', 'बहुत बढ़िया, यही उत्तर है।', 'Correct! बहुत बढ़िया।']) assert.equal(verdictMissing(s, ['correct'], langs), null, s);
+    for (const s of ['यह सही नहीं है।', 'अच्छा, अब अगला देखते हैं।', 'यह correct नहीं है।', 'नहीं, फिर से देखो।']) assert.equal(verdictMissing(s, ['correct'], langs), 'correct', s);
+    for (const s of ['यह सही नहीं है।', 'नहीं, एक बार फिर देखो।', 'थोड़ी गलती है।', 'यह correct नहीं है।', 'लगभग, पर पूरा सही नहीं।']) assert.equal(verdictMissing(s, ['incorrect'], langs), null, s);
+    for (const s of ['बिल्कुल सही।', 'अब अगला सवाल देखते हैं।']) assert.equal(verdictMissing(s, ['incorrect'], langs), 'incorrect', s);
+  }
+  assert.equal(lastQuestionOf('ठीक है। अब बताओ, x की value क्या है?'), 'अब बताओ, x की value क्या है?');
+  assert.ok(nonAnswer('हाँ', 'x की value क्या है?')); assert.ok(nonAnswer('4', 'तुम्हें क्या दिख रहा है?'));
+  for (const [said, q] of [['4', 'x की value क्या है?'], ['हाँ', 'क्या यह सही है?'], ['4', 'x कितना है?'], ['हाँ', 'समझ आया?'], ['चार', 'x कितना है?']]) assert.equal(nonAnswer(said, q), null, `${said} / ${q}`);
+  for (const s of ['शायद 11?', 'क्या यह 11 है?', '11 है ना?', 'पता नहीं, शायद 11']) assert.equal(isGuess(s), true, s);
+  for (const s of ['11', 'x बराबर 11', 'शायद 11, क्योंकि दोनों तरफ से 5 घटाया', 'उत्तर 11 है']) assert.equal(isGuess(s), false, s);
+  for (const s of ['चार', '11', '23 मुर्गियाँ', '5 किलोमीटर', '110 डिग्री', 'बीस प्रतिशत']) assert.equal(isBareNumber(s, ['hi']), true, s);
+  for (const s of ['x 4 है', 'क्योंकि 11', 'मुर्गियाँ 23 हैं और खरगोश 12']) assert.equal(isBareNumber(s, ['hi']), false, s);
+  for (const s of ['बिल्कुल सही।', 'हाँ, यही है।', 'शाबाश!']) assert.equal(givesCredit(s), true, s);
+  for (const s of ['ठीक है, अब अगला देखते हैं।', 'यह सही नहीं है।', 'देखो, यहाँ क्या हो रहा है।']) assert.equal(givesCredit(s), false, s);
+  const guessed = [{ label: '', value: '11' }];
+  assert.equal(unearnedCredit('तुमने खुद निकाल लिया कि x 11 है।', guessed, true).length, 1); assert.equal(unearnedCredit('हाँ, 11 सही है।', guessed, true).length, 0);
+  assert.equal(castsDoubt('यह सिर्फ़ एक अंदाज़ा था।').length, 1); assert.equal(castsDoubt('तुम्हारा जवाब सही है।').length, 0);
+});
+t('the reply checks in French and Spanish, only in a lesson taught in them', () => {
+  for (const s of ["Oui, c'est ça.", 'Exactement !', 'Très bien, x vaut 4.', 'Bravo, bonne réponse.']) assert.equal(verdictMissing(s, ['correct'], ['fr']), null, s);
+  for (const s of ['Pas tout à fait.', "Non, ce n'est pas correct.", 'Voyons la suite.', 'Pas exactement.']) assert.equal(verdictMissing(s, ['correct'], ['fr']), 'correct', s);
+  for (const s of ['Pas tout à fait.', 'Presque !', 'Non, regarde encore.', 'Il y a une petite erreur.']) assert.equal(verdictMissing(s, ['incorrect'], ['fr']), null, s);
+  assert.equal(verdictMissing("Oui, c'est ça.", ['incorrect'], ['fr']), 'incorrect');
+  for (const s of ['Sí, correcto.', '¡Exacto!', 'Muy bien, x vale 4.', 'Así es.']) assert.equal(verdictMissing(s, ['correct'], ['es']), null, s);
+  for (const s of ['No del todo.', 'No es correcto.', 'Veamos lo siguiente.']) assert.equal(verdictMissing(s, ['correct'], ['es']), 'correct', s);
+  for (const s of ['No del todo.', 'Casi.', 'No, revisa el signo.', 'Hay un error.']) assert.equal(verdictMissing(s, ['incorrect'], ['es']), null, s);
+  assert.equal(verdictMissing('Sí, correcto.', ['incorrect'], ['es']), 'incorrect');
+  // An English lesson, and a lesson in another language, never reads these rows.
+  for (const langs of [undefined, ['en'], ['en', 'fr'], ['zh-TW'], ['hi']]) { assert.equal(verdictMissing("Oui, c'est ça.", ['correct'], langs), 'correct'); assert.equal(verdictMissing('Sí, correcto.', ['correct'], langs), 'correct'); assert.equal(nonAnswer('yes', 'Can you comment on that?', langs), null); assert.equal(nonAnswer('no', 'Is there an error here?', langs), null); }
+  assert.ok(nonAnswer('oui', 'Que vaut x ?', ['fr'])); assert.ok(nonAnswer('4', 'Que remarques-tu ?', ['fr'])); assert.ok(nonAnswer('sí', '¿Cuánto vale x?', ['es'])); assert.ok(nonAnswer('4', '¿Qué notas?', ['es']));
+  for (const [said, q, l] of [['4', 'Combien vaut x ?', 'fr'], ['oui', 'Tu comprends ?', 'fr'], ['oui', 'Est-ce que tu vois pourquoi ?', 'fr'], ['douze', 'Combien ça fait ?', 'fr'], ['4', '¿Cuánto vale x?', 'es'], ['sí', '¿Lo ves?', 'es'], ['sí', '¿Está claro, verdad?', 'es']]) assert.equal(nonAnswer(said, q, [l]), null, `${said} / ${q}`);
+  for (const [l, s] of [['fr', 'peut-être 11 ?'], ['fr', "c'est 11 ?"], ['fr', 'je ne sais pas, peut-être 11'], ['es', '¿es 11?'], ['es', 'tal vez 11'], ['es', 'no sé, creo que 11']]) assert.equal(isGuess(s, [l]), true, s);
+  for (const [l, s] of [['fr', "je pense que c'est 11 parce que 6 plus 5"], ['fr', 'x égale 11'], ['fr', 'la réponse est 11'], ['es', 'creo que es 11 porque 6 más 5'], ['es', 'x es 11']]) assert.equal(isGuess(s, [l]), false, s);
+  for (const [l, s] of [['fr', 'douze'], ['fr', "c'est douze"], ['fr', '110 degrés'], ['es', 'doce'], ['es', 'es doce'], ['es', '20 por ciento']]) assert.equal(isBareNumber(s, [l]), true, s);
+  assert.equal(isBareNumber('douze'), false); assert.equal(isBareNumber('doce', ['en']), false); assert.equal(isBareNumber('12'), true);
+  const guessed = [{ label: '', value: '11' }];
+  assert.equal(unearnedCredit('Tu as calculé x toi-même.', guessed, true, ['fr']).length, 1); assert.equal(unearnedCredit('Oui, 11 est juste.', guessed, true, ['fr']).length, 0);
+  assert.equal(unearnedCredit('Lo resolviste paso a paso.', guessed, true, ['es']).length, 1); assert.equal(unearnedCredit('Sí, 11 es correcto.', guessed, true, ['es']).length, 0);
+  assert.equal(castsDoubt('Tu as juste deviné.', ['fr']).length, 1); assert.equal(castsDoubt('Tu as trouvé la bonne réponse.', ['fr']).length, 0);
+  assert.equal(castsDoubt('Solo adivinaste.', ['es']).length, 1); assert.equal(castsDoubt('Encontraste la respuesta.', ['es']).length, 0);
+});
+t('the verdict said in front of a draft that lacks it is read as that verdict', () => {
+  for (const code of ['zh-TW', 'zh-CN', 'ja', 'hi', 'hi-Latn', 'fr', 'es']) {
+    const o = V2_VERDICT_OPENERS_BY_LANGUAGE[code]; assert.ok(o, code);
+    assert.equal(verdictMissing(`${o.correct} x = 4`, ['correct'], [code]), null, `${code}: ${o.correct}`); assert.equal(verdictMissing(`${o.incorrect} x = 4`, ['incorrect'], [code]), null, `${code}: ${o.incorrect}`);
+    assert.equal(verdictMissing(`${o.incorrect} x = 4`, ['correct'], [code]), 'correct', `${code}: ${o.incorrect}`); assert.equal(verdictMissing(`${o.correct} x = 4`, ['incorrect'], [code]), 'incorrect', `${code}: ${o.correct}`);
+    assert.equal(o.mixed, '');
+  }
+  assert.deepEqual(V2_VERDICT_OPENERS, { correct: "That's right.", incorrect: 'Not quite.', mixed: '' });
+});
+t('typed Hinglish: answers typed in Latin letters', async () => {
+  const L = ['hi-Latn'];
+  const eq = (a: string, b: string) => { assert.equal(answerText(a, L), b, a); assert.equal(answerText(a, ['hi']), b, `hi: ${a}`); assert.equal(answerText(answerText(a, L), L), b, `again: ${a}`); assert.equal(answerText(b), b, `no session: ${b}`); };
+  eq('x ki value 4 hogi', 'x = 4'); eq('x ka maan 5 hai', 'x = 5'); eq('answer 12 hai', 'the answer is 12'); eq('jawab 4 hai', 'the answer is 4'); eq('4 hoga', '4'); eq('12 aayega', '12'); eq('shayad 4', 'maybe 4'); eq('4 hai kya?', '4?'); eq('11 hai na?', '11?');
+  eq('kya yeh 11 hai?', 'is it 11?'); eq('pata nahi, shayad 11', "I don't know, maybe 11"); eq('mujhe lagta hai 11 hoga', 'maybe 11'); eq('x barabar 3', 'x = 3'); eq('x = 3 aur y = 2', 'x = 3, y = 2'); eq('x 3 hai aur y 2 hai', 'x = 3, y = 2');
+  // What is no answer stays as typed, in Latin letters.
+  for (const s of ['haan samajh gaya', 'nahi samajh aaya', 'ek doubt hai', 'aage badhao', 'x = 4', 'the answer is 4', 'I think 4']) eq(s, s);
+  // Read so only in a Hindi or Hinglish session.
+  for (const langs of [undefined, ['en'], ['en', 'hi'], ['fr'], ['es'], ['zh-TW']]) for (const s of ['x ki value 4 hogi', 'answer 12 hai', 'jawab 4 hai', '4 hoga', 'shayad 4', '4 hai kya?', 'ek doubt hai']) assert.equal(answerText(s, langs as string[] | undefined), s, `${langs}: ${s}`);
+  for (const s of ['x ki value 11 hogi', 'answer 11 hai', 'jawab 11 hai', '11 hoga', 'shayad 11', '11 hai kya?', 'x = 11 hai', 'mujhe lagta hai 11']) assert.equal(await checkIn(L, K2, s), '·:correct DONE', s);
+  for (const s of ['x ki value 10 hogi', 'answer 10 hai', 'jawab 10 hai']) assert.equal(await checkIn(L, K2, s), '·:incorrect', s);
+  for (const s of ['shayad 10', '10 hai kya?', 'nahi samajh aaya', 'ek doubt hai', 'haan samajh gaya']) assert.equal(await checkIn(L, K2, s), 'UNDECIDED', s);
+  assert.equal(await checkIn(L, K1, 'x 3 hai aur y 2 hai'), RIGHT1); assert.equal(await checkIn(L, K1, 'x ki value 2 hai aur y ki value 3 hai'), WRONG1);
+  for (const s of ['x ki value 11 hogi', 'jawab 11 hai', '11 hoga']) assert.equal(await checkIn(['en'], K2, s), await check(K2, s), `an English session: ${s}`);
+});
+t('typed Hinglish: the reply checks read Hindi typed in Latin letters, only in a Hindi or Hinglish lesson', () => {
+  const L = ['hi-Latn'];
+  for (const s of ['Bilkul sahi, x = 4 hai.', 'Haan, yeh correct hai.', 'Sahi jawab!', 'Shabaash!', 'Bahut badhiya, yahi answer hai.']) { assert.equal(verdictMissing(s, ['correct'], L), null, s); assert.equal(verdictMissing(s, ['incorrect'], L), 'incorrect', s); }
+  // "sahi nahi", "theek nahi" and "bilkul nahi" are denials.
+  for (const s of ['Yeh sahi nahi hai.', 'Galat hai, phir se dekho.', 'Theek nahi hai.', 'Yeh poori tarah correct nahi hai.', 'Bilkul nahi.', 'Nahi, ek baar phir dekho.']) { assert.equal(verdictMissing(s, ['correct'], L), 'correct', s); assert.equal(verdictMissing(s, ['incorrect'], L), null, s); }
+  assert.equal(verdictMissing('Theek hai, ab agla dekhte hain.', ['correct'], L), 'correct'); assert.equal(verdictMissing('Theek hai, ab agla dekhte hain.', ['incorrect'], L), 'incorrect');
+  // An English lesson reads none of it: only English's own words count there, as before.
+  for (const langs of [undefined, ['en'], ['en', 'hi']]) {
+    for (const s of ['Bilkul sahi, x = 4 hai.', 'Sahi jawab!', 'Shabaash!']) assert.equal(verdictMissing(s, ['correct'], langs), 'correct', `${langs}: ${s}`);
+    for (const s of ['Yeh sahi nahi hai.', 'Galat hai, phir se dekho.', 'Theek nahi hai.']) assert.equal(verdictMissing(s, ['incorrect'], langs), 'incorrect', `${langs}: ${s}`);
+    assert.equal(nonAnswer('haan', 'x ki value kya hai?', langs), null); assert.equal(isGuess('shayad 4?', langs), true, 'a "?" is a hedge in any language');
+    assert.equal(verdictMissing("That's right.", ['correct'], langs), null); assert.equal(verdictMissing('Not quite.', ['incorrect'], langs), null);
+  }
+  assert.ok(nonAnswer('haan', 'x ki value kya hai?', L)); assert.ok(nonAnswer('theek hai', 'Tumhe kya dikh raha hai?', L)); assert.ok(nonAnswer('4', 'Tumhe kya dikh raha hai?', L));
+  for (const [said, q] of [['4', 'x ki value kya hai?'], ['haan', 'Kya yeh sahi hai?'], ['4', 'x kitna hai?'], ['haan', 'Samajh aaya?'], ['4 hoga', 'x kitna hoga?']]) assert.equal(nonAnswer(said, q, L), null, `${said} / ${q}`);
+  for (const s of ['shayad 4?', '4 hai kya?', 'pata nahi, shayad 4', 'kya yeh 4 hai?']) assert.equal(isGuess(s, L), true, s);
+  for (const s of ['x ki value 4 hogi', 'answer 4 hai', 'shayad 4, kyunki dono side se 5 ghataya']) assert.equal(isGuess(s, L), false, s);
+  for (const s of ['4 hoga', '4 hai', '4']) assert.equal(isBareNumber(s, L), true, s);
+  const guessed = [{ label: '', value: '11' }];
+  assert.equal(unearnedCredit('Tumne khud nikal liya ki x 11 hai.', guessed, true, L).length, 1); assert.equal(unearnedCredit('Haan, 11 sahi hai.', guessed, true, L).length, 0);
+  assert.equal(castsDoubt('Yeh sirf ek tukka tha.', L).length, 1); assert.equal(castsDoubt('Tumhara jawab sahi hai.', L).length, 0); assert.equal(castsDoubt('Yeh sirf ek tukka tha.').length, 0);
+  // The verdict said in front of a draft: typed in a typed session, the speech form in a spoken one.
+  const typed = v2VerdictOpeners(L, 'text');
+  assert.deepEqual(typed, { correct: 'Haan, yeh correct hai.', incorrect: 'Yeh poori tarah correct nahi hai.', mixed: '' });
+  assert.equal(v2VerdictOpeners(L, 'voice'), V2_VERDICT_OPENERS_BY_LANGUAGE['hi-Latn']); assert.equal(v2VerdictOpeners(L), V2_VERDICT_OPENERS_BY_LANGUAGE['hi-Latn']);
+  assert.equal(verdictMissing(`${typed.correct} x = 4`, ['correct'], L), null); assert.equal(verdictMissing(`${typed.incorrect} x = 4`, ['incorrect'], L), null);
+  assert.equal(verdictMissing(`${typed.incorrect} x = 4`, ['correct'], L), 'correct'); assert.equal(verdictMissing(`${typed.correct} x = 4`, ['incorrect'], L), 'incorrect');
+  for (const code of ['hi', 'fr', 'es', 'zh-TW', 'ja']) assert.equal(v2VerdictOpeners([code], 'text'), V2_VERDICT_OPENERS_BY_LANGUAGE[code], code);
+  for (const langs of [undefined, ['en'], ['en', 'hi']]) for (const mode of [undefined, 'text', 'voice'] as const) assert.equal(v2VerdictOpeners(langs, mode), V2_VERDICT_OPENERS);
+});
+t('a problem named by its number, and the plan\'s words, in the new languages', () => {
+  const sheet = { problems: [1, 2, 3, 4, 5].map((k) => ({ n: k, text: 't', verified: true })) };
+  const named = (s: string) => sheetProblemNamed(s, sheet);
+  assert.equal(named("l'exercice 3"), 3); assert.equal(named('le numéro 2'), 2); assert.equal(named('problème 4'), 4); assert.equal(named('el problema 4'), 4); assert.equal(named('la pregunta 5'), 5); assert.equal(named('ejercicio 2'), 2);
+  assert.equal(named('सवाल 3'), 3); assert.equal(named('प्रश्न नंबर 4'), 4); assert.equal(named('3 नंबर का सवाल'), 3); assert.equal(named('question 3 करते हैं'), 3); assert.equal(named('सवाल 9'), null);
+  assert.deepEqual(problemNumbersNamed('problem 2 and number 4'), [2, 4]); assert.deepEqual(problemNumbersNamed('question 3'), [3]);
+  assert.equal(homeworkWording('hi').problemTitle(4), 'सवाल 4'); assert.equal(homeworkWording('fr-FR').problemTitle(4), 'Exercice 4'); assert.equal(homeworkWording('es-419').problemTitle(4), 'Problema 4');
+  assert.equal(homeworkWording('fr').sheetTitle, 'Aide aux devoirs'); assert.equal(homeworkWording('es').sheetTitle, 'Ayuda con la tarea'); assert.equal(homeworkWording('hi').sheetTitle, 'होमवर्क में मदद');
+  // Hinglish: the board and the labels are English.
+  assert.equal(homeworkWording('hi-Latn').problemTitle(4), 'Problem 4'); assert.equal(homeworkWording('hinglish').sheetTitle, 'Homework help');
+  // The panel's heading and the plan's title say the same thing.
+  for (const code of ['hi', 'fr', 'es', 'hi-Latn', 'zh-TW', 'ja']) assert.equal(sessionStrings([code]).problemN(4), homeworkWording(code).problemTitle(4), code);
 });
 
 (async () => {

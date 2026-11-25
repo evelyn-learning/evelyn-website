@@ -76,7 +76,7 @@ async function main() {
   const tools = v2Tools('math');
   const toolChars = JSON.stringify(tools).length;
   // 26,000 since 2026-11-13 (three teaching principles, drawing what is pictured, and the session's own figures with their parameters). 18,000 since 2026-11-10: the eleven board forms are listed in the principles (a reference list, not rules).
-  check(`constitution + session part stay small (${sys.length} chars)`, sys.length < 26000, sys.length);
+  check(`constitution + session part stay small (${sys.length} chars)`, sys.length < 26600, sys.length); // 2026-11-24: +545 for CHANGING LANGUAGE (every session is told its one language; v2/language-switch.ts)
   check(`a math session gets a handful of tools (${tools.length}, ${toolChars} chars)`, tools.length <= 16 && toolChars < 24000, [tools.length, toolChars]);
   check('the control tools are present', ['update_session_note', 'set_goal_status', 'track_gap', 'end_lesson'].every((n) => tools.some((t) => t.name === n)));
   check('the constitution names no partner, topic or symptom', !/crimsora|greenapple|gdi|l'h[oô]pital|cos\(|streak/i.test(V2_CONSTITUTION));

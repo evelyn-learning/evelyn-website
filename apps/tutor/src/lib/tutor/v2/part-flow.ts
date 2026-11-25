@@ -12,6 +12,7 @@
  * And by the product owner's decision (PART_ASK_EVERY), every part change after the level check is asked first, in words
  * that vary through the lesson. Pure: the callers gate (Task 7e: PART_POSITION_KEPT is the default of a parameter).
  */
+import { v2LessonLines } from './lesson-lines';
 import type { LessonPlan } from '../lesson-plan/types';
 import { stripBoardBlocks } from './board-inline';
 import { PART_OFFERS, V2_CLOSING_PAGE, endsAsking } from './part-close';
@@ -23,6 +24,9 @@ import { v2LevelCheckBegun } from './level-check-count';
 import { v2PartFirstStepLine } from './optional-hold';
 import { V2_LANGUAGE_PACKS, v2EndingAsk, v2IsAskLead, v2WithoutFillers } from './language-pack';
 import { V2_CUT_MARK, v2WithoutCutBoardNote } from './interrupted';
+import { lessonMoveWords } from './lesson-words';
+import { v2EndsOnLessonQuestionFirst } from './lesson-lines';
+import { taughtIn } from '../voice/lesson-language';
 
 /** `history` (Task 7g, LEVEL_CHECK_CHIP): when present, a level check under way lights its chip before any goal is marked. */
 type View = Pick<V2State, 'board' | 'goals' | 'workingLevel'> & { closed?: boolean; history?: V2State['history'] } & Partial<Pick<V2State, 'practiceSaid' | 'timeFit' | 'summaryBegunAt' | 'visitPages'>>;
@@ -278,6 +282,16 @@ export function v2MoveAnswer(said: string | null, lastTutor: string = '', langua
   if (goNamed && plan && v2NamesAskedPart(s, v2AskedParts(lastTutor, plan, languages, langs), plan) >= 0) return 'go';
   const last = stripBoardBlocks(lastTutor).split(SENTENCES).map((x) => x.trim()).filter(Boolean).pop() ?? '';
   const offersQuestion = v2OffersQuestionFirst(lastTutor, plan, languages, langs);
+  // 2026-11-24: a lesson taught in Chinese, Hindi, French or Spanish is answered in it (lesson-words.ts): 「好」, "हाँ, चलो",
+  // "oui, vas-y", "sí, sigamos" were `other`, and the page held behind the engine's own ask never opened. Read before the
+  // English words, which still read an answer given in English; an English lesson has no row.
+  const own = lessonMoveWords(taughtIn(languages)?.base);
+  if (own) {
+    if (own.decline.test(s)) return 'other';
+    if (own.question.test(s)) return 'question';
+    if (own.no.test(s)) return offersQuestion ? 'go' : 'other';
+    if (own.go.test(s)) return 'go';
+  }
   if (NO_QUESTIONS.test(s)) return 'go';
   // Final review I4: ahead of the decline and question checks (「いいえ」 is a decline word, 「質問」 a question's).
   if ((NO_QUESTIONS_READY.test(s) || NO_QUESTIONS_READY_JA.test(s)) && !READY_BUT.test(s) && offersQuestion) return 'go';
@@ -327,7 +341,7 @@ export function v2UnheardPartAsk(plan: LessonPlan, state: Pick<V2State, 'unheard
 export function v2OffersQuestionFirst(lastTutor: string, plan?: LessonPlan, languages?: readonly string[], langs: boolean = TUTOR_V2_PART_ASK_LANGS): boolean {
   const last = stripBoardBlocks(lastTutor).split(SENTENCES).map((x) => x.trim()).filter(Boolean).pop() ?? '';
   const ending = langs && plan && !(last && v2IsPartAsk(last)) ? v2EndingPartAsk(lastTutor, plan, languages) : null;
-  return (!!last && v2IsPartAsk(last) && QUESTIONS_FIRST.test(last)) || (!!ending && QUESTIONS_FIRST.test(ending.ask));
+  return (!!last && v2IsPartAsk(last) && QUESTIONS_FIRST.test(last)) || (!!ending && QUESTIONS_FIRST.test(ending.ask)) || v2EndsOnLessonQuestionFirst(stripBoardBlocks(lastTutor));
 }
 const NO_THEN_GO_JA = /^(?:(?:いいえ|いや|ううん)(?:[、,。]?\s*(?:進みましょう|進みます|次に進みましょう|次へ|行きましょう|お願いします|結構です))?|結構です)[。！!]*$/u;
 const NOT_NOW = /^(?:(?:no|nope|nah)[,.!]?\s+)?not (?:really|today)[.!]*$/i;
@@ -737,7 +751,11 @@ export function v2AskRepeats(sentence: string, history: V2State['history'], plan
 /** The line in place of a held page, or after a repeated ask that was dropped: one line on the part just done, the next part
  *  by name, and the ask, never in the words of an earlier one in the lesson. `named`: the reply already named the next
  *  part, so only the ask. `done`: the part just done (none: no closing words). */
-export function v2PartAskLine(o: { next: string; done?: string; named: boolean; history: V2State['history'] }): string {
+export function v2PartAskLine(o: { next: string; done?: string; named: boolean; history: V2State['history']; languages?: readonly string[] | null; mode?: 'voice' | 'text' }): string {
+  // A lesson taught in another language: the ask in that language (lesson-lines.ts). The plan's part names are
+  // stored in English, so the line names no part; the tutor names it in its own words when it opens it.
+  const lines = v2LessonLines(o.languages, o.mode);
+  if (lines) return lines.goOnOrQuestion;
   const said = new Set(tutorSentences(o.history).map((x) => norm(x).join(' ')));
   const fresh = (x: string) => !said.has(norm(x).join(' '));
   const before = tutorSentences(o.history).filter((x) => v2IsPartAsk(x)).length;

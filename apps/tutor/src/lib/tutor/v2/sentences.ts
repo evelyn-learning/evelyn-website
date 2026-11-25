@@ -71,7 +71,7 @@ export class SentenceStream {
     // Task 7m (NO_FALSE_SILENCE, mic test 4 flag 4, embed-1795028886172 9.57 min): a starter quoted with an ellipsis ends a
     // sentence when a capital follows: `…with "I have…" Try starting with "I have worked with…"` was one sentence, its hand-over
     // in the middle, and the reply was taken for one that asked nothing (a silence turn 2 s after it).
-    const re = TUTOR_V2_NO_FALSE_SILENCE ? /[.!?]+["')\]]*(?=\s)|…[)\]]*["”'’][)\]]*(?=\s+[A-Z])|[。！？]+(?=[^」』）)"'”\]])/g : /[.!?]+["')\]]*(?=\s)|[。！？]+(?=[^」』）)"'”\]])/g;
+    const re = TUTOR_V2_NO_FALSE_SILENCE ? /[.!?।]+["')\]]*(?=\s)|…[)\]]*["”'’][)\]]*(?=\s+[A-Z])|[。！？]+(?=[^」』）)"'”\]])/g : /[.!?।]+["')\]]*(?=\s)|[。！？]+(?=[^」』）)"'”\]])/g;
     let m: RegExpExecArray | null;
     while ((m = re.exec(this.buf))) {
       const end = m.index + m[0].length;

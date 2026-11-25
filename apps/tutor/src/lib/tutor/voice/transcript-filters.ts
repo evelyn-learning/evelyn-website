@@ -420,7 +420,8 @@ export function isNoiseTranscript(text: string, opts?: NoiseFilterOpts): boolean
   // (the perception classifier still treats it as a turn-taking filler,
   // which is the right layer for that decision — not the noise filter).
   const MATH_VAR_LETTERS = new Set(['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']);
-  const SHORT_ANSWER_WORDS = new Set(['no', 'ok', 'up']);
+  // 2026-11-24: "sí" with its accent is the Spanish yes and nothing else.
+  const SHORT_ANSWER_WORDS = new Set(['no', 'ok', 'up', 'sí']);
   // Phase-3 live round (2026-07-23, session-1784762966829): the student
   // answered "6." to "what number times 4 gives us 12?" — dropped here as
   // a ≤2-char single word, the tutor never responded, and the session
@@ -442,7 +443,8 @@ export function isNoiseTranscript(text: string, opts?: NoiseFilterOpts): boolean
     // Bilingual session: 「はい」「うん」「ええ」 are two characters and a whole
     // answer — the bare 「はい」 to a closing line was dropped here and the idle
     // nudge restarted the exercise (GDI starter 2026-10-15, 1159.8s).
-    && !(opts?.allowNonLatin && /[\u3040-\u30ff\u4e00-\u9fff]/.test(normalized))
+    // 2026-11-24: Devanagari too (जी, ना, दो, छह are two characters and a whole answer in a Hindi or Hinglish lesson).
+    && !(opts?.allowNonLatin && /[\u3040-\u30ff\u4e00-\u9fff\u0900-\u097f]/.test(normalized))
   ) return true;
   // Phonetic garbage — mostly single letters separated by spaces
   if (isPhoneticGarbage(normalized)) return true;

@@ -542,7 +542,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         if (text.trim()) setTutor(text.trim(), false);
       } else {
         // The state is unchanged, so the same message can simply be sent again.
-        const unreachable = v2LessonLines(p.current.tutorLanguages)?.unreachable ?? UNREACHABLE;
+        const unreachable = v2LessonLines(p.current.tutorLanguages, p.current.mode)?.unreachable ?? UNREACHABLE;
         setTutor(text.trim() ? `${text.trim()}\n\n${unreachable}` : unreachable, false);
         p.current.onDebugEvent?.('brain_v2_error', String((err as Error)?.message ?? err).slice(0, 200));
         p.current.onError?.(err instanceof Error ? err : new Error(String(err)));
@@ -698,7 +698,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
         return;
       }
       // A lesson that has already said its goodbye (kept open by its partner) is not said goodbye to twice.
-      const bye = TUTOR_V2_TIME_BOX && !stateRef.current.closed ? v2LessonLines(p.current.tutorLanguages)?.timeUp((p.current.studentName ?? '').trim().split(/\s+/)[0] ?? '') ?? goodbyeLine(p.current.studentName) : null;
+      const bye = TUTOR_V2_TIME_BOX && !stateRef.current.closed ? v2LessonLines(p.current.tutorLanguages, p.current.mode)?.timeUp((p.current.studentName ?? '').trim().split(/\s+/)[0] ?? '') ?? goodbyeLine(p.current.studentName) : null;
       // Task 7d fix round 1 (M10): the next-time line waits for the reply that closes; when the box comes first, its goodbye says it.
       const nextTime = bye ? v2HardStopNextTime({ mode: p.current.mode, plan: planRef.current ?? undefined, languages: p.current.tutorLanguages, pronunciation: p.current.pronunciation }, planRef.current, stateRef.current) : null;
       const farewell = bye && nextTime ? `${nextTime} ${bye}` : bye;

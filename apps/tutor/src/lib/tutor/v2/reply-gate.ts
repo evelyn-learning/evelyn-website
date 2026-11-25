@@ -21,6 +21,7 @@
  */
 import { TUTOR_V2_PART_OFFER_ONCE, TUTOR_V2_PASSED_PART_CLOSE } from '../orchestrator/flags';
 import { v2HandsOver, v2IsCheckIn } from './one-question';
+import { v2HoldsLessonPartAsk } from './lesson-lines';
 
 /** The part-change frame: asking whether to go on, alone or with the question check. Matched on a whole sentence. */
 export const V2_PART_FRAME = /^(?:(?:so|okay|ok|now|then|great|good|alright|all right)[,!.]?\s+)*(?:shall we (?:go on|move on|continue|start)|are you ready (?:for (?:that|it|the next part|this)|to (?:go on|move on|start))|ready to (?:go on|move on))\b[^.?!]*\?["'”’]*$|^[^.?!]*\bor do you have (?:a|any) questions? (?:first|before we (?:go on|move on|start))\?["'”’]*$/i;
@@ -64,7 +65,9 @@ export const V2_PART_FRAME_JA = { test: (s: string) => JA_ASKS.test(s) && (JA_BA
 /** Whether a whole sentence is a part-change frame. `ja`: the Japanese forms count too (the kill switch's old matcher
  *  is the English one only). */
 export function isPartFrame(sentence: string, ja: boolean = TUTOR_V2_PART_OFFER_ONCE): boolean {
-  return V2_PART_FRAME.test(sentence) || (ja && V2_PART_FRAME_JA.test(sentence));
+  // 2026-11-24: the engine's own ask in a lesson taught in another language is a frame too (lesson-lines.ts), so the
+  // frames such a lesson hears are counted as an English lesson's are (part-close.ts v2FrameDue).
+  return V2_PART_FRAME.test(sentence) || (ja && V2_PART_FRAME_JA.test(sentence)) || v2HoldsLessonPartAsk(sentence);
 }
 /** Quoted words are a phrase being taught ("We say 'Goodbye!'"), not the tutor's own goodbye. */
 const QUOTED_SPANS = /"[^"]*"|“[^”]*”|「[^」]*」|『[^』]*』|‘[^’]*’/g;

@@ -94,7 +94,8 @@ export const QPIN_MAX_CHARS = 220;
  *  one sentence. */
 export function splitSentences(text: string): string[] {
   return text
-    .split(/\n+|(?<=[.!?…。！？]["”’)]?)\s+(?=[A-Z"“'‘(])/)
+    // 2026-11-24: a sentence may end on the Hindi । and open on a letter of any script, an accented capital, or ¿ ¡.
+    .split(/\n+|(?<=[.!?…。！？।]["”’)]?)\s+(?=[\p{Lu}\p{Lo}"“'‘(¿¡])/u)
     .map((x) => x.trim())
     .filter(Boolean);
 }
@@ -324,8 +325,10 @@ export function hasInterrogative(s: string | null | undefined): boolean {
 // those scripts is read character by character (a rephrased question keeps its characters, not its neighbouring pairs).
 const GIST_CJK_RUN = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]+/gu;
 const gistPairs = (run: string): string[] => [...new Set(Array.from(run))];
+// 2026-11-24, \p{M}: a Devanagari word keeps its vowel signs. Without them every Hindi word was cut into its bare
+// consonants, which any Hindi turn holds, so a gist was "grounded" whatever it said.
 const gistWords = (s: string): string[] => [
-  ...(s.toLowerCase().replace(GIST_CJK_RUN, ' ').match(/[\p{L}\p{N}]+/gu) ?? []).filter((w) => !GIST_STOP.has(w)).map((w) => (w.length > 3 ? w.replace(/(?<!s)s$/, '') : w)),
+  ...(s.toLowerCase().replace(GIST_CJK_RUN, ' ').match(/[\p{L}\p{M}\p{N}]+/gu) ?? []).filter((w) => !GIST_STOP.has(w)).map((w) => (w.length > 3 ? w.replace(/(?<!s)s$/, '') : w)),
   ...(s.match(GIST_CJK_RUN) ?? []).flatMap(gistPairs),
 ];
 export function gistGrounded(gist: string | null | undefined, turnText: string | null | undefined): boolean {

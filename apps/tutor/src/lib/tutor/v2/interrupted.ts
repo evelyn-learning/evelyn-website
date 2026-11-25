@@ -12,6 +12,7 @@ import { applyToModelBoard } from './board';
 import { V2_CONTROL_TOOL_NAMES } from './tool-names';
 import type { V2State, V2ToolCall } from './types';
 import { TUTOR_V2_SELF_CORRECTION, TUTOR_V2_STAY_IN_PART } from '../orchestrator/flags';
+import { lessonBriefAnswer } from './lesson-words';
 
 export const V2_CUT_MARK = '[cut off here: the student began to speak]';
 /** Merge with main (Task 8e): main's note on a cut reply (trimToSpoken: "[this reply had already put on the board, where the student
@@ -91,7 +92,8 @@ export function answeredAsItEnded(studentSaid: string, sentences: string[], star
   if (!sentences.length || started !== sentences.length) return false;
   if (/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(studentSaid)) return /[?？]["')\]」』）]*$/.test(sentences[sentences.length - 1].trim()) && studentSaid.replace(/[^\p{L}\p{N}]/gu, '').length <= 8 && BRIEF_ANSWER_CJK.test(studentSaid);
   const words = studentSaid.trim().split(/\s+/).filter(Boolean);
-  return /\?["')\]]*$/.test(sentences[sentences.length - 1].trim()) && words.length > 0 && words.length <= 6 && BRIEF_ANSWER.test(studentSaid);
+  // 2026-11-24: or a brief answer in Hindi, French or Spanish (lesson-words.ts: हाँ, ठीक है, oui, d'accord, sí, claro).
+  return /\?["')\]]*$/.test(sentences[sentences.length - 1].trim()) && words.length > 0 && words.length <= 6 && (BRIEF_ANSWER.test(studentSaid) || lessonBriefAnswer(studentSaid));
 }
 
 /** Task 7v (SELF_CORRECTION): the learner's words of a turn cut before anything of the reply reached them (no words heard, no board

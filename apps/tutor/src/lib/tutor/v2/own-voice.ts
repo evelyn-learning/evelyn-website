@@ -17,7 +17,9 @@ import { TUTOR_V2_OWN_VOICE_SKIP } from '../orchestrator/flags';
 
 const CJK_CHAR = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\u30FC]/u;
 const SPLIT = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\u30FC]|[^\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\u30FC]+/gu;
-const words = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean).flatMap((w) => (CJK_CHAR.test(w) ? w.match(SPLIT) ?? [] : [w]));
+// 2026-11-24, \p{M}: a Devanagari word keeps its vowel signs. Cut at them, two Hindi words were five "words", enough to
+// be taken for the tutor's own voice.
+const words = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{M}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean).flatMap((w) => (CJK_CHAR.test(w) ? w.match(SPLIT) ?? [] : [w]));
 const weight = (ws: string[]) => ws.reduce((n, w) => n + (CJK_CHAR.test(w) ? 0.5 : 1), 0);
 /** A heard word the recogniser may have rendered its own way: a CJK character or a number (三 heard as 3). Only these
  *  are passed over when the tutor did not say them; an English word the tutor did not say is the student's own

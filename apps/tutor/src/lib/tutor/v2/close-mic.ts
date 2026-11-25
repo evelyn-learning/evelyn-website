@@ -9,6 +9,7 @@
  * Task 7d close then runs as usual. The time box's hard stop is not this: it stays uninterruptible.
  */
 import { reopensClose } from './close-heard';
+import { lessonNotAName, withoutLessonPartings } from './lesson-words';
 import { TUTOR_V2_CLOSE_HEARS } from '../orchestrator/flags';
 import { V2_HARD_STOP_TAIL_MAX_MS } from './time-box';
 
@@ -20,12 +21,27 @@ const JA_PARTING = /(?:どうも)?ありがとう(?:ございます|ございま
  *  Chinese closing too. Read as Japanese, 「謝謝老師，再見」 was two characters that are no Japanese goodbye, and reopened the close. */
 const ZH_PARTING = /(?:非常|太|很)?(?:謝謝|谢谢|感謝|感谢)(?:老師|老师|你|您)?|謝了|谢了|多謝|多谢|再見|再见|下次見|下次见|明天見|明天见|拜拜|掰掰|辛苦了|我(?:先)?走了|我要(?:去|走)了|好的|好啊|好|嗯|對|对|知道了|了解|明白了|懂了|沒問題|没问题|老師|老师|今天|學到很多|学到很多|我/gu;
 
+/** 2026-11-24: a learner in a Hindi or Hinglish lesson closing too (「धन्यवाद टीचर, बाय」, "ठीक है, thank you"). Hindi words
+ *  are spaced, so what is left is counted in words as English is: more than one, or one that is no name. The English
+ *  words of a Hinglish goodbye are read as English. */
+const DEVANAGARI = /\p{Script=Devanagari}/u;
+function hindiCloseCalledOff(said: string, languages?: readonly string[] | null): boolean {
+  if (/[?]/.test(said)) return true;
+  const rest = withoutLessonPartings(said).replace(/[^\p{L}\p{M}\p{N}']+/gu, ' ').trim();
+  if (!rest) return false;
+  const hindi = rest.split(/\s+/).filter((w) => DEVANAGARI.test(w));
+  const latin = rest.split(/\s+/).filter((w) => !DEVANAGARI.test(w)).join(' ');
+  return hindi.length > 1 || (hindi.length === 1 && lessonNotAName(hindi[0]!)) || (!!latin && reopensClose(latin, languages));
+}
+
 /** Whether words heard over the closing words call the close off. reopensClose (English: anything but thanks and a
  *  goodbye, any question); and Japanese, which reopensClose reads as one word: anything left once the thanks and
  *  goodbyes are taken out, or a full-width question mark. */
-export function v2CloseCalledOff(said: string): boolean {
+/** `languages`: the session's (close-heard.ts reopensClose: romanised Hindi partings are read only in a Hindi or Hinglish lesson). */
+export function v2CloseCalledOff(said: string, languages?: readonly string[] | null): boolean {
   if (/？/.test(said)) return true;
-  if (!CJK.test(said)) return reopensClose(said);
+  if (DEVANAGARI.test(said)) return hindiCloseCalledOff(said, languages);
+  if (!CJK.test(said)) return reopensClose(said, languages);
   const rest = said.replace(JA_PARTING, ' ').replace(ZH_PARTING, ' ').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
   if (!rest) return false;
   // Latin words left among the Japanese are read as English.

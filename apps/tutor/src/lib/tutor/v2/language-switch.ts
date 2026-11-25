@@ -47,7 +47,7 @@ export const V2_SWITCH_LANGUAGE_TOOL_NAME = 'switch_language';
 export function v2SwitchLanguageTool(codes: readonly string[]): Anthropic.Tool {
   return {
     name: V2_SWITCH_LANGUAGE_TOOL_NAME,
-    description: 'Change the language of the whole lesson (your voice, what you hear, the board and the screen) because the student asked for it. Call it alone, with no words and no other tool: the change happens after this reply, and your next reply is the first in the new language.',
+    description: 'Change the language of the whole lesson (your voice, what you hear, the board and the screen) because the student asked for it. The change happens after this reply: in this reply say at most one short sentence, in the language the lesson is in now ("Sure, one moment."), and call no other tool. Your next reply is the first in the new language.',
     input_schema: { type: 'object', properties: { language: { type: 'string', enum: [...codes], description: 'The code of the language to change to.' } }, required: ['language'] },
   };
 }
@@ -67,7 +67,7 @@ export function v2LanguageSwitchSection(session: Pick<V2Session, 'languages' | '
   ];
   if (to.length) {
     lines.push(
-      `The student may have the lesson in one of these instead: ${list(to)}. When they ask for one of them (in any words and any language: "can you talk in Hindi?", "Hindi me samjhao", "explain in Chinese"), or plainly cannot follow ${now.name} and are using one of them, call ${V2_SWITCH_LANGUAGE_TOOL_NAME} with its code, alone and with no words. When it is not clear which they want (Hindi or Hinglish; which Chinese), ask once, in ${now.name}, naming the choices. Asking how to say a word in another language is a question about that word, not a request to change the lesson.`,
+      `The student may have the lesson in one of these instead: ${list(to)}. When they ask for one of them (in any words and any language: "can you talk in Hindi?", "Hindi me samjhao", "explain in Chinese"), or plainly cannot follow ${now.name} and are using one of them, call ${V2_SWITCH_LANGUAGE_TOOL_NAME} with its code. In that reply say at most one short sentence, still in ${now.name}: your voice changes only after it, and the new language's words would be mispronounced. When it is not clear which they want (Hindi or Hinglish; which Chinese), ask once, in ${now.name}, naming the choices. Asking how to say a word in another language is a question about that word, not a request to change the lesson.`,
       `When they ask for a language that is not in that list, say in one sentence that it is not available in this lesson, name the ones that are, and go on in ${now.name}.`,
     );
   } else {
@@ -85,7 +85,7 @@ export function v2ApplySwitchLanguage(state: V2State, session: Pick<V2Session, '
   }
   if (row.code === v2CurrentLanguage(session.languages).code) return `not changed: the lesson is already in ${row.name}.`;
   state.languageSwitch = { to: row.code, at: nowMs };
-  return `changing to ${row.name}: say nothing more in this reply. Your next reply is in ${row.name}.`;
+  return `changing to ${row.name} after this reply: say nothing more now, and nothing in ${row.name} yet. Your next reply is in ${row.name}.`;
 }
 
 /** The note the session page sends as the first turn after the change, in place of the student's words. */
