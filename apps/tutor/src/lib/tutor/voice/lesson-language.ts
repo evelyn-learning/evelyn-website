@@ -41,16 +41,26 @@ export interface LessonLanguage {
   script?: RegExp;
   /** How the brain is told to write it: script, register, regional wording. One fact per line. */
   writing: readonly string[];
+  /** The language the board and the screen's own labels are written in when it is not the row's own: Hinglish
+   *  is spoken in the Hindi-English mix and written on the board in English. Absent: the row's own language. */
+  boardIn?: 'en';
+  /** Numbers in a spoken line are said in English ("two x plus three equals eleven"), as Hinglish speakers do. */
+  numbersInEnglish?: boolean;
+  /** A spoken test lesson has been run in it and passed: it may be offered to people (the demo pickers, the
+   *  dashboard's test lesson, the public language list). A row without the mark works for a token that names it
+   *  and is not yet advertised. */
+  ready?: boolean;
 }
 
 const HAN = /\p{Script=Han}/u;
 const KANA = /[\p{Script=Hiragana}\p{Script=Katakana}]/u;
+const DEVANAGARI = /\p{Script=Devanagari}/u;
 
 export const LESSON_LANGUAGES: readonly LessonLanguage[] = [
   {
     code: 'en', base: 'en', name: 'English', ownName: 'English', tts: 'en', sttModel: 'ink-2',
     voices: { female: '01eaafa9-308a-4276-a017-6ab0cf061b1f', male: '86e30c1d-714b-4074-a1f2-1cb6b552fb49' },
-    writing: [],
+    writing: [], ready: true,
   },
   {
     code: 'ja', base: 'ja', name: 'Japanese', ownName: '日本語', tts: 'ja', sttModel: 'ink-2',
@@ -61,6 +71,7 @@ export const LESSON_LANGUAGES: readonly LessonLanguage[] = [
       'Japanese is natural and polite (です/ます), the way a kind teacher speaks to a student.',
       'Write Japanese in Japanese script, never romaji. Use the terms Japanese schools use (連立方程式, 代入, 約分).',
     ],
+    ready: true,
   },
   {
     code: 'zh-TW', base: 'zh', name: 'Mandarin Chinese as used in Taiwan', ownName: '繁體中文（台灣）', tts: 'zh', sttModel: 'ink-preview', sttHints: ['zh', 'en'],
@@ -73,6 +84,7 @@ export const LESSON_LANGUAGES: readonly LessonLanguage[] = [
       'Use the wording of Taiwan\'s schools and textbooks, not mainland China\'s (聯立方程式 not 方程组, 加減消去法, 代入消去法, 分數 and 小數, 公分 not 厘米, 國中 and 高中 for the school levels).',
       'Speak the way a kind teacher in Taiwan speaks to a student: natural spoken Mandarin, 你 for the student.',
     ],
+    ready: true,
   },
   {
     code: 'zh-CN', base: 'zh', name: 'Mandarin Chinese as used in mainland China', ownName: '简体中文', tts: 'zh', sttModel: 'ink-preview', sttHints: ['zh', 'en'],
@@ -84,6 +96,55 @@ export const LESSON_LANGUAGES: readonly LessonLanguage[] = [
       'Use the wording of mainland China\'s schools and textbooks (方程组, 代入消元法, 加减消元法).',
       'Speak the way a kind teacher speaks to a student: natural spoken Mandarin, 你 for the student.',
     ],
+    ready: true,
+  },
+  // 2026-11-24, after the Chinese and Japanese lessons: the next languages people asked the demo for. Voices were
+  // picked from the vendor's own descriptions and a speak-then-transcribe check (nobody has yet listened to them);
+  // the recogniser choice is from the same check (ink-2 heard a short "हाँ" as "Huh." and "Sí." as "See,").
+  {
+    code: 'hi', base: 'hi', name: 'Hindi', ownName: 'हिन्दी', tts: 'hi', sttModel: 'ink-preview', sttHints: ['hi', 'en'],
+    // Kriti ("clear explainer") and Rehan ("friendly explainer", described for educational content).
+    voices: { female: '5283efe8-07d1-4e3a-b615-2ae4a81c1b73', male: '205fc552-2cce-4307-baa1-598b9dc3dd01' },
+    script: DEVANAGARI,
+    writing: [
+      'Write Hindi in Devanagari, never in Latin letters, in speech and on the board. Letters for variables stay Latin (x, y).',
+      'Use the terms Hindi-medium schools use (समीकरण, भिन्न, प्रतिशत, वर्ग, वर्गमूल).',
+      'Speak the way a kind teacher speaks to a student: simple everyday Hindi, तुम for the student, never stiff or literary.',
+    ],
+  },
+  {
+    // Hinglish: Hindi mixed with English, the way most Indian students speak and are taught (Praveen 2026-11-24:
+    // many are not at ease with pure Hindi spoken or written, and ask for Hindi all the same). Spoken by the Hindi
+    // voice, which reads the mix naturally (an English voice does not); the board stays English.
+    code: 'hi-Latn', base: 'hi', name: 'Hinglish (Hindi mixed with English, as students in India speak)', ownName: 'Hinglish', tts: 'hi', sttModel: 'ink-preview', sttHints: ['hi', 'en'],
+    voices: { female: '5283efe8-07d1-4e3a-b615-2ae4a81c1b73', male: '205fc552-2cce-4307-baa1-598b9dc3dd01' },
+    script: DEVANAGARI, boardIn: 'en', numbersInEnglish: true,
+    writing: [
+      'Speak Hinglish: Hindi sentence structure and connecting words, with English for every school and subject term (equation, value, add, cancel, slope, answer, formula), as a friendly teacher in India talks to a student. Never pure formal Hindi.',
+      'In what you say, write the Hindi words in Devanagari and the English words in English spelling: "देखो, पहले हम दोनों equations को add करेंगे।" The voice reads that naturally; Hindi in Latin letters it may misread.',
+      'Everything on the board is in English: titles, steps, problems, labels. No Hindi on the board.',
+      'The student\'s words reach you with the Hindi in Devanagari and the English in Latin letters. A number may arrive as चार, four or 4: all the same answer.',
+    ],
+  },
+  {
+    code: 'fr', base: 'fr', name: 'French', ownName: 'Français', tts: 'fr', sttModel: 'ink-preview', sttHints: ['fr', 'en'],
+    // Maëlle B ("measured and empathetic, for thoughtful guidance and detailed explanations") and Mathis
+    // ("thoughtful, measured delivery, simplifying detailed analyses"): France.
+    voices: { female: '80f117a5-5196-4b64-8b4c-efda3d3ab176', male: '996ec149-0dca-4389-ad08-e2d6f906b4bf' },
+    writing: [
+      'Write standard French as used in France, in speech and on the board, tu for the student, the way a kind teacher speaks.',
+      'Use the terms French schools use (équation, fraction, numérateur, dénominateur, pourcentage, racine carrée).',
+    ],
+  },
+  {
+    code: 'es', base: 'es', name: 'Spanish as used in Latin America', ownName: 'Español', tts: 'es', sttModel: 'ink-preview', sttHints: ['es', 'en'],
+    // Laura ("making complex information accessible, calm and friendly") and Jose ("patient explainer, for
+    // listeners learning new or intricate subjects"): Mexico.
+    voices: { female: '1cc00672-e9d4-455e-b3fb-31dfb7aad231', male: '3ca54c01-ef9a-4f44-9f73-adbde3a26ef8' },
+    writing: [
+      'Write neutral Latin American Spanish, in speech and on the board, tú for the student (never vosotros), the way a kind teacher speaks.',
+      'Use the terms Latin American schools use (ecuación, fracción, porcentaje, raíz cuadrada).',
+    ],
   },
 ];
 
@@ -91,6 +152,7 @@ export const LESSON_LANGUAGES: readonly LessonLanguage[] = [
 const ALIASES: Readonly<Record<string, string>> = {
   zh: 'zh-CN', 'zh-hans': 'zh-CN', 'zh-hans-cn': 'zh-CN', 'zh-sg': 'zh-CN', cmn: 'zh-CN',
   'zh-hant': 'zh-TW', 'zh-hant-tw': 'zh-TW', 'zh-hk': 'zh-TW', 'zh-mo': 'zh-TW',
+  hinglish: 'hi-Latn', 'hi-en': 'hi-Latn', 'hi-latn-in': 'hi-Latn', 'es-419': 'es', 'es-mx': 'es',
 };
 
 const BY_CODE = new Map(LESSON_LANGUAGES.map((l) => [l.code.toLowerCase(), l]));
@@ -143,4 +205,15 @@ export function sessionRecogniser(languages: readonly string[] | null | undefine
   const rows = sessionLanguageRows(languages);
   if (!rows.some((r) => r.sttModel === 'ink-preview')) return { model: 'ink-2', hints: [] };
   return { model: 'ink-preview', hints: [...new Set([...rows.flatMap((r) => r.sttHints ?? [r.base]), 'en'])].slice(0, 6) };
+}
+
+/** The language the board and the screen's labels are in for a lesson taught in `lang`: its own, or English for
+ *  a row that says so (Hinglish). */
+export function boardLanguage(lang: LessonLanguage): LessonLanguage {
+  return lang.boardIn === 'en' ? BY_CODE.get('en')! : lang;
+}
+
+/** The languages that may be offered to people: rows marked ready, in the table's order. */
+export function readyLessonLanguages(): LessonLanguage[] {
+  return LESSON_LANGUAGES.filter((l) => l.ready);
 }
