@@ -359,6 +359,38 @@ run_remote_command() {
   ssh -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_IP" "$command"
 }
 
+# Keystone is served by this same process (keystone.evelynlearning.com → :3001), and a client's reviewer works in
+# it for hours at a time. A restart drops her requests for a few seconds, and a page she has open from the old
+# build can fail its next click (2026-11-24: two deploys that evening, two 502s on the item she had open and one
+# review click that did nothing). So a deploy is refused while Keystone is in use: a request in the last
+# KEYSTONE_QUIET_MIN minutes (her open page refreshes itself, so an open tab counts), or a release or animated
+# build holding its lock. KEYSTONE_BUSY_OK=1 deploys anyway, for when the owner says to.
+KEYSTONE_QUIET_MIN="${KEYSTONE_QUIET_MIN:-15}"
+keystone_in_use() {
+  run_remote_command "L=/var/log/nginx/keystone.access.log; \
+    recent=\$(find \$L -mmin -$KEYSTONE_QUIET_MIN 2>/dev/null | wc -l | tr -d ' '); \
+    last=\$(tail -1 \$L 2>/dev/null | awk '{print \$4}' | tr -d '['); \
+    locks=\$(mongosh --quiet 'mongodb://127.0.0.1:2710/castle_rock_review' --eval 'print(db.locks.countDocuments({expiresAt:{\$gt:new Date()}}))' 2>/dev/null | tail -1 | tr -dc '0-9'); \
+    echo \"\$recent|\${locks:-0}|\$last\""
+}
+refuse_if_keystone_in_use() {
+  local when=$1 out recent locks last
+  out=$(keystone_in_use 2>/dev/null | tail -1)
+  recent=${out%%|*}; locks=$(echo "$out" | cut -d'|' -f2); last=$(echo "$out" | cut -d'|' -f3)
+  if [ "$recent" = "0" ] && [ "${locks:-0}" = "0" ]; then
+    log_message "INFO" "Keystone is quiet ($when): no request in the last $KEYSTONE_QUIET_MIN min (last: ${last:-none}), no job running."
+    return 0
+  fi
+  if [ "${KEYSTONE_BUSY_OK:-}" = "1" ]; then
+    log_message "INFO" "Keystone is IN USE ($when; last request ${last:-unknown} server time, ${locks:-?} job lock(s)) — deploying anyway: KEYSTONE_BUSY_OK=1."
+    return 0
+  fi
+  log_message "ERROR" "Keystone is in use ($when): last request ${last:-unknown} (server time), ${locks:-?} job lock(s) held."
+  log_message "ERROR" "      This deploy restarts the process she is working in. Wait for $KEYSTONE_QUIET_MIN quiet minutes, or, when the owner"
+  log_message "ERROR" "      says to go anyway:  KEYSTONE_BUSY_OK=1 ./deploy-marketing.sh"
+  exit 1
+}
+
 # Robust file upload, over a plain `ssh 'cat > dest'` pipe rather than scp.
 #
 # History: this used `scp -O` to force the legacy SCP protocol, because modern
@@ -467,6 +499,8 @@ fi
 # code is clean (2026-05-18 build failure — Next 16 only emits
 # cache-life.d.ts when cacheComponents is on, which it isn't here).
 log_message "INFO" "Cleaning up previous build artifacts..."
+# Fail fast, before the minutes of build: nothing is deployed over someone working in Keystone.
+refuse_if_keystone_in_use "before the build"
 rm -rf "$APP_DIR/.next/" 2>/dev/null || true
 rm -f "$APP_DIR/tsconfig.tsbuildinfo" 2>/dev/null || true
 
@@ -721,6 +755,8 @@ LOCK_HASH="$(shasum -a 256 package-lock.json | cut -c1-32)"
 #      would leave cwd at the repo root, which is exactly the breakage.
 #      The `../../node_modules/.bin/next` path is relative for the same
 #      reason deps are hoisted: there is no node_modules/.bin inside the app.
+# Checked again here: the build and the upload take minutes, and she may have come back in them.
+refuse_if_keystone_in_use "before the restart"
 log_message "STEP" "Running deployment on production server..."
 run_remote_command "cd $REMOTE_DIR && \
   if [ -f .deploy-public-manifest ]; then cp .deploy-public-manifest /tmp/.deploy-public-manifest.$TMP_TAG.prev; else : > /tmp/.deploy-public-manifest.$TMP_TAG.prev; fi && \
@@ -733,7 +769,7 @@ run_remote_command "cd $REMOTE_DIR && \
   if [ -s .deploy-static-manifest ]; then find $APP_DIR/.next/static -type f | LC_ALL=C sort > /tmp/.static-have.$TMP_TAG && LC_ALL=C sort .deploy-static-manifest > /tmp/.static-keep.$TMP_TAG && comm -23 /tmp/.static-have.$TMP_TAG /tmp/.static-keep.$TMP_TAG > /tmp/.static-orphans.$TMP_TAG && if [ -s /tmp/.static-orphans.$TMP_TAG ]; then echo \"Pruning \$(wc -l < /tmp/.static-orphans.$TMP_TAG) orphaned .next/static file(s) from prior builds\"; xargs -r rm -f < /tmp/.static-orphans.$TMP_TAG; else echo \"No orphaned .next/static files to prune.\"; fi && rm -f /tmp/.static-have.$TMP_TAG /tmp/.static-keep.$TMP_TAG /tmp/.static-orphans.$TMP_TAG; else echo \"WARN: .deploy-static-manifest missing/empty — skipping static prune (safety)\"; fi && \
   if [ -d node_modules ] && [ \"\$(cat .deploy-lock-hash 2>/dev/null)\" = \"$LOCK_HASH\" ]; then echo \"npm ci skipped — package-lock.json unchanged since the last install ($LOCK_HASH)\"; else echo \"npm ci — lockfile changed or first install\" && npm ci --omit=dev && echo \"$LOCK_HASH\" > .deploy-lock-hash; fi && \
   (pm2 delete $PM2_NAME 2>/dev/null || true) && \
-  (cd $REMOTE_DIR/$APP_DIR && pm2 start ../../node_modules/.bin/next --name $PM2_NAME -- start -p $PM2_PORT) && \
+  (cd $REMOTE_DIR/$APP_DIR && pm2 start ../../node_modules/.bin/next --name $PM2_NAME --kill-timeout 10000 -- start -p $PM2_PORT) && \
   pm2 save && \
   if [ -s .deploy-server-chunks-manifest ]; then find $APP_DIR/.next/server/chunks -type f | LC_ALL=C sort > /tmp/.srv-have.$TMP_TAG && LC_ALL=C sort .deploy-server-chunks-manifest > /tmp/.srv-keep.$TMP_TAG && comm -23 /tmp/.srv-have.$TMP_TAG /tmp/.srv-keep.$TMP_TAG > /tmp/.srv-orphans.$TMP_TAG && if [ -s /tmp/.srv-orphans.$TMP_TAG ]; then echo \"Pruning \$(wc -l < /tmp/.srv-orphans.$TMP_TAG) orphaned .next/server/chunks file(s) from prior builds\"; xargs -r rm -f < /tmp/.srv-orphans.$TMP_TAG; else echo \"No orphaned .next/server/chunks files to prune.\"; fi && rm -f /tmp/.srv-have.$TMP_TAG /tmp/.srv-keep.$TMP_TAG /tmp/.srv-orphans.$TMP_TAG; else echo \"WARN: .deploy-server-chunks-manifest missing/empty — skipping server-chunk prune (safety)\"; fi" || {
   log_message "ERROR" "Deployment failed on remote server"
