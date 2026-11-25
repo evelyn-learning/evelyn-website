@@ -2,45 +2,33 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { isUnder, portalPath } from '../../components/portal-path';
+import { DOCS_PAGES } from '../../portal-pages';
 
-const sections = [
-  { href: '/docs', label: 'Overview' },
-  { href: '/docs/quickstart', label: 'Getting Started' },
-  { href: '/docs/embed', label: 'Embed Configuration' },
-  { href: '/docs/voices', label: 'Voices and Companions' },
-  { href: '/docs/api', label: 'API Reference' },
-  { href: '/docs/webhooks', label: 'Events' },
-  { href: '/docs/modules', label: 'Your Curriculum' },
-  { href: '/docs/authentication', label: 'Authentication' },
-  { href: '/docs/whiteboard', label: 'Whiteboard Types' },
-];
-
+// 2026-11-24: the list is the docs pages of portal-pages.ts, so a new docs page is in the sidebar, the sitemap
+// and llms.txt together. The active check now works on the tutor host too (the path there has no /tutor-portal
+// prefix, so nothing was ever highlighted).
 export function DocsSidebar() {
-  const pathname = usePathname();
-
-  const isActive = (href: string) => {
-    const fullPath = `/tutor-portal${href}`;
-    return href === '/docs'
-      ? pathname === fullPath
-      : pathname === fullPath || pathname?.startsWith(`${fullPath}/`);
-  };
+  const path = portalPath(usePathname());
+  const isActive = (href: string) => (href === '/docs' ? path === '/docs' : isUnder(path, href));
 
   return (
-    <nav className="sticky top-20 space-y-1">
+    <nav className="sticky top-20 space-y-1" aria-label="Documentation">
       <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
         Documentation
       </p>
-      {sections.map((s) => (
+      {DOCS_PAGES.map((s) => (
         <Link
-          key={s.href}
-          href={s.href}
+          key={s.path}
+          href={s.path}
+          aria-current={isActive(s.path) ? 'page' : undefined}
           className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
-            isActive(s.href)
+            isActive(s.path)
               ? 'bg-blue-50 font-medium text-blue-700'
               : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
           }`}
         >
-          {s.label}
+          {s.docs}
         </Link>
       ))}
     </nav>

@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import { PORTAL_LINKS } from '@/lib/portal-links';
 import { ArrowRight, CheckCircle, BookOpen, Shield, Cloud, Smartphone } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -322,6 +323,14 @@ export default function PublishersIndustryPage() {
                 </span>
               ))}
             </div>
+            {/* 2026-11-24: one link to the developer portal where the page already talks about the API. */}
+            <p className="mt-6 text-slate-500 text-sm">
+              For the AI Voice Tutor, the API is public:{' '}
+              <a href={PORTAL_LINKS.docs} className="text-primary-500 font-medium hover:underline">
+                read the Voice Tutor API docs
+              </a>
+              .
+            </p>
           </div>
         </div>
       </section>

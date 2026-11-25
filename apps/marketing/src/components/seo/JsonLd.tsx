@@ -136,6 +136,11 @@ interface SoftwareApplicationJsonLdProps {
   url: string;
   featureList?: string[];
   screenshot?: string;
+  /**
+   * Real offers for a product with public prices (2026-11-24). Without it the
+   * default below stays: price "0" with "Contact for enterprise pricing".
+   */
+  offers?: Array<Record<string, unknown>>;
 }
 
 export function SoftwareApplicationJsonLd({
@@ -145,6 +150,7 @@ export function SoftwareApplicationJsonLd({
   url,
   featureList,
   screenshot,
+  offers,
 }: SoftwareApplicationJsonLdProps) {
   const jsonLd = {
     "@context": "https://schema.org",
@@ -159,7 +165,7 @@ export function SoftwareApplicationJsonLd({
       name: "Evelyn Learning",
       url: SITE_URL,
     },
-    offers: {
+    offers: offers && offers.length > 0 ? offers : {
       "@type": "Offer",
       price: "0",
       priceCurrency: "USD",

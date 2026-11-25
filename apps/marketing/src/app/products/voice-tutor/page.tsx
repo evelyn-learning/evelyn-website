@@ -6,6 +6,13 @@ import { FAQ } from '@/components/ui/FAQ';
 import { productFAQs } from '@/data/faqs/products';
 import { DemoTracker } from '@/components/demos/DemoTracker';
 import { Mic, MessageSquare, Upload, Pencil, ExternalLink } from 'lucide-react';
+import {
+  API_PRICING,
+  NPM_PACKAGE,
+  PORTAL_LINKS,
+  PYPI_PACKAGE,
+  TAUGHT_LANGUAGES_SENTENCE,
+} from '@/lib/portal-links';
 
 const VoiceTutorLiveDemo = dynamic(
   () => import('@/components/demos/VoiceTutorLiveDemo'),
@@ -206,7 +213,8 @@ function FeaturesSection() {
     { title: 'Visual Whiteboard', description: 'Equations, graphs, and diagrams appear in real-time', icon: '📐' },
     { title: 'Homework Photo Upload', description: 'Snap a picture of problems for guided assistance', icon: '📸' },
     { title: 'Step-by-Step Guidance', description: 'Socratic method teaching, not just answers', icon: '📋' },
-    { title: 'Multiple Topics', description: 'Physics, math, and expanding STEM coverage', icon: '🔬' },
+    // 2026-11-24: was "Physics, math, and expanding STEM coverage" (stale).
+    { title: 'Many Subjects', description: 'Math, science, English, history, and test prep', icon: '🔬' },
     { title: 'White-Label Ready', description: 'Your branding, your platform, your curriculum', icon: '🏷️' }
   ];
 
@@ -232,7 +240,7 @@ function FeaturesSection() {
 
 function HowItWorksSection() {
   const steps = [
-    { step: 1, title: 'Choose Your Topic', description: 'Select from available physics topics or request custom subjects for your curriculum.' },
+    { step: 1, title: 'Choose Your Topic', description: 'Pick a ready lesson or type any topic. The tutor can also teach from your own curriculum.' },
     { step: 2, title: 'Select Your Mode', description: 'Use voice chat for natural conversation or text chat for typing-based interaction.' },
     { step: 3, title: 'Start Learning', description: 'Ask questions, work through problems, and see visual explanations on the whiteboard.' },
     { step: 4, title: 'Upload Homework', description: 'Take a photo of your homework and get guided step-by-step help.' },
@@ -257,6 +265,75 @@ function HowItWorksSection() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Developer and partner entry (2026-11-24). Before this the page never said
+ * an API exists and www had no link to the developer portal. Facts only, from
+ * src/lib/portal-links.ts. Plain anchors in the same tab: the portal is our
+ * own site on another host.
+ */
+function DevelopersSection() {
+  const [small, medium, large] = API_PRICING.packs;
+  const facts = [
+    {
+      title: 'Price',
+      body: `$${API_PRICING.voicePerMinute} per voice minute and $${API_PRICING.typedPerMinute} per typed minute. Prepaid packs: ${small.minutes} minutes for ${small.price}, ${medium.minutes} minutes for ${medium.price}, ${large.minutes} minutes for ${large.price}.`,
+    },
+    {
+      title: 'Free sandbox',
+      body: `${API_PRICING.sandboxMinutes} tutoring minutes free. You get your keys as soon as you sign up, and no card is needed.`,
+    },
+    {
+      title: 'Lesson languages',
+      body: `A lesson can be taught entirely in ${TAUGHT_LANGUAGES_SENTENCE}.`,
+    },
+    {
+      title: 'Your own material',
+      body: 'Send a photo of a worksheet and the tutor takes the student through it question by question.',
+    },
+    {
+      title: 'Partner dashboard',
+      body: 'Usage, keys, sessions and replays, billing and webhooks in one place.',
+    },
+    {
+      title: 'Developer packages',
+      body: `${NPM_PACKAGE} on npm and ${PYPI_PACKAGE} on PyPI, including an MCP server for coding assistants.`,
+    },
+  ];
+  const primary = 'px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition text-center';
+  const secondary = 'px-6 py-3 bg-white border-2 border-slate-200 text-slate-800 font-semibold rounded-xl hover:border-blue-300 hover:text-blue-600 transition text-center';
+
+  return (
+    <section id="developers" className="py-16 bg-white">
+      <div className="container-wide">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">For developers and partners</h2>
+            <p className="text-slate-600 max-w-3xl mx-auto">
+              The Voice Tutor API puts this tutor inside your own product: a hosted AI tutor with voice, a live whiteboard and typed chat, under your brand. Your server signs one link and your app opens it in an iframe or a mobile WebView.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {facts.map((fact) => (
+              <div key={fact.title} className="p-6 rounded-2xl bg-slate-50">
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">{fact.title}</h3>
+                <p className="text-slate-600 text-sm break-words">{fact.body}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-10 flex flex-col sm:flex-row sm:flex-wrap gap-4 justify-center">
+            <a href={PORTAL_LINKS.sandbox} className={primary}>Get free sandbox keys</a>
+            <a href={PORTAL_LINKS.docs} className={secondary}>Read the docs</a>
+            <a href={PORTAL_LINKS.pricing} className={secondary}>API pricing</a>
+            <a href={PORTAL_LINKS.signIn} className={secondary}>Partner sign-in</a>
           </div>
         </div>
       </div>
@@ -329,6 +406,7 @@ export default function VoiceTutorProductPage() {
       <LiveImplementationsSection />
       <FeaturesSection />
       <HowItWorksSection />
+      <DevelopersSection />
       <FAQSection />
       <CTASection />
       <RelatedProductsSection />

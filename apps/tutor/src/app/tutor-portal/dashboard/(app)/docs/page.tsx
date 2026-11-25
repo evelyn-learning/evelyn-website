@@ -60,7 +60,7 @@ export default function DashboardDocsPage() {
 
       <h2 id="start" className={h2}>1. Start a lesson</h2>
       <p className={p}>
-        There is no SDK. Your server signs a token (a JWT, <code className={code}>alg: HS256</code>, signed with
+        No package is needed: your server signs a token (a JWT, <code className={code}>alg: HS256</code>, signed with
         your partner secret) and the student&apos;s browser or app opens the session page with it. The token is
         the session&apos;s configuration.
       </p>
@@ -77,6 +77,13 @@ export default function DashboardDocsPage() {
       <p className={p}>
         Any standard JWT library works as long as the algorithm is HS256 and the claims are top-level. Do not
         sign tokens in the browser or in a mobile app, and use one token per student per session.
+      </p>
+      <p className={p}>
+        If you would rather not write the signing yourself, the optional package does it:{' '}
+        <code className={code}>npm install @evelynlearning/tutor</code> (Node) or{' '}
+        <code className={code}>pip install evelyn-tutor</code> (Python). It also wraps the worksheet calls, checks
+        webhook signatures, and includes a command line tool and an MCP server for coding assistants. See{' '}
+        <Link href="/docs/package" className={linkClass}>Developer Package</Link>.
       </p>
       <Callout type="tip" title="See it before you write it">
         <Link href="/dashboard/try" className="font-medium underline underline-offset-2">Try it</Link> makes a signed

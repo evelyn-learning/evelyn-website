@@ -1,15 +1,26 @@
+import type { Metadata } from 'next';
 import { CodeBlock } from '../components/CodeBlock';
+import { portalMetadata } from '../../seo';
+import { DocsBreadcrumb } from '../components/DocsBreadcrumb';
+
+export const metadata: Metadata = portalMetadata('/docs/authentication');
 import { Callout } from '../components/Callout';
 
 export default function AuthenticationPage() {
   return (
     <div>
+      <DocsBreadcrumb path="/docs/authentication" />
       <h1 className="mb-2 text-3xl font-bold text-slate-900">Authentication</h1>
       <p className="mb-8 text-lg text-slate-600">
         One partner secret, two uses: signing session tokens and signing API requests.
       </p>
 
       <h2 className="mb-3 mt-8 text-xl font-semibold text-slate-900">Credentials</h2>
+      <p className="mb-4 text-sm text-slate-600">
+        Both values are created when you <a href="/sandbox" className="text-blue-600 underline">sign up</a> and are
+        shown on the API keys page of your <a href="/dashboard" className="text-blue-600 underline">dashboard</a>. No
+        request to us is needed.
+      </p>
       <div className="mb-6 overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -35,9 +46,9 @@ export default function AuthenticationPage() {
       </div>
 
       <Callout type="warning" title="Security">
-        Never expose the partner secret in client-side code, version control or logs. To rotate it,
-        contact us: we add the new secret beside the old one so there is no cutover window, then
-        retire the old one.
+        Never expose the partner secret in client-side code, version control or logs. You rotate it yourself on
+        the API keys page of your dashboard: the new secret works at once, and the old one keeps working for 24
+        hours so you can switch without downtime.
       </Callout>
 
       {/* Session tokens */}
@@ -59,7 +70,7 @@ const token = jwt.sign(
     student_id: 'stu_abc123',
     subject: 'math',
     level: 'Grade 6',
-    teacher: persona,                       // from the persona catalog
+    teacher: 'ms-priya-nair',               // a ready-made teacher, or your own persona object
     exp: Math.floor(Date.now() / 1000) + 7200,
   },
   process.env.EVELYN_PARTNER_SECRET,
@@ -73,7 +84,7 @@ $token = JWT::encode([
     'student_id' => 'stu_abc123',
     'subject'    => 'math',
     'level'      => 'Grade 6',
-    'teacher'    => $persona,
+    'teacher'    => 'ms-priya-nair',
     'exp'        => time() + 7200,
 ], $_ENV['EVELYN_PARTNER_SECRET'], 'HS256');`}</CodeBlock>
 

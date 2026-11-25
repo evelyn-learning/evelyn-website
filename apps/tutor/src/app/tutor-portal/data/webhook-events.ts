@@ -1,7 +1,8 @@
 /**
  * Browser events the embed posts to its parent window (window.parent.postMessage).
- * These are the ONLY push events today; there is no outbound webhook delivery
- * yet. Keep in sync with src/app/tutor-portal/embed/page.tsx.
+ * Keep in sync with src/app/tutor-portal/embed/page.tsx. Server webhooks are a
+ * separate list at the foot of this file (2026-11-24: this comment said there
+ * was no outbound webhook delivery; there is).
  */
 export interface WebhookEvent {
   event: string;
@@ -34,3 +35,16 @@ export const inboundEvents: WebhookEvent[] = [
 ];
 
 export const webhookCategories = [...new Set(webhookEvents.map((e) => e.category))];
+
+/**
+ * Server webhooks: POSTs from our server to the URL a partner sets on the dashboard. Written from
+ * src/lib/tutor/partner-dashboard/webhooks.ts: the types are WebhookEventType, the data fields are what
+ * sessionEndedData and notifyPoolLine build, and the pool lines are the 80% and 100% marks.
+ * scripts/test-portal-seo.ts checks the types against that file.
+ */
+export const serverWebhookEvents: WebhookEvent[] = [
+  { event: 'session.ended', trigger: 'Once per session, when its end is saved', category: 'Server webhooks', keyFields: ['session_id', 'student_id', 'started_at', 'ended_at', 'duration_seconds', 'status', 'languages', 'subject', 'topic', 'input_mode', 'message_count'] },
+  { event: 'pool.low', trigger: '80% of your tutoring minutes are used', category: 'Server webhooks', keyFields: ['cap_minutes', 'used_minutes', 'remaining_minutes'] },
+  { event: 'pool.exhausted', trigger: 'All of your tutoring minutes are used', category: 'Server webhooks', keyFields: ['cap_minutes', 'used_minutes', 'remaining_minutes'] },
+  { event: 'webhook.test', trigger: 'You press "Send test event" on the dashboard', category: 'Server webhooks', keyFields: ['message'] },
+];

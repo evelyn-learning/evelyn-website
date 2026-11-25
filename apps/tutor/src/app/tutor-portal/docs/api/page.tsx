@@ -1,10 +1,16 @@
+import type { Metadata } from 'next';
 import { apiEndpoints, apiCategories } from '../../data/api-endpoints';
+import { portalMetadata } from '../../seo';
+import { DocsBreadcrumb } from '../components/DocsBreadcrumb';
+
+export const metadata: Metadata = portalMetadata('/docs/api');
 import { EndpointCard } from '../components/EndpointCard';
 import { Callout } from '../components/Callout';
 
 export default function ApiReferencePage() {
   return (
     <div>
+      <DocsBreadcrumb path="/docs/api" />
       <h1 className="mb-2 text-3xl font-bold text-slate-900">API Reference</h1>
       <p className="mb-8 text-lg text-slate-600">
         The partner API: pull session facts and learning state, push student context, and turn your
@@ -45,7 +51,7 @@ export default function ApiReferencePage() {
 
       <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">Typical flow after a session</h2>
       <ol className="mb-6 list-decimal space-y-2 pl-5 text-sm text-slate-600">
-        <li>Your page receives <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">evelyn:session_ended</code> and tells your backend.</li>
+        <li>Your page receives <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">evelyn:session_ended</code> and tells your backend, or your server receives the <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">session.ended</code> <a href="/docs/webhooks" className="text-blue-600 underline">webhook</a>.</li>
         <li>Backend calls <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">GET /sessions/summary?ids=…</code> for active minutes, turns and board items.</li>
         <li>Backend calls <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">GET /gaps</code> and <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">GET /mastery</code> (or <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">/learner-state</code>) for the student and stores the result for parent and teacher dashboards.</li>
         <li>Optionally <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">POST /assigned-practice</code> to show the homework the tutor set.</li>
@@ -57,6 +63,11 @@ export default function ApiReferencePage() {
         <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">/sessions/summary</code> is active tutoring
         time: the gaps between consecutive turns, each capped at ten minutes. Idle time in an open tab is
         not counted. This is the number your invoice is based on.
+      </p>
+      <p className="mb-6 text-sm text-slate-600">
+        A prepaid balance is counted by the clock instead: each sitting from the tutor&apos;s start to its end, pauses
+        included, with a typed session drawing 0.8 of a minute per minute.{' '}
+        <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">GET /usage</code> returns the balance.
       </p>
 
       <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">Error format</h2>

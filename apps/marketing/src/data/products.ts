@@ -282,7 +282,7 @@ export const productCategories: ProductCategory[] = [
           {
             question: "What subjects does the Voice Tutor support?",
             answer:
-              "Currently optimized for physics with topics like kinematics and projectile motion. We are expanding to cover mathematics, chemistry, and other STEM subjects. The system can be customized for your specific curriculum needs.",
+              "The tutor teaches math, science (physics, chemistry, biology), English, history, and test prep. Students can pick a ready lesson or type any topic, and the tutor can also teach from your own curriculum.",
           },
           {
             question: "Can students also type their questions?",
@@ -313,6 +313,24 @@ export const productCategories: ProductCategory[] = [
             question: "Does the voice tutor AI provide 24/7 student support?",
             answer:
               "Yes, the AI Voice Tutor is available 24/7 with no scheduling required. Students can access real-time voice tutoring anytime—during homework, late-night study sessions, or exam prep. This makes it ideal for organizations that want to offer round-the-clock student support without adding staff.",
+          },
+          // 2026-11-24: API, price and sandbox. The page FAQ and its FAQPage
+          // JSON-LD both read this list, so they stay in step. Facts mirror
+          // src/lib/portal-links.ts; no provider or client names.
+          {
+            question: "Is there an API for the AI Voice Tutor?",
+            answer:
+              "Yes. The Voice Tutor API gives your product a hosted AI tutor with voice, a live whiteboard and typed chat, under your brand. Your server signs one link and your app opens it in an iframe or a mobile WebView. The documentation is at https://tutor.evelynlearning.com/docs.",
+          },
+          {
+            question: "How much does the Voice Tutor API cost?",
+            answer:
+              "$0.20 per voice minute and $0.16 per typed minute. Prepaid packs are 500 minutes for $100, 2,500 minutes for $450 and 10,000 minutes for $1,600. Current prices are at https://tutor.evelynlearning.com/pricing.",
+          },
+          {
+            question: "Can I try the Voice Tutor API for free?",
+            answer:
+              "Yes. The free sandbox comes with 300 tutoring minutes. You get your keys as soon as you sign up at https://tutor.evelynlearning.com/sandbox, and no card is needed.",
           },
         ],
       },

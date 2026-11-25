@@ -1,9 +1,16 @@
+import type { Metadata } from 'next';
 import { CodeBlock } from '../components/CodeBlock';
+import { portalMetadata } from '../../seo';
+import { DocsBreadcrumb } from '../components/DocsBreadcrumb';
+import { lessonPlanCountFloor } from '../../data/curriculum';
+
+export const metadata: Metadata = portalMetadata('/docs/modules');
 import { Callout } from '../components/Callout';
 
 export default function ModulesPage() {
   return (
     <div>
+      <DocsBreadcrumb path="/docs/modules" />
       <h1 className="mb-2 text-3xl font-bold text-slate-900">Your Curriculum</h1>
       <p className="mb-8 text-lg text-slate-600">
         Send your own lesson, assignment or syllabus excerpt and the tutor teaches that, Socratically,
@@ -16,7 +23,7 @@ export default function ModulesPage() {
           <strong>Our catalog.</strong> Put <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">subject</code>,{' '}
           <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">level</code> and a{' '}
           <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">topic</code> in the token. The tutor picks or
-          builds a lesson on that topic from our 1,000+ K-12 plans.
+          builds a lesson on that topic from our {lessonPlanCountFloor.toLocaleString('en-US')}+ lesson plans.
         </li>
         <li>
           <strong>Your material.</strong> Call <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">POST /plan-generate</code>{' '}
@@ -91,6 +98,16 @@ export default function ModulesPage() {
         <li>Every student&apos;s token for that assignment carries <code className="text-xs">curriculum_module: planId</code>.</li>
         <li>After the session, pull <code className="text-xs">/gaps</code>, <code className="text-xs">/mastery</code> and <code className="text-xs">/assigned-practice</code> to show progress and follow-up work.</li>
       </ol>
+
+      <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">A photographed worksheet</h2>
+      <p className="mb-6 text-sm text-slate-600">
+        When the material is a photo of a worksheet, <code className="text-xs">plan-generate</code> also returns the
+        numbered questions as <code className="text-xs">problems: [{'{ n, text }'}]</code>. Show the list, let the student
+        pick a question, call <code className="text-xs">POST /homework-problem-plan</code> with{' '}
+        <code className="text-xs">{'{ planId, n }'}</code>, and open a session on the plan id it returns. The tutor guides
+        the student to their own answer and does not give it away. The routes are under Worksheet help in the{' '}
+        <a href="/docs/api" className="text-blue-600 underline">API Reference</a>.
+      </p>
 
       <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">Related</h2>
       <ul className="space-y-1 text-sm text-slate-600">

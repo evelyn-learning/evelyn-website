@@ -31,9 +31,20 @@ test("voice-tutor CTA links to the product page", () => {
 test("academy CTA links to the product page", () => {
   assert.equal(CTA_COPY.academy.href, "/products/academy");
 });
+test("voice-tutor CTA carries a developer link to the portal docs", () => {
+  assert.deepEqual(CTA_COPY["voice-tutor"].developer, {
+    lead: "Building it into your product?",
+    label: "See the API docs",
+    href: "https://tutor.evelynlearning.com/docs",
+  });
+});
+test("academy CTA has no developer link (the portal is the Voice Tutor API)", () => {
+  assert.equal(CTA_COPY.academy.developer, undefined);
+});
 test("no CTA copy makes a pricing claim", () => {
   for (const [key, copy] of Object.entries(CTA_COPY)) {
-    for (const text of [copy.heading, copy.body, copy.button]) {
+    const developer = copy.developer ? [copy.developer.lead, copy.developer.label] : [];
+    for (const text of [copy.heading, copy.body, copy.button, ...developer]) {
       assert.doesNotMatch(text, /\$|\bprice\b/i, `${key}: ${text}`);
     }
   }

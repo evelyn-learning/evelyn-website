@@ -1,172 +1,100 @@
-export interface WhiteboardType {
-  id: string;
-  name: string;
-  command: string;
-  category: 'math' | 'graphs' | 'diagrams' | 'science' | 'programming' | 'navigation';
-  description: string;
-  exampleUse: string;
-}
+/**
+ * What the tutor's whiteboard draws, grouped for a reader (2026-11-24).
+ *
+ * This file listed 16 "types" from the first engine (showEquation, showSvgDiagram, clear…) and the two pages
+ * that used it gave two different counts. The board the tutor uses today has three sources, and this list is
+ * written from them:
+ *   - the forms the tutor writes while it talks: InlineKind in src/lib/tutor/v2/board-inline.ts
+ *     (INLINE_BOARD_FORMS below repeats that list; scripts/test-portal-seo.ts keeps the two equal);
+ *   - figures with a drawing tool of their own: TOOL_FIGURES in src/lib/tutor/v2/figure-catalogue.ts and the
+ *     subject tools in src/lib/tutor/v2/tools.ts;
+ *   - the catalogue of figures drawn exactly from a few parameters: DIAGRAM_CATALOG in
+ *     src/lib/tutor/diagrams/catalog/manifest.ts.
+ * Counts are not typed here: data/board-catalogue.ts reads them from the engine.
+ *
+ * Pure (no imports).
+ */
 
-export const whiteboardTypes: WhiteboardType[] = [
+/** The inline board forms, as the engine names them. 'figure' places a catalogue figure and 'page' starts a new
+ *  board page; the rest are things a student sees drawn. */
+export const INLINE_BOARD_FORMS = [
+  'equation', 'note', 'problem', 'table', 'timeline', 'compare', 'steps', 'quote', 'forces', 'numberline', 'graph',
+  'cycle', 'web', 'map', 'chart', 'ranks', 'code', 'sketch', 'figure', 'page', 'sentence',
+] as const;
+
+export interface BoardItem { name: string; description: string }
+export interface BoardGroup { id: 'general' | 'maths' | 'science' | 'humanities' | 'computing'; name: string; summary: string; items: BoardItem[] }
+
+export const boardGroups: BoardGroup[] = [
   {
-    id: 'equation',
-    name: 'LaTeX Equations',
-    command: 'showEquation',
-    category: 'math',
-    description: 'Renders mathematical equations and expressions with full LaTeX support, including labels.',
-    exampleUse: 'Quadratic formula, integral notation, matrix equations',
+    id: 'general',
+    name: 'Every lesson',
+    summary: 'Written as the tutor speaks, at the moment a teacher would pick up the pen.',
+    items: [
+      { name: 'Equations', description: 'Typeset maths with an optional label, one line or a chain of lines.' },
+      { name: 'Notes', description: 'Key points, with maths inline, plain or highlighted.' },
+      { name: 'Problems', description: 'The question the student is working on, kept in view.' },
+      { name: 'Worked steps', description: 'A solution or a method laid out step by step.' },
+      { name: 'Tables', description: 'Rows and columns for data, cases or comparisons.' },
+      { name: 'Compare cards', description: 'Two or more things side by side.' },
+      { name: 'Quotes', description: 'A line from a text or a source, set apart.' },
+      { name: 'Sketches', description: 'A simple labelled drawing for anything no exact figure covers.' },
+      { name: 'Pages', description: 'A new board page when the subject changes; earlier pages stay for review.' },
+    ],
   },
   {
-    id: 'graph',
-    name: 'Interactive Graphs',
-    command: 'showGraph',
-    category: 'graphs',
-    description: 'Interactive function graphs with pan/zoom. Supports position-time, velocity-time, acceleration-time, and generic function plots.',
-    exampleUse: 'Plotting y = x², showing velocity vs time for projectile motion',
+    id: 'maths',
+    name: 'Mathematics',
+    summary: 'From counting to calculus and statistics.',
+    items: [
+      { name: 'Graphs', description: 'Functions, points and inequalities on axes.' },
+      { name: 'Number lines', description: 'Positions, intervals and inequality solutions.' },
+      { name: 'Geometry', description: 'Triangles, polygons, circles, angles and constructions, exact in proportion; transformations and solids.' },
+      { name: 'Fractions and place value', description: 'Fraction bars, tape diagrams, area models, ten-frames and base-ten blocks.' },
+      { name: 'Statistics', description: 'Dot plots, histograms, bar charts, box plots, scatterplots with a regression line, normal and other distribution curves.' },
+      { name: 'Probability', description: 'Probability trees and Venn diagrams.' },
+      { name: 'Trigonometry and calculus', description: 'The unit circle, Riemann sums, slope fields, parametric and polar curves, solids of revolution.' },
+      { name: 'Matrices and vectors', description: 'Matrices with row operations, vector addition, 3D axes.' },
+    ],
   },
   {
-    id: 'diagram',
-    name: 'Physics Diagrams',
-    command: 'showDiagram',
-    category: 'diagrams',
-    description: 'Vector diagrams, free-body diagrams, projectile trajectories, motion diagrams, circular paths, and pipe flow diagrams.',
-    exampleUse: 'Free-body diagram of a block on an incline, vector addition',
+    id: 'science',
+    name: 'Science',
+    summary: 'Physics, chemistry, biology and earth science.',
+    items: [
+      { name: 'Forces and motion', description: 'Force diagrams, inclined planes, pulleys, springs, pendulums, projectiles, collisions, energy bars and motion graphs.' },
+      { name: 'Circuits', description: 'Series, parallel and mixed circuits drawn from what is connected to what.' },
+      { name: 'Waves and optics', description: 'Wave diagrams, standing waves, interference, ray diagrams for lenses and mirrors, refraction.' },
+      { name: 'Atoms and molecules', description: 'Molecular structures, Lewis structures, electron configurations, the periodic table, molecular geometry.' },
+      { name: 'Reactions', description: 'Balanced equations, reaction-energy curves, titration curves, heating curves, the pH scale.' },
+      { name: 'Cells and genetics', description: 'Cells and membranes, mitosis and meiosis, DNA, Punnett squares, pedigrees, cladograms.' },
+      { name: 'Body systems and ecology', description: 'The heart, the nephron, the eye and other labelled systems; food webs, energy pyramids, life cycles.' },
+      { name: 'Earth and space', description: 'The water and rock cycles, plate boundaries, the layers of the Earth, moon phases, eclipses, seasons, the solar system.' },
+    ],
   },
   {
-    id: 'table',
-    name: 'Data Tables',
-    command: 'showTable',
-    category: 'graphs',
-    description: 'Structured data tables with headers and rows for organizing information.',
-    exampleUse: 'Experimental data, comparison charts, truth tables',
+    id: 'humanities',
+    name: 'Humanities and languages',
+    summary: 'History, geography, civics, economics, reading and writing.',
+    items: [
+      { name: 'Timelines', description: 'Events in order along a line.' },
+      { name: 'Maps', description: 'Places marked on a world or regional map, joined as a route when the lesson follows a journey.' },
+      { name: 'Annotated passages', description: 'A poem, passage or source with words highlighted and notes on them.' },
+      { name: 'Cycles and cause webs', description: 'Stages that go round, and what leads to what.' },
+      { name: 'Rankings and structures', description: 'Levels from the top down, branches of government, argument structure, plot diagrams.' },
+      { name: 'Economics graphs', description: 'Supply and demand, production possibilities, aggregate demand and supply, and other standard models.' },
+      { name: 'Sentence cards', description: 'One sentence of a language lesson with its stress and meaning marked.' },
+    ],
   },
   {
-    id: 'svg',
-    name: 'Custom SVG Diagrams',
-    command: 'showSvgDiagram',
-    category: 'diagrams',
-    description: 'Custom SVG layouts with strict zone positioning for flexible visual content.',
-    exampleUse: 'Circuit diagrams, flow charts, custom illustrations',
-  },
-  {
-    id: 'code',
-    name: 'Code Blocks',
-    command: 'showCode',
-    category: 'programming',
-    description: 'Syntax-highlighted programming code extracted from markdown fences.',
-    exampleUse: 'Python functions, JavaScript algorithms, SQL queries',
-  },
-  {
-    id: 'numberline',
-    name: 'Number Lines',
-    command: 'showNumberLine',
-    category: 'math',
-    description: 'Number lines with customizable intervals and highlighted segments.',
-    exampleUse: 'Integer placement, fraction comparison, inequality visualization',
-  },
-  {
-    id: 'geometry',
-    name: 'Geometry',
-    command: 'showGeometry',
-    category: 'math',
-    description: 'Points, segments, polygons, circles, angles, and arcs with labels and measurements.',
-    exampleUse: 'Triangle proofs, circle theorems, coordinate geometry',
-  },
-  {
-    id: 'unitcircle',
-    name: 'Unit Circle',
-    command: 'showUnitCircle',
-    category: 'math',
-    description: 'Trigonometry unit circle with angle highlights, sine/cosine projections.',
-    exampleUse: 'Trigonometric identities, radian measure, sin/cos values',
-  },
-  {
-    id: 'fractionbar',
-    name: 'Fraction Bars',
-    command: 'showFractionBar',
-    category: 'math',
-    description: 'Visual fraction representations with shaded portions for comparison.',
-    exampleUse: 'Equivalent fractions, adding fractions, mixed numbers',
-  },
-  {
-    id: 'tree',
-    name: 'Tree Diagrams',
-    command: 'showTree',
-    category: 'diagrams',
-    description: 'Hierarchical tree structures for probability, data structures, and genealogy.',
-    exampleUse: 'Probability trees, binary search trees, factor trees',
-  },
-  {
-    id: 'venn',
-    name: 'Venn Diagrams',
-    command: 'showVennDiagram',
-    category: 'diagrams',
-    description: 'Overlapping set diagrams for comparing and contrasting concepts.',
-    exampleUse: 'Set operations, classification, comparing properties',
-  },
-  {
-    id: 'matrix',
-    name: 'Matrices',
-    command: 'showMatrix',
-    category: 'math',
-    description: 'Mathematical matrices with proper bracket notation.',
-    exampleUse: 'Matrix multiplication, determinants, systems of equations',
-  },
-  {
-    id: 'stats',
-    name: 'Statistical Displays',
-    command: 'showStats',
-    category: 'graphs',
-    description: 'Statistical visualizations including distributions and summary statistics.',
-    exampleUse: 'Normal distributions, box plots, mean/median/mode',
-  },
-  {
-    id: 'molecule',
-    name: '3D Molecular Structures',
-    command: 'showMolecule',
-    category: 'science',
-    description: 'Interactive 3D molecular viewer for chemistry with rotation and zoom.',
-    exampleUse: 'Water molecule, organic compounds, protein structures',
-  },
-  {
-    id: 'problem',
-    name: 'Problem Display',
-    command: 'showProblem',
-    category: 'math',
-    description: 'Formatted problem statements with proper mathematical notation.',
-    exampleUse: 'Word problems, exam questions, practice sets',
-  },
-  {
-    id: 'newpage',
-    name: 'New Page',
-    command: 'newPage',
-    category: 'navigation',
-    description: 'Creates a new whiteboard page for the next concept or problem.',
-    exampleUse: 'Moving to a new topic, separating worked examples',
-  },
-  {
-    id: 'gotopage',
-    name: 'Page Navigation',
-    command: 'goToPage',
-    category: 'navigation',
-    description: 'Navigates back to a previous whiteboard page for review.',
-    exampleUse: 'Referring back to an equation, reviewing a previous diagram',
-  },
-  {
-    id: 'clear',
-    name: 'Clear',
-    command: 'clear',
-    category: 'navigation',
-    description: 'Clears the current whiteboard page.',
-    exampleUse: 'Starting fresh on a new problem',
+    id: 'computing',
+    name: 'Computer science',
+    summary: 'Programs and the structures behind them.',
+    items: [
+      { name: 'Code', description: 'Program code as typed, with its language.' },
+      { name: 'Call stacks and recursion trees', description: 'What a program is doing at one moment.' },
+      { name: 'Data structures', description: 'Stacks, queues, linked lists, binary trees, graphs and hash tables.' },
+      { name: 'Logic', description: 'Truth tables, logic gates, flowcharts and state machines.' },
+    ],
   },
 ];
-
-export const whiteboardCategories = [
-  { id: 'math', name: 'Mathematics', count: whiteboardTypes.filter((t) => t.category === 'math').length },
-  { id: 'graphs', name: 'Graphs & Data', count: whiteboardTypes.filter((t) => t.category === 'graphs').length },
-  { id: 'diagrams', name: 'Diagrams', count: whiteboardTypes.filter((t) => t.category === 'diagrams').length },
-  { id: 'science', name: 'Science', count: whiteboardTypes.filter((t) => t.category === 'science').length },
-  { id: 'programming', name: 'Programming', count: whiteboardTypes.filter((t) => t.category === 'programming').length },
-  { id: 'navigation', name: 'Navigation', count: whiteboardTypes.filter((t) => t.category === 'navigation').length },
-] as const;

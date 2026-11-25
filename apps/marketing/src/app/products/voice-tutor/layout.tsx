@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { SoftwareApplicationJsonLd, FAQPageJsonLd, BreadcrumbJsonLd } from '@/components/seo/JsonLd';
 import { productFAQs } from '@/data/faqs/products';
 import { getKeywordsForProduct } from '@/lib/seo/keywords';
+import { API_PRICING, PORTAL_LINKS } from '@/lib/portal-links';
 
 const productId = 'voice-tutor';
 const productName = 'AI Voice Tutor';
@@ -36,6 +37,47 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           'Adaptive learning for physics, math, and STEM subjects',
           '24/7 student support without adding staff',
           'White-label deployment for your platform',
+        ]}
+        // 2026-11-24: the schema said price "0, contact for enterprise
+        // pricing" while the API has public prices. Three true offers: the
+        // free sandbox and the two per-minute rates (UN/CEFACT unit MIN).
+        offers={[
+          {
+            '@type': 'Offer',
+            name: 'Free sandbox',
+            price: '0',
+            priceCurrency: 'USD',
+            description: `${API_PRICING.sandboxMinutes} tutoring minutes free. Keys on sign-up, no card needed.`,
+            url: PORTAL_LINKS.sandbox,
+          },
+          {
+            '@type': 'Offer',
+            name: 'Voice Tutor API, voice sessions',
+            price: API_PRICING.voicePerMinute,
+            priceCurrency: 'USD',
+            description: `$${API_PRICING.voicePerMinute} per voice minute`,
+            url: PORTAL_LINKS.pricing,
+            priceSpecification: {
+              '@type': 'UnitPriceSpecification',
+              price: API_PRICING.voicePerMinute,
+              priceCurrency: 'USD',
+              unitCode: 'MIN',
+            },
+          },
+          {
+            '@type': 'Offer',
+            name: 'Voice Tutor API, typed sessions',
+            price: API_PRICING.typedPerMinute,
+            priceCurrency: 'USD',
+            description: `$${API_PRICING.typedPerMinute} per typed minute`,
+            url: PORTAL_LINKS.pricing,
+            priceSpecification: {
+              '@type': 'UnitPriceSpecification',
+              price: API_PRICING.typedPerMinute,
+              priceCurrency: 'USD',
+              unitCode: 'MIN',
+            },
+          },
         ]}
       />
       <FAQPageJsonLd faqs={faqs} />

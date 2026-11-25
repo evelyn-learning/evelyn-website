@@ -31,6 +31,14 @@ export const apiEndpoints: ApiEndpoint[] = [
   { method: 'POST', path: '/review-plan', description: '{ studentId, los: [{ loId, title }], sessionMinutes? } → a remediation plan built from a student\'s weak objectives.', category: 'Your curriculum' },
   { method: 'POST', path: '/taxonomy-generate', description: 'Turn a course outline into a draft learning-objective graph you can review and adopt.', category: 'Your curriculum' },
 
+  // Worksheet help (2026-11-24: these five routes were in integration.md and missing here; shapes read from
+  // src/app/api/portal/v1/{homework-build,homework-problem-plan,homework-problem-outcome,material-summary}/route.ts)
+  { method: 'POST', path: '/homework-build', description: '{ planId, first? } → 202 { started }. After plan-generate has read a worksheet (its response carries problems: [{ n, text }]), prepares every question in the background so that homework-problem-plan answers at once. first is the question number to prepare first.', category: 'Worksheet help' },
+  { method: 'GET', path: '/homework-build?planId=', description: 'Progress of that preparation: { planId, done, startedAt, updatedAt, problems: [{ n, status, hasFigure, … }] }. Never carries an answer key.', category: 'Worksheet help' },
+  { method: 'POST', path: '/homework-problem-plan', description: '{ planId, n, waitMs?, locale?, priorNote?, priorConfirmed? } → 201 { planId, verified, hasFigure, buildStatus }. Makes the one-question plan a session runs on: put the returned planId in the token as curriculum_module, with session_goal "homework-help". Waits up to waitMs (0 to 8000) for the question to be ready.', category: 'Worksheet help' },
+  { method: 'GET', path: '/homework-problem-outcome?sessionId=&planId=', description: 'How one worksheet-question session went: { outcome: "done" | "in_progress" | "needs_review", priorNote, confirmed }. Pass priorNote and confirmed back to homework-problem-plan (as priorNote, priorConfirmed) if the student returns to the question. Never returns an answer.', category: 'Worksheet help' },
+  { method: 'POST', path: '/material-summary', description: '{ materials: [ … ] } (the same file objects as plan-generate) → what an upload is about, so your page can show it before a lesson is made. 422 when a file cannot be read, 502 summary_failed when no summary could be made.', category: 'Worksheet help' },
+
   // Practice & assessment
   { method: 'POST', path: '/practice', description: '{ studentId, courseId, scope: { loId } | { topicId }, count, difficulty?, excludeIds? } → practice items with hints and answer keys.', category: 'Practice & assessment' },
   { method: 'POST', path: '/grade', description: '{ studentId, itemId, response: { text } | { imageRef } } → rubric-based score with per-criterion feedback and a model response.', category: 'Practice & assessment' },

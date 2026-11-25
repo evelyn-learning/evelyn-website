@@ -37,7 +37,22 @@ const footerLinks = {
   ],
 };
 
-export function Footer() {
+export interface FooterLink {
+  name: string;
+  href: string;
+}
+
+interface FooterProps {
+  /**
+   * Optional "Developers" group shown under Platform (2026-11-24). A prop
+   * because this footer is shared: apps/tutor renders it around its /admin
+   * tools and must stay as it was. Only marketing's AppShell passes it.
+   * The links are absolute (another host), so they render as plain anchors.
+   */
+  developerLinks?: FooterLink[];
+}
+
+export function Footer({ developerLinks }: FooterProps = {}) {
   return (
     <footer className="bg-gray-900 text-gray-300">
       <div className="container-wide py-12 md:py-16">
@@ -162,6 +177,25 @@ export function Footer() {
                 </li>
               ))}
             </ul>
+            {developerLinks && developerLinks.length > 0 && (
+              <>
+                <h3 className="mt-8 text-sm font-semibold uppercase tracking-wider text-white">
+                  Developers
+                </h3>
+                <ul className="mt-4 space-y-3">
+                  {developerLinks.map((link) => (
+                    <li key={link.name}>
+                      <a
+                        href={link.href}
+                        className="text-sm hover:text-white transition-colors"
+                      >
+                        {link.name}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </div>
 
           {/* Resources */}

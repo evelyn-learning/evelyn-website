@@ -42,5 +42,14 @@ export const supportedCurricula: SupportedCurriculum[] = [
   { region: 'United States', curricula: 'Common Core, AP, SAT/ACT' },
 ];
 
-export const topicCount = 200;
+/**
+ * Lesson plans in the catalogue, as a floor for "N+" on the pages (2026-11-24: was `topicCount = 200`, while
+ * the catalogue held over two thousand plans and another page said "1,000+").
+ *
+ * Counted 2026-11-24: SEED_PLANS in src/lib/tutor/lesson-plan/store.ts holds 2,172 plans whose title does not
+ * start with "[TEST]" (2,195 with the test plans). A constant, not an import: importing the store would put
+ * every plan into the portal home's bundle. scripts/test-portal-seo.ts fails if the catalogue ever holds fewer
+ * plans than this.
+ */
+export const lessonPlanCountFloor = 2100;
 export const subjectCount = subjects.length;

@@ -9,6 +9,9 @@ import { sandboxLimits } from '../../data/pricing';
 export const metadata: Metadata = {
   title: 'Sandbox terms',
   description: 'The terms for the Voice Tutor developer sandbox.',
+  // 2026-11-24: not indexed. The text is a draft awaiting review (see the note above), and a terms page is
+  // not what a search for the product should land on. Links on it are still followed.
+  robots: { index: false, follow: true },
 };
 
 const link = 'font-medium text-blue-600 underline underline-offset-2 hover:text-blue-500';

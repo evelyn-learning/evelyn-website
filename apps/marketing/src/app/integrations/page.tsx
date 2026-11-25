@@ -1,6 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import {
+  API_PRICING,
+  NPM_PACKAGE,
+  NPM_PACKAGE_URL,
+  PORTAL_LINKS,
+  PYPI_PACKAGE,
+  PYPI_PACKAGE_URL,
+} from '@/lib/portal-links';
 
 // Hero Section
 function HeroSection() {
@@ -276,8 +284,37 @@ function IntegrationOptionsSection() {
   );
 }
 
-// Developer Resources Preview
+// Developer Resources
+// 2026-11-24: the three cards said "Coming Soon" and the only link was the
+// contact form, while the Voice Tutor API has live docs, a free sandbox and
+// published packages on the developer portal. The cards now link there. The
+// portal covers the Voice Tutor only, so the copy says so and keeps a
+// "talk to us" link for everything else.
 function DeveloperResourcesSection() {
+  const resources = [
+    {
+      title: 'API Documentation',
+      description: 'Quickstart, authentication, the signed embed link, webhooks and the API reference for the Voice Tutor.',
+      icon: '📚',
+      links: [{ label: 'Read the docs', href: PORTAL_LINKS.docs, external: false }],
+    },
+    {
+      title: 'Packages',
+      description: `${NPM_PACKAGE} on npm and ${PYPI_PACKAGE} on PyPI, including an MCP server for coding assistants.`,
+      icon: '📦',
+      links: [
+        { label: 'npm', href: NPM_PACKAGE_URL, external: true },
+        { label: 'PyPI', href: PYPI_PACKAGE_URL, external: true },
+      ],
+    },
+    {
+      title: 'Integration Guide',
+      description: 'The whole integration in one file, plain enough to hand to a coding assistant.',
+      icon: '📖',
+      links: [{ label: 'Open the one-file guide', href: PORTAL_LINKS.integrationGuide, external: false }],
+    },
+  ];
+
   return (
     <section className="py-16 bg-slate-900 text-white">
       <div className="container-wide">
@@ -285,56 +322,60 @@ function DeveloperResourcesSection() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">Developer Resources</h2>
             <p className="text-xl text-slate-300">
-              Everything you need to integrate Evelyn AI into your platform
+              The Voice Tutor API is open to developers today: a hosted AI tutor with voice, a live whiteboard and typed chat, embedded by one signed link.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                title: 'API Documentation',
-                description: 'Comprehensive API reference with examples, authentication guides, and best practices.',
-                icon: '📚',
-                status: 'Coming Soon'
-              },
-              {
-                title: 'SDKs & Libraries',
-                description: 'Client libraries for popular languages to accelerate your integration.',
-                icon: '📦',
-                status: 'Coming Soon'
-              },
-              {
-                title: 'Integration Guides',
-                description: 'Step-by-step tutorials for common integration patterns and use cases.',
-                icon: '📖',
-                status: 'Coming Soon'
-              }
-            ].map((resource, idx) => (
-              <div key={idx} className="bg-white/10 backdrop-blur rounded-2xl p-6 border border-white/10">
+            {resources.map((resource) => (
+              <div key={resource.title} className="bg-white/10 backdrop-blur rounded-2xl p-6 border border-white/10 flex flex-col">
                 <span className="text-3xl mb-4 block">{resource.icon}</span>
                 <h3 className="text-lg font-semibold mb-2">{resource.title}</h3>
-                <p className="text-slate-300 text-sm mb-4">{resource.description}</p>
-                <span className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 text-emerald-300 text-xs rounded-full">
-                  <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-                  {resource.status}
-                </span>
+                <p className="text-slate-300 text-sm mb-4 flex-1 break-words">{resource.description}</p>
+                <div className="flex flex-wrap gap-x-4 gap-y-2">
+                  {resource.links.map((link) => (
+                    <a
+                      key={link.label}
+                      href={link.href}
+                      {...(link.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                      className="inline-flex items-center gap-1 text-emerald-300 text-sm font-medium hover:text-emerald-200"
+                    >
+                      {link.label}
+                      <span aria-hidden="true">→</span>
+                    </a>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
 
           <div className="text-center mt-12">
-            <p className="text-slate-400 mb-4">
-              Need early access to our developer resources?
+            <p className="text-slate-300 mb-6">
+              The free sandbox comes with {API_PRICING.sandboxMinutes} tutoring minutes. You get your keys as soon as you sign up, and no card is needed.
             </p>
-            <Link
-              href="/contact?subject=developer-access"
-              className="inline-flex items-center gap-2 text-emerald-400 font-medium hover:text-emerald-300"
-            >
-              Request Developer Preview Access
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <a
+                href={PORTAL_LINKS.sandbox}
+                className="px-6 py-3 bg-emerald-500 text-white font-semibold rounded-xl hover:bg-emerald-600 transition"
+              >
+                Get free sandbox keys
+              </a>
+              <a
+                href={PORTAL_LINKS.pricing}
+                className="px-6 py-3 border-2 border-white/30 text-white font-semibold rounded-xl hover:bg-white/10 transition"
+              >
+                API pricing
+              </a>
+            </div>
+            <p className="text-slate-400 mt-8">
+              Integrating another product, or need LTI or SSO?{' '}
+              <Link
+                href="/contact?subject=developer-access"
+                className="text-emerald-400 font-medium hover:text-emerald-300"
+              >
+                Talk to us
+              </Link>
+            </p>
           </div>
         </div>
       </div>

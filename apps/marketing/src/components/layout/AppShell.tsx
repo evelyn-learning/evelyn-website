@@ -4,6 +4,11 @@ import { usePathname, useSelectedLayoutSegment } from 'next/navigation';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { ChatWidgetWrapper } from '@/components/chat';
+import { FOOTER_DEVELOPER_LINKS, PORTAL_LINKS } from '@/lib/portal-links';
+
+// 2026-11-24: www had no path to the developer portal. The shared Header and
+// Footer take these as props so the other app that renders them is unchanged.
+const PARTNER_SIGN_IN = { name: 'Partner sign-in', href: PORTAL_LINKS.signIn };
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -36,9 +41,9 @@ export function AppShell({ children }: AppShellProps) {
   // Every other Evelyn Learning page gets the full wrapper.
   return (
     <>
-      <Header />
+      <Header utilityLink={PARTNER_SIGN_IN} />
       <main className="flex-grow">{children}</main>
-      <Footer />
+      <Footer developerLinks={FOOTER_DEVELOPER_LINKS} />
       <ChatWidgetWrapper />
     </>
   );

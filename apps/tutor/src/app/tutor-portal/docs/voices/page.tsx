@@ -3,12 +3,13 @@ import { VOICE_CODES, codeForVoiceId } from '@core/voice/voice-codes';
 import { DEMO_TEACHERS } from '@core/ai/teacher-persona';
 import { CodeBlock } from '../components/CodeBlock';
 import { Callout } from '../components/Callout';
+import { portalMetadata } from '../../seo';
+import { DocsBreadcrumb } from '../components/DocsBreadcrumb';
 import { VoiceCard } from './VoiceCard';
 
-export const metadata: Metadata = {
-  title: 'Voices and Companions',
-  robots: { index: false },
-};
+// 2026-11-24: this page was noindex with no reason given; it is public documentation like the other docs
+// pages, so it is indexable and in the sitemap.
+export const metadata: Metadata = portalMetadata('/docs/voices');
 
 const teacherVoices = VOICE_CODES.filter((v) => v.group === 'teacher');
 const characterVoices = VOICE_CODES.filter((v) => v.group === 'character');
@@ -18,6 +19,7 @@ const code = (s: string) => <code className="rounded bg-slate-100 px-1.5 py-0.5 
 export default function VoicesPage() {
   return (
     <div>
+      <DocsBreadcrumb path="/docs/voices" />
       <h1 className="mb-2 text-3xl font-bold text-slate-900">Voices and Companions</h1>
       <p className="mb-8 text-lg text-slate-600">
         Choose how your tutor sounds and who it is. A voice and a persona are separate choices: any persona can speak
@@ -52,8 +54,8 @@ export default function VoicesPage() {
 
       <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">Ready-made teachers</h2>
       <p className="mb-4 text-sm text-slate-600">
-        Send the id as {code('teacher')}. Each has its own name, teaching style and default voice. The same list, as full
-        objects you can edit, is in the {code('teachers.json')} file supplied with your credentials.
+        Send the id as {code('teacher')}. Each has its own name, teaching style and default voice. To change
+        one, send a persona object of your own instead (see below).
       </p>
       <div className="overflow-x-auto rounded-lg border border-slate-200">
         <table className="w-full text-left text-sm">

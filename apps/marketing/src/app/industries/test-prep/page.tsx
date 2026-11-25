@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import { PORTAL_LINKS } from '@/lib/portal-links';
 import { ArrowRight, CheckCircle } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -188,6 +189,14 @@ export default function TestPrepIndustryPage() {
                   </li>
                 ))}
               </ul>
+              {/* 2026-11-24: one link to the developer portal where the page already talks about the API. */}
+              <p className="mt-6 text-sm text-slate-600">
+                Want a white-label AI tutor without a custom build?{' '}
+                <a href={PORTAL_LINKS.sandbox} className="text-primary-500 font-medium hover:underline">
+                  Try the Voice Tutor API in a free sandbox
+                </a>
+                .
+              </p>
             </div>
           </div>
         </div>

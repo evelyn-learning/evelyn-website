@@ -1,9 +1,61 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+import { JsonLd } from './components/JsonLd';
+import { boardCounts } from './data/board-catalogue';
 import { voiceEngines } from './data/engines';
-import { whiteboardTypes, whiteboardCategories } from './data/whiteboard-types';
-import { subjects, supportedCurricula, topicCount } from './data/curriculum';
+import { boardGroups } from './data/whiteboard-types';
+import { subjects, supportedCurricula, lessonPlanCountFloor } from './data/curriculum';
+import { count, portalFacts, rateUsd, taughtLanguageNames, usd } from './data/facts';
 import { languageCount } from './data/languages';
 import { pricing, perSessionUsd } from './data/pricing';
+import { PORTAL_ORIGIN, PORTAL_SITE_NAME, PORTAL_TEXT_FILES, portalPage } from './portal-pages';
+import { organizationLd, portalMetadata } from './seo';
+
+const facts = portalFacts();
+const board = boardCounts();
+
+// 2026-11-24: the home page had no metadata of its own (no canonical, and the retail tutor's Open Graph).
+export const metadata: Metadata = portalMetadata('/', {
+  description: `${portalPage('/').description} ${rateUsd(facts.voicePerMinuteUsd)} per voice minute, ${count(facts.sandboxFreeMinutes)} free sandbox minutes.`,
+});
+
+/** SoftwareApplication with the two real offers (the per-minute rate and the free sandbox) and the publisher.
+ *  No ratings or reviews: there are none to state. */
+const homeLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    organizationLd,
+    {
+      '@type': 'SoftwareApplication',
+      '@id': `${PORTAL_ORIGIN}/#software`,
+      name: PORTAL_SITE_NAME,
+      url: `${PORTAL_ORIGIN}/`,
+      description: portalPage('/').description,
+      applicationCategory: ['EducationalApplication', 'DeveloperApplication'],
+      operatingSystem: 'Web',
+      inLanguage: facts.taughtLanguages.map((l) => l.code),
+      publisher: { '@id': organizationLd['@id'] },
+      offers: [
+        {
+          '@type': 'Offer',
+          name: 'Voice tutoring, per minute',
+          price: facts.voicePerMinuteUsd.toFixed(2),
+          priceCurrency: 'USD',
+          priceSpecification: { '@type': 'UnitPriceSpecification', price: facts.voicePerMinuteUsd.toFixed(2), priceCurrency: 'USD', unitCode: 'MIN', unitText: 'tutoring minute' },
+          url: `${PORTAL_ORIGIN}/pricing`,
+        },
+        {
+          '@type': 'Offer',
+          name: 'Free sandbox',
+          price: '0',
+          priceCurrency: 'USD',
+          description: `${count(facts.sandboxFreeMinutes)} free tutoring minutes on the production engine, sessions of up to ${facts.sandboxSessionMinutes} minutes. No card needed.`,
+          url: `${PORTAL_ORIGIN}/sandbox`,
+        },
+      ],
+    },
+  ],
+};
 
 function Hero() {
   return (
@@ -34,6 +86,13 @@ function Hero() {
               Read the Docs
             </Link>
           </div>
+          {/* 2026-11-24: sign-in beside the sign-up, for the partner who already has keys. */}
+          <p className="mt-5 text-sm text-blue-100">
+            Already have keys?{' '}
+            <Link href="/dashboard/login" className="font-semibold text-white underline underline-offset-4 hover:text-blue-200">
+              Sign in
+            </Link>
+          </p>
         </div>
       </div>
     </section>
@@ -42,8 +101,9 @@ function Hero() {
 
 function StatsBar() {
   const stats = [
-    { value: `${whiteboardTypes.filter((t) => t.category !== 'navigation').length}`, label: 'Whiteboard Visual Types' },
-    { value: `${topicCount}+`, label: 'Topics Covered' },
+    // 2026-11-24: was "16 Whiteboard Visual Types" (the first engine's list) and "200+ Topics Covered".
+    { value: `${board.catalogueFigures}+`, label: 'Whiteboard Figures' },
+    { value: `${count(lessonPlanCountFloor)}+`, label: 'Lesson Plans' },
     { value: `${languageCount}+`, label: 'Languages Supported' },
     { value: '<400ms', label: 'Response Latency' },
   ];
@@ -59,6 +119,62 @@ function StatsBar() {
             </div>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+/** The facts in plain sentences, in the server HTML: what a search engine or an assistant quotes when asked
+ *  what this is and what it costs (2026-11-24). Every number comes from data/facts.ts. The taught-languages
+ *  line names the languages a whole lesson runs in; the reach figure is the same one the stats bar shows. */
+function AtAGlance() {
+  const packs = facts.packs.map((p) => `${count(p.minutes)} minutes for ${usd(p.usd)}`);
+  const rows: Array<{ term: string; text: React.ReactNode }> = [
+    {
+      term: 'What it is',
+      text: 'A hosted AI tutor for school and college subjects. It talks with the student, listens, and teaches on a live whiteboard; the student can also type. You embed it in a web page or a mobile WebView with one signed link, under your own brand.',
+    },
+    {
+      term: 'Price',
+      text: `${rateUsd(facts.voicePerMinuteUsd)} per voice tutoring minute and ${rateUsd(facts.textPerMinuteUsd)} per typed minute. No setup fee, no monthly fee, no minimum.`,
+    },
+    {
+      term: 'Prepaid packs',
+      text: `${packs.join(', ')}. Pack minutes are good for ${facts.packValidityMonths} months.`,
+    },
+    {
+      term: 'Free sandbox',
+      text: `${count(facts.sandboxFreeMinutes)} free tutoring minutes on the production engine, in sessions of up to ${facts.sandboxSessionMinutes} minutes. Keys are shown as soon as you confirm your email address. No card and no approval step.`,
+    },
+    {
+      term: 'Lesson languages',
+      text: `Lessons can be taught entirely in ${taughtLanguageNames(facts)}; the tutor also supports learners in ${languageCount}+ languages.`,
+    },
+    {
+      term: 'How to start',
+      text: (
+        <>
+          <Link href="/sandbox" className="font-medium text-blue-600 underline underline-offset-2">Get API keys</Link>, sign a session token on
+          your server, and load the session page in an iframe. The <Link href="/docs/quickstart" className="font-medium text-blue-600 underline underline-offset-2">quick start</Link>{' '}
+          has the code; the <Link href="/docs/package" className="font-medium text-blue-600 underline underline-offset-2">developer package</Link> does the
+          signing for you in Node or Python. Coding assistants can read{' '}
+          <a href={PORTAL_TEXT_FILES.llms} className="font-medium text-blue-600 underline underline-offset-2">llms.txt</a>.
+        </>
+      ),
+    },
+  ];
+  return (
+    <section aria-labelledby="at-a-glance" className="bg-white py-14 lg:py-16">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+        <h2 id="at-a-glance" className="mb-6 text-2xl font-bold text-slate-900">At a glance</h2>
+        <dl className="divide-y divide-slate-100 border-y border-slate-100">
+          {rows.map((r) => (
+            <div key={r.term} className="grid gap-1 py-4 sm:grid-cols-[11rem_1fr] sm:gap-6">
+              <dt className="text-sm font-semibold text-slate-900">{r.term}</dt>
+              <dd className="text-sm leading-relaxed text-slate-600">{r.text}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
     </section>
   );
@@ -95,7 +211,8 @@ function HowItWorks() {
         </div>
         <div className="grid gap-8 lg:grid-cols-3">
           {steps.map((step) => (
-            <div key={step.step} className="rounded-2xl bg-white p-6 shadow-sm">
+            // min-w-0 (2026-11-24): without it the code line set the card's width and the page scrolled sideways on a phone.
+            <div key={step.step} className="min-w-0 rounded-2xl bg-white p-6 shadow-sm">
               <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
                 {step.step}
               </div>
@@ -157,40 +274,40 @@ function EngineComparison() {
   );
 }
 
+// 2026-11-24: was "16 Interactive Whiteboard Types", a list from the first engine, while the docs page said 19.
+// Both pages now show the same groups (data/whiteboard-types.ts) and the same counts (data/board-catalogue.ts).
 function WhiteboardShowcase() {
-  const visualCategories = whiteboardCategories.filter((c) => c.id !== 'navigation');
-
   return (
     <section className="bg-slate-50 py-16 lg:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-12 text-center">
-          <h2 className="text-3xl font-bold text-slate-900">
-            {whiteboardTypes.filter((t) => t.category !== 'navigation').length} Interactive Whiteboard Types
-          </h2>
-          <p className="mt-3 text-slate-600">
-            Every visual is generated in real-time, synchronized with the tutor&apos;s voice.
+          <h2 className="text-3xl font-bold text-slate-900">The Whiteboard</h2>
+          <p className="mx-auto mt-3 max-w-3xl text-slate-600">
+            The tutor writes and draws while it speaks. Everyday items (equations, notes, worked steps, tables) go up
+            as it talks. For the rest it draws from a catalogue of {board.catalogueFigures} exact figures, and{' '}
+            {board.toolFigures} more have a drawing tool of their own.
           </p>
         </div>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {visualCategories.map((cat) => {
-            const types = whiteboardTypes.filter((t) => t.category === cat.id);
-            return (
-              <div key={cat.id} className="rounded-2xl bg-white p-6 shadow-sm">
-                <h3 className="mb-1 text-lg font-semibold text-slate-900">{cat.name}</h3>
-                <p className="mb-4 text-xs text-slate-400">{cat.count} types</p>
-                <ul className="space-y-2">
-                  {types.map((type) => (
-                    <li key={type.id} className="text-sm">
-                      <span className="font-medium text-slate-700">{type.name}</span>
-                      <span className="text-slate-400"> — </span>
-                      <span className="text-slate-500">{type.exampleUse}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            );
-          })}
+          {boardGroups.map((group) => (
+            <div key={group.id} className="rounded-2xl bg-white p-6 shadow-sm">
+              <h3 className="mb-1 text-lg font-semibold text-slate-900">{group.name}</h3>
+              <p className="mb-4 text-xs text-slate-500">{group.summary}</p>
+              <ul className="space-y-2">
+                {group.items.map((item) => (
+                  <li key={item.name} className="text-sm">
+                    <span className="font-medium text-slate-700">{item.name}.</span>{' '}
+                    <span className="text-slate-500">{item.description}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
+        <p className="mt-8 text-center text-sm text-slate-600">
+          The full list of figures is on the{' '}
+          <Link href="/docs/whiteboard" className="font-medium text-blue-600 underline underline-offset-2">whiteboard page</Link> of the docs.
+        </p>
       </div>
     </section>
   );
@@ -203,7 +320,7 @@ function CurriculumSection() {
         <div className="mb-12 text-center">
           <h2 className="text-3xl font-bold text-slate-900">Curriculum Coverage</h2>
           <p className="mt-3 text-slate-600">
-            {subjects.length} subjects, {topicCount}+ topics, K through College — plus custom curriculum support.
+            {subjects.length} subjects, {count(lessonPlanCountFloor)}+ lesson plans, K through College — plus custom curriculum support.
           </p>
         </div>
 
@@ -254,7 +371,7 @@ function CurriculumSection() {
 function BuildVsBuy() {
   const rows = [
     { build: '6-12 months to build whiteboard alone', buy: 'Launch in weeks' },
-    { build: '16+ visual renderers to develop and maintain', buy: 'Battle-tested rendering engine' },
+    { build: `${board.catalogueFigures}+ figure renderers to develop and maintain`, buy: 'Battle-tested rendering engine' },
     { build: 'Voice engine integration and tuning', buy: 'Production-grade voice stack, tuned for tutoring' },
     { build: 'Ongoing AI prompt engineering', buy: 'Continuously refined pedagogy' },
     { build: 'Multi-stage validation layers to build', buy: 'Built-in quality assurance' },
@@ -319,7 +436,7 @@ function PricingSection() {
             See what&apos;s included
           </Link>
           <p className="mt-3 text-xs text-slate-400">
-            Text-only sessions ${pricing.textPerMinuteUsd.toFixed(2)}/min. Volume pricing on request.
+            Text-only sessions ${pricing.textPerMinuteUsd.toFixed(2)}/min. Prepaid packs from {usd(facts.packs[0]!.usd)}; the first {count(facts.sandboxFreeMinutes)} minutes are free.
           </p>
         </div>
       </div>
@@ -333,7 +450,8 @@ function CTASection() {
       <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
         <h2 className="mb-4 text-3xl font-bold text-white">Ready to integrate?</h2>
         <p className="mb-8 text-lg text-blue-100">
-          Get sandbox API keys and start building. Self-service onboarding — launch in 3-8 weeks.
+          Get sandbox API keys and start building. Sign-up is self-service and your keys are shown as soon as you
+          confirm your email address.
         </p>
         <div className="flex flex-wrap justify-center gap-4">
           <Link
@@ -349,6 +467,10 @@ function CTASection() {
             Quick Start Guide
           </Link>
         </div>
+        <p className="mt-5 text-sm text-blue-100">
+          Already have keys?{' '}
+          <Link href="/dashboard/login" className="font-semibold text-white underline underline-offset-4">Sign in</Link>
+        </p>
         <p className="mt-6 text-sm text-blue-200">
           Questions? <a href="mailto:info@evelynlearning.com" className="underline">info@evelynlearning.com</a>
         </p>
@@ -360,8 +482,10 @@ function CTASection() {
 export default function TutorPortalHome() {
   return (
     <>
+      <JsonLd data={homeLd} />
       <Hero />
       <StatsBar />
+      <AtAGlance />
       <HowItWorks />
       <EngineComparison />
       <WhiteboardShowcase />

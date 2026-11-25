@@ -11,6 +11,13 @@
 import { productCategories, getAllProducts } from "@/data/products";
 import { services } from "@/data/services";
 import type { ISiteSettings } from "@/models/SiteSettings";
+import {
+  API_PRICING,
+  NPM_PACKAGE,
+  PORTAL_LINKS,
+  PYPI_PACKAGE,
+  TAUGHT_LANGUAGES_SENTENCE,
+} from "@/lib/portal-links";
 
 // Plain settings data type (without Mongoose Document properties)
 type SiteSettingsData = {
@@ -160,6 +167,38 @@ function buildFAQSection(): string {
 }
 
 /**
+ * Voice Tutor API facts (2026-11-24). The chat used to say all pricing is
+ * customized and never mentioned the developer portal. These are the only
+ * API facts it may state; anything else goes to the docs or the team.
+ */
+function buildVoiceTutorApiSection(): string {
+  const packs = API_PRICING.packs
+    .map((p) => `${p.minutes} minutes for ${p.price}`)
+    .join(", ");
+  return [
+    "The **Voice Tutor API** lets a company put our AI Voice Tutor inside its own product, under its own brand (white-label).",
+    "",
+    "- **What it is:** a hosted AI tutor with voice, a live whiteboard and typed chat. The partner's server signs one link and the partner's app opens it in an iframe or a mobile WebView.",
+    `- **Price:** $${API_PRICING.voicePerMinute} per voice minute and $${API_PRICING.typedPerMinute} per typed minute. Prepaid packs: ${packs}.`,
+    `- **Free sandbox:** ${API_PRICING.sandboxMinutes} tutoring minutes free. Keys are issued as soon as the developer signs up, and no card is needed.`,
+    `- **Lesson languages:** a lesson can be taught entirely in ${TAUGHT_LANGUAGES_SENTENCE}.`,
+    "- **Worksheets:** a photo of a worksheet becomes a session where the tutor takes the student through it question by question.",
+    "- **Partner dashboard:** usage, keys, sessions and replays, billing and webhooks.",
+    `- **Developer packages:** ${NPM_PACKAGE} on npm and ${PYPI_PACKAGE} on PyPI, including an MCP server for coding assistants.`,
+    "",
+    "**Developer portal links:**",
+    `- Docs: ${PORTAL_LINKS.docs}`,
+    `- Free sandbox sign-up: ${PORTAL_LINKS.sandbox}`,
+    `- API pricing: ${PORTAL_LINKS.pricing}`,
+    `- Live demo: ${PORTAL_LINKS.demo}`,
+    `- Partner sign-in (dashboard): ${PORTAL_LINKS.signIn}`,
+    `- One-file integration guide: ${PORTAL_LINKS.integrationGuide}`,
+    "",
+    "Do not state any other API number (speed, limits, customer counts) and do not name the technology providers behind the tutor. For anything not listed here, point to the docs or offer to connect them with our team.",
+  ].join("\n");
+}
+
+/**
  * Builds the system prompt for the chat bot
  *
  * @param siteSettings - Settings from database (or uses defaults)
@@ -229,6 +268,10 @@ ${settings.stats.map((s) => `- ${s.label}: ${s.value}`).join("\n")}
 
 ${productsSection}
 
+## Voice Tutor API (for developers and partners)
+
+${buildVoiceTutorApiSection()}
+
 ## Services
 
 ${servicesSection}
@@ -258,7 +301,9 @@ ${customQASection}
 - It's better to have a back-and-forth conversation than to front-load everything
 
 **Topic-Specific Guidelines:**
-- **Pricing:** Say pricing is customized and suggest the contact page (https://evelynlearning.com/contact) or emailing ${settings.contactEmail}
+- **Pricing:** Say pricing is customized and suggest the contact page (https://evelynlearning.com/contact) or emailing ${settings.contactEmail}. The one exception is the Voice Tutor API, whose prices are public: give the per-minute prices from the Voice Tutor API section and link ${PORTAL_LINKS.pricing}
+- **API, embedding or developer questions about the Voice Tutor:** Answer from the Voice Tutor API section and link the docs (${PORTAL_LINKS.docs}) and the free sandbox (${PORTAL_LINKS.sandbox})
+- **Partner sign-in:** ${PORTAL_LINKS.signIn}
 - **Demos:** Share the demo link (${settings.demoLink}) or mention live demos on https://evelynlearning.com/products
 - **Scheduling a call:** Share the meeting link: https://calendar.app.google/wy1ke4xc69Cv1GpX6
 - **Jobs:** Direct to https://evelynlearning.com/contact
@@ -269,6 +314,8 @@ ${customQASection}
 **IMPORTANT - Always use full URLs so they appear as clickable links:**
 - Contact page: https://evelynlearning.com/contact
 - Products page: https://evelynlearning.com/products
+- Voice Tutor API docs: ${PORTAL_LINKS.docs}
+- Voice Tutor API sandbox: ${PORTAL_LINKS.sandbox}
 - Schedule meeting: https://calendar.app.google/wy1ke4xc69Cv1GpX6
 - Demo scheduling: ${settings.demoLink}
 

@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { PORTAL_LINKS } from '@/lib/portal-links';
 import {
   getAllProducts,
   productCategories,
@@ -338,6 +339,13 @@ function IntegrationSection() {
               View all integration options
               <ArrowRight className="w-4 h-4" />
             </Link>
+            {/* 2026-11-24: one link to the developer portal where the page already talks about the API. */}
+            <p className="mt-4 text-slate-400 text-sm">
+              Building the AI Voice Tutor into your own product?{' '}
+              <a href={PORTAL_LINKS.docs} className="text-slate-200 underline hover:text-white">
+                Read the Voice Tutor API docs
+              </a>
+            </p>
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import { PORTAL_LINKS } from '@/lib/portal-links';
 import { ArrowRight, CheckCircle } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -204,6 +205,14 @@ export default function EnterpriseIndustryPage() {
                   </div>
                 ))}
               </div>
+              {/* 2026-11-24: one link to the developer portal where the page already talks about the API. */}
+              <p className="mt-4 text-sm text-slate-500">
+                For the AI Voice Tutor, API access is self-serve:{' '}
+                <a href={PORTAL_LINKS.docs} className="text-emerald-600 font-medium hover:underline">
+                  read the Voice Tutor API docs
+                </a>
+                .
+              </p>
             </div>
             <div className="bg-gradient-to-br from-slate-100 to-slate-50 rounded-2xl p-8">
               <h3 className="font-bold text-slate-900 mb-4">ROI You Can Measure</h3>

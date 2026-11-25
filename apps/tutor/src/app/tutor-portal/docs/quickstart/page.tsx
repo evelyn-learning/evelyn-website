@@ -1,9 +1,15 @@
+import type { Metadata } from 'next';
 import { CodeBlock } from '../components/CodeBlock';
+import { portalMetadata } from '../../seo';
+import { DocsBreadcrumb } from '../components/DocsBreadcrumb';
+
+export const metadata: Metadata = portalMetadata('/docs/quickstart');
 import { Callout } from '../components/Callout';
 
 export default function QuickstartPage() {
   return (
     <div>
+      <DocsBreadcrumb path="/docs/quickstart" />
       <h1 className="mb-2 text-3xl font-bold text-slate-900">Getting Started</h1>
       <p className="mb-8 text-lg text-slate-600">
         Embed a working AI Voice Tutor session in your platform in four steps.
@@ -33,6 +39,13 @@ export default function QuickstartPage() {
         <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">voice</code> code: see{' '}
         <a href="/docs/voices" className="text-blue-700 underline">Voices and Companions</a>.
       </p>
+
+      <Callout type="tip" title="Prefer a package?">
+        <code>npm install @evelynlearning/tutor</code> (Node) or <code>pip install evelyn-tutor</code> (Python) signs
+        the token and the API calls for you. See the{' '}
+        <a href="/docs/package" className="font-medium underline">Developer Package</a> page. The code below needs no
+        package.
+      </Callout>
 
       <CodeBlock language="javascript" title="Node.js (no dependencies)">{`const crypto = require('crypto');
 
@@ -90,6 +103,7 @@ token = sign_embed_token({
 }, os.environ["EVELYN_PARTNER_SECRET"])`}</CodeBlock>
 
       <p className="mt-4 text-sm text-slate-500">
+        In the free sandbox a session ends at 15 minutes whatever <code className="text-xs">max_duration_minutes</code> says.
         Any JWT library works too (jsonwebtoken, PyJWT, firebase/php-jwt) with algorithm HS256.
         See <a href="/docs/embed" className="text-blue-600 underline">Embed Configuration</a> for
         every claim.
@@ -137,7 +151,8 @@ GET /api/portal/v1/gaps?studentId=stu_abc123          # learning gaps
 GET /api/portal/v1/mastery?studentId=stu_abc123       # mastery per objective`}</CodeBlock>
 
       <p className="mt-4 text-sm text-slate-600">
-        See <a href="/docs/webhooks" className="text-blue-600 underline">Events</a> for every event
+        To be told on your server instead, even when the student has closed the tab, set a webhook URL on your
+        dashboard. See <a href="/docs/webhooks" className="text-blue-600 underline">Webhooks and Events</a> for every event
         and payload, and <a href="/docs/authentication" className="text-blue-600 underline">Authentication</a>{' '}
         for request signing.
       </p>
@@ -154,8 +169,12 @@ GET /api/portal/v1/mastery?studentId=stu_abc123       # mastery per objective`}<
           practice items, grading, study notes
         </li>
         <li>
-          <a href="/docs/whiteboard" className="text-blue-600 underline">Browse whiteboard types</a> — the
+          <a href="/docs/whiteboard" className="text-blue-600 underline">See what the whiteboard draws</a> — the
           visuals the tutor draws while it speaks
+        </li>
+        <li>
+          <a href="/docs/languages" className="text-blue-600 underline">Teach in another language</a>: the lesson
+          languages and the claim that sets one
         </li>
       </ul>
     </div>

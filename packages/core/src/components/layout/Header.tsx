@@ -76,7 +76,19 @@ const navigation: NavItem[] = [
   },
 ];
 
-export function Header() {
+interface HeaderProps {
+  /**
+   * Optional quiet link in the mobile menu (2026-11-24), e.g. partner sign-in
+   * on the developer portal. Not in the desktop bar: the container is 1280px
+   * and the seven nav items already fill it (tried, the nav wrapped). A prop
+   * because this header is shared: apps/tutor's /tutor page and /admin layout
+   * render it and must stay as they were. Only marketing's AppShell passes
+   * it. Absolute URL, so a plain anchor.
+   */
+  utilityLink?: { name: string; href: string };
+}
+
+export function Header({ utilityLink }: HeaderProps = {}) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
@@ -206,6 +218,14 @@ export function Header() {
             >
               Contact
             </Link>
+            {utilityLink && (
+              <a
+                href={utilityLink.href}
+                className="block rounded-lg px-3 py-2 text-base font-medium text-gray-500 hover:bg-gray-50"
+              >
+                {utilityLink.name}
+              </a>
+            )}
             <Link
               href="/contact?demo=true"
               className="btn-primary mt-4 block w-full text-center"

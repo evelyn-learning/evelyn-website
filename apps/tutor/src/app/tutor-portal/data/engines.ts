@@ -11,14 +11,16 @@ export interface VoiceEngine {
   bestFor: string;
 }
 
-// We ship a single engine at a single per-minute rate (see pricing.ts) — the claude-brain orchestrator. The earlier
+// We ship a single engine at a single per-minute rate (see pricing.ts). The earlier
 // Standard / Premium tier split has been retired: every embed and demo
 // surface routes to the same engine. Token `engine` fields from existing
 // partners are still accepted for backwards compatibility but no longer
 // influence routing (see src/app/tutor-portal/embed/page.tsx).
 export const voiceEngines: VoiceEngine[] = [
   {
-    id: 'claude-brain',
+    // 2026-11-24: the id named the model provider, and this object is sent to the browser (the demo page is a
+    // client component). Nothing reads the id.
+    id: 'voice-tutor',
     name: 'Voice Tutor',
     description:
       'Conversational voice tutor with a structured pedagogy engine. Low-latency turn-taking, full whiteboard (equations, diagrams, tables, problems, concept maps), multi-language support, and per-student adaptive pacing.',

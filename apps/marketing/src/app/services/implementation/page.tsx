@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import { PORTAL_LINKS } from '@/lib/portal-links';
 import { ArrowRight, Settings, Database, Key, Link2, Shield, Headphones } from 'lucide-react';
 import { ServiceJsonLd, FAQPageJsonLd, BreadcrumbJsonLd } from '@/components/seo/JsonLd';
 import { FAQ } from '@/components/ui/FAQ';
@@ -230,6 +231,14 @@ export default function ImplementationPage() {
               </div>
             ))}
           </div>
+          {/* 2026-11-24: one link to the developer portal where the page already talks about the API. */}
+          <p className="text-center text-slate-500 text-sm mt-10">
+            Integrating the AI Voice Tutor yourself? Its API is public:{' '}
+            <a href={PORTAL_LINKS.docs} className="text-orange-600 font-medium hover:underline">
+              read the Voice Tutor API docs
+            </a>
+            .
+          </p>
         </div>
       </section>
 

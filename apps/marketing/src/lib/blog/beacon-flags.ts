@@ -20,12 +20,28 @@ export function isSitemapPost(post: { status: string; noindex?: boolean }): bool
 }
 
 // Copy rule: names no client, quotes no price.
-export const CTA_COPY: Record<CtaProduct, { heading: string; body: string; href: string; button: string }> = {
+// `developer` (2026-11-24): a second, quieter link to the developer portal for
+// readers who would build the product in, shown under the button. The URL is
+// written out because this file stays free of imports (pure helpers).
+export interface CtaCopy {
+  heading: string;
+  body: string;
+  href: string;
+  button: string;
+  developer?: { lead: string; label: string; href: string };
+}
+
+export const CTA_COPY: Record<CtaProduct, CtaCopy> = {
   "voice-tutor": {
     heading: "Add an AI voice tutor to your platform",
     body: "A white-label tutor that talks students through problems on a live whiteboard, under your brand.",
     href: "/products/voice-tutor",
     button: "Try the live demo",
+    developer: {
+      lead: "Building it into your product?",
+      label: "See the API docs",
+      href: "https://tutor.evelynlearning.com/docs",
+    },
   },
   academy: {
     heading: "Launch your own branded online academy",

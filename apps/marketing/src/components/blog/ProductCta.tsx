@@ -16,6 +16,15 @@ export function ProductCta({ product }: { product: CtaProduct }) {
         {copy.button}
         <ArrowRight className="h-4 w-4" />
       </Link>
+      {/* 2026-11-24: plain anchor, same tab. The portal is our own site on another host. */}
+      {copy.developer && (
+        <p className="mt-4 text-sm text-gray-600" data-cta-developer>
+          {copy.developer.lead}{" "}
+          <a href={copy.developer.href} className="font-medium text-primary-600 underline hover:text-primary-700">
+            {copy.developer.label}
+          </a>
+        </p>
+      )}
     </aside>
   );
 }

@@ -22,9 +22,11 @@ export const pricing = {
    */
   textPerMinuteUsd: 0.16,
   tagline: 'One product. One rate. No fixed fees.',
+  // 2026-11-24: "Billed monthly" removed. Self-serve accounts buy prepaid packs (partner-dashboard/billing.ts);
+  // the pricing page says how paying works, from the constants (data/facts.ts).
   description:
     'Voice + interactive-whiteboard AI tutor, embedded in your platform under your brand. ' +
-    'Billed monthly on the minutes your students actually use.',
+    'You pay for the tutoring minutes your students use.',
   includes: [
     'Voice and text tutoring with the full interactive whiteboard',
     'Structured pedagogy engine with adaptive pacing',
@@ -35,10 +37,12 @@ export const pricing = {
     'Your branding, your student IDs, your lesson context',
     'All AI inference, speech recognition and speech synthesis costs',
   ],
+  // 2026-11-24: was "billed monthly in arrears" and "volume pricing for 50,000+ minutes". Neither is what a
+  // self-serve account gets: minutes are prepaid in packs, and invoicing is by arrangement above the largest
+  // pack (the pricing page builds those lines from MINUTE_PACKS).
   billing: [
     'No setup fee, no monthly platform fee, no minimum commitment',
-    'Minutes are metered per session and billed monthly in arrears',
-    'Volume pricing available for 50,000+ minutes per month — contact us',
+    'Minutes are metered per session and drawn from your prepaid balance',
   ],
 };
 
@@ -47,7 +51,7 @@ export const sandboxLimits = {
   freeMinutes: 300,
   // 2026-11-24: 30 → 15, the partner minute pool's default session cap (what a sandbox session really ends at).
   maxSessionDurationMinutes: 15,
-  maxConcurrentSessions: 5,
+  // 2026-11-24: "5 concurrent sessions" removed. Nothing in the engine limits concurrent sessions.
 };
 
 /** A 30-minute session at list price — used wherever we quote "per session". */
@@ -58,7 +62,7 @@ export const rateFor = (mode: SessionMode = 'voice') =>
   mode === 'text' ? pricing.textPerMinuteUsd : pricing.perMinuteUsd;
 
 // 2026-10-24 (Praveen ruling): the 5-minute per-session minimum is dropped —
-// on Haiku 5.5 a short session costs well under the per-minute rate.
+// a short session now costs well under the per-minute rate.
 export const perSessionUsd = (minutes: number, mode: SessionMode = 'voice') => minutes * rateFor(mode);
 
 export function estimateMonthlyCost(

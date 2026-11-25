@@ -1,9 +1,7 @@
-import type { Metadata } from 'next';
 import { DocsSidebar } from './components/DocsSidebar';
 
-export const metadata: Metadata = {
-  title: 'Documentation',
-};
+// 2026-11-24: no metadata here. This layout's title made every docs page "Documentation | Evelyn Voice Tutor";
+// each page now sets its own title, description and canonical (portalMetadata in ../seo.ts).
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   return (

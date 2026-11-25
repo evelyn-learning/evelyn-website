@@ -1,9 +1,8 @@
 import type { Metadata } from 'next';
+import { portalMetadata } from '../seo';
 import { EngineSelector } from './components/EngineSelector';
 
-export const metadata: Metadata = {
-  title: 'Live Demo',
-};
+export const metadata: Metadata = portalMetadata('/demo');
 
 export default function DemoPage() {
   return (

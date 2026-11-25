@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { PORTAL_LINKS } from '@/lib/portal-links';
 
 // Hero Section
 function HeroSection() {
@@ -194,6 +195,14 @@ function DataSecuritySection() {
             </div>
           ))}
         </div>
+        {/* 2026-11-24: one link to the developer portal where the page already talks about the API. */}
+        <p className="text-center text-slate-500 text-sm mt-8">
+          How partner API requests are authenticated is described in the{' '}
+          <a href={`${PORTAL_LINKS.docs}/authentication`} className="text-emerald-600 hover:underline">
+            Voice Tutor API docs
+          </a>
+          .
+        </p>
       </div>
     </section>
   );
