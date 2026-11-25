@@ -1,0 +1,22 @@
+# @evelynlearning/tutor
+
+> Node package for the Evelyn Voice Tutor, a hosted AI tutor (voice, whiteboard, typed chat) that an app embeds with one signed link. The package signs session tokens and API requests, wraps the worksheet and usage endpoints, sets a project up from the command line, and includes an MCP server for coding assistants. The partner secret stays on the server.
+
+## Docs
+
+- [README](README.md): quick start, session claims, languages, worksheet flow, browser events, command line, MCP setup
+- [Integration guide](docs/integration.md): the service's own guide, bundled with the package (token claims, embed, Android WebView, worksheet API, request signing, events)
+- [Live integration guide](https://tutor.evelynlearning.com/docs/integration.md): the current copy
+- [Type declarations](dist/esm/index.d.ts): every export with its doc comments
+
+## Get keys
+
+- [Sandbox sign-up](https://tutor.evelynlearning.com/sandbox): email, confirm the link, keys shown at once. A person does this.
+- [Dashboard](https://tutor.evelynlearning.com/dashboard): keys, minutes used, sessions and replays
+
+## Use
+
+- Server: `new EvelynTutor().sessionUrl({ student_id, subject, level, topic, target_kind: 'freestyle' })` returns the URL for an iframe or WebView. Keys come from EVELYN_PARTNER_ID and EVELYN_PARTNER_SECRET.
+- Browser: `mountTutor(container, { sessionUrl, onEnded })` from `@evelynlearning/tutor/embed`.
+- Set-up: `npx @evelynlearning/tutor init`; check: `npx @evelynlearning/tutor doctor`.
+- MCP server: `npx -y -p @evelynlearning/tutor evelyn-tutor-mcp`.

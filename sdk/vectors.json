@@ -1,0 +1,90 @@
+{
+  "note": "Shared by sdk/js and sdk/python tests. Expected values were computed with the engine's own algorithms (embed-token.ts signEmbedToken; portal-contract signPortalRequest). The secret is a test value.",
+  "partnerId": "acme-sandbox",
+  "secret": "test-secret-not-a-real-key",
+  "tokens": [
+    {
+      "name": "lesson taught in Traditional Chinese",
+      "issuedAt": 1795550000,
+      "expiresInSeconds": 7200,
+      "claims": {
+        "student_id": "stu_abc123",
+        "student_name": "小安",
+        "subject": "math",
+        "level": "Grade 8",
+        "topic": "聯立方程式：加減消去法",
+        "target_kind": "freestyle",
+        "tutor_languages": [
+          "zh-TW"
+        ],
+        "input_mode": "voice",
+        "max_duration_minutes": 15
+      },
+      "payloadJson": "{\"partner_id\":\"acme-sandbox\",\"student_id\":\"stu_abc123\",\"student_name\":\"小安\",\"subject\":\"math\",\"level\":\"Grade 8\",\"topic\":\"聯立方程式：加減消去法\",\"target_kind\":\"freestyle\",\"tutor_languages\":[\"zh-TW\"],\"input_mode\":\"voice\",\"max_duration_minutes\":15,\"iat\":1795550000,\"exp\":1795557200}",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwYXJ0bmVyX2lkIjoiYWNtZS1zYW5kYm94Iiwic3R1ZGVudF9pZCI6InN0dV9hYmMxMjMiLCJzdHVkZW50X25hbWUiOiLlsI_lrokiLCJzdWJqZWN0IjoibWF0aCIsImxldmVsIjoiR3JhZGUgOCIsInRvcGljIjoi6IGv56uL5pa556iL5byP77ya5Yqg5rib5raI5Y675rOVIiwidGFyZ2V0X2tpbmQiOiJmcmVlc3R5bGUiLCJ0dXRvcl9sYW5ndWFnZXMiOlsiemgtVFciXSwiaW5wdXRfbW9kZSI6InZvaWNlIiwibWF4X2R1cmF0aW9uX21pbnV0ZXMiOjE1LCJpYXQiOjE3OTU1NTAwMDAsImV4cCI6MTc5NTU1NzIwMH0.k9wHGtSGquTFcDObaGwSthvHKfY-BKSKQ3HC8mzA2-A"
+    },
+    {
+      "name": "worksheet question with nested metadata",
+      "issuedAt": 1795550000,
+      "expiresInSeconds": 600,
+      "claims": {
+        "student_id": "stu/7 é",
+        "subject": "math",
+        "level": "Grade 6",
+        "session_goal": "homework-help",
+        "curriculum_module": "gen-0b0e5a52-6f0c-4f6e-9a57-3d1c2b7a9e10",
+        "input_mode": "text",
+        "resume": false,
+        "session_id": "sess-9012",
+        "metadata": {
+          "class_id": "math-6b",
+          "tags": [
+            "a",
+            "b"
+          ],
+          "seat": 12
+        }
+      },
+      "payloadJson": "{\"partner_id\":\"acme-sandbox\",\"student_id\":\"stu/7 é\",\"subject\":\"math\",\"level\":\"Grade 6\",\"session_goal\":\"homework-help\",\"curriculum_module\":\"gen-0b0e5a52-6f0c-4f6e-9a57-3d1c2b7a9e10\",\"input_mode\":\"text\",\"resume\":false,\"session_id\":\"sess-9012\",\"metadata\":{\"class_id\":\"math-6b\",\"tags\":[\"a\",\"b\"],\"seat\":12},\"iat\":1795550000,\"exp\":1795550600}",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwYXJ0bmVyX2lkIjoiYWNtZS1zYW5kYm94Iiwic3R1ZGVudF9pZCI6InN0dS83IMOpIiwic3ViamVjdCI6Im1hdGgiLCJsZXZlbCI6IkdyYWRlIDYiLCJzZXNzaW9uX2dvYWwiOiJob21ld29yay1oZWxwIiwiY3VycmljdWx1bV9tb2R1bGUiOiJnZW4tMGIwZTVhNTItNmYwYy00ZjZlLTlhNTctM2QxYzJiN2E5ZTEwIiwiaW5wdXRfbW9kZSI6InRleHQiLCJyZXN1bWUiOmZhbHNlLCJzZXNzaW9uX2lkIjoic2Vzcy05MDEyIiwibWV0YWRhdGEiOnsiY2xhc3NfaWQiOiJtYXRoLTZiIiwidGFncyI6WyJhIiwiYiJdLCJzZWF0IjoxMn0sImlhdCI6MTc5NTU1MDAwMCwiZXhwIjoxNzk1NTUwNjAwfQ.FT12MwdxGaB9SXFJHQgD_mpSblTGt94aqzpUv5vclaI"
+    }
+  ],
+  "requests": [
+    {
+      "name": "GET with no body",
+      "method": "GET",
+      "path": "/api/portal/v1/usage",
+      "timestamp": 1795550000000,
+      "body": "",
+      "signingString": "1795550000000.GET./api/portal/v1/usage.",
+      "signature": "60e906b9504c89e10e8587678bfc2726c0e7571dbacbba801d912c06f2de23ad"
+    },
+    {
+      "name": "GET with a query string",
+      "method": "GET",
+      "path": "/api/portal/v1/sessions/summary?ids=sess-1%2Csess-2",
+      "timestamp": 1795550000123,
+      "body": "",
+      "signingString": "1795550000123.GET./api/portal/v1/sessions/summary?ids=sess-1%2Csess-2.",
+      "signature": "ca7767c06a5b36f24ad815991675eeffdd56d08633d8fc54527a7435599720a2"
+    },
+    {
+      "name": "POST with a JSON body",
+      "method": "POST",
+      "path": "/api/portal/v1/homework-problem-plan",
+      "timestamp": 1795550000456,
+      "body": "{\"planId\":\"gen-1\",\"n\":3,\"waitMs\":8000}",
+      "signingString": "1795550000456.POST./api/portal/v1/homework-problem-plan.{\"planId\":\"gen-1\",\"n\":3,\"waitMs\":8000}",
+      "signature": "eb644f091a4e76ed5525cff52fec37287e0bf98479aa1e90eeffa915ee413d53"
+    },
+    {
+      "name": "POST with non-ASCII text in the body",
+      "method": "post",
+      "path": "/api/portal/v1/plan-generate",
+      "timestamp": 1795550000789,
+      "body": "{\"text\":\"國二數學作業\",\"subject\":\"math\",\"grade\":\"Grade 8\",\"goal\":\"homework-help\"}",
+      "signingString": "1795550000789.POST./api/portal/v1/plan-generate.{\"text\":\"國二數學作業\",\"subject\":\"math\",\"grade\":\"Grade 8\",\"goal\":\"homework-help\"}",
+      "signature": "3ab885782c83ab4fb9ae961d73f8aea2f1c6cb4fdb56695114dc0e2b2fdfa999"
+    }
+  ]
+}

@@ -15,6 +15,12 @@ import {
 } from '../src/lib/tutor/partner-dashboard/service';
 
 import { POOL_CALLS_FLOOR, POOL_CALLS_PER_CAP_MINUTE, poolCallCeiling, poolGuardVerdict, poolServerGuardOn } from '../src/lib/tutor/portal/pool-server-guard';
+import { sessionsCsv } from '../src/lib/tutor/partner-dashboard/data';
+import { admitRefusedLine, partnerApiLogOn } from '../src/lib/tutor/partner-dashboard/api-log';
+import { isDashboardAdmin, parseAdminAction } from '../src/lib/tutor/partner-dashboard/admin';
+import { createHmac } from 'node:crypto';
+import { checkWebhookUrl, checkWebhookUrlShape, isPrivateAddress, signWebhook, webhookBody } from '../src/lib/tutor/partner-dashboard/webhooks';
+import { MINUTE_PACKS, billingEnv, checkoutForm, mayBuy, packById, paidCheckoutFromEvent, perMinute, verifyStripeSignature } from '../src/lib/tutor/partner-dashboard/billing';
 
 let passed = 0; let failed = 0;
 const pending: Promise<void>[] = [];
@@ -272,7 +278,7 @@ test('every dashboard route that changes something asks for a same-origin reques
   }
   for (const r of ['start', 'verify', 'logout']) assert.match(src(`app/api/tutor-portal/dashboard/${r}/route.ts`), /sameOrigin\(req\)/, r);
   const data = src('lib/tutor/partner-dashboard/data.ts');
-  assert.equal((data.match(/TutorSession\.(?:find|findOne|countDocuments)\(/g) ?? []).length, (data.match(/sourcePartnerId: partnerId/g) ?? []).length + 1, 'each query names the partner (one shares a filter object)');
+  assert.equal((data.match(/TutorSession\.(?:find|findOne|countDocuments|aggregate)(?:<[^(]*>)?\(/g) ?? []).length, (data.match(/sourcePartnerId: partnerId/g) ?? []).length + 1, 'each query names the partner (one shares a filter object)');
 });
 test('a new partner gets its pool before its row, and the pool is never skipped', () => {
   const st = src('lib/tutor/partner-dashboard/mongo-store.ts');
@@ -298,6 +304,111 @@ test('the gate asks the guard for a partner token and answers 402; the switch de
   const g = src('lib/tutor/demo-gate/enforce.ts');
   assert.match(g, /await poolServerGuard\(p\.partner_id\)/); assert.match(g, /status: 402/);
   assert.equal(poolServerGuardOn({} as NodeJS.ProcessEnv), true); assert.equal(poolServerGuardOn({ TUTOR_POOL_SERVER_GUARD: 'off' } as unknown as NodeJS.ProcessEnv), false);
+});
+
+console.log('students, export, API log, owner view');
+test('the CSV escapes commas, quotes and line breaks, and disarms cells a spreadsheet would run', () => {
+  const csv = sessionsCsv([{ sessionId: 's1', studentId: '=HYPERLINK("x")', startedAt: '2026-11-24T00:00:00.000Z', minutes: 2.5, status: 'completed', languages: ['zh-TW', 'en'], subject: 'math', topic: 'a, "b"\nc', inputMode: 'voice', messages: 4, test: false }]);
+  const [head, line] = csv.split('\r\n');
+  assert.equal(head, 'session_id,student_id,started_at,minutes,status,languages,subject,topic,mode,messages');
+  assert.ok(line.startsWith('s1,"\'=HYPERLINK(""x"")",2026-11-24T00:00:00.000Z,2.5,completed,zh-TW en,math,"a, ""b""'));
+});
+test('a refused call is logged once a second per claimed partner; the log has an off switch', () => {
+  assert.equal(admitRefusedLine('zz-flood', 1000), true); assert.equal(admitRefusedLine('zz-flood', 1500), false);
+  assert.equal(admitRefusedLine('zz-other', 1500), true); assert.equal(admitRefusedLine('zz-flood', 2001), true);
+  assert.equal(partnerApiLogOn({} as NodeJS.ProcessEnv), true); assert.equal(partnerApiLogOn({ PARTNER_API_LOG: 'off' } as unknown as NodeJS.ProcessEnv), false);
+  assert.match(src('lib/tutor/portal/auth.ts'), /recordPartnerApiCall\(\{ partnerId: req\.headers\.get\(PORTAL_PARTNER_HEADER\)/);
+  assert.doesNotMatch(src('lib/tutor/partner-dashboard/api-log.ts'), /u\.search|rawBody|body:/, 'no query string, no body');
+});
+test('the owner view is for the listed emails only, and its actions are checked', () => {
+  const env = { PARTNER_DASHBOARD_ADMINS: 'A@x.io, b@y.io' } as unknown as NodeJS.ProcessEnv;
+  assert.ok(isDashboardAdmin('a@x.io', env) && isDashboardAdmin('B@Y.io', env)); assert.ok(!isDashboardAdmin('c@z.io', env) && !isDashboardAdmin(null, env));
+  assert.ok(isDashboardAdmin('praveen@evelynlearning.com', {} as NodeJS.ProcessEnv));
+  assert.deepEqual(parseAdminAction({ action: 'add_minutes', partnerId: 'acme', minutes: 300 }), { action: 'add_minutes', partnerId: 'acme', minutes: 300 });
+  assert.deepEqual(parseAdminAction({ action: 'suspend', partnerId: 'acme' }), { action: 'suspend', partnerId: 'acme' });
+  for (const bad of [null, {}, { action: 'add_minutes', partnerId: 'acme', minutes: -5 }, { action: 'add_minutes', partnerId: 'acme', minutes: 1.5 }, { action: 'add_minutes', partnerId: 'acme', minutes: 1e9 }, { action: 'delete', partnerId: 'acme' }, { action: 'suspend', partnerId: 'Acme Co' }, { action: 'suspend', partnerId: { $ne: '' } }]) assert.equal(parseAdminAction(bad), null, JSON.stringify(bad));
+  const route = src('app/api/tutor-portal/dashboard/admin/partners/route.ts');
+  assert.equal((route.match(/if \(!isDashboardAdmin\(a\.account\.email\)\) return json\(\{ error: 'not_found' \}, 404\)/g) ?? []).length, 2);
+  assert.match(src('lib/tutor/partner-dashboard/admin.ts'), /\$inc: \{ capSec: a\.minutes \* 60 \}/);
+});
+test('erasing a student is the owner\'s, scoped to the account\'s partner', () => {
+  const r = src('app/api/tutor-portal/dashboard/students/route.ts');
+  assert.match(r, /a\.account\.role !== 'owner'\) return json\(\{ error: 'owner_only' \}, 403\)/);
+  assert.match(r, /eraseStudentData\(\{ partnerId: a\.account\.partnerId, externalStudentId: body\.studentId \}\)/);
+});
+
+console.log('webhooks to the partner');
+test('a webhook URL must be HTTPS, public, with no credentials and an ordinary port', () => {
+  assert.deepEqual(checkWebhookUrlShape('https://api.acme.io/hooks/evelyn?x=1#frag'), { ok: true, url: 'https://api.acme.io/hooks/evelyn?x=1' });
+  const bad: Array<[unknown, string]> = [['http://api.acme.io/h', 'https_only'], ['https://user:pw@acme.io/h', 'no_credentials'], ['https://acme.io:22/h', 'bad_port'], ['https://localhost/h', 'private_host'], ['https://intranet/h', 'private_host'], ['https://db.internal/h', 'private_host'], ['https://127.0.0.1/h', 'private_host'], ['https://10.1.2.3/h', 'private_host'], ['https://169.254.169.254/latest/meta-data', 'private_host'], ['https://[::1]/h', 'private_host'], ['https://[::ffff:10.0.0.1]/h', 'private_host'], ['ftp://acme.io', 'https_only'], ['not a url', 'invalid_url'], [5, 'invalid_url'], ['https://a.io/' + 'x'.repeat(600), 'invalid_url']];
+  for (const [u, why] of bad) assert.deepEqual(checkWebhookUrlShape(u), { ok: false, error: why }, String(u));
+});
+test('private address ranges, v4 and v6', () => {
+  for (const ip of ['0.0.0.0', '10.0.0.1', '100.64.0.1', '127.0.0.1', '169.254.1.1', '172.16.0.1', '172.31.255.255', '192.168.1.1', '198.18.0.1', '224.0.0.1', '255.255.255.255', '::', '::1', 'fc00::1', 'fd12::1', 'fe80::1', 'ff02::1', '::ffff:192.168.0.1', 'nonsense']) assert.equal(isPrivateAddress(ip), true, ip);
+  for (const ip of ['8.8.8.8', '172.32.0.1', '100.63.0.1', '193.0.0.1', '2606:4700::1111', '::ffff:8.8.8.8']) assert.equal(isPrivateAddress(ip), ip === '::ffff:8.8.8.8' ? false : false, ip);
+});
+test('a host that resolves to a private address is refused, at save and before each send', async () => {
+  assert.deepEqual(await checkWebhookUrl('https://hooks.acme.io/x', async () => ['93.184.216.34']), { ok: true, url: 'https://hooks.acme.io/x' });
+  assert.deepEqual(await checkWebhookUrl('https://rebind.acme.io/x', async () => ['93.184.216.34', '10.0.0.5']), { ok: false, error: 'private_host' });
+  assert.deepEqual(await checkWebhookUrl('https://nowhere.acme.io/x', async () => { throw new Error('ENOTFOUND'); }), { ok: false, error: 'invalid_url' });
+  const w = src('lib/tutor/partner-dashboard/webhooks.ts');
+  assert.ok((w.match(/await checkWebhookUrl\(/g) ?? []).length >= 3); assert.equal((w.match(/redirect: 'manual'/g) ?? []).length, (w.match(/await fetch\(/g) ?? []).length);
+});
+test('the webhook body and its signature: the partner\'s secret over timestamp.body', () => {
+  const body = webhookBody('acme', 'session.ended', { session_id: 's1' }, Date.parse('2026-11-24T00:00:00Z'), 'evt_1');
+  assert.equal(body, '{"id":"evt_1","type":"session.ended","created":"2026-11-24T00:00:00.000Z","partner_id":"acme","data":{"session_id":"s1"}}');
+  assert.equal(signWebhook('secret', 1795500000000, body), createHmac('sha256', 'secret').update(`1795500000000.${body}`).digest('hex'));
+});
+test('a session\'s end is told once, from the save of its end', () => {
+  const r = src('app/api/tutor/session-usage/route.ts');
+  assert.match(r, /if \(status !== "active"\) notifySessionEnded\(who\.partnerId, sessionId\)/);
+  assert.match(src('models/PartnerWebhookDelivery.ts'), /index\(\{ partnerId: 1, event: 1, key: 1 \}, \{ unique: true \}\)/);
+});
+
+console.log('billing');
+test('the packs: per-minute price falls with size from the published rate', () => {
+  assert.deepEqual(MINUTE_PACKS.map((p) => [p.minutes, p.usd, perMinute(p)]), [[500, 100, 0.2], [2500, 450, 0.18], [10000, 1600, 0.16]]);
+  assert.equal(packById('pack_2500')!.minutes, 2500); assert.equal(packById('nope'), null); assert.equal(packById({ $ne: '' }), null);
+});
+test('no key: nothing is on sale; a test key sells only to the listed test buyers; a live key to everyone', () => {
+  assert.equal(billingEnv({} as NodeJS.ProcessEnv), null); assert.equal(billingEnv({ STRIPE_SECRET_KEY: 'whatever' } as unknown as NodeJS.ProcessEnv), null);
+  const t = billingEnv({ STRIPE_SECRET_KEY: 'sk_test_x', STRIPE_WEBHOOK_SECRET: 'whsec_x', PARTNER_BILLING_TEST_BUYERS: 'A@x.io' } as unknown as NodeJS.ProcessEnv)!;
+  assert.equal(t.live, false); assert.equal(mayBuy(t, 'a@x.io'), true); assert.equal(mayBuy(t, 'b@x.io'), false);
+  const l = billingEnv({ STRIPE_SECRET_KEY: 'sk_live_x', STRIPE_WEBHOOK_SECRET: 'whsec_x' } as unknown as NodeJS.ProcessEnv)!;
+  assert.equal(l.live, true); assert.equal(mayBuy(l, 'anyone@x.io'), true);
+  assert.equal(mayBuy(billingEnv({ STRIPE_SECRET_KEY: 'sk_live_x' } as unknown as NodeJS.ProcessEnv), 'anyone@x.io'), false, 'no webhook secret: a payment could not be credited');
+  assert.equal(mayBuy(null, 'a@x.io'), false);
+});
+test('the checkout asks Stripe for the pack\'s price and carries the partner and the pack', () => {
+  const f = checkoutForm({ pack: packById('pack_2500')!, partnerId: 'acme', email: 'd@acme.io', customerId: 'cus_1', origin: 'https://tutor.example', automaticTax: false });
+  assert.equal(f.mode, 'payment'); assert.equal(f['line_items[0][price_data][unit_amount]'], 45000); assert.equal(f['metadata[partner_id]'], 'acme'); assert.equal(f['metadata[pack_id]'], 'pack_2500');
+  assert.equal(f.success_url, 'https://tutor.example/dashboard/billing?paid={CHECKOUT_SESSION_ID}'); assert.equal('automatic_tax[enabled]' in f, false);
+  assert.equal(checkoutForm({ pack: packById('pack_500')!, partnerId: 'acme', email: 'd@acme.io', customerId: 'cus_1', origin: 'https://t.e', automaticTax: true })['automatic_tax[enabled]'], true);
+});
+test('Stripe\'s signature: right secret and fresh timestamp only', () => {
+  const body = '{"id":"evt_1"}'; const now = 1795500000000; const t = Math.floor(now / 1000);
+  const sig = createHmac('sha256', 'whsec_a').update(`${t}.${body}`).digest('hex');
+  assert.equal(verifyStripeSignature(body, `t=${t},v1=${sig}`, 'whsec_a', now), true);
+  assert.equal(verifyStripeSignature(body, `t=${t},v1=deadbeef,v1=${sig}`, 'whsec_a', now), true, 'a rotated secret sends two');
+  assert.equal(verifyStripeSignature(body + ' ', `t=${t},v1=${sig}`, 'whsec_a', now), false);
+  assert.equal(verifyStripeSignature(body, `t=${t},v1=${sig}`, 'whsec_b', now), false);
+  assert.equal(verifyStripeSignature(body, `t=${t},v1=${sig}`, 'whsec_a', now + 301_000), false, 'replayed later');
+  for (const h of [null, '', 'v1=' + sig, `t=abc,v1=${sig}`, `t=${t}`]) assert.equal(verifyStripeSignature(body, h, 'whsec_a', now), false);
+});
+test('only a paid checkout of one of our packs, at the pack\'s price, is credited; the minutes come from the pack table', () => {
+  const ev = (o: Record<string, unknown>, type = 'checkout.session.completed') => ({ type, livemode: false, data: { object: { id: 'cs_1', mode: 'payment', payment_status: 'paid', amount_subtotal: 10000, amount_total: 10800, currency: 'usd', metadata: { partner_id: 'acme', pack_id: 'pack_500', minutes: '999999', by: 'd@acme.io' }, ...o } } });
+  assert.deepEqual(paidCheckoutFromEvent(ev({})), { sessionId: 'cs_1', partnerId: 'acme', packId: 'pack_500', minutes: 500, amountCents: 10800, currency: 'usd', by: 'd@acme.io', livemode: false });
+  assert.ok(paidCheckoutFromEvent(ev({}, 'checkout.session.async_payment_succeeded')));
+  for (const o of [{ payment_status: 'unpaid' }, { mode: 'subscription' }, { amount_subtotal: 100, amount_total: 100 }, { currency: 'inr' }, { metadata: { partner_id: 'acme', pack_id: 'pack_x' } }, { metadata: { partner_id: 'Bad Id', pack_id: 'pack_500' } }, { metadata: {} }, { id: '' }]) assert.equal(paidCheckoutFromEvent(ev(o)), null, JSON.stringify(o));
+  assert.equal(paidCheckoutFromEvent(ev({}, 'payment_intent.succeeded')), null); assert.equal(paidCheckoutFromEvent(null), null);
+});
+test('a pack is credited once: the claim is one step, and the webhook is the only thing that credits', () => {
+  const b = src('lib/tutor/partner-dashboard/billing.ts');
+  assert.match(b, /findOneAndUpdate\(\{ stripeSessionId: p\.sessionId, creditedAt: \{ \$exists: false \} \}/);
+  assert.match(src('models/PartnerPurchase.ts'), /stripeSessionId: \{ type: String, required: true, unique: true \}/);
+  const hook = src('app/api/tutor-portal/billing/stripe-webhook/route.ts');
+  assert.ok(hook.indexOf('verifyStripeSignature') < hook.indexOf('JSON.parse')); assert.match(hook, /paid\.livemode !== b\.live/);
+  for (const r of ['billing/route.ts', 'billing/checkout/route.ts', 'billing/portal/route.ts']) assert.doesNotMatch(src(`app/api/tutor-portal/dashboard/${r}`), /creditPurchase/, r);
 });
 
 void Promise.all(pending).then(() => {

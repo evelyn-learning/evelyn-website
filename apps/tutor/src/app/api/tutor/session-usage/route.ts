@@ -20,6 +20,8 @@ import { sendPoolAlert } from "@/lib/tutor/portal/partner-pool-alerts";
 import { PartnerModel } from "@/models/Partner";
 import { mongoDashStore, serviceEnv } from "@/lib/tutor/partner-dashboard/mongo-store";
 import { noteFirstSession } from "@/lib/tutor/partner-dashboard/service";
+import { notifyPoolLine, notifySessionEnded } from "@/lib/tutor/partner-dashboard/webhooks";
+import { notifyPartnerOfPoolLine } from "@/lib/tutor/partner-dashboard/pool-notice";
 import { buildAttemptSpanWrite, durationBehindSpans, planAttemptSave, sessionActiveSeconds, type AttemptSavePlan } from "@/lib/tutor/recordings/active-seconds";
 import { clientTotalsMax, usageTotalsBehind } from "@/lib/tutor/ai/usage-totals";import { homeworkSolvedFromDebugEvents } from '@/lib/tutor/lesson-plan/homework-ledger';
 import { runSummaryForSession } from '@/lib/tutor/portal/learner-summary-store';
@@ -622,6 +624,8 @@ export async function POST(req: NextRequest) {
             });
             // A self-serve partner's first charged session is told to us, once (partner-dashboard/service.ts
             // noteFirstSession; Praveen 2026-11-24). Never awaited: it must not slow or sink the save.
+            // The partner's own server is told of the ending too (partner-dashboard/webhooks.ts), once per session.
+            if (status !== "active") notifySessionEnded(who.partnerId, sessionId);
             if (result.charged && status !== "active") {
               void noteFirstSession(mongoDashStore(), serviceEnv(), {
                 partnerId: who.partnerId, sessionId, minutes: (typeof body.duration === "number" ? body.duration : 0) / 60,
@@ -639,6 +643,8 @@ export async function POST(req: NextRequest) {
                   .catch(() => partnerId)
                   .then((partnerName) => {
                     for (const which of result.crossed) {
+                      notifyPoolLine(partnerId, which, snap.usedSec, snap.capSec);
+                      notifyPartnerOfPoolLine(partnerId, which, snap.usedSec, snap.capSec);
                       void sendPoolAlert({ partnerId, partnerName, usedSec: snap.usedSec, capSec: snap.capSec, which });
                     }
                   });

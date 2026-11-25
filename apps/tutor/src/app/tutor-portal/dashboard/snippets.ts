@@ -125,3 +125,51 @@ export const eventsSnippet = `window.addEventListener('message', (e) => {
   if (type === 'evelyn:session_started') console.log('started', data.session_id);
   if (type === 'evelyn:session_ended') console.log('ended', data.session_id, data.duration);
 });`;
+
+/** What our server POSTs to a partner's webhook when a session ends (the body, as sent). */
+export function webhookPayloadExample(partnerId: string): string {
+  return JSON.stringify({
+    id: '0b7e6c1e-3c1b-4f2a-9a55-2f6d1c0e8a41',
+    type: 'session.ended',
+    created: '2026-11-24T18:03:11.000Z',
+    partner_id: partnerId,
+    data: {
+      session_id: '6741d2f0a3b4c5d6e7f80912',
+      student_id: 'your-internal-student-id',
+      started_at: '2026-11-24T17:56:19.000Z',
+      ended_at: '2026-11-24T18:03:11.000Z',
+      duration_seconds: 412,
+      status: 'completed',
+      languages: ['zh-TW'],
+      subject: 'math',
+      topic: 'Solving linear equations',
+      input_mode: 'voice',
+      message_count: 23,
+    },
+  }, null, 2);
+}
+
+/** Checking a webhook's signature in Node (Express). The body must be the raw bytes, before any JSON parsing. */
+export const webhookVerifySnippet = `const crypto = require('crypto');
+const express = require('express');
+const app = express();
+
+app.post('/hooks/evelyn', express.raw({ type: 'application/json' }), (req, res) => {
+  const timestamp = req.get('x-evelyn-timestamp') || '';
+  const signature = req.get('x-evelyn-signature') || '';
+
+  // Refuse anything more than 5 minutes old.
+  if (!/^\\d+$/.test(timestamp) || Math.abs(Date.now() - Number(timestamp)) > 5 * 60 * 1000) return res.sendStatus(400);
+
+  const expected = crypto.createHmac('sha256', process.env.EVELYN_PARTNER_SECRET)
+    .update(timestamp + '.')
+    .update(req.body)   // a Buffer: the raw body, exactly as sent
+    .digest();
+  const given = Buffer.from(signature, 'hex');
+  if (given.length !== expected.length || !crypto.timingSafeEqual(given, expected)) return res.sendStatus(401);
+
+  const event = JSON.parse(req.body);
+  // Answer first, work after: we wait 6 seconds for a 2xx.
+  res.sendStatus(200);
+  handle(event);   // event.type, event.data
+});`;

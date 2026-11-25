@@ -61,7 +61,7 @@ export default function DashboardOverviewPage() {
       </PageHeader>
 
       <div className="space-y-6">
-        <Card title="Sandbox minutes">
+        <Card title="Tutoring minutes">
           {pool.pooled ? (
             <>
               <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
@@ -69,10 +69,13 @@ export default function DashboardOverviewPage() {
                   <span className="text-2xl font-semibold tabular-nums text-slate-900">{num(pool.usedMinutes)}</span>
                   {' '}of {num(pool.capMinutes)} minutes used
                 </p>
-                <p className="text-sm font-medium tabular-nums text-slate-700">{num(pool.remainingMinutes)} left</p>
+                <p className="text-sm font-medium tabular-nums text-slate-700">
+                  {num(pool.remainingMinutes)} left
+                  <Link href="/dashboard/billing" className={`ml-3 ${linkClass}`}>Add minutes</Link>
+                </p>
               </div>
               <div
-                role="progressbar" aria-label="Sandbox minutes used" aria-valuemin={0} aria-valuemax={pool.capMinutes} aria-valuenow={pool.usedMinutes}
+                role="progressbar" aria-label="Tutoring minutes used" aria-valuemin={0} aria-valuemax={pool.capMinutes} aria-valuenow={pool.usedMinutes}
                 aria-valuetext={`${num(pool.usedMinutes)} of ${num(pool.capMinutes)} minutes used`}
                 className="h-2.5 overflow-hidden rounded-full bg-slate-100"
               >
@@ -81,8 +84,9 @@ export default function DashboardOverviewPage() {
               <p className="mt-3 text-sm text-slate-500">Sessions capped at {num(pool.sessionMaxMinutes)} minutes.</p>
               {pool.exhausted && (
                 <p role="status" className="mt-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
-                  Your sandbox minutes are used up, so new sessions will not start. Write to{' '}
-                  <a href="mailto:info@evelynlearning.com" className="font-medium underline">info@evelynlearning.com</a> for more, or to move to production.
+                  Your minutes are used up, so new sessions will not start.{' '}
+                  <Link href="/dashboard/billing" className="font-medium underline">Add minutes</Link> on the Billing page, or write to{' '}
+                  <a href="mailto:info@evelynlearning.com" className="font-medium underline">info@evelynlearning.com</a>.
                 </p>
               )}
             </>

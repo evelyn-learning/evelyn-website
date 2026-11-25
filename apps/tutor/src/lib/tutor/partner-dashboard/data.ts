@@ -76,3 +76,39 @@ export async function sessionReplayLink(partnerId: string, sessionId: string, or
   const token = await signReplayToken({ partner_id: partnerId, student_id: d.studentId, session_id: sessionId, ttlSec: 3600 });
   return token ? replayUrl(token, origin) : null;
 }
+
+export interface StudentRow { studentId: string; sessions: number; minutes: number; lastSessionAt: string; languages: string[] }
+
+/** The partner's students, by their own student ids: sessions, minutes and the last lesson. Newest first. */
+export async function listStudents(partnerId: string, limit = 200): Promise<{ rows: StudentRow[]; total: number }> {
+  await connectDB();
+  const grouped = await TutorSession.aggregate<{ _id: string; sessions: number; seconds: number; last: Date; languages: string[][] }>([
+    { $match: { sourcePartnerId: partnerId, studentId: { $nin: [null, ''] } } },
+    { $group: { _id: '$studentId', sessions: { $sum: 1 }, seconds: { $sum: { $ifNull: ['$duration', 0] } }, last: { $max: '$startedAt' }, languages: { $addToSet: '$tutorLanguages' } } },
+    { $sort: { last: -1 } },
+    { $limit: 2000 },
+  ]);
+  const rows = grouped.slice(0, Math.min(500, Math.max(1, limit))).map((g) => ({
+    studentId: g._id, sessions: g.sessions, minutes: tenth(g.seconds), lastSessionAt: (g.last ?? new Date(0)).toISOString(),
+    languages: [...new Set((g.languages ?? []).flat().filter((x): x is string => typeof x === 'string'))],
+  }));
+  return { rows, total: grouped.length };
+}
+
+/** Every session of the partner as rows for a spreadsheet (no transcript: that is the replay's). Capped, newest first. */
+export async function exportSessionRows(partnerId: string, cap = 5000): Promise<SessionListRow[]> {
+  await connectDB();
+  const docs = await TutorSession.find({ sourcePartnerId: partnerId }, FIELDS).sort({ startedAt: -1 }).limit(cap).lean<Doc[]>();
+  return docs.map(row);
+}
+
+/** CSV with a header row. Cells that a spreadsheet would run as a formula are made plain text. */
+export function sessionsCsv(rows: readonly SessionListRow[]): string {
+  const cell = (v: string | number) => {
+    let s = String(v);
+    if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+    return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const head = ['session_id', 'student_id', 'started_at', 'minutes', 'status', 'languages', 'subject', 'topic', 'mode', 'messages'];
+  return [head.join(','), ...rows.map((r) => [r.sessionId, r.studentId, r.startedAt, r.minutes, r.status, r.languages.join(' '), r.subject, r.topic, r.inputMode, r.messages].map(cell).join(','))].join('\r\n') + '\r\n';
+}

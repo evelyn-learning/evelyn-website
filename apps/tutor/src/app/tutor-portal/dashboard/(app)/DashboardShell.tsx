@@ -10,7 +10,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpen, History, KeyRound, LayoutDashboard, LogOut, Play, UserRound } from 'lucide-react';
+import { BookOpen, Building2, CreditCard, History, KeyRound, LayoutDashboard, LogOut, Play, ScrollText, ShieldCheck, UserRound, Users, Webhook } from 'lucide-react';
 import { isUnder, portalPath } from '../../components/portal-path';
 import { DashApiError, LOGIN_PATH, dashFetch, errorText, type DashMe } from '../dash-api';
 import { Notice, focusRing, secondaryButton } from '../ui';
@@ -33,12 +33,19 @@ export function useDash(): DashContext {
 
 const sections = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
+  { href: '/dashboard/billing', label: 'Billing', icon: CreditCard },
   { href: '/dashboard/keys', label: 'API keys', icon: KeyRound },
   { href: '/dashboard/try', label: 'Try it', icon: Play },
   { href: '/dashboard/sessions', label: 'Sessions', icon: History },
+  { href: '/dashboard/students', label: 'Students', icon: Users },
+  { href: '/dashboard/api-log', label: 'API log', icon: ScrollText },
+  { href: '/dashboard/webhooks', label: 'Webhooks', icon: Webhook },
   { href: '/dashboard/docs', label: 'Docs', icon: BookOpen },
+  { href: '/dashboard/privacy', label: 'Data & privacy', icon: ShieldCheck },
   { href: '/dashboard/account', label: 'Account', icon: UserRound },
 ];
+// For the people who run Evelyn only (me.admin). Last, and set apart from the partner's own pages by a rule.
+const adminSection = { href: '/dashboard/admin', label: 'All partners', icon: Building2 };
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const path = portalPath(usePathname());
@@ -63,7 +70,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const tabs = useRef<HTMLUListElement>(null);
   useEffect(() => {
     tabs.current?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-  }, [path]);
+  }, [path, me?.admin]);
 
   const signOut = useCallback(async () => {
     setSigningOut(true);
@@ -104,10 +111,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
             <nav aria-label="Dashboard" className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
               <ul ref={tabs} className="flex gap-1 border-b border-slate-200 pb-2 lg:flex-col lg:border-0 lg:pb-0">
-                {sections.map((s) => {
+                {[...sections, ...(me?.admin ? [adminSection] : [])].map((s) => {
                   const active = isActive(s.href);
                   return (
-                    <li key={s.href} className="shrink-0">
+                    <li
+                      key={s.href}
+                      className={`shrink-0 ${s === adminSection ? 'ml-1 border-l border-slate-200 pl-2 lg:ml-0 lg:mt-2 lg:border-l-0 lg:border-t lg:pl-0 lg:pt-2' : ''}`}
+                    >
                       <Link
                         href={s.href}
                         aria-current={active ? 'page' : undefined}

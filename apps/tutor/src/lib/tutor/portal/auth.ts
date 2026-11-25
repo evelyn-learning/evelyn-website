@@ -11,6 +11,7 @@
  * explicitly wrapped with `withPortalAuth`.
  */
 
+import { recordPartnerApiCall } from '@/lib/tutor/partner-dashboard/api-log';
 import { NextResponse, type NextRequest } from 'next/server';
 import {
   PORTAL_PARTNER_HEADER,
@@ -144,6 +145,29 @@ export function __setLimitsDepsOverrideForTests(deps: LimitsDeps | null): void {
  * endpoint, so a verified partner can only read the exact student it names.
  */
 export function withPortalAuth<C = unknown>(handler: PortalRouteHandler<C>) {
+  const guarded = withPortalAuthUnlogged(handler);
+  // 2026-11-24: every call leaves one line in the partner's API log (partner-dashboard/api-log.ts), which the
+  // dashboard shows. The line is written after the response exists and is never awaited.
+  return async (req: NextRequest, ctx: C): Promise<Response> => {
+    const startedMs = Date.now();
+    const res = await guarded(req, ctx);
+    try {
+      let error: string | undefined;
+      if (res.status >= 400) {
+        // A refusal answers { error: 'unauthorized', reason: 'bad_signature' }: the reason is what tells a
+        // developer what to fix, so it is the one logged when there is one.
+        const body = (await res.clone().json().catch(() => null)) as { error?: unknown; reason?: unknown } | null;
+        if (typeof body?.reason === 'string') error = body.reason;
+        else if (typeof body?.error === 'string') error = body.error;
+      }
+      const authed = res.status !== 401;
+      recordPartnerApiCall({ partnerId: req.headers.get(PORTAL_PARTNER_HEADER), authed, method: req.method, pathname: new URL(req.url).pathname, status: res.status, error, startedMs });
+    } catch { /* never the call's problem */ }
+    return res;
+  };
+}
+
+function withPortalAuthUnlogged<C = unknown>(handler: PortalRouteHandler<C>) {
   return async (req: NextRequest, ctx: C): Promise<Response> => {
     const partnerId = req.headers.get(PORTAL_PARTNER_HEADER);
     const timestamp = req.headers.get(PORTAL_TIMESTAMP_HEADER);

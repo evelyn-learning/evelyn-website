@@ -1,0 +1,40 @@
+{
+  "name": "@evelynlearning/tutor",
+  "version": "0.1.0",
+  "description": "Add the Evelyn Voice Tutor to your app: signed session links, the worksheet and usage API, a setup command and an MCP server for coding assistants.",
+  "license": "MIT",
+  "author": "Evelyn Learning <info@evelynlearning.com>",
+  "homepage": "https://tutor.evelynlearning.com/docs",
+  "keywords": ["evelyn", "tutor", "ai-tutor", "voice", "education", "embed", "mcp"],
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/cjs/index.d.ts",
+  "exports": {
+    ".": {
+      "import": { "types": "./dist/esm/index.d.ts", "default": "./dist/esm/index.js" },
+      "require": { "types": "./dist/cjs/index.d.ts", "default": "./dist/cjs/index.js" }
+    },
+    "./embed": {
+      "import": { "types": "./dist/esm/embed.d.ts", "default": "./dist/esm/embed.js" },
+      "require": { "types": "./dist/cjs/embed.d.ts", "default": "./dist/cjs/embed.js" }
+    },
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "evelyn-tutor": "bin/evelyn-tutor.js",
+    "evelyn-tutor-mcp": "bin/evelyn-tutor-mcp.js"
+  },
+  "files": ["dist", "bin", "docs", "llms.txt"],
+  "sideEffects": false,
+  "engines": { "node": ">=18" },
+  "publishConfig": { "access": "public" },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.esm.json && tsc -p tsconfig.cjs.json && node -e \"require('fs').writeFileSync('dist/esm/package.json', JSON.stringify({ type: 'module' }) + '\\n')\"",
+    "test": "npm run build && node --test",
+    "prepublishOnly": "npm test"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

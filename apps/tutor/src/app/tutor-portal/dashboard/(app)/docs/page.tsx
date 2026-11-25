@@ -208,6 +208,10 @@ export default function DashboardDocsPage() {
         </table>
       </div>
       <CodeBlock language="js" title="Listening in the host page">{eventsSnippet}</CodeBlock>
+      <p className={p}>
+        To be told on your server instead, even when the student has closed the tab, set a URL on the{' '}
+        <Link href="/dashboard/webhooks" className={linkClass}>Webhooks</Link> page.
+      </p>
 
       <h2 id="usage" className={h2}>7. Usage</h2>
       <p className={p}>
