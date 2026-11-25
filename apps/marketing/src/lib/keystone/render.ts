@@ -68,10 +68,18 @@ export function renderMarkdown(md: string, opts: RenderOptions = {}): string {
   s = s.replace(/```[\s\S]*?```|`[^`\n]+`/g, (m) => slot(marked.parse(m, { async: false }) as string));
 
   // 3. Math.
-  s = s.replace(/\\\$/g, () => slot("$"));
+  // An escaped dollar is set aside so it cannot open or close math. Inside math it goes back in as \$ before the
+  // maths is typeset: left as its slot name, "$\$316032$" was typeset as the letters K S S L O T 0 K S 316032.
+  const dollars: string[] = [];
+  s = s.replace(/\\\$/g, () => {
+    const name = slot("$");
+    dollars.push(name);
+    return name;
+  });
+  const inMath = (t: string) => dollars.reduce((acc, name) => acc.split(name).join("\\$"), t);
   const m = opts.math ?? tex;
-  s = s.replace(/\$\$([\s\S]+?)\$\$/g, (_m, t: string) => `\n\n${slot(`<div class="ks-math">${m(t, true)}</div>`)}\n\n`);
-  s = s.replace(/\$([^$\n]+?)\$/g, (_m, t: string) => slot(m(t, false)));
+  s = s.replace(/\$\$([\s\S]+?)\$\$/g, (_m, t: string) => `\n\n${slot(`<div class="ks-math">${m(inMath(t), true)}</div>`)}\n\n`);
+  s = s.replace(/\$([^$\n]+?)\$/g, (_m, t: string) => slot(m(inMath(t), false)));
 
   // 4. Table captions.
   s = s.replace(/^Table:\s*(.+)$/gm, (_m, c: string) => `KSCAP${slot(esc(c.trim()))}`);
