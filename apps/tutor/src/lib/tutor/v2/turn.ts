@@ -42,7 +42,8 @@ import { V2_JA_SCRIPT, v2AnswerAsksOrDeclines, v2GoForPart, v2AskedParts, v2Opti
 import { heardAsWords } from './heard';
 import { v2IsPracticeAsk, v2LanguagesSection } from './languages';
 import { v2LessonLanguageSection } from './lesson-language-section';
-import { taughtIn } from '../voice/lesson-language';
+import { V2_SWITCH_LANGUAGE_TOOL_NAME, v2ApplySwitchLanguage, v2CurrentLanguage, v2LanguageChangedNote, v2LanguageSwitchSection, v2SwitchLanguageTool } from './language-switch';
+import { boardTaughtIn, lessonLanguageOf, taughtIn } from '../voice/lesson-language';
 import { v2ReadsByClauses } from './language-pack';
 import { v2AsksRepeat, v2AsksTheLearner, v2HandsOver, v2ReplyAsks, v2ReplyHandsOver, v2ReplySentences } from './one-question';
 import { V2_LEVEL_WAIT, V2_LEVEL_WAIT_OVER, V2_SET_WORKING_LEVEL_TOOL, v2ApplySetWorkingLevel, v2LevelCheckOn, v2MarkLevelKnownParts, v2ReopenLevelCheck, v2WorkingLevelSection } from './working-level';
@@ -239,6 +240,7 @@ export function v2SessionPart(session: V2Session): string {
         ? 'This is a spoken conversation. Your words are read aloud, so write them the way you would say them: no symbols, no lists, no headings. Speech is slow to listen to: a reply of more than about fifty words is a long one. Their words reach you through a speech recogniser, which now and then mishears a word: when what you heard makes no sense where it stands, ask what they meant.'
         : 'This is a typed conversation. They read your replies beside the board. Keep each reply short.',
       v2LessonLanguageSection(session) ?? '',
+      v2LanguageSwitchSection(session),
       session.timeBoxMinutes ? `The conversation is meant to last about ${session.timeBoxMinutes} minutes.` : '',
       session.background?.length ? `What is known about this person:\n${session.background.map((l) => `  - ${l}`).join('\n')}` : '',
       `\n${renderDiscussionMap(session.plan, discussion)}`,
@@ -256,6 +258,8 @@ export function v2SessionPart(session: V2Session): string {
     v2LanguagesSection(session.languages, session.mode, { pronunciationMeasured: v2PronunciationOn(session) }) ?? '',
     // Only for a lesson taught in another language (lesson-language-section.ts): every other session part is unchanged.
     v2LessonLanguageSection(session) ?? '',
+    // Every session: the lesson's one language, and whether and to what it may change (language-switch.ts).
+    v2LanguageSwitchSection(session),
     // Only for a partner that checks the level: every other session part is unchanged.
     v2LevelCheckOn(session) ? v2WorkingLevelSection() : '',
     // Only for a partner that measures pronunciation, in a spoken lesson: every other session part is unchanged.
@@ -336,6 +340,7 @@ export const V2_MAX_OWN_ANSWERS = 5;
 
 function applyControlTool(state: V2State, session: V2Session, name: string, args: Record<string, unknown>, nowMs: number, studentSaid: string | null = null, ctx: V2ControlCtx = { tf: v2TimeFlags() }): string {
   if (name === 'keep_listening') return 'listening';
+  if (name === V2_SWITCH_LANGUAGE_TOOL_NAME) return v2ApplySwitchLanguage(state, session, args, nowMs);
   // The student's own stop counts as their request whatever reason the close gives: a refused close tells the tutor
   // to ask what they would like next, a new question to a student who is leaving (stop-signal.ts).
   const asked = args.because === 'student_asked' || (TUTOR_V2_STOP_SIGNAL && v2StopAsked(studentSaid));
@@ -487,7 +492,9 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   /** The first reply of the session: nothing has been said by either side. */
   const opening = !state.history.length && input.studentSaid === null;
   const discussion = !!discussionOf(session.plan);
-  const studentText = v2StudentBlock(input.studentSaid, state, input.facts?.silenceSeconds, input.facts?.resumed, session, input.facts?.timeCheck, input.facts?.roomVoices);
+  // The first turn after a change of language carries the engine's note of it in place of the student's words.
+  const changedFrom = input.studentSaid === null ? lessonLanguageOf(input.facts?.languageChangedFrom) : null;
+  const studentText = changedFrom ? v2LanguageChangedNote(changedFrom, v2CurrentLanguage(session.languages)) : v2StudentBlock(input.studentSaid, state, input.facts?.silenceSeconds, input.facts?.resumed, session, input.facts?.timeCheck, input.facts?.roomVoices);
   // Task 7f: the time switches for this turn. A taught lesson's time is up at the box plus the overrun margin (F).
   const tf = v2TimeFlags(input.timeFlags, session);
   // Task 7n (PART_ASK_LANGS): the lesson's teaching languages, whose language packs read its part asks and answers.
@@ -747,7 +754,10 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const base = v2Tools(session.subject, session.topic ?? '', discussion);
   // A taught lesson's partner tools; none: the base set itself, so other sessions send byte-identical tools.
   const partnerTools = [...(v2LevelCheckOn(session) ? [V2_SET_WORKING_LEVEL_TOOL] : []), ...(v2PronunciationOn(session) ? [V2_PRACTISE_PRONUNCIATION_TOOL] : [])];
-  const tools = discussion ? base : session.homeworkSheet ? [...base, V2_SET_CURRENT_PROBLEM_TOOL, V2_NOTE_OWN_ANSWER_TOOL] : session.homework ? [...base, V2_NOTE_OWN_ANSWER_TOOL] : partnerTools.length ? [...base, ...partnerTools] : base;
+  // A session that may change language has the tool for it (language-switch.ts); one that may not has no such tool.
+  const switchTool = session.switchLanguages?.length ? [v2SwitchLanguageTool(session.switchLanguages)] : [];
+  const toolsBefore = discussion ? base : session.homeworkSheet ? [...base, V2_SET_CURRENT_PROBLEM_TOOL, V2_NOTE_OWN_ANSWER_TOOL] : session.homework ? [...base, V2_NOTE_OWN_ANSWER_TOOL] : partnerTools.length ? [...base, ...partnerTools] : base;
+  const tools = switchTool.length ? [...toolsBefore, ...switchTool] : toolsBefore;
   let messages: Anthropic.MessageParam[] = [...withCacheMark(state.history), userNow];
 
   const stored: Anthropic.MessageParam[] = [{ role: 'user', content: [{ type: 'text', text: studentText }] }];
@@ -2319,7 +2329,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // A reply that wrote its own summary has put the recap up: the plan's would be a second one.
     const wroteSummary = toolCalls.some((c) => c.name === 'annotate' && !/^not /.test(c.outcome) && String(c.args.text ?? '').split('\n').filter((l) => l.trim()).length >= 3);
     // Not in a lesson taught in another language: the plan's points are stored in English.
-    if (recapPart && points.length && taught && !reached(recapPart.id) && !hasRecapPage && !wroteSummary && state.board.pages.length && !taughtIn(session.languages)) {
+    if (recapPart && points.length && taught && !reached(recapPart.id) && !hasRecapPage && !wroteSummary && state.board.pages.length && !boardTaughtIn(session.languages)) {
       const stamp = nowMs.toString(36);
       settle({ type: 'tool_use', id: `recap_page_${stamp}`, name: 'new_page', input: { title: 'Recap' } } as Anthropic.ToolUseBlock, true);
       settle({ type: 'tool_use', id: `recap_note_${stamp}`, name: 'annotate', input: { text: points.slice(0, 6).map((x) => `- ${x.trim()}`).join('\n') } } as Anthropic.ToolUseBlock, true);
@@ -2404,7 +2414,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   }
   // A lesson taught in another language gets no board text from the plan as stored (its title and objectives are English): the
   // tutor is told to open the board itself in the lesson's language (lesson-language-section.ts).
-  if (opening && !openingFirst.length && !session.homework && !session.homeworkSheet && !state.closed && spoken.length && !paintedSoFar() && !taughtIn(session.languages)) {
+  if (opening && !openingFirst.length && !session.homework && !session.homeworkSheet && !state.closed && spoken.length && !paintedSoFar() && !boardTaughtIn(session.languages)) {
     // Standards codes are for the plan's author, not the student: "(CCSS 8.G.B.6, 8.G.B.7)" was printed on the first card (demo check, 2026-11-13).
     const noCodes = (x: string) => x.replace(/\s*\((?:[^()]*\b(?:CCSS|NGSS|TEKS|HS-|MS-|[0-9]\.[A-Z]{1,3}\.[A-Z]?\.?\d)[^()]*)\)/g, '').trim();
     // A discussion's objectives are written about the participant, for the tutor ("greater clarity about their own

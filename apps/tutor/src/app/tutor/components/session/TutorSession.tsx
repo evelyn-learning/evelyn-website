@@ -148,6 +148,10 @@ export interface TutorSessionProps {
   cartesiaVoiceSpeed?: VTRProps['cartesiaVoiceSpeed'];
   /** Bilingual tutor languages (tenant setting). Forwarded to the runtime. */
   tutorLanguages?: VTRProps['tutorLanguages'];
+  /** Tutor v2: the languages the token lets the lesson change to, and the page's handler for a change the tutor
+   *  made at the student's request (v2/language-switch.ts). */
+  switchLanguages?: unknown;
+  onLanguageSwitch?: (code: string) => void;
   /** Per-partner session behaviour (partner-session-options.ts). Forwarded. */
   openerPrefetch?: VTRProps['openerPrefetch'];
   lessonCloseAutoEnd?: VTRProps['lessonCloseAutoEnd'];
@@ -327,7 +331,7 @@ interface LessonProgressState {
 export default function TutorSession(props: TutorSessionProps) {
   const {
     subject, topic, level, studentName, studentId, embedToken, sessionId, sessionStartedAtMs,
-    sessionGoal, mockReview, refetchMockReview, lessonPlanId, voice, voiceEngine, ttsProvider, sessionMode = 'voice', brainVersion, cartesiaVoiceId, cartesiaVoiceSpeed, tutorLanguages, openerPrefetch, lessonCloseAutoEnd, levelCheck, pronunciation, speechRate, thinkingCue = false, sessionMaxMinutes,
+    sessionGoal, mockReview, refetchMockReview, lessonPlanId, voice, voiceEngine, ttsProvider, sessionMode = 'voice', brainVersion, cartesiaVoiceId, cartesiaVoiceSpeed, tutorLanguages, switchLanguages, onLanguageSwitch, openerPrefetch, lessonCloseAutoEnd, levelCheck, pronunciation, speechRate, thinkingCue = false, sessionMaxMinutes,
     topicDisplayName, headerBrand, loadDesmos = true, onEndSession, embedded, onMilestone, onTranscriptUpdate,
     onWhiteboardCommand, onUsageUpdate, onBrainUsage, onBrainBusyChange, onDebugEvent, onTrackInteraction,
     onTranscriptionStatus, onProposePlanSwap, onConfirmPlanLos, onBeforeTypedSubmit,
@@ -1790,6 +1794,8 @@ export default function TutorSession(props: TutorSessionProps) {
           cartesiaVoiceSpeed={cartesiaVoiceSpeed}
           speechRate={speechRate ?? speechRateForLevel(level)}
           tutorLanguages={tutorLanguages}
+          switchLanguages={switchLanguages}
+          onLanguageSwitch={onLanguageSwitch}
           thinkingCue={thinkingCue}
           onTranscriptUpdate={handleVoiceTranscriptUpdate}
           onWhiteboardCommand={handleVoiceWhiteboardCommand}
@@ -1827,6 +1833,8 @@ export default function TutorSession(props: TutorSessionProps) {
           levelCheck={levelCheck}
           prewarm={prewarm}
           tutorLanguages={tutorLanguages}
+          switchLanguages={switchLanguages}
+          onLanguageSwitch={onLanguageSwitch}
           sessionMaxMinutes={sessionMaxMinutes}
           sessionWrapMinutes={sessionWrapMinutes}
           sessionStopCeilingMinutes={sessionStopCeilingMinutes}

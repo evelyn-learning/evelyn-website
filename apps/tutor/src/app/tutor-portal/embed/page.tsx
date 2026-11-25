@@ -807,6 +807,8 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // mid-session plan swap can move both. For every non-open-scope token
   // neither setter is ever called and the values equal the old consts.
   const [subject, setSubject] = useState(config.subject);
+  // The language the tutor changed the lesson to, mid-lesson (null: the token's own).
+  const [switchedLanguage, setSwitchedLanguage] = useState<string | null>(null);
   const [lessonPlanId, setLessonPlanId] = useState<string | undefined>(config.curriculum_module || undefined);
   const level = config.level;
   const topic = config.topic || '';
@@ -843,7 +845,13 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // omits `teacher` hears the same natural voice as every first-party surface
   // instead of the OpenAI Realtime fallback. An explicit openai persona voice
   // is still honored. Flag TUTOR_EMBED_CARTESIA_DEFAULT ('off' = old behavior).
-  const tutorLanguages = TUTOR_EXTRA_LANGUAGES ? parseTutorLanguages(config.tutor_languages) ?? undefined : undefined;
+  // The lesson's languages: the token's, until the tutor changes the lesson's language at the student's request
+  // (v2/language-switch.ts). From then the changed-to language is the session's: the voice, the recogniser, the
+  // labels and what each turn sends all follow from this one value. 'en' is the plain English session (no list).
+  const tutorLanguages = useMemo(
+    () => (!TUTOR_EXTRA_LANGUAGES ? undefined : switchedLanguage === null ? parseTutorLanguages(config.tutor_languages) ?? undefined : switchedLanguage === 'en' ? undefined : parseTutorLanguages([switchedLanguage]) ?? undefined),
+    [config.tutor_languages, switchedLanguage],
+  );
   // The wording of this page's own screens (start fallback, expired link, session complete) in the lesson's language.
   const S = sessionStrings(tutorLanguages);
   const useCartesiaDefault = TUTOR_EMBED_CARTESIA_DEFAULT && !teacherVoice && !voiceOverrideId;
@@ -2615,6 +2623,8 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         cartesiaVoiceId={cartesiaVoiceId}
         cartesiaVoiceSpeed={cartesiaVoiceSpeed}
         tutorLanguages={tutorLanguages}
+        switchLanguages={(config as { switch_languages?: unknown }).switch_languages}
+        onLanguageSwitch={setSwitchedLanguage}
         openerPrefetch={sessionOptions.openerPrefetch}
         brainVersion={brainVersion}
         lessonCloseAutoEnd={sessionOptions.lessonCloseAutoEnd}

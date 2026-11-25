@@ -63,6 +63,12 @@ export interface PartnerSessionOptions {
    *  lesson is the product being shown; other trials (the marketing demo, Crimsora's) stay the student's to
    *  steer (Praveen 2026-10-28). Trial's other effects (no memory, no practice) stay. Default off. */
   trialKeepsPlan: boolean;
+  /** Whether a student may change the lesson's language in the middle of a lesson (v2/language-switch.ts;
+   *  Praveen 2026-11-24). 'all': to any ready language (our own demos and products, where students ask for it).
+   *  'claim': to the languages the session's token lists in `switch_languages`, and to none when it lists none
+   *  (a partner chooses for itself). 'off': never, whatever the token says (a partner whose lesson being in one
+   *  language is the product). Default 'claim'. */
+  languageSwitch: 'all' | 'claim' | 'off';
 }
 
 /** Partner rows — applied when present. A partner absent from this table
@@ -71,7 +77,8 @@ export const PARTNER_SESSION_DEFAULTS: Readonly<Record<string, Partial<PartnerSe
   // GDI Communications demo (showcase mint, tutor_languages ["en","ja"]):
   // the prefetch was built on its sessions (embed-1792338502233). Explicit so
   // the row survives a token minted without the languages claim.
-  'gdi-demo': { openerPrefetch: true, levelCheck: true, pronunciation: true },
+  // An English lesson is what GDI sells: its language never changes.
+  'gdi-demo': { openerPrefetch: true, levelCheck: true, pronunciation: true, languageSwitch: 'off' },
   // Praveen 2026-10-28: prefetch ON only for GDI; OFF for every other
   // existing partner (it is a brain call per page load). Rows for each
   // `partners` _id in production as of 2026-10-28 (registry is DB-backed), so
@@ -80,12 +87,12 @@ export const PARTNER_SESSION_DEFAULTS: Readonly<Record<string, Partial<PartnerSe
   academy: { openerPrefetch: false },
   // Praveen 2026-11-12: v2 once lesson progress, memory, resume, practice and mastery were ported. The kinds
   // of session v2 has not taken over still run on v1 (v2CanRunSession).
-  crimsora: { openerPrefetch: false, brainVersion: 'v2' },
+  crimsora: { openerPrefetch: false, brainVersion: 'v2', languageSwitch: 'all' },
   evelyn: { openerPrefetch: false },
   // Praveen 2026-11-12: the marketing demo is the first tenant on tutor v2 (the other tenants need lesson
   // progress reporting, session memory, resume and homework ported first).
-  'evelyn-marketing': { openerPrefetch: false, brainVersion: 'v2' },
-  evelyntutor: { openerPrefetch: false, brainVersion: 'v2' },
+  'evelyn-marketing': { openerPrefetch: false, brainVersion: 'v2', languageSwitch: 'all' },
+  evelyntutor: { openerPrefetch: false, brainVersion: 'v2', languageSwitch: 'all' },
   kanzoo: { openerPrefetch: false },
   // Praveen 2026-11-13: GAC moves to tutor v2 at once, homework included (docs/superpowers/plans/2026-11-13-gac-on-v2-plan.md).
   // Rollback: drop brainVersion here, or NEXT_PUBLIC_TUTOR_BRAIN_VERSIONS=greenapple=v1 in the GAC build env.
@@ -149,6 +156,7 @@ export function defaultPartnerSessionOptions(tutorLanguages: string[] | undefine
     brainVersion: 'v1',
     homeworkOnV2: false,
     trialKeepsPlan: false,
+    languageSwitch: 'claim',
     questionRead: false,
   };
 }
@@ -167,5 +175,6 @@ export function resolvePartnerSessionOptions(session: PartnerSessionLike | null 
     questionRead: row?.questionRead ?? base.questionRead,
     homeworkOnV2: row?.homeworkOnV2 ?? base.homeworkOnV2,
     trialKeepsPlan: row?.trialKeepsPlan ?? base.trialKeepsPlan,
+    languageSwitch: row?.languageSwitch ?? base.languageSwitch,
   };
 }

@@ -26,6 +26,9 @@ export interface V2Session {
   /** The session's teaching languages, the lesson's own first (`['en', 'ja']`). A second one brings in the
    *  bilingual section of the session part (languages.ts). Absent: one language. */
   languages?: string[];
+  /** The languages this lesson may change to when the student asks (language-switch.ts): codes of the
+   *  lesson-language table, never the current one. Absent or empty: it cannot change. */
+  switchLanguages?: string[];
   /** Minutes the session is meant to last, when there is a box. */
   timeBoxMinutes?: number;
   /** The minute the host's wrap starts, two before the box (partner-pool.ts `poolTimeBox`, the embed page's
@@ -166,6 +169,9 @@ export interface V2State {
   /** Level-check sessions (working-level.ts): the learner's working level, remembered from an earlier lesson or
    *  set in this one. Optional: other sessions have none. */
   workingLevel?: V2WorkingLevel;
+  /** The tutor called switch_language (language-switch.ts): the language to change to, and when. The session
+   *  page acts on it once and sends the lesson's new languages from the next turn. */
+  languageSwitch?: { to: string; at: number };
   /** Pronunciation sessions (pronunciation.ts): the armed reply, its score once in, and what it asked for. */
   pronunciation?: V2PronunciationState;
   /** Sentence-card sessions (sentence-cards.ts): the learner's sentences as the tutor's cards corrected them, the most

@@ -11,7 +11,7 @@
  * Traditional Chinese it did so correctly, with the engine's own English lines between its sentences and one
  * reply in Simplified characters. The model can teach in the language; it was never told to.
  */
-import { taughtIn } from '../voice/lesson-language';
+import { boardLanguage, taughtIn } from '../voice/lesson-language';
 import type { V2Session } from './types';
 
 /** The session part's section for a lesson taught in another language, or null for an English lesson. */
@@ -19,6 +19,10 @@ export function v2LessonLanguageSection(session: Pick<V2Session, 'languages' | '
   const lang = taughtIn(session.languages);
   if (!lang) return null;
   const L = lang.name;
+  // A language spoken in one tongue and written on the board in another (Hinglish: the mix in speech, English on
+  // the board, as Indian classrooms and textbooks have it) gets its own wording; every other lesson is unchanged.
+  const B = boardLanguage(lang);
+  if (B.code !== lang.code) return splitSection(session, lang.name, B.name, lang.writing);
   return [
     'LESSON LANGUAGE',
     // embed-1795518069724: "the board and my explanations will be in English".
@@ -33,9 +37,23 @@ export function v2LessonLanguageSection(session: Pick<V2Session, 'languages' | '
     session.mode === 'voice' ? `In speech, say notation in ${L} words, the way a teacher there says it aloud; the symbols go on the board.` : '',
     // embed-1795519284671: the recogniser wrote Taiwan Mandarin as unrelated characters; a reply built on them answers something never said.
     session.mode === 'voice' ? `The student speaks ${L}. Their words reach you through a speech recogniser, which now and then writes a word as another that sounds like it: read what they said for its sound and its sense in the lesson, and when it still makes no sense, ask them to say it again.` : '',
-    `When the student writes or speaks in another language, they are still your student: answer what they asked, in ${L}, and add a few words in their language only when they plainly did not understand ${L}. If they ask for the lesson in another language, say in one sentence that this lesson is in ${L}, and go on.`,
+    // What happens when they use or ask for another language is the CHANGING LANGUAGE section's (language-switch.ts).
     'Their name, and yours, stay as they are written.',
     // The engine's notes (facts lines, tool names and results, bracketed lines in the student's turn) are written in English.
+    `Notes from the engine in the conversation (lines in square brackets, tool results) are written in English and are for you alone: act on them, and never say them or translate them aloud.`,
+  ].filter(Boolean).join('\n');
+}
+
+/** The section for a lesson spoken in `L` and written on the board in `B`. */
+function splitSection(session: Pick<V2Session, 'mode'>, L: string, B: string, writing: readonly string[]): string {
+  return [
+    'LESSON LANGUAGE',
+    `You speak this whole lesson in ${L}, from your first word to your goodbye. Everything you write on the board (page titles, notes, problems, labels, cards, the summary) is in ${B}.`,
+    `The plan and the topic are written in ${B}: use their terms as they are on the board, and explain them aloud in ${L}.`,
+    ...writing,
+    session.mode === 'voice' ? `In speech, say every number and every piece of notation in ${B} words inside your sentence ("two x plus three equals eleven", "x squared", "three by four"), never as digits or symbols; the symbols go on the board.` : `In a typed reply the same mix is written the way students type it; numbers and notation stay as symbols.`,
+    session.mode === 'voice' ? `The student speaks ${L}. Their words reach you through a speech recogniser, which now and then writes a word as another that sounds like it: read what they said for its sound and its sense in the lesson, and when it still makes no sense, ask them to say it again.` : '',
+    'Their name, and yours, stay as they are written.',
     `Notes from the engine in the conversation (lines in square brackets, tool results) are written in English and are for you alone: act on them, and never say them or translate them aloud.`,
   ].filter(Boolean).join('\n');
 }

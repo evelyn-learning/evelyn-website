@@ -6,7 +6,7 @@
  * contains a tool name is dropped whole; everything else passes untouched.
  * This is a safety net for a rare slip, not a way of steering the tutor.
  */
-const TOOL_NAME = /\b(?:end_lesson|update_session_note|set_goal_status|track_gap|record_thinking|keep_listening|new_page|go_to_page|tutor_handwrite|show_[a-z]+(?:_[a-z]+)*)\b/;
+const TOOL_NAME = /\b(?:end_lesson|update_session_note|set_goal_status|track_gap|record_thinking|keep_listening|switch_language|new_page|go_to_page|tutor_handwrite|show_[a-z]+(?:_[a-z]+)*)\b/;
 
 /** The same slip in plain words: an order to the board said aloud ("Open a new page for it.", embed-1794500923861). */
 const BOARD_ORDER = /(?:^|[.!?]\s+)(?:open|start|turn to|create|add|begin) (?:a|the) new page\b/i;
@@ -32,7 +32,7 @@ export function stripToolTalk(text: string): string {
 }
 
 /** The tools that never draw: a reply that writes one of them as markup has slipped. */
-const CONTROL_NAMES = ['record_thinking', 'set_goal_status', 'update_session_note', 'end_lesson', 'keep_listening', 'track_gap'];
+const CONTROL_NAMES = ['record_thinking', 'set_goal_status', 'update_session_note', 'end_lesson', 'keep_listening', 'track_gap', 'switch_language'];
 
 /**
  * Takes control tools written as markup out of a reply as it streams. Board blocks are written inline, and now

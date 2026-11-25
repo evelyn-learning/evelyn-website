@@ -30,3 +30,24 @@ export function demoLanguageClaims(code: string | null | undefined): { tutor_lan
   const row = DEMO_LANGUAGES.find((l) => l.code === code);
   return row && row.code !== 'en' ? { tutor_languages: [row.code] } : {};
 }
+
+/** The live list from the tutor engine (GET /api/tutor-portal/languages), for a picker to show in place of the
+ *  built-in one: a language added to the engine then appears with no change here and no redeploy of this app.
+ *  Null on any failure or an answer of the wrong shape: the caller keeps DEMO_LANGUAGES. English is always first. */
+export async function fetchDemoLanguages(origin = ''): Promise<DemoLanguage[] | null> {
+  try {
+    const res = await fetch(`${origin}/api/tutor-portal/languages`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const body = (await res.json()) as { languages?: unknown };
+    if (!Array.isArray(body.languages)) return null;
+    const rows = body.languages.filter((l): l is DemoLanguage => !!l && typeof (l as DemoLanguage).code === 'string' && typeof (l as DemoLanguage).label === 'string' && typeof (l as DemoLanguage).english === 'string' && typeof (l as DemoLanguage).firstTopic === 'string');
+    if (!rows.some((l) => l.code === 'en')) return null;
+    return [...rows.filter((l) => l.code === 'en'), ...rows.filter((l) => l.code !== 'en')];
+  } catch { return null; }
+}
+
+/** `demoLanguageClaims` for a list that came from the engine: the code is one the engine itself offered. */
+export function languageClaims(code: string | null | undefined, offered: readonly DemoLanguage[]): { tutor_languages?: string[] } {
+  const row = offered.find((l) => l.code === code);
+  return row && row.code !== 'en' ? { tutor_languages: [row.code] } : {};
+}

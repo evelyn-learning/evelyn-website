@@ -7,6 +7,7 @@
  * calls to the whiteboard; the next state kept for the following turn. It
  * holds no audio and no lesson policy.
  */
+import { taughtIn } from '@/lib/tutor/voice/lesson-language';
 import { v2LessonLines } from '@/lib/tutor/v2/lesson-lines';
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import { homeworkProblemOf, type HomeworkProblemMeta } from '@/lib/tutor/lesson-plan/homework-problem-meta';
@@ -37,6 +38,9 @@ import { parseWorkingLevel, type WorkingLevel } from '@/lib/tutor/level/working-
 import { v2LevelEstimateDue, v2SeedWorkingLevel, v2WorkingLevelCommit } from '@/lib/tutor/v2/working-level';
 import { v2WithPronunciationHeard, type V2PronunciationHeard } from '@/lib/tutor/v2/pronunciation';
 import { V2ClosingWords, v2BoxDuringClose, v2CloseHears } from '@/lib/tutor/v2/close-mic';
+
+/** The code of the language a session's list makes it taught in ('en' for an English lesson). */
+function currentLanguageCode(languages: readonly string[] | null | undefined): string { return taughtIn(languages)?.code ?? 'en'; }
 
 export interface V2TurnsConfig {
   mode: 'text' | 'voice';
@@ -73,6 +77,11 @@ export interface V2TurnsConfig {
   topic?: string;
   /** The session's teaching languages, English first (a partner's `tutor_languages`); a second one makes the lesson bilingual (v2/languages.ts). */
   tutorLanguages?: string[];
+  /** The languages the token lets the lesson change to (`switch_languages`), sent with each turn for the route's rule. */
+  switchLanguages?: unknown;
+  /** The tutor changed the lesson's language at the student's request (v2/language-switch.ts): the page changes its
+   *  voice, recogniser, labels and `tutorLanguages` to this code; the hook then asks for the first reply in it. */
+  onLanguageSwitch?: (code: string) => void;
   /** What the partner's portal knows about the student (background.ts). */
   background?: string[];
   /** The session's id, under which its state is kept for a reload (resume.ts). */
@@ -275,6 +284,12 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       .catch((e) => c.onDebugEvent?.('working_level_estimate_failed', String((e as Error)?.message ?? e).slice(0, 80)));
   };
 
+  // A change of language (v2/language-switch.ts): the switch already acted on, the language it left, and the
+  // note owed to the next turn.
+  const switchAppliedRef = useRef(0);
+  const switchFromRef = useRef<string | null>(null);
+  const changedFromRef = useRef<string | null>(null);
+
   const runTurn = useCallback(async (studentSaid: string | null, silenceSeconds?: number, unheard?: boolean, timeCheck?: boolean) => {
     // Task 7h (CLOSE_HEARS): the closing words are still being said. Words of the student's over them call the close off
     // and the lesson goes on from them; thanks, a goodbye or a silence check let it end (v2/close-mic.ts).
@@ -336,6 +351,7 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     const session: V2ClientSession = {
       studentName: p.current.studentName, subject: p.current.subject, level: p.current.level, mode: p.current.mode,
       ...((p.current.tutorLanguages?.length ?? 0) > 0 ? { languages: p.current.tutorLanguages } : {}),
+      ...(p.current.switchLanguages !== undefined ? { switchLanguages: p.current.switchLanguages } : {}),
       ...(p.current.sessionMaxMinutes ? { timeBoxMinutes: p.current.sessionMaxMinutes } : {}),
       ...(p.current.sessionMaxMinutes && p.current.sessionWrapMinutes ? { wrapMinutes: p.current.sessionWrapMinutes } : {}),
       // Task 8h (ruling 2): the host's own maximum, so the tutor is told of a margin only where the hard stop below has one.
@@ -372,11 +388,15 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     const pageShown = () => { if (pagesHeldRef.current.painted(turnNo)) reportProgress(); };
     const roomVoices = p.current.roomVoices?.();
     const afterNote = studentSaid !== null && !!p.current.afterNote?.();
+    // The first turn after a change of language (below): sent once, with no words of the student's.
+    const languageChangedFrom = studentSaid === null ? changedFromRef.current : null;
+    if (languageChangedFrom) changedFromRef.current = null;
     try {
       const done = await streamV2Turn({
         session, state: stateRef.current, studentSaid: brainSaid, embedToken: p.current.embedToken, signal: abort.signal,
         ...(silenceSeconds ? { silenceSeconds } : {}),
         ...(timeCheck ? { timeCheck: true } : {}),
+        ...(languageChangedFrom ? { languageChangedFrom } : {}),
         ...(roomVoices ? { roomVoices } : {}),
         ...(afterNote ? { afterNote: true } : {}),
         ...(resumeTurnRef.current ? { resumed: true } : {}),
@@ -449,6 +469,9 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
       pagesHeldRef.current.done(turnNo);
       if (p.current.pronunciation) { const a = done.state.pronunciation?.armed; p.current.onPronunciationArm?.(a ? { seq: a.seq, reference: a.reference } : null); }
       requestLevelEstimate();
+      // The tutor changed the lesson's language: the page is told once; the reply in the new language is asked for
+      // when the page's languages have changed (the effect below), so that it is spoken by the new voice.
+      { const sw = done.state.languageSwitch; if (sw && sw.at !== switchAppliedRef.current) { switchAppliedRef.current = sw.at; switchFromRef.current = currentLanguageCode(p.current.tutorLanguages); p.current.onDebugEvent?.('v2_language_switch', `${switchFromRef.current} -> ${sw.to}`); p.current.onLanguageSwitch?.(sw.to); } }
       keptListeningRef.current = settled.some((c) => c.name === 'keep_listening' && !/^not /.test(c.outcome));
       reportSheet();
       if (done.state.closed) clearV2State(p.current.sessionId); else saveV2State(p.current.sessionId, done.state);
@@ -747,6 +770,15 @@ export function useV2Turns(config: V2TurnsConfig): V2Turns {
     if (!openedRef.current) { openedRef.current = true; if (!resumedRef.current) stateRef.current = v2StartClock(stateRef.current, Date.now()); p.current.onSessionStarted?.(); armHardStop(); }
     void runTurn(text);
   }, [runTurn, armHardStop]);
+
+  const languagesKey = (p.current.tutorLanguages ?? []).join(',');
+  useEffect(() => {
+    const from = switchFromRef.current;
+    if (!from || from === currentLanguageCode(p.current.tutorLanguages)) return;
+    switchFromRef.current = null;
+    changedFromRef.current = from;
+    void runTurn(null);
+  }, [languagesKey, runTurn]);
 
   const nudge = useCallback((silenceSeconds: number) => { if (openedRef.current && !busyRef.current) void runTurn(null, silenceSeconds); }, [runTurn]);
   const abort = useCallback(() => { abortRef.current?.abort(); }, []);

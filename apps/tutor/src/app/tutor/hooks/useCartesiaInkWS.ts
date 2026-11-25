@@ -768,7 +768,22 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
     };
   }, [clearWatchdog, teardownMic, teardownWS]);
 
-  // Round-7 item 3: foreground re-arm. A backgrounded tab throttles the
+  // The lesson's language changed mid-lesson (v2/language-switch.ts): another language may need another model
+  // or other hints, and those are fixed when the socket opens. The open socket is closed; the reconnect ladder
+  // opens the next one with the new values (connect reads them at that moment). The microphone stays open.
+  const recogniserKey = `${model}|${(languageHints ?? []).join(',')}`;
+  const recogniserKeyRef = useRef(recogniserKey);
+  useEffect(() => {
+    if (recogniserKeyRef.current === recogniserKey) return;
+    recogniserKeyRef.current = recogniserKey;
+    if (!enabled || intentionallyDisconnectedRef.current || !everConnectedRef.current) return;
+    console.warn(`${logPrefix} recogniser changed to ${recogniserKey}: reconnecting`);
+    reconnectAttemptsRef.current = 0;
+    try { wsRef.current?.close(); } catch { /* already closed: the ladder is running */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recogniserKey, enabled]);
+
+    // Round-7 item 3: foreground re-arm. A backgrounded tab throttles the
   // ladder's timers and drops the network, so all 3 attempts can burn out
   // with the socket already gone — no onclose ever comes and the hook
   // stays 'degraded' until reload. On visible: fresh ladder, and if the

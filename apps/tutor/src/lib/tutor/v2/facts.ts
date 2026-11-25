@@ -63,6 +63,9 @@ export interface V2TurnFacts {
   silenceSeconds?: number;
   /** No one spoke: the turn exists because the session is nearly out of time (useV2Turns). */
   timeCheck?: boolean;
+  /** The lesson's language has just been changed at the student's request (language-switch.ts): the code it was
+   *  in. This turn has no words of the student's: it is the tutor's first reply in the new language. */
+  languageChangedFrom?: string;
   /** The page was reloaded and the session has just been picked up again (resume.ts). */
   resumed?: boolean;
   /** A draft of this reply was held back, and why (homework-turn.ts). */

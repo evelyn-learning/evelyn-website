@@ -23,6 +23,8 @@ export interface V2ClientSession {
   teacher?: { name: string; nameIsRole?: boolean; style?: string; intro?: string; background?: string };
   trial?: boolean;
   background?: string[];
+  /** The languages the token lets the lesson change to (`switch_languages`); the turn route applies the partner's rule. */
+  switchLanguages?: unknown;
   /** The partner checks the learner's working level once and remembers it (working-level.ts). */
   levelCheck?: boolean;
   /** The partner measures pronunciation in spoken lessons (pronunciation.ts). */
@@ -51,6 +53,8 @@ export interface V2TurnRequest {
   silenceSeconds?: number;
   resumed?: boolean;
   timeCheck?: boolean;
+  /** The lesson's language was changed after the last reply (v2/language-switch.ts): the code it was in. */
+  languageChangedFrom?: string;
   /** Other voices in the room, left out this many times: the tutor tells the student once (room-voices.ts). */
   roomVoices?: number;
   /** The person has just closed a reviewer's note (V2FlagBar). */
@@ -72,7 +76,7 @@ export async function streamV2Turn(req: V2TurnRequest): Promise<V2TurnDone> {
   const res = await doFetch('/api/tutor/brain-v2/turn', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...(req.embedToken ? { 'x-embed-token': req.embedToken } : {}) },
-    body: JSON.stringify({ session: req.session, state: req.state, studentSaid: req.studentSaid, ...(req.silenceSeconds ? { silenceSeconds: req.silenceSeconds } : {}), ...(req.resumed ? { resumed: true } : {}), ...(req.timeCheck ? { timeCheck: true } : {}), ...(req.roomVoices ? { roomVoices: req.roomVoices } : {}), ...(req.afterNote ? { afterNote: true } : {}) }),
+    body: JSON.stringify({ session: req.session, state: req.state, studentSaid: req.studentSaid, ...(req.silenceSeconds ? { silenceSeconds: req.silenceSeconds } : {}), ...(req.resumed ? { resumed: true } : {}), ...(req.timeCheck ? { timeCheck: true } : {}), ...(req.roomVoices ? { roomVoices: req.roomVoices } : {}), ...(req.afterNote ? { afterNote: true } : {}), ...(req.languageChangedFrom ? { languageChangedFrom: req.languageChangedFrom } : {}) }),
     signal: req.signal,
   });
   if (!res.ok || !res.body) {

@@ -9,6 +9,8 @@
  *   { type: 'done', spoken, state, usage, firstTextMs, totalMs, events? }   events: Task 7q's session debug events
  *   { type: 'error', message }
  */
+import { v2SwitchLanguages } from '@/lib/tutor/v2/language-switch';
+import { lessonLanguageOf } from '@/lib/tutor/voice/lesson-language';
 import { NextRequest } from 'next/server';
 import { V2_BACKGROUND_LINE_CHARS, V2_BACKGROUND_MAX_LINES } from '@/lib/tutor/v2/background';
 import { denyIfNoDemoAccess } from '@/lib/tutor/demo-gate/enforce';
@@ -31,12 +33,13 @@ const SSE_HEADERS = { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-
 const MAX_STUDENT_CHARS = 8000;
 
 interface TurnBody {
-  session?: { studentName?: unknown; subject?: unknown; level?: unknown; mode?: unknown; languages?: unknown; timeBoxMinutes?: unknown; wrapMinutes?: unknown; stopCeilingMinutes?: unknown; lessonPlanId?: unknown; topic?: unknown; background?: unknown; teacher?: unknown; trial?: unknown; levelCheck?: unknown; pronunciation?: unknown };
+  session?: { studentName?: unknown; subject?: unknown; level?: unknown; mode?: unknown; languages?: unknown; switchLanguages?: unknown; timeBoxMinutes?: unknown; wrapMinutes?: unknown; stopCeilingMinutes?: unknown; lessonPlanId?: unknown; topic?: unknown; background?: unknown; teacher?: unknown; trial?: unknown; levelCheck?: unknown; pronunciation?: unknown };
   state?: unknown;
   studentSaid?: unknown;
   silenceSeconds?: unknown;
   resumed?: unknown;
   timeCheck?: unknown;
+  languageChangedFrom?: unknown;
   roomVoices?: unknown;
   afterNote?: unknown;
 }
@@ -72,12 +75,17 @@ export async function POST(req: NextRequest) {
   const background = Array.isArray(cfg.background) ? cfg.background.filter((x): x is string => typeof x === 'string' && !!x.trim()).slice(0, V2_BACKGROUND_MAX_LINES).map((x) => x.trim().slice(0, V2_BACKGROUND_LINE_CHARS)) : [];
   // The teaching languages, English first, only those the voice can speak and hear (tts-language.ts); none ⇒ English only.
   const languages = parseTutorLanguages(cfg.languages);
+  // The languages the lesson may change to (v2/language-switch.ts): the partner row decides, with the token's own
+  // list where the row leaves it to the token. The claims are unverified, as homework's is: a forged one only
+  // changes the language of the forger's own lesson.
+  const switchLanguages = v2SwitchLanguages({ setting: resolvePartnerSessionOptions({ partnerId: partnerClaim }).languageSwitch, claim: cfg.switchLanguages, languages, bilingual: !!languages && languages.length > 1 });
   const session: V2Session = {
     studentName: typeof cfg.studentName === 'string' ? cfg.studentName.slice(0, 80) : undefined,
     subject: cfg.subject.slice(0, 60),
     level: cfg.level.slice(0, 60),
     mode: cfg.mode === 'voice' ? 'voice' : 'text',
     ...(languages ? { languages: [...languages] } : {}),
+    ...(switchLanguages.length ? { switchLanguages } : {}),
     ...(typeof cfg.timeBoxMinutes === 'number' && cfg.timeBoxMinutes > 0 ? { timeBoxMinutes: Math.min(180, Math.round(cfg.timeBoxMinutes)) } : {}),
     // The wrap minute counts only inside a box (time-box.ts).
     ...(typeof cfg.timeBoxMinutes === 'number' && typeof cfg.wrapMinutes === 'number' && cfg.wrapMinutes > 0 && cfg.wrapMinutes < cfg.timeBoxMinutes ? { wrapMinutes: Math.round(cfg.wrapMinutes) } : {}),
@@ -108,7 +116,7 @@ export async function POST(req: NextRequest) {
       // A client that has gone (interrupted turn, closed tab) is not an error: stop writing, stop the model.
       const send = (event: Record<string, unknown>) => { if (req.signal.aborted) return; try { controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`)); } catch { /* stream already closed */ } };
       try {
-        const facts = { ...(silenceSeconds ? { silenceSeconds } : {}), ...(body.resumed === true ? { resumed: true } : {}), ...(body.timeCheck === true ? { timeCheck: true } : {}), ...(typeof body.roomVoices === 'number' && body.roomVoices > 0 ? { roomVoices: Math.min(99, Math.round(body.roomVoices)) } : {}), ...(body.afterNote === true ? { afterNote: true } : {}) };
+        const facts = { ...(silenceSeconds ? { silenceSeconds } : {}), ...(body.resumed === true ? { resumed: true } : {}), ...(body.timeCheck === true ? { timeCheck: true } : {}), ...(typeof body.roomVoices === 'number' && body.roomVoices > 0 ? { roomVoices: Math.min(99, Math.round(body.roomVoices)) } : {}), ...(body.afterNote === true ? { afterNote: true } : {}), ...(typeof body.languageChangedFrom === 'string' && lessonLanguageOf(body.languageChangedFrom) ? { languageChangedFrom: lessonLanguageOf(body.languageChangedFrom)!.code } : {}) };
         const turnInput = {
           session, state, studentSaid, signal: req.signal,
           ...(Object.keys(facts).length ? { facts } : {}),

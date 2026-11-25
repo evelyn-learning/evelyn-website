@@ -25,6 +25,10 @@ export interface LessonLanguage {
   name: string;
   /** Its name in itself, as a picker shows it. */
   ownName: string;
+  /** Its short name in English, for a picker's tooltip and for lists. */
+  label: string;
+  /** A first topic every school system teaches, named in the language of the board (a demo with no ready lesson opens on it). */
+  firstTopic: string;
   /** Cartesia Sonic `language`. */
   tts: string;
   /** Cartesia Ink model that hears it. ink-2 hears en/fr/hi/ja/es; ink-preview hears 44 languages (Mandarin among them). */
@@ -58,12 +62,12 @@ const DEVANAGARI = /\p{Script=Devanagari}/u;
 
 export const LESSON_LANGUAGES: readonly LessonLanguage[] = [
   {
-    code: 'en', base: 'en', name: 'English', ownName: 'English', tts: 'en', sttModel: 'ink-2',
+    code: 'en', base: 'en', name: 'English', ownName: 'English', label: 'English', firstTopic: 'Solving linear equations', tts: 'en', sttModel: 'ink-2',
     voices: { female: '01eaafa9-308a-4276-a017-6ab0cf061b1f', male: '86e30c1d-714b-4074-a1f2-1cb6b552fb49' },
     writing: [], ready: true,
   },
   {
-    code: 'ja', base: 'ja', name: 'Japanese', ownName: '日本語', tts: 'ja', sttModel: 'ink-2',
+    code: 'ja', base: 'ja', name: 'Japanese', ownName: '日本語', label: 'Japanese', firstTopic: '一次方程式', tts: 'ja', sttModel: 'ink-2',
     // Ayako ("friendly and calm, for providing instructions") and Tohru ("for providing guidance and instruction").
     voices: { female: '63d6f469-8c2c-489d-b53f-d36f0bbdcd4b', male: '49e02441-83ea-4c77-bda8-79fdd7f07e92' },
     script: KANA,
@@ -74,7 +78,7 @@ export const LESSON_LANGUAGES: readonly LessonLanguage[] = [
     ready: true,
   },
   {
-    code: 'zh-TW', base: 'zh', name: 'Mandarin Chinese as used in Taiwan', ownName: '繁體中文（台灣）', tts: 'zh', sttModel: 'ink-preview', sttHints: ['zh', 'en'],
+    code: 'zh-TW', base: 'zh', name: 'Mandarin Chinese as used in Taiwan', ownName: '繁體中文（台灣）', label: 'Chinese (Traditional)', firstTopic: '一元一次方程式', tts: 'zh', sttModel: 'ink-preview', sttHints: ['zh', 'en'],
     heardAs: 'traditional',
     // Yu-Hsin and Feng: Cartesia's two Taiwan-native Mandarin voices.
     voices: { female: '0f5ac064-30c7-4cf6-8748-d275f682a0d5', male: '453c418c-125e-4e5a-b048-03fec55d0963' },
@@ -87,7 +91,7 @@ export const LESSON_LANGUAGES: readonly LessonLanguage[] = [
     ready: true,
   },
   {
-    code: 'zh-CN', base: 'zh', name: 'Mandarin Chinese as used in mainland China', ownName: '简体中文', tts: 'zh', sttModel: 'ink-preview', sttHints: ['zh', 'en'],
+    code: 'zh-CN', base: 'zh', name: 'Mandarin Chinese as used in mainland China', ownName: '简体中文', label: 'Chinese (Simplified)', firstTopic: '一元一次方程', tts: 'zh', sttModel: 'ink-preview', sttHints: ['zh', 'en'],
     // Lan ("for providing guidance and instruction") and Tao ("for presentations and educational content").
     voices: { female: 'bf32f849-7bc9-4b91-8c62-954588efcc30', male: 'c59c247b-6aa9-4ab6-91f9-9eabea7dc69e' },
     script: HAN,
@@ -102,7 +106,7 @@ export const LESSON_LANGUAGES: readonly LessonLanguage[] = [
   // picked from the vendor's own descriptions and a speak-then-transcribe check (nobody has yet listened to them);
   // the recogniser choice is from the same check (ink-2 heard a short "हाँ" as "Huh." and "Sí." as "See,").
   {
-    code: 'hi', base: 'hi', name: 'Hindi', ownName: 'हिन्दी', tts: 'hi', sttModel: 'ink-preview', sttHints: ['hi', 'en'],
+    code: 'hi', base: 'hi', name: 'Hindi', ownName: 'हिन्दी', label: 'Hindi', firstTopic: 'रैखिक समीकरण', tts: 'hi', sttModel: 'ink-preview', sttHints: ['hi', 'en'],
     // Kriti ("clear explainer") and Rehan ("friendly explainer", described for educational content).
     voices: { female: '5283efe8-07d1-4e3a-b615-2ae4a81c1b73', male: '205fc552-2cce-4307-baa1-598b9dc3dd01' },
     script: DEVANAGARI,
@@ -116,7 +120,7 @@ export const LESSON_LANGUAGES: readonly LessonLanguage[] = [
     // Hinglish: Hindi mixed with English, the way most Indian students speak and are taught (Praveen 2026-11-24:
     // many are not at ease with pure Hindi spoken or written, and ask for Hindi all the same). Spoken by the Hindi
     // voice, which reads the mix naturally (an English voice does not); the board stays English.
-    code: 'hi-Latn', base: 'hi', name: 'Hinglish (Hindi mixed with English, as students in India speak)', ownName: 'Hinglish', tts: 'hi', sttModel: 'ink-preview', sttHints: ['hi', 'en'],
+    code: 'hi-Latn', base: 'hi', name: 'Hinglish (Hindi mixed with English, as students in India speak)', ownName: 'Hinglish', label: 'Hinglish', firstTopic: 'Solving linear equations', tts: 'hi', sttModel: 'ink-preview', sttHints: ['hi', 'en'],
     voices: { female: '5283efe8-07d1-4e3a-b615-2ae4a81c1b73', male: '205fc552-2cce-4307-baa1-598b9dc3dd01' },
     script: DEVANAGARI, boardIn: 'en', numbersInEnglish: true,
     writing: [
@@ -127,7 +131,7 @@ export const LESSON_LANGUAGES: readonly LessonLanguage[] = [
     ],
   },
   {
-    code: 'fr', base: 'fr', name: 'French', ownName: 'Français', tts: 'fr', sttModel: 'ink-preview', sttHints: ['fr', 'en'],
+    code: 'fr', base: 'fr', name: 'French', ownName: 'Français', label: 'French', firstTopic: 'Les équations du premier degré', tts: 'fr', sttModel: 'ink-preview', sttHints: ['fr', 'en'],
     // Maëlle B ("measured and empathetic, for thoughtful guidance and detailed explanations") and Mathis
     // ("thoughtful, measured delivery, simplifying detailed analyses"): France.
     voices: { female: '80f117a5-5196-4b64-8b4c-efda3d3ab176', male: '996ec149-0dca-4389-ad08-e2d6f906b4bf' },
@@ -137,7 +141,7 @@ export const LESSON_LANGUAGES: readonly LessonLanguage[] = [
     ],
   },
   {
-    code: 'es', base: 'es', name: 'Spanish as used in Latin America', ownName: 'Español', tts: 'es', sttModel: 'ink-preview', sttHints: ['es', 'en'],
+    code: 'es', base: 'es', name: 'Spanish as used in Latin America', ownName: 'Español', label: 'Spanish', firstTopic: 'Ecuaciones de primer grado', tts: 'es', sttModel: 'ink-preview', sttHints: ['es', 'en'],
     // Laura ("making complex information accessible, calm and friendly") and Jose ("patient explainer, for
     // listeners learning new or intricate subjects"): Mexico.
     voices: { female: '1cc00672-e9d4-455e-b3fb-31dfb7aad231', male: '3ca54c01-ef9a-4f44-9f73-adbde3a26ef8' },
@@ -213,7 +217,23 @@ export function boardLanguage(lang: LessonLanguage): LessonLanguage {
   return lang.boardIn === 'en' ? BY_CODE.get('en')! : lang;
 }
 
+/** What a picker or a public list needs of a language. */
+export interface OfferedLanguage { code: string; label: string; english: string; firstTopic: string }
+
+/** The ready languages as a picker shows them (the same shape as packages/core demo-languages.ts). */
+export function offeredLanguages(): OfferedLanguage[] {
+  return readyLessonLanguages().map((l) => ({ code: l.code, label: l.ownName.replace(/（.*）$/, ''), english: l.label, firstTopic: l.firstTopic }));
+}
+
 /** The languages that may be offered to people: rows marked ready, in the table's order. */
 export function readyLessonLanguages(): LessonLanguage[] {
   return LESSON_LANGUAGES.filter((l) => l.ready);
+}
+
+/** The language the board is written in when it is not English, or null: an English lesson, and a lesson spoken
+ *  in a mix whose board stays English (Hinglish). What the engine writes on the board itself (a first page from
+ *  the plan, a recap page) is in English, so it writes those only when this is null. */
+export function boardTaughtIn(languages: readonly string[] | null | undefined): LessonLanguage | null {
+  const row = taughtIn(languages);
+  return row && boardLanguage(row).code !== 'en' ? row : null;
 }
