@@ -366,6 +366,12 @@ run_remote_command() {
 # KEYSTONE_QUIET_MIN minutes (her open page refreshes itself, so an open tab counts), or a release or animated
 # build holding its lock. KEYSTONE_BUSY_OK=1 deploys anyway, for when the owner says to.
 KEYSTONE_QUIET_MIN="${KEYSTONE_QUIET_MIN:-15}"
+# A page open in someone's browser belongs to the build that was live when it loaded, and asks for that build's
+# script files when they click on. Deleting those files at the next deploy broke such pages (a 404 for a chunk);
+# they are now kept for a week. Their names carry a content hash, so old and new never collide. The other half of
+# the same care is NEXT_SERVER_ACTIONS_ENCRYPTION_KEY in .env.local.production: with it a button on an old page
+# still finds its action in the new build (without it every build gave every action a new id).
+STATIC_KEEP_DAYS="${STATIC_KEEP_DAYS:-7}"
 keystone_in_use() {
   run_remote_command "L=/var/log/nginx/keystone.access.log; \
     recent=\$(find \$L -mmin -$KEYSTONE_QUIET_MIN 2>/dev/null | wc -l | tr -d ' '); \
@@ -766,7 +772,7 @@ run_remote_command "cd $REMOTE_DIR && \
   STALE_FILES=\$(comm -23 /tmp/.deploy-public-manifest.$TMP_TAG.prev .deploy-public-manifest | grep -v -e '^$APP_DIR/public/images/blog/' -e '^$APP_DIR/public/client-samples/' || true) && \
   if [ -n \"\$STALE_FILES\" ]; then echo \"Pruning stale public/ files:\"; echo \"\$STALE_FILES\"; echo \"\$STALE_FILES\" | xargs -r rm -f; else echo \"No stale public/ files to prune.\"; fi && \
   rm -f /tmp/.deploy-public-manifest.$TMP_TAG.prev && \
-  if [ -s .deploy-static-manifest ]; then find $APP_DIR/.next/static -type f | LC_ALL=C sort > /tmp/.static-have.$TMP_TAG && LC_ALL=C sort .deploy-static-manifest > /tmp/.static-keep.$TMP_TAG && comm -23 /tmp/.static-have.$TMP_TAG /tmp/.static-keep.$TMP_TAG > /tmp/.static-orphans.$TMP_TAG && if [ -s /tmp/.static-orphans.$TMP_TAG ]; then echo \"Pruning \$(wc -l < /tmp/.static-orphans.$TMP_TAG) orphaned .next/static file(s) from prior builds\"; xargs -r rm -f < /tmp/.static-orphans.$TMP_TAG; else echo \"No orphaned .next/static files to prune.\"; fi && rm -f /tmp/.static-have.$TMP_TAG /tmp/.static-keep.$TMP_TAG /tmp/.static-orphans.$TMP_TAG; else echo \"WARN: .deploy-static-manifest missing/empty — skipping static prune (safety)\"; fi && \
+  if [ -s .deploy-static-manifest ]; then find $APP_DIR/.next/static -type f | LC_ALL=C sort > /tmp/.static-have.$TMP_TAG && LC_ALL=C sort .deploy-static-manifest > /tmp/.static-keep.$TMP_TAG && comm -23 /tmp/.static-have.$TMP_TAG /tmp/.static-keep.$TMP_TAG > /tmp/.static-orphans.$TMP_TAG && if [ -s /tmp/.static-orphans.$TMP_TAG ]; then echo \"\$(wc -l < /tmp/.static-orphans.$TMP_TAG) .next/static file(s) are from prior builds: kept for pages still open on them, removed once older than $STATIC_KEEP_DAYS days\"; while IFS= read -r f; do find \"\$f\" -type f -mtime +$STATIC_KEEP_DAYS -delete 2>/dev/null; done < /tmp/.static-orphans.$TMP_TAG; else echo \"No orphaned .next/static files to prune.\"; fi && rm -f /tmp/.static-have.$TMP_TAG /tmp/.static-keep.$TMP_TAG /tmp/.static-orphans.$TMP_TAG; else echo \"WARN: .deploy-static-manifest missing/empty — skipping static prune (safety)\"; fi && \
   if [ -d node_modules ] && [ \"\$(cat .deploy-lock-hash 2>/dev/null)\" = \"$LOCK_HASH\" ]; then echo \"npm ci skipped — package-lock.json unchanged since the last install ($LOCK_HASH)\"; else echo \"npm ci — lockfile changed or first install\" && npm ci --omit=dev && echo \"$LOCK_HASH\" > .deploy-lock-hash; fi && \
   (pm2 delete $PM2_NAME 2>/dev/null || true) && \
   (cd $REMOTE_DIR/$APP_DIR && pm2 start ../../node_modules/.bin/next --name $PM2_NAME --kill-timeout 10000 -- start -p $PM2_PORT) && \
