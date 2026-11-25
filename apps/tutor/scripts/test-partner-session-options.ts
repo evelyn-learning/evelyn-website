@@ -80,9 +80,9 @@ test('no partner id (retail, showcase without a token) resolves to the engine de
     { openerPrefetch: true, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false, homeworkOnV2: false, languageSwitch: 'claim', trialKeepsPlan: false }, 'a bilingual session with no partner row prefetches');
 });
 
-test('an unlisted English-only partner (test tenants, a future partner) gets no prefetch and auto-end on', () => {
+test('an unlisted English-only partner (test tenants, a future partner) gets no prefetch and auto-end on, and (2026-11-24: a partner with no row signed up by itself) tutor v2 with its homework', () => {
   for (const partnerId of ['trial', 'portalA', 'lmtest', 'revtest', 'some-future-partner']) {
-    assert.deepEqual(resolvePartnerSessionOptions({ partnerId }), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false, homeworkOnV2: false, languageSwitch: 'claim', trialKeepsPlan: false }, partnerId);
+    assert.deepEqual(resolvePartnerSessionOptions({ partnerId }), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v2', questionRead: false, homeworkOnV2: true, languageSwitch: 'claim', trialKeepsPlan: false }, partnerId);
   }
 });
 
@@ -162,8 +162,8 @@ test('the embed page hands the partner default to the claim resolver', () => {
 });
 
 test('prototype keys are not partner rows', () => {
-  assert.deepEqual(resolvePartnerSessionOptions({ partnerId: 'constructor' }), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false, homeworkOnV2: false, languageSwitch: 'claim', trialKeepsPlan: false });
-  assert.deepEqual(resolvePartnerSessionOptions({ partnerId: '__proto__' }), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v1', questionRead: false, homeworkOnV2: false, languageSwitch: 'claim', trialKeepsPlan: false });
+  assert.deepEqual(resolvePartnerSessionOptions({ partnerId: 'constructor' }), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v2', questionRead: false, homeworkOnV2: true, languageSwitch: 'claim', trialKeepsPlan: false });
+  assert.deepEqual(resolvePartnerSessionOptions({ partnerId: '__proto__' }), { openerPrefetch: false, lessonCloseAutoEnd: true, levelCheck: false, pronunciation: false, thinkingCue: true, brainVersion: 'v2', questionRead: false, homeworkOnV2: true, languageSwitch: 'claim', trialKeepsPlan: false });
 });
 
 console.log('\nWiring pins (source)');
@@ -210,7 +210,9 @@ test('GAC on tutor v2 (Praveen 2026-11-13): greenapple runs v2, homework include
   assert.equal(resolvePartnerSessionOptions({ partnerId: 'greenapple' }).homeworkOnV2, true);
   assert.equal(resolvePartnerSessionOptions({ partnerId: 'lumiq' }).brainVersion, 'v2');
   assert.equal(resolvePartnerSessionOptions({ partnerId: 'lumiq' }).homeworkOnV2, true);
-  for (const partnerId of [...Object.keys(PARTNER_SESSION_DEFAULTS).filter((p) => p !== 'greenapple' && p !== 'lumiq'), 'some-future-partner']) {
+  for (const partnerId of [...Object.keys(PARTNER_SESSION_DEFAULTS).filter((p) => p !== 'greenapple' && p !== 'lumiq')]) {
+  assert.equal(resolvePartnerSessionOptions({ partnerId: 'some-future-partner' }).homeworkOnV2, true, 'a self-serve partner');
+  assert.equal(resolvePartnerSessionOptions({}).brainVersion, 'v1', 'no partner id: the retail page is unchanged');
     assert.equal(resolvePartnerSessionOptions({ partnerId }).homeworkOnV2, false, `${partnerId}: its homework stays where it is`);
   }
 });

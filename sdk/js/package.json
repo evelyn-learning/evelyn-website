@@ -1,7 +1,7 @@
 {
   "name": "@evelynlearning/tutor",
   "version": "0.1.0",
-  "description": "Add the Evelyn Voice Tutor to your app: signed session links, the worksheet and usage API, a setup command and an MCP server for coding assistants.",
+  "description": "Add the Evelyn Voice Tutor to your app: signed session links, the worksheet and usage API, webhook verification, a setup command and an MCP server for coding assistants.",
   "license": "MIT",
   "author": "Evelyn Learning <info@evelynlearning.com>",
   "homepage": "https://tutor.evelynlearning.com/docs",
@@ -24,7 +24,7 @@
     "evelyn-tutor": "bin/evelyn-tutor.js",
     "evelyn-tutor-mcp": "bin/evelyn-tutor-mcp.js"
   },
-  "files": ["dist", "bin", "docs", "llms.txt"],
+  "files": ["dist", "bin", "docs", "llms.txt", "CHANGELOG.md"],
   "sideEffects": false,
   "engines": { "node": ">=18" },
   "publishConfig": { "access": "public" },

@@ -119,8 +119,9 @@ export const LESSON_LANGUAGES: readonly LessonLanguage[] = [
   },
   {
     // Hinglish: Hindi mixed with English, the way most Indian students speak and are taught (Praveen 2026-11-24:
-    // many are not at ease with pure Hindi spoken or written, and ask for Hindi all the same). Spoken by the Hindi
-    // voice, which reads the mix naturally (an English voice does not); the board stays English.
+    // many are not at ease with pure Hindi spoken or written, and ask for Hindi all the same). Written in Latin
+    // letters and spoken by the Hindi voice, which reads it naturally (an English voice does not); the board
+    // stays English.
     code: 'hi-Latn', base: 'hi', name: 'Hinglish (Hindi mixed with English, as students in India speak)', ownName: 'Hinglish', label: 'Hinglish', firstTopic: 'Solving linear equations', tts: 'hi', sttModel: 'ink-preview', sttHints: ['hi', 'en'],
     voices: { female: '5283efe8-07d1-4e3a-b615-2ae4a81c1b73', male: '205fc552-2cce-4307-baa1-598b9dc3dd01' },
     script: DEVANAGARI, boardIn: 'en', numbersInEnglish: true,

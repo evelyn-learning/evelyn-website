@@ -1,19 +1,19 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "evelyn-tutor"
 version = "0.1.0"
-description = "Add the Evelyn Voice Tutor to your app: signed session links and the worksheet and usage API."
+description = "Add the Evelyn Voice Tutor to your app: signed session links, the worksheet and usage API, and webhook verification."
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "Evelyn Learning", email = "info@evelynlearning.com" }]
 requires-python = ">=3.9"
 dependencies = []
 keywords = ["evelyn", "tutor", "ai-tutor", "voice", "education", "embed"]
 classifiers = [
-  "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",
   "Typing :: Typed",
 ]

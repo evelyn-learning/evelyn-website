@@ -1,6 +1,6 @@
 # @evelynlearning/tutor
 
-Add the Evelyn Voice Tutor to your app. The tutor is a hosted page (voice, whiteboard, typed chat) that you show in an iframe or a mobile WebView; your server signs a link for each session. This package signs that link, calls the worksheet and usage API, sets a project up from the command line, and gives coding assistants an MCP server so they can do the integration themselves.
+Add the Evelyn Voice Tutor to your app. The tutor is a hosted page (voice, whiteboard, typed chat) that you show in an iframe or a mobile WebView; your server signs a link for each session. This package signs that link, calls the worksheet and usage API, verifies webhooks, sets a project up from the command line, and gives coding assistants an MCP server so they can do the integration themselves.
 
 No runtime dependencies. Node 18 or later. ES modules, CommonJS and TypeScript types.
 
@@ -52,29 +52,50 @@ In an Android WebView, load the same URL directly and grant the page the microph
 | `subject`, `level` | `math`, `science`, `ela`, `social-studies` (also `cs`, `languages`), and the grade label, for example `"Grade 8"`. Send both with every session. |
 | `topic` + `target_kind: 'freestyle'` | Free text. The tutor builds the lesson on it. |
 | `curriculum_module` | A lesson plan id, in place of `topic`. Locks the session to that plan. |
-| `tutor_languages` | See Languages below. Leave it out for English. |
+| `tutor_languages` | The lesson's language, for example `['hi']`. See Languages below. Leave it out for English. |
+| `switch_languages` | Languages the student may change the lesson to by asking the tutor. See Languages below. |
 | `input_mode` | `'voice'` (default) or `'text'`. In a voice session the student can also type. |
 | `max_duration_minutes` | 1 to 120, default 30. In the sandbox a session ends at 15 minutes whatever this says. |
 | `session_id`, `resume` | Your own session id; with `resume: true` the same id continues where the student left off (kept 30 days). |
 | `student_name`, `teacher`, `voice`, `branding`, `metadata` | Optional. |
 
-The token expires after two hours (`{ expiresInSeconds }` changes that). `partner_id`, `iat` and `exp` are set for you. Obvious mistakes (no `student_id`, `tutor_languages` not an array, a duration outside 1 to 120) throw an `EvelynConfigError` that says what to change.
+The token expires after two hours (`{ expiresInSeconds }` changes that). `partner_id`, `iat` and `exp` are set for you. Obvious mistakes (no `student_id`, `tutor_languages` not an array, a duration outside 1 to 120) throw an `EvelynConfigError` that says what to change. Claims the types do not list are signed as given.
 
 ## Languages
 
-A lesson is taught in English unless `tutor_languages` says otherwise. With one of these the whole lesson (the tutor's speech, the board, the questions, the screen labels) is in that language, and the tutor understands the student speaking it:
+A lesson is taught in English unless `tutor_languages` names another language. The whole lesson is then in that language: the tutor speaks it with a native voice, understands the student speaking it, and writes the board, the questions and the screen labels in it.
 
 | `tutor_languages` | Lesson language |
 |---|---|
+| `['ja']` | Japanese |
 | `['zh-TW']` | Traditional Chinese (Taiwan) |
 | `['zh-CN']` | Simplified Chinese |
-| `['ja']` | Japanese |
+| `['hi']` | Hindi |
+| `['hi-Latn']` | Hinglish: spoken Hindi mixed with English, as students in India speak; the board stays in English |
+| `['fr']` | French |
+| `['es']` | Spanish (Latin America) |
 
 ```js
 tutor.sessionUrl({
   student_id: 'stu_abc123', student_name: '小安', subject: 'math', level: 'Grade 8',
   topic: '聯立方程式：加減消去法', target_kind: 'freestyle', tutor_languages: ['zh-TW'],
 });
+```
+
+The service adds languages, so read the list rather than writing it into your app:
+
+```js
+const languages = await tutor.languages();
+// [{ code: 'hi', label: 'हिन्दी', english: 'Hindi', firstTopic: 'रैखिक समीकरण' }, …]
+```
+
+`languages()` needs no keys and never throws: when the list cannot be read it returns the list bundled with this version. `fetchLanguages()` is the same call without a client.
+
+**Changing language in the middle of a lesson.** By default a lesson stays in its language. With `switch_languages` the student may ask the tutor for another one ("can you explain in Hindi?") and the voice, the listening, the board and the screen labels change together:
+
+```js
+tutor.sessionUrl({ student_id: 'stu_abc123', subject: 'math', level: 'Grade 8', topic: 'Fractions', target_kind: 'freestyle',
+  switch_languages: ['hi', 'hi-Latn'] });   // or 'all' (or true) for every language offered
 ```
 
 ## Help with a photographed worksheet
@@ -129,6 +150,56 @@ const tutor = mountTutor(document.getElementById('tutor'), {
 
 The iframe fills its container, so give the container a height. Messages are accepted only from the session page's origin and only from this iframe. `onEvent` receives every `evelyn:*` message, including `evelyn:start_blocked` (for example when your minutes are used up) and `evelyn:clock`.
 
+## Webhooks
+
+The browser events above never reach your server, and a closed tab sends none. Set a webhook URL on the dashboard and the service POSTs to your server instead:
+
+| `type` | When | `data` |
+|---|---|---|
+| `session.ended` | Once per session, when its end is saved | `session_id`, `student_id`, `started_at`, `ended_at`, `duration_seconds`, `status`, `languages`, `subject`, `topic`, `input_mode`, `message_count` |
+| `pool.low` | 80% of your tutoring minutes are used | `cap_minutes`, `used_minutes`, `remaining_minutes` |
+| `pool.exhausted` | All of your minutes are used | the same |
+| `webhook.test` | The dashboard's test button | `message` |
+
+Every event is `{ id, type, created, partner_id, data }`, signed with your partner secret (headers `x-evelyn-timestamp` and `x-evelyn-signature`). Verify it against the raw body, before any JSON parsing.
+
+Express (note `express.raw`, not `express.json`, on this route):
+
+```js
+import express from 'express';
+import { webhookHandler } from '@evelynlearning/tutor';
+
+app.post('/hooks/evelyn', express.raw({ type: 'application/json' }),
+  webhookHandler(process.env.EVELYN_PARTNER_SECRET, async (event) => {
+    if (event.type === 'session.ended') await saveSession(event.id, event.data);
+  }));
+```
+
+`webhookHandler` also works as a plain Node `http` handler. It answers 401 or 400 to a request that does not verify, 200 once your function returns, and 500 if it throws.
+
+Next.js (App Router), or anything else that gives you the raw body:
+
+```ts
+// app/hooks/evelyn/route.ts
+import { verifyWebhook, EvelynWebhookError } from '@evelynlearning/tutor';
+
+export async function POST(request: Request) {
+  const rawBody = await request.text();
+  try {
+    const event = verifyWebhook({ rawBody, headers: request.headers, secret: process.env.EVELYN_PARTNER_SECRET! });
+    if (event.type === 'session.ended') await saveSession(event.id, event.data);
+  } catch (err) {
+    if (err instanceof EvelynWebhookError) return Response.json({ error: err.reason }, { status: 400 });
+    throw err;
+  }
+  return Response.json({ received: true });
+}
+```
+
+`verifyWebhook` throws `EvelynWebhookError` with `reason` `bad_signature`, `stale_timestamp` (older than 5 minutes; `toleranceMs` changes that) or `malformed`.
+
+Delivery: the service waits 6 seconds for a 2xx answer and tries three times in all (at once, after 3 seconds, after 15 seconds). A retry carries the same `event.id`, so record the ids you have handled and ignore a repeat. A 4xx answer (other than 408 or 429) is not retried. Answer 2xx to event types you do not handle.
+
 ## Usage and session facts
 
 ```js
@@ -144,11 +215,12 @@ Cache `usage()` for 60 seconds, and hide your start button when `remaining_minut
 ## Without the client
 
 ```js
-import { createSessionUrl, createSessionToken, sessionUrl, verifySessionToken, signRequest } from '@evelynlearning/tutor';
+import { createSessionUrl, createSessionToken, sessionUrl, verifySessionToken, signRequest, fetchLanguages } from '@evelynlearning/tutor';
 
 const url = createSessionUrl(claims, { partnerId, secret });           // token + URL in one step
 const token = createSessionToken(claims, { partnerId, secret, expiresInSeconds: 7200 });
 const claimsBack = verifySessionToken(token, secret);                  // for tests and debugging
+const languages = await fetchLanguages();                              // no keys needed
 
 // Any other /api/portal/v1 endpoint: sign the exact string you send.
 const body = JSON.stringify({ studentId: 'stu_abc123' });
@@ -164,9 +236,10 @@ A failed API call throws `EvelynApiError` with `status`, `code` (for example `un
 
 ```
 npx @evelynlearning/tutor init      save your keys in .env.local / .env (kept out of git) and write a working example
-npx @evelynlearning/tutor token     print a session URL:  --student test-1 --topic "Fractions" [--language zh-TW] [--mode text]
+npx @evelynlearning/tutor token     print a session URL:  --student test-1 --topic "Fractions" [--language hi] [--switch all] [--mode text]
+npx @evelynlearning/tutor languages the languages a lesson can be taught in, with their codes
 npx @evelynlearning/tutor usage     minutes used and left
-npx @evelynlearning/tutor doctor    check the keys, this machine's clock and one signed API call
+npx @evelynlearning/tutor doctor    check the keys, this machine's clock and one signed API call; says when a newer version exists
 npx @evelynlearning/tutor docs      print the integration guide
 npx @evelynlearning/tutor mcp       run the MCP server
 ```
@@ -203,11 +276,12 @@ The server reads the keys from its environment, or from `.env.local` / `.env` in
 | `evelyn_docs` | Returns the integration guide. |
 | `evelyn_get_keys_instructions` | Says how to sign up and where the keys go. Sign-up needs a person. |
 | `evelyn_scaffold` | Returns example files for Next.js, Express or plain Node, for the assistant to write. |
+| `evelyn_languages` | Lists the lesson languages and their codes. |
 | `evelyn_create_session_url` | Claims in, session URL out. |
 | `evelyn_usage` | Minutes used and left. |
 | `evelyn_read_worksheet` | Image file paths in, numbered questions out. |
 | `evelyn_prepare_problem` | Prepares one question and returns its plan id. |
-| `evelyn_doctor` | Checks keys, clock and a signed call, and says what to fix. |
+| `evelyn_doctor` | Checks keys, clock and a signed call, says what to fix, and says when a newer version of this package exists. |
 
 Only opening a session URL and starting the lesson uses tutoring minutes.
 
@@ -217,6 +291,13 @@ Only opening a session URL and starting the lesson uses tutoring minutes.
 - A session URL lets its holder run that one session as that student until the token expires. Create it when the student is about to start, for the signed-in student, and do not log it.
 - Take `student_id` from your own authentication, never from the request body.
 - The sandbox is for evaluation with test data. Before real students use it, write to info@evelynlearning.com for an agreement.
+
+## Versioning
+
+- The API is version 1 (`/api/portal/v1`). Within v1 it only adds: new endpoints, new optional fields, new token claims, new event types, new languages. Nothing you already send or read changes meaning.
+- A breaking change would be a new `/v2` path served side by side with v1, and a new major version of this package.
+- Claims this version does not know are signed into the token as you give them, so a new option of the service can be used before you update: `tutor.sessionUrl({ ...claims, new_option: true } as SessionClaims)` (the cast is only for TypeScript).
+- The package follows semantic versioning; changes are listed in `CHANGELOG.md`, shipped with the package. `npx @evelynlearning/tutor doctor` says when a newer version is on npm.
 
 ## Python
 

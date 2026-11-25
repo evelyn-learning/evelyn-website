@@ -165,15 +165,20 @@ export function resolvePartnerSessionOptions(session: PartnerSessionLike | null 
   const partnerId = typeof session?.partnerId === 'string' ? session.partnerId : '';
   const row = Object.hasOwn(PARTNER_SESSION_DEFAULTS, partnerId) ? PARTNER_SESSION_DEFAULTS[partnerId] : undefined;
   const base = defaultPartnerSessionOptions(session?.tutorLanguages);
+  // A partner with an id and no row here is one that signed up by itself (the self-serve sandbox, 2026-11-24):
+  // every partner set up by hand has a row. It runs on tutor v2, homework included: v2 is the engine the demo
+  // shows them, and lessons taught in another language and the change of language exist only there. No partner
+  // id at all (the retail /tutor page, a showcase without a token) and every listed row keep what they had.
+  const selfServe = !!partnerId && !row;
   return {
     openerPrefetch: row?.openerPrefetch ?? base.openerPrefetch,
     lessonCloseAutoEnd: row?.lessonCloseAutoEnd ?? base.lessonCloseAutoEnd,
     levelCheck: row?.levelCheck ?? base.levelCheck,
     pronunciation: row?.pronunciation ?? base.pronunciation,
     thinkingCue: row?.thinkingCue ?? base.thinkingCue,
-    brainVersion: (Object.hasOwn(BRAIN_VERSION_BY_PARTNER, partnerId) ? BRAIN_VERSION_BY_PARTNER[partnerId] : undefined) ?? row?.brainVersion ?? base.brainVersion,
+    brainVersion: (Object.hasOwn(BRAIN_VERSION_BY_PARTNER, partnerId) ? BRAIN_VERSION_BY_PARTNER[partnerId] : undefined) ?? row?.brainVersion ?? (selfServe ? 'v2' : base.brainVersion),
     questionRead: row?.questionRead ?? base.questionRead,
-    homeworkOnV2: row?.homeworkOnV2 ?? base.homeworkOnV2,
+    homeworkOnV2: row?.homeworkOnV2 ?? (selfServe ? true : base.homeworkOnV2),
     trialKeepsPlan: row?.trialKeepsPlan ?? base.trialKeepsPlan,
     languageSwitch: row?.languageSwitch ?? base.languageSwitch,
   };

@@ -1,10 +1,11 @@
 # @evelynlearning/tutor
 
-> Node package for the Evelyn Voice Tutor, a hosted AI tutor (voice, whiteboard, typed chat) that an app embeds with one signed link. The package signs session tokens and API requests, wraps the worksheet and usage endpoints, sets a project up from the command line, and includes an MCP server for coding assistants. The partner secret stays on the server.
+> Node package for the Evelyn Voice Tutor, a hosted AI tutor (voice, whiteboard, typed chat) that an app embeds with one signed link. The package signs session tokens and API requests, wraps the worksheet and usage endpoints, lists the lesson languages, verifies webhooks, sets a project up from the command line, and includes an MCP server for coding assistants. Lessons run in English, Japanese, Traditional and Simplified Chinese, Hindi, Hinglish, French and Spanish. The partner secret stays on the server.
 
 ## Docs
 
-- [README](README.md): quick start, session claims, languages, worksheet flow, browser events, command line, MCP setup
+- [README](README.md): quick start, session claims, languages, worksheet flow, browser events, webhooks, command line, MCP setup, versioning
+- [Changelog](CHANGELOG.md): what each version added
 - [Integration guide](docs/integration.md): the service's own guide, bundled with the package (token claims, embed, Android WebView, worksheet API, request signing, events)
 - [Live integration guide](https://tutor.evelynlearning.com/docs/integration.md): the current copy
 - [Type declarations](dist/esm/index.d.ts): every export with its doc comments
@@ -17,6 +18,12 @@
 ## Use
 
 - Server: `new EvelynTutor().sessionUrl({ student_id, subject, level, topic, target_kind: 'freestyle' })` returns the URL for an iframe or WebView. Keys come from EVELYN_PARTNER_ID and EVELYN_PARTNER_SECRET.
+- Languages: `await tutor.languages()` returns `[{ code, label, english, firstTopic }]`; put a code in `tutor_languages: [code]`. Do not write the list into an app: the service adds languages. `switch_languages: ['hi', 'es']` (or `'all'`) lets the student change the lesson's language by asking the tutor.
 - Browser: `mountTutor(container, { sessionUrl, onEnded })` from `@evelynlearning/tutor/embed`.
+- Webhooks (server to server: `session.ended`, `pool.low`, `pool.exhausted`, `webhook.test`): `verifyWebhook({ rawBody, headers, secret })` returns the event or throws `EvelynWebhookError`; `webhookHandler(secret, onEvent)` for Express (after `express.raw`) and Node http. Always verify against the raw body. Retries carry the same `event.id`.
 - Set-up: `npx @evelynlearning/tutor init`; check: `npx @evelynlearning/tutor doctor`.
 - MCP server: `npx -y -p @evelynlearning/tutor evelyn-tutor-mcp`.
+
+## Versioning
+
+- The API (`/api/portal/v1`) only adds endpoints, optional fields, claims, event types and languages. A breaking change would be a `/v2` path served side by side and a new major version of this package. Claims this version does not know are signed as given.

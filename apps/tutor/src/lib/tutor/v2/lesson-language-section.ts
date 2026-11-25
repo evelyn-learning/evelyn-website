@@ -51,13 +51,14 @@ function splitSection(session: Pick<V2Session, 'mode'>, L: string, B: string, wr
     `You speak this whole lesson in ${L}, from your first word to your goodbye. Everything you write on the board (page titles, notes, problems, labels, cards, the summary) is in ${B}.`,
     `The plan and the topic are written in ${B}: use their terms as they are on the board, and explain them aloud in ${L}.`,
     ...writing,
-    // Spoken: the Hindi voice reads Devanagari and English spelling side by side naturally, and it is the form the
-    // recogniser gives the student's words in. Typed: Indian students type the mix in Latin letters and many do not
-    // want Hindi script on screen (a typed test, 2026-11-24: "Hindi script mat use karo").
+    // Latin letters in speech and in typing alike: it is how Indian students type the mix, many who ask for Hinglish
+    // do not want Hindi script on the screen (a typed test, 2026-11-24: "Hindi script mat use karo"), and the Hindi
+    // voice reads it as well as it reads Devanagari (a speak-then-transcribe check of fifteen sentences).
+    `Write the mix in Latin letters only, the way students in India type it ("Dekho, pehle hum dono equations ko add karenge."), never in Devanagari.`,
     session.mode === 'voice'
-      ? `Your words are read aloud by a Hindi voice. Write the Hindi words in Devanagari and the English words in English spelling ("देखो, पहले हम दोनों equations को add करेंगे।"). Say every number and every piece of notation in ${B} words inside the sentence ("two x plus three equals eleven", "x squared", "three by four"), never as digits or symbols; the symbols go on the board.`
-      : `This is a typed lesson: write the mix in Latin letters only, the way students in India type it ("Dekho, pehle hum dono equations ko add karenge."), never in Devanagari. Numbers and notation stay as symbols.`,
-    session.mode === 'voice' ? `The student speaks ${L}. Their words reach you through a speech recogniser, which now and then writes a word as another that sounds like it: read what they said for its sound and its sense in the lesson, and when it still makes no sense, ask them to say it again.` : '',
+      ? `Your words are read aloud. Say every number and every piece of notation in ${B} words inside the sentence ("two x plus three equals eleven", "x squared", "three by four"), never as digits or symbols; the symbols go on the board.`
+      : 'In a typed reply numbers and notation stay as symbols.',
+    session.mode === 'voice' ? `The student speaks ${L}. Their words reach you through a speech recogniser, which writes their Hindi words in Devanagari and their English words in Latin letters, and now and then writes a word as another that sounds like it: read what they said for its sound and its sense in the lesson, and when it still makes no sense, ask them to say it again.` : '',
     'Their name, and yours, stay as they are written.',
     `Notes from the engine in the conversation (lines in square brackets, tool results) are written in English and are for you alone: act on them, and never say them or translate them aloud.`,
   ].filter(Boolean).join('\n');

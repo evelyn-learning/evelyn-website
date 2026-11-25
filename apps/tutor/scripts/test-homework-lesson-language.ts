@@ -462,7 +462,7 @@ t('typed Hinglish: the reply checks read Hindi typed in Latin letters, only in a
   // The verdict said in front of a draft: typed in a typed session, the speech form in a spoken one.
   const typed = v2VerdictOpeners(L, 'text');
   assert.deepEqual(typed, { correct: 'Haan, yeh correct hai.', incorrect: 'Yeh poori tarah correct nahi hai.', mixed: '' });
-  assert.equal(v2VerdictOpeners(L, 'voice'), V2_VERDICT_OPENERS_BY_LANGUAGE['hi-Latn']); assert.equal(v2VerdictOpeners(L), V2_VERDICT_OPENERS_BY_LANGUAGE['hi-Latn']);
+  assert.deepEqual(v2VerdictOpeners(L, 'voice'), typed); assert.deepEqual(v2VerdictOpeners(L), typed);
   assert.equal(verdictMissing(`${typed.correct} x = 4`, ['correct'], L), null); assert.equal(verdictMissing(`${typed.incorrect} x = 4`, ['incorrect'], L), null);
   assert.equal(verdictMissing(`${typed.incorrect} x = 4`, ['correct'], L), 'correct'); assert.equal(verdictMissing(`${typed.correct} x = 4`, ['incorrect'], L), 'incorrect');
   for (const code of ['hi', 'fr', 'es', 'zh-TW', 'ja']) assert.equal(v2VerdictOpeners([code], 'text'), V2_VERDICT_OPENERS_BY_LANGUAGE[code], code);

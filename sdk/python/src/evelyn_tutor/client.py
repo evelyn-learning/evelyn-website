@@ -13,6 +13,7 @@ from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 from urllib.parse import urlencode
 
 from .errors import SANDBOX_URL, EvelynApiError, EvelynConfigError
+from .languages import Language, fetch_languages
 from .session_token import DEFAULT_EMBED_HOST, SessionClaims, create_session_token, session_url
 from .signing import sign_request
 
@@ -362,6 +363,11 @@ class EvelynTutor:
         Minutes are used only once the student starts the session.
         """
         return session_url(self.session_token(claims, expires_in_seconds=expires_in_seconds), host=self.embed_host)
+
+    def languages(self) -> List[Language]:
+        """The languages a lesson can be taught in: the service's current list, or the list bundled with this
+        package when the network fails. Needs no keys and never raises. Use a ``code`` as ``tutor_languages: [code]``."""
+        return fetch_languages(embed_host=self.embed_host)
 
     def usage(self) -> Usage:
         """Your tutoring minute pool: minutes used and left. Cache the answer for 60 seconds."""

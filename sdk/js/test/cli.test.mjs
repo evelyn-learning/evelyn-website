@@ -116,10 +116,10 @@ test('init --yes without keys still writes the example and says where to get key
 
 test('token prints a session URL built from the flags, with keys read from the project env file', async () => {
   const dir = project({ '.env.local': `EVELYN_PARTNER_ID=${partnerId}\nEVELYN_PARTNER_SECRET="${secret}"\n` });
-  const result = await cli(['token', '--student', 'stu_1', '--topic', '聯立方程式', '--language', 'zh-TW', '--mode', 'text', '--minutes=10', '--expires', '600'], { cwd: dir });
+  const result = await cli(['token', '--student', 'stu_1', '--topic', '聯立方程式', '--language', 'zh-tw', '--mode', 'text', '--minutes=10', '--expires', '600'], { cwd: dir });
   assert.equal(result.code, 0, result.stderr);
   const url = new URL(result.stdout.trim());
-  assert.equal(url.origin + url.pathname, 'https://tutor.evelynlearning.com/embed');
+  assert.equal(url.origin + url.pathname, 'http://127.0.0.1:9/embed', 'the host the test environment names');
   const claims = verifySessionToken(url.searchParams.get('token'), secret);
   assert.deepEqual(
     { ...claims, iat: 0, exp: claims.exp - claims.iat },
@@ -138,6 +138,10 @@ test('token explains missing input and missing keys', async () => {
   const unknown = await cli(['frobnicate'], { cwd: dir });
   assert.equal(unknown.code, 1);
   assert.match(unknown.stderr, /Unknown command/);
+  const notOffered = await cli(['token', '--student', 's', '--language', 'tlh'], { cwd: dir, env: KEYS });
+  assert.equal(notOffered.code, 1);
+  assert.match(notOffered.stderr, /--language: "tlh" is not a lesson language\. The codes: en, ja, zh-TW, zh-CN, hi, hi-Latn, fr, es\./);
+  assert.match((await cli(['token', '--student', 's', '--switch', 'hi,xx'], { cwd: dir, env: KEYS })).stderr, /--switch: "xx" is not a lesson language/);
   const misspelt = await cli(['token', '--student', 's', '--langauge', 'zh-TW'], { cwd: dir, env: KEYS });
   assert.equal(misspelt.code, 1);
   assert.match(misspelt.stderr, /"token" has no option --langauge\. Its options: --student,/);
@@ -145,7 +149,7 @@ test('token explains missing input and missing keys', async () => {
   assert.match(badMinutes.stderr, /max_duration_minutes must be a number from 1 to 120/);
 });
 
-/** A stand-in for the API: checks the signature the way the engine does and answers /usage. */
+/** Runs `body(host)` against a local HTTP server with the given handler: a stand-in for the API, the portal or the registry. */
 async function withApi(handler, body) {
   const server = createServer(handler);
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -155,6 +159,35 @@ async function withApi(handler, body) {
     server.close();
   }
 }
+
+test('token --language takes any offered code and --switch sets switch_languages', async () => {
+  const claimsOf = async (...args) => {
+    const result = await cli(['token', '--student', 's', ...args], { cwd: project(), env: KEYS });
+    assert.equal(result.code, 0, result.stderr);
+    return verifySessionToken(new URL(result.stdout.trim()).searchParams.get('token'), secret);
+  };
+  const hinglish = await claimsOf('--language', 'hi-latn', '--switch', 'HI,es');
+  assert.deepEqual([hinglish.tutor_languages, hinglish.switch_languages], [['hi-Latn'], ['hi', 'es']]);
+  const english = await claimsOf('--switch', 'all');
+  assert.deepEqual([english.tutor_languages, english.switch_languages], [undefined, 'all']);
+});
+
+test('languages lists the bundled languages when the portal cannot be reached, and the live list when it can', async () => {
+  const offline = await cli(['languages'], { cwd: project() });
+  assert.equal(offline.code, 0, offline.stderr);
+  assert.deepEqual(offline.stdout.trim().split('\n').map((line) => line.split(/\s+/)[0]), ['en', 'ja', 'zh-TW', 'zh-CN', 'hi', 'hi-Latn', 'fr', 'es']);
+  assert.match(offline.stdout, /^hi-Latn {2}Hinglish$/m);
+  assert.match(offline.stdout, /^fr {7}French \(Français\)$/m);
+
+  const live = [{ code: 'en', label: 'English', english: 'English', firstTopic: 'Fractions' }, { code: 'pt-BR', label: 'Português', english: 'Portuguese', firstTopic: 'Frações' }];
+  const portal = (req, res) => res.writeHead(req.url === '/api/tutor-portal/languages' ? 200 : 404, { 'content-type': 'application/json' }).end(JSON.stringify({ languages: live }));
+  await withApi(portal, async (host) => {
+    assert.deepEqual(JSON.parse((await cli(['languages', '--json'], { cwd: project(), env: { EVELYN_EMBED_HOST: host } })).stdout), live);
+    const made = await cli(['token', '--student', 's', '--language', 'pt-br'], { cwd: project(), env: { ...KEYS, EVELYN_EMBED_HOST: host } });
+    assert.equal(made.code, 0, made.stderr);
+    assert.deepEqual(verifySessionToken(new URL(made.stdout.trim()).searchParams.get('token'), secret).tutor_languages, ['pt-BR'], 'a language added after this version was released is accepted');
+  });
+});
 
 function usageApi(req, res) {
   const expected = createHmac('sha256', secret).update(`${req.headers['x-evelyn-timestamp']}.GET.${req.url}.`).digest('hex');
@@ -176,7 +209,8 @@ test('usage and doctor report a working setup', async () => {
     assert.match(doctor.stdout, /ok {4}EVELYN_PARTNER_SECRET: set\n/);
     assert.match(doctor.stdout, /ok {4}Clock: within \d s of the API's clock/);
     assert.match(doctor.stdout, /ok {4}Signed GET \/usage: 12 of 300/);
-    assert.match(doctor.stdout, /Everything works\./);
+    assert.match(doctor.stdout, /ok {4}Package version: \d+\.\d+\.\d+ \(the npm registry could not be reached, so newer versions were not looked for\)/);
+    assert.match(doctor.stdout, /Everything works\./, 'an unreachable registry is never a failure');
     assert.ok(!doctor.stdout.includes(secret));
   });
 });
@@ -202,6 +236,17 @@ test('doctor names a wrong secret, a wrong clock and missing keys', async () => 
   assert.match(missing.stdout, /FAIL {2}EVELYN_PARTNER_ID: not set\. Sign up at https:\/\/tutor\.evelynlearning\.com\/sandbox/);
 });
 
+test('doctor says when a newer version is on the registry, and when this one is the latest', async () => {
+  const registry = (latest) => (req, res) => {
+    const known = req.url === '/@evelynlearning%2ftutor/latest';
+    res.writeHead(known ? 200 : 404, { 'content-type': 'application/json' }).end(JSON.stringify(known ? { name: '@evelynlearning/tutor', version: latest } : { error: 'Not found' }));
+  };
+  const versionLine = (handler) => withApi(handler, async (host) => (await cli(['doctor'], { cwd: project(), env: { EVELYN_NPM_REGISTRY: host } })).stdout.split('\n').find((line) => line.includes('Package version')));
+  assert.match(await versionLine(registry('9.0.0')), /^ok {4}Package version: 0\.\d+\.\d+; 9\.0\.0 is available\. Update with: npm install @evelynlearning\/tutor@latest$/);
+  assert.match(await versionLine(registry('0.0.9')), /^ok {4}Package version: 0\.\d+\.\d+ is the latest$/);
+  assert.match(await versionLine((req, res) => res.writeHead(404).end('"Not Found"')), /^ok {4}Package version: 0\.\d+\.\d+ \(the registry did not say which version is the latest\)$/);
+});
+
 test('docs prints the integration guide, from the bundled copy when the portal cannot be reached', async () => {
   const result = await cli(['docs'], { cwd: project(), env: { EVELYN_EMBED_HOST: 'http://127.0.0.1:9' } });
   assert.equal(result.code, 0, result.stderr);
@@ -211,5 +256,5 @@ test('docs prints the integration guide, from the bundled copy when the portal c
 
 test('help lists every command', async () => {
   const result = await cli(['help']);
-  for (const command of ['init', 'token', 'usage', 'doctor', 'docs', 'mcp']) assert.match(result.stdout, new RegExp(`^  ${command} `, 'm'));
+  for (const command of ['init', 'token', 'languages', 'usage', 'doctor', 'docs', 'mcp']) assert.match(result.stdout, new RegExp(`^  ${command} `, 'm'));
 });

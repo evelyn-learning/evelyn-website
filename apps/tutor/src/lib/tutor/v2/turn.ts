@@ -1846,7 +1846,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
     // A discussion reply that is only notes and marks leaves the person in silence: in voice no words means
     // "keep listening", and they heard nothing after saying what worried them (replay review 2026-11-14). The
     // model is told so, once, and answers.
-    if (discussion && input.studentSaid !== null && !spoken.length && !toolCalls.some((c) => c.name === 'keep_listening' || c.name === 'end_lesson') && response.stop_reason !== 'tool_use' && modelCalls < V2_MAX_MODEL_CALLS && !input.signal?.aborted && !owedAsked) {
+    if (discussion && input.studentSaid !== null && !spoken.length && !toolCalls.some((c) => c.name === 'keep_listening' || c.name === 'end_lesson' || c.name === V2_SWITCH_LANGUAGE_TOOL_NAME) && response.stop_reason !== 'tool_use' && modelCalls < V2_MAX_MODEL_CALLS && !input.signal?.aborted && !owedAsked) {
       owedAsked = true;
       const nudge: Anthropic.TextBlockParam = { type: 'text', text: '[check — from the system running the session, not from the person] Your reply had no words, and they are waiting for you. Reply now to what they just said.' };
       const assistant = storable(response.content);
@@ -2258,7 +2258,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   const owedHeld = oneQuestion && askEvery && partFlow && session.plan && state.heldPage?.unasked && v2HeldPageOwed(session.plan, state) ? state.heldPage : null;
   // Task 7r (PART_GO_NAMED): not owed to a reply to their go for that same part.
   const owed = owedHeld && session.plan && TUTOR_V2_PART_GO_NAMED && v2GoForPart(input.studentSaid, lastTutorText, session.plan, state, session.plan.segments.findIndex((seg) => seg.id === owedHeld.part), askLangs) ? null : owedHeld;
-  if (owed && !practiceShort && session.plan && !heldAt && !askedPart && !state.closed && !input.signal?.aborted && spoken.length && !toolCalls.some((c) => (c.name === 'new_page' && !/^not /.test(c.outcome)) || c.name === 'keep_listening' || c.name === 'end_lesson')) {
+  if (owed && !practiceShort && session.plan && !heldAt && !askedPart && !state.closed && !input.signal?.aborted && spoken.length && !toolCalls.some((c) => (c.name === 'new_page' && !/^not /.test(c.outcome)) || c.name === 'keep_listening' || c.name === 'end_lesson' || c.name === V2_SWITCH_LANGUAGE_TOOL_NAME)) {
     const said = spoken.join(' ');
     const last = v2ReplySentences(stripBoardBlocks(said)).pop() ?? '';
     // Task 7r fix round 2 (N3, state before wording): the facts ordered this ask ("part change owed"), so in a lesson whose language
@@ -2353,7 +2353,7 @@ export async function runV2Turn(given: V2TurnInput): Promise<V2TurnResult> {
   // put to them); fix round 1: only one that is the retest's counts (adaptive.ts v2RetestAskOf).
   const replyQuestions = spoken.length > 0 ? v2ReplyQuestions(spoken.join(' ')) : [];
   const pronAsks = TUTOR_V2_PRONUNCIATION_PAGE && noteTargets && spoken.length > 0 && (toolCalls.some((c) => c.name === 'practise_pronunciation' && /^armed/.test(c.outcome)) || (TUTOR_V2_ASK_NO_CHECKIN && (session.languages?.length ?? 0) >= 2 && v2AsksTheLearner(stripBoardBlocks(spoken.join(' ')))));
-  if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && spoken.length && !framesDropped && !toolCalls.some((c) => c.name === 'keep_listening' || c.name === 'end_lesson') && !replyAsks && !pronAsks && !saysGoodbye && !endsOnRepeat(spoken.join(' '))
+  if (session.mode === 'voice' && !state.closed && !input.signal?.aborted && spoken.length && !framesDropped && !toolCalls.some((c) => c.name === 'keep_listening' || c.name === 'end_lesson' || c.name === V2_SWITCH_LANGUAGE_TOOL_NAME) && !replyAsks && !pronAsks && !saysGoodbye && !endsOnRepeat(spoken.join(' '))
     // With the close due the tutor is saying goodbye: "Good work today." was followed by "Are you with me so far?" (portal-84f8660d).
     && !(session.timeBoxMinutes && session.timeBoxMinutes - (nowMs - state.startedAtMs) / 60000 <= closeDueMinutes(session.timeBoxMinutes))) {
     // A lesson taught in another language checks in in that language (lesson-lines.ts).

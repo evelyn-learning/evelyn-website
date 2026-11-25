@@ -55,6 +55,9 @@ test('claims with obvious mistakes are refused with a message that says what to 
   refuses(null, /must be an object/);
   refuses({ student_id: 's', tutor_languages: 'zh-TW' }, /tutor_languages must be an array/);
   refuses({ student_id: 's', tutor_languages: [] }, /tutor_languages must be an array/);
+  refuses({ student_id: 's', switch_languages: 'hi' }, /switch_languages must be an array/);
+  refuses({ student_id: 's', switch_languages: [] }, /switch_languages must be an array/);
+  refuses({ student_id: 's', switch_languages: false }, /switch_languages must be an array/);
   refuses({ student_id: 's', max_duration_minutes: 0 }, /1 to 120/);
   refuses({ student_id: 's', max_duration_minutes: 121 }, /1 to 120/);
   refuses({ student_id: 's', max_duration_minutes: '30' }, /1 to 120/);
@@ -71,6 +74,14 @@ test('claims with obvious mistakes are refused with a message that says what to 
 test('claims left undefined are not written into the token', () => {
   const token = createSessionToken({ student_id: 's', topic: undefined }, { partnerId, secret, issuedAt: 1 });
   assert.deepEqual(Object.keys(verifySessionToken(token, secret, { now: 1 })), ['partner_id', 'student_id', 'iat', 'exp']);
+});
+
+test('switch_languages and claims this version does not know are written into the token as given', () => {
+  const read = (claims) => verifySessionToken(createSessionToken(claims, { partnerId, secret }), secret);
+  assert.deepEqual(read({ student_id: 's', tutor_languages: ['hi-Latn'], switch_languages: ['hi', 'es'] }).switch_languages, ['hi', 'es']);
+  assert.equal(read({ student_id: 's', switch_languages: 'all' }).switch_languages, 'all');
+  assert.equal(read({ student_id: 's', switch_languages: true }).switch_languages, true);
+  assert.deepEqual(read({ student_id: 's', an_option_added_later: { on: true } }).an_option_added_later, { on: true });
 });
 
 test('sessionUrl and createSessionUrl build the embed URL', () => {

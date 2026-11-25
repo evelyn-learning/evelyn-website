@@ -4,8 +4,8 @@ A hosted AI tutor (voice, whiteboard, typed chat) you embed with one signed link
 
 ## 1. What you get
 
-- A hosted tutor (voice, whiteboard, typed chat) that you show in an iframe or a mobile WebView. No SDK.
-- Lessons in English, or taught wholly in another language: Traditional Chinese (Taiwan), Simplified Chinese or Japanese. In those the tutor speaks with a native voice, understands the student's speech, and writes the board, the questions and the screen labels in that language.
+- A hosted tutor (voice, whiteboard, typed chat) that you show in an iframe or a mobile WebView. No SDK is needed; an optional package does the signing for you (§9).
+- Lessons in English, or taught wholly in another language: Hindi, Hinglish (the Hindi-English mix students in India speak; the board stays in English), Spanish, French, Traditional Chinese (Taiwan), Simplified Chinese or Japanese. The tutor speaks with a native voice, understands the student's speech, and writes the board, the questions and the screen labels in that language. The current list: `GET https://tutor.evelynlearning.com/api/tutor-portal/languages`.
 - Worksheet help: your server sends a photo of the worksheet; the service reads the questions; the student picks a question by number and is tutored through it step by step, without being handed the answer.
 - One shared secret. It signs the session token and your server-to-server calls.
 - Sandbox: the production engine and endpoints, with **300 free tutoring minutes**.
@@ -44,7 +44,8 @@ Your server signs a token (JWT, `alg: HS256`, signed with the partner secret) an
 
 | Claim | Notes |
 |---|---|
-| `tutor_languages` | `["zh-TW"]` Traditional Chinese (Taiwan). Also available: `["zh-CN"]` Simplified Chinese, `["ja"]` Japanese. Leave it out for English. |
+| `tutor_languages` | One code: `["hi"]` Hindi, `["hi-Latn"]` Hinglish, `["es"]` Spanish (Latin America), `["fr"]` French, `["zh-TW"]` Traditional Chinese (Taiwan), `["zh-CN"]` Simplified Chinese, `["ja"]` Japanese. Leave it out for English. |
+| `switch_languages` | Optional. The languages the student may change the lesson to in the middle of a lesson, by asking the tutor ("can you explain in Hindi?"): a list of codes, or `"all"`. The voice, the listening, the board and the screen change together. Left out: the lesson stays in its language. |
 | `topic` | Free text in Chinese. The tutor builds the lesson on it. |
 | `level` | The grade, e.g. `"Grade 8"` (國二). |
 | `input_mode` | `voice` (default) or `text`. In a voice session the student can also type. |
@@ -194,8 +195,24 @@ The session page posts messages to its host (`window.parent.postMessage({ type, 
 
 `GET /api/portal/v1/usage` (signed) returns the minutes used and left in your sandbox.
 
+`GET /api/portal/v1/usage` reports minutes; a typed session uses 0.8 of a minute for each minute, a voice session one.
+
+**Webhooks (server to server).** Set a URL on the dashboard's Webhooks page and your server is told when a session ends (`session.ended`) and when your minutes run low (`pool.low`, `pool.exhausted`), even if the student closed the tab. Each call is a POST with JSON `{ id, type, created, partner_id, data }` and the headers `x-evelyn-event`, `x-evelyn-timestamp` (Unix milliseconds) and `x-evelyn-signature`: the hex HMAC-SHA256 of `<timestamp>.<raw body>` with your partner secret. Answer 2xx within 6 seconds; a failed delivery is tried three times.
+
 ## 8. Getting keys
 
 Sign up at https://tutor.evelynlearning.com/sandbox with an email address. Confirm the emailed link and the dashboard shows your partner id and secret at once, with 300 free tutoring minutes. No request or approval is needed. The dashboard (https://tutor.evelynlearning.com/dashboard) also shows minutes used, your sessions with replays, and a button that starts a test lesson without any code.
 
 The sandbox is for evaluation with test data. Before real students use it, write to info@evelynlearning.com for an agreement.
+
+## 9. The developer package (optional)
+
+`npm install @evelynlearning/tutor` (Node 18+) or `pip install evelyn-tutor` (Python 3.9+). It signs session tokens and API calls, wraps the worksheet flow, verifies webhooks and lists the languages, with no dependencies.
+
+```js
+import { EvelynTutor } from '@evelynlearning/tutor';
+const tutor = new EvelynTutor(); // reads EVELYN_PARTNER_ID and EVELYN_PARTNER_SECRET
+const url = tutor.sessionUrl({ student_id: 'stu-42', subject: 'math', level: 'Grade 8', topic: 'Solving linear equations', tutor_languages: ['hi-Latn'] });
+```
+
+`npx @evelynlearning/tutor init` writes a working example into a Next.js, Express or plain Node project. For a coding assistant, the same package is an MCP server: `npx -y -p @evelynlearning/tutor evelyn-tutor-mcp`.

@@ -1,6 +1,7 @@
 import { DEFAULT_API_HOST, type Usage } from './client.js';
 import { EvelynApiError, explainError, SANDBOX_URL } from './errors.js';
 import { signRequest } from './signing.js';
+import { VERSION } from './version.js';
 
 /** One line of the doctor's report. */
 export interface DoctorCheck {
@@ -11,6 +12,7 @@ export interface DoctorCheck {
 
 const USAGE_PATH = '/api/portal/v1/usage';
 const SKEW_LIMIT_SEC = 300;
+const DEFAULT_REGISTRY = 'https://registry.npmjs.org';
 
 /** How a usage answer reads in one line. */
 export function describeUsage(usage: Usage): string {
@@ -18,11 +20,46 @@ export function describeUsage(usage: Usage): string {
   return `${usage.used_minutes} of ${usage.cap_minutes} tutoring minutes used, ${usage.remaining_minutes} left (one session may run up to ${usage.session_max_minutes} minutes).`;
 }
 
+/** Whether version `a` is newer than version `b` (`major.minor.patch`; anything after the patch is ignored). */
+function isNewer(a: string, b: string): boolean {
+  const [x, y] = [a, b].map((version) => version.split('.').map((part) => parseInt(part, 10) || 0));
+  for (let i = 0; i < 3; i += 1) {
+    if ((x![i] ?? 0) !== (y![i] ?? 0)) return (x![i] ?? 0) > (y![i] ?? 0);
+  }
+  return false;
+}
+
 /**
- * Checks an integration's setup end to end: both keys present, this machine's clock against the API's, and
- * one signed `GET /usage`. Makes a single request and never prints the secret.
+ * Says whether a newer version of this package is on the npm registry. Advice only: the line is never a
+ * failure, and when the registry cannot be reached within 4 seconds it says so and nothing else.
+ * `EVELYN_NPM_REGISTRY` names another registry (a company mirror).
+ */
+async function checkVersion(env: NodeJS.ProcessEnv, fetchImpl: typeof fetch): Promise<DoctorCheck> {
+  const name = 'Package version';
+  const registry = (env.EVELYN_NPM_REGISTRY ?? DEFAULT_REGISTRY).replace(/\/+$/, '');
+  try {
+    const response = await fetchImpl(`${registry}/@evelynlearning%2ftutor/latest`, { signal: AbortSignal.timeout(4000) });
+    const latest = response.ok ? ((await response.json()) as { version?: unknown }).version : undefined;
+    if (typeof latest !== 'string') return { name, ok: true, detail: `${VERSION} (the registry did not say which version is the latest)` };
+    return isNewer(latest, VERSION)
+      ? { name, ok: true, detail: `${VERSION}; ${latest} is available. Update with: npm install @evelynlearning/tutor@latest` }
+      : { name, ok: true, detail: `${VERSION} is the latest` };
+  } catch {
+    return { name, ok: true, detail: `${VERSION} (the npm registry could not be reached, so newer versions were not looked for)` };
+  }
+}
+
+/**
+ * Checks an integration's setup end to end: both keys present, this machine's clock against the API's, one
+ * signed `GET /usage`, and whether a newer version of this package exists. Never prints the secret.
  */
 export async function runDoctor(env: NodeJS.ProcessEnv = process.env, fetchImpl: typeof fetch = fetch): Promise<DoctorCheck[]> {
+  const [setup, version] = await Promise.all([checkSetup(env, fetchImpl), checkVersion(env, fetchImpl)]);
+  return [...setup, version];
+}
+
+/** The keys, the clock and the signed call: one request to the API. */
+async function checkSetup(env: NodeJS.ProcessEnv, fetchImpl: typeof fetch): Promise<DoctorCheck[]> {
   const partnerId = env.EVELYN_PARTNER_ID;
   const secret = env.EVELYN_PARTNER_SECRET;
   const checks: DoctorCheck[] = [

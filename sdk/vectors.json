@@ -1,5 +1,5 @@
 {
-  "note": "Shared by sdk/js and sdk/python tests. Expected values were computed with the engine's own algorithms (embed-token.ts signEmbedToken; portal-contract signPortalRequest). The secret is a test value.",
+  "note": "Shared by sdk/js and sdk/python tests. Expected values were computed with the engine's own algorithms (embed-token.ts signEmbedToken; portal-contract signPortalRequest; partner-dashboard/webhooks.ts signWebhook). The secret is a test value.",
   "partnerId": "acme-sandbox",
   "secret": "test-secret-not-a-real-key",
   "tokens": [
@@ -85,6 +85,36 @@
       "body": "{\"text\":\"國二數學作業\",\"subject\":\"math\",\"grade\":\"Grade 8\",\"goal\":\"homework-help\"}",
       "signingString": "1795550000789.POST./api/portal/v1/plan-generate.{\"text\":\"國二數學作業\",\"subject\":\"math\",\"grade\":\"Grade 8\",\"goal\":\"homework-help\"}",
       "signature": "3ab885782c83ab4fb9ae961d73f8aea2f1c6cb4fdb56695114dc0e2b2fdfa999"
+    }
+  ],
+  "webhooks": [
+    {
+      "name": "session.ended with non-ASCII text",
+      "type": "session.ended",
+      "timestamp": 1795550591000,
+      "body": "{\"id\":\"0b7e6c1e-3c1b-4f2a-9a55-2f6d1c0e8a41\",\"type\":\"session.ended\",\"created\":\"2026-11-24T20:03:11.000Z\",\"partner_id\":\"acme-sandbox\",\"data\":{\"session_id\":\"sess-9012\",\"student_id\":\"stu_abc123\",\"started_at\":\"2026-11-24T17:56:19.000Z\",\"ended_at\":\"2026-11-24T18:03:11.000Z\",\"duration_seconds\":412,\"status\":\"completed\",\"languages\":[\"zh-TW\"],\"subject\":\"math\",\"topic\":\"聯立方程式：加減消去法\",\"input_mode\":\"voice\",\"message_count\":23}}",
+      "signature": "de930282a62dca3166f8382cbd4161708354deff5424369daef864571067a530"
+    },
+    {
+      "name": "pool.low",
+      "type": "pool.low",
+      "timestamp": 1795550600123,
+      "body": "{\"id\":\"6a1f0c52-8d0e-4f0b-b7a3-51c2d9e4f7a8\",\"type\":\"pool.low\",\"created\":\"2026-11-24T20:03:20.123Z\",\"partner_id\":\"acme-sandbox\",\"data\":{\"cap_minutes\":300,\"used_minutes\":240.5,\"remaining_minutes\":59.5}}",
+      "signature": "ad382cc9a438c02dd70949940d1dc02a5c6a6825177f06c1b1ae0ae7319fa06e"
+    },
+    {
+      "name": "pool.exhausted",
+      "type": "pool.exhausted",
+      "timestamp": 1795550700456,
+      "body": "{\"id\":\"c2b9a1d4-1e6f-4c3a-8f57-0a9b8c7d6e5f\",\"type\":\"pool.exhausted\",\"created\":\"2026-11-24T20:05:00.456Z\",\"partner_id\":\"acme-sandbox\",\"data\":{\"cap_minutes\":300,\"used_minutes\":300,\"remaining_minutes\":0}}",
+      "signature": "07ac214b5613b79a40a2b3c7f7badb42806f3f134d01888166bd15f709dd400f"
+    },
+    {
+      "name": "webhook.test",
+      "type": "webhook.test",
+      "timestamp": 1795550800789,
+      "body": "{\"id\":\"f3e2d1c0-b9a8-4776-8554-433221100fee\",\"type\":\"webhook.test\",\"created\":\"2026-11-24T20:06:40.789Z\",\"partner_id\":\"acme-sandbox\",\"data\":{\"message\":\"This is a test event from your Evelyn Voice Tutor dashboard.\"}}",
+      "signature": "aa2c3a6807d3045b1ac689840abb39f3ec535218bea850118a10f244abb2f410"
     }
   ]
 }

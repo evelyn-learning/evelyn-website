@@ -39,6 +39,21 @@ export class EvelynApiError extends Error {
   }
 }
 
+/** Why a webhook request was refused. */
+export type WebhookErrorReason = 'bad_signature' | 'stale_timestamp' | 'malformed';
+
+/** A webhook request that did not pass verification. Answer it with a 4xx status and do not act on it. */
+export class EvelynWebhookError extends Error {
+  /** `bad_signature`, `stale_timestamp` or `malformed`. */
+  readonly reason: WebhookErrorReason;
+
+  constructor(reason: WebhookErrorReason, message: string) {
+    super(`Webhook refused (${reason}): ${message}`);
+    this.name = 'EvelynWebhookError';
+    this.reason = reason;
+  }
+}
+
 const API_FIXES: Record<string, string> = {
   missing_auth_headers: 'The request reached the API without its three x-evelyn-* headers. A proxy between you and the API may be removing them.',
   unknown_partner: `The partner id is not recognised. Compare EVELYN_PARTNER_ID with the one on ${DASHBOARD_URL}.`,

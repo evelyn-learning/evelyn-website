@@ -1,6 +1,6 @@
 /**
  * @evelynlearning/tutor: server-side helpers for the Evelyn Voice Tutor.
- * Sign a session token, get the session URL, call the worksheet and usage API.
+ * Sign a session token, get the session URL, call the worksheet and usage API, verify webhooks.
  * The browser side (the iframe and its events) is in `@evelynlearning/tutor/embed`.
  */
 export {
@@ -35,4 +35,17 @@ export {
   type WorksheetReadInput,
   type WorksheetReadResult,
 } from './client.js';
-export { EvelynApiError, EvelynConfigError } from './errors.js';
+export { fetchLanguages, BUNDLED_LANGUAGES, type Language } from './languages.js';
+export {
+  verifyWebhook,
+  webhookHandler,
+  type PoolExhaustedWebhook,
+  type PoolLowWebhook,
+  type PoolWebhookData,
+  type SessionEndedWebhook,
+  type VerifyWebhookInput,
+  type WebhookEvent,
+  type WebhookHeaders,
+  type WebhookTestEvent,
+} from './webhooks.js';
+export { EvelynApiError, EvelynConfigError, EvelynWebhookError, type WebhookErrorReason } from './errors.js';

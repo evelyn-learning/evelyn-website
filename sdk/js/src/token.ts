@@ -4,8 +4,12 @@ import { EvelynConfigError } from './errors.js';
 /** Where the hosted session page lives. */
 export const DEFAULT_EMBED_HOST = 'https://tutor.evelynlearning.com';
 
-/** Languages a whole lesson can be taught in. */
-export type LessonLanguage = 'en' | 'ja' | 'zh-TW' | 'zh-CN';
+/**
+ * Languages a whole lesson can be taught in, as of this version: English, Japanese, Traditional Chinese
+ * (Taiwan), Simplified Chinese, Hindi, Hinglish (spoken Hindi mixed with English; the board stays in English),
+ * French and Latin American Spanish. The service's current list comes from `fetchLanguages()`.
+ */
+export type LessonLanguage = 'en' | 'ja' | 'zh-TW' | 'zh-CN' | 'hi' | 'hi-Latn' | 'fr' | 'es';
 
 /** What the session is for. The service's default is `concept-review`. */
 export type SessionGoal = 'homework-help' | 'practice' | 'concept-review' | 'test-prep' | 'catch-up' | 'challenge' | 'general';
@@ -45,10 +49,18 @@ export interface SessionClaims {
   /** `"voice"` (default) or `"text"`. In a voice session the student can also type. */
   input_mode?: 'voice' | 'text';
   /**
-   * The lesson's languages, the lesson's own language first. `['zh-TW']`, `['zh-CN']` or `['ja']` teaches the
-   * whole lesson (speech, board, questions) in that language. Leave it out for English.
+   * The lesson's language. One code teaches the whole lesson (speech, board, questions) in that language:
+   * `['ja']`, `['zh-TW']`, `['zh-CN']`, `['hi']`, `['hi-Latn']` (Hinglish: spoken Hindi mixed with English,
+   * board in English), `['fr']`, `['es']`. Leave it out for English. Prefer the codes `languages()` /
+   * `fetchLanguages()` return over a list written into your code: the service adds languages.
    */
   tutor_languages?: Array<LessonLanguage | (string & {})>;
+  /**
+   * The languages the student may change the lesson to in the middle of a lesson, by asking the tutor
+   * ("can you explain in Hindi?"): an array of codes, or `true` / `'all'` for every language offered.
+   * Leave it out and the lesson's language cannot change.
+   */
+  switch_languages?: Array<LessonLanguage | (string & {})> | true | 'all';
   /** Hard cap in minutes, 1 to 120, default 30. In the sandbox a session ends at 15 minutes whatever this says. */
   max_duration_minutes?: number;
   /** Your own session id. The service then uses it everywhere (events, session summaries). Otherwise it makes one. */
@@ -118,6 +130,10 @@ function validateClaims(claims: SessionClaims): void {
   }
   if (claims.tutor_languages !== undefined && !(Array.isArray(claims.tutor_languages) && claims.tutor_languages.length > 0 && claims.tutor_languages.every(isNonEmptyString))) {
     throw new EvelynConfigError('tutor_languages must be an array of language codes, for example ["zh-TW"]. Leave it out for English.');
+  }
+  const switchTo = claims.switch_languages;
+  if (switchTo !== undefined && switchTo !== true && switchTo !== 'all' && !(Array.isArray(switchTo) && switchTo.length > 0 && switchTo.every(isNonEmptyString))) {
+    throw new EvelynConfigError('switch_languages must be an array of language codes, for example ["hi", "es"], or true / "all" for every language. Leave it out to keep the lesson in one language.');
   }
   const minutes = claims.max_duration_minutes;
   if (minutes !== undefined && !(typeof minutes === 'number' && Number.isFinite(minutes) && minutes >= 1 && minutes <= 120)) {

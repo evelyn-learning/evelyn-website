@@ -123,10 +123,10 @@ t('Hindi, Hinglish, French, Spanish: the lines the engine says itself', () => {
     assert.ok(l.timeUp('Asha').startsWith('Asha,')); assert.ok(!l.timeUp('').includes('Asha') && !/^[,\s]/.test(l.timeUp('')));
     assert.ok(l.correction('X1').endsWith('X1'));
   }
-  // Hindi is Devanagari with no Latin word; Hinglish has both in every line.
+  // Hindi is Devanagari with no Latin word; Hinglish is in Latin letters only.
   for (const c of [...hi.checkIns, hi.goOn, hi.goOnOrQuestion, hi.lookAtBoard, hi.unreachable, hi.nextStep, hi.timeUp('')]) assert.ok(DEVANAGARI.test(c) && !/[A-Za-z]/.test(c), c);
-  for (const c of [hing.checkIns[0]!, hing.goOn, hing.goOnOrQuestion, hing.lookAtBoard, hing.unreachable, hing.nextStep, hing.timeUp('')]) assert.ok(DEVANAGARI.test(c) && /[A-Za-z]{3,}/.test(c), c);
-  assert.equal(hing.checkIns[0], 'यहाँ तक clear है?');
+  for (const c of [hing.checkIns[0]!, hing.goOn, hing.goOnOrQuestion, hing.lookAtBoard, hing.unreachable, hing.nextStep, hing.timeUp('')]) assert.ok(!DEVANAGARI.test(c) && /[A-Za-z]{3,}/.test(c), c);
+  assert.equal(hing.checkIns[0], 'Yahan tak clear hai?');
   // tu and tú: never vous, usted or vosotros.
   const all = (l: typeof fr) => [...l.checkIns, l.goOn, l.goOnOrQuestion, l.lookAtBoard, l.unreachable, l.nextStep, l.timeUp('A'), l.correction('x')].join('\n');
   assert.ok(/\btu\b/i.test(all(fr)) && !/\b(?:vous|votre|vos)\b/i.test(all(fr)));
@@ -137,12 +137,11 @@ t('Hindi, Hinglish, French, Spanish: the lines the engine says itself', () => {
   for (const l of [hi, hing, fr, es]) assert.ok(v2HoldsLessonPartAsk(`x = 4. ${l.goOn}`) && v2HoldsLessonPartAsk(l.goOnOrQuestion));
   assert.ok(!v2HoldsLessonPartAsk('Shall we go on?') && !v2HoldsLessonPartAsk('x = 4.'));
 });
-t('a typed Hinglish session is in Latin letters; a spoken one keeps the speech form', () => {
+t('Hinglish is in Latin letters, typed and spoken alike (2026-11-24: the voice reads it as well, and it is what students can read)', () => {
   const spoken = v2LessonLines(['hi-Latn'])!; const typed = v2LessonLines(['hi-Latn'], 'text')!;
-  assert.equal(v2LessonLines(['hi-Latn'], 'voice'), spoken); assert.notEqual(typed, spoken); assert.equal(v2LessonLines(['hinglish'], 'text'), typed);
+  assert.equal(v2LessonLines(['hi-Latn'], 'voice'), typed); assert.equal(typed, spoken); assert.equal(v2LessonLines(['hinglish'], 'text'), typed);
   const all = (l: typeof typed) => [...l.checkIns, l.goOn, l.goOnOrQuestion, l.lookAtBoard, l.unreachable, l.nextStep, l.timeUp('Asha'), l.timeUp(''), l.correction('x = 4')];
   for (const c of all(typed)) assert.ok(!/[^\x00-\x7f]/.test(c), `typed Hinglish outside ASCII: ${c}`);
-  for (const c of all(spoken)) assert.ok(DEVANAGARI.test(c), c);
   assert.equal(typed.checkIns[0], 'Yahan tak clear hai?'); assert.equal(typed.goOnOrQuestion, 'Next part par chalein, ya pehle koi doubt hai?');
   assert.equal(typed.timeUp(''), 'Aaj ka time poora ho gaya. Tumne bahut achha kiya. Agli class mein milte hain.'); assert.ok(typed.timeUp('Asha').startsWith('Asha, aaj'));
   assert.equal(typed.checkIns.length, 4); for (const c of [...typed.checkIns, typed.goOn, typed.goOnOrQuestion, typed.nextStep]) assert.ok(/\?$/.test(c), c);

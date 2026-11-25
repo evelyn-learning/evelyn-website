@@ -1,0 +1,82 @@
+{
+  "name": "lang-switch-spoken",
+  "sourceSessions": [
+    "synthetic: a spoken lesson that changes language mid-way, 2026-11-24"
+  ],
+  "partner": "evelyn-marketing",
+  "claims": {
+    "student_name": "Sourav",
+    "subject": "math",
+    "level": "Grade 8",
+    "topic": "Solving linear equations",
+    "target_kind": "freestyle",
+    "max_duration_minutes": 14,
+    "wrap_at_minutes": 12,
+    "input_mode": "voice",
+    "open_scope": true,
+    "features": {
+      "voice_mode": true,
+      "text_mode": true,
+      "homework_upload": false
+    },
+    "metadata": {
+      "source": "lesson-language-check"
+    }
+  },
+  "maxMinutes": 14,
+  "maxStudentTurns": 14,
+  "student": {
+    "who": "A 15-year-old in class 10 in Patna, India, SPEAKING. Your English is weak. You START in simple English, and after the tutor's first explanation you ask to be taught in Hinglish. After the lesson changes you speak Hinglish.",
+    "voice": "Short spoken lines read by a Hindi voice. Before the change: simple English words only (\"yes sir, I am ready\"). After the change: Hinglish with the Hindi words written in Devanagari and the English words in English spelling (\"हाँ sir, समझ गया\", \"x की value four होगी\"). Numbers as English words. No digits or symbols. Never a single word: at least three words.",
+    "manner": "You answer what was asked. You make one mistake and get it right after a clear explanation.",
+    "beats": [
+      {
+        "id": "start",
+        "when": "The tutor greets you.",
+        "do": "Say: yes sir, I am ready",
+        "once": true
+      },
+      {
+        "id": "ask",
+        "when": "The tutor has given its first explanation or question about the topic.",
+        "do": "Say exactly: sir, can you please teach me in Hinglish",
+        "once": true
+      },
+      {
+        "id": "choose",
+        "when": "The tutor asks which you want, Hindi or Hinglish.",
+        "do": "Say: Hinglish please sir",
+        "once": true
+      },
+      {
+        "id": "learn",
+        "when": "The tutor asks a question after the change.",
+        "do": "Answer briefly in Hinglish (Devanagari Hindi words, English school words), saying the number in English."
+      },
+      {
+        "id": "french",
+        "when": "About four turns after the change.",
+        "do": "Say: sir, can you teach in German",
+        "once": true
+      }
+    ],
+    "reactions": [
+      {
+        "tag": "complaint_lost",
+        "when": "After you chose Hinglish, the tutor still replies only in English, or writes Hindi in Latin letters, or the board changes to Hindi script.",
+        "do": "Type that you asked for Hinglish."
+      },
+      {
+        "tag": "end_request",
+        "when": "About 12 or more of the tutor's turns have passed.",
+        "do": "Type: thank you sir, bye",
+        "once": true
+      }
+    ],
+    "sampleLines": [
+      "yes sir, I am ready",
+      "sir, can you please teach me in Hinglish",
+      "x की value four होगी sir"
+    ]
+  }
+}

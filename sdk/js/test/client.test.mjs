@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { inspect } from 'node:util';
 import { test } from 'node:test';
-import { EvelynTutor, EvelynApiError, EvelynConfigError, verifySessionToken } from '../dist/esm/index.js';
+import { BUNDLED_LANGUAGES, EvelynTutor, EvelynApiError, EvelynConfigError, fetchLanguages, verifySessionToken } from '../dist/esm/index.js';
 import { fakeFetch, vectors } from './helpers.mjs';
 
 const { partnerId, secret } = vectors;
@@ -140,6 +140,34 @@ test('sessionToken and sessionUrl sign with the client\'s keys and hosts', () =>
   const claims = verifySessionToken(tutor.sessionToken({ student_id: 'stu_1' }, { expiresInSeconds: 60 }), secret);
   assert.equal(claims.exp - claims.iat, 60);
   assert.ok(tutor.sessionUrl({ student_id: 'stu_1' }).startsWith('http://localhost:3007/embed?token='));
+});
+
+test('languages() reads the public list with no signature, and falls back to the bundled list', async () => {
+  const live = [{ code: 'en', label: 'English', english: 'English', firstTopic: 'Fractions', extra: 'ignored' }, { code: 'pt-BR', label: 'Português', english: 'Portuguese', firstTopic: 'Frações' }];
+  const { tutor, calls } = client(() => ({ body: { languages: live } }));
+  assert.deepEqual(await tutor.languages(), [{ code: 'en', label: 'English', english: 'English', firstTopic: 'Fractions' }, live[1]]);
+  assert.equal(calls[0].url, 'https://tutor.evelynlearning.com/api/tutor-portal/languages');
+  assert.equal(calls[0].init.headers, undefined, 'no keys are sent to the public list');
+
+  const codes = (list) => list.map((language) => language.code);
+  const bundled = ['en', 'ja', 'zh-TW', 'zh-CN', 'hi', 'hi-Latn', 'fr', 'es'];
+  assert.deepEqual(codes(BUNDLED_LANGUAGES), bundled);
+  const failures = [
+    () => ({ status: 404, body: '<html>Not found</html>' }),
+    () => ({ body: { languages: [] } }),
+    () => ({ body: { languages: [{ code: 'xx' }] } }),
+    () => {
+      throw new TypeError('fetch failed');
+    },
+  ];
+  for (const respond of failures) assert.deepEqual(codes(await client(respond).tutor.languages()), bundled);
+
+  const copy = await fetchLanguages({ fetch: async () => { throw new Error('offline'); } });
+  copy[0].code = 'changed';
+  assert.equal(BUNDLED_LANGUAGES[0].code, 'en', 'the fallback is a copy');
+  const other = fakeFetch(() => ({ body: { languages: live } }));
+  await fetchLanguages({ embedHost: 'http://localhost:3007/', fetch: other.fetch });
+  assert.equal(other.calls[0].url, 'http://localhost:3007/api/tutor-portal/languages');
 });
 
 test('sessions.summary joins ids and returns the sessions array', async () => {

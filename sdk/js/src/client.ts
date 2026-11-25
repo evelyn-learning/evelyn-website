@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { EvelynApiError, EvelynConfigError, SANDBOX_URL } from './errors.js';
+import { fetchLanguages, type Language } from './languages.js';
 import { signRequest } from './signing.js';
 import { createSessionToken, sessionUrl, DEFAULT_EMBED_HOST, type SessionClaims } from './token.js';
 
@@ -324,6 +325,14 @@ export class EvelynTutor {
   /** Signs a token and returns the session page URL: an iframe's `src`, or the URL a mobile WebView loads. Minutes are used only once the student starts the session. */
   sessionUrl(claims: SessionClaims, options: { expiresInSeconds?: number } = {}): string {
     return sessionUrl(this.sessionToken(claims, options), { host: this.embedHost });
+  }
+
+  /**
+   * The languages a lesson can be taught in: the service's current list, or the list bundled with this package
+   * when the network fails. Needs no keys and never throws. Use a `code` as `tutor_languages: [code]`.
+   */
+  languages(): Promise<Language[]> {
+    return fetchLanguages({ embedHost: this.embedHost, fetch: this.#fetch });
   }
 
   /** Your tutoring minute pool: minutes used and left. Cache the answer for 60 seconds. */

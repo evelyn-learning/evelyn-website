@@ -12,7 +12,7 @@ const { partnerId, secret } = vectors;
 
 /** Starts the server as an MCP client would and returns `call(method, params)` over its stdio. */
 function startServer({ command = [MCP], env = {}, cwd = mkdtempSync(join(tmpdir(), 'evelyn-mcp-')) } = {}) {
-  const child = spawn(process.execPath, command, { cwd, env: cleanEnv({ EVELYN_EMBED_HOST: 'http://127.0.0.1:9', ...env }), stdio: ['pipe', 'pipe', 'inherit'] });
+  const child = spawn(process.execPath, command, { cwd, env: cleanEnv(env), stdio: ['pipe', 'pipe', 'inherit'] });
   const waiting = new Map();
   const unexpected = [];
   createInterface({ input: child.stdout }).on('line', (line) => {
@@ -40,7 +40,7 @@ function startServer({ command = [MCP], env = {}, cwd = mkdtempSync(join(tmpdir(
   };
 }
 
-const EXPECTED_TOOLS = ['evelyn_docs', 'evelyn_get_keys_instructions', 'evelyn_create_session_url', 'evelyn_usage', 'evelyn_read_worksheet', 'evelyn_prepare_problem', 'evelyn_scaffold', 'evelyn_doctor'];
+const EXPECTED_TOOLS = ['evelyn_docs', 'evelyn_get_keys_instructions', 'evelyn_languages', 'evelyn_create_session_url', 'evelyn_usage', 'evelyn_read_worksheet', 'evelyn_prepare_problem', 'evelyn_scaffold', 'evelyn_doctor'];
 
 test('initialize → tools/list → tools/call evelyn_create_session_url returns a URL that verifies', async () => {
   const server = startServer({ env: { EVELYN_PARTNER_ID: partnerId, EVELYN_PARTNER_SECRET: secret } });
@@ -94,6 +94,12 @@ test('a tool that needs keys says how to get them, as a tool error', async () =>
     assert.equal(made.isError, false);
     assert.equal(verifySessionToken(new URL(made.text.split('\n')[0]).searchParams.get('token'), secret).partner_id, partnerId);
 
+    const switching = await server.tool('evelyn_create_session_url', { student_id: 'stu_1', subject: 'math', level: 'Grade 8', tutor_languages: ['hi-Latn'], switch_languages: ['hi', 'es'] });
+    const switchClaims = verifySessionToken(new URL(switching.text.split('\n')[0]).searchParams.get('token'), secret);
+    assert.deepEqual([switchClaims.tutor_languages, switchClaims.switch_languages], [['hi-Latn'], ['hi', 'es']]);
+    const everything = await server.tool('evelyn_create_session_url', { student_id: 'stu_1', subject: 'math', level: 'Grade 8', switch_languages: ['all'] });
+    assert.equal(verifySessionToken(new URL(everything.text.split('\n')[0]).searchParams.get('token'), secret).switch_languages, 'all');
+
     const badClaims = await server.tool('evelyn_create_session_url', { student_id: 'stu_1', subject: 'math', level: 'Grade 8', max_duration_minutes: 500 });
     assert.equal(badClaims.isError, true);
     assert.match(badClaims.text, /max_duration_minutes must be a number from 1 to 120/);
@@ -121,8 +127,12 @@ test('tools that need no keys: docs, key instructions, scaffold, doctor', async 
     assert.match(express.text, /export default router;/);
     assert.equal((await server.tool('evelyn_scaffold', { framework: 'rails' })).isError, true);
 
+    const languages = await server.tool('evelyn_languages');
+    assert.deepEqual(JSON.parse(languages.text.split('\n\n')[0]).map((language) => language.code), ['en', 'ja', 'zh-TW', 'zh-CN', 'hi', 'hi-Latn', 'fr', 'es']);
+
     const doctor = await server.tool('evelyn_doctor');
     assert.match(doctor.text, /FAIL {2}EVELYN_PARTNER_ID: not set/);
+    assert.match(doctor.text, /ok {4}Package version: /);
   } finally {
     await server.stop();
   }

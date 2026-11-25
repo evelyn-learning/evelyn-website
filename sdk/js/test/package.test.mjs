@@ -18,7 +18,7 @@ test('the CommonJS and ES module builds export the same names and sign the same 
 });
 
 test('the public surface is what the README documents', () => {
-  assert.deepEqual(Object.keys(esm).sort(), ['DEFAULT_API_HOST', 'DEFAULT_EMBED_HOST', 'EvelynApiError', 'EvelynConfigError', 'EvelynTutor', 'createSessionToken', 'createSessionUrl', 'sessionUrl', 'signRequest', 'verifySessionToken']);
+  assert.deepEqual(Object.keys(esm).sort(), ['BUNDLED_LANGUAGES', 'DEFAULT_API_HOST', 'DEFAULT_EMBED_HOST', 'EvelynApiError', 'EvelynConfigError', 'EvelynTutor', 'EvelynWebhookError', 'createSessionToken', 'createSessionUrl', 'fetchLanguages', 'sessionUrl', 'signRequest', 'verifySessionToken', 'verifyWebhook', 'webhookHandler']);
 });
 
 test('package.json points at files the build produces, and the version constant matches', () => {

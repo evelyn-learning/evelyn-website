@@ -6,6 +6,7 @@ import { EvelynTutor } from './client.js';
 import { describeUsage, formatDoctor, runDoctor } from './doctor.js';
 import { DASHBOARD_URL, EvelynConfigError, explainError, SANDBOX_URL } from './errors.js';
 import { loadGuide } from './guide.js';
+import { fetchLanguages, type Language } from './languages.js';
 import { startMcpServer } from './mcp.js';
 import { addEnvEntries, ensureGitignored, loadProjectEnv } from './project-env.js';
 import { buildScaffold, detectProject, FRAMEWORKS, type Framework } from './scaffold.js';
@@ -28,15 +29,17 @@ Commands
               --topic <text>        what the lesson is on
               --subject <name>      default: math
               --level <label>       default: "Grade 8"
-              --language <code>     zh-TW, zh-CN or ja; leave out for English
+              --language <code>     a code from "evelyn-tutor languages"; leave out for English
+              --switch <all|codes>  languages the student may change to by asking: all, or hi,es
               --mode <voice|text>   default: voice
               --name <first name>   the student's first name
               --minutes <1-120>     session time cap
               --plan <plan id>      open a prepared lesson plan or worksheet question
               --goal <goal>         for example homework-help
               --expires <seconds>   token lifetime (default: 7200)
+  languages List the languages a lesson can be taught in (--json for the raw list)
   usage     Print tutoring minutes used and left (--json for the raw answer)
-  doctor    Check the keys, this machine's clock and one signed API call
+  doctor    Check the keys, this machine's clock, one signed API call, and for a newer version
   docs      Print the integration guide
   mcp       Run the MCP server on stdio, for coding assistants
 
@@ -49,7 +52,8 @@ const BOOLEAN_FLAGS = new Set(['yes', 'force', 'json', 'help']);
 /** The options each command takes. A misspelt option is refused, not ignored. */
 const COMMAND_FLAGS: Record<string, readonly string[]> = {
   init: ['yes', 'force', 'framework', 'partner-id', 'dir'],
-  token: ['student', 'topic', 'subject', 'level', 'language', 'mode', 'name', 'minutes', 'plan', 'goal', 'expires'],
+  token: ['student', 'topic', 'subject', 'level', 'language', 'switch', 'mode', 'name', 'minutes', 'plan', 'goal', 'expires'],
+  languages: ['json'],
   usage: ['json'],
   doctor: [],
   docs: [],
@@ -169,14 +173,32 @@ function dependsOnPackage(dir: string): boolean {
   }
 }
 
+/** The list's own spelling of a language code typed on the command line (`zh-tw` → `zh-TW`), or an error naming the codes. */
+function languageCode(typed: string, offered: Language[], flag: string): string {
+  const match = offered.find((language) => language.code.toLowerCase() === typed.trim().toLowerCase());
+  if (!match) throw new EvelynConfigError(`--${flag}: "${typed}" is not a lesson language. The codes: ${offered.map((language) => language.code).join(', ')}.`);
+  return match.code;
+}
+
+/** `languages`: prints the languages a lesson can be taught in. */
+async function languages(flags: Map<string, string>): Promise<void> {
+  const offered = await fetchLanguages({ embedHost: process.env.EVELYN_EMBED_HOST });
+  if (flags.has('json')) return console.log(JSON.stringify(offered, null, 2));
+  const width = Math.max(...offered.map((language) => language.code.length));
+  console.log(offered.map((language) => `${language.code.padEnd(width)}  ${language.english}${language.label === language.english ? '' : ` (${language.label})`}`).join('\n'));
+}
+
 /** `token`: prints a session URL built from the flags. */
-function token(flags: Map<string, string>): void {
+async function token(flags: Map<string, string>): Promise<void> {
   const student = flags.get('student');
   if (!student) throw new EvelynConfigError('--student is required: your id for the student, for example --student test-student.');
   const mode = flags.get('mode');
   if (mode !== undefined && mode !== 'voice' && mode !== 'text') throw new EvelynConfigError('--mode must be voice or text.');
   const plan = flags.get('plan');
   const topic = flags.get('topic');
+  const language = flags.get('language');
+  const switchTo = flags.get('switch');
+  const offered = language !== undefined || (switchTo !== undefined && switchTo !== 'all') ? await fetchLanguages({ embedHost: process.env.EVELYN_EMBED_HOST }) : [];
   const claims: SessionClaims = {
     student_id: student,
     subject: flags.get('subject') ?? 'math',
@@ -186,7 +208,9 @@ function token(flags: Map<string, string>): void {
     ...(topic && !plan ? { target_kind: 'freestyle' as const } : {}),
     ...(plan ? { curriculum_module: plan } : {}),
     ...(flags.has('goal') ? { session_goal: flags.get('goal') as SessionGoal } : {}),
-    ...(flags.has('language') ? { tutor_languages: [flags.get('language')!] } : {}),
+    ...(language !== undefined ? { tutor_languages: [languageCode(language, offered, 'language')] } : {}),
+    ...(switchTo === 'all' ? { switch_languages: 'all' as const } : {}),
+    ...(switchTo !== undefined && switchTo !== 'all' ? { switch_languages: switchTo.split(',').map((code) => languageCode(code, offered, 'switch')) } : {}),
     ...(mode ? { input_mode: mode } : {}),
     ...(flags.has('minutes') ? { max_duration_minutes: Number(flags.get('minutes')) } : {}),
   };
@@ -221,7 +245,8 @@ export async function main(argv: string[]): Promise<void> {
     if (flags.has('help')) return console.log(HELP);
     if (command === 'init') return await init(flags);
     loadProjectEnv(process.cwd());
-    if (command === 'token') return token(flags);
+    if (command === 'token') return await token(flags);
+    if (command === 'languages') return await languages(flags);
     if (command === 'usage') return await usage(flags);
     if (command === 'doctor') return await doctor();
     return console.log((await loadGuide()).text);

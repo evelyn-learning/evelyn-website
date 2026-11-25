@@ -320,7 +320,9 @@ const V2_VERDICT_OPENERS_TYPED: Readonly<Record<string, { correct: string; incor
 /** The verdict openers of a session: its lesson language's (the typed form in a typed session), or English. */
 export function v2VerdictOpeners(languages: GuardLanguages, mode?: 'voice' | 'text'): { correct: string; incorrect: string; mixed: string } {
   const code = taughtIn(languages)?.code ?? '';
-  return (mode === 'text' ? V2_VERDICT_OPENERS_TYPED[code] : undefined) ?? V2_VERDICT_OPENERS_BY_LANGUAGE[code] ?? V2_VERDICT_OPENERS;
+  // Hinglish: Latin letters in speech too (lesson-lines.ts v2LessonLines).
+  void mode;
+  return V2_VERDICT_OPENERS_TYPED[code] ?? V2_VERDICT_OPENERS_BY_LANGUAGE[code] ?? V2_VERDICT_OPENERS;
 }
 
 /**

@@ -22,6 +22,12 @@ export const DEMO_LANGUAGES: readonly DemoLanguage[] = [
   { code: 'zh-TW', label: '繁體中文', english: 'Chinese (Traditional)', firstTopic: '一元一次方程式' },
   { code: 'zh-CN', label: '简体中文', english: 'Chinese (Simplified)', firstTopic: '一元一次方程' },
   { code: 'ja', label: '日本語', english: 'Japanese', firstTopic: '一次方程式' },
+  // 2026-11-24. This built-in list is what a picker shows before the engine's live list arrives, and what names a
+  // code elsewhere; the engine's table (GET /api/tutor-portal/languages) is the list that counts.
+  { code: 'hi', label: 'हिन्दी', english: 'Hindi', firstTopic: 'रैखिक समीकरण' },
+  { code: 'hi-Latn', label: 'Hinglish', english: 'Hinglish', firstTopic: 'Solving linear equations' },
+  { code: 'fr', label: 'Français', english: 'French', firstTopic: 'Les équations du premier degré' },
+  { code: 'es', label: 'Español', english: 'Spanish', firstTopic: 'Ecuaciones de primer grado' },
 ];
 
 /** What a demo's session config adds for a picked language: nothing for English (the session every demo was

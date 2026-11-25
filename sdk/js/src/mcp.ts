@@ -4,6 +4,7 @@ import { EvelynTutor } from './client.js';
 import { describeUsage, formatDoctor, runDoctor } from './doctor.js';
 import { DASHBOARD_URL, EvelynConfigError, explainError, SANDBOX_URL } from './errors.js';
 import { bundledGuide, loadGuide } from './guide.js';
+import { fetchLanguages } from './languages.js';
 import { loadProjectEnv } from './project-env.js';
 import { buildScaffold, FRAMEWORKS, type Framework } from './scaffold.js';
 import type { SessionClaims } from './token.js';
@@ -75,6 +76,17 @@ const TOOLS: Tool[] = [
     run: async () => KEYS_INSTRUCTIONS,
   },
   {
+    name: 'evelyn_languages',
+    description:
+      'Lists the languages a lesson can be taught in, with the code to put in tutor_languages (for example ["hi"]) and switch_languages, each language\'s own name, and a first topic in that language for a test lesson. ' +
+      'Use it before offering a language choice in the app or creating a session in another language; do not write a fixed list into the app, because the service adds languages (the app can call languages() from @evelynlearning/tutor on its server). Free, needs no keys. Returns the service\'s current list, or the list bundled with this package when offline.',
+    inputSchema: noArguments,
+    run: async () => {
+      const offered = await fetchLanguages({ embedHost: process.env.EVELYN_EMBED_HOST });
+      return `${JSON.stringify(offered, null, 2)}\n\nA lesson is in English unless tutor_languages names one of these codes. hi-Latn is Hinglish: spoken Hindi mixed with English, with the board in English.`;
+    },
+  },
+  {
     name: 'evelyn_create_session_url',
     description:
       'Signs a session token and returns the session page URL (https://tutor.evelynlearning.com/embed?token=…) for one student and one lesson. ' +
@@ -92,7 +104,12 @@ const TOOLS: Tool[] = [
         tutor_languages: {
           type: 'array',
           items: { type: 'string' },
-          description: 'Leave out for English. ["zh-TW"] (Traditional Chinese, Taiwan), ["zh-CN"] (Simplified Chinese) or ["ja"] (Japanese) teaches the whole lesson in that language.',
+          description: 'Leave out for English. One code from evelyn_languages, for example ["zh-TW"], ["hi"] or ["es"], teaches the whole lesson in that language.',
+        },
+        switch_languages: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Languages the student may change the lesson to mid-lesson by asking the tutor: codes from evelyn_languages, or ["all"] for every language. Leave out and the lesson\'s language cannot change.',
         },
         input_mode: { type: 'string', enum: ['voice', 'text'], description: 'voice (default) or text.' },
         max_duration_minutes: { type: 'number', minimum: 1, maximum: 120, description: 'Session time cap. Default 30; a sandbox session ends at 15 minutes whatever this says.' },
@@ -106,6 +123,7 @@ const TOOLS: Tool[] = [
     },
     run: async (args) => {
       const { expires_in_seconds: expires, ...claims } = args;
+      if (Array.isArray(claims.switch_languages) && claims.switch_languages.length === 1 && claims.switch_languages[0] === 'all') claims.switch_languages = 'all';
       const tutor = new EvelynTutor();
       const url = tutor.sessionUrl(claims as unknown as SessionClaims, typeof expires === 'number' ? { expiresInSeconds: expires } : {});
       return `${url}\n\nOpen it in a browser, or use it as an iframe src with allow="microphone; camera; autoplay; clipboard-write". Anyone with this URL can start the session as this student until it expires, so do not commit it.`;

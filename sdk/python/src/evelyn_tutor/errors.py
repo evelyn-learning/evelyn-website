@@ -13,6 +13,18 @@ class EvelynConfigError(ValueError):
     file. The message says what to change."""
 
 
+class EvelynWebhookError(Exception):
+    """A webhook request that did not pass verification. Answer it with a 4xx status and do not act on it.
+
+    Attributes:
+        reason: ``bad_signature``, ``stale_timestamp`` or ``malformed``.
+    """
+
+    def __init__(self, reason: str, message: str) -> None:
+        self.reason = reason
+        super().__init__(f"Webhook refused ({reason}): {message}")
+
+
 class EvelynApiError(Exception):
     """The API answered with a status outside 200-299.
 

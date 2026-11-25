@@ -38,8 +38,13 @@ class SessionClaims(_RequiredClaims, total=False):
         curriculum_module: a lesson plan id (a worksheet question, your own material, a catalogue lesson).
         session_goal: ``homework-help``, ``practice``, ``concept-review`` (default), ``test-prep``, ``catch-up``, ``challenge``, ``general``.
         input_mode: ``"voice"`` (default) or ``"text"``. In a voice session the student can also type.
-        tutor_languages: the lesson's languages, its own language first. ``["zh-TW"]``, ``["zh-CN"]`` or ``["ja"]``
-            teaches the whole lesson in that language. Leave it out for English.
+        tutor_languages: the lesson's language. One code teaches the whole lesson in that language: ``["ja"]``,
+            ``["zh-TW"]``, ``["zh-CN"]``, ``["hi"]``, ``["hi-Latn"]`` (Hinglish: spoken Hindi mixed with English,
+            board in English), ``["fr"]``, ``["es"]``. Leave it out for English. Prefer the codes
+            ``languages()`` / ``fetch_languages()`` return over a list written into your code: the service adds languages.
+        switch_languages: the languages the student may change the lesson to in the middle of a lesson, by
+            asking the tutor: a list of codes, or ``True`` / ``"all"`` for every language offered. Leave it
+            out and the lesson's language cannot change.
         max_duration_minutes: hard cap, 1 to 120, default 30. A sandbox session ends at 15 minutes whatever this says.
         session_id: your own session id. Otherwise the service makes one.
         resume: with the same ``session_id``, continue that session instead of starting over (kept 30 days).
@@ -62,6 +67,7 @@ class SessionClaims(_RequiredClaims, total=False):
     session_goal: str
     input_mode: str
     tutor_languages: List[str]
+    switch_languages: Union[List[str], bool, str]
     max_duration_minutes: Union[int, float]
     session_id: str
     resume: bool
@@ -104,6 +110,9 @@ def _validate_claims(claims: Mapping[str, Any]) -> None:
     languages = claims.get("tutor_languages")
     if languages is not None and not (isinstance(languages, (list, tuple)) and len(languages) > 0 and all(_is_text(code) for code in languages)):
         raise EvelynConfigError('tutor_languages must be a list of language codes, for example ["zh-TW"]. Leave it out for English.')
+    switch_to = claims.get("switch_languages")
+    if switch_to is not None and switch_to is not True and switch_to != "all" and not (isinstance(switch_to, (list, tuple)) and len(switch_to) > 0 and all(_is_text(code) for code in switch_to)):
+        raise EvelynConfigError('switch_languages must be a list of language codes, for example ["hi", "es"], or True / "all" for every language. Leave it out to keep the lesson in one language.')
     minutes = claims.get("max_duration_minutes")
     if minutes is not None and not (isinstance(minutes, (int, float)) and not isinstance(minutes, bool) and math.isfinite(minutes) and 1 <= minutes <= 120):
         raise EvelynConfigError("max_duration_minutes must be a number from 1 to 120.")

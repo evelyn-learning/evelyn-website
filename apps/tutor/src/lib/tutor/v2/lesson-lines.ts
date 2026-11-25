@@ -114,7 +114,11 @@ const LINES: Readonly<Record<string, V2LessonLines>> = {
  *  English wording stands) and for a language with no lines yet (English, as before, rather than nothing). */
 export function v2LessonLines(languages: readonly string[] | null | undefined, mode?: 'voice' | 'text'): V2LessonLines | null {
   const lang = taughtIn(languages);
-  return lang ? (mode === 'text' ? TYPED[lang.code] : undefined) ?? LINES[lang.code] ?? null : null;
+  // Hinglish is written in Latin letters in a spoken lesson as well as a typed one (2026-11-24, the first spoken
+  // test: the tutor wrote it so by itself, the Hindi voice reads it as well as the Devanagari form, and it is what
+  // students who asked for Hinglish can read on the screen). `mode` stays for a language whose typed form differs.
+  void mode;
+  return lang ? TYPED[lang.code] ?? LINES[lang.code] ?? null : null;
 }
 
 /**
