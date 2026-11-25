@@ -9,7 +9,7 @@
  * the pool. Everything fails OPEN: any throw → not charged, `{ pooled: false }`.
  * Spec: docs/superpowers/specs/2026-10-21-partner-minute-pool-design.md §4.2
  */
-import {
+import { TEXT_MINUTE_RATE, pooledSeconds,
   clampEngagedAt,
   poolView,
   sittingCharge,
@@ -114,6 +114,8 @@ export async function chargeSitting(
      *  usage report). Absent or 0 (a v1 sitting, homework, a discussion, any other lesson): clamped as on main. Never more than
      *  the engine's margin: a forged value only lets the forger's own sitting be charged its real wall clock that far. */
     overrunSec?: number;
+    /** A typed session: its time draws on the pool at TEXT_MINUTE_RATE. Absent: voice, the full rate. */
+    textMode?: boolean;
   },
   deps: PoolStoreDeps = mongoPoolStoreDeps(),
 ): Promise<ChargeResult> {
@@ -155,12 +157,16 @@ export async function chargeSitting(
     });
     if (!won) return none(snap);
 
-    const after = await deps.incPool(input.partnerId, deltaSec);
-    const newDoc: PoolDoc = after ?? { ...pool, usedSec: pool.usedSec + deltaSec };
-    const prevUsed = newDoc.usedSec - deltaSec;
+    // The sitting's own record stays in wall-clock seconds (it is what the next report is compared with); the
+    // pool is drawn at the session's rate.
+    const rate = input.textMode ? TEXT_MINUTE_RATE : 1;
+    const poolDelta = pooledSeconds(wallSec, rate) - pooledSeconds(wallSec - deltaSec, rate);
+    const after = await deps.incPool(input.partnerId, poolDelta);
+    const newDoc: PoolDoc = after ?? { ...pool, usedSec: pool.usedSec + poolDelta };
+    const prevUsed = newDoc.usedSec - poolDelta;
     return {
       charged: true,
-      deltaSec,
+      deltaSec: poolDelta,
       snapshot: poolView(newDoc),
       crossed: thresholdsCrossed(prevUsed, newDoc.usedSec, newDoc.capSec),
     };

@@ -18,6 +18,13 @@ export interface IPartnerPurchase {
   receiptUrl?: string;
   createdAt: Date;
   creditedAt?: Date;
+  /** How the pack was bought: by the buyer at checkout, or by the automatic top-up. */
+  kind?: 'checkout' | 'auto_topup';
+  /** When the pack's unused minutes lapse (twelve months after they were added). */
+  expiresAt?: Date;
+  /** Set once the lapse has been applied: the seconds that were still unused and were taken off the pool. */
+  expiredAt?: Date;
+  expiredSec?: number;
 }
 
 const PartnerPurchaseSchema = new Schema<IPartnerPurchase>({
@@ -31,8 +38,13 @@ const PartnerPurchaseSchema = new Schema<IPartnerPurchase>({
   livemode: { type: Boolean, default: false },
   receiptUrl: { type: String },
   creditedAt: { type: Date },
+  kind: { type: String },
+  expiresAt: { type: Date },
+  expiredAt: { type: Date },
+  expiredSec: { type: Number },
 }, { timestamps: { createdAt: true, updatedAt: false }, versionKey: false });
 PartnerPurchaseSchema.index({ partnerId: 1, createdAt: -1 });
+PartnerPurchaseSchema.index({ expiresAt: 1, expiredAt: 1 });
 
 export const PartnerPurchase: Model<IPartnerPurchase> =
   (mongoose.models.PartnerPurchase as Model<IPartnerPurchase>) ||

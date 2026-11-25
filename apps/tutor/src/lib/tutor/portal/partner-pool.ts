@@ -48,6 +48,17 @@ function finiteOr(n: unknown, fallback: number): number {
   return typeof n === 'number' && Number.isFinite(n) ? n : fallback;
 }
 
+/** What a minute of a typed session takes from the pool: 0.8 of a minute. Typed tutoring is priced at $0.16 a
+ *  minute against $0.20 for voice (the published rates), and the pool is one balance of minutes, so the lower
+ *  price is a lower draw (Praveen 2026-11-24: packs must not be voice-only). */
+export const TEXT_MINUTE_RATE = 0.8;
+
+/** The pool seconds a sitting's wall-clock seconds come to at a rate. Rounded on the running total, never on each
+ *  report, so many small reports cannot drift from one large one. */
+export function pooledSeconds(wallSec: number, rate: number): number {
+  return Math.round(Math.max(0, wallSec) * (rate > 0 && rate <= 1 ? rate : 1));
+}
+
 export function poolView(doc: PoolDoc | null | undefined): PoolSnapshot {
   if (!doc) return { pooled: false };
   const capSec = Math.max(0, finiteOr(doc.capSec, 0));

@@ -21,7 +21,9 @@ import { PartnerModel } from "@/models/Partner";
 import { mongoDashStore, serviceEnv } from "@/lib/tutor/partner-dashboard/mongo-store";
 import { noteFirstSession } from "@/lib/tutor/partner-dashboard/service";
 import { notifyPoolLine, notifySessionEnded } from "@/lib/tutor/partner-dashboard/webhooks";
-import { notifyPartnerOfPoolLine } from "@/lib/tutor/partner-dashboard/pool-notice";
+import { mailPartnerOwners, notifyPartnerOfPoolLine } from "@/lib/tutor/partner-dashboard/pool-notice";
+import { lapseExpiredMinutes, maybeAutoTopUp } from "@/lib/tutor/partner-dashboard/billing";
+import { dashboardOrigin } from "@/lib/tutor/partner-dashboard/core";
 import { buildAttemptSpanWrite, durationBehindSpans, planAttemptSave, sessionActiveSeconds, type AttemptSavePlan } from "@/lib/tutor/recordings/active-seconds";
 import { clientTotalsMax, usageTotalsBehind } from "@/lib/tutor/ai/usage-totals";import { homeworkSolvedFromDebugEvents } from '@/lib/tutor/lesson-plan/homework-ledger';
 import { runSummaryForSession } from '@/lib/tutor/portal/learner-summary-store';
@@ -621,6 +623,8 @@ export async function POST(req: NextRequest) {
               save: { status, endedAtMs: Number.isFinite(endedAtMs as number) ? endedAtMs : null },
               // Task 8h (ruling 3): the margin this sitting's runtime has (a v2 part-flow lesson's); bounded in the store.
               ...(typeof body.overrunSec === "number" ? { overrunSec: body.overrunSec } : {}),
+              // A typed session draws on the pool at the text rate (partner-pool.ts TEXT_MINUTE_RATE).
+              ...(body.inputMode === "text" ? { textMode: true } : {}),
             });
             // A self-serve partner's first charged session is told to us, once (partner-dashboard/service.ts
             // noteFirstSession; Praveen 2026-11-24). Never awaited: it must not slow or sink the save.
@@ -635,6 +639,16 @@ export async function POST(req: NextRequest) {
             }
             if (result.snapshot.pooled) {
               pool = { remaining_sec: result.snapshot.remainingSec, exhausted: result.snapshot.exhausted };
+              // Paid minutes: lapse any pack past its twelve months, and buy the next pack when the partner has
+              // automatic top-up on and is at its line (partner-dashboard/billing.ts). Neither is awaited.
+              if (result.charged) {
+                const topUpPartner = who.partnerId;
+                const leftSec = result.snapshot.remainingSec;
+                void lapseExpiredMinutes(topUpPartner).catch(() => 0);
+                void maybeAutoTopUp(topUpPartner, leftSec).then((r) => {
+                  if (r === "failed") void mailPartnerOwners(topUpPartner, "Automatic top-up failed: your card was not charged", `We tried to add minutes to your Evelyn Voice Tutor account and the saved card was refused. Automatic top-up is now off. ${Math.round(leftSec / 60)} minutes are left.\n\nBuy minutes or update the card: ${dashboardOrigin()}/dashboard/billing\n\nEvelyn Learning`);
+                });
+              }
               if (result.crossed.length) {
                 const partnerId = who.partnerId;
                 const snap = result.snapshot;

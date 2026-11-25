@@ -7,7 +7,9 @@
  * and 500 when a credit could not be written, so that Stripe sends the event again.
  */
 import { NextResponse, type NextRequest } from 'next/server';
-import { billingEnv, creditPurchase, paidCheckoutFromEvent, verifyStripeSignature } from '@/lib/tutor/partner-dashboard/billing';
+import { billingEnv, creditPurchase, paidCheckoutFromEvent, rememberCard, verifyStripeSignature } from '@/lib/tutor/partner-dashboard/billing';
+import { dashboardOrigin } from '@/lib/tutor/partner-dashboard/core';
+import { mailPartnerOwners } from '@/lib/tutor/partner-dashboard/pool-notice';
 import { dashboardOwnerEmail, sendDashboardMail } from '@/lib/tutor/partner-dashboard/mailer';
 
 export const dynamic = 'force-dynamic';
@@ -26,10 +28,12 @@ export async function POST(req: NextRequest) {
   try {
     const r = await creditPurchase(paid);
     if (r.credited) {
+      if (paid.kind !== 'auto_topup') void rememberCard(b, paid).catch((err) => console.warn('[partner-billing] card not kept as default', paid.partnerId, (err as Error)?.message));
+      else void mailPartnerOwners(paid.partnerId, `Automatic top-up: ${paid.minutes.toLocaleString('en-US')} tutoring minutes added`, `Your minutes were running low, so your saved card was charged ${(paid.amountCents / 100).toFixed(2)} ${paid.currency.toUpperCase()} and ${paid.minutes.toLocaleString('en-US')} minutes were added.\n\nInvoices and the top-up setting: ${dashboardOrigin()}/dashboard/billing\n\nEvelyn Learning`);
       console.log(`[partner-billing] credited ${paid.minutes} min to ${paid.partnerId} (${paid.sessionId}${paid.livemode ? '' : ', test mode'})`);
       void sendDashboardMail({
         to: dashboardOwnerEmail(), ...(paid.by ? { replyTo: paid.by } : {}),
-        subject: `Purchase${paid.livemode ? '' : ' (test mode)'}: ${paid.partnerId} bought ${paid.minutes.toLocaleString('en-US')} minutes`,
+        subject: `${paid.kind === 'auto_topup' ? 'Automatic top-up' : 'Purchase'}${paid.livemode ? '' : ' (test mode)'}: ${paid.partnerId} bought ${paid.minutes.toLocaleString('en-US')} minutes`,
         text: `Partner: ${paid.partnerId}\nPack: ${paid.packId}\nMinutes: ${paid.minutes}\nPaid: ${(paid.amountCents / 100).toFixed(2)} ${paid.currency.toUpperCase()}\nBy: ${paid.by || 'unknown'}\nStripe checkout: ${paid.sessionId}\n`,
         html: `<h2>Minute pack purchased${paid.livemode ? '' : ' (test mode)'}</h2><p>Partner: ${paid.partnerId}<br>Pack: ${paid.packId}<br>Minutes: ${paid.minutes}<br>Paid: ${(paid.amountCents / 100).toFixed(2)} ${paid.currency.toUpperCase()}<br>Stripe checkout: ${paid.sessionId}</p>`,
       }).catch(() => false);

@@ -19,6 +19,16 @@ export function poolNoticeMail(which: 'pct80' | 'pct100', company: string, usedS
     : { subject: 'Your Evelyn Voice Tutor minutes are running low', text: `${who} has used 80% of its ${cap} tutoring minutes; ${left} minutes are left. Sessions keep running until they are used up.\n\nAdd minutes: ${origin}/dashboard/billing\n\nEvelyn Learning` };
 }
 
+/** A plain note to every owner of a partner's dashboard (billing events). Never throws. */
+export async function mailPartnerOwners(partnerId: string, subject: string, text: string): Promise<void> {
+  if (!isDBConfigured()) return;
+  try {
+    await connectDB();
+    const owners = await PartnerAccount.find({ partnerId, role: 'owner' }, { email: 1 }).lean<Array<{ email: string }>>();
+    for (const o of owners) await sendDashboardMail({ to: o.email, subject, text, html: `<p>${text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>')}</p>` });
+  } catch (err) { console.warn('[partner-dashboard] owner mail failed', partnerId, (err as Error)?.message); }
+}
+
 export function notifyPartnerOfPoolLine(partnerId: string, which: 'pct80' | 'pct100', usedSec: number, capSec: number): void {
   if (!isDBConfigured()) return;
   void (async () => {
