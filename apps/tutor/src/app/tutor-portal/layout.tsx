@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { PortalShell } from './components/PortalShell';
 import { lessonPlanCountFloor } from './data/curriculum';
-import { PORTAL_ORIGIN, PORTAL_SITE_NAME } from './portal-pages';
+import { PORTAL_OG_IMAGE, PORTAL_ORIGIN, PORTAL_SITE_NAME } from './portal-pages';
 
 // Written out, not built from PORTAL_SITE_NAME: scripts/test-partner-frame-metadata.ts reads these two literals.
 const titles = { default: 'AI Voice Tutor — White-Label Platform', template: '%s | Evelyn Voice Tutor' };
@@ -21,8 +21,8 @@ export const metadata: Metadata = {
   title: titles,
   description,
   applicationName: PORTAL_SITE_NAME,
-  openGraph: { type: 'website', locale: 'en_US', url: `${PORTAL_ORIGIN}/`, siteName: PORTAL_SITE_NAME, title, description },
-  twitter: { card: 'summary', title, description },
+  openGraph: { type: 'website', locale: 'en_US', url: `${PORTAL_ORIGIN}/`, siteName: PORTAL_SITE_NAME, title, description, images: [{ ...PORTAL_OG_IMAGE }] },
+  twitter: { card: 'summary_large_image', title, description, images: [PORTAL_OG_IMAGE.url] },
   robots: { index: true, follow: true },
 };
 

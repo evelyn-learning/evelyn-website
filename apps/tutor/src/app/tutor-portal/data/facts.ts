@@ -74,3 +74,27 @@ export function listAnd(items: readonly string[]): string {
 export function taughtLanguageNames(f: PortalFacts = portalFacts()): string {
   return listAnd(f.taughtLanguages.map((l) => l.english));
 }
+
+/**
+ * How a session's reported duration and the minute balance are counted, in the words every page uses
+ * (2026-11-24). The API docs said the active-time figure "is the number your invoice is based on"; minutes are
+ * prepaid, and the balance is drawn by the clock, not by active time:
+ *   - durationSec: gaps between consecutive messages, each capped at ten minutes (portal/session-summary.ts
+ *     activeSeconds, ACTIVE_GAP_CAP_SEC);
+ *   - the balance: each sitting from when the lesson starts to its end or its last report, clamped at the
+ *     session limit plus a small margin (portal/partner-pool.ts sittingCharge, partner-pool-store.ts
+ *     chargeSitting), typed sessions at TEXT_MINUTE_RATE.
+ */
+export function minuteCounting(f: PortalFacts = portalFacts()): { balance: string; reported: string } {
+  return {
+    balance:
+      `Your minute balance is drawn by the clock. Each sitting of a session counts from the moment the lesson starts to the moment it ends, pauses included; ` +
+      `if the tab is closed or abandoned, it counts up to the last report the session page sent. A sitting stops counting at your session limit ` +
+      `(${f.sandboxSessionMinutes} minutes in the free sandbox, ${f.paidSessionMinutes} after a first purchase), apart from a margin of a few minutes at most while a lesson is finishing. ` +
+      `A minute of a voice session uses one minute of balance and a minute of a typed session uses ${f.textMinuteRate}. ` +
+      `The balance is reported by GET /usage and on your dashboard.`,
+    reported:
+      `durationSec in GET /sessions/summary is a different figure: active tutoring time, the gaps between consecutive messages with each gap capped at ten minutes, so an idle open tab adds nothing. ` +
+      `Use it to show how long a student worked. It is not what your balance is drawn by.`,
+  };
+}

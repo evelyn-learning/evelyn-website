@@ -9,7 +9,7 @@
  * the layout's og:url (the portal home) and og:title.
  */
 import type { Metadata } from 'next';
-import { PARENT_SITE, PORTAL_ORIGIN, PORTAL_SITE_NAME, portalPage, portalUrl } from './portal-pages';
+import { PARENT_SITE, PORTAL_OG_IMAGE, PORTAL_ORIGIN, PORTAL_SITE_NAME, portalPage, portalUrl } from './portal-pages';
 
 export const PORTAL_TITLE_TEMPLATE = `%s | ${PORTAL_SITE_NAME}`;
 
@@ -24,9 +24,8 @@ export function portalMetadata(path: string, over: { description?: string } = {}
     title: page.path === '/' ? { absolute: fullTitle } : page.title,
     description,
     alternates: { canonical: url },
-    openGraph: { type: 'website', locale: 'en_US', url, siteName: PORTAL_SITE_NAME, title: fullTitle, description },
-    // No image: this app has no share image of its own (the root layout names one that is not in public/).
-    twitter: { card: 'summary', title: fullTitle, description },
+    openGraph: { type: 'website', locale: 'en_US', url, siteName: PORTAL_SITE_NAME, title: fullTitle, description, images: [{ ...PORTAL_OG_IMAGE }] },
+    twitter: { card: 'summary_large_image', title: fullTitle, description, images: [PORTAL_OG_IMAGE.url] },
     robots: { index: true, follow: true },
   };
 }

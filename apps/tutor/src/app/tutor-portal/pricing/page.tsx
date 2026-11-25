@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { JsonLd } from '../components/JsonLd';
-import { count, portalFacts, rateUsd, usd } from '../data/facts';
+import { count, minuteCounting, portalFacts, rateUsd, usd } from '../data/facts';
 import { pricing, sandboxLimits, perSessionUsd } from '../data/pricing';
 import { PORTAL_ORIGIN, PORTAL_SITE_NAME } from '../portal-pages';
 import { organizationLd, portalMetadata } from '../seo';
@@ -35,6 +35,7 @@ const faqs: Array<{ q: string; a: string }> = [
     q: 'Do prepaid minutes expire?',
     a: `Minutes bought in a pack are good for ${facts.packValidityMonths} months from the day they are added. The free sandbox minutes do not expire and are used first.`,
   },
+  { q: 'How are minutes counted?', a: minuteCounting(facts).balance },
   {
     q: 'How do typed sessions count?',
     a: `One balance covers both. A minute of a voice session uses one minute; a minute of a typed session uses ${facts.textMinuteRate} of a minute, so typed tutoring costs ${typedLessPct}% less.`,

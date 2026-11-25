@@ -1,10 +1,18 @@
 import type { Metadata } from 'next';
 import { CodeBlock } from '../components/CodeBlock';
+import { ENV_FALLBACK_LIMITS } from '@/lib/tutor/portal/registry';
 import { portalMetadata } from '../../seo';
 import { DocsBreadcrumb } from '../components/DocsBreadcrumb';
 
 export const metadata: Metadata = portalMetadata('/docs/authentication');
 import { Callout } from '../components/Callout';
+
+// 2026-11-24: the 429 row said "Default 600 requests/min, burst 60. Honour retryAfterSec". What is enforced
+// (src/lib/tutor/portal/limits.ts checkPartnerLimits) is the tighter of the two numbers, per endpoint path, in
+// clock minutes; the wait is in the Retry-After header, and no retryAfterSec field is sent. A new account gets
+// ENV_FALLBACK_LIMITS (partner-dashboard/mongo-store.ts), so the number is read from there.
+const defaultCaps = [ENV_FALLBACK_LIMITS.rpm, ENV_FALLBACK_LIMITS.burst].filter((n) => n > 0);
+const requestsPerMinute = Math.min(...defaultCaps);
 
 export default function AuthenticationPage() {
   return (
@@ -171,8 +179,8 @@ def portal_request(method: str, path: str, body: dict | None = None):
           <tbody>
             <tr className="border-b border-slate-100"><td className="py-2.5 pr-4">401</td><td className="py-2.5 pr-4"><code className="text-xs">missing_auth_headers · unknown_partner · bad_signature · stale_timestamp · bad_timestamp</code></td><td className="py-2.5 text-slate-600">Fix the signing.</td></tr>
             <tr className="border-b border-slate-100"><td className="py-2.5 pr-4">403</td><td className="py-2.5 pr-4"><code className="text-xs">partner_suspended · endpoint_not_allowed</code></td><td className="py-2.5 text-slate-600">Contact us.</td></tr>
-            <tr className="border-b border-slate-100"><td className="py-2.5 pr-4">429</td><td className="py-2.5 pr-4"><code className="text-xs">rate_limited</code></td><td className="py-2.5 text-slate-600">Default 600 requests/min, burst 60. Honour <code className="text-xs">retryAfterSec</code>.</td></tr>
-            <tr className="border-b border-slate-100"><td className="py-2.5 pr-4">402</td><td className="py-2.5 pr-4"><code className="text-xs">quota_exceeded</code></td><td className="py-2.5 text-slate-600">Daily request quota (not set for sandboxes).</td></tr>
+            <tr className="border-b border-slate-100"><td className="py-2.5 pr-4">429</td><td className="py-2.5 pr-4"><code className="text-xs">rate_limited</code></td><td className="py-2.5 text-slate-600">{requestsPerMinute} requests per minute for each endpoint by default, counted in clock minutes. Past that the API answers 429 with <code className="text-xs">{'{ "error": "rate_limited", "reason": "rate_limited" }'}</code> and a <code className="text-xs">Retry-After</code> header: the seconds until the next minute starts. Ask us for higher limits.</td></tr>
+            <tr className="border-b border-slate-100"><td className="py-2.5 pr-4">402</td><td className="py-2.5 pr-4"><code className="text-xs">quota_exceeded</code></td><td className="py-2.5 text-slate-600">A daily request quota for each endpoint, when one has been set on your account. None is set by default.</td></tr>
             <tr className="border-b border-slate-100"><td className="py-2.5 pr-4">400</td><td className="py-2.5 pr-4"><code className="text-xs">bad_request</code></td><td className="py-2.5 text-slate-600">Validation failed; the failing field is in <code className="text-xs">issues</code>.</td></tr>
           </tbody>
         </table>

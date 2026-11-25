@@ -58,3 +58,18 @@ export const FOOTER_DEVELOPER_LINKS = [
   { name: "Developer packages", href: PORTAL_LINKS.packages },
   { name: "Partner sign-in", href: PORTAL_LINKS.signIn },
 ];
+
+/**
+ * Header "Developers" group, shown inside the Platform dropdown and under
+ * Platform in the mobile menu. Passed to the shared Header by AppShell only.
+ */
+export const HEADER_DEVELOPER_GROUP = {
+  under: "Platform",
+  heading: "Developers",
+  links: [
+    { name: "Voice Tutor API", href: PORTAL_LINKS.docs, description: "Docs for embedding the tutor" },
+    { name: "API pricing", href: PORTAL_LINKS.pricing, description: "Per-minute prices and prepaid packs" },
+    { name: "Free sandbox", href: PORTAL_LINKS.sandbox, description: "300 tutoring minutes, no card" },
+    { name: "Partner sign-in", href: PORTAL_LINKS.signIn, description: "Your partner dashboard" },
+  ],
+};

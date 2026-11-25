@@ -76,19 +76,29 @@ const navigation: NavItem[] = [
   },
 ];
 
-interface HeaderProps {
-  /**
-   * Optional quiet link in the mobile menu (2026-11-24), e.g. partner sign-in
-   * on the developer portal. Not in the desktop bar: the container is 1280px
-   * and the seven nav items already fill it (tried, the nav wrapped). A prop
-   * because this header is shared: apps/tutor's /tutor page and /admin layout
-   * render it and must stay as they were. Only marketing's AppShell passes
-   * it. Absolute URL, so a plain anchor.
-   */
-  utilityLink?: { name: string; href: string };
+export interface HeaderNavGroup {
+  /** Name of the top-level item whose dropdown gets the group, e.g. "Platform". */
+  under: string;
+  /** Small heading above the group, e.g. "Developers". */
+  heading: string;
+  /** Absolute URLs (another host), rendered as plain anchors. */
+  links: NavChild[];
 }
 
-export function Header({ utilityLink }: HeaderProps = {}) {
+interface HeaderProps {
+  /**
+   * Optional extra group inside one dropdown (2026-11-24), e.g. "Developers"
+   * under Platform with links to the developer portal. In a dropdown, not the
+   * bar: the container is 1280px and the seven nav items already fill it
+   * (a bar link was tried and the nav wrapped). The same group shows under
+   * that item in the mobile menu. A prop because this header is shared:
+   * apps/tutor's /tutor page and /admin layout render it with no props and
+   * must stay as they were. Only marketing's AppShell passes it.
+   */
+  navGroup?: HeaderNavGroup;
+}
+
+export function Header({ navGroup }: HeaderProps = {}) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
@@ -151,6 +161,29 @@ export function Header({ utilityLink }: HeaderProps = {}) {
                         )}
                       </Link>
                     ))}
+                    {navGroup && navGroup.under === item.name && (
+                      <div className="mt-2 border-t border-gray-100 pt-2">
+                        <span className="block px-4 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                          {navGroup.heading}
+                        </span>
+                        {navGroup.links.map((link) => (
+                          <a
+                            key={link.name}
+                            href={link.href}
+                            className="block px-4 py-2 hover:bg-gray-50"
+                          >
+                            <span className="block text-sm font-medium text-gray-900 hover:text-primary-500">
+                              {link.name}
+                            </span>
+                            {link.description && (
+                              <span className="block text-xs text-gray-500 mt-0.5">
+                                {link.description}
+                              </span>
+                            )}
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -209,6 +242,22 @@ export function Header({ utilityLink }: HeaderProps = {}) {
                     ))}
                   </div>
                 )}
+                {navGroup && navGroup.under === item.name && (
+                  <div className="ml-4 space-y-1">
+                    <span className="block px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                      {navGroup.heading}
+                    </span>
+                    {navGroup.links.map((link) => (
+                      <a
+                        key={link.name}
+                        href={link.href}
+                        className="block rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-50"
+                      >
+                        {link.name}
+                      </a>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
             <Link
@@ -218,14 +267,6 @@ export function Header({ utilityLink }: HeaderProps = {}) {
             >
               Contact
             </Link>
-            {utilityLink && (
-              <a
-                href={utilityLink.href}
-                className="block rounded-lg px-3 py-2 text-base font-medium text-gray-500 hover:bg-gray-50"
-              >
-                {utilityLink.name}
-              </a>
-            )}
             <Link
               href="/contact?demo=true"
               className="btn-primary mt-4 block w-full text-center"

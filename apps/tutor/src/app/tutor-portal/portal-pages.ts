@@ -15,6 +15,10 @@ export const PARENT_SITE = { name: 'Evelyn Learning', url: 'https://www.evelynle
 /** The product page on the parent site: the portal footer links to it. */
 export const PRODUCT_PAGE_URL = 'https://www.evelynlearning.com/products/voice-tutor';
 
+/** The share image (Open Graph and Twitter), drawn by scripts/make-portal-og-image.mjs into public/images/portal/.
+ *  An absolute URL on the portal host: the middleware does not rewrite images/, so it is the same file on both hosts. */
+export const PORTAL_OG_IMAGE = { url: `${PORTAL_ORIGIN}/images/portal/og-voice-tutor.png`, width: 1200, height: 630, alt: 'Evelyn Voice Tutor: AI voice tutor API for education platforms', type: 'image/png' } as const;
+
 export interface PortalPage {
   /** Path on the portal host, without the /tutor-portal prefix. */
   path: string;

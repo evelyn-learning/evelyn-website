@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { apiEndpoints, apiCategories } from '../../data/api-endpoints';
+import { minuteCounting } from '../../data/facts';
 import { portalMetadata } from '../../seo';
 import { DocsBreadcrumb } from '../components/DocsBreadcrumb';
 
@@ -57,18 +58,10 @@ export default function ApiReferencePage() {
         <li>Optionally <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">POST /assigned-practice</code> to show the homework the tutor set.</li>
       </ol>
 
-      <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">Billing figure</h2>
-      <p className="mb-6 text-sm text-slate-600">
-        <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">durationSec</code> in{' '}
-        <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">/sessions/summary</code> is active tutoring
-        time: the gaps between consecutive turns, each capped at ten minutes. Idle time in an open tab is
-        not counted. This is the number your invoice is based on.
-      </p>
-      <p className="mb-6 text-sm text-slate-600">
-        A prepaid balance is counted by the clock instead: each sitting from the tutor&apos;s start to its end, pauses
-        included, with a typed session drawing 0.8 of a minute per minute.{' '}
-        <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">GET /usage</code> returns the balance.
-      </p>
+      {/* 2026-11-24: this section said durationSec was the invoiced number. The text is data/facts.ts minuteCounting, the same on the pricing page. */}
+      <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">How minutes are counted</h2>
+      <p className="mb-4 text-sm text-slate-600">{minuteCounting().balance}</p>
+      <p className="mb-6 text-sm text-slate-600">{minuteCounting().reported}</p>
 
       <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">Error format</h2>
       <pre className="overflow-x-auto rounded-lg bg-slate-900 p-4 text-sm text-slate-100">

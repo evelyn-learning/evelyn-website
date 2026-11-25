@@ -23,12 +23,14 @@ import { TOOL_FIGURES } from '@/lib/tutor/v2/figure-catalogue';
 import { boardCounts, catalogueBySubject } from '@/app/tutor-portal/data/board-catalogue';
 import { configParams } from '@/app/tutor-portal/data/config-params';
 import { lessonPlanCountFloor } from '@/app/tutor-portal/data/curriculum';
-import { portalFacts } from '@/app/tutor-portal/data/facts';
+import { minuteCounting, portalFacts } from '@/app/tutor-portal/data/facts';
+import { ENV_FALLBACK_LIMITS } from '@/lib/tutor/portal/registry';
+import { ACTIVE_GAP_CAP_SEC } from '@/lib/tutor/portal/session-summary';
 import { languageCount } from '@/app/tutor-portal/data/languages';
 import { pricing, sandboxLimits } from '@/app/tutor-portal/data/pricing';
 import { serverWebhookEvents } from '@/app/tutor-portal/data/webhook-events';
 import { INLINE_BOARD_FORMS } from '@/app/tutor-portal/data/whiteboard-types';
-import { DOCS_PAGES, NOINDEX_PATHS, PORTAL_ORIGIN, PORTAL_PAGES, ROBOTS_DISALLOW, robotsTxt, sitemapXml } from '@/app/tutor-portal/portal-pages';
+import { DOCS_PAGES, NOINDEX_PATHS, PORTAL_OG_IMAGE, PORTAL_ORIGIN, PORTAL_PAGES, ROBOTS_DISALLOW, robotsTxt, sitemapXml } from '@/app/tutor-portal/portal-pages';
 import { PORTAL_TITLE_TEMPLATE, breadcrumbLd, portalMetadata } from '@/app/tutor-portal/seo';
 
 const APP = resolve(__dirname, '..');
@@ -213,7 +215,6 @@ test('the numbers typed into the docs copy equal the constants', () => {
   assert.ok(src('app/tutor-portal/docs/embed/page.tsx').includes(`${sandbox} minutes in the free\n        sandbox, ${paid} minutes after a first purchase`));
   assert.ok(src('app/tutor-portal/docs/quickstart/page.tsx').includes(`a session ends at ${sandbox} minutes`));
   assert.ok(src('app/tutor-portal/docs/authentication/page.tsx').includes(`keeps working for ${ROTATED_SECRET_GRACE_MS / 3_600_000}\n        hours`));
-  assert.ok(src('app/tutor-portal/docs/api/page.tsx').includes(`drawing ${TEXT_MINUTE_RATE} of a minute per minute`));
   for (const name of ['tutor_languages', 'switch_languages', 'speech_rate']) assert.ok(configParams.some((p) => p.name === name), name);
   // speech_rate's range is the engine's clamp.
   const rate = src('lib/tutor/voice/speech-rate.ts');
@@ -289,6 +290,66 @@ test('llms.txt lists exactly the offered languages, the prices and every docs pa
   const full = llmsFullTxt(origin);
   assert.ok(full.startsWith(txt));
   assert.ok(full.endsWith(integrationGuideMarkdown()));
+});
+
+console.log('share image, minute counting, rate limits');
+
+test('og:image and twitter:image are on every page, absolute on the portal host, and the file is a 1200x630 PNG', () => {
+  assert.equal(PORTAL_OG_IMAGE.url, `${PORTAL_ORIGIN}/images/portal/og-voice-tutor.png`);
+  for (const pg of PORTAL_PAGES) {
+    const m: Metadata = portalMetadata(pg.path);
+    const og = (m.openGraph as { images?: Array<{ url: string; width: number; height: number }> }).images ?? [];
+    assert.equal(og.length, 1, pg.path);
+    assert.ok(og[0]!.url.startsWith(`${PORTAL_ORIGIN}/`), pg.path);
+    assert.deepEqual([og[0]!.width, og[0]!.height], [1200, 630]);
+    const tw = m.twitter as { card?: string; images?: string[] };
+    assert.equal(tw.card, 'summary_large_image', pg.path);
+    assert.deepEqual(tw.images, [PORTAL_OG_IMAGE.url], pg.path);
+  }
+  const layout = src('app/tutor-portal/layout.tsx');
+  assert.match(layout, /images: \[\{ \.\.\.PORTAL_OG_IMAGE \}\]/);
+  assert.match(layout, /card: 'summary_large_image'/);
+  // The file: under public/images/, which the middleware matcher leaves alone, so the URL is not rewritten.
+  const png = readFileSync(join(APP, 'public', PORTAL_OG_IMAGE.url.slice(PORTAL_ORIGIN.length)));
+  assert.equal(png.subarray(1, 4).toString('latin1'), 'PNG');
+  assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [1200, 630]);
+  assert.match(src('middleware.ts'), /\|images\/\|/);
+  // The figure drawn on the image is the constant.
+  assert.ok(readFileSync(join(APP, 'scripts/make-portal-og-image.mjs'), 'utf8').includes(`const SANDBOX_FREE_MINUTES = ${SANDBOX_FREE_MINUTES};`));
+});
+
+test('minute counting: one text on the API docs and the pricing page, and no invoice claim', () => {
+  const text = minuteCounting();
+  assert.ok(text.balance.includes(`${DEFAULT_SESSION_MAX_SEC / 60} minutes in the free sandbox, ${PAID_SESSION_MAX_SEC / 60} after a first purchase`));
+  assert.ok(text.balance.includes(`a typed session uses ${TEXT_MINUTE_RATE}.`));
+  assert.ok(text.balance.includes('GET /usage'));
+  assert.equal(ACTIVE_GAP_CAP_SEC, 600, 'the docs say each gap is capped at ten minutes');
+  assert.ok(text.reported.includes('capped at ten minutes'));
+  assert.match(src('app/tutor-portal/docs/api/page.tsx'), /\{minuteCounting\(\)\.balance\}/);
+  assert.match(src('app/tutor-portal/pricing/page.tsx'), /a: minuteCounting\(facts\)\.balance/);
+  const stale = /invoice is based on|the billed number|For billing use/i;
+  for (const f of files.filter((x) => /\.tsx?$/.test(x))) assert.doesNotMatch(readFileSync(f, 'utf8').replace(/^\s*\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, ''), stale, relative(APP, f));
+  assert.doesNotMatch(integrationGuideMarkdown(), stale);
+  assert.doesNotMatch(llmsTxt(PORTAL_ORIGIN), stale);
+});
+
+test('the rate-limit line states what limits.ts enforces for a new account', () => {
+  // A self-serve account is created with ENV_FALLBACK_LIMITS, and the cap is the tighter of rpm and burst.
+  assert.match(src('lib/tutor/partner-dashboard/mongo-store.ts'), /limits: ENV_FALLBACK_LIMITS/);
+  const limits = src('lib/tutor/portal/limits.ts');
+  assert.match(limits, /const burstCap = burstCaps\.length > 0 \? Math\.min\(\.\.\.burstCaps\) : 0;/);
+  assert.match(limits, /windowKind: 'minute', windowStart: minuteWindow\(nowMs\)/);
+  assert.match(limits, /status: 429, reason: 'rate_limited', retryAfterSec/);
+  const auth = src('lib/tutor/portal/auth.ts');
+  assert.match(auth, /checkPartnerLimits\(partner, u\.pathname\)/);
+  assert.match(auth, /res\.headers\.set\('Retry-After', String\(limitVerdict\.retryAfterSec\)\)/);
+  assert.equal(Math.min(ENV_FALLBACK_LIMITS.rpm, ENV_FALLBACK_LIMITS.burst), 60);
+  assert.equal(ENV_FALLBACK_LIMITS.dailyQuota, null);
+  const page = src('app/tutor-portal/docs/authentication/page.tsx');
+  assert.match(page, /const requestsPerMinute = Math\.min\(\.\.\.defaultCaps\);/);
+  assert.match(page, /\{requestsPerMinute\} requests per minute for each endpoint by default/);
+  assert.match(page, /Retry-After/);
+  assert.doesNotMatch(page.replace(/^\s*\/\/.*$/gm, ''), /retryAfterSec|600 requests|burst 60/);
 });
 
 console.log('public copy');

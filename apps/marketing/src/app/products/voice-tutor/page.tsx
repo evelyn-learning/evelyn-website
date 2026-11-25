@@ -43,9 +43,10 @@ function ProductHero() {
                 <a href="#demo" className="px-6 py-3 bg-white text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition">
                   Try Live Demo
                 </a>
-                <Link href="/contact?product=voice-tutor" className="px-6 py-3 bg-transparent border-2 border-white/50 text-white font-semibold rounded-xl hover:bg-white/10 transition">
-                  Get Pricing
-                </Link>
+                {/* 2026-11-24: was "Get Pricing" to the contact form; API prices are public, so it goes to #pricing on this page. */}
+                <a href="#pricing" className="px-6 py-3 bg-transparent border-2 border-white/50 text-white font-semibold rounded-xl hover:bg-white/10 transition">
+                  See Pricing
+                </a>
               </div>
             </div>
           </div>
@@ -273,22 +274,79 @@ function HowItWorksSection() {
 }
 
 /**
+ * Pricing (2026-11-24). The hero button said "Get Pricing" and went to the
+ * contact form although the API prices are public. It now scrolls here: public
+ * prices for developers, and the contact route for schools, whose pricing is
+ * by arrangement. The bottom-of-page CTAs still go to the contact form.
+ */
+function PricingSection() {
+  const [small, medium, large] = API_PRICING.packs;
+  const apiLines = [
+    `$${API_PRICING.voicePerMinute} per voice minute`,
+    `$${API_PRICING.typedPerMinute} per typed minute`,
+    `Prepaid packs: ${small.minutes} minutes for ${small.price}, ${medium.minutes} minutes for ${medium.price}, ${large.minutes} minutes for ${large.price}`,
+    `Free sandbox: ${API_PRICING.sandboxMinutes} tutoring minutes, keys as soon as you sign up, no card needed`,
+  ];
+  const primary = 'px-5 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition text-center';
+  const secondary = 'px-5 py-3 bg-white border-2 border-slate-200 text-slate-800 font-semibold rounded-xl hover:border-blue-300 hover:text-blue-600 transition text-center';
+
+  return (
+    // scroll-mt-16: the sticky header is 4rem tall and would cover the heading.
+    <section id="pricing" className="py-16 bg-white scroll-mt-16">
+      <div className="container-wide">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">Pricing</h2>
+            <p className="text-slate-600 max-w-2xl mx-auto">
+              Two ways to buy, depending on who you are.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="p-6 md:p-8 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">For developers and platforms</h3>
+              <p className="text-slate-600 text-sm mb-4">
+                Public per-minute prices for the Voice Tutor API, which puts this tutor inside your own product.
+              </p>
+              <ul className="space-y-2 mb-6 flex-1">
+                {apiLines.map((line) => (
+                  <li key={line} className="flex gap-2 text-sm text-slate-700">
+                    <span className="mt-1.5 w-1.5 h-1.5 bg-blue-600 rounded-full flex-shrink-0" />
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <a href={PORTAL_LINKS.pricing} className={primary}>API pricing</a>
+                <a href={PORTAL_LINKS.sandbox} className={secondary}>Get free sandbox keys</a>
+              </div>
+            </div>
+
+            <div className="p-6 md:p-8 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col">
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">For schools, districts and enterprises</h3>
+              <p className="text-slate-600 text-sm mb-6 flex-1">
+                Pricing is by arrangement. Tell us about your students and how you want to deploy the tutor, and we will send you a quote.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link href="/contact?product=voice-tutor" className={secondary}>Contact us for pricing</Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/**
  * Developer and partner entry (2026-11-24). Before this the page never said
  * an API exists and www had no link to the developer portal. Facts only, from
  * src/lib/portal-links.ts. Plain anchors in the same tab: the portal is our
  * own site on another host.
  */
 function DevelopersSection() {
-  const [small, medium, large] = API_PRICING.packs;
+  // Price and sandbox moved up to PricingSection (same day) so they are said once.
   const facts = [
-    {
-      title: 'Price',
-      body: `$${API_PRICING.voicePerMinute} per voice minute and $${API_PRICING.typedPerMinute} per typed minute. Prepaid packs: ${small.minutes} minutes for ${small.price}, ${medium.minutes} minutes for ${medium.price}, ${large.minutes} minutes for ${large.price}.`,
-    },
-    {
-      title: 'Free sandbox',
-      body: `${API_PRICING.sandboxMinutes} tutoring minutes free. You get your keys as soon as you sign up, and no card is needed.`,
-    },
     {
       title: 'Lesson languages',
       body: `A lesson can be taught entirely in ${TAUGHT_LANGUAGES_SENTENCE}.`,
@@ -310,9 +368,9 @@ function DevelopersSection() {
   const secondary = 'px-6 py-3 bg-white border-2 border-slate-200 text-slate-800 font-semibold rounded-xl hover:border-blue-300 hover:text-blue-600 transition text-center';
 
   return (
-    <section id="developers" className="py-16 bg-white">
+    <section id="developers" className="py-16 bg-slate-50 scroll-mt-16">
       <div className="container-wide">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold text-slate-900 mb-4">For developers and partners</h2>
             <p className="text-slate-600 max-w-3xl mx-auto">
@@ -320,9 +378,9 @@ function DevelopersSection() {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 gap-6">
             {facts.map((fact) => (
-              <div key={fact.title} className="p-6 rounded-2xl bg-slate-50">
+              <div key={fact.title} className="p-6 rounded-2xl bg-white shadow-sm">
                 <h3 className="text-lg font-semibold text-slate-900 mb-2">{fact.title}</h3>
                 <p className="text-slate-600 text-sm break-words">{fact.body}</p>
               </div>
@@ -406,6 +464,7 @@ export default function VoiceTutorProductPage() {
       <LiveImplementationsSection />
       <FeaturesSection />
       <HowItWorksSection />
+      <PricingSection />
       <DevelopersSection />
       <FAQSection />
       <CTASection />
