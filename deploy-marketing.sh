@@ -15,6 +15,29 @@
 #
 # Marketing keeps :3001 (the port the old single `evelyn-website` process
 # used) so nginx's default upstream needed no change.
+#
+# ── TWO WAYS TO DEPLOY ──────────────────────────────────────────────────────
+# MARKETING_BLUE_GREEN unset or 0 (the default, the proven path): one process,
+#   `evelyn-marketing` on :3001, build dir .next, restarted in place. Port
+#   3001 is closed for about 5 seconds at every deploy.
+# MARKETING_BLUE_GREEN=1: two slots, no gap. Slot a = :3001 / .next-a,
+#   slot b = :3021 / .next-b, pm2 names evelyn-marketing-a / -b. The build is
+#   made for the idle slot, started there, health-checked on its own port,
+#   nginx is pointed at it (graceful reload), and only then is the old slot
+#   stopped. Server side: scripts/ops/marketing-bluegreen/{slot-lib,remote-deploy}.sh.
+#   Needs, once, on the server: apply-nginx.sh and apply-cron.sh from that
+#   folder (this script checks both and refuses without them). The first such
+#   deploy migrates by itself: today's process counts as slot a, the new build
+#   goes to slot b, and `evelyn-marketing` is stopped after the switch.
+#   Runbook: scripts/ops/marketing-bluegreen/README.md
+#
+# ROLLBACK (blue-green only; about 15 seconds, no build, no gap): the previous
+# build is still on the server in the other slot's dir.
+#       MARKETING_BLUE_GREEN=1 ./deploy-marketing.sh --rollback
+# Which slot is live:  ssh root@85.239.239.134 'cat /root/evelyn-marketing/.active-slot /root/evelyn-marketing/.active-port'
+# Once a blue-green deploy has happened, the single-process path refuses to
+# run (it would start a second copy beside the live slot); the README says how
+# to go back to it.
 
 # Colors for output formatting
 GREEN='\033[0;32m'
@@ -84,6 +107,19 @@ PM2_NAME="evelyn-marketing"
 # pm2 puts it in a restart loop. Deploy the tutor to :3007 first, verify it,
 # then `pm2 delete evelyn-website` immediately before running this.
 PM2_PORT="3001"
+
+# Blue-green (see the header). Off by default until the rehearsal has passed.
+MARKETING_BLUE_GREEN="${MARKETING_BLUE_GREEN:-0}"
+BG_DIR="scripts/ops/marketing-bluegreen"
+BG_PORT_A="3001"
+BG_PORT_B="3021"
+BG_UPSTREAM_FILE="/etc/nginx/conf.d/evelyn-marketing-upstream.conf"
+# How long pm2 lets the outgoing process finish its requests (same value as the single-process start line).
+BG_KILL_TIMEOUT_MS="${BG_KILL_TIMEOUT_MS:-10000}"
+BG_HEALTH_SECS="${BG_HEALTH_SECS:-45}"
+# The build dir's name inside $APP_DIR, here and on the server. Blue-green sets it to .next-a / .next-b in the preflight.
+DIST_NAME=".next"
+BG_TARGET=""
 
 # Suffix for this script's /tmp scratch files on the server. deploy-tutor.sh
 # and deploy-marketing.sh now run against the SAME host, and the prune logic
@@ -302,8 +338,26 @@ release_local_lock() {
   fi
 }
 
+# Blue-green builds with NEXT_DIST_DIR, and `next build` may then add that dir's types path to the app's
+# tsconfig.json, a tracked file. It is saved before the build and put back after (and here, if the run was cut short).
+TSCONFIG_SAVED=false
+restore_tsconfig() {
+  if [ "$TSCONFIG_SAVED" = true ] && [ -f "$APP_DIR/tsconfig.json.deploy-bak" ]; then
+    mv "$APP_DIR/tsconfig.json.deploy-bak" "$APP_DIR/tsconfig.json" 2>/dev/null || true
+    TSCONFIG_SAVED=false
+  fi
+}
+# The slot build dir (.next-a / .next-b) is not in .gitignore and is of no use locally once zipped.
+remove_local_slot_build() {
+  if [ "$MARKETING_BLUE_GREEN" = "1" ] && [ -n "$BG_TARGET" ] && [ "$DIST_NAME" != ".next" ]; then
+    rm -rf "${APP_DIR:?}/$DIST_NAME" 2>/dev/null || true
+  fi
+}
+
 on_exit() {
   restore_dev_env
+  restore_tsconfig
+  remove_local_slot_build
   release_local_lock
 }
 
@@ -397,6 +451,33 @@ refuse_if_keystone_in_use() {
   exit 1
 }
 
+# ── Blue-green: what the server looks like, and how its half of the work is run ──
+# One read-only ssh. Prints key=value lines:
+#   slot      a | b | (empty: no blue-green deploy yet)
+#   legacy    pm2 status of the single process `evelyn-marketing` (online/absent/…)
+#   upstream  yes when the nginx upstream file exists
+#   wired     how many proxy_pass lines go through the upstream (3 once apply-nginx.sh has run)
+#   direct    how many still name 127.0.0.1:3001 (0 once it has run)
+#   cron      how many Keystone cron lines read .active-port (2 once apply-cron.sh has run)
+bg_remote_state() {
+  run_remote_command "cd $REMOTE_DIR 2>/dev/null; \
+    echo \"slot=\$(cat .active-slot 2>/dev/null | tr -d '[:space:]')\"; \
+    echo \"legacy=\$(pm2 jlist 2>/dev/null | python3 -c 'import json,sys; print(next((p[\"pm2_env\"].get(\"status\",\"?\") for p in json.load(sys.stdin) if p.get(\"name\")==\"$PM2_NAME\"), \"absent\"))' 2>/dev/null)\"; \
+    echo \"upstream=\$([ -f $BG_UPSTREAM_FILE ] && echo yes || echo no)\"; \
+    echo \"wired=\$(cat /etc/nginx/sites-enabled/evelynlearning /etc/nginx/sites-enabled/keystone.evelynlearning.com 2>/dev/null | grep -c 'proxy_pass http://evelyn_marketing;')\"; \
+    echo \"direct=\$(cat /etc/nginx/sites-enabled/evelynlearning /etc/nginx/sites-enabled/keystone.evelynlearning.com 2>/dev/null | grep -c 'proxy_pass http://127.0.0.1:$BG_PORT_A;')\"; \
+    echo \"cron=\$(crontab -l 2>/dev/null | grep '/api/keystone/cron/' | grep -c 'active-port')\""
+}
+bg_field() { echo "$1" | grep "^$2=" | head -1 | cut -d= -f2-; }
+
+# Runs slot-lib.sh + <main script> on the server. The whole text is read there before any of it runs
+# (`eval "$(cat)"`), so a command inside it that reads stdin (unzip, npm, pm2) cannot swallow the rest of the script.
+# Arguments after the script name are VAR=value words (no spaces in values) put in the remote environment.
+bg_remote() {
+  local main=$1; shift
+  cat "$BG_DIR/slot-lib.sh" "$BG_DIR/$main" | ssh -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_IP" "$* bash -c 'eval \"\$(cat)\"'"
+}
+
 # Robust file upload, over a plain `ssh 'cat > dest'` pipe rather than scp.
 #
 # History: this used `scp -O` to force the legacy SCP protocol, because modern
@@ -441,6 +522,27 @@ upload_with_retry() {
   return 1
 }
 
+# Rollback: no build. Not held back by the Keystone check: a rollback is run because something is wrong for
+# whoever is on the site, and it closes no port.
+if [ "${1:-}" = "--rollback" ]; then
+  if [ "$MARKETING_BLUE_GREEN" != "1" ]; then
+    log_message "ERROR" "--rollback exists only for the blue-green layout:  MARKETING_BLUE_GREEN=1 ./deploy-marketing.sh --rollback"
+    exit 1
+  fi
+  for f in slot-lib.sh remote-rollback.sh; do
+    if [ ! -s "$BG_DIR/$f" ]; then log_message "ERROR" "$BG_DIR/$f is missing."; exit 1; fi
+  done
+  log_message "STEP" "Rolling the marketing app back to the previous build (other slot)..."
+  bg_remote remote-rollback.sh \
+    "BG_ROOT=$REMOTE_DIR" "BG_APP=$APP_DIR" "BG_NAME=$PM2_NAME" "BG_PORT_A=$BG_PORT_A" "BG_PORT_B=$BG_PORT_B" \
+    "BG_UPSTREAM_FILE=$BG_UPSTREAM_FILE" "BG_KILL_TIMEOUT_MS=$BG_KILL_TIMEOUT_MS" "BG_HEALTH_SECS=$BG_HEALTH_SECS" || {
+    log_message "ERROR" "Rollback failed on the server (see above). Whatever was live before is still live unless the output says the switch happened."
+    exit 1
+  }
+  log_message "INFO" "Rollback done."
+  exit 0
+fi
+
 # Starting deployment
 log_message "INFO" "Starting Evelyn Learning MARKETING deployment to production..."
 
@@ -477,6 +579,52 @@ if [ ! -e "$APP_DIR/.env.local" ]; then
 fi
 log_message "INFO" "Preflight OK (.env.local.production present; $APP_DIR/.env.local resolves)"
 
+# 0c. Which layout is the server in, and does it match the way this run was asked to deploy?
+BG_STATE="$(bg_remote_state 2>/dev/null || true)"
+BG_SLOT="$(bg_field "$BG_STATE" slot)"
+if [ -z "$(bg_field "$BG_STATE" upstream)" ]; then
+  log_message "ERROR" "Could not read the server's state over ssh (needed to know which process is live). Nothing built."
+  exit 1
+fi
+if [ "$MARKETING_BLUE_GREEN" = "1" ]; then
+  for f in slot-lib.sh remote-deploy.sh; do
+    if [ ! -s "$BG_DIR/$f" ]; then log_message "ERROR" "$BG_DIR/$f is missing."; exit 1; fi
+  done
+  if [ "$(bg_field "$BG_STATE" upstream)" != "yes" ] || [ "$(bg_field "$BG_STATE" wired)" != "3" ] || [ "$(bg_field "$BG_STATE" direct)" != "0" ]; then
+    log_message "ERROR" "nginx is not set up for blue-green (upstream file: $(bg_field "$BG_STATE" upstream); proxy_pass lines through it: $(bg_field "$BG_STATE" wired) of 3; still naming :$BG_PORT_A: $(bg_field "$BG_STATE" direct))."
+    log_message "ERROR" "      Run once:  $BG_DIR/apply-nginx.sh --yes     (then rerun this)"
+    exit 1
+  fi
+  if [ "$(bg_field "$BG_STATE" cron)" != "2" ]; then
+    log_message "ERROR" "The two Keystone cron lines do not read the live port yet ($(bg_field "$BG_STATE" cron) of 2): after a switch to slot b they would call a closed port."
+    log_message "ERROR" "      Run once:  $BG_DIR/apply-cron.sh --yes      (then rerun this)"
+    exit 1
+  fi
+  case "$BG_SLOT" in
+    a) BG_TARGET=b ;;
+    b) BG_TARGET=a ;;
+    "")
+      # First blue-green deploy: the single process is slot a in all but name (same port), so the build goes to b.
+      if [ "$(bg_field "$BG_STATE" legacy)" != "online" ]; then
+        log_message "ERROR" "No blue-green deploy yet and pm2 process $PM2_NAME is '$(bg_field "$BG_STATE" legacy)', not online: nothing known to be live. See $BG_DIR/README.md, 'First deploy'."
+        exit 1
+      fi
+      BG_TARGET=b
+      log_message "INFO" "First blue-green deploy: $PM2_NAME (:$BG_PORT_A, .next) is live; the new build goes to slot b (:$BG_PORT_B)."
+      ;;
+    *) log_message "ERROR" "The server's .active-slot holds '$BG_SLOT' (expected a or b)."; exit 1 ;;
+  esac
+  DIST_NAME=".next-$BG_TARGET"
+  log_message "INFO" "Blue-green: live slot '${BG_SLOT:-single process}', building for slot $BG_TARGET ($DIST_NAME)."
+else
+  if [ -n "$BG_SLOT" ]; then
+    log_message "ERROR" "The server runs the blue-green layout (live slot: $BG_SLOT). The single-process deploy would start a second"
+    log_message "ERROR" "      copy beside it and leave the site on the old build. Deploy with:  MARKETING_BLUE_GREEN=1 ./deploy-marketing.sh"
+    log_message "ERROR" "      (Going back to the single process is a by-hand procedure: $BG_DIR/README.md.)"
+    exit 1
+  fi
+fi
+
 # Step 1: Build locally using production env (for NEXT_PUBLIC_ vars)
 log_message "STEP" "Building Next.js application locally..."
 
@@ -507,17 +655,32 @@ fi
 log_message "INFO" "Cleaning up previous build artifacts..."
 # Fail fast, before the minutes of build: nothing is deployed over someone working in Keystone.
 refuse_if_keystone_in_use "before the build"
-rm -rf "$APP_DIR/.next/" 2>/dev/null || true
+rm -rf "${APP_DIR:?}/$DIST_NAME/" 2>/dev/null || true
 rm -f "$APP_DIR/tsconfig.tsbuildinfo" 2>/dev/null || true
+
+# Blue-green: the build is made FOR the idle slot's dir (next.config.ts reads NEXT_DIST_DIR), so the server can
+# unpack it beside the live build without touching it. Single-process: NEXT_DIST_DIR stays unset, exactly as before.
+if [ "$MARKETING_BLUE_GREEN" = "1" ]; then
+  cp "$APP_DIR/tsconfig.json" "$APP_DIR/tsconfig.json.deploy-bak"
+  TSCONFIG_SAVED=true
+  export NEXT_DIST_DIR="$DIST_NAME"
+fi
 
 npm run --workspace "$APP_WORKSPACE" build || {
   # Restore dev env before exiting on error
   if [ "$RESTORE_ENV" = true ]; then
     mv .env.local.dev.bak .env.local
   fi
+  restore_tsconfig
   log_message "ERROR" "Failed to build application locally"
   exit 1
 }
+unset NEXT_DIST_DIR
+restore_tsconfig
+if [ ! -f "$APP_DIR/$DIST_NAME/BUILD_ID" ]; then
+  log_message "ERROR" "The build did not produce $APP_DIR/$DIST_NAME/BUILD_ID (does next.config.ts still read NEXT_DIST_DIR?)."
+  exit 1
+fi
 
 # Restore dev env immediately after build
 if [ "$RESTORE_ENV" = true ]; then
@@ -554,7 +717,7 @@ log_message "INFO" "Manifest contains $(wc -l < .deploy-public-manifest) entries
 # Self-healing: the FIRST deploy after this change wipes all accumulated
 # orphans, and every deploy after keeps the tree clean.
 log_message "STEP" "Generating .next/static manifest (orphan-chunk prune)..."
-find "$APP_DIR/.next/static" -type f | LC_ALL=C sort > .deploy-static-manifest
+find "$APP_DIR/$DIST_NAME/static" -type f | LC_ALL=C sort > .deploy-static-manifest
 log_message "INFO" "Static manifest contains $(wc -l < .deploy-static-manifest) entries"
 
 # Step 1.7: Same treatment for .next/server/chunks — the server-side twin of
@@ -574,7 +737,7 @@ log_message "INFO" "Static manifest contains $(wc -l < .deploy-static-manifest) 
 #   For the same reason `rm -rf .next` on the server is NOT an option — it
 #   would also take out .next/cache (756 MB) and the running process's files.
 log_message "STEP" "Generating .next/server/chunks manifest (orphan-chunk prune)..."
-find "$APP_DIR/.next/server/chunks" -type f | LC_ALL=C sort > .deploy-server-chunks-manifest
+find "$APP_DIR/$DIST_NAME/server/chunks" -type f | LC_ALL=C sort > .deploy-server-chunks-manifest
 log_message "INFO" "Server-chunk manifest contains $(wc -l < .deploy-server-chunks-manifest) entries"
 
 # Step 2: Create deployment package
@@ -619,7 +782,7 @@ fi
 # took 8.5 of the 11.7 minutes a marketing deploy spent; it is rsynced
 # incrementally below instead (only changed files cross the wire).
 zip -qr "$ZIP_FILE" \
-  "$APP_DIR/.next" \
+  "$APP_DIR/$DIST_NAME" \
   "$APP_DIR/src" \
   "$APP_DIR/.env" \
   "$APP_DIR/package.json" \
@@ -637,7 +800,7 @@ zip -qr "$ZIP_FILE" \
   .deploy-public-manifest \
   .deploy-static-manifest \
   .deploy-server-chunks-manifest \
-  -x "*.log" "*/.DS_Store" "$APP_DIR/.next/cache/*" || {
+  -x "*.log" "*/.DS_Store" "$APP_DIR/$DIST_NAME/cache/*" || {
   log_message "ERROR" "Failed to create zip file"
   exit 1
 }
@@ -764,6 +927,20 @@ LOCK_HASH="$(shasum -a 256 package-lock.json | cut -c1-32)"
 # Checked again here: the build and the upload take minutes, and she may have come back in them.
 refuse_if_keystone_in_use "before the restart"
 log_message "STEP" "Running deployment on production server..."
+if [ "$MARKETING_BLUE_GREEN" = "1" ]; then
+# Blue-green: the server half lives in $BG_DIR (slot-lib.sh + remote-deploy.sh) so the rehearsal can run the very
+# same functions. It does what the chain below does, per slot: the public/ manifest prune (public/ is shared), the
+# .env.local gate, npm ci when the lockfile changed, the static age prune (inside the idle slot's dir, after the
+# live build's static files are copied forward), and a server-chunk check (the idle dir is emptied first, so
+# orphans cannot build up). Then start, health check, nginx switch, stop the old slot, pm2 save.
+bg_remote remote-deploy.sh \
+  "BG_ROOT=$REMOTE_DIR" "BG_APP=$APP_DIR" "BG_NAME=$PM2_NAME" "BG_PORT_A=$BG_PORT_A" "BG_PORT_B=$BG_PORT_B" \
+  "BG_UPSTREAM_FILE=$BG_UPSTREAM_FILE" "BG_KILL_TIMEOUT_MS=$BG_KILL_TIMEOUT_MS" "BG_HEALTH_SECS=$BG_HEALTH_SECS" \
+  "BG_TARGET=$BG_TARGET" "BG_ZIP=$ZIP_FILE" "BG_LOCK_HASH=$LOCK_HASH" "BG_TMP_TAG=$TMP_TAG" "BG_STATIC_KEEP_DAYS=$STATIC_KEEP_DAYS" || {
+  log_message "ERROR" "Blue-green deploy failed on the server (see above). Unless the output says nginx was switched, the previous build is still live and untouched."
+  exit 1
+}
+else
 run_remote_command "cd $REMOTE_DIR && \
   if [ -f .deploy-public-manifest ]; then cp .deploy-public-manifest /tmp/.deploy-public-manifest.$TMP_TAG.prev; else : > /tmp/.deploy-public-manifest.$TMP_TAG.prev; fi && \
   unzip -qo $ZIP_FILE && \
@@ -781,6 +958,7 @@ run_remote_command "cd $REMOTE_DIR && \
   log_message "ERROR" "Deployment failed on remote server"
   exit 1
 }
+fi
 log_message "INFO" "Deployment completed successfully on server"
 
 # Step 5: Clean up local zip file
@@ -795,5 +973,11 @@ log_message "INFO" "=========================================="
 log_message "INFO" "Marketing deployment to production completed!"
 log_message "INFO" "=========================================="
 log_message "INFO" "Site: http://$SERVER_IP"
-log_message "INFO" "Process: $PM2_NAME on port $PM2_PORT (nginx: evelyn_upstream, the default)"
-log_message "INFO" "Check logs: ssh root@$SERVER_IP 'pm2 logs $PM2_NAME'"
+if [ "$MARKETING_BLUE_GREEN" = "1" ]; then
+  log_message "INFO" "Process: $PM2_NAME-$BG_TARGET (slot $BG_TARGET; nginx upstream evelyn_marketing points at it)"
+  log_message "INFO" "Check logs: ssh root@$SERVER_IP 'pm2 logs $PM2_NAME-$BG_TARGET'"
+  log_message "INFO" "Roll back:  MARKETING_BLUE_GREEN=1 ./deploy-marketing.sh --rollback"
+else
+  log_message "INFO" "Process: $PM2_NAME on port $PM2_PORT (nginx: location / and /_next/static/ of evelynlearning, location / of keystone.evelynlearning.com)"
+  log_message "INFO" "Check logs: ssh root@$SERVER_IP 'pm2 logs $PM2_NAME'"
+fi

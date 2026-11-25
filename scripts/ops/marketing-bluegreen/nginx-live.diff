@@ -1,0 +1,58 @@
+The nginx change for the marketing app's blue-green deploy, as a unified diff against the LIVE files fetched
+read-only from root@85.239.239.134 on 2026-11-24 (Pacific). For reading. It is applied by apply-nginx.sh, which
+makes the same edit on the server with nginx-edit.py against the files as they are at that moment (and refuses if
+they no longer hold exactly these three lines); `apply-nginx.sh` without --yes prints this diff fresh.
+/etc/nginx/sites-enabled/{evelynlearning,keystone.evelynlearning.com} are symlinks to ../sites-available/.
+
+--- a/etc/nginx/sites-available/evelynlearning
++++ b/etc/nginx/sites-available/evelynlearning
+@@ -355,7 +355,11 @@
+     # immutable cache headers, and redeclaring add_header would drop the
+     # inherited server-level security headers.
+     location /_next/static/ {
+-        proxy_pass http://127.0.0.1:3001;
++        proxy_pass http://evelyn_marketing;
++        # evelyn_marketing = the live slot, then the other slot as backup (conf.d/evelyn-marketing-upstream.conf).
++        # A refused connect is retried on the backup; nothing was sent, so a POST is safe. Never add non_idempotent.
++        proxy_next_upstream error timeout;
++        proxy_next_upstream_tries 2;
+         proxy_intercept_errors on;
+         error_page 404 502 503 504 = @tutor_static;
+         proxy_http_version 1.1;
+@@ -377,7 +381,11 @@
+     }
+ 
+     location / {
+-        proxy_pass http://127.0.0.1:3001;
++        proxy_pass http://evelyn_marketing;
++        # evelyn_marketing = the live slot, then the other slot as backup (conf.d/evelyn-marketing-upstream.conf).
++        # A refused connect is retried on the backup; nothing was sent, so a POST is safe. Never add non_idempotent.
++        proxy_next_upstream error timeout;
++        proxy_next_upstream_tries 2;
+         proxy_http_version 1.1;
+         proxy_set_header Upgrade $http_upgrade;
+         proxy_set_header Connection 'upgrade';
+--- a/etc/nginx/sites-available/keystone.evelynlearning.com
++++ b/etc/nginx/sites-available/keystone.evelynlearning.com
+@@ -25,7 +25,11 @@
+     gzip on;
+     gzip_types text/css application/javascript application/json image/svg+xml text/plain;
+     location / {
+-        proxy_pass http://127.0.0.1:3001;
++        proxy_pass http://evelyn_marketing;
++        # evelyn_marketing = the live slot, then the other slot as backup (conf.d/evelyn-marketing-upstream.conf).
++        # A refused connect is retried on the backup; nothing was sent, so a POST is safe. Never add non_idempotent.
++        proxy_next_upstream error timeout;
++        proxy_next_upstream_tries 2;
+         proxy_http_version 1.1;
+         proxy_set_header Host $host;
+         proxy_set_header X-Real-IP $remote_addr;
+--- /dev/null
++++ b/etc/nginx/conf.d/evelyn-marketing-upstream.conf
+@@ -0,0 +1,6 @@
++# Written by the marketing blue-green deploy (scripts/ops/marketing-bluegreen). Do not edit by hand: the next
++# deploy rewrites it. Primary = the live slot; backup = the other slot's port (running only during a deploy).
++upstream evelyn_marketing {
++    server 127.0.0.1:3001 max_fails=0;
++    server 127.0.0.1:3021 max_fails=0 backup;
++}
