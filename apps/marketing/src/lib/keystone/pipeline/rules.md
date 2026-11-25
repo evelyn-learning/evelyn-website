@@ -45,6 +45,12 @@
 - [R-upright-units] (all, 2026-11-11, house) Units and chemical symbols are upright, e.g. $\text{m/s}$, $\text{Sn}^{2+}$.
 - [R-latex-math] (all, 2026-11-11, house) Mathematics and chemical formulas are written in LaTeX: $…$ inline and $$…$$ for display.
 - [R-compass-caps] (all, 2026-10-08) Compass directions in the solution's own text are capitalised (North, South of East); text quoted from the question keeps its own wording.
+- [R-value-source] (all, 2026-11-25) Every value that appears in the working comes from a line that is shown: no number appears that the reader cannot trace to the line that produced it.
+- [R-exact-values] (all, 2026-11-25) A value that is exact is written exactly (e.g. $\sin 30^\circ = \dfrac{1}{2}$ or $0.5$), never padded with extra decimal places, and no value carries more significant digits than the question's data and the final answer need.
+- [R-length-squared] (all, 2026-11-25) The square of a length named by two letters is written with parentheses, $(AB)^2$, never $AB^2$.
+- [R-group-parentheses] (all, 2026-11-25) A grouped term keeps its parentheses when it is named or substituted, e.g. $a = (m - n)$.
+- [R-named-as-is] (all, 2026-11-25) Each expression or equation is called by the name the question or the course uses for it (a quadratic is not called "the trinomial"), and a step that acts on an expression says which expression it is; "the original expression" means the one the question gives.
+- [R-assumption-stated] (all, 2026-11-25) A convention or assumption the working relies on that the question leaves unstated (e.g. that an angle with no unit is in radians) is stated where it is first used.
 - [R-zero-o] (all, 2026-11-16) The digit 0 and the letter O are distinguishable wherever both could be read.
 
 ## Short answer
@@ -52,7 +58,8 @@
 - [R-short-length] (short, 2026-11-11) The Short answer is one or two sentences.
 - [R-short-direct] (short, 2026-11-16) The Short answer answers the question stem directly; it states the answer, not an explanation of why.
 - [R-short-stem-words] (short, 2026-11-16) The Short answer reuses the stem's own words: a stem "What is the balanced oxidation half-reaction for the given reaction?" gets "The balanced oxidation half-reaction for <the reaction> is <the half-reaction>".
-- [R-short-restate-only] (short, 2026-11-11) The Short answer restates only the parts of the question that matter to the answer, nothing extra.
+- [R-short-restate-only] (short, 2026-11-11) The Short answer restates the question without its story filler: only the parts that matter to the answer, nothing extra.
+- [R-short-question-story] (short, 2026-11-25) The Short answer can be understood by someone who has not read the question: it carries what the answer depends on — the equation(s), function(s), expression or set the question is about written out, the named quantities with their values and units, and the stated conditions — and then the answer, in the shape "For <situation> with <variables> when <conditions>, <answer>"; a bare "The answer is Q" breaks this rule, and so does a reference such as "the equation", "this system", "the quotient" or "his first error" without the thing it refers to.
 - [R-short-no-plan] (short, 2026-11-11) The Short answer contains no plan.
 - [R-short-no-method] (short, 2026-11-11) The Short answer contains no method or working.
 - [R-short-option-letter] (short, 2026-11-11) For a multiple-choice question the Short answer names the option letter of the answer.
@@ -65,9 +72,12 @@
 - [R-diploma-plan] (diploma, 2026-11-11) For a multi-part question the second section opens with the plan in one line ("First find A, which gives C and D; then P and Q").
 - [R-diploma-choice-logic] (diploma, 2026-11-11) The second section gives explicit logic for choosing the answer.
 - [R-diploma-course-methods] (diploma, 2026-11-11) Every method used is one taught in the named course or earlier.
+- [R-diploma-known-results] (diploma, 2026-11-25) The second section applies a result the course teaches as known knowledge directly and does not derive or prove it (e.g. the CAST rule, the general term of a sequence, the vertex of $y = ax^2 + bx + c$ at $x = \dfrac{-b}{2a}$, the axis of symmetry $x = p$ of $y = a(x - p)^2 + q$); a derivation belongs in the Extended answer.
+- [R-diploma-fastest-route] (diploma, 2026-11-25) The second section takes the quickest valid route a prepared student takes in the exam: inspection or a visual reading of the graph when that settles the answer (after confirming the scales), and the graphing calculator where the course expects one; it does not substitute into or test the options one after another when a direct method exists.
 - [R-diploma-steps] (diploma, 2026-10-08) Intermediate working is shown: no line combines several steps a student would write separately.
+- [R-diploma-expand-then-simplify] (diploma, 2026-11-25) An expansion (e.g. the product of two binomials) is written out on its own line before the line that simplifies it.
 - [R-diploma-round-last] (diploma, 2026-11-11) Rounding happens only at the final step.
-- [R-diploma-intermediate-digits] (diploma, 2026-11-11, house) Intermediate values that are shown carry at least one more digit than the final answer.
+- [R-diploma-intermediate-digits] (diploma, 2026-11-11, house) A rounded intermediate value that is shown carries one or two more digits than the final answer, never more; an exact intermediate value (e.g. 500 000 read from a graph) is shown as it is.
 - [R-diploma-summary] (diploma, 2026-11-11) A long derivation ends with a brief summary of its logic before the final-answer sentence.
 - [R-diploma-closing] (diploma, 2026-11-17, house) A multiple-choice Diploma answer ends either with the sentence 'So the answer is X.' (or 'So the answers are X and Y.') or with the final clause ', so the answer is X.' (or ', so the answers are X and Y.'), using the option's own label; nothing follows it.
 - [R-diploma-final-sentence] (diploma, 2026-11-11) The second section ends with one clear final-answer sentence.
@@ -86,6 +96,7 @@
 
 - [R-alternate-warranted] (alternate, 2026-11-11) An Alternate answer uses a method that differs from the second section's method in its steps, not only in its wording.
 - [R-alternate-own-section] (alternate, 2026-11-17, house) A second method appears only in its own Alternate answer section, never inside the second section or any other section.
+- [R-alternate-not-quicker] (alternate, 2026-11-25) The Alternate answer is not the quicker method: when one of two methods is clearly shorter, the shorter one is the second section's method.
 - [R-alternate-full] (alternate, 2026-11-11) The Alternate answer shows full working.
 - [R-alternate-same-answer] (alternate, 2026-11-11) The Alternate answer ends at the same final answer.
 
@@ -94,6 +105,7 @@
 - [R-errors-optional] (errors, 2026-11-11) Common errors is optional and used sparingly: it is omitted when there is no slip worth warning about.
 - [R-errors-max-two] (errors, 2026-11-11) Common errors lists at most two errors.
 - [R-errors-slip-and-fix] (errors, 2026-11-11) Each Common errors bullet names the slip and how to avoid it.
+- [R-errors-wrong-answer] (errors, 2026-11-25) Each common error listed leads to a wrong answer; a slip that still reaches the correct answer is not listed.
 - [R-errors-corrected] (errors, 2026-10-08) A common error is stated and corrected at once; it is not left as a wrong statement.
 
 ## Figures

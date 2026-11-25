@@ -64,7 +64,7 @@ const rules = loadRules();
 const byId = new Map(rules.map((r) => [r.id, r]));
 {
   ok(rules.length >= 20, `at least 20 rules (got ${rules.length})`);
-  assert.equal(rules.length, 83, "rule count");
+  assert.equal(rules.length, 95, "rule count");
   const ids = rules.map((r) => r.id);
   assert.equal(new Set(ids).size, ids.length, "rule ids are unique");
   for (const r of rules) {

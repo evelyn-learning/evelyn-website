@@ -112,6 +112,16 @@ open) and each one looks right.
   that attach to the words around them (Praveen's flag on 302347, 2026-11-24). Write `speak` as "the point with
   ex equal to negative 9 and why equal to 6"; when only one coordinate changes, say so ("moves to ex equal to
   negative 3, with why still 6"). `say` keeps the usual (−9, 6).
+- **Say which side of the equation you are on.** When the working moves from one side to the other, the voice
+  says so ("Now the left side: …"). Castle Rock's reviewer on 286312 (2026-11-25): following the words alone, a
+  listener could not tell how a value had arrived on the right.
+- **Reviewer rules for every animation (Castle Rock, 2026-11-25).** Variables are italic on the board, in step
+  bodies and in boxes, exactly as in the written solution (304631: the n's were upright). A figure redrawn from
+  the question keeps what the original shows (304631: the original drew sperm release as a process outside; ours
+  did not). A "Check yourself first" question is one whose right answer is never a bare "no" shown as correct:
+  ask it as a true/false statement or as "which …?" (210560). Hard words are checked by ear after recording
+  (303101: "oocyte" is "oh-uh-site"). The animation follows the written solution's method: when the written
+  second section changes route (e.g. to inspection), the animation changes with it.
 - `cues` are what the board does when the line starts. A line with no cue is a pause.
 - The first line of step 1 is "The answer is … Here's why." The last line of the last step states the answer
   and carries `{ "do": "answer" }`.
