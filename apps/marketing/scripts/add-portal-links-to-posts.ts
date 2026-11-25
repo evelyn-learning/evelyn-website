@@ -1,6 +1,10 @@
-// One-off (2026-11-24): add in-body links to the developer portal in four
-// existing blog posts that talk about embedding, white-label or cost and had
-// no link to it. The posts are Markdown in BlogPost.content.
+// One-off (2026-11-24): add in-body links to the developer portal in three
+// existing blog posts that talk about embedding or white-label and had no
+// link to it, and repair one dead link. The posts are Markdown in
+// BlogPost.content.
+// Not here on purpose: the "How Much Does It Cost to Add an AI Voice Tutor"
+// post. Its figures contradict the public API prices, so it is being
+// rewritten separately instead of patched.
 //
 // DRY RUN unless --write. Reads only in dry run.
 //
@@ -15,7 +19,7 @@
 //   edited post is never patched in the wrong place.
 // - If "after" is already there the edit counts as applied and is skipped,
 //   so a second run changes nothing.
-// - --write needs --backup <dir>: the four original documents are saved there
+// - --write needs --backup <dir>: the original documents are saved there
 //   as JSON before the first write.
 // - Any refusal on any post stops the whole run before anything is written.
 // - The write sets `content` only, and only if the content is still what was
@@ -25,7 +29,7 @@
 //   its Article JSON-LD dateModified, which is right: the post did change.
 //   No date is shown on the page from `updatedAt`.
 // - Not done here, unlike the admin editor: readingTime is not recomputed
-//   (each edit adds about 40 words) and no revalidatePath runs; the post page
+//   (each added sentence is about 40 words) and no revalidatePath runs; the post page
 //   revalidates itself every 60 seconds.
 import fs from "node:fs";
 import path from "node:path";
@@ -40,7 +44,9 @@ interface Edit {
   /** Exact existing text. Must occur exactly once in the post. */
   before: string;
   /** Text appended directly after `before` (same paragraph). */
-  append: string;
+  append?: string;
+  /** Or: text that takes the place of `before`. One of the two is set. */
+  replace?: string;
 }
 
 interface PostEdits {
@@ -80,6 +86,12 @@ const POSTS: PostEdits[] = [
         append:
           ` Level two can be light work: Evelyn Learning's Voice Tutor API, for example, is a hosted tutor with voice, a live whiteboard and typed chat that your server opens with one signed link inside an iframe. The [API docs](${DOCS}) walk through it.`,
       },
+      // The post's closing link had "#" as its target. /contact is the site's
+      // contact page and the form the other posts' plain links use.
+      {
+        before: "[reach out to our team](#)",
+        replace: "[reach out to our team](/contact)",
+      },
       {
         before: "No slide decks — just the real thing.",
         append:
@@ -101,23 +113,6 @@ const POSTS: PostEdits[] = [
           "with tools built from the ground up to serve institutional needs, not individual consumers.",
         append:
           ` Technical teams can also try the Voice Tutor API themselves in a [free sandbox](${SANDBOX}) with 300 tutoring minutes.`,
-      },
-    ],
-  },
-  {
-    slug: "how-much-does-it-cost-to-add-an-ai-voice-tutor-to-your-education-platform-a-real-world-pricing-breakdown",
-    edits: [
-      {
-        before:
-          "typically takes 2–4 months and requires 1–2 engineers, bringing development costs to $50,000–$180,000 depending on complexity.",
-        append:
-          ` At the lightest end, a hosted tutor is embedded with one signed link in an iframe or a mobile WebView; Evelyn Learning's [Voice Tutor API docs](${DOCS}) show that route.`,
-      },
-      {
-        before:
-          "the white-label or API integration path delivers 80–90% of the learner experience quality at 20–30% of the cost and time investment.",
-        append:
-          ` For a published reference point, Evelyn Learning's Voice Tutor API charges $0.20 per voice minute and $0.16 per typed minute, with prepaid packs of 500 minutes for $100, 2,500 minutes for $450 and 10,000 minutes for $1,600 ([API pricing](${PRICING})), and a [free sandbox](${SANDBOX}) with 300 tutoring minutes.`,
       },
     ],
   },
@@ -170,8 +165,9 @@ const backupDir = argValue("--backup");
     let applied = 0;
     post.edits.forEach((edit, n) => {
       const label = `  edit ${n + 1}/${post.edits.length}`;
-      const after = edit.before + edit.append;
-      if (count(content, after) === 1) {
+      const after = edit.replace ?? edit.before + (edit.append ?? "");
+      // Applied already: the new text is there and, for a replacement, the old text is gone.
+      if (count(content, after) === 1 && (edit.replace === undefined || count(content, edit.before) === 0)) {
         console.log(`${label}: already applied, skipped`);
         return;
       }
@@ -189,7 +185,7 @@ const backupDir = argValue("--backup");
       console.log(`${label}:`);
       console.log(`  - ${oldParagraph}`);
       console.log(`  + ${newParagraph}`);
-      console.log(`    (added ${edit.append.length} chars)`);
+      console.log(`    (${edit.replace !== undefined ? `replaced "${edit.before}" with "${edit.replace}"` : `added ${(edit.append ?? "").length} chars`})`);
     });
     console.log(`  content: ${doc.content.length} -> ${content.length} chars, ${applied} edit(s) to apply`);
     plans.push({ id: doc._id, slug: post.slug, original: doc, before: doc.content, after: content, applied });
@@ -207,7 +203,7 @@ const backupDir = argValue("--backup");
     process.exit(0);
   }
 
-  // Backup first: all four originals, changed or not, one JSON file each.
+  // Backup first: every original, changed or not, one JSON file each.
   const dir = path.resolve(backupDir as string);
   fs.mkdirSync(dir, { recursive: true });
   for (const plan of plans) {
