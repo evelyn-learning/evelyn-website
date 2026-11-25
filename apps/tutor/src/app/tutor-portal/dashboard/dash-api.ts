@@ -40,13 +40,25 @@ export interface DashAdminPartnerRow {
   sessions: number; sessions7d: number; lastSessionAt: string | null; firstSessionAt: string | null;
 }
 export interface DashPack { id: string; label: string; minutes: number; usd: number; perMinute: number }
-export interface DashPurchase { at: string; pack: string; minutes: number; amount: number; currency: string; status: 'credited' | 'pending'; test: boolean }
+export interface DashPurchase {
+  at: string; pack: string; minutes: number; amount: number; currency: string; status: 'credited' | 'pending'; test: boolean;
+  /** Bought by automatic top-up, not by hand. */
+  auto: boolean;
+  /** When the pack's unused minutes lapse; `lapsedMinutes` is set once they have. */
+  expiresAt: string | null; lapsedMinutes: number | null;
+}
+export interface DashAutoTopUp { enabled: boolean; packId: string | null; lineMinutes: number | null; lastError: string | null; hasCard: boolean }
 export interface DashBilling {
   /** Whether this account can buy now; false shows the packs without a way to buy them. */
   onSale: boolean;
   /** Stripe's test mode: no money moves, the minutes are real. */
   testMode: boolean;
   packs: DashPack[]; pool: DashPool; purchases: DashPurchase[];
+  autoTopUp: DashAutoTopUp;
+  /** What a minute of a typed session takes from the balance (a voice minute takes 1). */
+  textMinuteRate: number;
+  packLifetimeMonths: number;
+  taxAtCheckout: boolean;
   /** Whether Stripe's page of invoices and receipts exists for this partner (it does after a first purchase). */
   canManage: boolean;
 }
@@ -106,6 +118,7 @@ const ERROR_TEXT: Record<string, string> = {
   not_on_sale: 'Minute packs are not on sale yet. Write to info@evelynlearning.com to add minutes.',
   unknown_pack: 'That pack is no longer offered. Reload the page and choose again.',
   payment_unavailable: 'We could not reach the payment service. Nothing was charged. Try again in a minute.',
+  no_card: 'Available after your first purchase, which saves your card with Stripe.',
   no_purchases: 'There are no invoices yet: this account has not bought a pack.',
   invalid_url: 'That does not look like a web address. It should look like https://example.com/hooks/evelyn',
   https_only: 'The URL must start with https://',

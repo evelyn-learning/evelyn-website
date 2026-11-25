@@ -20,7 +20,8 @@ import { admitRefusedLine, partnerApiLogOn } from '../src/lib/tutor/partner-dash
 import { isDashboardAdmin, parseAdminAction } from '../src/lib/tutor/partner-dashboard/admin';
 import { createHmac } from 'node:crypto';
 import { checkWebhookUrl, checkWebhookUrlShape, isPrivateAddress, signWebhook, webhookBody } from '../src/lib/tutor/partner-dashboard/webhooks';
-import { MINUTE_PACKS, billingEnv, checkoutForm, mayBuy, packById, paidCheckoutFromEvent, perMinute, verifyStripeSignature } from '../src/lib/tutor/partner-dashboard/billing';
+import { MINUTE_PACKS, PACK_LIFETIME_MS, billingEnv, checkoutForm, lapsePlan, mayBuy, packById, paidCheckoutFromEvent, perMinute, topUpLineSec, verifyStripeSignature, type Lot } from '../src/lib/tutor/partner-dashboard/billing';
+import { TEXT_MINUTE_RATE, pooledSeconds } from '../src/lib/tutor/portal/partner-pool';
 
 let passed = 0; let failed = 0;
 const pending: Promise<void>[] = [];
@@ -397,7 +398,7 @@ test('Stripe\'s signature: right secret and fresh timestamp only', () => {
 });
 test('only a paid checkout of one of our packs, at the pack\'s price, is credited; the minutes come from the pack table', () => {
   const ev = (o: Record<string, unknown>, type = 'checkout.session.completed') => ({ type, livemode: false, data: { object: { id: 'cs_1', mode: 'payment', payment_status: 'paid', amount_subtotal: 10000, amount_total: 10800, currency: 'usd', metadata: { partner_id: 'acme', pack_id: 'pack_500', minutes: '999999', by: 'd@acme.io' }, ...o } } });
-  assert.deepEqual(paidCheckoutFromEvent(ev({})), { sessionId: 'cs_1', partnerId: 'acme', packId: 'pack_500', minutes: 500, amountCents: 10800, currency: 'usd', by: 'd@acme.io', livemode: false });
+  assert.deepEqual(paidCheckoutFromEvent(ev({})), { sessionId: 'cs_1', partnerId: 'acme', packId: 'pack_500', minutes: 500, amountCents: 10800, currency: 'usd', by: 'd@acme.io', livemode: false, kind: 'checkout' });
   assert.ok(paidCheckoutFromEvent(ev({}, 'checkout.session.async_payment_succeeded')));
   for (const o of [{ payment_status: 'unpaid' }, { mode: 'subscription' }, { amount_subtotal: 100, amount_total: 100 }, { currency: 'inr' }, { metadata: { partner_id: 'acme', pack_id: 'pack_x' } }, { metadata: { partner_id: 'Bad Id', pack_id: 'pack_500' } }, { metadata: {} }, { id: '' }]) assert.equal(paidCheckoutFromEvent(ev(o)), null, JSON.stringify(o));
   assert.equal(paidCheckoutFromEvent(ev({}, 'payment_intent.succeeded')), null); assert.equal(paidCheckoutFromEvent(null), null);
@@ -409,6 +410,49 @@ test('a pack is credited once: the claim is one step, and the webhook is the onl
   const hook = src('app/api/tutor-portal/billing/stripe-webhook/route.ts');
   assert.ok(hook.indexOf('verifyStripeSignature') < hook.indexOf('JSON.parse')); assert.match(hook, /paid\.livemode !== b\.live/);
   for (const r of ['billing/route.ts', 'billing/checkout/route.ts', 'billing/portal/route.ts']) assert.doesNotMatch(src(`app/api/tutor-portal/dashboard/${r}`), /creditPurchase/, r);
+});
+
+console.log('billing: text rate, expiry, automatic top-up');
+test('a typed minute draws 0.8 of a minute, rounded on the running total', () => {
+  assert.equal(TEXT_MINUTE_RATE, 0.8); assert.equal(pooledSeconds(600, 0.8), 480); assert.equal(pooledSeconds(600, 1), 600);
+  let total = 0; for (let w = 7; w <= 700; w += 7) total += pooledSeconds(w, 0.8) - pooledSeconds(w - 7, 0.8);
+  assert.equal(total, pooledSeconds(700, 0.8), 'a hundred small reports come to the same as one');
+  assert.equal(pooledSeconds(100, 5), 100, 'a rate above 1 is not a rate'); assert.equal(pooledSeconds(-5, 0.8), 0);
+  const st = src('lib/tutor/portal/partner-pool-store.ts');
+  assert.match(st, /const rate = input\.textMode \? TEXT_MINUTE_RATE : 1;/); assert.match(st, /incPool\(input\.partnerId, poolDelta\)/);
+  assert.match(src('app/api/tutor/session-usage/route.ts'), /body\.inputMode === "text" \? \{ textMode: true \} : \{\}/);
+});
+test('lapse: free minutes go first and never lapse; a pack past twelve months loses only what was not used', () => {
+  const day = 86_400_000; const now = 400 * day;
+  const lot = (id: string, min: number, creditedDay: number, o: Partial<Lot> = {}): Lot => ({ id, sec: min * 60, creditedAtMs: creditedDay * day, expiresAtMs: (creditedDay + 365) * day, lapsed: false, lapsedSec: 0, ...o });
+  // 300 free + a 500 pack bought on day 10 (lapsed by day 400), 450 minutes used in all: 150 of the pack used, 350 lapse
+  assert.deepEqual(lapsePlan({ capSec: 800 * 60, usedSec: 450 * 60 }, [lot('a', 500, 10)], now), [{ id: 'a', forfeitSec: 350 * 60 }]);
+  // nothing used beyond the free minutes: the whole pack lapses, the free minutes stay
+  assert.deepEqual(lapsePlan({ capSec: 800 * 60, usedSec: 100 * 60 }, [lot('a', 500, 10)], now), [{ id: 'a', forfeitSec: 500 * 60 }]);
+  // fully used: lapses with nothing to take
+  assert.deepEqual(lapsePlan({ capSec: 800 * 60, usedSec: 800 * 60 }, [lot('a', 500, 10)], now), [{ id: 'a', forfeitSec: 0 }]);
+  // not yet due: nothing
+  assert.deepEqual(lapsePlan({ capSec: 800 * 60, usedSec: 0 }, [lot('a', 500, 100)], now), []);
+  // two packs, oldest used first: old one lapsed, newer one untouched
+  assert.deepEqual(lapsePlan({ capSec: (300 + 500 + 2500) * 60, usedSec: 600 * 60 }, [lot('new', 2500, 200), lot('old', 500, 10)], now), [{ id: 'old', forfeitSec: 200 * 60 }]);
+  // an already-lapsed pack counts only for what was used of it, and is not lapsed twice
+  assert.deepEqual(lapsePlan({ capSec: (300 + 150 + 2500) * 60, usedSec: 600 * 60 }, [lot('old', 500, 10, { lapsed: true, lapsedSec: 350 * 60 }), lot('new', 2500, 20)], now), [{ id: 'new', forfeitSec: (2500 - 150) * 60 }]);
+  assert.equal(PACK_LIFETIME_MS, 365 * day);
+  const b = src('lib/tutor/partner-dashboard/billing.ts');
+  assert.match(b, /findOneAndUpdate\(\{ _id: step\.id, expiredAt: \{ \$exists: false \} \}/, 'a pack is claimed before its seconds come off');
+  assert.ok(b.indexOf('await lapseExpiredMinutes(p.partnerId)') < b.indexOf("$set: { creditedAt: now, expiresAt"), 'old lapses come off before a new pack goes on');
+});
+test('automatic top-up: the line, the paid invoice, and only our own invoices', () => {
+  assert.equal(topUpLineSec(packById('pack_500')!), 50 * 60); assert.equal(topUpLineSec(packById('pack_10000')!), 1000 * 60); assert.equal(topUpLineSec({ id: 'x', minutes: 100, usd: 20, label: '' }), 30 * 60);
+  const inv = (o: Record<string, unknown>, meta: Record<string, string> = { partner_id: 'acme', pack_id: 'pack_2500', kind: 'auto_topup' }) => ({ type: 'invoice.paid', livemode: true, data: { object: { id: 'in_1', status: 'paid', subtotal: 45000, total: 48600, amount_paid: 48600, currency: 'usd', metadata: meta, ...o } } });
+  assert.deepEqual(paidCheckoutFromEvent(inv({})), { sessionId: 'in_1', partnerId: 'acme', packId: 'pack_2500', minutes: 2500, amountCents: 48600, currency: 'usd', livemode: true, kind: 'auto_topup' });
+  assert.equal(paidCheckoutFromEvent(inv({}, {})), null, 'the invoice of an ordinary checkout is not a top-up');
+  assert.equal(paidCheckoutFromEvent(inv({ status: 'open' })), null); assert.equal(paidCheckoutFromEvent(inv({ subtotal: 100 })), null);
+  const b = src('lib/tutor/partner-dashboard/billing.ts');
+  assert.match(b, /'autoTopUp\.pendingAt': \{ \$lt: new Date\(now\.getTime\(\) - 60 \* 60_000\) \}/, 'one top-up at a time');
+  assert.doesNotMatch(b.slice(b.indexOf('export async function maybeAutoTopUp')), /creditPurchase|\$inc: \{ capSec/, 'the webhook credits, never the charge call');
+  assert.match(src('app/api/tutor-portal/dashboard/billing/auto-topup/route.ts'), /role !== 'owner'\) return json\(\{ error: 'owner_only' \}, 403\)/);
+  assert.equal(checkoutForm({ pack: packById('pack_500')!, partnerId: 'acme', email: 'd@acme.io', customerId: 'cus_1', origin: 'https://t.e', automaticTax: false })['payment_intent_data[setup_future_usage]'], 'off_session');
 });
 
 void Promise.all(pending).then(() => {
