@@ -190,7 +190,8 @@
       setTimeout(function () { rem(answerBar, 'es-flash'); }, 2500);
     }
     function setReadout(t) { readoutEl.textContent = t || ''; }
-    function setLive(head, text) { liveHead.textContent = head; liveText.textContent = text; }
+    // html: the caption with its variables italic (built by build.ts from the same text); absent on older builds.
+    function setLive(head, text, html) { liveHead.textContent = head; if (html) liveText.innerHTML = html; else liveText.textContent = text; }
     function svgPoint(e) {
       var p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY;
       return p.matrixTransform(svg.getScreenCTM().inverse());
@@ -333,7 +334,7 @@
     function startTicker() { stopTicker(); ticker = setInterval(tick, 30); }
     function fireLine(k, i) {
       line = i; markSaid(k, i);
-      liveText.textContent = STEPS[k].lines[i].say;
+      if (STEPS[k].lines[i].html) liveText.innerHTML = STEPS[k].lines[i].html; else liveText.textContent = STEPS[k].lines[i].say;
       runCues(STEPS[k].lines[i].cues);
       emit('line');
     }
@@ -562,7 +563,7 @@
 
     /* ---------- the board and the caption never change size: reserve room for the longest of everything ---------- */
     function reserve() {
-      var h = 0, keepHead = liveHead.textContent, keepText = liveText.textContent, keepRead = readoutEl.textContent;
+      var h = 0, keepHead = liveHead.textContent, keepText = liveText.textContent, keepHtml = liveText.innerHTML, keepRead = readoutEl.textContent;
       var groups = [[]], probe = ink.cloneNode(false);
       var gather = function (cues) { (cues || []).forEach(function (c) { if (c['do'] === 'wither' || c['do'] === 'reset') groups.push([]); else if (c['do'] === 'ink') groups[groups.length - 1].push(c); }); };
       STEPS.forEach(function (s) { s.lines.forEach(function (l) { gather(l.cues); }); });
@@ -579,9 +580,9 @@
       h = 0;
       live.style.minHeight = '0';
       STEPS.forEach(function (s, k) {
-        s.lines.forEach(function (l) { setLive('Step ' + (k + 1) + ' · ' + s.title, l.say); if (live.offsetHeight > h) h = live.offsetHeight; });
+        s.lines.forEach(function (l) { setLive('Step ' + (k + 1) + ' · ' + s.title, l.say, l.html); if (live.offsetHeight > h) h = live.offsetHeight; });
       });
-      live.style.minHeight = h + 'px'; setLive(keepHead, keepText);
+      live.style.minHeight = h + 'px'; setLive(keepHead, keepText, keepHtml);
       h = 0; readoutEl.style.minHeight = '0';
       [BOARD.readoutFresh, BOARD.readoutPractice, END_TEXT, PRACTICE.doneText, PRACTICE.missText].forEach(function (t) {
         if (!t) return; readoutEl.textContent = t; if (readoutEl.offsetHeight > h) h = readoutEl.offsetHeight;

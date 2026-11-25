@@ -38,6 +38,32 @@ const EQ_HINT = `<p class="es-small">Tap an equation line to see the operation b
 
 /** Text → HTML text. */
 export const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/**
+ * The single letters this item marks as variables anywhere in its spec or figure (<var>x</var>, or class es-v in
+ * the figure). Captions and the transcript are plain text, so their variables came out upright while the step
+ * bodies had them italic (Castle Rock's reviewer on 304631, 2026-11-25: "the n's should all be italic").
+ * "a", "A" and "I" are left out: in a caption they are almost always words.
+ */
+export function captionVars(spec: Spec, figureSvg = ""): string[] {
+  const text = JSON.stringify(spec) + figureSvg;
+  const found = new Set<string>();
+  for (const m of text.matchAll(/<var>([A-Za-z])<\/var>/g)) found.add(m[1]);
+  for (const m of text.matchAll(/class=\\?"es-v\\?"[^>]*>([A-Za-z])</g)) found.add(m[1]);
+  for (const w of ["a", "A", "I"]) found.delete(w);
+  return [...found].sort();
+}
+
+/** Letters that are also unit symbols: after a number and a space ("14 m") they are the unit, not the variable. */
+const UNIT_LETTERS = new Set(["m", "s", "g", "L", "N", "J", "V", "W", "C", "K", "h"]);
+
+/** A caption as HTML: escaped, with the item's variable letters italic wherever they stand alone ("x = 3", "2n", "x-axis"). */
+export function captionHtml(say: string, vars: string[]): string {
+  const safe = esc(say);
+  if (!vars.length) return safe;
+  const re = new RegExp(`(?<![A-Za-z&;'’])(${vars.join("|")})(?![A-Za-z]|\\.[A-Za-z])`, "g");
+  return safe.replace(re, (m, v: string, at: number) => (UNIT_LETTERS.has(v) && /\d\s$/.test(safe.slice(0, at)) ? m : `<var>${v}</var>`));
+}
 const attr = (s: string) => esc(s).replace(/"/g, "&quot;");
 /** JSON that is safe inside a <script> element. */
 const jsonForScript = (v: unknown) => JSON.stringify(v).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
@@ -82,6 +108,7 @@ export function renderPage(input: PageInput): string {
   const js = (input.playerJs ?? readBeside("player.js")).replace(/^\s*\/\*[\s\S]*?\*\/\s*/, ""); // the authoring notes stay out of the page
 
   let hinted = false;
+  const vars = captionVars(spec, input.svg);
   const stepsHtml = spec.steps
     .map((st, k) => {
       const before = spec.boxes.filter((b) => b.beforeStep === k + 1).map(boxHtml).join("");
@@ -90,7 +117,7 @@ export function renderPage(input: PageInput): string {
         hinted = true;
         body += EQ_HINT;
       }
-      const caption = st.lines.map((l) => `<span>${esc(l.say)}</span>`).join(" ");
+      const caption = st.lines.map((l) => `<span>${captionHtml(l.say, vars)}</span>`).join(" ");
       return (
         `<li class="es-step" data-step="${k}"><div class="es-stephead"><button type="button" class="es-chev" aria-label="Show or hide step ${k + 1}">▼</button>` +
         `<h3>${k + 1}. ${esc(st.title)}</h3><button type="button" class="es-listen" aria-label="Listen from step ${k + 1}">▶ Listen</button></div>` +
@@ -100,14 +127,14 @@ export function renderPage(input: PageInput): string {
     .join("\n");
 
   const after = BOX_ORDER.flatMap((kind) => spec.boxes.filter((b) => b.kind === kind && b.beforeStep === undefined)).map(boxHtml).join("\n");
-  const transcript = spec.steps.map((st, k) => `<p><strong>Step ${k + 1}.</strong> ${st.lines.map((l) => esc(l.say)).join(" ")}</p>`).join("");
+  const transcript = spec.steps.map((st, k) => `<p><strong>Step ${k + 1}.</strong> ${st.lines.map((l) => captionHtml(l.say, vars)).join(" ")}</p>`).join("");
   const buttons = (spec.board.buttons ?? []).map((b, i) => `<button type="button" class="es-ghost" data-button="${i}">${esc(b.label)}</button>`).join("");
   const answer = spec.answer.letter ? `<strong>Answer: ${esc(spec.answer.letter)}.</strong> ${spec.answer.text}` : `<strong>Answer:</strong> ${spec.answer.text}`;
   const question = spec.question.trim() ? `<div class="es-question"><div class="es-fold" data-title="Show the question">${spec.question}</div></div>` : "";
 
   const data = {
     version: input.version ?? 0,
-    steps: spec.steps.map((st) => ({ title: st.title, lines: st.lines.map((l) => ({ say: l.say, len: (l.speak ?? l.say).length, cues: l.cues ?? [] })) })),
+    steps: spec.steps.map((st) => ({ title: st.title, lines: st.lines.map((l) => ({ say: l.say, ...(captionHtml(l.say, vars) !== esc(l.say) ? { html: captionHtml(l.say, vars) } : {}), len: (l.speak ?? l.say).length, cues: l.cues ?? [] })) })),
     board: spec.board,
     practice: spec.practice,
     timing: input.timing ?? null,
