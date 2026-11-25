@@ -11,7 +11,7 @@
 # own port, so the two apps deploy and restart completely independently.
 #
 #   this script      -> apps/tutor      -> /root/evelyn-tutor      -> pm2 evelyn-tutor      -> :3007
-#   deploy-marketing -> apps/marketing  -> /root/evelyn-marketing  -> pm2 evelyn-marketing  -> :3001
+#   deploy-marketing -> apps/marketing  -> /root/evelyn-marketing  -> pm2 evelyn-marketing-a / -b  -> :3001 / :3021
 #
 # Marketing keeps :3001 (the port the old single `evelyn-website` process
 # used) so nginx's default upstream needed no change.

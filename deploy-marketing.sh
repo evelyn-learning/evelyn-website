@@ -10,17 +10,18 @@
 # Each script owns its own remote directory, its own pm2 process and its
 # own port, so the two apps deploy and restart completely independently.
 #
-#   this script  -> apps/marketing  -> /root/evelyn-marketing  -> pm2 evelyn-marketing  -> :3001
+#   this script  -> apps/marketing  -> /root/evelyn-marketing  -> pm2 evelyn-marketing-a / -b  -> :3001 / :3021
 #   deploy-tutor -> apps/tutor      -> /root/evelyn-tutor      -> pm2 evelyn-tutor      -> :3007
 #
 # Marketing keeps :3001 (the port the old single `evelyn-website` process
 # used) so nginx's default upstream needed no change.
 #
 # ── TWO WAYS TO DEPLOY ──────────────────────────────────────────────────────
-# MARKETING_BLUE_GREEN unset or 0 (the default, the proven path): one process,
-#   `evelyn-marketing` on :3001, build dir .next, restarted in place. Port
-#   3001 is closed for about 5 seconds at every deploy.
-# MARKETING_BLUE_GREEN=1: two slots, no gap. Slot a = :3001 / .next-a,
+# MARKETING_BLUE_GREEN=0 (the old path; refuses to run now that the server is
+#   on the two-slot layout): one process, `evelyn-marketing` on :3001, build
+#   dir .next, restarted in place. Port 3001 closed for about 5 seconds.
+# MARKETING_BLUE_GREEN unset or 1 (the default since the first two-slot deploy
+#   on 2026-11-25): two slots, no gap. Slot a = :3001 / .next-a,
 #   slot b = :3021 / .next-b, pm2 names evelyn-marketing-a / -b. The build is
 #   made for the idle slot, started there, health-checked on its own port,
 #   nginx is pointed at it (graceful reload), and only then is the old slot
@@ -33,7 +34,7 @@
 #
 # ROLLBACK (blue-green only; about 15 seconds, no build, no gap): the previous
 # build is still on the server in the other slot's dir.
-#       MARKETING_BLUE_GREEN=1 ./deploy-marketing.sh --rollback
+#       ./deploy-marketing.sh --rollback
 # Which slot is live:  ssh root@85.239.239.134 'cat /root/evelyn-marketing/.active-slot /root/evelyn-marketing/.active-port'
 # Once a blue-green deploy has happened, the single-process path refuses to
 # run (it would start a second copy beside the live slot); the README says how
@@ -108,8 +109,8 @@ PM2_NAME="evelyn-marketing"
 # then `pm2 delete evelyn-website` immediately before running this.
 PM2_PORT="3001"
 
-# Blue-green (see the header). Off by default until the rehearsal has passed.
-MARKETING_BLUE_GREEN="${MARKETING_BLUE_GREEN:-0}"
+# Blue-green (see the header). The default since 2026-11-25 (rehearsal passed, first live deploy clean).
+MARKETING_BLUE_GREEN="${MARKETING_BLUE_GREEN:-1}"
 BG_DIR="scripts/ops/marketing-bluegreen"
 BG_PORT_A="3001"
 BG_PORT_B="3021"
@@ -526,7 +527,7 @@ upload_with_retry() {
 # whoever is on the site, and it closes no port.
 if [ "${1:-}" = "--rollback" ]; then
   if [ "$MARKETING_BLUE_GREEN" != "1" ]; then
-    log_message "ERROR" "--rollback exists only for the blue-green layout:  MARKETING_BLUE_GREEN=1 ./deploy-marketing.sh --rollback"
+    log_message "ERROR" "--rollback exists only for the blue-green layout:  ./deploy-marketing.sh --rollback"
     exit 1
   fi
   for f in slot-lib.sh remote-rollback.sh; do
@@ -619,7 +620,7 @@ if [ "$MARKETING_BLUE_GREEN" = "1" ]; then
 else
   if [ -n "$BG_SLOT" ]; then
     log_message "ERROR" "The server runs the blue-green layout (live slot: $BG_SLOT). The single-process deploy would start a second"
-    log_message "ERROR" "      copy beside it and leave the site on the old build. Deploy with:  MARKETING_BLUE_GREEN=1 ./deploy-marketing.sh"
+    log_message "ERROR" "      copy beside it and leave the site on the old build. Deploy with:  ./deploy-marketing.sh"
     log_message "ERROR" "      (Going back to the single process is a by-hand procedure: $BG_DIR/README.md.)"
     exit 1
   fi
@@ -976,7 +977,7 @@ log_message "INFO" "Site: http://$SERVER_IP"
 if [ "$MARKETING_BLUE_GREEN" = "1" ]; then
   log_message "INFO" "Process: $PM2_NAME-$BG_TARGET (slot $BG_TARGET; nginx upstream evelyn_marketing points at it)"
   log_message "INFO" "Check logs: ssh root@$SERVER_IP 'pm2 logs $PM2_NAME-$BG_TARGET'"
-  log_message "INFO" "Roll back:  MARKETING_BLUE_GREEN=1 ./deploy-marketing.sh --rollback"
+  log_message "INFO" "Roll back:  ./deploy-marketing.sh --rollback"
 else
   log_message "INFO" "Process: $PM2_NAME on port $PM2_PORT (nginx: location / and /_next/static/ of evelynlearning, location / of keystone.evelynlearning.com)"
   log_message "INFO" "Check logs: ssh root@$SERVER_IP 'pm2 logs $PM2_NAME'"

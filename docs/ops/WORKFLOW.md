@@ -24,7 +24,7 @@ web) and **portal-contract**.
 | Tutor engine, all tenants | evelynlearning `apps/tutor` | `deploy-tutor.sh` | `evelyn-tutor` :3007 | partner row (`lib/tutor/portal/partner-session-options.ts`), build flag default ON (`orchestrator/flags.ts`), plan kind |
 | GAC engine | same code | `deploy-tutor-gac.sh` — the only way to deploy :3008 (sets the GAC env keys); not pinned since 2026-11-16 | `evelyn-tutor-gac` :3008 | `TUTOR_NO_REVEAL_LEDGER_PARTNERS`, `homework-problem` plan kind, GAC env keys (fallback off, drawn answers) |
 | GDI and partner previews | same code | `deploy-tutor-demo.sh` | `evelyn-tutor-demo` :3009 | `sessionAllowsNonLatin(tutorLanguages)`, `gdi-demo` partner row |
-| Marketing site + back office | evelynlearning `apps/marketing` | `deploy-marketing.sh` | `evelyn-marketing` :3001 | — |
+| Marketing site + back office | evelynlearning `apps/marketing` | `deploy-marketing.sh` (two slots, no gap; `--rollback` goes back; waits for Keystone to be quiet) | `evelyn-marketing-a` :3001 / `-b` :3021 | — |
 | Crimsora / evelyntutor / GreenApple web | academy (one codebase) | `deploy-crimsora.sh` / `deploy-evelyntutor.com.sh` / `deploy-greenapple.sh` | `<tenant>-web` + `<tenant>-api` | tenant env file, tenant config in the app |
 | GameClass, Kanzoo, new partners | engine + dev portal | `deploy-tutor.sh` | :3007 | partner row + Mongo partner registry |
 | portal-contract | portal-contract | tag `vX.Y.Z`, bump the `github:…#vX.Y.Z` pin in **both** consumers | — | additive schema changes only |

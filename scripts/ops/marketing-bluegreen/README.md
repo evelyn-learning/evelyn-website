@@ -1,7 +1,7 @@
 # Marketing app: blue-green deploy (no closed port)
 
 Status: written 2026-11-24, **not yet rehearsed, not yet used**. `deploy-marketing.sh` keeps deploying the single
-process until `MARKETING_BLUE_GREEN=1` is given (or its default is flipped after the rehearsal passes).
+process only with `MARKETING_BLUE_GREEN=0`. Blue-green is the default since 2026-11-25: the rehearsal passed and the first live deploy (slot b, :3021) was clean.
 
 ## Why
 
@@ -64,7 +64,7 @@ Every script prints what it would do when run without `--yes`.
    Afterwards refresh the repo mirrors:
    `ssh root@85.239.239.134 'cat /etc/nginx/sites-enabled/evelynlearning'` → `nginx/evelynlearning-live.conf` (keep its header),
    same for `keystone.evelynlearning.com` → `nginx/keystone-evelynlearning-live.conf`.
-4. **First blue-green deploy**: `MARKETING_BLUE_GREEN=1 ./deploy-marketing.sh` from a worktree, after the usual gate.
+4. **First blue-green deploy**: `./deploy-marketing.sh` from a worktree, after the usual gate.
    It refuses unless steps 2 and 3 are done. Today's process `evelyn-marketing` (port 3001, `.next`) counts as
    slot a; the build goes to slot b (3021); after the switch `evelyn-marketing` is stopped and removed from pm2.
    Its build stays in `apps/marketing/.next` as the rollback target; delete that dir (about 700 MB) once the new
@@ -75,7 +75,7 @@ Every script prints what it would do when run without `--yes`.
 ## A normal deploy
 
 ```
-MARKETING_BLUE_GREEN=1 ./deploy-marketing.sh
+./deploy-marketing.sh
 ```
 
 Slots alternate by themselves. The Keystone-in-use check still applies (`KEYSTONE_BUSY_OK=1` to deploy anyway; once
@@ -91,7 +91,7 @@ ssh root@85.239.239.134 'cat /root/evelyn-marketing/.active-slot /root/evelyn-ma
 ## Rollback
 
 ```
-MARKETING_BLUE_GREEN=1 ./deploy-marketing.sh --rollback
+./deploy-marketing.sh --rollback
 ```
 
 About 15 seconds, no build, no closed port: the previous build is still in the other slot's dir and is brought
@@ -116,7 +116,7 @@ pm2 delete evelyn-marketing-b && pm2 save
 
 ## Back to the single process (untested, by hand)
 
-`deploy-marketing.sh` without `MARKETING_BLUE_GREEN=1` refuses while `.active-slot` exists. To return: make slot b
+`MARKETING_BLUE_GREEN=0 ./deploy-marketing.sh` refuses while `.active-slot` exists. To return: make slot b
 the live one (deploy or roll back until it is), then on the server
 `rm /root/evelyn-marketing/.active-slot /root/evelyn-marketing/.active-port /root/evelyn-marketing/.active-dist`,
 run the single-process `./deploy-marketing.sh` (it starts `evelyn-marketing` on 3001 from `.next`), put 3001 first

@@ -8,9 +8,9 @@ const nextConfig: NextConfig = {
   // Keystone's SOLARO export renders TeX to PNG on the server (MathJax → sharp);
   // load MathJax from node_modules at runtime instead of bundling it.
   serverExternalPackages: ['mathjax-full'],
-  // Deploy-time override so the prod build can land in a staging dir and be
-  // atomically swapped into .next (deploy-update.sh). Unset everywhere else,
-  // including `next start`, which must keep reading the default .next.
+  // Deploy-time override: deploy-marketing.sh builds into the idle slot's dir
+  // (.next-a / .next-b) and the slot's process is started with the same value.
+  // Unset in dev and local builds, which use the default .next.
   distDir: process.env.NEXT_DIST_DIR || ".next",
   // Pin the Turbopack workspace root to the repo root (two levels up from
   // this app, which lives at apps/marketing/). Without it, builds on the

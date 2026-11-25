@@ -9,7 +9,7 @@ tutor engine, and vice versa.
 | Workspace | What it is | Dev | Deploy | pm2 | Port |
 |---|---|---|---|---|---|
 | `apps/tutor` | The tutor engine: `/tutor`, `/tutor-portal/*`, `/api/tutor/*`, `/api/portal/v1/*`. Every portal (Crimsora, evelyntutor, white-labels, API partners) consumes THIS. | `npm run --workspace @evelyn/tutor dev` | `./deploy-tutor.sh` | `evelyn-tutor` | 3007 |
-| `apps/marketing` | evelynlearning.com: site, blog, admin, outreach, prospecting, showcase. | `npm run --workspace @evelyn/marketing dev` | `./deploy-marketing.sh` | `evelyn-marketing` | 3001 |
+| `apps/marketing` | evelynlearning.com: site, blog, admin, outreach, prospecting, showcase. | `npm run --workspace @evelyn/marketing dev` | `./deploy-marketing.sh` | `evelyn-marketing-a` / `-b` (two slots, switched with no gap) | 3001 / 3021 |
 | `packages/core` | Shared, tutor-agnostic: db, knowledge, utils, Teacher/SavedLesson models. Imported as `@core/*`. | — | — | — | — |
 
 The `Port` column is the **production** port each app is served on. In dev the tutor also
@@ -23,7 +23,7 @@ an app.
 Each script builds and ships **only its own app**; nothing else is rebuilt.
 
 - `./deploy-tutor.sh` — engine → pm2 `evelyn-tutor` on :3007.
-- `./deploy-marketing.sh` — site → pm2 `evelyn-marketing` on :3001.
+- `./deploy-marketing.sh` — site → pm2 `evelyn-marketing-a` (:3001) or `-b` (:3021), whichever is idle; nginx is switched after a health check. Undo: `./deploy-marketing.sh --rollback`.
 
 `deploy-to-production.sh` **no longer exists** — it deployed the pre-split single app and
 was replaced by the two scripts above. `deploy-update.sh` has been **deleted** (2026-08-21):
