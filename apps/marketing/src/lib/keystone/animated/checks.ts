@@ -198,6 +198,12 @@ export function sentenceCount(text: string): number {
  * abbreviations, no "sin/cos/tan", no three numbers in a row, no letter symbol spelled by its sound ("dee"; the
  * spellings in `spec.allowLetters` excepted), and as many sentences as the caption it goes with.
  */
+/**
+ * Words the voice is given in one spelling only. Two spellings of one word ("pi" in some animations, "pie" in
+ * others) made the voice say it two ways (Castle Rock, 2026-11-25). Add a pair here when a reviewer flags a word.
+ */
+export const ONE_SPELLING: [RegExp, string][] = [[/\bpi\b/i, "pie"]];
+
 export function earCheck(spec: Spec): Finding[] {
   const out: Finding[] = [];
   const allowed = new Set((spec.allowLetters ?? []).map((l) => l.trim().toLowerCase()));
@@ -217,6 +223,9 @@ export function earCheck(spec: Spec): Finding[] {
       const letters = [...new Set((voice.match(LETTER_SPELLING) ?? []).map((l) => l.toLowerCase()))].filter((l) => !allowed.has(l));
       if (letters.length)
         out.push({ where, detail: `${from} spells a letter symbol by its sound, which the voice can misread; name the quantity instead ("the slit separation", not "dee"), or list the spelling in allowLetters when the variable has no name: ${letters.join(", ")}` });
+      for (const [wrong, right] of ONE_SPELLING) {
+        if (wrong.test(voice)) out.push({ where, detail: `${from} must spell this word for the voice as "${right}", the one spelling every animation uses, so it sounds the same everywhere` });
+      }
       if (ln.speak && sentenceCount(ln.say) !== sentenceCount(ln.speak))
         out.push({ where, detail: `say has ${sentenceCount(ln.say)} sentence(s), speak has ${sentenceCount(ln.speak)}; they must match` });
     }),

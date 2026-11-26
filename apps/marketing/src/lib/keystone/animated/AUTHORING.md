@@ -120,7 +120,8 @@ open) and each one looks right.
   the question keeps what the original shows (304631: the original drew sperm release as a process outside; ours
   did not). A "Check yourself first" question is one whose right answer is never a bare "no" shown as correct:
   ask it as a true/false statement or as "which …?" (210560). Hard words are checked by ear after recording
-  (303101: "oocyte" is "oh-uh-site"). The animation follows the written solution's method: when the written
+  (303101: "oocyte" is "oh-uh-site"). A word has one spelling for the voice in every
+  animation: π is always "pie" in `speak` (the build refuses "pi"; the list is ONE_SPELLING in checks.ts). The animation follows the written solution's method: when the written
   second section changes route (e.g. to inspection), the animation changes with it.
 - `cues` are what the board does when the line starts. A line with no cue is a pause.
 - The first line of step 1 is "The answer is … Here's why." The last line of the last step states the answer

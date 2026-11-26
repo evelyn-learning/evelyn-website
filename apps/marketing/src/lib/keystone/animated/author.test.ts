@@ -56,6 +56,7 @@ const input: AuthorInput = {
   ok(checkAuthored(input, { spec: spec(), svg: SVG, boardJs: BOARD_JS }).html?.includes("ai-solution"), "a clean item comes with its built page");
   const f = (s: Spec, svg = SVG) => checkAuthored(input, { spec: s, svg, boardJs: BOARD_JS }).findings.join(" | ");
   ok(/^spec: step 2 line 1 cue 2 \(draw\): id "nope" is not in figure\.svg/.test(f(edit((s) => (s.steps[1].lines[0].cues![1].id = "nope")))), "spec findings are named and stop the later checks");
+  ok(/ear: step 2 line 1: speak must spell this word for the voice as "pie"/.test(f(edit((s) => (s.steps[1].lines[0].speak = "Two pi times the radius.")))), "one spelling of pi for the voice");
   ok(/ear: step 2 line 1: speak has a unit abbreviation/.test(f(edit((s) => (s.steps[1].lines[0].speak = "4 kg times 3 is 12 newtons.")))), "ear finding");
   ok(/ear: step 2 line 1: .*spells a letter symbol.*: em$/.test(f(edit((s) => (s.steps[1].lines[0].speak = "4 kilograms is em, and 12 newtons is the force.")))), "the letter rule reaches the author");
   ok(/numbers: 13 \(step 2 line 1 say\) is not in the written solution or the question/.test(f(edit((s) => (s.steps[1].lines[0].say = "4 kg times 3 m/s² is 13 N.")))), "numbers finding");
